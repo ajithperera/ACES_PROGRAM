@@ -3158,25 +3158,13 @@
 
 # The symmerty of the tensor is assured; xy=yx;xz=zx,yz=zy
 
-      GC1xx  = GC1xy_tmp
-      GC1xx += GC1xy_tmp
-      GC1xx += GC1yy_tmp
-      GC1xx += GC1yz_tmp
-      GC1xx += GC1yz_tmp
+      GC1xx  = GC1yy_tmp
       GC1xx += GC1zz_tmp
  
-      GC1yy  = GC1xy_tmp
-      GC1yy += GC1xy_tmp
-      GC1yy += GC1xx_tmp
-      GC1yy += GC1yz_tmp
-      GC1yy += GC1yz_tmp
+      GC1yy  = GC1xx_tmp
       GC1yy += GC1zz_tmp
 
-      GC1zz  = GC1xy_tmp
-      GC1zz += GC1xy_tmp
-      GC1zz += GC1xx_tmp
-      GC1zz += GC1yz_tmp
-      GC1zz += GC1yz_tmp
+      GC1zz  = GC1xx_tmp
       GC1zz += GC1yy_tmp
    
       GC1xy  = GC1xy_tmp 
@@ -3194,7 +3182,7 @@
 #      execute print_scalar GC1xz
 #      execute print_scalar GC1yy
 #      execute print_scalar GC1yz
-      execute print_scalar GC1zz
+#      execute print_scalar GC1zz
 #end_debug
 
 #
@@ -5438,10 +5426,14 @@
                   if xyz1 == 2
                      tpol(xyz,xyz1) = Pxy
                      G_tensor_1E_BL(xyz,xyz1) = tpol(xyz,xyz1)
+                     tpol(xyz,xyz1) = GC1xy
+                     g_tensor_1E_GC(xyz,xyz1) = tpol(xyz,xyz1)
                   endif
                     if xyz1 == 3
                        tpol(xyz,xyz1) = Pxz
                        g_tensor_1E_BL(xyz,xyz1) = tpol(xyz,xyz1)
+                       tpol(xyz,xyz1) = GC1xz
+                       g_tensor_1E_GC(xyz,xyz1) = tpol(xyz,xyz1)
                     endif
                enddo xyz1
                endif
@@ -5471,6 +5463,8 @@
                   if xyz1 == 1
                      tpol(xyz,xyz1) = Pyx
                      g_tensor_1E_BL(xyz,xyz1) = tpol(xyz,xyz1)
+                     tpol(xyz,xyz1) = GC1yx
+                     g_tensor_1E_GC(xyz,xyz1) = tpol(xyz,xyz1)
                   endif
                   if xyz1 == 2
                      tpol(xyz,xyz1) = Pyy
@@ -5483,6 +5477,8 @@
                     if xyz1 == 3
                        tpol(xyz,xyz1) = Pyz
                        g_tensor_1E_BL(xyz,xyz1) = tpol(xyz,xyz1)
+                       tpol(xyz,xyz1) = GC1yz
+                       g_tensor_1E_GC(xyz,xyz1) = tpol(xyz,xyz1)
                     endif
                enddo xyz1
                endif
@@ -5492,10 +5488,14 @@
                   if xyz1 == 1
                      tpol(xyz,xyz1) = Pzx
                      g_tensor_1E_BL(xyz,xyz1) = tpol(xyz,xyz1)
+                     tpol(xyz,xyz1) = GC1zx
+                     g_tensor_1E_GC(xyz,xyz1) = tpol(xyz,xyz1)
                   endif
                   if xyz1 == 2
                      tpol(xyz,xyz1) = Pzy
                      g_tensor_1E_BL(xyz,xyz1) = tpol(xyz,xyz1)
+                     tpol(xyz,xyz1) = GC1zy
+                     g_tensor_1E_GC(xyz,xyz1) = tpol(xyz,xyz1)
                   endif
                     if xyz1 == 3
                        tpol(xyz,xyz1) = Pzz
