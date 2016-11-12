@@ -260,6 +260,8 @@ C
 
       dummy = load_user_sub('print_eom_dens_info'//char(0),
      +                       0)
+      dummy = load_user_sub('compute_pvp_xyzbatch'//char(0), 0)
+      dummy = load_user_sub('return_dkh_h1'//char(0), 0)
 c
 c -------------------------------------------------------------------- 
 c VFL Instructions needed to perform 'fast' scf calculations 

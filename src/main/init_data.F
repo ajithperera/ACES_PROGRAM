@@ -45,7 +45,7 @@ C  in the file COPYRIGHT.
       integer          id_tensor                            ! perera Added
       integer          iguess, ilshfta,  ilshftb
       integer          idamp_type, idamp_tol,ilindep_tol,ilock_orbitals 
-      integer          iintgrl_tol, ilock_orbocc, idamp_end
+      integer          iintgrl_tol, ilock_orbocc, idamp_end, idkh_order
       character*4      atmnam(max_centers)
       logical          cartesian
       logical          uhf
@@ -279,7 +279,7 @@ C
         Ilock_orbitals = iflags(160)
         Ilock_orbocc   = ijunk(41)
         Idamp_end      = iflags(161)
-  
+        Idkh_order     = iflags(157)
   
         Damp_type     = DBLE(Idamp_type)
         Damp_tol      = DBLE(Idamp_tol)
@@ -287,7 +287,9 @@ C
         Lock_orbitals = DBLE(Ilock_orbitals)
         Lock_orbocc   = DBLE(Ilock_orbocc)
         Damp_end      = DBLE(Idamp_end)
-   
+        Dkh_order     = DBLE(Idkh_order)
+        Write(6,*) "The dkh order", Dkh_order, iflags(157)
+
 c-------------------------------------------------------------------------
 c   Read IFLAGS2 off JOBARC.
 c-------------------------------------------------------------------------

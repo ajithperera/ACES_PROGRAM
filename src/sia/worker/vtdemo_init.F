@@ -29,6 +29,7 @@ C  in the file COPYRIGHT.
      *                       guess, lshft_a1, lshft_b1, damp_type,
      *                       damp_tol,lindep_tol,lock_orbitals,
      *                       lock_orbocc, intgrl_tol, damp_end, 
+     *                       dkh_order,
      * 
      *                       io_company_id, niocompany, need_predef,
      *                       npre_defined, dryrun)
@@ -105,7 +106,7 @@ C  in the file COPYRIGHT.
       integer ibcc_conv ! Ajith Perera
       integer iguess, ilshft_a1, ilshft_b1, idamp_type, idamp_tol ! Ajith perera
       integer ilock_orbitals,ilindep_tol,iintgrl_tol, idamp_end
-      integer ilock_orbocc
+      integer ilock_orbocc, idkh_order 
       integer timertype
       integer index, val1, val2
       integer occ_index, index_type, ind, nindex
@@ -118,7 +119,7 @@ C  in the file COPYRIGHT.
       double precision polarizability, a_tensor, g_tensor, d_tensor
       double precision guess, lshft_a1, lshft_b1, damp_type, damp_tol
       double precision lindep_tol,lock_orbitals,intgrl_tol, damp_end
-      double precision lock_orbocc 
+      double precision lock_orbocc, dkh_order 
 
       double precision xxx(2)
 #ifdef ALTIX
@@ -737,6 +738,9 @@ C Ajith Perera, 05/2014  added
 
       ilock_orbocc     = array_table(c_scalar_index,37)
       scalar_table(ilock_orbocc) = lock_orbocc
+
+      idkh_order       = array_table(c_scalar_index,38)
+      scalar_table(idkh_order)   = dkh_order 
 C 
       next = 0
       next_server = 0
@@ -746,7 +750,7 @@ C Tom Watson, Changed to 22.
 C Ajith Perera, changed to 27, 05/2014. 
 C Ajith Perera, changed to 28, 12/2014. 
 C
-      do i = 38, narray_table   ! 1st 19 arrays are pre-defined.
+      do i = 39, narray_table   ! 1st 19 arrays are pre-defined.
          type = array_table(c_array_type,i) 
          if (type .eq. static_array) then
 

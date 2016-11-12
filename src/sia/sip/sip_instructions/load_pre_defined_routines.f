@@ -138,7 +138,7 @@ C
      *         second_moment
       external return_1st_mom, return_2nd_mom 
       external energy_ty_denominator, reorder_energy
-
+      external compute_pvp_xyzbatch, return_dkh_h1
 c 
 c VFL SCF instructions 
 
@@ -607,6 +607,11 @@ C
 
       dummy = load_user_sub('print_eom_dens_info'//char(0),
      +                       print_eom_dens_info)
+
+      dummy = load_user_sub('compute_pvp_xyzbatch'//char(0),
+     +                        compute_pvp_xyzbatch)
+
+      dummy = load_user_sub('return_dkh_h1'//char(0),return_dkh_h1)
 c
 c -------------------------------------------------------------------- 
 c VFL Instructions needed to perform 'fast' scf calculations 

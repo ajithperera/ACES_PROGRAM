@@ -551,6 +551,7 @@
       scalar lock_orbs 
       scalar lock_occs 
       scalar level_shift
+      scalar do_dkh_order 
 #
       distributed Fa(mu,nu,kdiis) 
       distributed Fb(mu,nu,kdiis) 
@@ -4012,7 +4013,8 @@
       kill_damp   = damp_end
       lock_orbs   = lock_orbitals
       lock_occs   = lock_orbocc 
-
+      do_dkh_order = dkh_order 
+      
 #bgn_debug
       execute print_scalar diis_start
       execute print_scalar diis_order
@@ -4024,6 +4026,7 @@
       execute print_scalar kill_damp
       execute print_scalar lock_orbs
       execute print_scalar lock_occs
+      execute print_scalar do_dkh_order 
 #end_debg
 
 # Set the damp type and GUESS based on user input.
