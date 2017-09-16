@@ -340,7 +340,8 @@ c------------------------------------------------------------------------
      *                    bcc_conv, guess, lshft_a1, lshft_b1, 
      *                    damp_type, damp_tol, lindep_tol, 
      *                    lock_orbitals, lock_orbocc, intgrl_tol, 
-     *                    damp_end,dkh_order,
+     *                    damp_end,dkh_order,reference,ee_maxcyc,
+     *                    ee_guess,ee_denom,
      *
      *                    io_company_id, niocompany, need_predef,
      *                    npre_defined, dryrun)

@@ -1,17 +1,3 @@
-C  Copyright (c) 2003-2010 University of Florida
-C
-C  This program is free software; you can redistribute it and/or modify
-C  it under the terms of the GNU General Public License as published by
-C  the Free Software Foundation; either version 2 of the License, or
-C  (at your option) any later version.
-
-C  This program is distributed in the hope that it will be useful,
-C  but WITHOUT ANY WARRANTY; without even the implied warranty of
-C  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-C  GNU General Public License for more details.
-
-C  The GNU General Public License is included in this distribution
-C  in the file COPYRIGHT.
       SUBROUTINE RDBAS(TITLE,IENTRY,ICONTX,LUVMOL,INTTYP,NULLST,
      &                 IATNUM,NORD,seward,cpbasis,icpun)
 C
@@ -62,6 +48,15 @@ C      PARAMETER (NCNTMAX = 10)
 #include "baslims.par"
 #include "molstrct.com"
 C
+C   ...Watson... 
+C
+C          UNCONTRACT JUNK
+C
+#include "flags.com"
+#include "flags2.com"
+C
+C   ...Watson...
+C
       PARAMETER (NDI10 = MXATMS)
       PARAMETER (NDI9  = 250)
       parameter (lusew = 15)
@@ -71,9 +66,9 @@ C Ajith 07/04/96
       CHARACTER*(*) TITLE
       CHARACTER*(baslen) TITEL(ndi10)
 
-      LOGICAL YESNO,seward,cpbasis
+      LOGICAL YESNO,seward,cpbasis,UNCONTRACT
 CSSS      INTEGER SHELLANG,SHELLLOC,SHELLSIZ,SHELLPRM
-      DIMENSION EEXP(MXPRIM)
+      DIMENSION EEXP(MXPRIM), IORIGCNT(MXSHEL)      ! ...Watson... !
       DIMENSION LANGSH(MXSHEL),NINSHL(MXSHEL)
       DIMENSION IFNCSH(MXSHEL),ICNTSH(MXSHEL),COEFMT(MXPRIM*MXCORB)
 C
@@ -86,6 +81,29 @@ CSSS      COMMON /MOLSTR2/ NTOTPRIM,NTOTSHEL,IOFFPRIM,IOFFSHEL,IATOM
 C
       INDXF(I,J,N)=I+(J-1)*N
       REWIND(12)
+C
+C
+C   ...Watson...
+C
+C          Initialize UNCONTRACT
+C
+      CALL  IGETREC (1,'JOBARC','IFLAGS2',500,iflags2)
+      UNCONTRACT = (iflags2(158) .eq. 1)
+
+      IF (UNCONTRACT) THEN
+          IF (cpbasis .AND. (icpun .EQ. 13)) THEN
+              WRITE (*,'(/," @RDBAS-I: Contracted basis set will be",
+     +                           " read from GENBAS, uncontracted,",/,
+     +                      10X, " and then written to ZMAT.BAS")')
+          END IF
+
+          WRITE (*,'(/," @RDBAS-I: Uncontracted basis set will be",
+     +                            " written to MOL file")')
+      END IF
+
+C
+C   ...Watson...
+C
 C
 C LOCATE BASIS SET
 C
@@ -100,8 +118,27 @@ C
       READ(12,'((14I5))')(LANGSH(I),I=1,NSHELL)
       READ(12,'((14I5))')(ICNTSH(I),I=1,NSHELL)
       READ(12,'((14I5))')(IFNCSH(I),I=1,NSHELL)
+C
+C
+C   ...Watson...
+C
+C          If uncontracted basis set is desired, copy 
+C          IFNCSH into ICNTSH
+C
+C
+      IF (UNCONTRACT) THEN
+          DO I = 1,NSHELL
+             IORIGCNT (I) = ICNTSH (I)
+             ICNTSH   (I) = IFNCSH (I)
+          END DO
+      END IF
+
       if (cpbasis) then
-         write(icpun,'(a)') test(1:linblnk(test))
+         IF (.NOT. UNCONTRACT) THEN
+           write(icpun,'(a)') test(1:linblnk(test))
+         ELSE
+           write(icpun,'(a,a13)') test(1:linblnk(test))," UNCONTRACTED"
+         ENDIF
          write(icpun,*)
          write(icpun,'(I3)')NSHELL
          write(icpun,'((14I5))')(LANGSH(I),I=1,NSHELL)
@@ -218,6 +255,16 @@ C
        IOFFSHEL=IOFFSHEL+NSHELL
 C
         Z=FLOAT(IATNUM)
+C Marcel was using this to handle point-charges, but it is not
+C quite necessary (point charges can be handlled from MOL file). 
+C This would break the default ghost atom calcualtions since default 
+C ghost atoms should carry no charge. Ajith Perera, 12/2013. 
+CSSS        Write(6,"(a,3i)") " @-rdbas: iatnum ", iatnum
+CSSS        if (iatnum .eq. 110) then
+CSSS           write(6,*) ' Artificial charge on ghost atom '
+CSSS           Z= 1.6d0
+CSSS        endif
+
         IF(Z.GT.109.0)Z=0.0
 cYAU        WRITE(LUVMOL,'(A6,F14.8,I5,(10I5))')NULLST,Z,NORD,
         WRITE(LUVMOL,'(A6,F14.8,I5,(10I5))')'      ',Z,NORD,
@@ -244,6 +291,17 @@ C
       DO 100 ISHELL=1,NSHELL
        NPRIM=IFNCSH(ISHELL)
        NCONT=ICNTSH(ISHELL)
+C
+C
+C   ...Watson...
+C
+C          Address problem when there are more than 7 exponents.
+C
+C
+       IF (UNCONTRACT) NORGCNT=IORIGCNT(ISHELL)
+C
+C   ...Watson...
+C
        NJUNK=NINSHL(LANGSH(ISHELL)+1)
        READ(12,*)
        READ(12,'((5F14.6))')(EEXP(I),I=1,NPRIM)
@@ -260,9 +318,36 @@ C
         endif
        ENDIF
        IOFF0=IOFFPRIM
+       IPASS = 1                  ! Watson: Uncontracted basis set. !
        DO 101 IPRIM=1,NPRIM
-        LENG=MAX(1,NCONT)
-        READ(12,'((7(F10.7,1X)))')(COEFMT(J),J=1,LENG)
+C
+C
+C   ...Watson...
+C
+C                If uncontracted basis set is desired, set the
+C                appropriate elements to 1, the others to 0
+C
+C
+C
+C        LENG=MAX(1,NCONT)
+C        READ(12,'((7(F10.7,1X)))')(COEFMT(J),J=1,LENG)
+C
+        IF (.NOT. UNCONTRACT) THEN
+            LENG = MAX(1,NCONT)
+            READ(12,'((7(F10.7,1X)))')(COEFMT(J),J=1,LENG)
+        ELSE
+            LENG = MAX(1,NORGCNT)
+            READ(12,'((7(F10.7,1X)))')(COEFMT(J),J=1,LENG)
+            LENG = MAX (1,NPRIM)
+            DO J = 1, LENG
+               COEFMT (J) = 0.D0
+            END DO
+            COEFMT (IPASS) = 1.D0
+            IPASS = IPASS + 1
+        END IF
+C
+C   ...Watson...
+C
         if (cpbasis) write(icpun,'((7(F10.7,1X)))')(COEFMT(J),J=1,LENG)
         CALL SCOPY(NCONT,COEFMT,1,BASISCNT(IOFF0),NPRIM)
         IOFF0=IOFF0+1

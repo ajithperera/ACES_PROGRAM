@@ -18,7 +18,6 @@ c  Computes the set of OED integrals of types
 c
 c   type = 1 --> NAI integrals
 c          2 --> KIN integrals
-C  Changes to make GNU compiler happy, C. Taylor, 08/2013.
 c---------------------------------------------------------------------------
       implicit none
 
@@ -69,9 +68,9 @@ c---------------------------------------------------------------------------
      *                 zn(max_centers)
       double precision x1,y1,z1,x2,y2,z2, y
 
-      integer ECP, ntot, npad
+      integer ECP, ntot
       double precision ecp_erd
-      common /FECP/ntot, npad,  ecp_erd(2500,2500)
+      common /FECP/ntot, ecp_erd(2500,2500)
 
       common /flags/ iflags
       integer iflags(100)
@@ -238,14 +237,14 @@ c ------------------------------------------------------------------------
      *                 dbuf(dpkgscr+nfirst-1),a1,a2,b1,b2,1.0d0)
 
                endif ! nints 
-
-               IF (ECP .eq. 1) then 
-                  do a = a1, a2 
-                  do b = b1, b2 
-cTURN OFF VFL                     z(a,b) = z(a,b)+ecp_erd(a,b)
-                  enddo 
-                  enddo 
-               endif 
+C needs to be commented out ~victor
+c              IF (ECP .eq. 1) then 
+c                 do a = a1, a2 
+c                 do b = b1, b2 
+c                    z(a,b) = z(a,b)+ecp_erd(a,b)
+c                 enddo 
+c                 enddo 
+c              endif 
 
             endif 
          enddo   ! n shells

@@ -272,7 +272,7 @@ C
          INTEGER     DERBX,DERBY,DERBZ
          INTEGER     DERCX,DERCY,DERCZ
          INTEGER     IMAX,ZMAX
-         INTEGER     IN,OUT
+         INTEGER     IN,OUT,I
          INTEGER     INDEXA,INDEXB
          INTEGER     INDEXR,INDEXS
          INTEGER     INUCCEN
@@ -457,7 +457,7 @@ C
      +                        ZCORE (1) )
      +
      +
-C         WRITE (*,*) ' NIJ,NCENA,NCENB,NCENC: ',NIJ,NCENA,NCENB,NCENC
+         WRITE (*,*) ' NIJ,NCENA,NCENB,NCENC: ',NIJ,NCENA,NCENB,NCENC
 C         WRITE (*,*) ' Finished set derivative ijc triples '
 
          IF (EMPTY) THEN
@@ -522,9 +522,9 @@ C
          CASEII  = NCENB .GT. 0
          CASEIII = NCENC .GT. 0
 
-C         WRITE (*,*) ' CASEI   = ',CASEI
-C         WRITE (*,*) ' CASEII  = ',CASEII
-C         WRITE (*,*) ' CASEIII = ',CASEIII
+         WRITE (*,*) ' CASEI   = ',CASEI
+         WRITE (*,*) ' CASEII  = ',CASEII
+         WRITE (*,*) ' CASEIII = ',CASEIII
 
          ONECASE =      (CASEI  .AND.(.NOT.CASEII).AND.(.NOT.CASEIII))
      +             .OR. (CASEII .AND.(.NOT.CASEI) .AND.(.NOT.CASEIII))
@@ -655,6 +655,7 @@ C
      +
      +
 C            WRITE (*,*) ' Finished case I ab nai pcgto derv block '
+
 
                 CALL  OED__CTR_2INDEX_BLOCK
      +
@@ -787,10 +788,11 @@ C
                 MIJCEN  = MIJ * NCENC
                 MGIJCEN = NGQP * MIJCEN
 
-C                WRITE (*,*) "MIJCEN,MGIJCEN,NINT1DX,NINT1DY,NINT1DZ: ",
-C     +                       MIJCEN,MGIJCEN,NINT1DX,NINT1DY,NINT1DZ
+                WRITE (*,*) "MIJCEN,MGIJCEN,NINT1DX,NINT1DY,NINT1DZ: ",
+     +                       MIJCEN,MGIJCEN,NINT1DX,NINT1DY,NINT1DZ
 
-                CALL  OED__PVP_PCGTO_BLOCK
+CSSS                CALL  OED__PVP_PCGTO_BLOCK
+         CALL  OED__NAI_DERV_3CEN_PCGTO_BLOCK
      +
      +                     ( NBATCH,
      +                       NINT1DX,NINT1DY,NINT1DZ,
@@ -806,7 +808,7 @@ C     +                       MIJCEN,MGIJCEN,NINT1DX,NINT1DY,NINT1DZ
      +                       NUCLEI,
      +                       XN,YN,ZN,NCHARGE,
      +                       ICORE (INUCCEN),
-     +                       XCOMP,YCOMP,ZCOMP,
+CSS     +                       XCOMP,YCOMP,ZCOMP,
      +                       DERAX,DERAY,DERAZ,
      +                       DERBX,DERBY,DERBZ,
      +                       DERCX,DERCY,DERCZ,

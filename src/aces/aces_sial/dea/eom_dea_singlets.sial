@@ -4451,24 +4451,24 @@
 
      PARDO a, b, i, a1
            REQUEST temp1abia(a,b,i,a1) a1
-           t2abia(a,b,i,a) = temp1abia(a,b,i,a1)
-           PREPARE R2abia(a,b,i,a) = t2abia(a,b,i,a)
+           t2abia(a,b,i,a1) = temp1abia(a,b,i,a1)
+           PREPARE R2abia(a,b,i,a1) = t2abia(a,b,i,a1)
            DO k21
               if k21 == 13
-                 tabiaS(a,b,i,a,k21) = t2abia(a,b,i,a)
-                 PREPARE V2abia(a,b,i,a,k21) = tabiaS(a,b,i,a,k21)
+                 tabiaS(a,b,i,a1,k21) = t2abia(a,b,i,a1)
+                 PREPARE V2abia(a,b,i,a1,k21) = tabiaS(a,b,i,a1,k21)
                endif
            ENDDO k21
      ENDPARDO a, b, i, a1
 
      PARDO a, b, i, a1
            REQUEST temp1abjb(a,b,i,a1) a1
-           t2abia(a,b,i,a) = temp1abjb(a,b,i,a1)
-           PREPARE R2abjb(a,b,i,a) = t2abia(a,b,i,a)
+           t2abia(a,b,i,a1) = temp1abjb(a,b,i,a1)
+           PREPARE R2abjb(a,b,i,a1) = t2abia(a,b,i,a1)
            DO k21
               if k21 == 13
-                 tabiaS(a,b,i,a,k21) = t2abia(a,b,i,a)
-                 PREPARE V2abjb(a,b,i,a,k21) = tabiaS(a,b,i,a,k21)
+                 tabiaS(a,b,i,a1,k21) = t2abia(a,b,i,a1)
+                 PREPARE V2abjb(a,b,i,a1,k21) = tabiaS(a,b,i,a,k21)
                endif
            ENDDO k21
      ENDPARDO a, b, i, a1

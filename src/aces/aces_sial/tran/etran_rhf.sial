@@ -42,6 +42,8 @@
 # Declare indeces 
 # --------------- 
 #
+      Index Nroots   = 1, 12
+#
       aoindex mu     = 1, norb
       aoindex nu     = 1, norb
       aoindex lambda = 1, norb
@@ -77,34 +79,7 @@
       moaindex q2= baocc, eavirt
       moaindex q3= baocc, eavirt
 #
-# CIS vectors
-# -----------
-#
-      distributed VSTART1A1(a,i)
-      distributed VSTART1A2(a,i)
-      distributed VSTART1A3(a,i)
-      distributed VSTART1A4(a,i)
-      distributed VSTART1A5(a,i)
-      distributed VSTART1A6(a,i)
-      distributed VSTART1A7(a,i)
-      distributed VSTART1A8(a,i)
-      distributed VSTART1A9(a,i)
-      distributed VSTART1A10(a,i)
-      distributed VSTART1A11(a,i)
-      distributed VSTART1A12(a,i)
-#
-      distributed VSTART1B1(b,j)
-      distributed VSTART1B2(b,j)
-      distributed VSTART1B3(b,j)
-      distributed VSTART1B4(b,j)
-      distributed VSTART1B5(b,j)
-      distributed VSTART1B6(b,j)
-      distributed VSTART1B7(b,j)
-      distributed VSTART1B8(b,j)
-      distributed VSTART1B9(b,j)
-      distributed VSTART1B10(b,j)
-      distributed VSTART1B11(b,j)
-      distributed VSTART1B12(b,j)
+      distributed CisA_s_evecs(a,i,Nroots)
 #
 # Declare served arrays 
 # ---------------------
@@ -585,60 +560,14 @@
 #
      PROC READ_CIS
 #    -------------
-#
-      create VSTART1A1
-      create VSTART1A2
-      create VSTART1A3
-      create VSTART1A4
-      create VSTART1A5
-      create VSTART1A6
-      create VSTART1A7
-      create VSTART1A8
-      create VSTART1A9
-      create VSTART1A10
-      create VSTART1A11
-      create VSTART1A12
-      create VSTART1B1
-      create VSTART1B2
-      create VSTART1B3
-      create VSTART1B4
-      create VSTART1B5
-      create VSTART1B6
-      create VSTART1B7
-      create VSTART1B8
-      create VSTART1B9
-      create VSTART1B10
-      create VSTART1B11
-      create VSTART1B12
-#
+
+      create CisA_s_evecs 
       execute sip_barrier
-#
-      execute list_to_blocks VSTART1A1
-      execute list_to_blocks VSTART1B1
-      execute list_to_blocks VSTART1A2
-      execute list_to_blocks VSTART1B2
-      execute list_to_blocks VSTART1A3
-      execute list_to_blocks VSTART1B3
-      execute list_to_blocks VSTART1A4
-      execute list_to_blocks VSTART1B4
-      execute list_to_blocks VSTART1A5
-      execute list_to_blocks VSTART1B5
-      execute list_to_blocks VSTART1A6
-      execute list_to_blocks VSTART1B6
-      execute list_to_blocks VSTART1A7
-      execute list_to_blocks VSTART1B7
-      execute list_to_blocks VSTART1A8
-      execute list_to_blocks VSTART1B8
-      execute list_to_blocks VSTART1A9
-      execute list_to_blocks VSTART1B9
-      execute list_to_blocks VSTART1A10
-      execute list_to_blocks VSTART1B10
-      execute list_to_blocks VSTART1A11
-      execute list_to_blocks VSTART1B11
-      execute list_to_blocks VSTART1A12
-      execute list_to_blocks VSTART1B12
-#
+
+      execute liSt_to_blocks CisA_s_evecs
+
       execute read_list_to_blocks
+      execute sip_barrier 
 #
      ENDPROC READ_CIS
 #    -----------------
@@ -664,30 +593,8 @@
       execute blocks_to_list Viaai   
       execute blocks_to_list VSaaai 
       execute blocks_to_list Vpiqj(p,i,q,j)   
-      execute blocks_to_list VSTART1A1
-      execute blocks_to_list VSTART1B1
-      execute blocks_to_list VSTART1A2
-      execute blocks_to_list VSTART1B2
-      execute blocks_to_list VSTART1A3
-      execute blocks_to_list VSTART1B3
-      execute blocks_to_list VSTART1A4
-      execute blocks_to_list VSTART1B4
-      execute blocks_to_list VSTART1A5
-      execute blocks_to_list VSTART1B5
-      execute blocks_to_list VSTART1A6
-      execute blocks_to_list VSTART1B6
-      execute blocks_to_list VSTART1A7
-      execute blocks_to_list VSTART1B7
-      execute blocks_to_list VSTART1A8
-      execute blocks_to_list VSTART1B8
-      execute blocks_to_list VSTART1A9
-      execute blocks_to_list VSTART1B9
-      execute blocks_to_list VSTART1A10
-      execute blocks_to_list VSTART1B10
-      execute blocks_to_list VSTART1A11
-      execute blocks_to_list VSTART1B11
-      execute blocks_to_list VSTART1A12
-      execute blocks_to_list VSTART1B12 
+      execute blocks_to_list CISA_s_evecs  
+
       execute write_blocks_to_list
       execute server_barrier
 # 

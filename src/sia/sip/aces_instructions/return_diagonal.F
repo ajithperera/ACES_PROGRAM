@@ -61,6 +61,8 @@ c
 c---------------------------------------------------------------------------
 
       implicit none
+      include 'parallel_info.h'
+      include 'int_gen_parms.h'
       integer a, b, n 
       double precision array1(n,n)
       double precision array2(n,n)
@@ -72,6 +74,9 @@ c---------------------------------------------------------------------------
       enddo
       enddo
 
+CSSS      if (me .eq.0) then
+CSSS         call output(array2,1,n,1,n,n,n,1)
+CSSS      endif 
       return
       end
 

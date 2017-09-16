@@ -8,6 +8,7 @@
       aoindex nu     = 1, norb
       aoindex lambda = 1, norb
       aoindex sigma  = 1, norb
+     
 
       TEMP Tmp_1SOIX(mu,nu)
       TEMP Tmp_1SOIY(mu,nu)
@@ -16,6 +17,7 @@
       TEMP Tmp_2SOIX(mu,nu,lambda,sigma)
       TEMP Tmp_2SOIY(mu,nu,lambda,sigma)
       TEMP Tmp_2SOIZ(mu,nu,lambda,sigma)
+      scalar one
 
       PARDO mu, nu
 
@@ -27,7 +29,8 @@
      
       ENDPARDO mu, nu
 
-     
+      one = 1.0
+      execute print_scalar one
 
       PARDO mu, nu, lambda, sigma
 

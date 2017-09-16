@@ -426,6 +426,7 @@
       scalar worder  
       scalar n1 
       scalar n2 
+      scalar do_dkh_order
 
       distributed Fa(mu,nu,kdiis) 
       distributed Fb(mu,nu,kdiis) 
@@ -437,6 +438,7 @@
       temp tdd(d1,d2) 
       temp t1dd(d1,d2) 
       local BB(kdiis,kdiis) 
+      static DKH(mu,nu)
 #
 # ---------------------------------------------------------------------------- 
 #
@@ -1365,8 +1367,12 @@
        DO mu    
        DO nu   
 #
-             Txx(mu,nu)        = 0.0  
-             execute return_h1 txx 
+            Txx(mu,nu)        = 0.0  
+            If do_dkh_order > 0.0
+               Txx(mu,nu) = DKH(mu,nu)
+            Else
+               execute return_h1 txx
+            Endif
 #
              PUT Fpq_a(mu,nu) += Txx(mu,nu) 
              PUT Fpq_b(mu,nu) += Txx(mu,nu) 
@@ -1404,7 +1410,11 @@
              GET DHFb(mu,nu) 
 #
              Txx(mu,nu)   = 0.0  
-             execute return_h1 txx 
+             If do_dkh_order > 0.0
+                Txx(mu,nu) = DKH(mu,nu)
+             Else
+                execute return_h1 txx
+             Endif
 #
              T1xx(mu,nu)  = Txx(mu,nu) 
              T1xx(mu,nu) += Fpq_a(mu,nu) 
@@ -3080,7 +3090,6 @@
 #     Define a few constants 
 #     ---------------------- 
 #
-      execute load_balance_off 
       ecrit  = scf_conv # Energy tolerance  
 #     damp   = 0.0 
       etemp  = 1.0 
@@ -3101,6 +3110,7 @@
       diis_end = 150.0 
       diis_order = 8.0 
       diis_max_order = 10.0 
+      do_dkh_order= dkh_order
 
       diis_start = 0.0
       do kbeg
@@ -3112,12 +3122,25 @@
          diis_order += 1.0
       ENDDO korder
 
-      if diis_order > 9.0  
-         diis_order = 9.0
-      endif
-
       execute print_scalar diis_start
       execute print_scalar diis_order
+
+      EXECUTE GET_MY_RANK RANK
+      IF DO_DKH_ORDER > 0.0
+          IF RANK == 0.0
+
+            DO mu
+            DO nu
+               TXX(mu,nu) = 0.0
+               EXECUTE RETURN_1EL_DKH TXX
+               DKH(mu,nu) = TXX(mu,nu)
+            ENDDO nu
+            ENDDO mu
+
+          ENDIF
+      ENDIF
+      execute BROADCAST_ARRAY DKH
+      execute sip_barrier
 #
 #
 #     Create the one-particle arrays needed for the computation. 
@@ -3210,16 +3233,16 @@
          txx(mu,nu) = oed_ovl(mu,nu)  
       ENDDO nu
       ENDDO mu
-      DO mu 
-      DO p 
-         ca(mu,p) = 0.0 
-      ENDDO p 
-      ENDDO mu 
-      DO mu 
-      DO q 
-         cb(mu,q) = 0.0 
-      ENDDO q 
-      ENDDO mu 
+      DO mu
+      DO p
+         ca(mu,p) = 0.0
+      ENDDO p
+      ENDDO mu
+      DO mu
+      DO q
+         cb(mu,q) = 0.0
+      ENDDO q
+      ENDDO mu
 
       dens_check = -1.0
       execute scf_atom dens_check 
@@ -3237,13 +3260,12 @@
          ENDDO nu
          ENDDO mu
 
-         endif 
-
          damp = 0.0 
          damp1 = 1.0 
 
+         endif 
+
       endif
-      execute load_balance_on 
       execute sip_barrier
 
 #     Construct the array S**(-1/2) 

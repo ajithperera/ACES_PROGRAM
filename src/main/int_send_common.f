@@ -25,15 +25,17 @@ c-------------------------------------------------------------------------
       include 'machine_types.h'
       include 'fmo.h'
 
-      integer ierr, len
+      integer ierr, len, ndim
       integer*8 ixx, c_loc64
 
+      integer iflags(100), iflags2(500)
       common /flags/ iflags
-      integer iflags(100) 
+      common /flags/ iflags2
 
       integer ECP, ntot, npad
-      double precision ecp_erd
+      double precision ecp_erd, Dkh_ints
       common /FECP/ntot, npad, ecp_erd(2500,2500)
+      common /DKH/ndim, Dkh_ints(2500,2500)
 
 c---------------------------------------------------------------------------
 c   Broadcast int_gen_parms common block.
@@ -69,7 +71,16 @@ c---------------------------------------------------------------------------
       len = 2500*2500+1 
       call mpi_bcast(ecp_erd, len, mpi_double_precision, 0, 
      *               mpi_comm_world, ierr) 
+c---------------------------------------------------------------------------
+c  Broadcast DKH common block.
+c---------------------------------------------------------------------------
 
+      call mpi_bcast(ndim, 1, mpi_integer, 0,
+     *               mpi_comm_world, ierr)
+
+      len = 2500*2500+1
+      call mpi_bcast(Dkh_ints, len, mpi_double_precision, 0,
+     *               mpi_comm_world, ierr)
 c---------------------------------------------------------------------------
 c     basis linear dependency threshold for SCF calculation
 C     No longer needed,moved to the int_gen_parm common block.

@@ -1,0 +1,2835 @@
+                        SIAL EOM_PROP_CCSD_RHF
+#                       ---------------------
+#
+      Index moment   = 1, 3
+      Index secmom   = 1, 6
+      Index octmom   = 1, 10
+      index indone   = 1, 1
+      Index kindex26 = 1, 26
+      Index kindex12 = 1, 12
+      Index Kroot    = 1, 12
+      Index Nroots   = 1, 12
+      Index Mroots   = 1, 12
+      Index Iroots   = 1, 12
+      Index Jroots   = 1, 12
+      INdex Jatom    = 1, Natoms 
+
+      aoindex mu     = 1, norb
+      aoindex nu     = 1, norb
+      aoindex lambda = 1, norb
+      aoindex sigma  = 1, norb
+
+      moaindex i = baocc, eaocc
+      moaindex i1= baocc, eaocc
+      moaindex i2= baocc, eaocc
+      moaindex i3= baocc, eaocc
+#
+      moaindex a = bavirt, eavirt
+      moaindex a1= bavirt, eavirt
+      moaindex a2= bavirt, eavirt
+      moaindex a3= bavirt, eavirt
+#
+      moaindex j = baocc, eaocc
+      moaindex j1= baocc, eaocc
+      moaindex j2= baocc, eaocc
+      moaindex j3= baocc, eaocc
+#
+      moaindex b = bavirt, eavirt
+      moaindex b1= bavirt, eavirt
+      moaindex b2= bavirt, eavirt
+      moaindex b3= bavirt, eavirt
+#
+      moaindex p = baocc, eavirt
+      moaindex p1= baocc, eavirt
+      moaindex p2= baocc, eavirt
+      moaindex p3= baocc, eavirt
+#
+      moaindex q = baocc, eavirt
+      moaindex q1= baocc, eavirt
+      moaindex q2= baocc, eavirt
+      moaindex q3= baocc, eavirt
+
+#
+      LOCAL  GRDSECM (secmom,indone)
+      LOCAL  EXCSECM (secmom,indone)
+      LOCAL  GRDQUAD (secmom,indone)
+      LOCAL  EXCQUAD (secmom,indone)
+      LOCAL  GRDOCTM (octmom,indone)
+      LOCAL  EXCOCTM (octmom,indone)
+
+      SERVED  R2AA_VECS (a,i,a1,i1,kroot)
+      SERVED  R2BB_VECS (b,j,b1,j1,kroot)
+      SERVED  R2AB_VECS (a,i,b ,j ,kroot)
+
+      SERVED  L2AA_VECS (i,a,i1,a1,kroot)
+      SERVED  L2BB_VECS (j,b,j1,b1,kroot)
+      SERVED  L2AB_VECS (i,a,j,b,kroot)
+
+      SERVED  L2AA_VECS_NRML (i,a,i1,a1,kroot)
+      SERVED  L2AB_VECS_NRML (i,a,j,b,kroot)
+
+      SERVED  R2AA_VECS_NRML (a,i,a1,i1,kroot)
+      SERVED  R2AB_VECS_NRML (a,i,b,j,kroot)
+
+      SERVED  R2AA (a,i,a1,i1)
+      SERVED  R2BB (b,j,b1,j1)
+      SERVED  R2AB (a,i,b,j)
+
+      SERVED  L2AA (i,a,i1,a1)
+      SERVED  L2BB (j,b,j1,b1)
+      SERVED  L2AB (i,a,j,b)
+
+      SERVED  A2AA (i,a,i1,a1)
+      SERVED  A2BB (j,b,j1,b1)
+      SERVED  A2AB (i,a,j,b)
+
+      DISTRIBUTED  R1A_VECS (a,i,kroot)
+      DISTRIBUTED  R1B_VECS (b,j,kroot)
+
+      DISTRIBUTED  L1A_VECS (i,a,kroot)
+      DISTRIBUTED  L1A_VECS_NRML (i,a,kroot)
+      DISTRIBUTED  R1A_VECS_NRML (a,i,kroot)
+      DISTRIBUTED  L1B_VECS (j,kroot)
+
+      DISTRIBUTED  R1A (a,i)
+      DISTRIBUTED  R1B (b,j)
+
+      DISTRIBUTED  L1A (i,a)
+      DISTRIBUTED  L1B (j,b)
+
+      DISTRIBUTED  A1A (i,a)
+      DISTRIBUTED  A1B (j,b)
+
+      DISTRIBUTED  T1A (a,i)
+      DISTRIBUTED  T1B (b,j)
+      LOCAL        LL1A (i,a)
+      LOCAL        LA1A (i,a)
+      LOCAL        LT1A (a,i)
+
+      DISTRIBUTED  EE  (kindex12,indone)
+      TEMP         TEE (kindex12,indone)
+
+      TEMP  TMOM_DATA (kindex26,kindex26)
+
+      SERVED  T2AA (a,i,a1,i1)
+      SERVED  T2AB (a,i,b,j)
+      SERVED  T2BB (b,j,b1,j1)
+
+      TEMP  tpipi (p,i,p1,i1)
+      TEMP  tiaia (i,a,i1,a1)
+      TEMP  t1iaia (i,a,i1,a1,MROOTS)
+      TEMP  t1aiai (a,i,a1,i1,MROOTS)
+      TEMP  tjbjb (j,b,j1,b1)
+      TEMP  tiajb (i,a,j ,b )
+      TEMP  t1iajb (i,a,j,b,MROOTS)
+      TEMP  t1aibj (a,i,b,j,MROOTS)
+      TEMP  taibj (a,i,b ,j )
+      TEMP  taibj1(a,i,b ,j )
+      TEMP  taiai (a,i,a1,i1)
+      TEMP  taiai1(a,i,a1,i1)
+      TEMP  tbjbj (b,j,b1,j1)
+      TEMP  tpppp (p,p1,q,q1)
+      TEMP  t1pppp (p,p1,q,q1)
+      TEMP  T1XX(MROOTS,NROOTS)
+
+      TEMP  RNN(NROOTS,INDONE)
+      TEMP  ONN(NROOTS,INDONE)
+      TEMP  LNN(NROOTS,INDONE)
+      TEMP  tia  (i,a)
+      TEMP  t1ia  (i,a,MROOTS)
+      TEMP  t1ai  (a,i,MROOTS)
+      TEMP  tia1 (i,a)
+      TEMP  tia2 (i,a)
+      TEMP  tia3 (i,a)
+      TEMP  tai  (a,i)
+      TEMP  tai1 (a,i)
+      TEMP  tai2 (a,i)
+      TEMP  tjb  (j,b)
+      TEMP  tjb1 (j,b)
+      TEMP  tjb2 (j,b)
+      TEMP  tjb3 (j,b)
+      TEMP  tbj  (b,j)
+      TEMP  tbj2 (b,j)
+      TEMP  tbj3 (b,j)
+      TEMP  tii  (i1,i)
+      TEMP  tjj  (j1,j)
+      TEMP  taa  (a,a1)
+      TEMP  taa2 (a,a1)
+      TEMP  tbb  (b,b1)
+      TEMP  tbb2 (b,b1)
+
+      TEMP  tii1 (i,i1)
+      TEMP  tii2 (i,i1)
+      TEMP  tjj1 (j,j1)
+      TEMP  tjj2 (j,j1)
+      TEMP  taa1 (a,a1)
+      TEMP  tbb1 (b,b1)
+      LOCAL  lai (a,i)
+      LOCAL  lbj (b,j)
+      LOCAL  lia (i,a)
+      LOCAL  ljb (j,b)
+      LOCAL  laa (a,a1)
+      LOCAL  lbb (b,b1)
+      LOCAL  lii (i,i1)
+      LOCAL  ljj (j,j1)
+      LOCAL  lxx (mu,nu)
+
+      TEMP  txx  (mu,nu)
+      TEMP  t2xx  (mu,nu)
+      TEMP  txx2 (mu,nu)
+      TEMP  txx3 (mu,nu)
+      TEMP  txi  (mu,i)
+      TEMP  txj  (mu,j)
+      TEMP  txa  (mu,a)
+      TEMP  txb  (mu,b)
+
+      DISTRIBUTED  HBAR_ia (i,a)
+      DISTRIBUTED  HBAR_jb (j,b)
+
+      SERVED  Vaaii  (a,a1,i,i1)
+      SERVED  Viaai  (i,a,a1,i1)
+      SERVED  Vaaai  (a,a1,a2,i)
+
+      DISTRIBUTED  DENS_VV_A (a,a1)
+      DISTRIBUTED  DENS_OO_A (i,i1)
+      DISTRIBUTED  DENS_OV_A (i,a)
+      DISTRIBUTED  DENS_VO_A (a,i)
+
+      distributed T2L2_VV_A (a,a1)
+      distributed R2L2_VV_A (a,a1)
+      distributed DENS_INT_OV_A (i,a)
+      distributed T1L1_OO_A (i,i1)
+      distributed T2L2_OO_A (i,i1)
+      distributed R2L2_OO_A (i,i1)
+      served VSpipi(p1,i,p,i1)
+      served VSaaai(a2,a,a1,i)
+#
+      served VSqjqj(q1,j,q,j1)
+      served Vjbbj(j,b1,b,j1)
+      served Vbbjj(b,b1,j,j1)
+#
+      served Vjbii(j,b,i,i1)
+      served Vbbii(b,b1,i,i1)
+      served Vbbai(b,b1,a,i)
+#
+      served Vpiqj(p,i,q,j)
+      served Vaajj(a,a1,j,j1)
+      served Viabj(i,a,b,j)
+      served Vaabj(a,a1,b,j)
+
+      STATIC  DENSITY (mu,nu)
+     
+      DISTRIBUTED ORTHO_COEF(NROOTS,MROOTS)
+      DISTRIBUTED DREE(NROOTS,INDONE)
+      DISTRIBUTED DLEE(NROOTS,INDONE)
+
+      STATIC DENS_OO_AA(i,i1)
+      STATIC DENS_VV_AA(a,a1)
+      STATIC AMP_PRINT_A(A,I)
+      STATIC R0_VEC(NROOTS,INDONE)
+      STATIC OMEGA2_VEC(NROOTS,INDONE)
+      STATIC OVLP_CHECK(NROOTS,MROOTS)
+      STATIC REE(NROOTS,INDONE)
+      STATIC LEE(NROOTS,INDONE)
+      STATIC DIFF(NROOTS,INDONE)
+
+
+      DISTRIBUTED  AO_DENS (mu,nu)
+      DISTRIBUTED  DHF (mu,nu)
+      LOCAL  liaia  (i,a,i1,a1)
+      LOCAL  laiai  (a,i,a1,i1)
+      LOCAL  laibj  (a,i,b, j )
+      LOCAL  liajb  (i,a,j, b )
+      LOCAL  laiai2 (a,i,a1,i1)
+      LOCAL  laibj2 (a,i1,b,j )
+      LOCAL  laiai3 (a,i,a1,i2)
+      LOCAL  laiai4 (a,i2,a1,i)
+      LOCAL  laiai5 (a,i2,a1,i)
+      LOCAL  laibj3 (a,i1,b, j)
+      LOCAL  laibj4 (a,j,b,i)
+      LOCAL  laibj5 (a,j,b,i)
+      LOCAL  lbiaj  (b,i,a,j)
+      LOCAL  lbiaj2 (b,i,a,j)
+
+      LOCAL  lbjbj  (b,j,b1,j1)
+      LOCAL  lbjbj2 (b,j,b1,j1)
+      LOCAL  lbjbj3 (b,j,b1,j2)
+      LOCAL  lbjbj4 (b,j2,b1,j)
+      LOCAL  lbjbj5 (b,j2,b1,j)
+
+      SCALAR  RANK
+      SCALAR  ZERO
+      SCALAR  ONE
+      SCALAR  TWO
+      SCALAR  THREE
+      SCALAR  HALF
+      SCALAR  tmpnuc
+      SCALAR  dipnuc
+      SCALAR  dipnucx
+      SCALAR  dipnucy
+      SCALAR  dipnucz
+      SCALAR  AMPLTHRESH
+      SCALAR  OMEGA
+      SCALAR  OMEGA2
+      SCALAR  OLD_R0
+      SCALAR  R0
+      SCALAR  R0_KEEP
+      SCALAR  L0
+      SCALAR  R0_THRESH
+      SCALAR  LOGRIGHT
+      SCALAR  GROUNDSTATE
+      SCALAR  EXCITESTATE
+      SCALAR  iroot
+      SCALAR  imomcount
+      SCALAR  rootcount
+      SCALAR  root_thresh
+      SCALAR  etemp
+      SCALAR  etemp1
+      SCALAR  etemp2
+      SCALAR  etemp3
+      SCALAR  etemp4
+      SCALAR  etemp5
+      SCALAR  etemp6
+      SCALAR  sum1
+      SCALAR  sum2
+      SCALAR  sum3
+      SCALAR  sum4
+      SCALAR  sum5
+      SCALAR  sum6
+      SCALAR  tmpa
+      SCALAR  tmpb
+      SCALAR  suma
+      SCALAR  sumb
+      SCALAR  OSC_STREN
+      SCALAR  OSC_STREN1
+      SCALAR  OSC_STREN2
+      SCALAR  OSC_STREN3
+      SCALAR  OSC_STREN_X
+      SCALAR  OSC_STREN_Y
+      SCALAR  OSC_STREN_Z
+      SCALAR  DIP_SCF_X
+      SCALAR  DIP_SCF_Y
+      SCALAR  DIP_SCF_Z
+      SCALAR  DIP_EXC_X
+      SCALAR  DIP_EXC_Y
+      SCALAR  DIP_EXC_Z
+      SCALAR  DIP_GRD_X
+      SCALAR  DIP_GRD_Y
+      SCALAR  DIP_GRD_Z
+      SCALAR  DIP_MOM_X
+      SCALAR  DIP_MOM_Y
+      SCALAR  DIP_MOM_Z
+      SCALAR  DIP_MOM_X_L
+      SCALAR  DIP_MOM_Y_L
+      SCALAR  DIP_MOM_Z_L
+      SCALAR  DIP_MOM_X_R
+      SCALAR  DIP_MOM_Y_R
+      SCALAR  DIP_MOM_Z_R
+      SCALAR  DIPXY
+      SCALAR  DIPXZ
+      SCALAR  DIPYZ
+      SCALAR  POLXX
+      SCALAR  POLYY
+      SCALAR  POLZZ
+      SCALAR  POLXY
+      SCALAR  POLXZ
+      SCALAR  POLYZ
+      SCALAR  POLTOTXX
+      SCALAR  POLTOTYY
+      SCALAR  POLTOTZZ
+      SCALAR  POLTOTXY
+      SCALAR  POLTOTXZ
+      SCALAR  POLTOTYZ
+      SCALAR  SECONDMOM
+      SCALAR  LRNORM
+      Scalar  RNORM
+      Scalar LNORM
+      Scalar NORM
+      Scalar INCREM
+      SCALAR Ncount
+      SCALAR R_OMEGA
+      SCALAR MYROOT
+      SCALAR PROOT
+      SCALAR MCOUNT 
+      SCALAR HC_A
+      SCALAR HC_AA
+      SCALAR HC_AB
+      SCALAR TMP
+      SCALAR SUMAA
+      SCALAR SUMAB
+      SCALAR TARGET_ROOTS 
+      SCALAR DIFF_NORM
+      SCALAR EOM_THRES
+      SCALAR FACT
+      SCALAR INV_NORM
+      SCALAR R2
+      SCALAR TINY 
+      SCALAR INEXT
+
+      SCALAR  esum
+      SCALAR  evfev
+      SCALAR  Idens
+
+#    ----------------
+      PROC BEGIN_PREP
+#    ----------------
+#
+      CREATE L1A
+      CREATE L1B
+      CREATE DENS_VV_A
+      CREATE DENS_OO_A
+      CREATE DENS_OV_A
+      CREATE DENS_VO_A
+      CREATE AO_DENS
+      CREATE T2L2_VV_A
+      CREATE R2L2_VV_A
+      CREATE DENS_INT_OV_A
+      CREATE T1L1_OO_A
+      CREATE T2L2_OO_A
+      CREATE R2L2_OO_A
+
+      Execute sip_barrier 
+
+      ENDPROC  BEGIN_PREP
+#     -------------------
+#
+      PROC END_PREP
+#    --------------
+#
+      DELETE L1A
+      DELETE L1B
+      DELETE DENS_VV_A
+      DELETE DENS_OO_A
+      DELETE DENS_OV_A
+      DELETE DENS_VO_A
+      DELETE AO_DENS
+      DELETE T2L2_VV_A
+      DELETE R2L2_VV_A
+      DELETE DENS_INT_OV_A
+      DELETE T1L1_OO_A
+      DELETE T2L2_OO_A
+      DELETE R2L2_OO_A
+
+      EXECUTE  SIP_BARRIER
+#
+#    ------------------
+      ENDPROC  END_PREP
+#    ------------------
+
+#    ------------------
+      PROC  HF_DENSITY
+#    ------------------
+#
+#
+      PARDO  mu, nu
+         txx (mu,nu) = 0.0
+         PUT  DHF (mu,nu) = txx (mu,nu)
+      ENDPARDO  mu, nu
+      EXECUTE  SIP_BARRIER
+
+      PARDO mu, nu, i
+
+            txi (nu,i )       = CA (nu,i)
+            txx (mu,nu)       = CA (mu,i) * txi (nu,i)
+            txx (mu,nu)      *= 2.0
+
+            PUT  DHF (mu,nu) += txx (mu,nu)
+
+      ENDPARDO mu, nu, i
+
+      EXECUTE  SIP_BARRIER
+
+      IDENS = 0.0
+      EXECUTE  DENS2JOBARC  DENSITY  IDENS
+#
+#
+#          ...ready!
+#
+#
+      ENDPROC  HF_DENSITY
+#     -------------------
+#
+      PROC PUT_ZERO_IN_Rk
+#    -------------------
+#
+      PARDO  i, a
+         tai(a,i) = 0.0
+         PUT  R1A(a,i) = tai (a,i)
+      ENDPARDO  i, a
+
+      PARDO  a, i, a1, i1
+         taiai (a,i,a1,i1) = 0.0
+         PREPARE  R2AA (a,i,a1,i1) = taiai (a,i,a1,i1)
+      ENDPARDO  a, i, a1, i1
+
+      PARDO  a, i, b, j
+         taibj (a,i,b,j) = 0.0
+         PREPARE  R2AB (a,i,b,j) = taibj (a,i,b,j)
+
+      ENDPARDO  a, i, b, j
+      EXECUTE  SERVER_BARRIER
+#
+      ENDPROC  PUT_ZERO_IN_Rk
+#    ------------------------
+
+      PROC  PUT_IN_Rk
+#    ----------------
+#
+   NCOUNT = 0.0
+   DO NROOTS
+      NCOUNT += 1.0
+
+      IF NCOUNT == MYROOT
+      PARDO  i, a
+         GET R1A_VECS(a,i,NROOTS)
+         tai(a,i) = R1A_VECS(a,i,NROOTS)
+         PUT  R1A(a,i) = tai (a,i)
+      ENDPARDO  i, a
+
+      PARDO  a, i, a1, i1
+         REQUEST R2AA_VECS(a,i,a1,i1,NROOTS) i1
+         taiai (a,i,a1,i1) = R2AA_VECS(a,i,a1,i1,NROOTS)
+         PREPARE  R2AA (a,i,a1,i1) = taiai (a,i,a1,i1)
+
+      ENDPARDO  a, i, a1, i1
+
+      PARDO  a, i, b, j
+
+         REQUEST R2AB_VECS(a,i,b,j,NROOTS) j
+         taibj (a,i,b,j) = R2AB_VECS(a,i,b,j,NROOTS)
+         PREPARE  R2AB (a,i,b,j) = taibj (a,i,b,j) 
+
+      ENDPARDO  a, i, b, j
+
+      ENDIF 
+
+    ENDDO NROOTS
+    EXECUTE  SERVER_BARRIER
+#
+    ENDPROC  PUT_IN_Rk
+#  -------------------
+
+    PROC  PUT_IN_Lk
+#  ----------------
+#
+   IF  LOGRIGHT == ONE
+  
+      PARDO  i, a
+         GET A1A(i,a)
+         tia(i,a) = A1A(i,a)
+         PUT L1A(i,a) = tia(i,a)
+         PUT L1B(i,a) = tia(i,a)
+      ENDPARDO  i, a
+
+      PARDO  a, i, a1, i1
+         REQUEST A2AA(i,a,i1,a1) a1
+         tiaia(i,a,i1,a1) = A2AA(i,a,i1,a1)
+         PREPARE L2AA(i,a,i1,a1) = tiaia(i,a,i1,a1)
+      ENDPARDO  a, i, a1, i1
+
+      PARDO  a, i, b, j
+         REQUEST A2AB(i,a,j,b) b
+         tiajb(i,a,j,b) = A2AB(i,a,j,b)
+         PREPARE L2AB(i,a,j,b) = tiajb(i,a,j,b)
+      ENDPARDO  a, i, b, j
+
+   ENDIF 
+     
+   IF LOGRIGHT == ZERO
+
+      NCOUNT = 0.0
+      DO NROOTS
+         NCOUNT += 1.0
+
+         IF NCOUNT == MYROOT
+            PARDO  i, a
+                GET L1A_VECS(i,a,NROOTS)
+                tia(i,a) = L1A_VECS(i,a,NROOTS)
+                PUT  L1A(i,a) = tia(i,a)
+                PUT  L1B(i,a) = tia(i,a)
+            ENDPARDO  i, a
+
+            PARDO  a, i, a1, i1
+                REQUEST L2AA_VECS(i,a,i1,a1,NROOTS) a1
+                tiaia(i,a,i1,a1) = L2AA_VECS(i,a,i1,a1,NROOTS)
+                PREPARE L2AA(i,a,i1,a1) = tiaia(i,a,i1,a1)
+            ENDPARDO  a, i, a1, i1
+
+            PARDO  a, i, b, j
+                REQUEST L2AB_VECS(i,a,j,b,NROOTS) b
+                tiajb(i,a,j,b) = L2AB_VECS(i,a,j,b,NROOTS)
+                PREPARE  L2AB (i,a,j,b) = tiajb(i,a,j,b)
+            ENDPARDO  a, i, b, j
+         ENDIF
+       ENDDO NROOTS
+    ENDIF 
+
+    EXECUTE SERVER_BARRIER 
+
+    ENDPROC PUT_IN_Lk
+#   -----------------
+
+      PROC  R0_COMPUTE
+#    ------------------
+#
+#
+#    Compute R  due to the formula
+#             0
+#                 _               -1
+#        R  = <0|(H R) |0> * omega
+#         0           c
+#
+#          ...Compute the contributions...
+#
+#
+#bgn_debug
+      tmpa=0.0
+      tmpb=0.0
+      suma=0.0
+      sumb=0.0
+      pardo i,a
+         get hbar_ia(i,a)
+         tmp = hbar_ia(i,a) * hbar_ia(i,a)
+         tmpa += tmp
+      endpardo i,a
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa=0.0
+      tmpb=0.0
+      suma=0.0
+      sumb=0.0
+      pardo i,a
+         get r1a(a,i)
+         tmp =  r1a(a,i) * r1a(a,i)
+         tmpa += tmp
+      endpardo i,a
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa =0.0
+      suma =0.0
+      pardo a,i1,a1,i
+            request VSpipi (a,i,a1,i1) i1
+            tmp = VSpipi (a,i,a1,i1) * VSpipi (a,i,a1,i1)
+            tmpa += tmp
+      endpardo a,i1,a1,i
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa =0.0
+      suma =0.0
+      pardo a,i1,a1,i
+            request r2aa(a,i,a1,i1) i1
+            tmp = r2aa(a,i,a1,i1) * r2aa (a,i,a1,i1)
+            tmpa += tmp
+      endpardo a,i1,a1,i
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+
+      tmpa =0.0
+      suma =0.0
+      pardo a,i,b,j
+            request Vpiqj (a,i,b,j) i
+            tmp =  Vpiqj (a,i,b,j) *  Vpiqj (a,i,b,j)
+            tmpa += tmp
+      endpardo a,i,b,j
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+#end_debug
+
+      R0 = 0.0
+
+      etemp1 = 0.0
+      etemp2 = 0.0
+      etemp3 = 0.0
+      etemp4 = 0.0
+      etemp5 = 0.0
+      sum1 = 0.0
+      sum2 = 0.0
+      sum3 = 0.0
+      sum4 = 0.0
+      sum5 = 0.0
+
+      PARDO  a, i
+
+         GET  HBAR_ia (i,a)
+         GET  R1A     (a,i)
+         tai (a,i) = R1A (a,i)
+         etemp = HBAR_ia (i,a) * R1A (a,i)
+         sum1 += etemp
+
+      ENDPARDO  a, i
+
+      PARDO  b, j
+
+         GET  HBAR_jb (j,b)
+         GET  R1B     (b,j)
+         etemp = HBAR_jb (j,b) * R1B (b,j)
+         sum2 += etemp
+
+      ENDPARDO  b, j
+      PARDO  a, a1, i, i1
+
+         REQUEST  R2AA   (a,i,a1,i1) i1
+         REQUEST  VSpipi (a,i,a1,i1) i1
+         etemp = R2AA (a,i,a1,i1) * VSpipi (a,i,a1,i1)
+         sum3 += etemp
+
+      ENDPARDO  a, a1, i, i1
+
+      PARDO  b, b1, j, j1
+
+         REQUEST  R2AA   (b,j,b1,j1) j1
+         REQUEST  VSqjqj (b,j,b1,j1) j1
+         etemp = R2AA (b,j,b1,j1) * VSqjqj (b,j,b1,j1)
+         sum4 += etemp
+
+      ENDPARDO  b, b1, j, j1
+
+      PARDO  a, i, b, j
+
+         REQUEST  R2AB  (a,i,b,j) j
+         REQUEST  Vpiqj (a,i,b,j) j
+         etemp = R2AB (a,i,b,j) * Vpiqj (a,i,b,j)
+         sum5 += etemp
+
+      ENDPARDO  a, i, b, j
+
+      EXECUTE  SERVER_BARRIER
+
+      collective  etemp1 += sum1
+      collective  etemp2 += sum2
+      collective  etemp3 += sum3
+      collective  etemp4 += sum4
+      collective  etemp5 += sum5
+
+      etemp3 *= 0.25
+      etemp4 *= 0.25
+
+      R0 += etemp1
+      R0 += etemp2
+      R0 += etemp3
+      R0 += etemp4
+      R0 += etemp5
+
+#bgn_debug
+      execute print_scalar etemp1
+      execute print_scalar etemp2
+      execute print_scalar etemp3
+      execute print_scalar etemp4
+      execute print_scalar etemp5
+#end_debug
+
+
+      EXECUTE  SIP_BARRIER
+      R0      = R0 / OMEGA
+      OMEGA2  = TWO / THREE
+      OMEGA2 *= OMEGA
+#bgn_debug
+      EXECUTE  PRINT_SCALAR  R0
+#end_debug
+#
+#
+#          ...ready!
+#
+#
+      ENDPROC  R0_COMPUTE
+#    -----------------------
+
+#    -----------------------
+      PROC  COMPUTE_DENSITY
+#    -----------------------
+#
+      execute load_balance_on
+#
+# VFL
+      PARDO  a, a1
+
+         taa(a,a1) = 0.0
+
+         DO i
+            GET           L1A (i,a1)
+            taa1 (a,a1) = LT1A (a,i) * L1A (i,a1)
+            taa(a,a1)  += taa1(a,a1)
+         ENDDO i
+
+         taa (a,a1)           *= R0
+         PUT  DENS_VV_A (a,a1) = taa (a,a1)
+#
+#
+#          ...Initialize intermediates...
+#
+#
+         taa (a,a1)            = 0.0
+         PUT  T2L2_VV_A (a,a1) = taa (a,a1)
+         PUT  R2L2_VV_A (a,a1) = taa (a,a1)
+
+      ENDPARDO  a, a1
+      PARDO  i, a
+
+         GET  L1A (i,a)
+
+         tia  (i,a)  = L1A (i,a)
+         tia  (i,a) *= R0
+         tia2 (i,a)  = 0.0
+
+         PUT  DENS_OV_A     (i,a) = tia (i,a)
+         PUT  DENS_INT_OV_A (i,a) = tia2 (i,a)
+
+
+      ENDPARDO  i, a
+
+
+#VFL
+      PARDO  i, i1
+#
+         tii(i,i1) = 0.0
+
+         DO a
+
+            GET  L1A (i1,a)
+
+            tii1 (i,i1)  = LT1A (a,i) * L1A (i1,a)
+            tii1 (i,i1) *= -1.0
+            tii(i,i1) += tii1(i,i1)
+
+         ENDDO a
+
+            PUT  T1L1_OO_A (i,i1) = tii (i,i1)
+
+            tii (i,i1) *= R0
+            PUT  DENS_OO_A (i,i1) = tii (i,i1)
+
+         tii (i,i1) = 0.0
+#
+#
+#          ...Initialize intermediates...
+#
+#
+         PUT  T2L2_OO_A (i,i1) = tii (i,i1)
+         PUT  R2L2_OO_A (i,i1) = tii (i,i1)
+
+      ENDPARDO  i, i1
+#
+      EXECUTE  SIP_BARRIER
+#    
+#    
+#                          -------------------
+#                          -                 -
+#                          -  ALPHA DENSITY  -
+#                          -                 -
+#                          -------------------
+#
+#
+#    ===========================================================
+#       COMPUTE  OCCUPIED - OCCUPIED  PIECE  TO  THE  DENSITY
+#    ===========================================================
+#    ALPHA                                                 ALPHA
+#    -----                                                 -----
+#
+#
+#
+#          ...L  * T  ...
+#              2    2
+#
+#
+#    
+      PARDO i, a, a1, i2
+
+            REQUEST            T2AA (a,i,a1,i2) i
+            tpppp(a,i2,a1,i) = T2AA (a,i,a1,i2)
+
+            DO i1
+
+               REQUEST  L2AA (i1,a,i2,a1) i1
+
+              #tii (i,i1)  = L2AA (i1,a,i2,a1) * T2AA (a,i,a1,i2)
+               tii1 (i1,i) = L2AA (i1,a,i2,a1) * tpppp (a,i2,a1,i)
+               tii (i,i1)  = tii1(i1,i)
+               tii (i,i1) *= -0.5
+               PUT  T2L2_OO_A (i,i1) += tii (i,i1)
+
+               tii (i,i1) *= R0
+               PUT  DENS_OO_A (i,i1) += tii (i,i1)
+
+
+            ENDDO i1
+
+      ENDPARDO i, a, a1, i2
+#    
+      PARDO i, a, b, j
+
+            REQUEST          T2AB (a,i,b,j) i
+            tpppp(a,j,b,i) = T2AB(a,i,b,j)
+
+            DO i1
+
+               REQUEST       L2AB (i1,a,j,b) i1
+
+              #tii (i,i1)  = L2AB (i1,a,j,b) * T2AB (a,i,b,j)
+               tii1(i1,i)  = L2AB (i1,a,j,b) * tpppp (a,j,b,i)
+               tii (i,i1)  = tii1(i1,i)
+               tii (i,i1) *= -1.0
+               PUT  T2L2_OO_A (i,i1) += tii (i,i1)
+
+               tii (i,i1) *= R0
+               PUT  DENS_OO_A   (i,i1) += tii (i,i1)
+
+            ENDDO i1
+
+      ENDPARDO  i, a, b, j
+#
+#
+#           ...The other piece to the right moment density...
+#
+#                 R1 * A1  +  R2 * A2  +  T1 * R1 * A2
+#
+      IF  LOGRIGHT == ONE
+
+         PARDO  i, i1, a
+
+               GET  R1A (a,i)
+               GET  L1A (i1,a)
+
+               tii  (i,i1)  = R1A (a,i) * L1A (i1,a)
+               tii  (i,i1) *= -1.0
+
+               PUT  DENS_OO_A (i,i1) += tii  (i,i1)
+               PUT  R2L2_OO_A (i,i1) += tii  (i,i1)
+
+         ENDPARDO  i, i1, a
+#
+#
+#
+         PARDO  a, a1, i2
+
+            ALLOCATE  laiai4 (a,i2,a1,*)
+            ALLOCATE  laiai5 (a,i2,a1,*)
+
+            DO i
+
+               REQUEST               R2AA (a,i,a1,i2) i
+               laiai5 (a,i2,a1,i)  = R2AA (a,i,a1,i2)
+               laiai5 (a,i2,a1,i) *= 0.5
+
+               GET  R1A (a1,i2)
+               laiai4 (a,i2,a1,i)  = laiai5 (a,i2,a1,i)
+               taiai  (a,i2,a1,i)  = LT1A (a,i) ^ R1A (a1,i2)
+               laiai4 (a,i2,a1,i) += taiai (a,i2,a1,i)
+
+            ENDDO i
+
+            DO i1
+
+               REQUEST  L2AA (i1,a,i2,a1) i1
+
+               DO i
+
+                  tii1(i1,i)  = L2AA (i1,a,i2,a1) * laiai4 (a,i2,a1,i)
+                  tii (i,i1)  = tii1(i1,i)
+                  tii (i,i1) *= -1.0
+                  PUT  DENS_OO_A (i,i1) += tii (i,i1)
+
+                  tii1(i1,i)  = L2AA (i1,a,i2,a1) * laiai5 (a,i2,a1,i)
+                  tii (i,i1)  = tii1(i1,i)
+                  tii (i,i1) *= -1.0
+                  PUT  R2L2_OO_A (i,i1) += tii (i,i1)
+
+               ENDDO i
+
+            ENDDO i1
+
+            DEALLOCATE  laiai4 (a,i2,a1,*)
+            DEALLOCATE  laiai5 (a,i2,a1,*)
+
+         ENDPARDO  a, a1, i2
+#
+#
+#          ...ALPHA-BETA summation...
+#
+#
+         PARDO  a, b, j
+
+            ALLOCATE  laibj4 (a,j,b,*)
+            ALLOCATE  laibj5 (a,j,b,*)
+
+            DO i
+
+               REQUEST            R2AB (a,i,b,j) i
+               GET                R1B (b,j)
+               laibj5 (a,j,b,i) = R2AB(a,i,b,j)
+
+               laibj4 (a,j,b,i)  = laibj5 (a,j,b,i)
+               taibj  (a,j,b,i)  = LT1A (a,i) ^ R1B (b,j)
+               laibj4 (a,j,b,i) += taibj (a,j,b,i)
+
+            ENDDO i
+
+            DO i1
+
+               REQUEST  L2AB (i1,a,j,b) i1
+
+               DO i
+
+                  tii1(i1,i)  = L2AB (i1,a,j,b) * laibj4 (a,j,b,i)
+                  tii (i,i1)  = tii1(i1,i)
+                  tii (i,i1) *= -1.0
+                  PUT  DENS_OO_A (i,i1) += tii (i,i1)
+
+                  tii1(i1,i)  = L2AB (i1,a,j,b) * laibj5 (a,j,b,i)
+                  tii (i,i1)  = tii1(i1,i)
+                  tii (i,i1) *= -1.0
+                  PUT  R2L2_OO_A (i,i1) += tii (i,i1)
+
+               ENDDO i
+
+            ENDDO i1
+
+            DEALLOCATE  laibj5 (a,j,b,*)
+            DEALLOCATE  laibj4 (a,j,b,*)
+
+         ENDPARDO  a, b, j
+
+      ENDIF  # LOGRIGHT == ONE #
+#
+#
+#    ===========================================================
+#       COMPUTE  VIRTUAL - VIRTUAL  PIECE  TO  THE  DENSITY
+#    ===========================================================
+#    ALPHA                                                 ALPHA
+#    -----                                                 -----
+#
+#
+#
+#
+      PARDO  a2, a1, i, i1
+
+            REQUEST             L2AA (i,a2,i1,a1) a2
+            tpppp(i,a1,i1,a2) = L2AA (i,a2,i1,a1)
+
+            DO a
+
+               REQUEST       T2AA (a,i,a1,i1) a
+
+              #taa (a,a2)  = L2AA (i,a2,i1,a1) * T2AA (a,i,a1,i1)
+               taa (a,a2)  = T2AA (a,i,a1,i1) * tpppp(i,a1,i1,a2)
+               taa (a,a2) *= -0.50
+               PUT  T2L2_VV_A (a,a2) += taa (a,a2)
+
+               taa (a,a2) *= R0
+               taa (a,a2) *= -1.0
+               PUT  DENS_VV_A (a,a2) += taa (a,a2)
+
+            ENDDO a
+
+      ENDPARDO  a2, a1, i, i1
+#
+#
+#
+      PARDO  a2, b, j, i
+
+            REQUEST           L2AB (i,a2,j,b) a2
+            tpppp(i,b,j,a2) = L2AB (i,a2,j,b)
+
+            DO a
+
+               REQUEST  T2AB (a,i,b,j) a
+
+              #taa (a,a2)  = L2AB (i,a2,j,b) * T2AB (a,i,b,j)
+               taa (a,a2)  = T2AB (a,i,b,j) * tpppp(i,b,j,a2)
+               taa (a,a2) *= -1.0
+               PUT  T2L2_VV_A (a,a2) += taa (a,a2)
+
+               taa (a,a2) *= R0
+               taa (a,a2) *= -1.0
+               PUT  DENS_VV_A (a,a2) += taa (a,a2)
+
+            ENDDO a
+
+      ENDPARDO  a2, b, j, i
+      IF  LOGRIGHT == ONE
+
+         PARDO  a, a1, i
+
+               GET  R1A (a,i)
+               GET  L1A (i,a1)
+
+               taa (a,a1)  = R1A (a,i) * L1A (i,a1)
+               PUT  DENS_VV_A (a,a1) += taa (a,a1)
+
+               taa (a,a1) *= -1.0
+               PUT  R2L2_VV_A (a,a1) += taa (a,a1)
+
+         ENDPARDO  a, a1, i
+#
+         PARDO  a1, i, i1
+
+            ALLOCATE  laiai  (*,i,a1,i1)
+            ALLOCATE  laiai2 (*,i,a1,i1)
+
+            GET  R1A (a1,i1)
+
+            DO a
+
+               REQUEST               R2AA (a,i,a1,i1) a
+
+               taiai  (a,i,a1,i1)  = LT1A (a,i) ^ R1A (a1,i1)
+               laiai  (a,i,a1,i1)  = R2AA (a,i,a1,i1)
+               laiai  (a,i,a1,i1) *= 0.5
+               laiai2 (a,i,a1,i1)  = laiai (a,i,a1,i1)
+               laiai  (a,i,a1,i1) += taiai (a,i,a1,i1)
+
+            ENDDO a
+
+            DO a2
+
+               REQUEST              L2AA (i,a2,i1,a1) a2
+               tpppp(i,a1,i1,a2) =  L2AA (i,a2,i1,a1)
+
+               DO a
+
+                 #taa  (a,a2) = L2AA (i,a2,i1,a1) * laiai  (a,i,a1,i1)
+                  taa  (a,a2) = laiai  (a,i,a1,i1) * tpppp(i,a1,i1,a2)
+                  PUT  DENS_VV_A (a,a2) += taa  (a,a2)
+
+               ENDDO a
+               DO a
+
+                 #taa2 (a,a2)  = L2AA (i,a2,i1,a1) * laiai2 (a,i,a1,i1)
+                  taa2 (a,a2)  = laiai2 (a,i,a1,i1) * tpppp(i,a1,i1,a2)
+                  taa2 (a,a2) *= -1.0
+                  PUT  R2L2_VV_A (a,a2) += taa2 (a,a2)
+
+               ENDDO a
+
+            ENDDO a2
+
+            DEALLOCATE  laiai  (*,i,a1,i1)
+            DEALLOCATE  laiai2 (*,i,a1,i1)
+
+         ENDPARDO  a1, i, i1
+#
+#
+         PARDO  b, j, i
+
+            ALLOCATE  laibj  (*,i,b,j)
+            ALLOCATE  laibj2 (*,i,b,j)
+
+            GET  R1B (b,j)
+
+            DO a
+
+               REQUEST            R2AB (a,i,b,j) a
+               laibj2 (a,i,b,j) = R2AB (a,i,b,j)
+
+               laibj (a,i,b,j)  = laibj2 (a,i,b,j)
+               taibj (a,i,b,j)  = LT1A (a,i) ^ R1B (b,j)
+               laibj (a,i,b,j) += taibj (a,i,b,j)
+
+            ENDDO a
+
+            DO a2
+
+               REQUEST            L2AB (i,a2,j,b) a2
+               tpppp(i,b,j,a2) =  L2AB (i,a2,j,b)
+
+               DO a
+
+                 #taa  (a,a2) = L2AB (i,a2,j,b) * laibj  (a,i,b,j)
+                  taa  (a,a2) = laibj  (a,i,b,j) * tpppp(i,b,j,a2)
+                  PUT  DENS_VV_A (a,a2) += taa  (a,a2)
+
+                 #taa2 (a,a2)  = L2AB (i,a2,j,b) * laibj2 (a,i,b,j)
+                  taa2 (a,a2)  = laibj2 (a,i,b,j) * tpppp(i,b,j,a2)
+                  taa2 (a,a2) *= -1.0
+                  PUT  R2L2_VV_A (a,a2) += taa2 (a,a2)
+
+
+               ENDDO a
+
+            ENDDO a2
+
+            DEALLOCATE  laibj  (*,i,b,j)
+            DEALLOCATE  laibj2 (*,i,b,j)
+
+         ENDPARDO  b, j, i
+
+      ENDIF  # LOGRIGHT == ONE #
+
+#
+#
+#          ------------------------------------------------
+#                          !!! IMPORTANT !!!
+#          ------------------------------------------------
+#
+#           The following Occupied - Virtual code computes
+#           both the alpha and beta pieces since one needs
+#           both to compute the Virtual - Occupied piece.
+#
+#          ------------------------------------------------
+#          ------------------------------------------------
+#
+#
+#    ===========================================================
+#       COMPUTE  OCCUPIED - VIRTUAL  PIECE  TO  THE  DENSITY
+#    ===========================================================
+#    ALPHA                                                 ALPHA
+#    -----                                                 -----
+#
+     IF  LOGRIGHT == ONE
+
+         PARDO  i, a, a1, i1
+
+            REQUEST                     L2AA (i,a,i1,a1) i1
+            GET                         R1A  (a1,i1)
+            tia (i,a)                 = L2AA (i,a,i1,a1) * R1A (a1,i1)
+            PUT  DENS_OV_A     (i,a) += tia (i,a)
+            PUT  DENS_INT_OV_A (i,a) += tia (i,a)
+
+         ENDPARDO  i, a, a1, i1
+
+         PARDO  i, a, b, j
+
+            REQUEST                     L2AB (i,a,j,b) j
+            GET                         R1B  (b,j)
+            tia (i,a)                 = L2AB (i,a,j,b) * R1B (b,j)
+            PUT  DENS_OV_A     (i,a) += tia (i,a)
+            PUT  DENS_INT_OV_A (i,a) += tia (i,a)
+
+         ENDPARDO i, a, b, j
+
+      ENDIF  # LOGRIGHT == ONE #
+#
+#
+      EXECUTE  SERVER_BARRIER
+#
+#
+#
+#    ===========================================================
+#       COMPUTE  VIRTUAL - OCCUPIED  PIECE  TO  THE  DENSITY
+#    ===========================================================
+#    ALPHA                                                 ALPHA
+#    -----                                                 -----
+#
+#
+#          ...Evaluate the R0 contribution...
+#
+#
+# VFL
+      PARDO  a, i
+
+         tai1(a,i) = 0.0
+
+         DO i1
+
+            GET  T1L1_OO_A (i,i1)
+            GET  T2L2_OO_A (i,i1)
+
+            tii (i,i1)  = T1L1_OO_A (i,i1)
+            tii (i,i1) += T2L2_OO_A (i,i1)
+
+            tai (a,i)   = LT1A (a,i1) * tii (i,i1)
+
+            tai1(a,i) += tai(a,i)
+
+         ENDDO i1
+
+         IF GROUNDSTATE == ONE
+            tai1 (a,i)  += LT1A (a,i)
+         ENDIF
+
+         tai1 (a,i)  *= R0
+         PUT  DENS_VO_A (a,i) = tai1 (a,i)
+
+      ENDPARDO  a, i
+
+      EXECUTE  SIP_BARRIER
+#end_debug
+      tmpa=0.0
+      suma=0.0
+      pardo i,a
+         get DENS_VO_A (a,i)
+         tmp = DENS_VO_A (a,i) * DENS_VO_A (a,i)
+         tmpa += tmp
+      endpardo i,a
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+#end_debug
+
+#
+#
+      PARDO  a, a1, i
+
+            GET                     T2L2_VV_A (a,a1)
+            tai (a,i)             = T2L2_VV_A (a,a1) * LT1A (a1,i)
+            tai (a,i)            *= R0
+            PUT  DENS_VO_A (a,i) += tai (a,i)
+
+      ENDPARDO  a, a1, i
+      PARDO  a1, i1
+
+         GET  L1A (i1,a1)
+
+         DO a
+            DO i
+               REQUEST                 T2AA (a,i,a1,i1) i
+               tai  (a,i)            = T2AA (a,i,a1,i1) * L1A (i1,a1)
+               tai  (a,i)           *= R0
+               PUT  DENS_VO_A (a,i) += tai (a,i)
+            ENDDO i
+         ENDDO a
+
+      ENDPARDO  a1, i1
+
+      PARDO  b, j
+
+         GET  L1B (j,b)
+
+         DO a
+            DO i
+               REQUEST                 T2AB (a,i,b,j) i
+               tai  (a,i)            = T2AB (a,i,b,j) * L1B (j,b)
+               tai  (a,i)           *= R0
+               PUT  DENS_VO_A (a,i) += tai (a,i)
+            ENDDO i
+         ENDDO a
+
+      ENDPARDO  b, j
+#end_debug
+      execute sip_barrier 
+      tmpa=0.0
+      suma=0.0
+      pardo i,a
+         get DENS_VO_A (a,i)
+         tmp = DENS_VO_A (a,i) * DENS_VO_A (a,i)
+         tmpa += tmp
+      endpardo i,a
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+#end_debug
+
+      IF LOGRIGHT == ONE
+
+       PARDO  a1, i1
+
+            GET  DENS_INT_OV_A (i1,a1)
+            tia (i1,a1) = DENS_INT_OV_A (i1,a1)
+
+            DO a
+               DO i
+                  REQUEST  T2AA (a,i,a1,i1) i
+                  tai (a,i) = T2AA (a,i,a1,i1) * tia (i1,a1)
+                  PUT  DENS_VO_A (a,i) += tai (a,i)
+               ENDDO i
+            ENDDO a
+
+         ENDPARDO  a1, i1
+         PARDO  b, j
+
+            GET  DENS_INT_OV_A (j,b)
+            tjb (j,b) = DENS_INT_OV_A (j,b)
+
+            DO a
+               DO i
+                  REQUEST  T2AB (a,i,b,j) i
+                  tai (a,i)    = T2AB (a,i,b,j) * tjb (j,b)
+                  PUT  DENS_VO_A (a,i) += tai (a,i)
+               ENDDO i
+            ENDDO a
+
+         ENDPARDO  b, j
+#
+         PARDO  i, i1
+
+            tii(i,i1) = 0.0
+            DO a1
+               GET           DENS_INT_OV_A (i1,a1)
+               tia (i1,a1) = DENS_INT_OV_A (i1,a1)
+               tii1 (i,i1) = LT1A (a1,i) * tia (i1,a1)
+               tii(i,i1) += tii1(i,i1)
+            ENDDO a1
+
+               DO a
+                  tai (a,i)             = LT1A (a,i1) * tii (i,i1)
+                  tai (a,i)            *= -1.0
+                  PUT  DENS_VO_A (a,i) += tai (a,i)
+               ENDDO a
+
+         ENDPARDO  i, i1
+#
+         PARDO  a1, i1
+
+            GET  L1A (i1,a1)
+
+            DO a
+               DO i
+                  REQUEST                 R2AA (a,i,a1,i1) i
+                  tai (a,i)             = R2AA (a,i,a1,i1) * L1A (i1,a1)
+                  PUT  DENS_VO_A (a,i) += tai (a,i)
+               ENDDO i
+            ENDDO a
+
+         ENDPARDO  a1, i1
+         PARDO  b, j
+
+            GET  L1B (j,b)
+
+            DO a
+               DO i
+                  REQUEST                 R2AB (a,i,b,j) i
+                  tai (a,i)             = R2AB (a,i,b,j) * L1B (j,b)
+                  PUT  DENS_VO_A (a,i) += tai (a,i)
+               ENDDO i
+            ENDDO a
+
+         ENDPARDO  b, j
+#
+         PARDO  i, a, a1
+
+               GET  R2L2_VV_A (a,a1)
+               GET  T2L2_VV_A (a,a1)
+               GET  R1A (a1,i)
+               tai  (a,i)  = R2L2_VV_A (a,a1) * LT1A (a1,i)
+               tai2 (a,i)  = T2L2_VV_A (a,a1) * R1A (a1,i)
+               tai  (a,i) += tai2 (a,i)
+               PUT  DENS_VO_A (a,i) += tai (a,i)
+
+         ENDPARDO i, a, a1
+#
+         PARDO i, a, i1
+
+               GET  R1A (a,i1)
+               GET  R2L2_OO_A (i,i1)
+               GET  T2L2_OO_A (i,i1)
+               tai  (a,i)  = LT1A (a,i1) * R2L2_OO_A (i,i1)
+               tai2 (a,i)  = R1A (a,i1) * T2L2_OO_A (i,i1)
+               tai  (a,i) += tai2 (a,i)
+               PUT  DENS_VO_A (a,i) += tai (a,i)
+
+         ENDPARDO  i, a, i1
+#
+         IF EXCITESTATE == ZERO
+            PARDO  a, i
+               GET  R1A (a,i)
+               tai (a,i) = R1A (a,i)
+               PUT  DENS_VO_A (a,i) += tai (a,i)
+            ENDPARDO  a, i
+         ENDIF
+        IF EXCITESTATE == ONE
+            etemp = 1.0 / LRNORM
+            PARDO  a, i
+               tai (a,i)  = LT1A (a,i)
+               tai (a,i) *= etemp
+               PUT  DENS_VO_A (a,i) += tai (a,i)
+            ENDPARDO  a, i
+         ENDIF
+
+
+      ENDIF  # LOGRIGHT = ONE #
+#
+      execute load_balance_off
+      EXECUTE  SERVER_BARRIER
+#
+      ENDPROC  COMPUTE_DENSITY
+#    -------------------------
+
+#
+#    ---------------------------
+      PROC  BACK_TRANS_COMP_DIP
+#    ---------------------------
+#
+#
+#          ...Zero out the necessary arrays...
+#
+#
+      PARDO mu, nu
+         txx (mu,nu)          = 0.0
+         PUT  AO_DENS (mu,nu) = txx (mu,nu)
+      ENDPARDO  mu, nu
+
+      EXECUTE  SIP_BARRIER
+#
+#
+#          ...Do the transformation...
+#
+#
+      IF GROUNDSTATE == ONE                        # Symmetrize
+#bgn_debug
+      tmpa=0.0
+      suma=0.0
+      pardo i,i1
+         get DENS_OO_A (i,i1)
+         tmp = DENS_OO_A (i,i1) * DENS_OO_A (i,i1)
+         tmpa += tmp
+      endpardo i,i1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa=0.0
+      suma=0.0
+      pardo a,a1
+         get DENS_VV_A (a,a1)
+         tmp = DENS_VV_A (a,a1) * DENS_VV_A (a,a1)
+         tmpa += tmp
+      endpardo a,a1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa=0.0
+      suma=0.0
+      pardo i,a
+         get DENS_OV_A (i,a)
+         tmp = DENS_OV_A (i,a) * DENS_OV_A (i,a)
+         tmpa += tmp
+      endpardo i,a
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa=0.0
+      suma=0.0
+      pardo i,a
+         get DENS_VO_A (a,i)
+         tmp = DENS_VO_A (a,i) * DENS_VO_A (a,i)
+         tmpa += tmp
+      endpardo i,a
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+#end_debug
+#
+#
+#      ...Occupied-occupied alpha...
+#
+#
+         PARDO  i, i1
+            GET  DENS_OO_A (i,i1)
+            GET  DENS_OO_A (i1,i)
+            tii (i,i1)  = DENS_OO_A (i1,i)
+            tii (i,i1) += DENS_OO_A (i,i1)
+            tii (i,i1) *= LRNORM
+            DO mu
+               txi  (mu,i1) = tii (i,i1) * CA (mu,i)
+               DO nu
+                  txx  (mu,nu) = txi (mu,i1) * CA (nu,i1)
+                  PUT  AO_DENS (mu,nu) += txx  (mu,nu)
+               ENDDO nu
+            ENDDO mu
+         ENDPARDO  i, i1
+
+         PARDO  a, a1
+            GET  DENS_VV_A (a,a1)
+            GET  DENS_VV_A (a1,a)
+            taa (a,a1)  = DENS_VV_A (a1,a)
+            taa (a,a1) += DENS_VV_A (a,a1)
+            taa (a,a1) *= LRNORM
+            DO mu
+               txa  (mu,a1) = taa (a,a1) * CA (mu,a)
+               DO nu
+                  txx  (mu,nu) = txa (mu,a1) * CA (nu,a1)
+                  PUT  AO_DENS (mu,nu) += txx  (mu,nu)
+               ENDDO nu
+            ENDDO mu
+         ENDPARDO  a, a1
+
+         PARDO  a, i
+            GET  DENS_VO_A (a,i)
+            GET  DENS_OV_A (i,a)
+            tai (a,i)  = DENS_OV_A (i,a)
+            tai (a,i) += DENS_VO_A (a,i)
+            tai (a,i) *= LRNORM
+            DO mu
+               txi (mu,i) = tai (a,i) * CA (mu,a)
+               DO nu
+                  txx  (mu,nu) = txi (mu,i) * CA (nu,i)
+                  t2xx (nu,mu) = txx (mu,nu)
+                  PUT  AO_DENS (mu,nu) += txx  (mu,nu)
+                  PUT  AO_DENS (nu,mu) += t2xx (nu,mu)
+               ENDDO nu
+            ENDDO mu
+         ENDPARDO  a, i
+
+         PARDO  mu, nu
+
+            GET                     DHF (mu,nu)
+            txx (mu,nu)           = DHF (mu,nu)
+            PUT  AO_DENS (mu,nu) += txx (mu,nu)
+
+         ENDPARDO  mu, nu
+
+      ENDIF   #  GROUNDSTATE == ONE  #
+
+      IF GROUNDSTATE != ONE
+
+         PARDO  i, i1
+            GET  DENS_OO_A (i,i1)
+            DO mu
+               txi  (mu,i1) = DENS_OO_A (i,i1) * CA (mu,i)
+               txi  (mu,i1)*= 2.0
+               txi  (mu,i1)*= LRNORM
+               DO nu
+                  txx  (mu,nu) = txi (mu,i1) * CA (nu,i1)
+                  PUT  AO_DENS (mu,nu) += txx  (mu,nu)
+               ENDDO nu
+            ENDDO mu
+         ENDPARDO  i, i1
+
+         PARDO  a, a1
+            GET  DENS_VV_A (a,a1)
+            DO mu
+               txa  (mu,a1) = DENS_VV_A (a,a1) * CA (mu,a)
+               txa  (mu,a1)*= 2.0
+               txa  (mu,a1)*= LRNORM
+               DO nu
+                  txx  (mu,nu) = txa (mu,a1) * CA (nu,a1)
+                  PUT  AO_DENS (mu,nu) += txx  (mu,nu)
+               ENDDO nu
+            ENDDO mu
+         ENDPARDO  a, a1
+
+         PARDO  a, i
+            GET  DENS_VO_A (a,i)
+            DO mu
+               txi (mu,i) = DENS_VO_A (a,i) * CA (mu,a)
+               txi (mu,i)*= 2.0
+               txi (mu,i)*= LRNORM
+               DO nu
+                  txx  (mu,nu) = txi (mu,i) * CA (nu,i)
+                  PUT  AO_DENS (mu,nu) += txx  (mu,nu)
+               ENDDO nu
+            ENDDO mu
+         ENDPARDO  a, i
+
+         PARDO  i, a
+            GET  DENS_OV_A   (i,a)
+            DO mu
+               txa (mu,a) = DENS_OV_A (i,a) * CA (mu,i)
+               txa (mu,a)*= 2.0
+               txa (mu,a)*= LRNORM
+               DO nu
+                  txx  (mu,nu) = txa (mu,a) * CA (nu,a)
+                  PUT  AO_DENS (mu,nu) += txx  (mu,nu)
+               ENDDO nu
+            ENDDO mu
+         ENDPARDO  i, a
+
+      ENDIF   #  GROUNDSTATE != ONE  #
+
+      EXECUTE  SIP_BARRIER
+#
+#
+#          ...Contract with X, Y, and Z integrals...
+#
+#
+      etemp1 = 0.0
+      etemp2 = 0.0
+      etemp3 = 0.0
+
+      sum1 = 0.0
+      sum2 = 0.0
+      sum3 = 0.0
+
+      PARDO  mu, nu
+
+         GET  AO_DENS (mu,nu)
+
+         txx  (mu,nu) = 0.0
+         txx2 (mu,nu) = 0.0
+         txx3 (mu,nu) = 0.0
+
+         EXECUTE  RETURN_1ST_MOM  txx   ONE
+         EXECUTE  RETURN_1ST_MOM  txx2  TWO
+         EXECUTE  RETURN_1ST_MOM  txx3  THREE
+
+         etemp = AO_DENS (mu,nu) * txx  (mu,nu)
+         sum1 += etemp
+
+         etemp = AO_DENS (mu,nu) * txx2 (mu,nu)
+         sum2 += etemp
+         etemp = AO_DENS (mu,nu) * txx3 (mu,nu)
+         sum3 += etemp
+
+      ENDPARDO  mu, nu
+
+      EXECUTE  SIP_BARRIER
+
+      COLLECTIVE  etemp1 += sum1
+      COLLECTIVE  etemp2 += sum2
+      COLLECTIVE  etemp3 += sum3
+
+      EXECUTE  SIP_BARRIER
+
+      etemp1 *= -1.0
+      etemp2 *= -1.0
+      etemp3 *= -1.0
+
+      DIP_MOM_X = etemp1
+      DIP_MOM_Y = etemp2
+      DIP_MOM_Z = etemp3
+
+      EXECUTE  SIP_BARRIER
+#    
+#    
+#          ...ready!
+#
+#
+      ENDPROC  BACK_TRANS_COMP_DIP
+#     ----------------------------
+      PROC  COMPUTE_MOMENTS
+#    -----------------------
+#
+#
+#             Compute the moments!
+#
+#
+      EXECUTE  PRINT_SCALAR  ZERO
+      imomcount = 0
+      DO indone
+      DO secmom
+         imomcount += 1
+
+         sum1      = 0.0
+         SECONDMOM = 0.0
+         PARDO  mu, nu
+
+            txx (mu,nu) = 0.0
+            GET  AO_DENS (mu,nu)
+            EXECUTE  RETURN_2ND_MOM  txx  imomcount
+            etemp  = AO_DENS (mu,nu) * txx (mu,nu)
+            sum1  += etemp
+
+         ENDPARDO  mu, nu
+
+         EXECUTE  SIP_BARRIER
+         COLLECTIVE  SECONDMOM += sum1
+         EXECUTE  SIP_BARRIER
+
+         EXECUTE  PRINT_SCALAR  SECONDMOM
+         IF GROUNDSTATE == ONE
+            GRDSECM (secmom,indone) = SECONDMOM
+         ENDIF
+
+         IF EXCITESTATE == ONE
+            EXCSECM (secmom,indone) = SECONDMOM
+         ENDIF
+
+      ENDDO secmom
+      ENDDO indone
+#
+#
+#          ...ready!
+#
+#
+      ENDPROC  COMPUTE_MOMENTS
+#     ------------------------
+
+      PROC  COMP_R_NORM
+#    --------------------
+#
+#
+      RNORM  = R0
+      RNORM *= R0
+      esum   = 0.0
+
+      PARDO  i, a
+
+         GET         R1A (a,i)
+         tai (a,i) = R1A (a,i)
+         etemp  = tai (a,i) * tai (a,i)
+         etemp *= 2.0
+         esum  += etemp
+
+      ENDPARDO  i, a
+
+      PARDO  a, i, a1, i1
+
+         REQUEST             R2AA (a,i,a1,i1) i1
+         taiai (a,i,a1,i1) = R2AA (a,i,a1,i1)
+         etemp  = taiai (a,i,a1,i1) * taiai (a,i,a1,i1)
+         etemp  = etemp/2.0
+         esum  += etemp
+
+      ENDPARDO  a, i, a1, i1
+
+      PARDO  a, i, b, j
+
+         REQUEST           R2AB (a,i,b,j) j
+         taibj (a,i,b,j) = R2AB (a,i,b,j)
+         etemp  = taibj (a,i,b,j) * taibj (a,i,b,j)
+         esum  += etemp
+
+      ENDPARDO  a, i, b, j
+
+      EXECUTE  SERVER_BARRIER
+      COLLECTIVE  RNORM += esum
+      EXECUTE  SQUARE_ROOT  RNORM  HALF
+
+      RNORM  = 1.0 / RNORM
+#
+      ENDPROC  COMP_R_NORM
+#    ---------------------
+
+      PROC  COMP_RL_NORM
+#    --------------------
+#
+#
+      LNORM  = 0.0
+      esum   = 0.0
+
+      PARDO  i, a
+
+         GET         R1A (a,i)
+         GET         L1A (i,a)
+         tai (a,i) = R1A (a,i)
+         tia (i,a) = L1A (i,a)
+         etemp  = tai (a,i) * tia (i,a)
+         etemp *= 2.0
+         esum  += etemp
+
+      ENDPARDO  i, a
+
+      PARDO  i, a, i1, a1
+
+         REQUEST             R2AA (a,i,a1,i1) i1
+         REQUEST             L2AA (i1,a1,i,a) a1
+         taiai (a,i,a1,i1) = R2AA (a,i,a1,i1)
+         tiaia (i1,a1,i,a) = L2AA (i1,a1,i,a)
+         etemp  = taiai (a,i,a1,i1) * tiaia (i1,a1,i,a)
+         etemp  = etemp/2.0
+         esum  += etemp
+
+      ENDPARDO  i, a, i1, a1
+
+      PARDO  i, a, j, b
+
+         REQUEST           R2AB (a,i,b,j) j
+         REQUEST           L2AB (i,a,j,b) b
+         taibj (a,i,b,j) = R2AB (a,i,b,j)
+         tiaia (j,b,i,a) = L2AB (i,a,j,b)
+         etemp  = taibj (a,i,b,j) * tiaia (j,b,i,a)
+         esum  += etemp
+
+      ENDPARDO  i, a, j, b
+
+      EXECUTE  SIP_BARRIER
+      COLLECTIVE  LNORM += esum
+
+      EXECUTE SIP_BARRIER
+      LNORM *= RNORM
+
+      LNORM  = 1.0 / LNORM
+
+      ENDPROC  COMP_RL_NORM
+#     --------------------
+
+      PROC GROUND_STATE_RESP_PROPS
+#     ---------------------------
+
+      ALLOCATE  GRDSECM (*,*)
+      ALLOCATE  EXCSECM (*,*)
+      ALLOCATE  GRDQUAD (*,*)
+      ALLOCATE  EXCQUAD (*,*)
+
+      CALL HF_DENSITY
+
+      tmpnuc = 0.0
+      DO jatom
+         tmpnuc = tmpnuc + 1.0
+      ENDDO jatom
+
+      dipnucx = tmpnuc
+      dipnucy = dipnucx
+      dipnucz = dipnucy
+
+      EXECUTE NUC_DIPOLE_MOMENT  ONE    dipnucx
+      EXECUTE NUC_DIPOLE_MOMENT  TWO    dipnucy
+      EXECUTE NUC_DIPOLE_MOMENT  THREE  dipnucz
+
+# Compute ground state response properties; Dpq= <0|(1+L)e^-T{p+q}e^T|0>
+# The Lk is lambda and Rk is excited state R vectors but not used in 
+# the density codes.
+
+      R0     = ONE
+      LRNORM = ONE
+      CALL PUT_ZERO_IN_Rk
+      LOGRIGHT = ONE
+      CALL PUT_IN_Lk
+      LOGRIGHT = ZERO
+      GROUNDSTATE  = ONE
+      CALL  COMPUTE_DENSITY
+      CALL  BACK_TRANS_COMP_DIP
+
+      DIP_GRD_X  = DIP_MOM_X
+      DIP_GRD_Y  = DIP_MOM_Y
+      DIP_GRD_Z  = DIP_MOM_Z
+      DIP_GRD_X += dipnucx
+      DIP_GRD_Y += dipnucy
+      DIP_GRD_Z += dipnucz
+
+      EXECUTE  PRINT_SCALAR  ZERO
+      EXECUTE  PRINT_SCALAR  DIP_GRD_X
+      EXECUTE  PRINT_SCALAR  DIP_GRD_Y
+      EXECUTE  PRINT_SCALAR  DIP_GRD_Z
+
+      CALL  COMPUTE_MOMENTS
+
+      ENDPROC GROUND_STATE_RESP_PROPS
+#     -------------------------------
+
+      PROC PRINT_ESTATE_RESP_PROPS
+#     ----------------------------
+
+      DO kindex26
+
+         IF kindex26 == 1
+            etemp = 1.0
+            TMOM_DATA (kindex26,kindex26) = OMEGA
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+         IF kindex26 == 2
+            etemp = 2.0
+            TMOM_DATA (kindex26,kindex26) = OSC_STREN
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+         IF kindex26 == 3
+            etemp = 3.0
+            TMOM_DATA (kindex26,kindex26) = DIP_MOM_X_R
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+         IF kindex26 == 4
+            etemp = 4.0
+            TMOM_DATA (kindex26,kindex26) = DIP_MOM_X_L
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+         IF kindex26 == 5
+            etemp = 5.0
+            TMOM_DATA (kindex26,kindex26) = DIP_MOM_X
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+         IF kindex26 == 6
+            etemp = 6.0
+            TMOM_DATA (kindex26,kindex26) = OSC_STREN_X
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+         IF kindex26 == 7
+            etemp = 7.0
+            TMOM_DATA (kindex26,kindex26) = DIP_MOM_Y_R
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+         IF kindex26 == 8
+            etemp = 8.0
+            TMOM_DATA (kindex26,kindex26) = DIP_MOM_Y_L
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+         IF kindex26 == 9
+            etemp = 9.0
+            TMOM_DATA (kindex26,kindex26) = DIP_MOM_Y
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+         IF kindex26 == 10
+            etemp = 10.0
+            TMOM_DATA (kindex26,kindex26) = OSC_STREN_Y
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+         IF kindex26 == 11
+            etemp = 11.0
+            TMOM_DATA (kindex26,kindex26) = DIP_MOM_Z_R
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+         IF kindex26 == 12
+            etemp = 12.0
+            TMOM_DATA (kindex26,kindex26) = DIP_MOM_Z_L
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+         IF kindex26 == 13
+            etemp = 13.0
+            TMOM_DATA (kindex26,kindex26) = DIP_MOM_Z
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+         IF kindex26 == 14
+            etemp = 14.0
+            TMOM_DATA (kindex26,kindex26) = OSC_STREN_Z
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+         IF kindex26 == 15
+            etemp = 15.0
+            TMOM_DATA (kindex26,kindex26) = POLXX
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+        #IF kindex26 == 16
+        #   etemp = 16.0
+        #   TMOM_DATA (kindex26,kindex26) = POLTOTXX
+        #   EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+        #ENDIF
+
+         IF kindex26 == 17
+            etemp = 17.0
+            TMOM_DATA (kindex26,kindex26) = POLYY
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+        #IF kindex26 == 18
+        #   etemp = 18.0
+        #   TMOM_DATA (kindex26,kindex26) = POLTOTYY
+        #   EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+        #ENDIF
+
+         IF kindex26 == 19
+            etemp = 19.0
+            TMOM_DATA (kindex26,kindex26) = POLZZ
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+        #IF kindex26 == 20
+        #   etemp = 20.0
+        #   TMOM_DATA (kindex26,kindex26) = POLTOTZZ
+        #   EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+        #ENDIF
+
+         IF kindex26 == 21
+            etemp = 21.0
+            TMOM_DATA (kindex26,kindex26) = POLXY
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+        #IF kindex26 == 22
+        #   etemp = 22.0
+        #   TMOM_DATA (kindex26,kindex26) = POLTOTXY
+        #   EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+        #ENDIF
+
+         IF kindex26 == 23
+            etemp = 23.0
+            TMOM_DATA (kindex26,kindex26) = POLXZ
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+        #IF kindex26 == 24
+        #   etemp = 24.0
+        #   TMOM_DATA (kindex26,kindex26) = POLTOTXZ
+        #   EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+        #ENDIF
+
+         IF kindex26 == 25
+            etemp = 25.0
+            TMOM_DATA (kindex26,kindex26) = POLYZ
+            EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+         ENDIF
+
+        #IF kindex26 == 26
+        #   etemp = 26.0
+        #   TMOM_DATA (kindex26,kindex26) = POLTOTYZ
+        #   EXECUTE PRINT_EOM_DENS_INFO  TMOM_DATA  etemp
+        #ENDIF
+
+      ENDDO kindex26
+
+      ENDPROC PRINT_ESTATE_RESP_PROPS
+#     -------------------------------
+
+      PROC EXCITED_STATES_RESP_PROPS
+#     ------------------------------
+
+      GROUNDSTATE = ZERO
+      EXCITESTATE = ZERO 
+      POLTOTXX = 0.0
+      POLTOTYY = 0.0
+      POLTOTZZ = 0.0
+      POLTOTXY = 0.0
+      POLTOTXZ = 0.0
+      POLTOTYZ = 0.0
+
+# The right transition density <0|(1+L)e^-T{p+q}e^T|0>
+# Get the right vectors; the left vectors are lambda and they
+# already in. 
+
+      LOGRIGHT = ONE
+      CALL PUT_IN_Rk
+      R0     = R0_KEEP
+      CALL COMP_R_NORM
+      LRNORM = RNORM
+#bgn_debug
+      execute print_scalar r0
+      execute print_scalar OMEGA2 
+      execute print_scalar lrnorm
+#end_debug
+      CALL COMPUTE_DENSITY
+      CALL BACK_TRANS_COMP_DIP
+
+      DIP_MOM_X_R = DIP_MOM_X
+      DIP_MOM_Y_R = DIP_MOM_Y
+      DIP_MOM_Z_R = DIP_MOM_Z
+#bgn_debug
+      execute print_scalar DIP_MOM_X_R
+      execute print_scalar DIP_MOM_Y_R
+      execute print_scalar DIP_MOM_Z_R
+#end_debug
+
+# The left transition densities  <0|L_kde^-T{p+q}e^T|0>
+
+      LOGRIGHT = ZERO 
+      CALL PUT_IN_Lk 
+      CALL COMP_RL_NORM
+      LRNORM = LNORM 
+      R0     = 1.0
+      CALL COMPUTE_DENSITY
+      CALL BACK_TRANS_COMP_DIP
+
+      DIP_MOM_X_L = DIP_MOM_X
+      DIP_MOM_Y_L = DIP_MOM_Y
+      DIP_MOM_Z_L = DIP_MOM_Z
+
+#bgn_debug
+      execute print_scalar DIP_MOM_X_L
+      execute print_scalar DIP_MOM_Y_L
+      execute print_scalar DIP_MOM_Z_L
+#end_debug
+ 
+# The excited state densities <0|L_kde^-T{p+q}R_ke^T|0>
+
+      LOGRIGHT    = ONE
+      R0          = R0_KEEP
+      LRNORM      = LNORM * RNORM
+      EXCITESTATE = ONE
+      CALL  COMPUTE_DENSITY
+#bgn_debug
+      execute print_scalar lrnorm
+#end_debug
+
+      GROUNDSTATE = ONE
+      CALL BACK_TRANS_COMP_DIP
+      GROUNDSTATE = ZERO
+
+      DIP_EXC_X  = DIP_MOM_X
+      DIP_EXC_Y  = DIP_MOM_Y
+      DIP_EXC_Z  = DIP_MOM_Z
+#bgn_debug
+      EXECUTE  PRINT_SCALAR  DIP_EXC_X
+      EXECUTE  PRINT_SCALAR  DIP_EXC_Y
+      EXECUTE  PRINT_SCALAR  DIP_EXC_Z
+#end_debug
+      DIP_EXC_X += dipnucx
+      DIP_EXC_Y += dipnucy
+      DIP_EXC_Z += dipnucz
+
+#bgn_debug
+      EXECUTE  PRINT_SCALAR  ZERO
+      EXECUTE  PRINT_SCALAR  DIP_EXC_X
+      EXECUTE  PRINT_SCALAR  DIP_EXC_Y
+      EXECUTE  PRINT_SCALAR  DIP_EXC_Z
+#end_debug
+
+      CALL  COMPUTE_MOMENTS
+      EXCITESTATE = ZERO
+
+      DIP_MOM_X = DIP_MOM_X_R * DIP_MOM_X_L
+      DIP_MOM_Y = DIP_MOM_Y_R * DIP_MOM_Y_L
+      DIP_MOM_Z = DIP_MOM_Z_R * DIP_MOM_Z_L
+
+      OSC_STREN_X = OMEGA2 * DIP_MOM_X
+      OSC_STREN_Y = OMEGA2 * DIP_MOM_Y
+      OSC_STREN_Z = OMEGA2 * DIP_MOM_Z
+#bgn_debug
+      execute print_scalar OSC_STREN_X
+      execute print_scalar OSC_STREN_Y
+      execute print_scalar OSC_STREN_Z
+#end_debug
+
+      OSC_STREN  = OSC_STREN_X
+      OSC_STREN += OSC_STREN_Y
+      OSC_STREN += OSC_STREN_Z
+
+      DIPXY = DIP_MOM_X_R * DIP_MOM_Y_R
+      DIPXZ = DIP_MOM_X_R * DIP_MOM_Z_R
+      DIPYZ = DIP_MOM_Y_R * DIP_MOM_Z_R
+
+      POLXX = TWO * DIP_MOM_X
+      POLYY = TWO * DIP_MOM_Y
+      POLZZ = TWO * DIP_MOM_Z
+      POLXY = TWO * DIPXY
+      POLXZ = TWO * DIPXZ
+      POLYZ = TWO * DIPYZ
+      POLXX = POLXX / OMEGA
+      POLYY = POLYY / OMEGA
+      POLZZ = POLZZ / OMEGA
+      POLXY = POLXY / OMEGA
+      POLXZ = POLXZ / OMEGA
+      POLYZ = POLYZ / OMEGA
+      POLTOTXX += POLXX
+      POLTOTYY += POLYY
+      POLTOTZZ += POLZZ
+      POLTOTXY += POLXY
+      POLTOTXZ += POLXZ
+      POLTOTYZ += POLYZ
+
+      DEALLOCATE  GRDSECM (*,*)
+      DEALLOCATE  EXCSECM (*,*)
+      DEALLOCATE  GRDQUAD (*,*)
+      DEALLOCATE  EXCQUAD (*,*)
+
+      CALL PRINT_ESTATE_RESP_PROPS 
+
+      EXECUTE SIP_BARRIER
+
+#                                                                        #
+      ENDPROC EXCITED_STATES_RESP_PROPS
+#     ---------------------------------
+
+     PROC READ_RL_VECS
+#    ------------------
+     
+      execute list_to_blocks DREE 
+      execute list_to_blocks DLEE 
+
+      execute list_to_blocks HBAR_ia
+      execute list_to_blocks HBAR_jb
+
+      execute list_to_blocks R1A_VECS
+      execute list_to_blocks R2AA_VECS
+      execute list_to_blocks R2AB_VECS
+
+      execute list_to_blocks L1A_VECS
+      execute list_to_blocks L2AA_VECS
+      execute list_to_blocks L2AB_VECS
+
+      execute list_to_blocks t1a
+      execute list_to_blocks t1b
+      execute list_to_blocks T2aa
+      execute list_to_blocks T2ab
+      execute list_to_blocks T2bb
+
+      execute list_to_blocks A1a
+      execute list_to_blocks A2aa
+      execute list_to_blocks A2ab
+
+      execute list_to_blocks VSpipi(p,i,p1,i1)
+      execute list_to_blocks VSqjqj(q,j,q1,j1)
+      execute list_to_blocks Vpiqj(p,i,q,j) 
+      execute list_to_blocks Vaaai
+
+      execute server_barrier 
+      execute read_list_to_blocks
+      execute server_barrier 
+
+     ENDPROC READ_RL_VECS
+#    --------------------
+
+     PROC CHECK_RL_EES
+#    -----------------
+
+     NCOUNT    = 0.0
+     DIFF_NORM = 0.0
+     DO INDONE
+     DO NROOTS 
+        NCOUNT += 1.0
+        IF NCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF 
+        
+        DIFF(NROOTS,INDONE)  = REE(NROOTS,INDONE)
+        DIFF(NROOTS,INDONE) -= LEE(NROOTS,INDONE)
+
+        ETEMP = DIFF(NROOTS,INDONE) * DIFF(NROOTS,INDONE)
+        DIFF_NORM += ETEMP
+     
+     ENDDO NROOTS 
+     ENDDO INDONE
+
+#bgn_debug
+     execute print_scalar DIFF_NORM
+#end_debug
+
+     IF DIFF_NORM > EOM_THRES
+     ENDIF 
+
+     ENDPROC CHECK_RL_EES
+#    --------------------
+
+     PROC RENORM_Rk
+#    --------------
+
+     DO INDONE 
+     NCOUNT = 0.0
+     DO NROOTS
+        NCOUNT += 1.0
+        IF NCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF
+
+        RNN(NROOTS,INDONE) = R0_VEC(NROOTS,INDONE)
+        EXECUTE RETURN_SVAL RNN R0
+#bgn_debug
+     execute print_scalar r0
+#end_debug
+
+        TINY = 0.0000000001
+        IF R0 > TINY
+           
+           R2   = R0
+           R2  *= R0
+           TMP  = ONE 
+           TMP += R2
+
+           EXECUTE NORM_FAC TMP HALF
+           NORM = TMP
+
+           PARDO a, i
+              GET R1A_VECS(a,i,NROOTS)
+              T1ai(a,i,NROOTS)  = R1A_VECS(a,i,NROOTS)
+              T1ai(a,i,NROOTS) *= NORM
+              R1A_VECS_NRML(a,i,NROOTS) = T1ai(a,i,NROOTS)
+           ENDPARDO a, i
+
+           PARDO a, i, a1, i1
+               REQUEST R2AA_VECS(a,i,a1,i1,NROOTS) i1
+               T1aiai(a,i,a1,i1,NROOTS)  = R2AA_VECS(a,i,a1,i1,NROOTS)
+               T1aiai(a,i,a1,i1,NROOTS) *= NORM
+               PREPARE R2AA_VECS_NRML(a,i,a1,i1,NROOTS) =T1aiai(a,i,a1,i1,NROOTS)
+           ENDPARDO a, i, a1, i1
+
+           PARDO a, i, b, j
+               REQUEST R2AB_VECS(a,i,b,j,NROOTS) j
+               T1aibj(a,i,b,j,NROOTS)  = R2AB_VECS(a,i,b,j,NROOTS)
+               T1aibj(a,i,b,j,NROOTS) *= NORM
+               PREPARE R2AB_VECS_NRML(a,i,b,j,NROOTS) = T1aibj(a,i,b,j,NROOTS)
+           ENDPARDO a, i, b, j
+
+        ELSE
+
+           PARDO a, i
+              GET R1A_VECS(a,i,NROOTS)
+              T1ai(a,i,NROOTS)  = R1A_VECS(a,i,NROOTS)
+              R1A_VECS_NRML(a,i,NROOTS) = T1ai(a,i,NROOTS)
+           ENDPARDO a, i
+
+           PARDO a, i, a1, i1
+               REQUEST R2AA_VECS(a,i,a1,i1,NROOTS) i1
+               T1aiai(a,i,a1,i1,NROOTS)  = R2AA_VECS(a,i,a1,i1,NROOTS)
+               PREPARE R2AA_VECS_NRML(a,i,a1,i1,NROOTS) =T1aiai(a,i,a1,i1,NROOTS)
+           ENDPARDO a, i, a1, i1
+
+           PARDO a, i, b, j
+               REQUEST R2AB_VECS(a,i,b,j,NROOTS) j
+               T1aibj(a,i,b,j,NROOTS)  = R2AB_VECS(a,i,b,j,NROOTS)
+               PREPARE R2AB_VECS_NRML(a,i,b,j,NROOTS) = T1aibj(a,i,b,j,NROOTS)
+           ENDPARDO a, i, b, j
+
+        ENDIF 
+
+     ENDDO NROOTS
+     ENDDO INDONE 
+
+     EXECUTE SERVER_BARRIER 
+
+     ENDPROC RENORM_Rk
+#    -----------------
+
+     PROC RL_NORM
+#    ------------
+#bgn_debug
+      ncount = 0.0
+      do nroots 
+      ncount += 1.0
+      if ncount > TARGET_ROOTS
+         exit
+      endif 
+      tmpa=0.0
+      tmpb=0.0
+      suma=0.0
+      sumb=0.0
+      pardo i,a
+         get r1a_vecs(a,i,nroots)
+         tmp = r1a_vecs(a,i,nroots)* r1a_vecs(a,i,nroots)
+         tmpa += tmp
+      endpardo i,a
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab   = suma
+      sumab  += suma
+      tmpa =0.0
+      suma =0.0
+      pardo a,i1,a1,i
+            request r2aa_vecs(a,i1,a1,i,nroots) i
+            tmp = r2aa_vecs(a,i1,a1,i,nroots) * r2aa_vecs(a,i1,a1,i,nroots)
+            tmpa += tmp
+      endpardo a,i1,a1,i
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      sumab += suma
+      suma =0.0
+      tmpa =0.0
+      pardo j,i,a,b
+            request r2ab_vecs(a,i,b,j,nroots) j
+            tmp =  r2ab_vecs(a,i,b,j,nroots) * r2ab_vecs(a,i,b,j,nroots)
+            tmpa+= tmp 
+      endpardo j,i,a, b
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      execute print_scalar sumab
+      tmpa=0.0
+      tmpb=0.0
+      suma=0.0
+      sumb=0.0
+      sumab=0.0
+      pardo i,a
+         get l1a_vecs(i,a,nroots)
+         tmp = l1a_vecs(i,a,nroots) * l1a_vecs(i,a,nroots)
+         tmpa += tmp
+      endpardo i,a
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab  = suma
+      sumab += suma
+      tmpa =0.0
+      suma =0.0
+      pardo a,i1,a1,i
+            request l2aa_vecs(i,a,i1,a1,nroots) i
+            tmp = l2aa_vecs(i,a,i1,a1,nroots) * l2aa_vecs(i,a,i1,a1,nroots)
+            tmpa += tmp
+      endpardo a,i1,a1,i
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      sumab += suma
+      tmpa =0.0
+      suma =0.0
+      pardo j,i,a,b
+            request l2ab_vecs(i,a,j,b,nroots) j
+            tmp =  l2ab_vecs(i,a,j,b,nroots)  * l2ab_vecs(i,a,j,b,nroots) 
+            tmpa+= tmp
+      endpardo j,i,a, b
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      execute print_scalar sumab
+      enddo nroots 
+#end_debug
+
+     NCOUNT = 0.0
+     DO NROOTS
+        NCOUNT += 1.0
+
+        IF NCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF
+
+        PARDO i, a
+
+            GET R1A_VECS(a,i,NROOTS)
+            GET L1A_VECS(i,a,NROOTS)
+
+            Tai(a,i) = R1A_VECS(a,i,NROOTS)
+            Tia(i,a) = L1A_VECS(i,a,NROOTS)
+            TMP       =  Tai(a,i) * Tia(i,a)
+
+            T1xx(NROOTS,NROOTS)        = TMP
+            T1xx(NROOTS,NROOTS)       *= 2.0
+            PUT ORTHO_COEF(NROOTS,NROOTS) += T1xx(NROOTS,NROOTS)
+
+        ENDPARDO i, a
+
+        PARDO i, i1, a1, a
+
+            REQUEST R2AA_VECS(a,i,a1,i1,NROOTS) i1
+            REQUEST L2AA_VECS(i,a,i1,a1,NROOTS) i1
+
+            Taiai(a,i,a1,i1) = R2AA_VECS(a,i,a1,i1,NROOTS)
+            Tiaia(i,a,i1,a1) = L2AA_VECS(i,a,i1,a1,NROOTS)
+ 
+            TMP     = Taiai(a,i,a1,i1) * Tiaia(i,a,i1,a1)
+
+            T1xx(NROOTS,NROOTS)        = TMP
+            T1xx(NROOTS,NROOTS)       *= 2.0
+            PUT ORTHO_COEF(NROOTS,NROOTS) += T1xx(NROOTS,NROOTS)
+
+        ENDPARDO i, i1, a1, a
+
+        PARDO i, a, b, j
+
+            REQUEST R2AB_VECS(a,i,b,j,NROOTS) j
+            REQUEST L2AB_VECS(i,a,j,b,NROOTS) j
+
+            Taibj(a,i,b,j) = R2AB_VECS(a,i,b,j,NROOTS)
+            Tiajb(i,a,j,b) = L2AB_VECS(i,a,j,b,NROOTS)
+
+            TMP     = Taibj(a,i,b,j) * Tiajb(i,a,j,b)
+
+            T1xx(NROOTS,NROOTS)         = TMP
+            PUT ORTHO_COEF(NROOTS,NROOTS) += T1xx(NROOTS,NROOTS)
+
+        ENDPARDO i, a, b, j
+
+     ENDDO NROOTS
+
+     EXECUTE SIP_BARRIER
+
+    ENDPROC RL_NORM
+#   ---------------
+
+    PROC BIORTHO
+#   ------------
+
+     NCOUNT = 0.0
+     DO NROOTS
+
+        NCOUNT += 1.0
+        IF NCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF 
+
+        GET ORTHO_COEF(NROOTS,NROOTS)
+
+        T1xx(NROOTS,NROOTS) =  ORTHO_COEF(NROOTS,NROOTS)
+        EXECUTE RETURN_SVAL T1xx FACT
+        INV_NORM = 1.0/FACT 
+#bgn_debug
+        execute print_scalar INV_NORM
+#end_debug  
+        PARDO i, a
+
+            GET L1A_VECS(i,a,NROOTS)
+            T1ia(i,a,NROOTS)  = L1A_VECS(i,a,NROOTS)
+            T1ia(i,a,NROOTS) *= INV_NORM
+            PUT L1A_VECS_NRML(i,a,NROOTS) = T1ia(i,a,NROOTS)
+
+        ENDPARDO i, a
+
+        PARDO i, i1, a1, a
+
+            REQUEST L2AA_VECS(i,a,i1,a1,NROOTS) i1
+            T1iaia(i,a,i1,a1,NROOTS) = L2AA_VECS(i,a,i1,a1,NROOTS)
+            T1iaia(i,a,i1,a1,NROOTS)*= INV_NORM
+            PREPARE L2AA_VECS_NRML(i,a,i1,a1,NROOTS) = T1iaia(i,a,i1,a1,NROOTS)
+        ENDPARDO i, i1, a1, a
+
+        PARDO i, a, b, j
+
+            REQUEST L2AB_VECS(i,a,j,b,NROOTS) j
+            T1iajb(i,a,j,b,NROOTS)  = L2AB_VECS(i,a,j,b,NROOTS)
+            T1iajb(i,a,j,b,NROOTS) *=  INV_NORM
+            PREPARE L2AB_VECS_NRML(i,a,j,b,NROOTS) = T1iajb(i,a,j,b,NROOTS)
+
+        ENDPARDO i, a, b, j
+
+     ENDDO NROOTS
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC BIORTHO
+#    ---------------
+
+    PROC C_CHECK
+#    -----------
+     DO NROOTS
+        DO MROOTS
+           OVLP_CHECK(NROOTS,MROOTS) = 0.0
+        ENDDO MROOTS
+     ENDDO NROOTS
+
+     NCOUNT = 0.0
+     DO NROOTS 
+        NCOUNT += 1.0
+        IF NCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF
+
+        MCOUNT = 0.0
+        DO MROOTS
+           MCOUNT += 1.0
+
+           IF MCOUNT > TARGET_ROOTS
+              EXIT
+           ENDIF
+
+               SUMA  = 0.0
+               SUMAA = 0.0
+               SUMAB = 0.0
+               HC_A  = 0.0
+               HC_AA = 0.0
+               HC_AB = 0.0
+
+               PARDO i, a
+
+                   GET R1A_VECS(a,i,NROOTS)
+                   GET L1A_VECS_NRML(i,a,MROOTS)
+
+                   Tai(a,i) = R1A_VECS(a,i,NROOTS)
+                   Tia(i,a) = L1A_VECS_NRML(i,a,MROOTS)
+
+                   TMP   = Tai(a,i) * Tia(i,a)
+                   SUMA += TMP
+
+               ENDPARDO i, a
+
+               PARDO i, i1, a1, a
+
+                   REQUEST R2AA_VECS(a,i,a1,i1,NROOTS) i1
+                   REQUEST L2AA_VECS_NRML(i,a,i1,a1,MROOTS) i1
+
+                   Taiai(a,i,a1,i1) = R2AA_VECS(a,i,a1,i1,NROOTS)
+                   Tiaia(i,a,i1,a1) = L2AA_VECS_NRML(i,a,i1,a1,MROOTS)
+
+                   TMP     = Taiai(a,i,a1,i1) * Tiaia(i,a,i1,a1)
+                   SUMAA  += TMP
+               ENDPARDO i, i1, a1, a
+
+               PARDO i, a, b, j
+    
+                   REQUEST R2AB_VECS(a,i,b,j,NROOTS) j
+                   REQUEST L2AB_VECS_NRML(i,a,j,b,MROOTS) j
+
+                   Taibj(a,i,b,j) = R2AB_VECS(a,i,b,j,NROOTS)
+                   Tiajb(i,a,j,b) = L2AB_VECS_NRML(i,a,j,b,MROOTS)
+
+                   TMP     = Taibj(a,i,b,j) * Tiajb(i,a,j,b)
+                   SUMAB  += TMP
+
+               ENDPARDO i, a, b, j
+   
+               EXECUTE SIP_BARRIER 
+               COLLECTIVE HC_A   += SUMA
+               COLLECTIVE HC_AA  += SUMAA
+               COLLECTIVE HC_AB  += SUMAB
+
+               NORM  =  HC_A
+               NORM  += HC_A
+               NORM  += HC_AA
+               NORM  += HC_AA
+               NORM  += HC_AB
+#bgn_debug
+#     execute print_scalar norm 
+#end_debug
+               DO IROOTS 
+                  DO JROOTS 
+                     OVLP_CHECK(NROOTS,MROOTS) = NORM
+                  ENDDO JROOTS
+               ENDDO IROOTS 
+
+         ENDDO MROOTS 
+     ENDDO NROOTS 
+
+     execute print_static OVLP_CHECK target_roots 
+
+    ENDPROC C_CHECK
+#   --------------
+
+      PROC  WRITE_TO_JOBARC
+#    -----------------------
+#
+#
+#             Write to JOBARC
+#
+#
+      DO mu
+      DO nu
+
+         GET            AO_DENS (mu,nu)
+         txx (mu,nu)  = AO_DENS (mu,nu)
+         DENSITY (mu,nu) = txx (mu,nu)
+
+      ENDDO nu
+      ENDDO mu
+
+      proot = iroot - 1.0
+      IDENS = proot + inext
+      EXECUTE  PRINT_SCALAR  IDENS
+
+      EXECUTE  DENS2JOBARC  DENSITY  IDENS
+#
+#
+#          ...ready!
+#
+#
+      ENDPROC  WRITE_TO_JOBARC
+#     ------------------------
+           
+#    Main Program      
+#    ------------
+# Main driver of excited state properties.
+
+     TARGET_ROOTS = EOM_ROOTS
+     EOM_THRES    = EOM_TOL
+
+     ZERO      = 0.0
+     ONE       = 1.0
+     TWO       = 2.0
+     THREE     = 3.0
+     HALF      = 0.5
+     R0_THRESH = EOM_TOL
+
+     ALLOCATE LT1A(*,*)
+     ALLOCATE LA1A(*,*)
+     CREATE EE
+     CREATE DREE
+     CREATE DLEE
+     CREATE T1A
+     CREATE T1B
+     CREATE A1A
+     CREATE R1A
+     CREATE R1B
+     CREATE R1A_VECS
+     CREATE L1A_VECS
+     CREATE L1A_VECS_NRML
+     CREATE R1A_VECS_NRML
+     CREATE HBAR_ia
+     CREATE HBAR_jb
+     CREATE DHF
+     CREATE ORTHO_COEF
+     EXECUTE SIP_BARRIER 
+
+     CALL READ_RL_VECS
+
+     EXECUTE GET_MY_RANK RANK 
+
+     DO a
+     DO i
+        GET         T1A(a,i)
+        GET         A1A(i,a)
+        LT1A(a,i) = T1A(a,i)
+        LA1A(i,a) = A1A(i,a)
+     ENDDO i
+     ENDDO a
+
+     DO INDONE 
+     DO NROOTS
+        GET DREE(NROOTS,INDONE)
+        GET DLEE(NROOTS,INDONE)
+        RNN(NROOTS,INDONE) = DREE(NROOTS,INDONE)
+        LNN(NROOTS,INDONE) = DLEE(NROOTS,INDONE)
+        REE(NROOTS,INDONE) = RNN(NROOTS,INDONE)
+        LEE(NROOTS,INDONE) = LNN(NROOTS,INDONE)
+     ENDDO NROOTS
+     ENDDO INDONE 
+
+# Make sure that R and L roots 
+
+     CALL CHECK_RL_EES
+
+#bgn_debug
+     execute print_static ree target_roots 
+     execute print_static lee target_roots 
+#end_debug
+
+     NCOUNT = 0.0
+     DO INDONE 
+     DO NROOTS 
+        NCOUNT += 1.0
+        IF NCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF 
+        
+        RNN(NROOTS,INDONE) = REE(NROOTS,INDONE)
+        EXECUTE RETURN_SVAL RNN OMEGA 
+#bgn_debug
+     execute print_scalar omega 
+#end_debug
+
+        PARDO a, i
+            GET R1A_VECS(a,i,NROOTS)
+            Tai(a,i) = R1A_VECS(a,i,NROOTS)
+            PUT R1A(a,i) = Tai(a,i)
+            PUT R1B(a,i) = Tai(a,i)
+        ENDPARDO a, i
+
+        PARDO a, i, a1, i1
+            REQUEST R2AA_VECS(a,i,a1,i1,NROOTS) i1
+            taiai(a,i,a1,i1) = R2AA_VECS(a,i,a1,i1,NROOTS)
+            PREPARE R2AA(a,i,a1,i1) =taiai(a,i,a1,i1)
+        ENDPARDO a, i, a1, i1
+
+        PARDO a, i, b, j
+            REQUEST R2AB_VECS(a,i,b,j,NROOTS) j
+            taibj(a,i,b,j) = R2AB_VECS(a,i,b,j,NROOTS)
+            PREPARE R2AB(a,i,b,j) = taibj(a,i,b,j)
+        ENDPARDO a, i, b, j
+
+        EXECUTE SERVER_BARRIER 
+        CALL R0_COMPUTE 
+        R0_VEC(NROOTS,INDONE) = R0
+        OMEGA2_VEC(NROOTS,INDONE) = OMEGA2 
+
+     ENDDO NROOTS 
+     ENDDO INDONE 
+
+#bgn_debug
+     execute print_static r0_vec target_roots 
+#end_debug
+      
+#     CALL RENORM_Rk
+
+#     CALL RL_NORM
+
+#     CALL BIORTHO
+
+#bgn_debug
+#     call c_check
+#end_debug
+
+     MCOUNT = 0.0
+     DO INDONE
+     DO MROOTS
+
+        MCOUNT += 1.0
+        IF MCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF 
+       
+        MYROOT = MCOUNT
+        RNN(MROOTS,INDONE) = R0_VEC(MROOTS,INDONE)
+        EXECUTE RETURN_SVAL RNN R0_KEEP 
+        ONN(MROOTS,INDONE) = OMEGA2_VEC(MROOTS,INDONE)
+        EXECUTE RETURN_SVAL ONN OMEGA2 
+  
+        CALL BEGIN_PREP
+        CALL GROUND_STATE_RESP_PROPS 
+        CALL EXCITED_STATES_RESP_PROPS 
+        CALL END_PREP
+
+     ENDDO MROOTS 
+     ENDDO INDONE
+
+     DELETE EE
+     DELETE DREE
+     DELETE DLEE
+     DELETE T1A
+     DELETE T1B
+     DELETE A1A
+     DELETE R1A_VECS
+     DELETE L1A_VECS
+     DELETE L1A_VECS_NRML
+     DELETE R1A_VECS_NRML
+     DELETE HBAR_ia
+     DELETE HBAR_jb
+     DELETE DHF
+     DELETE ORTHO_COEF
+
+                        ENDSIAL EOM_PROP_CCSD_RHF  
+#                      -------------------------
+

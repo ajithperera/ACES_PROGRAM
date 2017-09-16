@@ -4077,6 +4077,8 @@ ac_config_files="$ac_config_files src/aces/aces_library/special_directory/dup/Ma
 
 ac_config_files="$ac_config_files src/aces/aces_library/special_directory/ecp/Makefile"
 
+ac_config_files="$ac_config_files src/aces/aces_library/special_directory/dkh/Makefile"
+
 ac_config_files="$ac_config_files src/aces/aces_library/special_directory/nlo/Makefile"
 
 ac_config_files="$ac_config_files src/aces/aces_library/special_directory/erd/Makefile"
@@ -4709,6 +4711,7 @@ do
     "src/aces/aces_library/special_directory/dup/Makefile") CONFIG_FILES="$CONFIG_FILES src/aces/aces_library/special_directory/dup/Makefile" ;;
     "src/aces/aces_library/special_directory/ecp/Makefile") CONFIG_FILES="$CONFIG_FILES src/aces/aces_library/special_directory/ecp/Makefile" ;;
     "src/aces/aces_library/special_directory/nlo/Makefile") CONFIG_FILES="$CONFIG_FILES src/aces/aces_library/special_directory/nlo/Makefile" ;;
+    "src/aces/aces_library/special_directory/dkh/Makefile") CONFIG_FILES="$CONFIG_FILES src/aces/aces_library/special_directory/dkh/Makefile" ;;
     "src/aces/aces_library/special_directory/erd/Makefile") CONFIG_FILES="$CONFIG_FILES src/aces/aces_library/special_directory/erd/Makefile" ;;
     "src/aces/aces_library/special_directory/direct_integral/Makefile") CONFIG_FILES="$CONFIG_FILES src/aces/aces_library/special_directory/direct_integral/Makefile" ;;
     "src/aces/aces_library/a2driver/symcor/Makefile") CONFIG_FILES="$CONFIG_FILES src/aces/aces_library/a2driver/symcor/Makefile" ;;

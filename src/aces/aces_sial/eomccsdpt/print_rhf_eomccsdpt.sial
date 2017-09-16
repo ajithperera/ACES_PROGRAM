@@ -1,0 +1,39 @@
+                      SIAL PRINT_EOMCCSDPT
+#                     --------------------
+
+     Index Ione = 1, 1
+
+     Scalar fifteen 
+     Scalar Sixteen 
+     Scalar Seventeen 
+     Scalar Zero 
+     Scalar Iuhf 
+     Scalar Itest1
+     Scalar Itest
+
+     Static Dummy(Ione,Ione)
+
+     Zero      =  0.0
+     fifteen   = 15.0
+     Sixteen   = 16.0
+     Seventeen = 17.0
+
+# Main Program 
+# ------------
+
+      DO Ione 
+         Dummy(Ione,Ione) = 0.0
+      ENDDO Ione 
+      execute sip_barrier
+ 
+     Itest = Reference 
+  
+#bgn_debug
+     execute print_scalar Itest 
+#end_debug 
+
+        Execute print_rel_info fifteen   Dummy 
+
+                      ENDSIAL PRINT_EOMCCSDPT
+#                     -----------------------
+#

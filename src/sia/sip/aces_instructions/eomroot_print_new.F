@@ -147,10 +147,11 @@ c
          if (i .le. amax) then  
             root = rootmat (i,1)
             resd = resdmat (i,1)
-            Write(6,*) i, root, root*27.21138505, resd
             write(66,100) i, root, root*27.21138505, resd
          endif 
       enddo
+
+      Call Dputrec(20,"JOBARC","EOM_EXES",ieom_roots,Rootmat(1,1))
 
       write(66,*) ' '
       write(66,'(1x,57("-"))')

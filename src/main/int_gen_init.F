@@ -23,8 +23,10 @@ c summary of the basis set.
       integer i, j, n, iCenter, iShell, iOffset, iTmp
       integer previous_end
       integer ECP 
+      logical DKH
       common /flags/ iflags
       integer iflags(100)
+      integer iflags2(500)
 
       include 'int_gen_parms.h'
 #ifdef ALTIX
@@ -73,14 +75,18 @@ c---------------------------------------------------------------------------
 c   Perform better fit of shells to segment size for better performance.
 c   Note that this is NOT done if ECP's are used!!! 
 c---------------------------------------------------------------------------
+         call igetrec(1,'JOBARC','IFLAGS2',500,iflags2)
 
          ECP = iflags(71) 
+         DKH = .False.
+         DKH = (iflags2(157) .GT. 0)
+
          if (intpkg .eq. gamess_package .or.
      *       intpkg .eq. gamess_derivative_package) go to 1000
-         if ((aat_database(1:1) .eq. ' ') .and. (ECP .eq. 0)) then
+         if ((aat_database(1:1) .eq. ' ')
+     *        .and. (ECP .eq.0) .and. (.NOT. DKH)) then
             call binpack(nshells, nfps, sip_mx_ao_segsize, ixshells)
          else
-
 c---------------------------------------------------------------------------
 c   No sorting of shells.  Shells are processed in their original order.
 c---------------------------------------------------------------------------

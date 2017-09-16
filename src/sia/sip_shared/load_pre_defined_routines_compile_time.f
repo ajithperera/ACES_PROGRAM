@@ -260,8 +260,7 @@ C
 
       dummy = load_user_sub('print_eom_dens_info'//char(0),
      +                       0)
-      dummy = load_user_sub('compute_pvp_xyzbatch'//char(0), 0)
-      dummy = load_user_sub('return_dkh_h1'//char(0), 0)
+      dummy = load_user_sub('c1_full_print'//char(0), 0)
 c
 c -------------------------------------------------------------------- 
 c VFL Instructions needed to perform 'fast' scf calculations 
@@ -332,6 +331,8 @@ c
       dummy = load_user_sub('asymm_force_i'//char(0), 0)
       dummy = load_user_sub('symm_force_ij'//char(0), 0)
       dummy = load_user_sub('return_h1_nodiag'//char(0),
+     *                       0)
+      dummy = load_user_sub('return_1el_dkh'//char(0),
      *                       0)
 c
 c --------------------------------------------------------------------
@@ -412,6 +413,23 @@ C Ajith Perera, miscellaneous developments.
       dummy = load_user_sub('report_maximum'//char(0),0)
       dummy = load_user_sub('place_constanta'//char(0),0)
       dummy = load_user_sub('place_constantb'//char(0),0)
+C
+      dummy = load_user_sub('form_guess'//char(0),0)
+      dummy = load_user_sub('xgeev'//char(0),0)
+      dummy = load_user_sub('process_eigs'//char(0),0)
+      dummy = load_user_sub('addrootindex'//char(0),0)
+      dummy = load_user_sub('extract_subset'//char(0),0)
+      dummy = load_user_sub('return_max_overlap'//char(0),0)
+      dummy = load_user_sub('return_selected'//char(0),0)
+      dummy = load_user_sub('print_static'//char(0),0)
+      dummy = load_user_sub('store_static_array'//char(0),0)
+      dummy = load_user_sub('form_rpa_guess'//char(0),0)
+      dummy = load_user_sub('guess_4current_root'//char(0),0)
+      dummy = load_user_sub('form_dip_guess'//char(0),0)
+      dummy = load_user_sub('form_dea_guess'//char(0),0)
+      dummy = load_user_sub('genrl_eig_solver'//char(0),0)
+      dummy = load_user_sub('return_inverse'//char(0),0)
+
 c -----------------------------------------------------------------
 c Prakash instructions need for delta integrals
 c ------------------------------------------------------------------

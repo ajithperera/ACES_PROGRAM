@@ -11,6 +11,7 @@
 # Declare indeces 
 # --------------- 
 #
+      Index Nroots   = 1, 12
       index kiter    = 1, cc_iter  
 #
       aoindex mu     = 1, norb
@@ -52,34 +53,9 @@
       moaindex q2= baocc, eavirt
       moaindex q3= baocc, eavirt
 #
-#  Watson
-#
-      DISTRIBUTED  VSTART1A1  (a,i)
-      DISTRIBUTED  VSTART1B1  (b,j)
-      DISTRIBUTED  VSTART1A2  (a,i)
-      DISTRIBUTED  VSTART1B2  (b,j)
-      DISTRIBUTED  VSTART1A3  (a,i)
-      DISTRIBUTED  VSTART1B3  (b,j)
-      DISTRIBUTED  VSTART1A4  (a,i)
-      DISTRIBUTED  VSTART1B4  (b,j)
-      DISTRIBUTED  VSTART1A5  (a,i)
-      DISTRIBUTED  VSTART1B5  (b,j)
-      DISTRIBUTED  VSTART1A6  (a,i)
-      DISTRIBUTED  VSTART1B6  (b,j)
-      DISTRIBUTED  VSTART1A7  (a,i)
-      DISTRIBUTED  VSTART1B7  (b,j)
-      DISTRIBUTED  VSTART1A8  (a,i)
-      DISTRIBUTED  VSTART1B8  (b,j)
-      DISTRIBUTED  VSTART1A9  (a,i)
-      DISTRIBUTED  VSTART1B9  (b,j)
-      DISTRIBUTED  VSTART1A10 (a,i)
-      DISTRIBUTED  VSTART1B10 (b,j)
-      DISTRIBUTED  VSTART1A11 (a,i)
-      DISTRIBUTED  VSTART1B11 (b,j)
-      DISTRIBUTED  VSTART1A12 (a,i)
-      DISTRIBUTED  VSTART1B12 (b,j)
-# 
+       Distributed  CisA_S_evecs(a,i,Nroots)
 # Declare static arrays 
+
 # --------------------- 
 #
       served t1b_old(b,j) # Watson
@@ -751,32 +727,7 @@
 #    ------------------------------------------------------------------------
 #
       execute server_barrier
-#
-      EXECUTE  LIST_TO_BLOCKS               VSTART1A1
-      EXECUTE  LIST_TO_BLOCKS               VSTART1B1
-      EXECUTE  LIST_TO_BLOCKS               VSTART1A2
-      EXECUTE  LIST_TO_BLOCKS               VSTART1B2
-      EXECUTE  LIST_TO_BLOCKS               VSTART1A3
-      EXECUTE  LIST_TO_BLOCKS               VSTART1B3
-      EXECUTE  LIST_TO_BLOCKS               VSTART1A4
-      EXECUTE  LIST_TO_BLOCKS               VSTART1B4
-      EXECUTE  LIST_TO_BLOCKS               VSTART1A5
-      EXECUTE  LIST_TO_BLOCKS               VSTART1B5
-      EXECUTE  LIST_TO_BLOCKS               VSTART1A6
-      EXECUTE  LIST_TO_BLOCKS               VSTART1B6
-      EXECUTE  LIST_TO_BLOCKS               VSTART1A7
-      EXECUTE  LIST_TO_BLOCKS               VSTART1B7
-      EXECUTE  LIST_TO_BLOCKS               VSTART1A8
-      EXECUTE  LIST_TO_BLOCKS               VSTART1B8
-      EXECUTE  LIST_TO_BLOCKS               VSTART1A9
-      EXECUTE  LIST_TO_BLOCKS               VSTART1B9
-      EXECUTE  LIST_TO_BLOCKS               VSTART1A10
-      EXECUTE  LIST_TO_BLOCKS               VSTART1B10
-      EXECUTE  LIST_TO_BLOCKS               VSTART1A11
-      EXECUTE  LIST_TO_BLOCKS               VSTART1B11
-      EXECUTE  LIST_TO_BLOCKS               VSTART1A12
-      EXECUTE  LIST_TO_BLOCKS               VSTART1B12
-
+      execute list_to_blocks                CisA_s_evecs
       execute list_to_blocks                t1a_old
       execute list_to_blocks                t1b_old
       execute list_to_blocks                T2old_aa
@@ -5927,31 +5878,7 @@
 # First read in the converged amplitudes
 # --------------------------------------
 #
-      CREATE  VSTART1A1
-      CREATE  VSTART1B1
-      CREATE  VSTART1A2
-      CREATE  VSTART1B2
-      CREATE  VSTART1A3
-      CREATE  VSTART1B3
-      CREATE  VSTART1A4
-      CREATE  VSTART1B4
-      CREATE  VSTART1A5
-      CREATE  VSTART1B5
-      CREATE  VSTART1A6
-      CREATE  VSTART1B6
-      CREATE  VSTART1A7
-      CREATE  VSTART1B7
-      CREATE  VSTART1A8
-      CREATE  VSTART1B8
-      CREATE  VSTART1A9
-      CREATE  VSTART1B9
-      CREATE  VSTART1A10
-      CREATE  VSTART1B10
-      CREATE  VSTART1A11
-      CREATE  VSTART1B11
-      CREATE  VSTART1A12
-      CREATE  VSTART1B12 # Watson
-
+      Create CisA_s_evecs 
       create t1a_old 
       CALL READ_2EL 
 #
@@ -5964,31 +5891,8 @@
 # ------------------------
 #
      #CALL WRITE_2EL # Watson comment out
-
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A1
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B1
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A2
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B2
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A3
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B3
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A4
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B4
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A5
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B5
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A6
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B6
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A7
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B7
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A8
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B8
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A9
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B9
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A10
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B10
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A11
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B11
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A12
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B12
+#
+      execute blocks_to_list CisA_s_evecs 
       execute blocks_to_list t1a_old
       execute blocks_to_list t1b_old
       execute blocks_to_list T2old_aa

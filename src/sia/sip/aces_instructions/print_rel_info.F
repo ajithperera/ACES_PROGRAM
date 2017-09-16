@@ -1,4 +1,5 @@
 C  Copyright (c) 2003-2010 University of Florida
+
 C
 C  This program is free software; you can redistribute it and/or modify
 C  it under the terms of the GNU General Public License as published by
@@ -45,13 +46,9 @@ c            12   MP2 gradient
 c            13   CCSD gradient after 1-p  
 c            14   CCSD gradient final  
 c
-c            15   CCSD(T) RHF ENERGY/AAA  
-c            16   CCSD(T) RHF ENERGY/AAB 
-c
-c            17   CCSD(T) UHF ENERGY/AAA  
-c            18   CCSD(T) UHF ENERGY/BBB  
-c            19   CCSD(T) UHF ENERGY/AAB  
-c            20   CCSD(T) UHF ENERGY/BBA  
+c            15      EOM-CCSD(T) RHF ENERGY
+c            16      EOM-CCSD(T) UHF ENERGY; Singlets 
+c            16,17   EOM-CCSD(T) UHF ENERGY; Triplets 
 c
 c            21   RHF T2 amplitude header 
 c            22   RHF T1 amplitude header 
@@ -63,12 +60,17 @@ c            27   RHF T1b amplitude header
 c
 c            28   RHF CIS energies 
 c            29   UHF CIS energies 
-c
+C
 c            30   RHF CIS Singles amplitude header 
 c            31   UHF CIS Singles amplitude header 
 c
+c            28   RHF CIS energies 
 c            32   RHF LCCD iteration, energy  
 c            33   RHF LCCD iteration, energy  
+C
+c            70   RHF EOM-CCSD energies (singlets)
+c            71   UHF EOM-CCSD energies (triplets)
+c           911   EOM warnings 
 c   
 c--------------------------------------------------------------------------
 C Changes to make GNU complier happy, C. Taylor, 08/2013.
@@ -102,7 +104,7 @@ C
       integer seg, index(mx_array_index), val1(mx_array_index), 
      *        val2(mx_array_index), junk
 
-      integer block, blkndx
+      integer block, blkndx, st_flag
       integer find_current_block
       integer*8 get_block_index
       integer stack
@@ -119,6 +121,7 @@ C
       dptr = dshptr
 #endif
 
+       
       open(66,file='summary.out') 
 
 c----------------------------------------------------------------------------
@@ -218,7 +221,7 @@ c---------------------------------------------------------------------------
       iarray  = get_index_from_base(daddr, x, 2)
 
       if (array .eq. 0) then
-         print *,'Error: The first argument in return_sval  
+         print *,'Error: The first argument in print_rel_info
      *            must be an array.'  
          print *,(op(i),i=1,loptable_entry)
          call abort_job()
@@ -310,32 +313,13 @@ c     enddo
       endif 
 
       if (scalar_table(sind) .eq. 15.0) then  
-          call print_ccsdpt_rhf_aaa(x(iarray),scalar_table(sind),
+          call print_ccsdpt_rhf(x(iarray),scalar_table(sind),
      *             1,n1,1,n2)
       endif 
 
-      if (scalar_table(sind) .eq. 16.0) then  
-          call print_ccsdpt_rhf_aab(x(iarray),scalar_table(sind),
-     *             1,n1,1,n2)
-      endif 
-
-      if (scalar_table(sind) .eq. 17.0) then  
-          call print_ccsdpt_uhf_aaa(x(iarray),scalar_table(sind),
-     *             1,n1,1,n2)
-      endif 
-
-      if (scalar_table(sind) .eq. 18.0) then  
-          call print_ccsdpt_uhf_bbb(x(iarray),scalar_table(sind),
-     *             1,n1,1,n2)
-      endif 
-
-      if (scalar_table(sind) .eq. 19.0) then  
-          call print_ccsdpt_uhf_aab(x(iarray),scalar_table(sind),
-     *             1,n1,1,n2)
-      endif 
-
-      if (scalar_table(sind) .eq. 20.0) then  
-          call print_ccsdpt_uhf_bba(x(iarray),scalar_table(sind),
+      if (scalar_table(sind) .eq. 16.0 .OR. 
+     *    scalar_table(sind) .eq. 17.0) then  
+          call print_ccsdpt_uhf(x(iarray),scalar_table(sind),
      *             1,n1,1,n2)
       endif 
 
@@ -512,13 +496,33 @@ c---------------------------------------------------------------------------
      *           has not converged') 
 
 c----------------------------------------------------------------------------
-c   CIS excitation energy(RHF) Print Flag = 28     
+c   CIS excitation energy(RHF,UHF) Print Flag = 28,29
 c---------------------------------------------------------------------------
-
-      if (scalar_table(sind) .eq. 28.0) then 
-          call print_cis_rhf_cinfo(x(iarray),scalar_table(sind),
+      st_flag = scalar_table(sind)
+      if (st_flag .eq. 28.0 .or. st_flag .eq. 29.0) then 
+          call print_cis_cinfo(x(iarray),scalar_table(sind),
      *             1,n1,1,n2)
       endif 
+c----------------------------------------------------------------------------
+c   EOM-CCSD excitation energy(RHF,UHF) Print Flag = 70,71 (Right)
+c                                                    80,81 (Left)
+c---------------------------------------------------------------------------
+      st_flag = scalar_table(sind)
+      if (st_flag .eq. 70.0 .or. st_flag .eq. 71.0 .or. 
+     *    st_flag .eq. 80.0 .or. st_flag .eq. 81.0) then
+          call print_eomccsd_cinfo(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+      endif
+
+c----------------------------------------------------------------------------
+c   HF stability analysis flag=55;singlet 56;triplet 
+c----------------------------------------------------------------------------
+      st_flag = scalar_table(sind)
+      If (st_flag .eq. 55 .or. st_flag .eq. 56) then 
+          call print_hfstability_matrix(x(iarray),st_flag,
+     *             1,n1,1,n2,)
+      endif 
+
 
 c----------------------------------------------------------------------------
 c   CIS singles amplitude header *RHF) Print Flag = 30   
@@ -538,6 +542,46 @@ c---------------------------------------------------------------------------
           call print_lccd_cinfo(x(iarray),scalar_table(sind),
      *             1,n1,1,n2)
       endif 
+
+c----------------------------------------------------------------------------
+c   DEA total energies (singlet and triplet) Flag = 40, 41
+c---------------------------------------------------------------------------
+
+     
+      if (scalar_table(sind) .eq. 40.0 .or. 
+     *    scalar_table(sind) .eq. 41.0) then 
+          call print_dea_einfo(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+      endif 
+
+c----------------------------------------------------------------------------
+c   DIP total energies (singlet and triplet) Flag = 50, 51
+c---------------------------------------------------------------------------
+
+     
+      if (scalar_table(sind) .eq. 50.0 .or. 
+     *    scalar_table(sind) .eq. 51.0) then 
+          call print_dip_einfo(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+      endif 
+c----------------------------------------------------------------------------
+c   IP/EA total energies (doublet) Flag =60, 61
+c---------------------------------------------------------------------------
+
+     
+      if (scalar_table(sind) .eq. 60.0 .or. 
+     *    scalar_table(sind) .eq. 61.0) then 
+          call print_ip_ea_einfo(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+      endif 
+c----------------------------------------------------------------------------
+c   Warning flags (911:EOM)
+c---------------------------------------------------------------------------
+      if (scalar_table(sind) .eq. 911.0) then 
+          call print_warning(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+      endif 
+c----------------------------------------------------------------------------
 
       call flush(66) 
 
@@ -1041,12 +1085,10 @@ c-----------------------------------------------------------------------------
 
       return 
       end 
-
-      subroutine print_ccsdpt_rhf_aaa(array1,sval,a1,a2,b1,b2) 
-
 c---------------------------------------------------------------------------
-c
-c 
+
+      subroutine print_ccsdpt_rhf(array1,sval,a1,a2,b1,b2) 
+
 c---------------------------------------------------------------------------
 
       implicit none
@@ -1054,44 +1096,55 @@ c---------------------------------------------------------------------------
       include 'int_gen_parms.h'
       include 'parallel_info.h'
 c
-      integer i, ival, amax, a, a1, a2, b, b1, b2   
+      integer i, ival, amax, a, a1, a2, b, b1, b2, ieom_roots
       double precision array1(a1:a2,b1:b2), sval, stemp   
-      double precision efinal, conv   
+      double precision Eccsd,Eccsdt,Etotal,Conv
+      conv = 27.21138505
 
       open(66,file='summary.out') 
 
-       if (me .eq. 0)then
+      ieom_roots = eom_roots 
 
-          write(66,*) 
-          write(66,*) 
-          write(66,97) 
-          write(66,101) 
-          write(66,99) array1(1,1)  
-          write(66,100) array1(1,2)  
-          write(66,101) 
-          write(66,102) array1(1,1) + array1(1,2) + totenerg 
-          write(66,101) 
-          write(66,*) 
-          write(66,*) 
+      If (me .eq. 0) then 
+         write(66,10)
+         write(66,100)
+         write(66,30)
+         write(66,100)
+
+          do i = 1, ieom_roots
+
+CSSS#ifdef _DEBUG_LVL0
+        Write(6,"(a,2i)")     "Root   =", i
+        Write(6,"(a,F15.10)") "E-CCSD =", EE_CCSD(i)
+        Write(6,"(a,F15.10)") "E4_aaa =", E4_aaa(i)
+        Write(6,"(a,F15.10)") "E5_aaa =", E5_aaa(i)
+        Write(6,"(a,F15.10)") "E4_aab =", E4_aab(i)
+        Write(6,"(a,F15.10)") "E5_aab =", E5_aab(i)
+        Write(6,"(a,F15.10)") "Total  =", E5_aab(i)+E4_aab(i)+
+     &                         E5_aaa(i)+E4_aaa(i)
+CSSS#endif 
+             Eccsd  = EE_CCSD(i) 
+             Eccsdt = E4_aaa(i)+E5_aaa(i)+E4_aab(i)+E5_aab(i)
+             Etotal = Eccsd + Eccsdt
+             write(66,20) i, Eccsd*Conv, Etotal*Conv
+
+          enddo
+          write(66,100)
 
       endif
 
-97    format(2x,"SUMMARY OF RHF PERTURBATIVE TRIPLES CALCULATION AAA") 
-99    format(2x,'E5(T) =',3x,F20.10) 
-100   format(2x,'E4(T) =',3x,F20.10) 
-101   format(2x,60('-'))
-102   format(2x,"Final CCSD(T) energy after aaa = ",3x,F20.10)
+10    format(2x,"EOM-CCSD(T) singlet excitation energies")  
+100   format(2x,60('-'))
+20    format(2x,I4,x,F20.8,x,F20.8)
+30    format(2x,'ROOT',12x,'EOM-CCSD ',12x,'EOM-CCSD(T) (eV)')
 
       return
       end
 
-
-
-      subroutine print_ccsdpt_rhf_aab(array1,sval,a1,a2,b1,b2) 
-
 c---------------------------------------------------------------------------
-c
-c 
+
+      subroutine print_ccsdpt_uhf(array1,sval,a1,a2,b1,b2) 
+
 c---------------------------------------------------------------------------
 
       implicit none
@@ -1099,220 +1152,98 @@ c---------------------------------------------------------------------------
       include 'int_gen_parms.h'
       include 'parallel_info.h'
 c
-      integer i, ival, amax, a, a1, a2, b, b1, b2   
+      integer i, ival, amax, a, a1, a2, b, b1, b2,ieom_roots 
       double precision array1(a1:a2,b1:b2), sval, stemp   
-      double precision efinal, conv   
+      double precision efinal,Two
+      double precision Eccsd,Eccsdt,Etotal,Conv
 
-      open(66,file='summary.out') 
+      conv = 27.21138505
+      Two  = 2.0D0
 
-       if (me .eq. 0)then
+      ieom_roots = eom_roots
 
-          write(66,*) 
-          write(66,*) 
-          write(66,97) 
-          write(66,101) 
-          write(66,99) array1(1,1)  
-          write(66,100) array1(1,2)  
-          write(66,101) 
-          write(66,102) array1(1,1) + array1(1,2) + totenerg 
-          write(66,101) 
-          write(66,*) 
-          write(66,*) 
+      If (me .eq. 0) then
+         If (Sval .Eq. 16) Write(66,10)
+         If (Sval .Eq. 17) Write(66,40)
+
+         write(66,100)
+         write(66,30)
+         write(66,100)
+
+          do i = 1, ieom_roots
+
+CSSS#ifdef _DEBUG_LVL0
+        If (sval .eq. 16) Then
+           Write(6,"(a,2i)")     "Root   =", i
+           Write(6,"(a,F15.10)") "E-CCSD =", EE_CCSD(i)
+           Write(6,"(a,F15.10)") "E4_aaa =", E4_aaa(i)
+           Write(6,"(a,F15.10)") "E5_aaa =", E5_aaa(i)
+           Write(6,"(a,F15.10)") "E4_aab =", E4_aab(i)
+           Write(6,"(a,F15.10)") "E5_aab =", E5_aab(i)
+           Write(6,"(a,F15.10)") "E5_bbb =", E4_bbb(i)
+           Write(6,"(a,F15.10)") "E4_bbb =", E5_bbb(i)
+           Write(6,"(a,F15.10)") "E5_bba =", E4_bba(i)
+           Write(6,"(a,F15.10)") "E4_bba =", E5_bba(i)
+
+           Write(6,"(a,F15.10)")"Total  =", (E5_aab(i)+E4_aab(i)+
+     &                            E5_aaa(i)+E4_aaa(i))*Two
+        else
+           Write(6,"(a,2i)")     "Root   =", i
+           Write(6,"(a,F15.10)") "E-CCSD =", EE_CCSD(i)
+           Write(6,"(a,F15.10)") "E4_aaa =", E4_aaa(30+i)
+           Write(6,"(a,F15.10)") "E5_aaa =", E5_aaa(30+i)
+           Write(6,"(a,F15.10)") "E4_aab =", E4_aab(30+i)
+           Write(6,"(a,F15.10)") "E5_aab =", E5_aab(30+i)
+           Write(6,"(a,F15.10)") "E5_bbb =", E4_bbb(30+i)
+           Write(6,"(a,F15.10)") "E4_bbb =", E5_bbb(30+i)
+           Write(6,"(a,F15.10)") "E5_bba =", E4_bba(30+i)
+           Write(6,"(a,F15.10)") "E4_bba =", E5_bba(30+i)
+
+           Write(6,"(a,F15.10)")"Total  =", E5_aab(30+i)+
+     &                                      E4_aab(30+i)+
+     &                                      E5_aaa(30+i)+
+     &                                      E4_aaa(30+i)+
+     &                                      E4_bbb(30+i)+
+     &                                      E5_bbb(30+i)+
+     &                                      E4_bba(30+i)+
+     &                                      E5_bba(30+i)
+        endif 
+CSSS#endif
+            If (Sval .EQ. 16) Then
+               Eccsd  = EE_CCSD(i)
+               Eccsdt = E4_aaa(i)+E5_aaa(i)+E4_aab(i)+E5_aab(i)
+               Eccsdt = Eccsdt * Two
+               Etotal = Eccsd + Eccsdt
+               write(66,20) i, Eccsd*Conv, Etotal*Conv
+            Endif 
+
+            If (Sval .EQ. 17) Then
+               Eccsd  = EE_CCSD(30+i)
+               Eccsdt = E4_aaa(30+i)+E5_aaa(30+i)+
+     &                  E4_aab(30+i)+E5_aab(30+i)+
+     &                  E4_bbb(30+i)+E5_bbb(30+i)+
+     &                  E4_bba(30+i)+E5_bba(30+i)
+               Etotal = Eccsd + Eccsdt
+               write(66,20) i, Eccsd*Conv, Etotal*Conv
+            Endif 
+
+            enddo
+            write(66,100)
 
       endif
 
-97    format(2x,"SUMMARY OF RHF PERTURBATIVE TRIPLES CALCULATION AAB") 
-99    format(2x,'E5(T) =',3x,F20.10) 
-100   format(2x,'E4(T) =',3x,F20.10) 
-101   format(2x,60('-'))
-102   format(2x,"Final CCSD(T) energy after aab = ",3x,F20.10)
+10    format(2x,"EOM-CCSD(T) singlet excitation energies")  
+40    format(2x,"EOM-CCSD(T) triplet excitation energies")  
+100   format(2x,60('-'))
+20    format(2x,I4,x,F20.8,x,F20.8)
+30    format(2x,'ROOT',12x,'EOM-CCSD ',12x,'EOM-CCSD(T) (eV)')
 
       return
       end
 
-
-      subroutine print_ccsdpt_uhf_aaa(array1,sval,a1,a2,b1,b2) 
-
 c---------------------------------------------------------------------------
-c
-c 
-c---------------------------------------------------------------------------
-
-      implicit none
-      include 'interpreter.h'
-      include 'int_gen_parms.h'
-      include 'parallel_info.h'
-c
-      integer i, ival, amax, a, a1, a2, b, b1, b2   
-      double precision array1(a1:a2,b1:b2), sval, stemp   
-      double precision efinal, conv   
-
-      open(66,file='summary.out') 
-
-       if (me .eq. 0)then
-
-          write(66,*) 
-          write(66,*) 
-          write(66,97) 
-          write(66,101) 
-          write(66,99) array1(1,1)  
-          write(66,100) array1(1,2)  
-          write(66,101) 
-          write(66,102) array1(1,1) + array1(1,2) + totenerg 
-          write(66,101) 
-          write(66,*) 
-          write(66,*) 
-
-      endif
-
-97    format(2x,"SUMMARY OF UHF PERTURBATIVE TRIPLES CALCULATION AAA") 
-99    format(2x,'E5(T) =',3x,F20.10) 
-100   format(2x,'E4(T) =',3x,F20.10) 
-101   format(2x,60('-'))
-102   format(2x,"Final CCSD(T) energy after aaa = ",3x,F20.10)
-
-      return
-      end
-
-
-      subroutine print_ccsdpt_uhf_bbb(array1,sval,a1,a2,b1,b2) 
-
-c---------------------------------------------------------------------------
-c
-c 
-c---------------------------------------------------------------------------
-
-      implicit none
-      include 'interpreter.h'
-      include 'int_gen_parms.h'
-      include 'parallel_info.h'
-c
-      integer i, ival, amax, a, a1, a2, b, b1, b2   
-      double precision array1(a1:a2,b1:b2), sval, stemp   
-      double precision efinal, conv   
-
-      open(66,file='summary.out') 
-
-       if (me .eq. 0)then
-
-          write(66,*) 
-          write(66,*) 
-          write(66,97) 
-          write(66,101) 
-          write(66,99) array1(1,1)  
-          write(66,100) array1(1,2)  
-          write(66,101) 
-          write(66,102) array1(1,1) + array1(1,2) + totenerg 
-          write(66,101) 
-          write(66,*) 
-          write(66,*) 
-
-      endif
-
-97    format(2x,"SUMMARY OF UHF PERTURBATIVE TRIPLES CALCULATION BBB") 
-99    format(2x,'E5(T) =',3x,F20.10) 
-100   format(2x,'E4(T) =',3x,F20.10) 
-101   format(2x,60('-'))
-102   format(2x,"Final CCSD(T) energy after bbb = ",3x,F20.10)
-
-      return
-      end
-
-
-      subroutine print_ccsdpt_uhf_aab(array1,sval,a1,a2,b1,b2) 
-
-c---------------------------------------------------------------------------
-c
-c 
-c---------------------------------------------------------------------------
-
-      implicit none
-      include 'interpreter.h'
-      include 'int_gen_parms.h'
-      include 'parallel_info.h'
-c
-      integer i, ival, amax, a, a1, a2, b, b1, b2   
-      double precision array1(a1:a2,b1:b2), sval, stemp   
-      double precision efinal, conv   
-
-      open(66,file='summary.out') 
-
-       if (me .eq. 0)then
-
-          write(66,*) 
-          write(66,*) 
-          write(66,97) 
-          write(66,101) 
-          write(66,99) array1(1,1)  
-          write(66,100) array1(1,2)  
-          write(66,101) 
-          write(66,102) array1(1,1) + array1(1,2) + totenerg 
-          write(66,101) 
-          write(66,*) 
-          write(66,*) 
-
-      endif
-
-97    format(2x,"SUMMARY OF UHF PERTURBATIVE TRIPLES CALCULATION AAB") 
-99    format(2x,'E5(T) =',3x,F20.10) 
-100   format(2x,'E4(T) =',3x,F20.10) 
-101   format(2x,60('-'))
-102   format(2x,"Final CCSD(T) energy after aab = ",3x,F20.10)
-
-      return
-      end
-
-
-      subroutine print_ccsdpt_uhf_bba(array1,sval,a1,a2,b1,b2) 
-
-c---------------------------------------------------------------------------
-c
-c 
-c---------------------------------------------------------------------------
-
-      implicit none
-      include 'interpreter.h'
-      include 'int_gen_parms.h'
-      include 'parallel_info.h'
-c
-      integer i, ival, amax, a, a1, a2, b, b1, b2   
-      double precision array1(a1:a2,b1:b2), sval, stemp   
-      double precision efinal, conv   
-
-      open(66,file='summary.out') 
-
-       if (me .eq. 0)then
-
-          write(66,*) 
-          write(66,*) 
-          write(66,97) 
-          write(66,101) 
-          write(66,99) array1(1,1)  
-          write(66,100) array1(1,2)  
-          write(66,101) 
-          write(66,102) array1(1,1) + array1(1,2) + totenerg 
-          write(66,101) 
-          write(66,*) 
-          write(66,*) 
-
-      endif
-
-97    format(2x,"SUMMARY OF UHF PERTURBATIVE TRIPLES CALCULATION BBA") 
-99    format(2x,'E5(T) =',3x,F20.10) 
-100   format(2x,'E4(T) =',3x,F20.10) 
-101   format(2x,60('-'))
-102   format(2x,"Final CCSD(T) energy after bba = ",3x,F20.10)
-
-      return
-      end
-
-
-
       subroutine print_rhfamp_cinfo(sval)
 
-c---------------------------------------------------------------------------
-c
-c 
 c---------------------------------------------------------------------------
 
       implicit none
@@ -1391,9 +1322,7 @@ c UHF T1b
       return 
       end 
 
-
-
-      subroutine print_cis_rhf_cinfo(array1,sval,a1,a2,b1,b2) 
+      subroutine print_cis_cinfo(array1,sval,a1,a2,b1,b2) 
 
 c---------------------------------------------------------------------------
 c
@@ -1409,6 +1338,73 @@ c
       integer ieom_roots 
       double precision array1(a1:a2,b1:b2), sval, stemp   
       double precision efinal, conv   
+      logical singlet, triplet 
+
+      open(66,file='summary.out') 
+
+      ival = sval 
+      conv = 27.21138505 
+      ieom_roots = eom_roots 
+      amax = max(ieom_roots,6) 
+      singlet = (Sval .eq. 28)
+      triplet = (Sval .eq. 29)
+
+      if (me .eq. 0)then
+
+         If (singlet) then
+            write(66,10) 
+            write(66,100) 
+            write(66,30) 
+            write(66,100) 
+            do i = 1, ieom_roots
+               write(66,20) i, array1(i,1), array1(i,1)*conv
+            enddo 
+            write(66,100) 
+            Call Dputrec(20,"JOBARC","CIS_EXES",ieom_roots,Array1)
+
+         Elseif (Triplet) then
+
+            write(66,*)
+            write(66,40) 
+            write(66,100) 
+            write(66,30) 
+            write(66,100) 
+            do i = 1, ieom_roots
+               write(66,20) i, array1(i,1), array1(i,1)*conv
+            enddo 
+            Call Dputrec(20,"JOBARC","CIS_EXES",ieom_roots,Array1)
+            write(66,100) 
+
+         Endif 
+
+      endif 
+
+
+100   format(2x,60('-'))
+10    format(2x,"CIS singlet excitation energies")  
+40    format(2x,"CIS Triplet excitation energies")  
+20    format(2x,I4,5x,F20.8,x,F20.8)  
+30    format(2x,'ROOT',15x,'Hartree',15x,'eV')  
+C 
+
+      return
+      end
+
+c---------------------------------------------------------------------------
+      subroutine print_eomccsd_cinfo(array1,sval,a1,a2,b1,b2) 
+
+c---------------------------------------------------------------------------
+
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+c
+      integer i, ival, amax, a, a1, a2, b, b1, b2   
+      integer ieom_roots 
+      double precision array1(a1:a2,b1:b2), sval, stemp   
+      double precision efinal, conv   
+      logical singlet, triplet, left_hand, right_hand 
 
       open(66,file='summary.out') 
 
@@ -1417,29 +1413,328 @@ c
       ieom_roots = eom_roots 
       amax = max(ieom_roots,6) 
 
+      singlet = .False.
+      triplet = .False.
+      Right_hand = .False.
+      Left_hand  = .False.
+      singlet = (Sval .eq. 70 .or. Sval .eq. 80)
+      triplet = (Sval .eq. 71 .or. Sval .eq. 81)
+
+      Right_hand = (Sval .eq. 70 .or. Sval .eq. 71)
+      Left_hand  = (Sval .eq. 80 .or. Sval .eq. 81)
+
       if (me .eq. 0)then
 
-         write(66,10) 
-         write(66,100) 
-         write(66,30) 
-         write(66,100) 
-         do i = 1, 12 
-            if (i .le. amax) then  
-            write(66,20) i, array1(i,1)/conv, array1(i,1)  
-            endif 
-         enddo 
+         If (singlet) then
+            If (Right_hand) then
+                write(66,10) 
+            Elseif (Left_hand) then
+                write(66,11) 
+            Endif 
+            write(66,100) 
+            write(66,30) 
+            write(66,100) 
+            do i = 1, ieom_roots
+               write(66,20) i, array1(i,1), array1(i,1)*conv
+            enddo 
+            write(66,100) 
+            Call Dputrec(20,"JOBARC","EOM_EXES",ieom_roots,Array1(1,1))
+
+         Elseif (Triplet) then
+
+            write(66,*)
+            If (Right_hand) then
+               write(66,40) 
+            Elseif (Left_hand) then
+               write(66,41) 
+            Endif
+            write(66,100) 
+            write(66,30) 
+            write(66,100) 
+            do i = 1, ieom_roots
+               write(66,20) i, array1(i,1), array1(i,1)*conv
+            enddo 
+            Call Dputrec(20,"JOBARC","EOM_EXES",ieom_roots,Array1(1,1))
+            write(66,100) 
+
+         Endif 
 
       endif 
 
-
 100   format(2x,60('-'))
-10    format(2x,"CIS excitation energies")  
+10    format(2x,"Right EOM-CCSD singlet excitation energies")  
+11    format(2x,"Left  EOM-CCSD singlet excitation energies")  
+40    format(2x,"Right EOM-CCSD Triplet excitation energies")  
+41    format(2x,"Left  EOM-CCSD Triplet excitation energies")  
 20    format(2x,I4,5x,F20.8,x,F20.8)  
 30    format(2x,'ROOT',15x,'Hartree',15x,'eV')  
+C 
+      return
+      end
+
+c---------------------------------------------------------------------------
+      subroutine print_warning (array1,sval,a1,a2,b1,b2)
+c---------------------------------------------------------------------------
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+c
+      integer a1, a2, b, b1, b2
+      integer ieom_roots
+      double precision array1(a1:a2,b1:b2), sval
+
+      If (me   .eq. 0) then
+      If (Sval .eq.911) then
+
+      Write(66,*)
+      Write(66,"(2x,a)") "Warnings!!"
+      Write(66,"(2x,a)") "----------"
+      Write(66,"(2x,a)") "Zero entry: Did not converged!"
+      Write(66,"(2x,a)") "Left and right energies should be identical."
+      Write(66,"(2x,a,a)") "Right converged Left did not ",
+     &                     "or vice versa: rare but possible."
+      Write(66,"(2x,a,a,a)") "Possible solutions:"
+      Write(66,"(2x,a)")"1. Increase the number of iterations (<50)."
+      Write(66,"(2x,a)")"2. Change the denominator from Fock to Hbar."
+
+      Endif
+      Endif
 
       return
       end
 
+c---------------------------------------------------------------------------
+      subroutine print_hfstability_matrix(array1,sval,a1,a2,b1,b2)
+c---------------------------------------------------------------------------
+
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+c
+      integer i, ival, amax, a, a1, a2, b, b1, b2
+      integer ieom_roots,sval
+      double precision array1(a1:a2,b1:b2), stemp
+      double precision efinal, conv
+      logical Singlet, Triplet 
+
+      open(66,file='summary.out')
+
+      conv = 27.21138505
+
+      singlet = (Sval .eq. 55)
+      triplet = (Sval .eq. 56)
+      ieom_roots = eom_roots 
+    
+      if (me .eq. 0)then
+
+        If (Singlet)  Then
+
+         write(66,10)
+         write(66,100)
+         write(66,30)
+         write(66,100)
+         do i = 1, ieom_roots
+            write(66,20) i, array1(i,1), array1(i,1)*conv
+         enddo
+         write(66,100)
+ 
+        Elseif (Triplet) then
+
+         Write(66,*)
+         write(66,40)
+         write(66,100)
+         write(66,30)
+         write(66,100)
+         do i = 1, ieom_roots
+            write(66,20) i, array1(i,1), array1(i,1)*conv
+         enddo
+         write(66,100)
+
+        Endif
+
+      endif
+
+100   format(2x,60('-'))
+10    format(2x,"HF-stability analysis: Singlet ---> Singlet")
+40    format(2x,"HF-stability analysis: Singlet ---> Triplet")
+20    format(2x,I4,5x,F20.8,x,F20.8)
+30    format(2x,'ROOT',15x,'Hartree',15x,'eV')
+C
+      return
+      end
+c---------------------------------------------------------------------------
+
+
+      subroutine print_dea_einfo(array1,sval,a1,a2,b1,b2)
+
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+c
+      integer i, ival, amax, a, a1, a2, b, b1, b2
+      integer ieom_roots
+      double precision array1(a1:a2,b1:b2), sval, stemp
+      double precision efinal, conv
+
+      open(66,file='summary.out')
+
+      ival = sval
+      conv = 27.21138505
+      ieom_roots = eom_roots
+
+      if (me .eq. 0)then
+
+         if (sval .eq. 40) write(66,10)
+         if (sval .eq. 41) write(66,20)
+         write(66,100)
+         write(66,40)
+         write(66,100)
+         do i = 1, ieom_roots
+            write(66,30) i, array1(i,1), array1(i,1)*conv 
+         enddo
+         write(66,100)
+      endif
+
+
+100   format(2x,60('-'))
+10    format(2x,"DEA Singlet energies")
+20    format(2x,"DEA Triplet energies")
+30    format(2x,I4,5x,F20.8,x,F20.8)
+40    format(2x,'ROOT',15x,'Hartree',15X,"eV")
+
+      return
+      end
+c---------------------------------------------------------------------------
+
+      subroutine print_dip_einfo(array1,sval,a1,a2,b1,b2)
+
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+c
+      integer i, ival, amax, a, a1, a2, b, b1, b2
+      integer ieom_roots
+      double precision array1(a1:a2,b1:b2), sval, stemp
+      double precision efinal, conv
+
+      open(66,file='summary.out')
+
+      ival = sval
+      conv = 27.21138505
+      ieom_roots = eom_roots
+
+      if (me .eq. 0)then
+
+         if (sval .eq. 50) write(66,10)
+         if (sval .eq. 51) write(66,20)
+         write(66,100)
+         write(66,40)
+         write(66,100)
+         do i = 1, ieom_roots 
+            write(66,30) i, array1(i,1), array1(i,1)*Conv 
+         enddo
+         write(66,100)
+      endif
+
+
+100   format(2x,60('-'))
+10    format(2x,"DIP Singlet energies")
+20    format(2x,"DIP Triplet energies")
+30    format(2x,I4,5x,F20.8,x,F20.8)
+40    format(2x,'ROOT',15x,'Hartree',15X,"eV")
+
+      return
+      end
+
+c---------------------------------------------------------------------------
+      subroutine print_ip_ea_einfo(array1,sval,a1,a2)
+c---------------------------------------------------------------------------
+
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+c
+      integer i, ival, amax, a, a1, a2, b, b1, b2
+      integer ieom_roots
+      double precision array1(a1:a2), sval, stemp
+      double precision efinal, conv
+
+      open(66,file='summary.out')
+
+      ival = sval
+      conv = 27.21138505
+      ieom_roots = eom_roots
+
+      if (me .eq. 0)then
+         If (Sval .eq. 60) write(66,10)
+         If (Sval .eq. 61) write(66,11)
+         write(66,100)
+         write(66,30)
+         write(66,100)
+         do i = 1, ieom_roots
+            write(66,20) i, array1(i),  array1(i)*conv
+         enddo
+         write(66,100)
+      endif
+
+100   format(2x,60('-'))
+10    format(2x,"IP-EOM-CCSD energies")
+11    format(2x,"EA-EOM-CCSD energies")
+20    format(2x,I4,5x,F20.8,x,F20.8)
+30    format(2x,'ROOT',15x,'Hartree',15x,'eV')
+
+      return
+      end
+
+c---------------------------------------------------------------------------
+      subroutine print_eom_rhf_cinfo(array1,sval,a1,a2,b1,b2)
+c---------------------------------------------------------------------------
+
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+c
+      integer i, ival, amax, a, a1, a2, b, b1, b2
+      integer ieom_roots
+      double precision array1(a1:a2,b1:b2), sval, stemp
+      double precision efinal, conv
+
+      open(66,file='summary.out')
+
+      ival = sval
+      conv = 27.21138505
+      ieom_roots = eom_roots
+      amax = max(ieom_roots,6)
+
+      if (me .eq. 0)then
+
+         write(66,10)
+         write(66,100)
+         write(66,30)
+         write(66,100)
+         do i = 1, 12
+            if (i .le. amax) then
+            write(66,20) i, array1(i,1)/conv, array1(i,1)
+            endif
+         enddo
+         Write(6,*) "Writing to JOBARC"
+         Call Dputrec(20,"JOBARC","EOM_EXES",ieom_roots,Array1)
+
+      endif
+
+100   format(2x,60('-'))
+10    format(2x,"EOM-CCSD excitation energies")
+20    format(2x,I4,5x,F20.8,x,F20.8)
+30    format(2x,'ROOT',15x,'Hartree',15x,'eV')
+
+      return
+      end
 
       subroutine print_cis_uhf_cinfo(array1,sval,a1,a2,b1,b2) 
 

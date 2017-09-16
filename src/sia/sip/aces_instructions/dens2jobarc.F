@@ -42,7 +42,7 @@ c--------------------------------------------------------------------------
       integer*8 get_block_data_index
       integer find_current_block, block 
 
-      integer array_type, nindex, inda(2), indb(2)    
+      integer array_type, nindex, inda(2), indb(2), n1, n2
 
       logical direct_flag
 
@@ -145,7 +145,7 @@ c---------------------------------------------------------------------------
       INCLUDE 'int_gen_parms.h'
       INCLUDE 'parallel_info.h'
 
-      INTEGER    NDIM,NDIM1,NDIM2,MU,NU
+      INTEGER    NDIM,NDIM1,NDIM2,MU,NU,IEOM_ROOTS 
       INTEGER    ierd,ierd1,ierd2
       INTEGER    TYPE,FLAG
       INTEGER    ibuf (*)
@@ -158,9 +158,23 @@ c---------------------------------------------------------------------------
       DOUBLE PRECISION  SCR  (1:NDIM1,1:NDIM2)
       DOUBLE PRECISION  dbuf (*)
 
+#ifdef _DEBUG_LVL0
+      if (me .EQ. 0) then
+CSSS         call output(DENS, 1, NDIM1, 1, NDIM2, NDIM1, NDIM2, 1)
+         write(6,*) "TYPE, iuhf :", TYPE, iuhf 
+      Endif 
+    
+#endif 
+
+      If (Iuhf .Eq. 0) Then 
+
       FLAG = -1 
       IF (me .EQ. 0) THEN
-
+ 
+         IF (type .eq. -1) CALL DPUTREC (1, 'JOBARC',"CIS     ",
+     &                                   1,SCR)
+         IF (type .eq. -2) CALL DPUTREC (1, 'JOBARC',"EOM     ",
+     &                                   1,SCR)
          IF      (type .EQ.  0) THEN
             JALABEL='HFDENSTY'
          ELSE IF (type .EQ.  1) THEN
@@ -250,7 +264,7 @@ c---------------------------------------------------------------------------
          ELSE IF (type .EQ. 37) THEN
             JALABEL='EXCDEN12'
 
-         ELSE IF (type .EQ. -1) THEN ! Special for now 5-2011
+         ELSE IF (type .EQ. -3) THEN ! Special for now 5-2011
             FLAG = 1 ! anything but density
             JALABEL='AOOVRLAP'
             WRITE (*,*)
@@ -258,85 +272,271 @@ c---------------------------------------------------------------------------
             WRITE (*,*)
 
          ELSE
-
-            WRITE (*,*)
-            WRITE (*,*) ' No density for this integer label! '
-            RETURN
-
+            IF (TYPE .NE. -1 .OR. TYPE .EQ. -5) THEN
+                WRITE (*,*)
+                WRITE (*,*) ' No density for this integer label! '
+                RETURN
+            ENDIF 
          ENDIF
 
-         IF (intpkg .eq. flocke_package) THEN
-
-             do nu = 1, ndim2
-             do mu = 1, ndim1
-                scr(mu,nu) = dens(mu,nu)
-             enddo
-             enddo
-            
-
-             IF (FLAG .EQ. 0) THEN
-
-                do nu = 1, ndim2
-                do mu = 1, ndim1
-                   ierd1 = ibuf (ierdind+mu-1)
-                   ierd2 = ibuf (ierdind+nu-1)
-                   dscale = dbuf(iscale_fac+ierd1-1) * 
-     +                      dbuf(iscale_fac+ierd2-1)
-                   dens(ierd1,ierd2) = scr(mu,nu) / dscale
-                enddo
-                enddo
-
-             ELSE IF (FLAG .EQ. 1) THEN
-
-                do nu = 1, ndim2
-                do mu = 1, ndim1
-                   ierd1 = ibuf (ierdind+mu-1)
-                   ierd2 = ibuf (ierdind+nu-1)
-                   dscale = dbuf(iscale_fac+ierd1-1) * 
-     +                      dbuf(iscale_fac+ierd2-1)
-                   dens(ierd1,ierd2) = scr(mu,nu) * dscale
-                enddo
-                enddo
-
-             ENDIF
+C The following block of code is no longer necessary. All the
+C reordering and rescaling is transfered to a2proc routines. 
+C From here write everyting as they come out from ACES III.
+C Ajith Perera. 01/2014.
 C
-C            do nu = 1, ndim2
+CSSS         IF (intpkg .eq. flocke_package) THEN
+CSSS
+CSSS             do nu = 1, ndim2
+CSSS             do mu = 1, ndim1
+CSSS                scr(mu,nu) = dens(mu,nu)
+CSSS             enddo
+CSSS             enddo
+CSSS            
+CSSS             IF (FLAG .EQ. 0) THEN
+CSSS
+CSSS                do nu = 1, ndim2
+CSSS                do mu = 1, ndim1
+CSSS                   ierd1 = ibuf (ierdind+mu-1)
+CSSS                   ierd2 = ibuf (ierdind+nu-1)
+CSSS                   dscale = dbuf(iscale_fac+ierd1-1) * 
+CSSS     +                      dbuf(iscale_fac+ierd2-1)
+CSSS                   dens(ierd1,ierd2) = scr(mu,nu) / dscale
+CSSS                enddo
+CSSS                enddo
+CSSS
+CSSS             ELSE IF (FLAG .EQ. 1) THEN
+CSSS
+CSSS                do nu = 1, ndim2
+CSSS                do mu = 1, ndim1
+CSSS                   ierd1 = ibuf (ierdind+mu-1)
+CSSS                   ierd2 = ibuf (ierdind+nu-1)
+CSSS                   dscale = dbuf(iscale_fac+ierd1-1) * 
+CSSS     +                      dbuf(iscale_fac+ierd2-1)
+CSSS                   dens(ierd1,ierd2) = scr(mu,nu) * dscale
+CSSS                enddo
+CSSS                enddo
+CSSS
+CSSS             ENDIF
+CSSS
+CSSS            do nu = 1, ndim2
+CSSS
+CSSS               do mu = 1, ndim1
+CSSS                  scr (mu) = dens (mu,nu)
+CSSS               enddo
+CSSS
+CSSS               do mu = 1, ndim1
+CSSS                  ierd = ibuf (ierdind+mu-1)
+CSSS                  dens (ierd,nu) = scr(mu) / dbuf (iscale_fac+ierd-1)
+CSSS               enddo
+CSSS
+CSSS            enddo
+CSSS
+CSSS            do mu = 1, ndim1
+CSSS
+CSSS               do nu = 1, ndim2
+CSSS                  scr(nu) = dens (mu,nu)
+CSSS               enddo
+CSSS
+CSSS               do nu = 1, ndim2
+CSSS                  ierd = ibuf (ierdind+nu-1)
+CSSS                  dens (mu,ierd) = scr (nu) / dbuf (iscale_fac+ierd-1)
+CSSS               enddo
+CSSS
+CSSS            enddo
+CSSS
+CSSS         ENDIF
+CSSS         IF (FLAG .EQ. 0 .OR. FLAG .EQ. 1) 
+CSSS     +   CALL  DESCRAMBLE_MATRIX
+CSSS     +
+CSSS     +               (DENS,NDIM1,NFPS,IXSHELLS,NSHELLS)
+CSSS     +
+CSSS     +
+CSSS         Write(6,*) "Inside dens2jobarc, ndim1, ndim2", ndim1, ndim2
 C
-C               do mu = 1, ndim1
-C                  scr (mu) = dens (mu,nu)
-C               enddo
-C
-C               do mu = 1, ndim1
-C                  ierd = ibuf (ierdind+mu-1)
-C                  dens (ierd,nu) = scr(mu) / dbuf (iscale_fac+ierd-1)
-C               enddo
-C
-C            enddo
-C
-C            do mu = 1, ndim1
-C
-C               do nu = 1, ndim2
-C                  scr(nu) = dens (mu,nu)
-C               enddo
-C
-C               do nu = 1, ndim2
-C                  ierd = ibuf (ierdind+nu-1)
-C                  dens (mu,ierd) = scr (nu) / dbuf (iscale_fac+ierd-1)
-C               enddo
-C
-C            enddo
-
-         ENDIF
-         IF (FLAG .EQ. 0 .OR. FLAG .EQ. 1) 
-     +   CALL  DESCRAMBLE_MATRIX
-     +
-     +               (DENS,NDIM1,NFPS,IXSHELLS,NSHELLS)
-     +
-     +
          NDIM = NDIM1 * NDIM2
          CALL  DPUTREC (1, 'JOBARC', JALABEL, NDIM,DENS)
 
       ENDIF
+C
+C Block for the UHF wave functions. Write both Alpha and Beta densities
+C
+      ELSE 
+
+      FLAG = -1 
+      IF (me .EQ. 0) THEN
+ 
+         IF (type .eq. -1) CALL DPUTREC (1, 'JOBARC',"CIS     ",
+     &                                   1,SCR)
+         IF (type .eq. -2) CALL DPUTREC (1, 'JOBARC',"EOM     ",
+     &                                   1,SCR)
+
+         IF      (type .EQ.  0) THEN
+            JALABEL='HFDENSTY'
+         ELSE IF (type .EQ.  1) THEN
+            JALABEL='TDENSITY'
+
+         ELSE IF (type .EQ.  2) THEN
+            JALABEL='REOMDN1A'
+         ELSE IF (type .EQ.  3) THEN
+            JALABEL='REOMDN1B'
+         ELSE IF (type .EQ.  4) THEN
+            JALABEL='LEOMDN1A'
+         ELSE IF (type .EQ.  5) THEN
+            JALABEL='LEOMDN1B'
+         ELSE IF (type .EQ.  6) THEN
+            JALABEL='EXCDEN01'
+
+         ELSE IF (type .EQ.  7) THEN
+            JALABEL='REOMDN2A'
+         ELSE IF (type .EQ.  8) THEN
+            JALABEL='REOMDN2B'
+         ELSE IF (type .EQ.  9) THEN
+            JALABEL='LEOMDN2A'
+         ELSE IF (type .EQ.  10) THEN
+            JALABEL='LEOMDN2B'
+         ELSE IF (type .EQ.  11) THEN
+            JALABEL='EXCDEN02'
+
+         ELSE IF (type .EQ.  12) THEN
+            JALABEL='REOMDN3A'
+         ELSE IF (type .EQ.  13) THEN
+            JALABEL='REOMDN3B'
+         ELSE IF (type .EQ.  14) THEN
+            JALABEL='LEOMDN3A'
+         ELSE IF (type .EQ.  15) THEN
+            JALABEL='LEOMDN3B'
+         ELSE IF (type .EQ. 16) THEN
+            JALABEL='EXCDEN03'
+
+         ELSE IF (type .EQ. 17) THEN
+            JALABEL='REOMDN4A'
+         ELSE IF (type .EQ. 18) THEN
+            JALABEL='REOMDN4B'
+         ELSE IF (type .EQ. 19) THEN
+            JALABEL='LEOMDN4A'
+         ELSE IF (type .EQ. 20) THEN
+            JALABEL='LEOMDN4B'
+         ELSE IF (type .EQ. 21) THEN
+            JALABEL='EXCDEN04'
+
+         ELSE IF (type .EQ. 22) THEN
+            JALABEL='REOMDN5A'
+         ELSE IF (type .EQ. 23) THEN
+            JALABEL='REOMDN5B'
+         ELSE IF (type .EQ. 24) THEN
+            JALABEL='LEOMDN5A'
+         ELSE IF (type .EQ. 25) THEN
+            JALABEL='LEOMDN5B'
+         ELSE IF (type .EQ. 26) THEN
+            JALABEL='EXCDEN05'
+
+         ELSE IF (type .EQ. 27) THEN
+            JALABEL='REOMDN6A'
+         ELSE IF (type .EQ. 28) THEN
+            JALABEL='REOMDN6B'
+         ELSE IF (type .EQ. 29) THEN
+            JALABEL='LEOMDN6A'
+         ELSE IF (type .EQ. 30) THEN
+            JALABEL='LEOMDN6B'
+         ELSE IF (type .EQ. 31) THEN
+            JALABEL='EXCDEN06'
+
+         ELSE IF (type .EQ. 32) THEN
+            JALABEL='REOMDN7A'
+         ELSE IF (type .EQ. 33) THEN
+            JALABEL='REOMDN7B'
+         ELSE IF (type .EQ. 34) THEN
+            JALABEL='LEOMDN7A'
+         ELSE IF (type .EQ. 35) THEN
+            JALABEL='LEOMDN7B'
+         ELSE IF (type .EQ. 36) THEN
+            JALABEL='EXCDEN07'
+
+         ELSE IF (type .EQ. 37) THEN
+            JALABEL='REOMDN8A'
+         ELSE IF (type .EQ. 38) THEN
+            JALABEL='REOMDN8B'
+         ELSE IF (type .EQ. 39) THEN
+            JALABEL='LEOMDN8A'
+         ELSE IF (type .EQ. 40) THEN
+            JALABEL='LEOMDN8B'
+         ELSE IF (type .EQ. 41) THEN
+            JALABEL='EXCDEN08'
+
+         ELSE IF (type .EQ. 42) THEN
+            JALABEL='REOMDN9A'
+         ELSE IF (type .EQ. 43) THEN
+            JALABEL='REOMDN9B'
+         ELSE IF (type .EQ. 44) THEN
+            JALABEL='LEOMDN9A'
+         ELSE IF (type .EQ. 45) THEN
+            JALABEL='LEOMDN9B'
+         ELSE IF (type .EQ. 46) THEN
+            JALABEL='EXCDEN09'
+
+         ELSE IF (type .EQ. 47) THEN
+            JALABEL='REOMD10A'
+         ELSE IF (type .EQ. 48) THEN
+            JALABEL='REOMD10B'
+         ELSE IF (type .EQ. 49) THEN
+            JALABEL='LEOMD10A'
+         ELSE IF (type .EQ. 50) THEN
+            JALABEL='LEOMD10B'
+         ELSE IF (type .EQ. 51) THEN
+            JALABEL='EXCDEN10'
+
+         ELSE IF (type .EQ. 52) THEN
+            JALABEL='REOMD11A'
+         ELSE IF (type .EQ. 53) THEN
+            JALABEL='REOMD11A'
+         ELSE IF (type .EQ. 54) THEN
+            JALABEL='LEOMD11B'
+         ELSE IF (type .EQ. 55) THEN
+            JALABEL='LEOMD11B'
+         ELSE IF (type .EQ. 56) THEN
+            JALABEL='EXCDEN11'
+
+         ELSE IF (type .EQ. 57) THEN
+            JALABEL='REOMD12A'
+         ELSE IF (type .EQ. 58) THEN
+            JALABEL='REOMD12B'
+         ELSE IF (type .EQ. 59) THEN
+            JALABEL='LEOMD12A'
+         ELSE IF (type .EQ. 60) THEN
+            JALABEL='LEOMD12B'
+         ELSE IF (type .EQ. 61) THEN
+            JALABEL='EXCDEN12'
+
+         ELSE IF (type .EQ. -3) THEN ! Special for now 5-2011
+            FLAG = 1 ! anything but density
+            JALABEL='AOOVRLAP'
+            WRITE (*,*)
+            WRITE (*,*) ' Writing atomic overlap integrals to JOBARC '
+            WRITE (*,*)
+
+        ELSE IF (type .EQ.-5) THEN 
+C
+C This block is reserved to dump the record that flag the states with
+C spin multplicity. The triplets carry 2 and singlet carry 1.
+C
+         IEOM_ROOTS = EOM_ROOTS 
+         CALL  DPUTREC (1, 'JOBARC', "SPINMULT", IEOM_ROOTS,DENS)
+
+         ELSE 
+
+            IF (TYPE .NE. -1 .OR. TYPE .EQ. -5) THEN 
+            WRITE (*,*)
+            WRITE (*,*) ' No density for this integer label! '
+            ENDIF 
+            RETURN
+
+         ENDIF 
+
+         NDIM = NDIM1 * NDIM2
+         CALL  DPUTREC (1, 'JOBARC', JALABEL, NDIM,DENS)
+
+       ENDIF 
+      ENDIF 
 
       RETURN
       END

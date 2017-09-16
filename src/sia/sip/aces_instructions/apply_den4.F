@@ -64,6 +64,7 @@ c--------------------------------------------------------------------------
      *                   i1,i2,j1,j2,k1,k2,l1,l2)
       implicit none 
       include 'interpreter.h'
+      include 'parallel_info.h'
 
       integer a1,a2,b1,b2,c1,c2,d1,d2
       integer i1,i2,j1,j2,k1,k2,l1,l2

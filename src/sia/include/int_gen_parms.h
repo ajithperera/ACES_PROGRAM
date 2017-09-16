@@ -127,11 +127,16 @@ c nContAOs : total number of contracted functions
       double precision damp_init, cc_conv, scf_conv, bcc_conv
       double precision guess, lshft_a1, lshft_b1, damp_type, damp_tol
       double precision lindep_tol, lock_orbitals, intgrl_tol, damp_end
-      double precision lock_orbocc, dkh_order 
+      double precision lock_orbocc
 
       double precision excite, eom_tol, eom_roots ! Watson Added
       double precision  polarizability, a_tensor, g_tensor, d_tensor
+      double precision  dkh_order,reference 
+      double precision  ee_maxcyc,ee_guess,ee_denom 
+      double precision  spn_orbt
       double precision reg,stabvalue
+      double precision EE_ccsd,E4_aaa,E5_aaa,E4_bbb,E5_bbb,E4_aab
+      double precision E5_aab,E4_bba,E5_bba,E4_abb,E5_abb
 
       integer itrips, itripe
       integer ihess1, ihess2, jhess1, jhess2, subb, sube
@@ -195,8 +200,8 @@ c nContAOs : total number of contracted functions
      &                     d_tensor, bcc_conv, guess, lshft_a1, 
      &                     lshft_b1, damp_type, damp_tol, lindep_tol,
      &                     lock_orbitals, lock_orbocc, intgrl_tol, 
-     &                     damp_end, dkh_order, last 
-
+     &                     damp_end,dkh_order,spn_orbt,reference,
+     &                     ee_maxcyc, ee_guess, ee_denom, last
 
       logical managers_are_workers, master_is_worker
  
@@ -204,7 +209,12 @@ c nContAOs : total number of contracted functions
       logical compute_1e_integrals
       common /gradient_data/gradient_data(3*max_Centers),
      *                     compute_1e_integrals
-                       
+
+      common /eomt_data/EE_ccsd(60),E4_aaa(60),E5_aaa(60),
+     *                              E4_bbb(60),E5_bbb(60),
+     *                              E4_aab(60),E5_aab(60),
+     *                              E4_abb(60),E5_abb(60),
+     *                              E4_bba(60),E5_bba(60)
       integer max_procsx
       parameter (max_procsx = 150000)
       integer scfa_req, scfb_req, epsa_req, epsb_req 

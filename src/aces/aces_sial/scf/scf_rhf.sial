@@ -247,6 +247,7 @@
       STATIC A_OCC_NUMS(NbfnsA)
       STATIC B_OCC_NUMS(NbfnsB)
       STATIC DAMP_PARMS(Ithree)
+      STATIC DKH(mu,nu)
 #bgn_debug
      distributed OVC_T(p,mu)
      distributed OVC(p,p1)
@@ -763,7 +764,11 @@
           DO nu   
 #
              txx(mu,nu) = 0.0 
-             execute return_h1 txx  
+             If do_dkh_order > 0.0
+                Txx(mu,nu) = DKH(mu,nu)
+             Else
+                execute return_h1 txx
+             Endif
 #
              PUT Fpq_a(mu,nu) += Txx(mu,nu) 
              PUT Fpq_b(mu,nu) += Txx(mu,nu) 
@@ -1568,11 +1573,15 @@
        DO mu    
        DO nu   
 #
-            Txx(mu,nu) = 0.0 
-            execute return_h1 txx 
+          Txx(mu,nu) = 0.0 
+          If do_dkh_order > 0.0
+             Txx(mu,nu) = DKH(mu,nu)
+          Else
+             execute return_h1 txx
+          Endif
 #
-             PUT Fpq_a(mu,nu) += Txx(mu,nu) 
-             PUT Fpq_b(mu,nu) += Txx(mu,nu) 
+          PUT Fpq_a(mu,nu) += Txx(mu,nu) 
+          PUT Fpq_b(mu,nu) += Txx(mu,nu) 
 #
        ENDDO nu   
        ENDDO mu    
@@ -1627,7 +1636,11 @@
              GET DHFb(mu,nu) 
 #
              Txx(mu,nu)   = 0.0 
-             execute return_h1 txx  
+             If do_dkh_order > 0.0
+                Txx(mu,nu) = DKH(mu,nu)
+             Else
+                execute return_h1 txx
+             Endif
 #
              T1xx(mu,nu)  = Txx(mu,nu) 
              T1xx(mu,nu) += Fpq_a(mu,nu) 
@@ -1991,7 +2004,11 @@
 
          PARDO mu, nu
             Txx(mu,nu) = 0.0
-            execute return_h1 Txx
+            If do_dkh_order > 0.0
+               Txx(mu,nu) = DKH(mu,nu)
+            Else
+               execute return_h1 Txx
+            Endif
             PUT Fpq_a(mu,nu) = Txx(mu,nu)
             PUT Fpq_b(mu,nu) = Txx(mu,nu)
          ENDPARDO mu, nu
@@ -3263,7 +3280,11 @@
              GET Fpq_b(mu,nu)
 
              Txx(mu,nu)   = 0.0
-             execute return_h1 txx
+             If do_dkh_order > 0.0
+                Txx(mu,nu) = DKH(mu,nu)
+             Else
+                execute return_h1 txx
+             Endif
 #
              T1xx(mu,nu)  = Txx(mu,nu)
 #
@@ -3375,7 +3396,11 @@
            GET Pnew_b(mu,nu)
 #
            Txx(mu,nu)   = 0.0
-           execute return_h1 txx
+           If do_dkh_order > 0.0
+              Txx(mu,nu) = DKH(mu,nu)
+           Else
+              execute return_h1 txx
+           Endif
 
            T1xx(mu,nu)  = Txx(mu,nu)
 
@@ -4281,6 +4306,23 @@
          EXECUTE GET_INIT_OCCUPATION A_OCC_NUMS ZERO
 
       endif
+
+      EXECUTE GET_MY_RANK RANK
+      IF DO_DKH_ORDER > 0.0
+          IF RANK == 0.0
+
+            DO mu
+            DO nu
+               TXX(mu,nu) = 0.0
+               EXECUTE RETURN_1EL_DKH TXX
+               DKH(mu,nu) = TXX(mu,nu)
+            ENDDO nu
+            ENDDO mu
+
+          ENDIF
+      ENDIF
+      execute BROADCAST_ARRAY DKH
+      execute sip_barrier
 
       If etemp == 9.0
          CALL IGUESS

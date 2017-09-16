@@ -59,6 +59,7 @@ c      subroutine beta()
       integer saveocc, savevirt, saveao
       integer ndim 
       integer Iostat, Ierror 
+      integer Idkh_order 
 
       character*20 logfile
       character*80 sial_program
@@ -98,8 +99,9 @@ c      subroutine beta()
       integer i1, i2
       integer*8 mpierr8, nprocs8
 
-       common /flags/ iflags
-       integer iflags(100) 
+      integer iflags(100),iflags2(500)
+      common /flags/ iflags
+      common /flags/ iflags2
 
 #ifdef ALTIX
       pointer (dptr, dbuf)
@@ -719,9 +721,7 @@ c-------------------------------------------------------------------
 c        stack_algorithm_type = 2
 
          first = .false.
-         Write(6,*) "Entering init_data"
          call init_data()
-         Write(6,*) "out from init_data"
          call joda_prep()
 
          if (sip_mx_occ_segsize.lt.1.or.
@@ -877,9 +877,12 @@ c          go to 333
       endif
 
       if (me .eq. 0) then
-         WRITE(6,*) 'VFL NAME :', sial_program 
-         WRITE(6,*) 'VFL NAME :', dryrun  
-      if (sial_program(1:10) .eq. 'scf_aguess') then
+      WRITE(6,*) 'The Sial Program :', sial_program
+      WRITE(6,*) 'Is this dryrun??:', dryrun
+
+      if ((sial_program(1:10) .eq.  'scf_aguess') .or.
+     +    (sial_program(1:7)  .eq.  'scf_rhf'   ) .or.
+     +    (sial_program(1:7)  .eq.  'scf_uhf'   )) then 
       if (dryrun) then
          write(6,*) ' Skipping Calling ECP main ' 
 
@@ -890,6 +893,17 @@ c          go to 333
             call ecpmain() 
             write(6,*) ' Out Of Calling ECP main ' 
          endif 
+C
+C Add the DKH transformed integrals of a given DKH order. 
+C
+         Write(6,*) "iflags2(157)===>", iflags2(157)
+         If (iflags2(157) .NE. 0) then
+             Idkh_order = iflags2(157)
+             Write(6,"(a,i1,a)") " The DKH-1el ints. of order ",
+     +                             dkh_order," is computed."
+             Write(6,*)
+             call dkh__main(Idkh_order)
+          Endif
 
       endif 
       endif 

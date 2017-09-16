@@ -316,7 +316,7 @@ const ASV_nl_t ASV_nl[] =
 {/*202*/ "IEASYM",	"EA_SYM#",	h_ICHAR_string,	0,	""},
 {/*203*/ "ITDHF",	"TDHF#",	h_ICHAR_handle,	0,	""},
 {/*204*/ "IFNCTL",	"FUNCT#IONAL",	h_ICHAR_handle,	4,	""},
-{/*205*/ "IEOMCY",	"EOM_MAXCY#C",	h_ICHAR_f_int,	50,	"cycles"},
+{/*205*/ "IEOMCY",	"EOM_MAXCY#C",	h_ICHAR_f_int,	30,	"cycles"},
 {/*206*/ "IEOMPR",	"EOMPROP#",	h_ICHAR_handle,	0,	""},
 {/*207*/ "IABCDF",	"ABCDFULL#",	h_ICHAR_handle,	0,	""},
 {/*208*/ "IINTOL",	"INTGRL_TOL#",	h_ICHAR_f_int,	14,	"(tol)"},
@@ -375,9 +375,11 @@ const ASV_nl_t ASV_nl[] =
 {/*259*/ "IOPT_CTRL",   "OPT_CONT#ROL", h_ICHAR_handle, 0,      ""},
 {/*260*/ "ILOCK_ORBS",  "LOCK_ORBITALS",h_ICHAR_handle, 0,      ""},
 {/*261*/ "IDAMP_END",   "DAMP_END"     ,h_ICHAR_handle, 20,     ""},
-{/*262*/ "",   ""     ,h_ICHAR_handle,0,""},
+{/*262*/ "EE_GUESS",    "EE_GUESS"     ,h_ICHAR_handle, 0,      ""},
+{/*263*/ "EE_DENOM",    "EE_DENOM"     ,h_ICHAR_handle, 0,      ""},
+{/*264*/ "",   ""     ,h_ICHAR_handle,0,""},
 }; /* end ASV_nl[] definition */
-#define MAX_ASVs 262
+#define MAX_ASVs 264
 
 /******************************************************************************/
 
@@ -494,6 +496,7 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "A-TEN",        /* 15 */
                 "G-TEN",        /* 16 */
                 "D-TEN",        /* 17 */
+                "SOC",          /* 18 */
                 "",
             };
             asv_update_handle(index,value,handles);
@@ -852,6 +855,22 @@ void asv_handle_proc(const f_int * index, const char * value)
             asv_update_handle(index,value,handles);
             break;
         }
+
+        case h_IOPPAR_ee_guess:
+        {
+            const char *handles[] = { "CIS", "EXTERNAL", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_ee_denom:
+        {
+            const char *handles[] = { "FOCK", "HBAR", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+
 
         case h_IOPPAR_treat_pert:
         {

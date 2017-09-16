@@ -1,0 +1,3868 @@
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by 
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  The GNU General Public License is included in this distribution
+#  in the file COPYRIGHT.
+			SIAL CIS_UHF
+#                       -----------
+
+      index kiter      = 1, cc_iter
+      Index Ndim       = 1, 100
+      Index Nroots     = 1, 12
+      Index Mroots     = 1, 12
+      Index Dbl_mroots = 1, 60
+      Index Subsp_dim  = 1, 50
+      Index Nindex50   = 1, 50
+      Index Mindex50   = 1, 50
+      Index Kindex50   = 1, 50
+      Index Lindex50   = 1, 50
+      Index Spn_mult   = 1, 2
+      Index Ione       = 1, 1
+      Index Twelve     = 1, 12
+#
+      aoindex mu     = 1, norb
+      aoindex nu     = 1, norb
+      aoindex lambda = 1, norb
+      aoindex sigma  = 1, norb
+#
+      moaindex i = baocc, eaocc
+      moaindex i1= baocc, eaocc
+      moaindex i2= baocc, eaocc
+      moaindex i3= baocc, eaocc
+#
+      moaindex a = bavirt, eavirt
+      moaindex a1= bavirt, eavirt
+      moaindex a2= bavirt, eavirt
+      moaindex a3= bavirt, eavirt
+#
+      mobindex j = bbocc, ebocc
+      mobindex j1= bbocc, ebocc
+      mobindex j2= bbocc, ebocc
+      mobindex j3= bbocc, ebocc
+#
+      mobindex b = bbvirt, ebvirt
+      mobindex b1= bbvirt, ebvirt
+      mobindex b2= bbvirt, ebvirt
+      mobindex b3= bbvirt, ebvirt
+#
+      moaindex p = baocc, eavirt
+      moaindex p1= baocc, eavirt
+      moaindex p2= baocc, eavirt
+      moaindex p3= baocc, eavirt
+#
+      mobindex q = bbocc, ebvirt
+      mobindex q1= bbocc, ebvirt
+      mobindex q2= bbocc, ebvirt
+      mobindex q3= bbocc, ebvirt
+#
+      served Viaai(i,a1,a,i1)
+      served Vaaii(a,a1,i,i1)
+      served Vjbbj(j,b,b1,j1)
+      served Vbbjj(b,b1,j,j1)
+      served Vaajj(a,a1,j,j1)
+      served Viabj(i,a,b,j)
+      served Vxxjj(mu,nu,j1,j)
+      served Vjjxx(j1,nu,lambda,j)
+      served Vjxxj(j1,nu,lambda,j)
+      served Vxjqj(mu,j,q,j1)
+      served Vjxbj(j,mu,b,j1)
+      served Vxbjj(mu,b,j,j1)     
+      served Vxbii(mu,b,i,i1)  
+      served Vxixi(mu,i1,lambda,i)
+      served Vxxii(mu,nu,i1,i)
+      served Viixx(i1,i,mu,nu)
+      served Vixxi(i1,nu,lambda,i)
+      served Vixai(i,mu,a,i1)
+      served Vxaii(mu,a,i,i1)   
+      served Vixbj(i,mu,b,j) 
+      served Vixxj(i,mu,nu,j) 
+#
+      local lai(a,i)
+      local lia(i,a)
+      local ljb(j,b)
+      local l2ai(a,i)
+      local laa(a,a1)
+      local lbb(b,b1)
+      local lii(i1,i)
+      local ljj(j1,j)
+      local lbj(b,j)
+#
+# Distributed arrays 
+#
+      distributed DDaa(a,a1)
+      distributed DDii(i,i1)
+      distributed DDia(i,a)
+      distributed DDbb(b,b1)
+      distributed DDjj(j,j1)
+      distributed DDjb(j,b)
+      distributed Fae_a(a,a1)
+      distributed Fae_b(b,b1)
+      distributed Fmi_a(i1,i)
+      distributed Fmi_b(j1,j)
+      distributed Fia_a(i,a)
+      distributed Fia_b(j,b)
+#
+      DISTRIBUTED R1A(a,i)
+      DISTRIBUTED R1B(b,j)
+      DISTRIBUTED R1A_INTMD(a,i)
+      DISTRIBUTED R1B_INTMD(b,j)
+      DISTRIBUTED INIT_VEC_A(a,i)
+      DISTRIBUTED INIT_VEC_B(b,j)
+      DISTRIBUTED HR1A(a,i)
+      DISTRIBUTED HR1B(b,j)
+      DISTRIBUTED R1A_HIST(a,i,NINDEX50)
+      DISTRIBUTED R1B_HIST(b,j,NINDEX50)
+      DISTRIBUTED HR1A_HIST(a,i,NINDEX50)
+      DISTRIBUTED HR1B_HIST(b,j,NINDEX50)
+      DISTRIBUTED R1DA(a,i)
+      DISTRIBUTED R1DB(b,j)
+      DISTRIBUTED RES1A(a,i)
+      DISTRIBUTED RES1B(b,j)
+      DISTRIBUTED CORR_VECa(a,i)
+      DISTRIBUTED CORR_VECb(b,j)
+      DISTRIBUTED ORTHO_COEF(NINDEX50,MINDEX50)
+      
+      DISTRIBUTED Y1a(a,i,NINDEX50)
+      DISTRIBUTED Y1b(b,j,NINDEX50)
+      DISTRIBUTED Y1a_PICKED(a,i)
+      DISTRIBUTED Y1b_PICKED(b,j)
+      DISTRIBUTED HY1a_PICKED(a,i)
+      DISTRIBUTED HY1b_PICKED(b,j)
+      DISTRIBUTED CISA_S_VECS(a,i,MROOTS)
+      DISTRIBUTED CISA_T_VECS(a,i,MROOTS)
+      DISTRIBUTED CISB_S_VECS(b,j,MROOTS)
+      DISTRIBUTED CISB_T_VECS(b,j,MROOTS)
+      DISTRIBUTED CIS_VEC_AO(mu,nu)
+      DISTRIBUTED INTXA(mu,a)
+      DISTRIBUTED INTXB(mu,b)
+
+      static Sii(i,i1)
+      static Sdii(i,i1)
+      static Saa(a,a1)
+      static Sdaa(a,a1)
+      static Sia(i,a)
+      static Sdia(i,a)
+      static Sjj(j,j1)
+      static Sdjj(j,j1)
+      static Sbb(b,b1)
+      static Sdbb(b,b1)
+      static A_MATRIX(MINDEX50,NINDEX50)
+      static DVECTORS(MINDEX50,NINDEX50)
+      static OVERLAP_R(MINDEX50)
+      static A_DIAGS(MINDEX50)
+      Static CIS_S_EES(MROOTS)
+      Static CIS_T_EES(MROOTS)
+      Static RVEC_AA_INTMD(a,i,NROOTS)
+      Static RVEC_BB_INTMD(b,j,NROOTS)
+      Static DIAGA(a,i)
+      Static DIAGB(b,j)
+      Static INIT_RVEC_AA(a,i,NROOTS)
+      Static INIT_RVEC_BB(b,j,NROOTS)
+      Static ETEMP(KINDEX50,LINDEX50)
+      Static HF_DENSITY(mu,nu)
+      Static AMP_PRINT_A(a,i)
+      Static AMP_PRINT_B(b,j)
+      Static DENS_OO_AA(i,i1)
+      Static DENS_OO_BB(j,j1)
+      Static DENS_VV_AA(a,a1)
+      Static DENS_VV_BB(b,b1)
+      Static AO_DENSITY(mu,nu)
+      Static ROOT_MULT(DBL_MROOTS,IONE)
+#
+      Scalar ROOT_COUNT
+      Scalar TARGET_ROOTS
+      Scalar EOM_THRES
+      Scalar MYROOT
+      Scalar COUNTER
+      Scalar tmp
+      Scalar tmpa
+      Scalar tmpb
+      Scalar suma
+      Scalar sumb
+      Scalar sumab
+      Scalar Sumaaa
+      Scalar Sumbbb
+      Scalar Sumaab
+      Scalar Sumbba
+      Scalar MAX_SUBSP_DIM
+      Scalar Iter_count
+      Scalar Count
+      Scalar Ncount
+      Scalar Mcount
+      Scalar Kcount
+      Scalar Lcount
+      Scalar HC_A
+      Scalar HC_B
+      Scalar SUM_R
+      Scalar C_A
+      Scalar C_B
+      Scalar A_VALUE
+      Scalar CY_A
+      Scalar CY_B
+      Scalar CY_AB
+      Scalar IMAX
+      Scalar Omega
+      Scalar Omegam
+      Scalar Eig_value
+      Scalar NORM_PREV_C
+      Scalar EXPONENT
+      Scalar FACT
+      Scalar INV_SQRT_NORM_ORTGC
+      Scalar NORM_NEW_ORTGC
+      Scalar INV_SQRT_NORM_R
+      Scalar NORM_R
+      Scalar NORM_GHG
+      Scalar NORM_OF_CORRECTION
+      Scalar RANK
+      Scalar RESIDUAL_NORM
+      Scalar SQRT_OVERLAP
+      Scalar OMEGA0
+      Scalar OMEGA0M
+      Scalar HALF
+      Scalar PRINT_FLAG
+      Scalar CIS_THRES 
+      Scalar ONE
+      Scalar TWO 
+      Scalar THREE
+      Scalar ONEHALF 
+      Scalar FACT_23
+      Scalar ZERO
+      Scalar Singlet 
+      Scalar Triplet 
+      Scalar MUlt 
+      Scalar Marker 
+      Scalar Vrt
+      Scalar CIS_ENEG
+      Scalar SUM1
+      Scalar SUM2
+      Scalar SUM3
+      Scalar ETMP
+      Scalar ESUM
+      Scalar ETEMP1
+      Scalar ETEMP2
+      Scalar ETEMP3
+      Scalar DIP_MOM_X
+      Scalar DIP_MOM_Y
+      Scalar DIP_MOM_Z
+      Scalar SQR_SUM
+      Scalar DIP_SQR_X
+      Scalar DIP_SQR_Y
+      Scalar DIP_SQR_Z
+      Scalar CIS_TMOM
+      Scalar IDENS 
+      Scalar ROOT_ID
+      Scalar EOM_MAXCYC
+#
+      temp  Tx(MROOTS)
+      temp TS(MINDEX50,NINDEX50)
+      temp daoint(mu,nu,lambda,sigma) 
+      temp Txixi(mu,i1,lambda,i)
+      temp T1xixi(mu,i1,lambda,i)
+      temp Txxii(mu,nu,i1,i)
+      temp Tixxi(i1,nu,lambda,i)
+      temp Txipi(mu,i,p,i1)
+      temp Tpipi(p1,i,p,i1)
+      temp T1pipi(p1,i,p,i1)
+      temp T2pipi(p1,i,p,i1)
+      temp Tixai(i,mu,a,i1)
+      temp Txaii(mu,a,i,i1)
+#
+      temp Txxxi(mu,nu,sigma,i)
+      temp T1xxxi(mu,nu,sigma,i)
+      temp Txxxj(mu,nu,sigma,j)
+      temp T1xxxj(mu,nu,sigma,j)
+#
+      temp Txjxj(mu,j1,lambda,j)
+      temp T1xjxj(mu,j1,lambda,j)
+      temp Txxjj(mu,nu,j1,j)
+      temp Tjjxx(j1,nu,lambda,j)
+      temp Tjxxj(j1,nu,lambda,j)
+      temp Txjqj(mu,j,q,j1)
+      temp Tqjqj(q1,j,q,j1)
+      temp T1qjqj(q1,j,q,j1)
+      temp T2qjqj(q1,j,q,j1)
+      temp Tjxbj(j,mu,b,j1)
+      temp Txbjj(mu,b,j,j1)
+      temp Txbbj(mu,b1,b,j)
+      temp Tbbbj(b2,b,b1,j)
+      temp T1bbbj(b2,b,b1,j)
+      temp Txxbj(mu,nu,b,j)
+      temp txixx(lambda,i,mu,nu)
+      temp t1xixx(lambda,i,mu,nu)
+      temp t2xixx(lambda,i,mu,nu)
+      temp t3xixx(lambda,i,mu,nu)
+      temp txjxx(lambda,j,mu,nu)
+      temp t1xjxx(lambda,j,mu,nu)
+      temp t2xjxx(lambda,j,mu,nu)
+      temp t3xjxx(lambda,j,mu,nu)
+      temp txxix(nu,mu,i,lambda)
+      temp t1xxix(nu,mu,i,lambda)
+      temp t2xxix(nu,mu,i,lambda)
+      temp t3xxix(nu,mu,i,lambda)
+      temp txxjx(nu,mu,j,lambda)
+      temp t1xxjx(nu,mu,j,lambda)
+      temp t2xxjx(nu,mu,j,lambda)
+      temp t3xxjx(nu,mu,j,lambda)
+#
+      temp tmpii(i,i1)
+      temp tmpjj(j,j1)
+      temp tmpaa(a,a1)
+      temp tmpbb(b,b1)
+      temp tmp_tia(i,a)
+      temp tmp_tjb(j,b)
+
+      temp Txx1(mu,nu)
+      temp Txx2(mu,nu)
+      temp Txx3(mu,nu)
+      temp Tmpxa(mu,a)
+      temp Tmpxb(mu,b)
+      temp Tmpxx(mu,nu)
+      temp Txi(mu,i)
+      temp Txj(mu,j)
+      temp Txixj(mu,i,nu,j)
+      temp Txiqj(mu,i,q,j)
+      temp Tpiqj(p,i,q,j)
+      temp T1piqj(p,i,q,j)
+      temp T2piqj(p,i,q,j)
+      temp Tiixx(i,i1,mu,nu)
+      temp Tiixb(i,i1,mu,b)
+      temp Tiibb(i,i1,b1,b)
+      temp Txajj(mu,a,j,j1)
+      temp Taajj(a,a1,j,j1)
+      temp Txabj(mu,a,b,j)
+      temp Tixxj(i,mu,nu,j)
+      temp Tixbj(i,mu,b,j)
+      temp Taabj(a,a1,b,j) 
+      temp Txbii(mu,b,i,i1)
+      temp Tbbii(b,b1,i,i1)
+      temp Tjbii(j,b,i,i1)
+      temp Txbai(mu,b,a,i)
+      temp Tbbai(b,b1,a,i)
+      temp T1aix(a,i,NINDEX50)
+      temp T1bjx(b,j,NINDEX50)
+      temp TXX(MINDEX50,MINDEX50)
+#
+      temp  Tiaai(i1,a1,a,i)
+      temp  TSiaai(i,a,a1,i1)
+      temp  TS2iaai(i,a,a1,i1)
+      temp  TSbjbj(b,j,b1,j1)
+      temp  Taaii(a,a2,i,i2)
+      temp  T1aaii(a,a2,i,i2)
+      temp  Tbbjj(b,b1,j,j1)
+      temp  T2bbjj(b,b1,j,j1)
+      temp  Tii(i,i1)
+      temp  T1ii(i,i1)
+      temp  T1jj(j,j1)
+      temp  Tjj(j,j1)
+      temp  Taa(a,a1)
+      temp  Tbb(b,b1)
+      temp  Txa(mu,a)
+      temp  Txb(mu,b)
+      temp  tai(a,i)
+      temp  t1ai(a,i)
+      temp  t2ai(a,i)
+      temp  t11ai(a,i)
+      temp  t1aa(a,a1)
+      temp  t11aa(a,a1)
+      temp  t1bb(b,b1)
+      temp  t11bb(b,b1)
+      temp  t111bb(b,b1)
+      temp  tia(i,a)
+      temp  t2ia(i,a)
+      temp  t2jb(j,b)
+      temp  t1ia(i,a)
+      temp  t3ai(a,i)
+      temp  tbj(b,j)
+      temp  tjb(j,b)
+      temp  t1jb(j,b)
+      temp  t1bj(b,j)
+      temp  t2bj(b,j)
+      temp  t3bj(b,j)
+      temp  t11bj(b,j)
+      temp  Tjbbj(j1,b1,b,j)
+      temp  Tiabj(i,a,b,j)
+      temp  Taix(a,i,MINDEX50)
+      temp  Tbjx(b,j,MINDEX50)
+      temp  T2aix(a,i,NROOTS)
+      temp  T2bjx(b,j,NROOTS)
+#
+      local L0xxxi(mu,nu,lambda,i)
+      local L1xxxi(nu,mu,lambda,i)
+      local L2xxxi(mu,nu,sigma,i)
+      local L3xxxi(nu,mu,sigma,i)
+#
+      local L0xxxj(mu,nu,lambda,j)
+      local L1xxxj(nu,mu,lambda,j)
+      local L2xxxj(mu,nu,sigma,j)
+      local L3xxxj(nu,mu,sigma,j)
+#
+      temp V0xxxi(mu,nu,lambda,i)
+      temp V0xxxj(mu,nu,lambda,j)
+#
+      local Lxixi(mu,i1,lambda,i)
+      local Lxixj(mu,i,lambda,j)
+      local Lxjxj(mu,j1,lambda,j)
+      local Lxxii(mu,nu,i1,i)
+      local Lxxjj(mu,nu,j1,j)
+      local Lixxi(i1,nu,lambda,i)
+      local Lixxj(i,nu,lambda,j)
+      local Ljxxj(j1,nu,lambda,j)
+      local Lxipi(mu,i,p,i1)
+      local Lpipi(p1,i,p,i1)
+      local Lxaii(mu,a,i,i1)
+      local Laaii(a1,a,i,i1)
+      local Lixai(i,mu,a,i1)
+      local Liaai(i,a1,a,i1)
+#
+      local Lxjqj(mu,j,q,j1)
+      local Lqjqj(q1,j,q,j1)
+      local Lxbjj(mu,b,j,j1)
+      local Lbbjj(b1,b,j,j1)
+      local Ljxbj(j,mu,b,j1)
+      local Ljbbj(j,b1,b,j1)
+      local Lxbii(mu,b,i,i1)
+      local Lbbii(b1,b,i,i1)
+      local Lxajj(mu,a,j,j1)
+      local Laajj(a1,a,j,j1)
+      local Lixbj(i,mu,b,j)
+      local Liabj(i,a,b,j)
+      local Liixb(i,i1,mu,b)
+      local Liibb(i,i1,b1,b)
+      local Lxiqj(mu,i,q,j)
+      local Lpiqj(p,i,q,j)
+#
+      local Lxiai(mu,i,a1,i1)
+      local Lxjbj(mu,j,b1,j1)
+      local Lxibj(mu,i,b,j)
+      local L1xixi(mu,i,nu,i1)
+      local L1xjxj(mu,j,nu,j1)
+      local L1xixj(mu,i,nu,j)
+#
+     PROC TRAN_XXII
+#    --------------
+#
+     execute sip_barrier
+#
+      PARDO mu, nu, lambda
+        WHERE mu < nu 
+            allocate L0xxxi(mu,nu,lambda,*) 
+            allocate L0xxxj(mu,nu,lambda,*) 
+            DO  sigma
+#
+                compute_integrals daoint(mu,nu,lambda,sigma)
+#
+                DO i
+                   txxxi(mu,nu,lambda,i)  = daoint(mu,nu,lambda,sigma)*ca(sigma,i)
+                   L0xxxi(mu,nu,lambda,i) += txxxi(mu,nu,lambda,i)
+                ENDDO i
+#
+                DO j
+                   txxxj(mu,nu,lambda,j)  = daoint(mu,nu,lambda,sigma)*cb(sigma,j)
+                   L0xxxj(mu,nu,lambda,j) += txxxj(mu,nu,lambda,j)
+                ENDDO j
+#
+           ENDDO  sigma
+#     
+           DO i
+#     
+              txixx(lambda,i,mu,nu) = L0xxxi(mu,nu,lambda,i)
+              txxix(nu,mu,i,lambda) = L0xxxi(mu,nu,lambda,i)
+#
+              DO i1
+                 Txxii(nu,mu,i,i1)  = txxix(nu,mu,i,lambda)*ca(lambda,i1)
+                 prepare Vxxii(nu,mu,i,i1) += Txxii(nu,mu,i,i1)
+              ENDDO i1
+#
+              DO i1
+                 Tixxi(i1,nu,lambda,i)  = L0xxxi(mu,nu,lambda,i)*ca(mu,i1)
+                 prepare Vixxi(i1,nu,lambda,i) += Tixxi(i1,nu,lambda,i)
+              ENDDO i1
+#
+           ENDDO i
+#
+           DO j
+#     
+              txjxx(lambda,j,mu,nu) = L0xxxj(mu,nu,lambda,j)
+              txxjx(nu,mu,j,lambda) = L0xxxj(mu,nu,lambda,j)
+#
+              DO j1
+                 Txxjj(nu,mu,j,j1)  = txxjx(nu,mu,j,lambda)*cb(lambda,j1)
+                 prepare Vxxjj(nu,mu,j,j1) += Txxjj(nu,mu,j,j1)
+              ENDDO j1
+#
+              DO j1
+                 Tjxxj(j1,nu,lambda,j)  = L0xxxj(mu,nu,lambda,j)*cb(mu,j1)
+                 prepare Vjxxj(j1,nu,lambda,j) += Tjxxj(j1,nu,lambda,j)
+              ENDDO j1
+#
+              DO i1
+                 Tixxj(i1,nu,lambda,j)  = L0xxxj(mu,nu,lambda,j)*ca(mu,i1)
+                 prepare Vixxj(i1,nu,lambda,j) += Tixxj(i1,nu,lambda,j)
+              ENDDO i1
+#
+           ENDDO j
+#
+        deallocate L0xxxi(mu,nu,lambda,*)
+        deallocate L0xxxj(mu,nu,lambda,*)
+
+      ENDPARDO mu, nu, lambda 
+#
+      PARDO mu, nu, lambda
+        WHERE mu > nu 
+            allocate L0xxxi(mu,nu,lambda,*) 
+            allocate L0xxxj(mu,nu,lambda,*) 
+            DO  sigma
+#
+                compute_integrals daoint(mu,nu,lambda,sigma)
+#
+                DO i
+                   txxxi(mu,nu,lambda,i)  = daoint(mu,nu,lambda,sigma)*ca(sigma,i)
+                   L0xxxi(mu,nu,lambda,i) += txxxi(mu,nu,lambda,i)
+                ENDDO i
+#
+                DO j
+                   txxxj(mu,nu,lambda,j)  = daoint(mu,nu,lambda,sigma)*cb(sigma,j)
+                   L0xxxj(mu,nu,lambda,j) += txxxj(mu,nu,lambda,j)
+                ENDDO j
+#
+           ENDDO  sigma
+#     
+           DO i
+#     
+              txixx(lambda,i,mu,nu) = L0xxxi(mu,nu,lambda,i)
+              txxix(nu,mu,i,lambda) = L0xxxi(mu,nu,lambda,i)
+#
+              DO i1
+                 Txxii(nu,mu,i,i1)  = txxix(nu,mu,i,lambda)*ca(lambda,i1)
+                 prepare Vxxii(nu,mu,i,i1) += Txxii(nu,mu,i,i1)
+              ENDDO i1
+#
+              DO i1
+                 Tixxi(i1,nu,lambda,i)  = L0xxxi(mu,nu,lambda,i)*ca(mu,i1)
+                 prepare Vixxi(i1,nu,lambda,i) += Tixxi(i1,nu,lambda,i)
+              ENDDO i1
+#
+           ENDDO i
+#
+           DO j
+#     
+              txjxx(lambda,j,mu,nu) = L0xxxj(mu,nu,lambda,j)
+              txxjx(nu,mu,j,lambda) = L0xxxj(mu,nu,lambda,j)
+#
+              DO j1
+                 Txxjj(nu,mu,j,j1)  = txxjx(nu,mu,j,lambda)*cb(lambda,j1)
+                 prepare Vxxjj(nu,mu,j,j1) += Txxjj(nu,mu,j,j1)
+              ENDDO j1
+#
+              DO j1
+                 Tjxxj(j1,nu,lambda,j)  = L0xxxj(mu,nu,lambda,j)*cb(mu,j1)
+                 prepare Vjxxj(j1,nu,lambda,j) += Tjxxj(j1,nu,lambda,j)
+              ENDDO j1
+#
+              DO i1
+                 Tixxj(i1,nu,lambda,j)  = L0xxxj(mu,nu,lambda,j)*ca(mu,i1)
+                 prepare Vixxj(i1,nu,lambda,j) += Tixxj(i1,nu,lambda,j)
+              ENDDO i1
+#
+           ENDDO j
+#
+        deallocate L0xxxi(mu,nu,lambda,*)
+        deallocate L0xxxj(mu,nu,lambda,*)
+
+      ENDPARDO mu, nu, lambda 
+#
+      PARDO mu, nu, lambda
+
+        WHERE mu == nu 
+            allocate L0xxxi(mu,nu,lambda,*) 
+            allocate L0xxxj(mu,nu,lambda,*) 
+            DO  sigma
+#
+                compute_integrals daoint(mu,nu,lambda,sigma)
+#
+                DO i
+                   txxxi(mu,nu,lambda,i)  = daoint(mu,nu,lambda,sigma)*ca(sigma,i)
+                   L0xxxi(mu,nu,lambda,i) += txxxi(mu,nu,lambda,i)
+                ENDDO i
+#
+                DO j
+                   txxxj(mu,nu,lambda,j)  = daoint(mu,nu,lambda,sigma)*cb(sigma,j)
+                   L0xxxj(mu,nu,lambda,j) += txxxj(mu,nu,lambda,j)
+                ENDDO j
+#
+           ENDDO  sigma
+#     
+           DO i
+#     
+              txixx(lambda,i,mu,nu) = L0xxxi(mu,nu,lambda,i)
+              txxix(nu,mu,i,lambda) = L0xxxi(mu,nu,lambda,i)
+#
+              DO i1
+                 Txxii(nu,mu,i,i1)  = txxix(nu,mu,i,lambda)*ca(lambda,i1)
+                 prepare Vxxii(nu,mu,i,i1) += Txxii(nu,mu,i,i1)
+              ENDDO i1
+#
+              DO i1
+                 Tixxi(i1,nu,lambda,i)  = L0xxxi(mu,nu,lambda,i)*ca(mu,i1)
+                 prepare Vixxi(i1,nu,lambda,i) += Tixxi(i1,nu,lambda,i)
+              ENDDO i1
+#
+           ENDDO i
+#
+           DO j
+#     
+              txjxx(lambda,j,mu,nu) = L0xxxj(mu,nu,lambda,j)
+              txxjx(nu,mu,j,lambda) = L0xxxj(mu,nu,lambda,j)
+#
+              DO j1
+                 Txxjj(nu,mu,j,j1)  = txxjx(nu,mu,j,lambda)*cb(lambda,j1)
+                 prepare Vxxjj(nu,mu,j,j1) += Txxjj(nu,mu,j,j1)
+              ENDDO j1
+#
+              DO j1
+                 Tjxxj(j1,nu,lambda,j)  = L0xxxj(mu,nu,lambda,j)*cb(mu,j1)
+                 prepare Vjxxj(j1,nu,lambda,j) += Tjxxj(j1,nu,lambda,j)
+              ENDDO j1
+#
+              DO i1
+                 Tixxj(i1,nu,lambda,j)  = L0xxxj(mu,nu,lambda,j)*ca(mu,i1)
+                 prepare Vixxj(i1,nu,lambda,j) += Tixxj(i1,nu,lambda,j)
+              ENDDO i1
+#
+           ENDDO j
+#
+        deallocate L0xxxi(mu,nu,lambda,*)
+        deallocate L0xxxj(mu,nu,lambda,*)
+      ENDPARDO mu, nu, lambda 
+#
+     execute server_barrier
+#
+     ENDPROC TRAN_XXII
+#    -----------------
+#
+     PROC TRAN_AAII
+#    --------------
+#
+     execute sip_barrier
+#
+     PARDO mu, i, i1
+#
+           allocate Lxaii(mu,*,i,i1) 
+#
+           DO nu 
+#
+              REQUEST Vxxii(mu,nu,i,i1) i
+#
+              DO a
+                 Txaii(mu,a,i,i1)  = Vxxii(mu,nu,i,i1)*ca(nu,a)
+                 Lxaii(mu,a,i,i1) += Txaii(mu,a,i,i1)
+              ENDDO a
+#
+           ENDDO nu 
+#
+           DO a 
+#
+              PREPARE Vxaii(mu,a,i,i1) = Lxaii(mu,a,i,i1) 
+#
+           ENDDO a 
+#
+           deallocate Lxaii(mu,*,i,i1) 
+#
+     ENDPARDO mu, i, i1
+#
+     execute server_barrier
+     destroy Vxxii  
+#
+     PARDO a, i, i1
+#
+           allocate Laaii(*,a,i,i1) 
+#
+           DO mu 
+#
+              REQUEST Vxaii(mu,a,i,i1) i
+#
+              DO a1
+#
+                 Taaii(a1,a,i,i1)  = Vxaii(mu,a,i,i1)*ca(mu,a1)
+                 Laaii(a1,a,i,i1) += Taaii(a1,a,i,i1)
+#
+              ENDDO a1
+#
+           ENDDO mu 
+#
+           DO a1 
+#
+              PREPARE Vaaii(a1,a,i,i1) = Laaii(a1,a,i,i1) 
+#
+           ENDDO a1 
+#
+           deallocate Laaii(*,a,i,i1) 
+#
+     ENDPARDO a, i, i1
+#
+     execute sip_barrier
+     execute server_barrier
+     destroy Vxaii
+
+     ENDPROC TRAN_AAII
+#    -----------------
+
+     PROC TRAN_IAAI
+#    --------------
+#
+     execute sip_barrier
+#
+     PARDO mu, i, i1
+#
+           allocate Lixai(i,mu,*,i1) 
+#
+           DO nu 
+#
+              REQUEST Vixxi(i,mu,nu,i1) i 
+#
+              DO a
+#
+                 Tixai(i,mu,a,i1)  = Vixxi(i,mu,nu,i1)*ca(nu,a)
+                 Lixai(i,mu,a,i1) += Tixai(i,mu,a,i1)
+#
+              ENDDO a
+#
+           ENDDO nu 
+#
+           DO a 
+#
+              PREPARE Vixai(i,mu,a,i1) = Lixai(i,mu,a,i1)
+#
+           ENDDO a 
+#
+           deallocate Lixai(i,mu,*,i1) 
+#
+     ENDPARDO mu, i, i1
+#
+     execute sip_barrier
+     execute server_barrier
+     destroy Vixxi
+#
+     PARDO a, i, i1
+#
+           allocate Liaai(i,*,a,i1) 
+#
+           DO mu 
+#
+              REQUEST Vixai(i,mu,a,i1) i 
+#
+              DO a1
+#
+                 Tiaai(i,a1,a,i1)  = Vixai(i,mu,a,i1)*ca(mu,a1)
+                 Liaai(i,a1,a,i1) += Tiaai(i,a1,a,i1)
+#
+              ENDDO a1
+#
+           ENDDO mu 
+#
+           DO a1 
+#
+              REQUEST                    Vaaii(a,a1,i,i1) a  
+              tiaai(i,a1,a,i1)         = Vaaii(a,a1,i,i1) 
+              tiaai(i,a1,a,i1)        -= Liaai(i,a1,a,i1)  
+              tiaai(i,a1,a,i1)        *= -1.0  
+              PREPARE Viaai(i,a1,a,i1) = tiaai(i,a1,a,i1)
+#
+           ENDDO a1 
+#
+           deallocate Liaai(i,*,a,i1) 
+#
+     ENDPARDO a, i, i1
+#
+     execute sip_barrier
+     execute server_barrier
+     destroy Vixai
+#
+     ENDPROC TRAN_IAAI
+#    -----------------
+#
+     PROC TRAN_BBJJ
+#    --------------
+#
+     execute sip_barrier
+#
+     PARDO mu, j, j1
+#
+           allocate Lxbjj(mu,*,j,j1) 
+#
+           DO nu 
+#
+              REQUEST Vxxjj(mu,nu,j,j1) j 
+#
+              DO b
+#
+                 Txbjj(mu,b,j,j1)  = Vxxjj(mu,nu,j,j1)*cb(nu,b)
+                 Lxbjj(mu,b,j,j1) += Txbjj(mu,b,j,j1)
+#
+              ENDDO b
+#
+           ENDDO nu 
+#
+           DO b 
+#
+              PREPARE Vxbjj(mu,b,j,j1) = Lxbjj(mu,b,j,j1)
+#
+           ENDDO b 
+#
+           deallocate Lxbjj(mu,*,j,j1) 
+#
+     ENDPARDO mu, j, j1
+#
+     execute server_barrier
+     destroy Vxxjj 
+#
+     PARDO b, j, j1
+#
+           allocate Lbbjj(*,b,j,j1) 
+#
+           DO mu 
+#
+              REQUEST Vxbjj(mu,b,j,j1) j 
+# 
+              DO b1
+#
+                 Tbbjj(b1,b,j,j1)  = Vxbjj(mu,b,j,j1)*cb(mu,b1)
+                 Lbbjj(b1,b,j,j1) += Tbbjj(b1,b,j,j1)
+#
+              ENDDO b1
+#
+           ENDDO mu 
+#
+           DO b1
+#
+              PREPARE Vbbjj(b1,b,j,j1) = Lbbjj(b1,b,j,j1)
+#
+           ENDDO b1
+#
+           deallocate Lbbjj(*,b,j,j1) 
+#
+     ENDPARDO b, j, j1
+#
+     execute sip_barrier
+     execute server_barrier
+     destroy Vxbjj
+#
+     ENDPROC TRAN_BBJJ
+#    -----------------
+#
+     PROC TRAN_JBBJ
+#    --------------
+#
+     execute sip_barrier
+#
+     PARDO mu, j, j1
+#
+           allocate Ljxbj(j,mu,*,j1) 
+#
+           DO nu 
+#
+              REQUEST Vjxxj(j,mu,nu,j1) j 
+#
+              DO b
+#
+                 Tjxbj(j,mu,b,j1)  = Vjxxj(j,mu,nu,j1)*cb(nu,b)
+                 Ljxbj(j,mu,b,j1) += Tjxbj(j,mu,b,j1)
+#
+              ENDDO b
+#
+           ENDDO nu 
+#
+           DO b
+#
+              PREPARE Vjxbj(j,mu,b,j1) = Ljxbj(j,mu,b,j1)
+#
+           ENDDO b
+#
+           deallocate Ljxbj(j,mu,*,j1) 
+#
+     ENDPARDO mu, j, j1
+#
+     execute server_barrier
+     destroy Vjxxj
+#
+     PARDO b, j, j1
+#
+           allocate Ljbbj(j,*,b,j1) 
+#
+           DO mu 
+#
+              REQUEST Vjxbj(j,mu,b,j1) j 
+#
+              DO b1
+#
+                 Tjbbj(j,b1,b,j1)  = Vjxbj(j,mu,b,j1)*cb(mu,b1)
+                 Ljbbj(j,b1,b,j1) += Tjbbj(j,b1,b,j1)
+#
+              ENDDO b1
+#
+           ENDDO mu 
+#
+           DO b1
+#
+              REQUEST                    Vbbjj(b,b1,j,j1) b 
+              tjbbj(j,b1,b,j1)         = Vbbjj(b,b1,j,j1) 
+              tjbbj(j,b1,b,j1)        -= Ljbbj(j,b1,b,j1)  
+              tjbbj(j,b1,b,j1)        *= -1.0  
+              PREPARE Vjbbj(j,b1,b,j1) = tjbbj(j,b1,b,j1)
+#
+           ENDDO b1
+#
+           deallocate Ljbbj(j,*,b,j1) 
+#
+     ENDPARDO b, j, j1
+#
+     execute server_barrier
+     destroy Vjxbj
+#
+     ENDPROC TRAN_JBBJ
+#    -----------------
+
+     PROC TRAN_IABJ
+#    --------------
+#
+     execute sip_barrier
+#
+     PARDO mu, i, j
+#
+           allocate Lixbj(i,mu,*,j) 
+#
+           DO nu 
+#
+              REQUEST Vixxj(i,mu,nu,j) i
+#
+              DO b
+#
+                 Tixbj(i,mu,b,j)  = Vixxj(i,mu,nu,j)*cb(nu,b)
+                 Lixbj(i,mu,b,j) += Tixbj(i,mu,b,j)
+#
+              ENDDO b
+#
+           ENDDO nu 
+#
+           DO b
+#
+              PREPARE Vixbj(i,mu,b,j) = Lixbj(i,mu,b,j)
+#
+           ENDDO b
+#
+           deallocate Lixbj(i,mu,*,j) 
+#
+     ENDPARDO mu, i, j
+#
+     execute server_barrier
+     destroy Vixxj
+#
+     PARDO b, i, j
+#
+           allocate Liabj(i,*,b,j) 
+#
+           DO mu 
+#
+              REQUEST Vixbj(i,mu,b,j) i
+#
+              DO a
+#
+                 Tiabj(i,a,b,j)  = Vixbj(i,mu,b,j)*ca(mu,a)
+                 Liabj(i,a,b,j) += Tiabj(i,a,b,j)
+#
+              ENDDO a
+#
+           ENDDO mu 
+#
+           DO a
+#
+              PREPARE Viabj(i,a,b,j) = Liabj(i,a,b,j)
+#
+           ENDDO a
+#
+           deallocate Liabj(i,*,b,j) 
+#
+     ENDPARDO b, i, j
+#
+     execute sip_barrier
+     execute server_barrier
+     destroy Vixbj
+
+     ENDPROC TRAN_IABJ
+#    -----------------
+#
+     PROC TRAN_PPPP
+#    --------------
+#
+          CALL TRAN_XXII
+          CALL TRAN_AAII
+          CALL TRAN_IAAI
+#
+          CALL TRAN_BBJJ
+          CALL TRAN_JBBJ
+#
+          CALL TRAN_IABJ
+#
+     ENDPROC TRAN_PPPP
+#    -----------------
+#
+     PROC TRAN_UHF 
+#     -------------
+# 
+         CALL TRAN_PPPP  
+#
+     ENDPROC TRAN_UHF 
+
+     PROC CREATE_ARRAYS
+#    ------------------
+#
+      CREATE R1A
+      CREATE R1B
+      CREATE R1DA
+      CREATE R1DB
+      CREATE HR1A
+      CREATE HR1B
+      CREATE DDII
+      CREATE DDJJ
+      CREATE DDAA
+      CREATE DDBB
+      CREATE R1A_HIST
+      CREATE R1B_HIST
+      CREATE HR1A_HIST
+      CREATE HR1B_HIST
+      CREATE Y1a
+      CREATE Y1b
+      CREATE Y1a_PICKED
+      CREATE Y1b_PICKED
+      CREATE HY1a_PICKED
+      CREATE HY1b_PICKED
+      CREATE RES1a
+      CREATE RES1b
+      CREATE CORR_VECa
+      CREATE CORR_VECb
+      CREATE ORTHO_COEF
+      CREATE R1a_INTMD
+      CREATE R1b_INTMD
+      CREATE INIT_VEC_A
+      CREATE INIT_VEC_B
+      CREATE CISA_S_VECS  
+      CREATE CISA_T_VECS  
+      CREATE CISB_S_VECS  
+      CREATE CISB_T_VECS  
+      CREATE INTXa
+      CREATE INTXb
+      CREATE CIS_VEC_AO
+
+      EXECUTE SIP_BARRIER
+
+     ENDPROC CREATE_ARRAYS
+#    ---------------------
+# 
+      PROC HC_MULT
+#     ------------
+      PARDO a, i
+            tai(a,i) = 0.0
+            PUT HR1A(a,i) = tai(a,i)
+      ENDPARDO a, i
+#
+      PARDO b, j
+            tbj(b,j) = 0.0
+            PUT HR1B(b,j) = tbj(b,j)
+      ENDPARDO b, j
+#
+      PARDO a, i
+#
+            tai(a,i) = 0.0
+#
+            DO i1
+               GET         R1A(a,i1)
+               t2ai(a,i) = R1A(a,i1)*fock_a(i1,i)
+               tai(a,i) -= t2ai(a,i)
+            ENDDO i1
+#
+            DO a1
+#
+               GET         R1A(a1,i)
+               t1ai(a,i) = R1A(a1,i)*fock_a(a,a1)
+               tai(a,i) += t1ai(a,i)
+#
+            ENDDO a1
+#
+            PUT HR1A(a,i) = tai(a,i)
+#
+      ENDPARDO a, i
+#
+      PARDO b, j
+#
+            tbj(b,j) = 0.0
+#
+            DO j1
+#
+               GET         R1B(b,j1)
+               t2bj(b,j) = R1B(b,j1)*fock_b(j1,j)
+               tbj(b,j) -= t2bj(b,j)
+#
+            eNDDO j1
+#
+            DO b1
+#
+               GET         R1B(b1,j)
+               t1bj(b,j) = R1B(b1,j)*fock_b(b,b1)
+               tbj(b,j) += t1bj(b,j)
+#
+            ENDDO b1
+#
+            PUT HR1B(b,j) = tbj(b,j)
+#
+      ENDPARDO b, j
+#
+      execute sip_barrier 
+#bgn_debug
+#      tmpb=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,a
+#         get hr1a(a,i)
+#         Tmp =  hr1a(a,i) *  hr1a(a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      pardo j,b
+#         get hr1b(b,j)
+#         tmp = hr1b(b,j) * hr1b(b,j)
+#         tmpb += tmp
+#      endpardo j,b
+#      execute server_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute sip_barrier
+#      execute print_scalar suma
+#      execute print_scalar sumb
+#end_debug
+#
+      PARDO a, i, b, j 
+#
+            REQUEST              Viabj(i,a,b,j) a 
+            GET                  R1B(b,j)
+            t2ai(a,i)          = Viabj(i,a,b,j)*R1B(b,j)
+            PUT HR1A(a,i) += t2ai(a,i)
+            GET                  R1A(a,i)
+            t1bj(b,j)          =  Viabj(i,a,b,j)*R1A(a,i)
+            PUT HR1B(b,j)+= t1bj(b,j)
+
+      ENDPARDO a, i, b, j 
+#
+      PARDO a, i, a1, i1     
+#
+            REQUEST             Viaai(i1,a1,a,i) i
+            GET                 R1A(a1,i1)
+            tai(a,i)          = Viaai(i1,a1,a,i)*R1A(a1,i1)
+            PUT HR1A(a,i)+= tai(a,i)
+#
+      ENDPARDO a, i, a1, i1     
+#
+      PARDO b, j, b1, j1  
+#
+            REQUEST             Vjbbj(j1,b1,b,j) j
+            GET                 R1B(b1,j1)
+            tbj(b,j)          = Vjbbj(j1,b1,b,j)*R1B(b1,j1)
+            PUT HR1B(b,j)+= tbj(b,j)
+#
+      ENDPARDO b, j, b1, j1    
+      execute sip_barrier
+#bgn_debug
+#      tmpb=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,a
+#         get hr1a(a,i)
+#         Tmp =  hr1a(a,i) *  hr1a(a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      pardo j,b
+#         get hr1b(b,j)
+#         tmp = hr1b(b,j) * hr1b(b,j)
+#         tmpb += tmp
+#      endpardo j,b
+#      execute server_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute sip_barrier
+#      execute print_scalar suma
+#      execute print_scalar sumb
+#end_debug
+#
+      ENDPROC HC_MULT
+#     --------------
+#
+     PROC FORM_INITIAL_GUESS
+#    -----------------------
+     DO NROOTS 
+        PARDO a, i
+            INIT_RVEC_AA(a,i,NROOTS) = 0.0
+            DIAGA(a,i)               = 0.0
+        ENDPARDO a, i
+     ENDDO NROOTS 
+
+     DO NROOTS 
+        PARDO b, j
+            INIT_RVEC_BB(b,j,NROOTS) = 0.0
+            DIAGB(b,j)               = 0.0
+        ENDPARDO b, j
+     ENDDO NROOTS 
+
+     DO a 
+     DO i
+        GET R1DA(a,i)
+        Tai(a,i)   = R1DA(a,i)
+        DIAGA(a,i) = Tai(a,i)
+     ENDDO i
+     ENDDO a 
+
+     DO b
+     DO j
+        GET R1DB(b,j)
+        Tbj(b,j)   = R1DB(b,j)
+        DIAGB(b,j) = Tbj(b,j)
+     ENDDO j 
+     ENDDO b
+     EXECUTE SIP_BARRIER 
+   
+     EXECUTE FORM_RPA_GUESS DIAGA INIT_RVEC_AA
+     EXECUTE FORM_RPA_GUESS DIAGB INIT_RVEC_BB
+
+     EXECUTE SIP_BARRIER 
+
+     ENDPROC FORM_INITIAL_GUESS
+#    --------------------------
+
+     PROC PREP_RPA_GUESS
+#    -------------------
+
+      EXECUTE GUESS_4CURRENT_ROOT INIT_RVEC_AA MYROOT 
+      IF TRIPLET == ONE 
+          MYROOT *= -1.0
+      ENDIF 
+      EXECUTE GUESS_4CURRENT_ROOT INIT_RVEC_BB MYROOT 
+      IF TRIPLET == ONE 
+          MYROOT *= -1.0
+      ENDIF 
+
+      COUNTER = 0.0
+#
+# Always copy the position one because the above SIP copies the 
+# the guess for the current root to position one. 
+
+      DO MROOTS
+
+         COUNTER += 1.0
+        
+         IF COUNTER > ONE 
+            EXIT
+         ENDIF 
+
+            PARDO a, i 
+                Tai(a,i) =  INIT_RVEC_AA(a,i,mroots)
+                PUT R1a_intmd(a,i)  =  Tai(a,i)
+                PUT INIT_VEC_A(a,i) =  Tai(a,i)
+            ENDPARDO a, i
+
+            PARDO b, j
+               Tbj(b,j)  = INIT_RVEC_BB(b,j,mroots)
+               PUT R1b_intmd(b,j)  =  Tbj(b,j)
+               PUT INIT_VEC_B(b,j) =  Tbj(b,j)
+            ENDPARDO b, j
+
+      ENDDO MROOTS
+
+      EXECUTE SIP_BARRIER
+#bgn_debug
+#      tmpa = 0.0
+#      do i 
+#      do a
+#         Get R1a_intmd(a,i)
+#         tmp  = R1a_intmd(a,i) * R1a_intmd(a,i)
+#         tmpa += tmp
+#      enddo a
+#      enddo i
+#      execute print_scalar tmpa
+#end_debug
+
+      SUMA = 0.0
+      SUMB = 0.0
+      TMPA = 0.0
+      TMPB = 0.0
+      PARDO i, a
+            GET  R1a_intmd(a,i)
+            Tai(a,i) = R1a_intmd(a,i)
+            TMP   = Tai(a,i) * Tai(a,i)
+            TMPA += TMP
+      ENDPARDO i, a
+
+      PARDO j, b
+            GET  R1b_intmd(b,j)
+            Tbj(b,j) =  R1b_intmd(b,j)
+            TMP   = Tbj(b,j) * Tbj(b,j)
+            TMPB += TMP
+      ENDPARDO j, b
+
+      EXECUTE SIP_BARRIER
+      COLLECTIVE  SUMA += TMPA
+      COLLECTIVE  SUMB += TMPB
+      EXECUTE SIP_BARRIER
+      SUMAB  = SUMA
+      SUMAB += SUMB
+
+      EXPONENT = 0.5
+      EXECUTE NORM_FAC SUMAB EXPONENT
+      INV_SQRT_NORM_R = SUMAB
+      NORM_R = SUMAB
+
+      PARDO i, a
+            GET  R1a_intmd(a,i)
+            Tai(a,i)  = R1a_intmd(a,i)
+            Tai(a,i) *= INV_SQRT_NORM_R
+            PUT R1a(a,i) = Tai(a,i)
+      ENDPARDO i, a
+
+      PARDO j, b
+            GET  R1b_intmd(b,j)
+            Tbj(b,j)  =  R1b_intmd(b,j)
+            Tbj(b,j) *= INV_SQRT_NORM_R
+            PUT  R1b(b,j) = Tbj(b,j)
+      ENDPARDO j, b
+
+      EXECUTE SIP_BARRIER
+
+#bgn_debug
+#      tmpb=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,a
+#         get r1a(a,i)
+#         Tmp =  r1a(a,i) *  r1a(a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      pardo j,b
+#         get r1b(b,j)
+#         tmp = r1b(b,j) * r1b(b,j)
+#         tmpb += tmp
+#      endpardo j,b
+#      execute server_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute sip_barrier
+#      execute print_scalar suma
+#      execute print_scalar sumb
+#end_debug
+
+     ENDPROC PREP_RPA_GUESS
+#    ----------------------
+#
+     PROC FORM_DIAG
+#    --------------
+#
+# -----prepare f_aa diagonal = Sdaa
+#
+     PARDO a, a1
+           Saa(a,a1)      = fock_a(a,a1)
+           execute return_diagonal Saa Sdaa
+           taa(a,a1)      = Sdaa(a,a1)
+        
+           put DDaa(a,a1) = taa(a,a1)
+     ENDPARDO a, a1
+#
+# -----prepare f_ii diagonal = Sdii
+#
+     PARDO i, i1
+           Sii(i1,i)      = fock_a(i1,i)
+           execute return_diagonal Sii Sdii
+           tii(i1,i)      = Sdii(i1,i)
+           put DDii(i1,i) = tii(i1,i)
+     ENDPARDO i, i1
+#
+# -----prepare f_bb diagonal = DDbb
+#
+     PARDO b, b1
+           Sbb(b,b1)      = fock_b(b,b1)
+           execute return_diagonal Sbb Sdbb
+           tbb(b,b1)      = Sdbb(b,b1)
+           put DDbb(b,b1) = tbb(b,b1)
+     ENDPARDO b, b1
+#
+# -----prepare f_jj diagonal = DDjj
+#
+     PARDO j, j1
+           Sjj(j1,j)      = fock_b(j1,j)
+           execute return_diagonal Sjj Sdjj
+           tjj(j1,j)      = Sdjj(j1,j)
+           put DDjj(j1,j) = tjj(j1,j)
+     ENDPARDO j, j1
+#
+# -----prepare Hbar_aiai diagonal
+#
+     PARDO a, i
+#
+           tai(a,i) = 0.0
+#
+           do a1
+           do i1
+#
+               REQUEST             Viaai(i1,a1,a,i) i
+               Tiaai(i1,a1,a,i)  = Viaai(i1,a1,a,i)
+#
+               Taaii(a,a1,i,i1)  = Tiaai(i1,a1,a,i)
+               execute return_diagonal4 Taaii
+               tia(i1,a1)        = 1.0
+               t1ai(a,i)         = Taaii(a,a1,i,i1)*tia(i1,a1)
+               tai(a,i)         += t1ai(a,i)
+#
+           enddo i1
+           enddo a1
+#
+           PUT R1DA(a,i) = tai(a,i)
+#
+     ENDPARDO a, i
+#
+# -----prepare Hbar_bjbj diagonal
+#
+     PARDO b, j
+#
+           tbj(b,j) = 0.0
+#
+           do b1
+           do j1
+#
+               REQUEST             Vjbbj(j1,b1,b,j) j
+#
+               Tjbbj(j1,b1,b,j)  = Vjbbj(j1,b1,b,j)
+#
+               Tbbjj(b,b1,j,j1)  = Tjbbj(j1,b1,b,j)
+               execute return_diagonal4 Tbbjj
+               tjb(j1,b1)        = 1.0
+               t1bj(b,j)         = Tbbjj(b,b1,j,j1)*tjb(j1,b1)
+               tbj(b,j)         += t1bj(b,j)
+#
+           enddo j1
+           enddo b1
+#
+           PUT R1DB(b,j) = tbj(b,j)
+#
+     ENDPARDO b, j
+#
+     execute sip_barrier
+#
+# ---------compute T(a,i)=F(a,a)-f(i,i)-v(a,i,a,i)
+#
+     PARDO a, i
+#
+           tai(a,i) = 0.0
+#
+           do a1
+#
+              get         DDaa(a,a1)
+              tia(i,a1) = 1.0
+              taa(a1,a) = DDaa(a,a1)
+#
+              t2ai(a,i) = tia(i,a1)*taa(a1,a)
+              tai(a,i) += t2ai(a,i)
+#
+           enddo a1
+#
+           do i1
+#
+              get         DDii(i1,i)
+              t2ia(i1,a)= 1.0
+              tii(i,i1) = DDii(i1,i)
+#
+              t2ai(a,i) = tii(i,i1)*t2ia(i1,a)
+              t2ai(a,i)*= -1.0
+              tai(a,i) += t2ai(a,i)
+#
+           enddo i1
+#
+           PUT R1DA(a,i)=tai(a,i)
+#
+     ENDPARDO a, i
+#
+# ---------compute T(b,j)=F(b,b)-f(j,j)
+#
+     PARDO b, j
+#
+           tbj(b,j)=0.0
+#
+           do b1
+#
+              get         DDbb(b,b1)
+              tjb(j,b1) = 1.0
+              tbb(b1,b) = DDbb(b,b1)
+              t2bj(b,j) = tjb(j,b1)*tbb(b1,b)
+              tbj(b,j) += t2bj(b,j)
+#
+           enddo b1
+#
+           do j1
+#
+              get         DDjj(j1,j)
+              t2jb(j1,b)= 1.0
+              tjj(j,j1) = DDjj(j1,j)
+              t2bj(b,j) = tjj(j,j1)*t2jb(j1,b)
+              t2bj(b,j)*= -1.0
+              tbj(b,j) += t2bj(b,j)
+#
+           enddo j1
+#
+           PUT R1DB(b,j) = tbj(b,j)
+#
+     ENDPARDO b, j
+#
+     execute sip_barrier
+
+     ENDPROC FORM_DIAG
+#    -----------------
+
+      PROC SAVE_C_VECTORS
+#     ------------------
+
+      NCOUNT = 0
+      DO NINDEX50
+         NCOUNT += 1.0
+
+         IF NCOUNT == ITER_COUNT
+
+            DO a
+               DO i
+                  GET R1A(a,i)
+                  Tai(a,i) = R1A(a,i)
+                  Taix(a,i,NINDEX50) = Tai(a,i)
+                  PUT R1A_HIST(a,i,NINDEX50) = Taix(a,i,NINDEX50)
+               ENDDO i
+            ENDDO a
+
+            DO b
+               DO j
+                  GET R1B(b,j)
+                  Tbj(b,j) = R1B(b,j)
+                  Tbjx(b,j,NINDEX50) = Tbj(b,j)
+                  PUT R1B_HIST(b,j,NINDEX50) = Tbjx(b,j,NINDEX50) 
+               ENDDO j
+            ENDDO b
+        ENDIF
+
+      ENDDO NINDEX50
+
+      execute sip_barrier 
+#bgn_debug
+#      tmpb=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      sumb=0.0
+#      ncount = 0.0
+#      DO NINDEX50
+#      ncount += 1.0
+#      if ncount == iter_count
+#      pardo i,a
+#         get r1a_hist(a,i,NINDEX50)
+#         Tmp =   r1a_hist(a,i,NINDEX50) *  r1a_hist(a,i,NINDEX50)
+#         tmpa += tmp
+#      endpardo i,a
+#      pardo j,b
+#         get r1b_hist(b,j,NINDEX50)
+#         tmp =  r1b_hist(b,j,NINDEX50) * r1b_hist(b,j,NINDEX50)
+#         tmpb += tmp
+#      endpardo j,b
+#      endif
+#      ENDDO NINDEX50
+#      execute server_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute sip_barrier
+#      execute print_scalar suma
+#      execute print_scalar sumb
+#end_debug
+
+      ENDPROC SAVE_C_VECTORS
+#     --------------------
+
+      PROC SAVE_HC_VECTORS
+#     --------------------
+
+      NCOUNT = 0
+      DO NINDEX50
+         NCOUNT += 1.0
+
+         IF NCOUNT == ITER_COUNT
+
+            DO a
+               DO i
+                  GET HR1A(a,i)
+                  Tai(a,i) = HR1A(a,i)
+                  PUT HR1A_HIST(a,i,NINDEX50) = Tai(a,i)
+               ENDDO i
+            ENDDO a
+
+            DO b
+               DO j
+                  GET HR1B(b,j)
+                  Tbj(b,j) = HR1B(b,j)
+                  PUT HR1B_HIST(b,j,NINDEX50) = Tbj(b,j)
+               ENDDO j
+            ENDDO b
+        ENDIF
+
+      ENDDO NINDEX50
+
+      execute sip_barrier
+
+#bgn_debug
+#      tmpb=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      sumb=0.0
+#      ncount = 0.0
+#      DO NINDEX50
+#      ncount += 1.0
+#      if ncount == iter_count 
+#      pardo i,a
+#         get hr1a_hist(a,i,NINDEX50)
+#         Tmp =   hr1a_hist(a,i,NINDEX50) *  hr1a_hist(a,i,NINDEX50) 
+#         tmpa += tmp
+#      endpardo i,a
+#      pardo j,b
+#         get hr1b_hist(b,j,NINDEX50)
+#         tmp =  hr1b_hist(b,j,NINDEX50) * hr1b_hist(b,j,NINDEX50)
+#         tmpb += tmp
+#      endpardo j,b
+#      endif 
+#      ENDDO NINDEX50
+#      execute server_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute sip_barrier
+#      execute print_scalar suma
+#      execute print_scalar sumb
+#end_debug
+
+
+      ENDPROC SAVE_HC_VECTORS
+#     -----------------------
+#
+     PROC FORM_A_MATRIX_11
+#    ----------------------
+
+     SUMA   = 0.0
+     SUMB   = 0.0
+     HC_A   = 0.0
+     HC_B   = 0.0
+
+# Build A(1,1) for the first iteraion
+
+        NCOUNT = 0.0
+        DO NINDEX50
+           NCOUNT += 1.0
+           IF NCOUNT == ITER_COUNT
+
+              MCOUNT = 0.0
+              DO MINDEX50
+                 MCOUNT += 1.0
+                 IF MCOUNT == ITER_COUNT
+
+                    PARDO i, a
+
+                          GET HR1A_HIST(a,i,NINDEX50)
+                          GET R1A_HIST(a,i,MINDEX50)
+
+                          Tai(a,i)   = HR1A_HIST(a,i,NINDEX50)
+                          T1ai(a,i)  = R1A_HIST(a,i,MINDEX50)
+
+                          TMP   = Tai(a,i) *  T1ai(a,i)
+                          SUMA += TMP
+
+                    ENDPARDO i, a
+
+                    EXECUTE SERVER_BARRIER
+                    COLLECTIVE HC_A += SUMA
+
+                    PARDO j, b
+
+                          GET HR1B_HIST(b,j,NINDEX50)
+                          GET R1B_HIST(b,j,MINDEX50)
+
+                          Tbj(b,j)   = HR1B_HIST(b,j,NINDEX50)
+                          T1bj(b,j)  = R1B_HIST(b,j,MINDEX50)
+
+                          TMP   = Tbj(b,j) * T1bj(b,j)
+                          SUMB += TMP
+
+                    ENDPARDO j, b
+
+                    EXECUTE SERVER_BARRIER
+                    COLLECTIVE HC_B += SUMB
+
+                 ENDIF
+
+              ENDDO MINDEX50
+           ENDIF
+
+        ENDDO NINDEX50
+
+     A_VALUE  = HC_A
+     A_VALUE += HC_B
+#bgn_debug
+#     execute print_scalar A_value
+#end_debug
+
+     NCOUNT = 0.0
+     MCOUNT = 0.0
+
+     DO NINDEX50
+         NCOUNT += 1.0
+         IF NCOUNT == 1.0
+
+            DO MINDEX50
+               MCOUNT += 1.0
+               IF MCOUNT == 1.0
+
+                   A_MATRIX(MINDEX50,NINDEX50) = A_VALUE
+
+                ENDIF
+             ENDDO MINDEX50
+         ENDIF
+     ENDDO NINDEX50
+
+     EXECUTE SIP_BARRIER
+
+     ENDPROC FORM_A_MATRIX_11
+#    ------------------------
+
+     PROC  FORM_A_MATRIX_IJ
+#    ---------------------
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT > ITER_COUNT
+           EXIT
+        ENDIF
+              MCOUNT = 0.0
+              DO MINDEX50
+                 MCOUNT += 1.0
+
+                 IF MCOUNT > NCOUNT
+                    EXIT
+                 ENDIF
+
+                 IF MCOUNT == ITER_COUNT
+                    IF NCOUNT == ITER_COUNT
+                       EXIT
+                    ENDIF
+                 ENDIF
+
+                    SUMA   = 0.0
+                    SUMB   = 0.0
+                    HC_A   = 0.0
+                    HC_B   = 0.0
+
+                     PARDO i, a
+
+                          GET HR1A_HIST(a,i,NINDEX50)
+                          GET R1A_HIST(a,i,MINDEX50)
+
+                          Tai(a,i)   = HR1A_HIST(a,i,NINDEX50)
+                          T1ai(a,i)  = R1A_HIST(a,i,MINDEX50)
+
+                          TMP   = Tai(a,i) *  T1ai(a,i)
+                          SUMA += TMP
+
+                    ENDPARDO i, a
+
+                    EXECUTE SERVER_BARRIER
+                    COLLECTIVE HC_A += SUMA
+
+                    PARDO j, b
+
+                          GET HR1B_HIST(b,j,NINDEX50)
+                          GET R1B_HIST(b,j,MINDEX50)
+
+                          Tbj(b,j)   = HR1B_HIST(b,j,NINDEX50)
+                          T1bj(b,j)  = R1B_HIST(b,j,MINDEX50)
+
+                          TMP   = Tbj(b,j) * T1bj(b,j)
+                          SUMB += TMP
+
+                    ENDPARDO j, b
+
+                    EXECUTE SERVER_BARRIER
+                    COLLECTIVE HC_B += SUMB
+                    
+                    A_VALUE  = HC_A
+                    A_VALUE += HC_B
+
+                    KCOUNT = 0.0
+                    DO KINDEX50
+                        KCOUNT += 1.0
+                        IF KCOUNT  == NCOUNT
+
+                           LCOUNT = 0.0
+                           DO LINDEX50
+                              LCOUNT += 1.0
+                              IF LCOUNT == MCOUNT
+
+                                 A_MATRIX(MINDEX50,NINDEX50) = A_VALUE
+
+                              ENDIF
+                           ENDDO LINDEX50
+                        ENDIF
+                    ENDDO KINDEX50
+
+              ENDDO MINDEX50
+     ENDDO NINDEX50
+
+     EXECUTE SIP_BARRIER
+
+     ENDPROC  FORM_A_MATRIX_IJ
+#    -------------------------
+
+     PROC FORM_A_MATRIX_JI
+#    ----------------------
+
+# Built A_jk where k=1, ..j-1, <(HC_k)_j | C_k>
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT > ITER_COUNT
+           EXIT
+        ENDIF
+
+              MCOUNT = 0.0
+              DO MINDEX50
+                 MCOUNT += 1.0
+
+                 IF MCOUNT >= NCOUNT
+                    EXIT
+                 ENDIF
+
+                 IF MCOUNT == ITER_COUNT
+                    IF NCOUNT == ITER_COUNT
+                       EXIT
+                    ENDIF
+                 ENDIF
+
+                    SUMA   = 0.0
+                    SUMB   = 0.0
+                    HC_A   = 0.0
+                    HC_B   = 0.0
+
+                     PARDO i, a
+
+                            GET HR1A_HIST(a,i,MINDEX50)
+                            GET R1A_HIST(a,i,NINDEX50)
+
+                            Tai(a,i)   = HR1A_HIST(a,i,MINDEX50)
+                            T1ai(a,i)  = R1A_HIST(a,i,NINDEX50)
+
+                            TMP   = Tai(a,i) * T1ai(a,i)
+                            SUMA += TMP
+
+                     ENDPARDO i, a
+
+                     EXECUTE SERVER_BARRIER
+                     COLLECTIVE HC_A += SUMA
+
+                     PARDO j, b
+
+                           GET HR1B_HIST(b,j,MINDEX50)
+                           GET R1B_HIST(b,j,NINDEX50)
+
+                           Tbj(b,j)  = HR1B_HIST(b,j,MINDEX50)
+                           T1bj(b,j) = R1B_HIST(b,j,NINDEX50)
+
+                           TMP   = Tbj(b,j) * T1bj(b,j)
+                           SUMB += TMP
+
+                     ENDPARDO j, b
+
+                     EXECUTE SERVER_BARRIER
+                     COLLECTIVE HC_B += SUMB
+
+                     A_VALUE  = HC_A
+                     A_VALUE += HC_B
+                     EXECUTE SIP_BARRIER
+
+                     KCOUNT = 0.0
+                     DO KINDEX50
+                         KCOUNT += 1.0
+                         IF KCOUNT  == NCOUNT
+
+                            LCOUNT = 0.0
+                            DO LINDEX50
+                               LCOUNT += 1.0
+                               IF LCOUNT == MCOUNT
+
+                                  A_MATRIX(NINDEX50,MINDEX50) = A_VALUE
+
+                               ENDIF
+                            ENDDO LINDEX50
+                         ENDIF
+                     ENDDO KINDEX50
+
+              ENDDO MINDEX50
+     ENDDO NINDEX50
+
+     EXECUTE SIP_BARRIER
+
+     ENDPROC  FORM_A_MATRIX_JI
+#    -------------------------
+
+     PROC  FORM_A_MATRIX_II
+#    ----------------------
+
+     SUMA   = 0.0
+     SUMB   = 0.0
+     HC_A   = 0.0
+     HC_B   = 0.0
+
+     MCOUNT = 0.0
+     DO MINDEX50
+        MCOUNT += 1.0
+        IF MCOUNT == ITER_COUNT
+
+              NCOUNT = 0.0
+              DO NINDEX50
+                 NCOUNT += 1.0
+                 IF NCOUNT == MCOUNT
+
+                    SUMA   = 0.0
+                    SUMB   = 0.0
+                    HC_A   = 0.0
+                    HC_B   = 0.0
+
+                    PARDO i, a
+
+                          GET HR1A_HIST(a,i,NINDEX50)
+                          GET R1A_HIST(a,i,MINDEX50)
+
+                          Tai(a,i)   = HR1A_HIST(a,i,NINDEX50)
+                          T1ai(a,i)  = R1A_HIST(a,i,MINDEX50)
+
+                          TMP   = Tai(a,i) *  T1ai(a,i)
+                          SUMA += TMP
+
+                    ENDPARDO i, a
+
+                    EXECUTE SERVER_BARRIER
+                    COLLECTIVE HC_A += SUMA
+
+                    PARDO j, b
+
+                          GET HR1B_HIST(b,j,NINDEX50)
+                          GET R1B_HIST(b,j,MINDEX50)
+
+                          Tbj(b,j)   = HR1B_HIST(b,j,NINDEX50)
+                          T1bj(b,j)  = R1B_HIST(b,j,MINDEX50)
+
+                          TMP   = Tbj(b,j) * T1bj(b,j)
+                          SUMB += TMP
+
+                    ENDPARDO j, b
+
+                    EXECUTE SERVER_BARRIER
+                    COLLECTIVE HC_B += SUMB
+
+                    A_VALUE  = HC_A
+                    A_VALUE += HC_B
+
+
+                   A_VALUE  = HC_A
+                   A_VALUE += HC_B
+                   EXECUTE SIP_BARRIER
+
+                     KCOUNT = 0.0
+                     DO KINDEX50
+                         KCOUNT += 1.0
+                         IF KCOUNT  == NCOUNT
+
+                            LCOUNT = 0.0
+                            DO LINDEX50
+                               LCOUNT += 1.0
+                               IF LCOUNT == MCOUNT
+
+                                  A_MATRIX(NINDEX50,MINDEX50) = A_VALUE
+
+                               ENDIF
+                            ENDDO LINDEX50
+                         ENDIF
+                     ENDDO KINDEX50
+                ENDIF
+              ENDDO NINDEX50
+       ENDIF
+
+     ENDDO MINDEX50
+     EXECUTE SIP_BARRIER
+
+     ENDPROC  FORM_A_MATRIX_II
+#    -------------------------
+
+     PROC FORM_NEWVECS_ITR1
+#    ----------------------
+
+     OMEGA0   = A_VALUE
+     OMEGA0M  = A_VALUE
+     OMEGA0M *= -1.0
+
+# First the residual vector for iteration 1
+    
+     PARDO i, a
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > 1.0
+                 EXIT
+              ENDIF
+
+              GET HR1A_HIST(a,i,NINDEX50)
+              GET R1A_HIST(a,i,NINDEX50)
+
+              Tai(a,i)   = HR1A_HIST(a,i,NINDEX50)
+              T1ai(a,i)  = R1A_HIST(a,i,NINDEX50)
+              T1ai(a,i) *= OMEGA0M
+              Tai(a,i)  += T1ai(a,i)
+
+              PUT RES1a(a,i) = Tai(a,i)
+
+           ENDDO NINDEX50
+     ENDPARDO i, a
+
+
+     PARDO j, b
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > 1.0
+                 EXIT
+              ENDIF
+
+              GET HR1B_HIST(b,j,NINDEX50)
+              GET R1B_HIST(b,j,NINDEX50)
+
+              Tbj(b,j)   = HR1B_HIST(b,j,NINDEX50)
+              T1bj(b,j)  = R1B_HIST(b,j,NINDEX50)
+              T1bj(b,j) *= OMEGA0M
+              Tbj(b,j)  += T1bj(b,j)
+
+              PUT RES1b(b,j) = Tbj(b,j)
+
+           ENDDO NINDEX50
+     ENDPARDO  j, b
+
+     EXECUTE SIP_BARRIER 
+
+# Now the correction vector for iteration 1
+
+     DO a
+        DO i
+           GET RES1a(a,i)
+           GET R1DA(a,i)
+
+           Tai(a,i)   = R1DA(a,i)
+           T1ai(a,i)  = RES1a(a,i)
+
+           Tai(a,i)  *= -1.0
+           T2ai(a,i)  = OMEGA0
+           Tai(a,i)  += T2ai(a,i)
+
+           EXECUTE APPLY_DEN2_NOR  T1ai Tai
+
+           PUT CORR_VECa(a,i) =  T1ai(a,i)
+
+         ENDDO i
+     ENDDO a
+
+     DO b
+         DO j
+            GET RES1b(b,j)
+            GET R1DB(b,j)
+
+            Tbj(b,j)   = R1DB(b,j)
+            T1bj(b,j)  = RES1b(b,j)
+
+            Tbj(b,j)  *= -1.0
+            T2bj(b,j)  = OMEGA0
+            Tbj(b,j)  += T2bj(b,j)
+
+            EXECUTE APPLY_DEN2_NOR  T1bj Tbj
+
+            PUT CORR_VECb(b,j) =  T1bj(b,j)
+
+         ENDDO j
+     ENDDO b
+
+     EXECUTE SIP_BARRIER 
+
+#bgn_debug
+#      tmpb=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,a
+#         get corr_veca(a,i)
+#         Tmp =  corr_veca(a,i) * corr_veca(a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      pardo j,b
+#         get  corr_vecb(b,j)
+#         tmp = corr_vecb(b,j) * corr_vecb(b,j) 
+#         tmpb += tmp
+#      endpardo j,b
+#      execute server_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute sip_barrier
+#      execute print_scalar suma
+#      execute print_scalar sumb
+#      sumab  = suma
+#     sumab += sumb
+#      execute print_scalar sumab
+#end_debug
+
+
+# Orthognalize to the Guess vector; first get the norm.
+
+     SUMA   = 0.0
+     SUMB   = 0.0
+     HC_A   = 0.0
+     HC_B   = 0.0
+
+     PARDO i, a
+           GET CORR_VECa(a,i)
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > 1.0
+                 EXIT
+              ENDIF
+
+              GET R1A_HIST(a,i,NINDEX50)
+
+              Tai(a,i)   = CORR_VECa(a,i)
+              T1ai(a,i)  = R1A_HIST(a,i,NINDEX50)
+              TMP   = Tai(a,i) * T1ai(a,i)
+              SUMA += TMP
+
+           ENDDO NINDEX50
+     ENDPARDO i, a
+
+     EXECUTE SIP_BARRIER
+     COLLECTIVE  HC_A += SUMA
+
+     PARDO j, b
+
+           GET CORR_VECb(b,j)
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > 1.0
+                 EXIT
+              ENDIF
+
+              GET R1B_HIST(b,j,NINDEX50)
+
+              Tbj(b,j)   = CORR_VECb(b,j)
+              T1bj(b,j)  = R1B_HIST(b,j,NINDEX50)
+              TMP  = Tbj(b,j) * T1bj(b,j)
+              SUMB += TMP
+
+           ENDDO NINDEX50
+     ENDPARDO  j,b
+
+     EXECUTE SIP_BARRIER
+     COLLECTIVE  HC_B += SUMB
+     NORM_GHG  = HC_A
+     NORM_GHG += HC_B
+#
+# Orthogonalization  (i.e. <G|HG> = 0.0) (G=Guess vectors)
+#
+     PARDO i, a
+
+           GET CORR_VECa(a,i)
+           Tai(a,i) = 0.0
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > 1.0
+                 EXIT
+              ENDIF
+
+              GET R1A_HIST(a,i,NINDEX50)
+
+              Tai(a,i)   = CORR_VECa(a,i)
+              T1ai(a,i)  = R1A_HIST(a,i,NINDEX50)
+              T1ai(a,i) *= NORM_GHG
+              T1ai(a,i) *= -1.0
+              Tai(a,i)  += T1ai(a,i)
+
+           ENDDO NINDEX50
+
+          PUT R1a_intmd(a,i) = Tai(a,i)
+     ENDPARDO i, a
+
+     PARDO j, b
+
+           GET CORR_VECb(b,j)
+           Tbj(b,j) = 0.0
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > 1.0
+                 EXIT
+              ENDIF
+
+              GET R1B_HIST(b,j,NINDEX50)
+
+              Tbj(b,j)   = CORR_VECb(b,j)
+              T1bj(b,j)  = R1B_HIST(b,j,NINDEX50)
+              T1bj(b,j) *= NORM_GHG
+              T1bj(b,j) *= -1.0
+              Tbj(b,j)  += T1bj(b,j)
+
+           ENDDO NINDEX50
+
+           PUT R1b_intmd(b,j) = Tbj(b,j)
+     ENDPARDO  j, b
+
+    EXECUTE SIP_BARRIER
+
+# Final normalization
+
+     SUMA = 0.0
+     SUMB = 0.0
+     TMPA = 0.0
+     TMPB = 0.0
+     PARDO i, a
+
+            GET  R1a_intmd(a,i)
+            Tai(a,i) = R1a_intmd(a,i)
+            TMP   = Tai(a,i) * Tai(a,i)
+            TMPA += TMP
+
+     ENDPARDO i, a
+
+     EXECUTE SIP_BARRIER
+     COLLECTIVE  SUMA += TMPA
+
+     PARDO j, b
+
+           GET  R1b_intmd(b,j)
+           Tbj(b,j) =  R1b_intmd(b,j)
+           TMP   = Tbj(b,j) * Tbj(b,j)
+           TMPB += TMP
+
+     ENDPARDO j, b
+
+     EXECUTE SIP_BARRIER
+     COLLECTIVE  SUMB += TMPB
+
+     SUM_R  = SUMA
+     SUM_R += SUMB
+
+     EXPONENT = 0.5
+     EXECUTE NORM_FAC SUM_R EXPONENT
+     INV_SQRT_NORM_R = SUM_R
+#bgn_debug
+#     execute print_scalar SUM_R
+#end_debug
+
+     EXECUTE SIP_BARRIER
+
+     PARDO i, a
+
+            GET  R1a_intmd(a,i)
+            Tai(a,i)  = R1a_intmd(a,i)
+            Tai(a,i) *= INV_SQRT_NORM_R
+            PUT R1a(a,i) = Tai(a,i)
+
+      ENDPARDO i, a
+
+      PARDO j, b
+
+            GET  R1b_intmd(b,j)
+            Tbj(b,j)  =  R1b_intmd(b,j)
+            Tbj(b,j) *=  INV_SQRT_NORM_R
+            PUT  R1b(b,j) = Tbj(b,j)
+
+      ENDPARDO j, b
+
+      EXECUTE SIP_BARRIER
+#bgn_debug
+#      tmpb=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,a
+#         get r1a(a,i)
+#         Tmp =  r1a(a,i) *  r1a(a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      pardo j,b
+#         get r1b(b,j)
+#         tmp = r1b(b,j) * r1b(b,j)
+#         tmpb += tmp
+#      endpardo j,b
+#      execute server_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute sip_barrier
+#      execute print_scalar suma
+#      execute print_scalar sumb
+#      sumab  = suma
+#      sumab += sumb
+#      execute print_scalar sumab
+#end_debug
+
+     ENDPROC FORM_NEWVECS_ITR1
+#    ------------------------
+
+    PROC REORDER_A_EIGS
+#    -------------------
+
+     DO MINDEX50
+        DO NINDEX50
+           IF MINDEX50  == NINDEX50
+              TXX(MINDEX50,MINDEX50) = A_MATRIX(MINDEX50,MINDEX50)
+              EXECUTE RETURN_SVAL TXX EIG_VALUE
+              A_DIAGS(MINDEX50)      = EIG_VALUE
+           ENDIF
+         ENDDO NINDEX50
+     ENDDO MINDEX50
+
+     EXECUTE PROCESS_EIGS A_DIAGS DVECTORS
+
+     ENDPROC REORDER_A_EIGS
+#    ----------------------
+
+     PROC FORM_NEWVECS
+#    ------------------
+     PARDO i, a
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET R1A_HIST(a,i,MINDEX50)
+                       Taix(a,i,MINDEX50)  = R1A_HIST(a,i,MINDEX50)
+                       T1aix(a,i,NINDEX50) = Taix(a,i,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1A(a,i,NINDEX50) += T1aix(a,i,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO i, a
+
+     PARDO j, b
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       GET R1B_HIST(b,j,MINDEX50)
+                       Tbjx(b,j,MINDEX50)  = R1B_HIST(b,j,MINDEX50)
+                       T1bjx(b,j,NINDEX50) = Tbjx(b,j,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1B(b,j,NINDEX50) += T1bjx(b,j,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO  j, b
+
+     EXECUTE SIP_BARRIER 
+
+     ENDPROC FORM_NEWVECS
+#    ---------------------
+
+    PROC SELECT_VECS_EXP
+#   --------------------
+
+     MCOUNT = 0.0
+     DO MINDEX50
+        MCOUNT += 1.0
+        IF MCOUNT >  ITER_COUNT
+           EXIT
+         ENDIF
+
+         SUMA   = 0.0
+         SUMB   = 0.0
+         CY_A   = 0.0
+         CY_B   = 0.0
+
+         PARDO a, i
+
+              GET INIT_VEC_A(a,i)
+              GET Y1a(a,i,MINDEX50)
+
+              Tai(a,i)  = INIT_VEC_A(a,i)
+              T1ai(a,i) = Y1a(a,i,MINDEX50)
+
+              TMP   =  Tai(a,i) * T1ai(a,i)
+              SUMA +=  TMP
+
+         ENDPARDO a, i
+
+         EXECUTE SERVER_BARRIER
+         COLLECTIVE CY_A += SUMA
+
+         PARDO j, b
+
+             GET INIT_VEC_B(b,j)
+             GET Y1b(b,j,MINDEX50)
+
+             Tbj(b,j)  = INIT_VEC_B(b,j) 
+             T1bj(b,j) = Y1b(b,j,MINDEX50)
+
+             TMP    =  Tbj(b,j) * T1bj(b,j)
+             SUMB   +=  TMP
+
+         ENDPARDO j, b
+
+         EXECUTE SERVER_BARRIER
+         COLLECTIVE CY_B += SUMB
+
+         CY_AB  = CY_A
+         CY_AB += CY_B
+
+         KCOUNT = 0.0
+         DO KINDEX50
+            KCOUNT += 1.0
+
+            IF KCOUNT == MCOUNT
+               OVERLAP_R(MINDEX50) = CY_AB
+            ENDIF
+
+         ENDDO KINDEX50
+
+     ENDDO  MINDEX50
+
+     EXECUTE SIP_BARRIER
+
+     EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
+#bgn_debug
+#     execute print_scalar imax
+#end_debug
+
+     ENDPROC SELECT_VECS_EXP
+#    -----------------------
+
+    PROC SELECT_VECS
+#    ---------------
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT  > 1.0
+           EXIT
+        ENDIF
+
+           MCOUNT = 0.0
+           DO MINDEX50
+              MCOUNT += 1.0
+              IF MCOUNT >  ITER_COUNT
+                 EXIT
+              ENDIF
+
+                 SUMA   = 0.0
+                 SUMB   = 0.0
+                 CY_A   = 0.0
+                 CY_B   = 0.0
+
+                 PARDO a, i
+
+                       GET R1A_HIST(a,i,NINDEX50)
+                       GET Y1a(a,i,MINDEX50)
+
+                       Tai(a,i)  = R1A_HIST(a,i,NINDEX50)
+                       T1ai(a,i) = Y1a(a,i,MINDEX50)
+
+                       TMP   =  Tai(a,i) * T1ai(a,i)
+                       SUMA +=  TMP
+
+                  ENDPARDO a, i
+
+                  EXECUTE SERVER_BARRIER
+                  COLLECTIVE CY_A += SUMA
+
+                  PARDO j, b
+
+                       GET R1b_HIST(b,j,NINDEX50)
+                       GET Y1b(b,j,MINDEX50)
+
+                       Tbj(b,j)  = R1b_HIST(b,j,NINDEX50)
+                       T1bj(b,j) = Y1b(b,j,MINDEX50)
+
+                       TMP    =  Tbj(b,j) * T1bj(b,j)
+                       SUMB   +=  TMP
+
+                  ENDPARDO j, b
+                  EXECUTE SERVER_BARRIER
+                  COLLECTIVE CY_B += SUMB
+
+                  CY_AB  = CY_A
+                  CY_AB += CY_B
+
+                  KCOUNT = 0.0
+                  DO KINDEX50
+                     KCOUNT += 1.0
+
+                     IF KCOUNT == MCOUNT
+                        OVERLAP_R(MINDEX50) = CY_AB
+                     ENDIF
+
+                  ENDDO KINDEX50
+
+           ENDDO  MINDEX50
+
+     ENDDO NINDEX50
+
+     EXECUTE SIP_BARRIER
+
+     EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
+#bgn_debug
+#     execute print_scalar imax
+#end_debug
+
+     ENDPROC SELECT_VECS
+#    -------------------
+
+     PROC FORM_SELECTED_Y
+#    --------------------
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO i, a
+
+                 GET Y1a(a,i,NINDEX50)
+                 Tai(a,i) = Y1a(a,i,NINDEX50)
+                 PUT Y1a_PICKED(a,i) = Tai(a,i)
+
+           ENDPARDO i, a
+        ENDIF
+     ENDDO NINDEX50
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO j, b
+
+                 GET Y1b(b,j,NINDEX50)
+                 Tbj(b,j) = Y1b(b,j,NINDEX50)
+                 PUT Y1b_PICKED(b,j) = Tbj(b,j)
+
+           ENDPARDO j, b
+        ENDIF
+     ENDDO NINDEX50
+
+     EXECUTE SIP_BARRIER
+
+     ENDPROC FORM_SELECTED_Y
+#    -----------------------
+
+      PROC FORM_HBAR_Y_VECS
+#    ---------------------
+
+      PARDO a, i
+         GET Y1a_PICKED(a,i)
+         Tai(a,i) = Y1a_PICKED(a,i)
+         PUT R1a(a,i) =  Tai(a,i)
+      ENDPARDO a, i
+
+      PARDO b, j
+         GET Y1b_PICKED(b,j)
+         Tbj(b,j) = Y1b_PICKED(b,j)
+         PUT R1b(b,j) =  Tbj(b,j)
+      ENDPARDO b, j
+
+      EXECUTE SIP_BARRIER
+
+      CALL HC_MULT
+
+      PARDO a, i
+         GET HR1a(a,i)
+         Tai(a,i) = HR1a(a,i)
+         PUT  HY1a_PICKED(a,i) =  Tai(a,i)
+      ENDPARDO a, i
+
+      PARDO b, j
+         GET HR1b(b,j)
+         Tbj(b,j) = HR1b(b,j)
+         PUT HY1B_PICKED(b,j) =  Tbj(b,j)
+      ENDPARDO b, j
+   
+      EXECUTE SIP_BARRIER
+
+      ENDPROC FORM_HBAR_Y_VECS
+#    -------------------------
+
+     PROC FORM_RESIDUAL_VEC
+#    ----------------------
+
+      EXECUTE RETURN_SELECTED A_DIAGS IMAX
+      OMEGA   = IMAX
+      OMEGAM  = OMEGA
+      OMEGAM *= -1.0
+#bgn_debug
+#     execute print_scalar OMEGAM
+#end_debug
+
+     DO i
+        DO a
+           GET HY1a_picked(a,i)
+           GET Y1a_picked(a,i)
+
+           Tai(a,i)   = HY1a_picked(a,i)
+           T1ai(a,i)  = Y1a_picked(a,i)
+           T1ai(a,i) *= Omegam
+           Tai(a,i)  +=  T1ai(a,i)
+           PUT RES1a(a,i) =  Tai(a,i)
+         ENDDO a
+     ENDDO i
+
+     DO b
+         DO j
+            GET HY1b_picked(b,j)
+            GET Y1b_picked(b,j)
+            Tbj(b,j)   = HY1b_picked(b,j)
+            T1bj(b,j)  = Y1b_picked(b,j)
+            T1bj(b,j) *= Omegam
+            Tbj(b,j)  += T1bj(b,j)
+            PUT RES1b(b,j) =  Tbj(b,j)
+         ENDDO j
+     ENDDO b
+     
+    EXECUTE SIP_BARRIER
+
+     ENDPROC FORM_RESIDUAL_VEC
+#    -----------------------
+
+     PROC CHECK_CONVERGENCE
+#    -----------------------
+     SUMA   = 0.0
+     SUMB   = 0.0
+     HC_A   = 0.0
+     HC_B   = 0.0
+
+     PARDO i, a
+
+           GET RES1a(a,i)
+
+           Tai(a,i)   = RES1a(a,i)
+
+           TMP   = Tai(a,i) * Tai(a,i)
+           SUMA += TMP
+
+     ENDPARDO i, a
+
+     EXECUTE SERVER_BARRIER
+     COLLECTIVE HC_A += SUMA
+
+     PARDO j, b
+
+           GET RES1b(b,j)
+
+           Tbj(b,j)  = RES1b(b,j)
+
+           TMP   = Tbj(b,j) * Tbj(b,j)
+           SUMB += TMP
+
+     ENDPARDO j, b
+
+     EXECUTE SERVER_BARRIER
+     COLLECTIVE HC_B += SUMB
+
+     A_VALUE  = HC_A
+     A_VALUE += HC_B
+
+     EXECUTE SIP_BARRIER
+
+     HALF = 0.5
+     EXECUTE SQUARE_ROOT A_VALUE HALF
+     RESIDUAL_NORM = A_VALUE
+
+     ENDPROC CHECK_CONVERGENCE
+#    -------------------------
+
+     PROC FORM_CORRECTION_VEC
+#    ------------------------
+
+#bgn_debug
+#     execute print_scalar OMEGA
+#end_debug
+
+     DO a
+        DO i
+           GET RES1a(a,i)
+           GET R1DA(a,i)
+
+           Tai(a,i)   = R1DA(a,i)
+           T1ai(a,i)  = RES1a(a,i)
+
+           Tai(a,i)  *= -1.0
+           T2ai(a,i)  = OMEGA
+           Tai(a,i)  += T2ai(a,i)
+
+           EXECUTE APPLY_DEN2_NOR  T1ai Tai
+
+           PUT CORR_VECa(a,i) =  T1ai(a,i)
+
+         ENDDO i
+     ENDDO a
+
+     DO b
+         DO j
+            GET RES1b(b,j)
+            GET R1DB(b,j)
+
+            Tbj(b,j)   = R1DB(b,j)
+            T1bj(b,j)  = RES1b(b,j)
+
+            Tbj(b,j)  *= -1.0
+            T2bj(b,j)  = OMEGA
+            Tbj(b,j)  += T2bj(b,j)
+
+            EXECUTE APPLY_DEN2_NOR  T1bj Tbj
+
+            PUT CORR_VECb(b,j) =  T1bj(b,j)
+
+         ENDDO j
+     ENDDO b
+
+     EXECUTE SIP_BARRIER
+
+     ENDPROC FORM_CORRECTION_VEC
+#    ---------------------------
+
+     PROC MAKE_ORTHO_COEFS
+#    ---------------------
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+
+        IF NCOUNT > ITER_COUNT
+           EXIT
+        ENDIF
+
+           PARDO i, a
+
+                 GET R1A_HIST(a,i,NINDEX50)
+                 GET CORR_VECa(a,i)
+
+                 Tai(a,i)  = R1A_HIST(a,i,NINDEX50)
+                 T1ai(a,i) = CORR_VECa(a,i)
+                 TMP          = Tai(a,i) * T1ai(a,i)
+
+                 Txx(NINDEX50,NINDEX50)         = TMP
+                 PUT ORTHO_COEF(NINDEX50,NINDEX50) += Txx(NINDEX50,NINDEX50)
+
+           ENDPARDO i, a
+
+           PARDO j, b
+
+                 GET R1B_HIST(b,j,NINDEX50)
+                 GET CORR_VECb(b,j)
+
+                 Tbj(b,j)  = R1B_HIST(b,j,NINDEX50)
+                 T1bj(b,j) = CORR_VECb(b,j)
+                 TMP          = Tbj(b,j) * T1bj(b,j)
+
+                 Txx(NINDEX50,NINDEX50)         = TMP
+                 PUT ORTHO_COEF(NINDEX50,NINDEX50) += Txx(NINDEX50,NINDEX50)
+
+           ENDPARDO j, b
+     ENDDO NINDEX50
+
+     EXECUTE SIP_BARRIER
+
+     ENDPROC MAKE_ORTHO_COEFS
+#    ------------------------
+
+     PROC GRAM_SCHMIDT
+#    ----------------
+     MCOUNT = 0.0
+     SUMA   = 0.0
+     SUMB   = 0.0
+     C_A    = 0.0
+     C_B    = 0.0
+
+     PARDO i, a
+           GET CORR_VECa(a,i)
+           Tai(a,i)   = CORR_VECa(a,i)
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+  
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF
+
+              GET R1A_HIST(a,i,NINDEX50)
+              GET ORTHO_COEF(NINDEX50,NINDEX50)
+
+              T1ai(a,i)  = R1A_HIST(a,i,NINDEX50)
+              Txx(NINDEX50,NINDEX50) = ORTHO_COEF(NINDEX50,NINDEX50)
+
+              EXECUTE RETURN_SVAL Txx FACT
+
+              T1ai(a,i) *= FACT
+              T1ai(a,i) *= -1.0
+              Tai(a,i)  += T1ai(a,i)
+
+           ENDDO NINDEX50
+
+           PUT R1a_INTMD(a,i) = Tai(a,i)
+
+           TMP    = Tai(a,i) * Tai(a,i)
+           SUMA  += TMP
+
+     ENDPARDO i, a
+     EXECUTE SERVER_BARRIER
+     COLLECTIVE C_A += SUMA
+
+     PARDO j, b
+          GET CORR_VECb(b,j)
+          Tbj(b,j)  = CORR_VECb(b,j)
+
+          NCOUNT = 0.0
+          DO NINDEX50
+             NCOUNT += 1.0
+
+             IF NCOUNT > ITER_COUNT
+                EXIT
+             ENDIF
+
+             GET R1B_HIST(b,j,NINDEX50)
+             GET ORTHO_COEF(NINDEX50,NINDEX50)
+
+             T1bj(b,j) = R1B_HIST(b,j,NINDEX50)
+             Txx(NINDEX50,NINDEX50) = ORTHO_COEF(NINDEX50,NINDEX50)
+
+             EXECUTE RETURN_SVAL Txx FACT
+
+             T1bj(b,j) *= FACT
+             T1bj(b,j) *= -1.0
+             Tbj(b,j)  += T1bj(b,j)
+
+          ENDDO NINDEX50
+
+          PUT R1b_INTMD(b,j) = Tbj(b,j)
+
+          TMP   = Tbj(b,j) * Tbj(b,j) 
+          SUMB += TMP
+
+     ENDPARDO j, b
+
+     EXECUTE SERVER_BARRIER
+     COLLECTIVE   C_B += SUMB
+     EXECUTE SIP_BARRIER
+
+     NORM_NEW_ORTGC  = C_A
+     NORM_NEW_ORTGC += C_B
+
+     EXPONENT = 0.5
+     EXECUTE NORM_FAC NORM_NEW_ORTGC EXPONENT
+     INV_SQRT_NORM_ORTGC  = NORM_NEW_ORTGC
+     SQRT_OVERLAP         = EXPONENT
+#bgn_debug
+#     execute print_scalar INV_SQRT_NORM_ORTGC
+#     execute print_scalar SQRT_OVERLAP
+#end_debug
+
+     ENDPROC GRAM_SCHMIDT
+#    --------------------
+
+     PROC DRIVE_ORTHO
+#    ----------------
+
+     CALL MAKE_ORTHO_COEFS
+     CALL GRAM_SCHMIDT
+
+     ENDPROC DRIVE_ORTHO
+#    -------------------
+
+     PROC RESCALE_NEW_C
+#    ------------------
+     SUMA = 0.0
+     SUMB = 0.0
+     TMPA = 0.0
+     TMPB = 0.0
+     PARDO i, a
+
+            GET  R1a_intmd(a,i)
+            Tai(a,i) = R1a_intmd(a,i)
+            TMP   = Tai(a,i) * Tai(a,i)
+            TMPA += TMP
+
+      ENDPARDO i, a
+
+      EXECUTE SIP_BARRIER
+      COLLECTIVE  SUMA += TMPA
+
+      PARDO j, b
+
+            GET  R1b_intmd(b,j)
+            Tbj(b,j) =  R1b_intmd(b,j)
+            TMP   = Tbj(b,j) * Tbj(b,j)
+            TMPB += TMP
+
+      ENDPARDO j, b
+
+      EXECUTE SIP_BARRIER
+      COLLECTIVE  SUMB += TMPB
+      SUM_R  = SUMA
+      SUM_R += SUMB
+
+#bgn_debug
+#     execute print_scalar SUM_R
+#end_debug
+ 
+      EXPONENT = 0.5
+      EXECUTE NORM_FAC SUM_R EXPONENT
+      INV_SQRT_NORM_ORTGC  = SUM_R
+      SQRT_OVERLAP         = EXPONENT
+ 
+      EXECUTE SIP_BARRIER
+#bgn_debug
+#     execute print_scalar INV_SQRT_NORM_ORTGC
+#     execute print_scalar SQRT_OVERLAP
+#end_debug
+
+    DO a
+       DO i
+          GET R1a_intmd(a,i)
+
+          Tai(a,i)  = R1a_intmd(a,i)
+          Tai(a,i) *= INV_SQRT_NORM_ORTGC
+
+          PUT R1a(a,i) =  Tai(a,i)
+
+        ENDDO i
+     ENDDO a
+
+     DO b
+        DO j
+           GET R1b_intmd(b,j)
+
+           Tbj(b,j)  = R1b_intmd(b,j)
+           Tbj(b,j) *= INV_SQRT_NORM_ORTGC
+
+           PUT R1b(b,j) =  Tbj(b,j)
+
+        ENDDO j
+    ENDDO b
+
+    EXECUTE SIP_BARRIER
+#bgn_debug
+#      tmpb=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,a
+#         get r1a(a,i)
+#         Tmp =  r1a(a,i) *  r1a(a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      pardo j,b
+#         get r1b(b,j)
+#         tmp = r1b(b,j) * r1b(b,j)
+#         tmpb += tmp
+#      endpardo j,b
+#      execute server_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute sip_barrier
+#      execute print_scalar suma
+#      execute print_scalar sumb
+#end_debug
+#
+    ENDPROC RESCALE_NEW_C
+#   ---------------------
+
+     PROC SET_TO_ZERO
+#    ----------------
+
+     DO MINDEX50
+        OVERLAP_R(MINDEX50) = 0.0
+        DO NINDEX50
+           TS(MINDEX50,NINDEX50) = 0.0
+           A_MATRIX(MINDEX50,NINDEX50)   = 0.0
+           PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
+        ENDDO NINDEX50
+     ENDDO MINDEX50
+#
+     DO NINDEX50
+
+     PARDO a, i
+           tai(a,i)      = 0.0
+           PUT Y1a(a,i,NINDEX50) = tai(a,i)
+           PUT R1a_intmd(a,i) = tai(a,i)
+     ENDPARDO a, i
+
+     PARDO b, j
+           tbj(b,j)      = 0.0
+           PUT Y1b(b,j,NINDEX50) = tbj(b,j)
+           PUT R1b_intmd(b,j) =  tbj(b,j)
+     ENDPARDO b, j
+      
+     ENDDO NINDEX50
+
+     ENDPROC SET_TO_ZERO
+#    -------------------
+
+     PROC C_CHECK
+#    -----------
+     DO KINDEX50
+        DO LINDEX50
+           ETEMP(KINDEX50,LINDEX50) = 0.0
+       ENDDO LINDEX50
+     ENDDO KINDEX50
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT > ITER_COUNT
+           EXIT
+        ENDIF
+
+              MCOUNT = 0.0
+              DO MINDEX50
+                 MCOUNT += 1.0
+
+                 IF MCOUNT > ITER_COUNT
+                    EXIT
+                 ENDIF
+
+                    SUMA   = 0.0
+                    SUMB   = 0.0
+                    HC_A   = 0.0
+                    HC_B   = 0.0
+
+                     PARDO a, i
+
+                            GET R1A_HIST(a,i,NINDEX50)
+                            GET R1A_HIST(a,i,MINDEX50)
+
+                            Tai(a,i )  = R1A_HIST(a,i,NINDEX50)
+                            T1ai(a,i)  = R1A_HIST(a,i,MINDEX50)
+
+                            TMP   = Tai(a,i ) * T1ai(a,i)
+                            SUMA += TMP
+
+                     ENDPARDO a, i
+
+                     EXECUTE SERVER_BARRIER
+                     COLLECTIVE HC_A += SUMA
+
+                     PARDO b, j
+
+                           GET R1B_HIST(b,j,NINDEX50)
+                           GET R1B_HIST(b,j,MINDEX50)
+
+                           Tbj(b,j)  = R1B_HIST(b,j,NINDEX50)
+                           T1bj(b,j) = R1B_HIST(b,j,MINDEX50)
+
+                            TMP   = Tbj(b,j) * T1bj(b,j)
+                            SUMB += TMP
+
+                     ENDPARDO b, j 
+
+                     EXECUTE SERVER_BARRIER
+                     COLLECTIVE HC_B += SUMB
+
+                     A_VALUE  = HC_A
+                     A_VALUE += HC_B
+
+                     KCOUNT = 0.0
+                     DO KINDEX50
+                         KCOUNT += 1.0
+                            LCOUNT = 0.0
+                            DO LINDEX50
+                               LCOUNT += 1.0
+                                  ETEMP(MINDEX50,NINDEX50) = A_VALUE
+                            ENDDO LINDEX50
+                     ENDDO KINDEX50
+
+              ENDDO MINDEX50
+     ENDDO NINDEX50
+
+     execute print_static etemp  iter_count
+
+     ENDPROC C_CHECK
+#    ---------------
+
+      PROC DUMP_DENS_2JOBARC 
+#     ----------------------
+
+      DO i
+      DO i1
+         tmpii(i,i1) = DENS_OO_AA(i,i1)
+         DO mu
+            txi(mu,i1) = tmpii(i,i1) * CA(mu,i)
+            DO nu
+               txx1(mu,nu) = txi(mu,i1) * CA(nu,i1)
+               AO_DENSITY (mu,nu) += txx1(mu,nu)
+            ENDDO nu
+         ENDDO mu
+      ENDDO i1
+      ENDDO i
+
+      DO j
+      DO j1
+         tmpjj(j,j1) = DENS_OO_BB(j,j1)
+         DO mu
+            txj(mu,j1) = tmpjj(j,j1) * CB(mu,j)
+            DO nu
+               txx1(mu,nu) = txj(mu,j1) * CB(nu,j1)
+               AO_DENSITY (mu,nu) += txx1(mu,nu)
+            ENDDO nu
+         ENDDO mu
+      ENDDO j1
+      ENDDO j
+
+      DO a
+      DO a1
+         tmpaa(a,a1) = DENS_VV_AA(a,a1)
+         DO mu
+            txa(mu,a1) = tmpaa(a,a1) * CA(mu,a)
+            DO nu
+               txx1(mu,nu) = txa(mu,a1) * CA(nu,a1)
+               AO_DENSITY (mu, nu) += txx1(mu,nu)
+            ENDDO nu
+         ENDDO mu
+      ENDDO a1
+      ENDDO a
+
+      DO b
+      DO b1
+         tmpbb(b,b1) = DENS_VV_BB(b,b1)
+         DO mu
+            txb(mu,b1) = tmpbb(b,b1) * CB(mu,b)
+            DO nu
+               txx1(mu,nu) = txb(mu,b1) * CB(nu,b1)
+               AO_DENSITY (mu, nu) += txx1(mu,nu)
+            ENDDO nu
+         ENDDO mu
+      ENDDO b1
+      ENDDO b
+
+      EXECUTE SIP_BARRIER
+
+      IF RANK == 0.0
+         IDENS +=  1.0
+         EXECUTE  DENS2JOBARC  DENS_OO_AA IDENS
+         IDENS += 1.0
+         EXECUTE  DENS2JOBARC  DENS_OO_BB IDENS
+         IDENS += 1.0
+         EXECUTE  DENS2JOBARC  DENS_VV_AA IDENS
+         IDENS += 1.0
+         EXECUTE  DENS2JOBARC  DENS_VV_BB IDENS
+         IDENS += 1.0
+         EXECUTE  DENS2JOBARC  AO_DENSITY IDENS
+      ENDIF
+      EXECUTE  C1_FULL_PRINT  amp_print_a amp_print_b
+
+      ENDPROC DUMP_DENS_2JOBARC 
+#     -------------------------
+
+      PROC XPROP
+#     ----------
+#
+# Compute the density matrices and the transition moments for CIS.
+#
+      ONE     = 1.0
+      TWO     = 2.0
+      THREE   = 3.0
+      ONEHALF = 0.5
+      FACT_23 = TWO/THREE
+
+      Sum1 = 0.0
+      Sum2 = 0.0
+      Sum3 = 0.0
+
+      etemp1 = 0.0
+      etemp2 = 0.0
+      etemp3 = 0.0
+
+      DO i
+      DO i1
+         tmpii(i,i1) = 0.0
+         DENS_OO_AA(i,i1) = tmpii(i,i1)
+      ENDDO i1
+      ENDDO i
+
+      DO j
+      DO j1
+         tmpjj(j,j1) = 0.0
+         DENS_OO_BB(j,j1) = tmpjj(j,j1)
+      ENDDO j1
+      ENDDO j
+
+      DO a
+      DO a1
+         tmpaa(a,a1) = 0.0
+         DENS_VV_AA(a,a1) = tmpaa(a,a1)
+      ENDDO a1
+      ENDDO a
+      DO b
+      DO b1
+         tmpbb(b,b1) = 0.0
+         DENS_VV_BB(b,b1) = tmpbb(b,b1)
+      ENDDO b1
+      ENDDO b
+      DO mu
+      DO nu
+         Txx1(mu,nu) = 0.0
+         AO_DENSITY(mu,nu) = 0.0
+      ENDDO nu
+      ENDDO mu
+
+      EXECUTE SIP_BARRIER
+
+      DO i
+      DO i1
+      DO a
+         tmpii(i,i1)  = amp_print_a(a,i)*amp_print_a(a,i1)
+         DENS_OO_AA(i,i1) += tmpii(i,i1)
+      ENDDO a
+      ENDDO i1
+      ENDDO i
+
+      DO j
+      DO j1
+      DO b
+         tmpjj(j,j1)  = amp_print_b(b,j)*amp_print_b(b,j1)
+         DENS_OO_BB(j,j1) += tmpjj(j,j1)
+      ENDDO b
+      ENDDO j1
+      ENDDO j
+
+      DO a1
+      DO a
+      DO i
+         tmp_tia(i,a1) = amp_print_a(a1,i)
+         tmpaa(a,a1)  = amp_print_a(a,i)*tmp_tia(i,a1)
+         DENS_VV_AA(a,a1) += tmpaa(a,a1)
+      ENDDO i
+      ENDDO a
+      ENDDO a1
+
+      DO b1
+      DO b
+      DO j
+         tmp_tjb(j,b1) = amp_print_b(b1,j)
+         tmpbb(b,b1)  = amp_print_b(b,j)*tmp_tjb(j,b1)
+         DENS_VV_BB(b,b1) += tmpbb(b,b1)
+      ENDDO j
+      ENDDO b
+      ENDDO b1
+
+      EXECUTE SIP_BARRIER
+#
+# Density building is complete; start the transition moments
+#
+      PARDO mu, a
+            tmpxa(mu,a) = 0.0
+            PUT INTxa(mu,a) = tmpxa(mu,a)
+      ENDPARDO mu, a
+
+      PARDO mu, b
+            tmpxb(mu,b) = 0.0
+            PUT INTxb(mu,b) = tmpxb(mu,b)
+      ENDPARDO mu, b
+
+      PARDO mu, nu
+            tmpxx(mu,nu) = 0.0
+            PUT CIS_VEC_AO(mu,nu) = tmpxx(mu,nu)
+      ENDPARDO mu, nu
+
+      EXECUTE SIP_BARRIER
+
+      PARDO mu, a
+      DO i
+         tmpxa(mu,a)  = amp_print_a(a,i)*Ca(mu,i)
+         PUT INTxa(mu,a) += tmpxa(mu,a)
+      ENDDO i
+      ENDPARDO mu, a
+
+      PARDO mu, b
+      DO j
+         tmpxb(mu,b)  = amp_print_b(b,j)*CB(mu,j)
+         PUT INTxb(mu,b) += tmpxb(mu,b)
+      ENDDO j
+      ENDPARDO mu, b
+
+      EXECUTE SIP_BARRIER
+
+      PARDO mu, nu
+      DO a
+         GET INTxa(mu,a)
+         tmpxx(mu,nu)  = INTxa(mu,a)*Ca(nu,a)
+         PUT CIS_VEC_AO(mu,nu) += tmpxx(mu,nu)
+      ENDDO a
+      ENDPARDO mu, nu
+
+      PARDO mu, nu
+      DO b
+         GET INTxb(mu,b)
+         tmpxx(mu,nu)  = INTxb(mu,b)*CB(nu,b)
+         PUT CIS_VEC_AO(mu,nu) += tmpxx(mu,nu)
+      ENDDO b
+      ENDPARDO mu,nu
+
+      EXECUTE SIP_BARRIER
+#bn_debug
+#      tmpb=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,a
+#         Tmp = amp_print_a (a,i) * amp_print_a (a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      pardo j,b
+#         tmp = amp_print_b (b,j) * amp_print_b (b,j)
+#         tmpb += tmp
+#      endpardo j,b
+#      execute server_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute sip_barrier
+#      execute print_scalar suma
+#      execute print_scalar sumb
+#      esum = 0.0
+#      etmp = 0.0
+#      PARDO mu, nu
+#            GET CIS_VEC_AO(mu,nu) 
+#            etemp1 = CIS_VEC_AO(mu,nu)* CIS_VEC_AO(mu,nu)
+#            etmp += etemp1
+#      ENDPARDO mu, nu
+#      execute sip_barrier 
+#      collective esum+=etmp
+#      EXECUTE PRINT_SCALAR ESUM
+#en_debug
+
+     PARDO  mu, nu
+
+         GET  CIS_VEC_AO (mu,nu)
+
+         txx1 (mu,nu) = 0.0
+         txx2 (mu,nu) = 0.0
+         txx3 (mu,nu) = 0.0
+
+         EXECUTE  RETURN_1ST_MOM  txx1  ONE
+         EXECUTE  RETURN_1ST_MOM  txx2  TWO
+         EXECUTE  RETURN_1ST_MOM  txx3  THREE
+
+         etmp = CIS_VEC_AO (mu,nu) * txx1  (mu,nu)
+         sum1 += etmp
+
+         etmp = CIS_VEC_AO (mu,nu) * txx2 (mu,nu)
+         sum2 += etmp
+
+         etmp = CIS_VEC_AO (mu,nu) * txx3 (mu,nu)
+         sum3 += etmp
+
+      ENDPARDO  mu, nu
+
+      EXECUTE  SIP_BARRIER
+
+      COLLECTIVE  etemp1 += sum1
+      COLLECTIVE  etemp2 += sum2
+      COLLECTIVE  etemp3 += sum3
+
+      etemp1 *= -1.0
+      etemp2 *= -1.0
+      etemp3 *= -1.0
+#bn_debug
+      execute print_scalar etemp1
+      execute print_scalar etemp2
+      execute print_scalar etemp3
+#en_debug
+
+      DIP_MOM_X = etemp1
+      DIP_MOM_Y = etemp2
+      DIP_MOM_Z = etemp3
+
+      DIP_SQR_X = DIP_MOM_X*DIP_MOM_X
+      DIP_SQR_Y = DIP_MOM_Y*DIP_MOM_Y
+      DIP_SQR_Z = DIP_MOM_Z*DIP_MOM_Z
+
+      SQR_SUM =  DIP_SQR_X
+      SQR_SUM += DIP_SQR_Y
+      SQR_SUM += DIP_SQR_Z
+
+#      EXECUTE SQUARE_ROOT SQR_SUM ONEHALF
+#bn_debug
+#      execute print_scalar SQR_SUM
+      execute print_scalar CIS_ENEG
+#en_debug
+
+      CIS_TMOM = CIS_ENEG*SQR_SUM
+      CIS_TMOM = FACT_23*CIS_TMOM
+#bn_debug
+      execute print_scalar CIS_TMOM
+#en_debug
+
+      EXECUTE  SIP_BARRIER
+
+      ENDPROC XPROP
+#     -------------
+
+     PROC ANALYZE_STATE
+#    ------------------
+
+       
+       DO mu
+       DO nu
+          txx1(mu,nu) = 0.0
+          HF_DENSITY(mu,nu) = 0.0
+       ENDDO nu
+       ENDDO mu
+
+       EXECUTE  SIP_BARRIER
+
+       DO mu
+       Do nu
+       DO i
+          txi(nu, i) = CA (nu,i)
+          txx1 (mu,nu) = CA (mu,i) * txi (nu,i)
+          HF_DENSITY(mu,nu) +=  txx1 (mu,nu)
+
+       ENDDO i
+       ENDDO nu
+       ENDDO mu
+
+       DO mu
+       Do nu
+       DO j
+          txj(nu, j) = CB (nu,j)
+          txx1 (mu,nu) = CB (mu,j) * txj (nu,j)
+          HF_DENSITY(mu,nu) +=  txx1 (mu,nu)
+
+       ENDDO j
+       ENDDO nu
+       ENDDO mu
+
+       EXECUTE  SIP_BARRIER
+
+# The singlet states 
+
+       MCOUNT = 0.0
+       DO MROOTS
+          MCOUNT += 1.0
+          IF MCOUNT > TARGET_ROOTS
+             EXIT
+          ENDIF 
+
+          DO i
+          DO a
+            GET CISA_S_VECS(a,i,mroots)
+            amp_print_a (a,i) =  CISA_S_VECS(a,i,mroots)
+          ENDDO a
+          ENDDO i
+
+          DO j
+          DO b
+            GET  CISB_S_VECS(b,j,mroots)
+            amp_print_b (b,j) = CISB_S_VECS(b,j,mroots)
+          ENDDO b
+          ENDDO j
+ 
+          ROOT_ID = MCOUNT 
+          EXECUTE RETURN_SELECTED CIS_S_EES ROOT_ID
+          CIS_ENEG = ROOT_ID
+#bgn_debug
+#      execute print_scalar CIS_ENEG
+#      tmpb=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,a
+#         Tmp = amp_print_a (a,i) * amp_print_a (a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      pardo j,b
+#         tmp = amp_print_b (b,j) * amp_print_b (b,j)
+#         tmpb += tmp
+#      endpardo j,b
+#      execute server_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute sip_barrier
+#      execute print_scalar suma
+#      execute print_scalar sumb
+#end_debug
+          CALL XPROP
+
+       ENDDO MROOTS
+
+# The triplet states 
+
+       MCOUNT = 0.0
+       DO MROOTS
+          MCOUNT += 1.0
+          IF MCOUNT > TARGET_ROOTS
+             EXIT
+          ENDIF
+          execute print_scalar mcount 
+
+          DO i
+          DO a
+            GET CISA_T_VECS(a,i,mroots)
+            amp_print_a (a,i) =  CISA_T_VECS(a,i,mroots)
+          ENDDO a
+          ENDDO i
+
+          DO j
+          DO b
+            GET  CISB_T_VECS(b,j,mroots)
+            amp_print_b (b,j) = CISB_T_VECS(b,j,mroots)
+          ENDDO b
+          ENDDO j
+
+          ROOT_ID = MCOUNT 
+          EXECUTE RETURN_SELECTED CIS_T_EES ROOT_ID
+          CIS_ENEG = ROOT_ID
+
+#bgn_debug
+#     execute print_scalar CIS_ENEG
+#end_debug
+          CALL XPROP
+
+       ENDDO MROOTS
+
+# Note that the only twelve roots can be handle through JOBARC.
+
+       NCOUNT = 0.0
+       DO TWELVE 
+          NCOUNT += 1.0
+          IF NCOUNT > TARGET_ROOTS
+             EXIT
+          ENDIF 
+          CALL DUMP_DENS_2JOBARC 
+       ENDDO TWELVE 
+
+     ENDPROC ANALYZE_STATE
+#    ---------------------
+
+#     BEGIN MAIN PROGRAM
+#     -----------------
+#
+# Some initialization of constants 
+#
+      TARGET_ROOTS = eom_roots  
+      CIS_THRES    = EOM_TOL
+      EOM_MAXCYC   = EE_MAXCYC
+
+#bgn_debug
+      EXECUTE  PRINT_SCALAR  eom_maxcyc
+#end_debug
+
+      CALL CREATE_ARRAYS
+      CALL TRAN_UHF
+      CALL FORM_DIAG
+#
+# The initial guess is moved to the loop that treat singlets and triplet.
+# Since the triplets are simply genetrated by changing the beta block's
+# element's sign one can generate the guess once for both singlets and
+# tiplets, but some internal ACES III issues prevent me from doing that.
+# It's so cheap it is adavantages to do it twice instead of storing.
+
+      MAX_SUBSP_DIM = EOM_MAXCYC
+#bgn_debug
+      EXECUTE  PRINT_SCALAR  MAX_SUBSP_DIM
+#end_debug
+
+      MULT  = 0.0
+      ZERO  = 0.0
+      ONE   = 1.0
+      TWO   = 2.0
+      THREE = 3.0
+
+      SINGLET = ZERO
+      TRIPLET = ZERO 
+
+      DO SPN_MULT 
+
+         MULT  += 1.0
+
+         IF MULT == ONE 
+            SINGLET = ONE
+            TRIPLET = ZERO
+         ELSE 
+            SINGLET = ZERO 
+            TRIPLET = ONE 
+         ENDIF 
+#bgn_debug
+#         execute print_scalar mult
+         execute print_scalar singlet 
+         execute print_scalar triplet 
+#end_debug
+
+         CALL FORM_INITIAL_GUESS
+
+         ROOT_COUNT = 0.0
+         DO NROOTS
+
+            ROOT_COUNT += 1.0
+            IF ROOT_COUNT > TARGET_ROOTS
+               EXIT
+            ENDIF
+#bgn_debug
+        execute print_scalar ROOT_COUNT
+#end_debug
+            MYROOT = ROOT_COUNT
+            CALL PREP_RPA_GUESS
+
+            ITER_COUNT = 0.0
+   
+            DO SUBSP_DIM
+   
+               CALL SET_TO_ZERO
+   
+               ITER_COUNT += 1.0
+#bgn_debug
+         execute print_scalar ITER_COUNT
+#end_debug
+               IF ITER_COUNT > MAX_SUBSP_DIM
+                   EXIT
+                ENDIF
+
+                CALL SAVE_C_VECTORS
+#bgn_debug
+#            call c_check
+#end_debug
+                CALL HC_MULT
+
+                CALL SAVE_HC_VECTORS
+
+                IF ITER_COUNT == 1.0
+                   CALL FORM_A_MATRIX_11
+                ELSE
+                  CALL FORM_A_MATRIX_IJ
+                  CALL FORM_A_MATRIX_JI
+                  CALL FORM_A_MATRIX_II
+                ENDIF
+#bgn_debug
+#            execute print_static A_MATRIX ITER_COUNT
+#end_debug
+              EXECUTE XGEEV A_MATRIX DVECTORS
+#bgn_debug
+#            execute print_static A_MATRIX ITER_COUNT
+#end_debug
+               IF ITER_COUNT != 1.0
+                  CALL REORDER_A_EIGS
+               ENDIF
+#
+# The eigen vectors are normalized and ordered in descending order of the
+# eigenvalues. The corresponding eigenvalues are in the diagonal.
+#
+               IF ITER_COUNT == 1.0
+                  CALL FORM_NEWVECS_ITR1
+               ELSE
+    
+                  CALL FORM_NEWVECS
+    
+                  CALL SELECT_VECS
+
+                  CALL FORM_SELECTED_Y
+    
+                  CALL FORM_HBAR_Y_VECS
+    
+                  CALL FORM_RESIDUAL_VEC
+    
+                  CALL CHECK_CONVERGENCE
+#bgn_debug
+      execute print_scalar RESIDUAL_NORM
+#end_debug
+                  IF RESIDUAL_NORM  < CIS_THRES
+                     EXIT
+                  ELSE
+                     CALL FORM_CORRECTION_VEC
+    
+                     CALL DRIVE_ORTHO
+    
+                     CALL RESCALE_NEW_C
+                  ENDIF 
+
+               ENDIF 
+
+             ENDDO SUBSP_DIM
+    
+             EXECUTE SERVER_BARRIER
+#bgn_debug
+#      if RESIDUAL_NORM  < CIS_THRES
+#          execute print_scalar OMEGA
+#      endif 
+#end_debug
+             IF ITER_COUNT == MAX_SUBSP_DIM
+                IF RESIDUAL_NORM  > CIS_THRES
+#
+# The root under consideration could not be locates in 50 cycles.
+# Lets set energy to zero and inform the user whart that means
+#
+                    OMEGA = 0.0
+                 ENDIF
+             ENDIF
+    
+             IF SINGLET == ONE 
+                MCOUNT = 0.0
+                DO MROOTS
+                   MCOUNT += 1.0
+                   IF MCOUNT == ROOT_COUNT
+                      CIS_S_EES(MROOTS) = OMEGA
+                   PARDO a, i
+                      GET R1A(a,i) 
+#bgn_debug
+#                      execute dump_amp R1A(a,i)
+#end_debug
+                      PUT CISA_S_VECS(a,i,MROOTS) = R1A(a,i)
+                   ENDPARDO a, i
+                   PARDO b, j
+                      GET R1B(b,j) 
+#bgn_debug
+#                      execute dump_amp R1B(b,j)
+#end_debug
+                      PUT CISB_S_VECS(b,j,MROOTS) = R1B(b,j)
+                   ENDPARDO b, j
+                   ENDIF
+                ENDDO MROOTS
+             ENDIF 
+
+             IF TRIPLET == ONE 
+                MCOUNT = 0.0
+                DO MROOTS
+                   MCOUNT += 1.0
+                   IF MCOUNT == ROOT_COUNT
+                      CIS_T_EES(MROOTS) = OMEGA
+                   PARDO a, i
+                      GET R1A(a,i) 
+                      PUT CISA_T_VECS(a,i,MROOTS) = R1A(a,i)
+                   ENDPARDO a, i
+                   PARDO b, j
+                      GET R1B(b,j) 
+                      PUT CISB_T_VECS(b,j,MROOTS) = R1B(b,j)
+                   ENDPARDO b, j
+                   ENDIF
+                ENDDO MROOTS 
+              ENDIF 
+
+          ENDDO NROOTS
+
+
+#bgn_debug
+      ROOT_COUNT -= 1.0
+      IF SINGLET == ONE
+         execute print_static CIS_S_EES ROOT_COUNT
+         MARKER = 28.0
+         execute print_rel_info MARKER CIS_S_EES 
+      ENDIF 
+      IF TRIPLET == ONE
+         execute print_static CIS_T_EES ROOT_COUNT
+         MARKER = 29.0
+         execute print_rel_info MARKER CIS_T_EES 
+      ENDIF 
+#end_debug
+
+      ENDDO SPN_MULT
+
+      EXECUTE SERVER_BARRIER
+
+# The following DENS2JOBARC call add record "CIS" to the JOBARC file.
+
+      IF RANK == 0.0
+        PRINT_FLAG = -1.0
+        EXECUTE DENS2JOBARC HF_DENSITY PRINT_FLAG
+      ENDIF 
+      IDENS = 1.0
+      CALL ANALYZE_STATE 
+
+# The following DENS2JOBARC call identify the nature of the state 
+# (triplet=1.0, singlet=0.0).
+
+      DO IONE
+         MCOUNT = 0.0
+         DO DBL_MROOTS 
+            MCOUNT += 1.0
+            IF MCOUNT <= TARGET_ROOTS 
+               ROOT_MULT(DBL_MROOTS,IONE)  = ZERO 
+            ELSE 
+               ROOT_MULT(DBL_MROOTS,IONE)  = ONE
+            ENDIF 
+         ENDDO DBL_MROOTS 
+      ENDDO IONE
+
+      IF RANK == 0.0
+         PRINT_FLAG = -5.0
+         EXECUTE DENS2JOBARC ROOT_MULT PRINT_FLAG
+      ENDIF 
+#
+      EXECUTE SIP_BARRIER 
+      EXECUTE BLOCKS_TO_LIST  CISA_S_VECS
+      EXECUTE BLOCKS_TO_LIST  CISB_S_VECS 
+      EXECUTE BLOCKS_TO_LIST  CISA_T_VECS
+      EXECUTE BLOCKS_TO_LIST  CISB_T_VECS
+      EXECUTE WRITE_BLOCKS_TO_LIST
+      EXECUTE SERVER_BARRIER 
+
+                       ENDSIAL CIS_UHF
+#                      ---------------

@@ -265,10 +265,10 @@ C
          EMPTY  = .FALSE.
 CSSS         ATOMIC = (X1.EQ.X2) .AND. (Y1.EQ.Y2) .AND. (Z1.EQ.Z2)
 C
-C Atomic has to be turned of to  obtain the corret PVP integral 
+C Atomic has to be turned of to  obtain the corret PVP integral
 C for molecules, 09/2016 Ajith Perera
 C
-        ATOMIC = .FALSE. 
+         ATOMIC = .FALSE.
          SHELLP = SHELL1 + SHELL2
 
          MXSHELL = MAX0 (SHELL1,SHELL2)
@@ -531,10 +531,9 @@ C
          END IF
 
          NODIFF = (NDERX.EQ.0) .AND. (NDERY.EQ.0) .AND. (NDERZ.EQ.0)
-
          IXCEQA = 0
          IXCEQB = 0
-C
+  
 C         WRITE(*,*) "IXCEQA,IXCEQB,DIFFC,NDERX,NDERY,NDERZ,DIFFX,Y,Z",
 C     +       IXCEQA,IXCEQB,DIFFC,NDERX,NDERY,NDERZ,DIFFX,DIFFY,DIFFZ
 C

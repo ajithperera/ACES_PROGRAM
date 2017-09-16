@@ -18,7 +18,6 @@ C  in the file COPYRIGHT.
      *                              eval2, bdim2, edim2)
 c--------------------------------------------------------------------------
 c   Usage: execute Sum_2D_Array array1 sum
-c   Changes to make GNU compiler happy from C. Taylor, 08/2013.
 c--------------------------------------------------------------------------
 
       implicit none
@@ -64,14 +63,15 @@ c---------------------------------------------------------------------------
       sval = 0.0d+0 
       do a = a1, a2 
          do b = b1, b2 
-           sval = Sval + array1(a,b) 
-
+           if (a .eq. b) then
 #ifdef _DEBUG_LVL0
-           write(6,"(a,1x,2I4,1x,F20.10)") " SVAL ", a, b, sval 
+           write(6,"(a,1x,2I4,1x,F20.10)") ' SVAL ', a, b, sval 
 #endif
+           sval = Sval + array1(a,b) 
+           endif 
       enddo ! b 
       enddo ! a 
-      sval = array1(a2,b2)
+CSSS      sval = array1(a2,b2)
 c
       return
       end

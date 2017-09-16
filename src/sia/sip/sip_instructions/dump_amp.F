@@ -112,10 +112,14 @@ c---------------------------------------------------------------------------
      *                             index_table, nindex_table,
      *                             segment_table, nsegment_table,
      *                             block_map_table, blkndx)
-         print *,'Task ',me,' at line number ',current_line,
-     *     ' ARRAY ',array,' BLOCK ',block,' ind = ',
-     *   (index(i),i=1,nindex),' seg = ',(seg(i),i=1,nindex),
-     *   ' actual size = ',n 
+C         print *,'Task ',me,' at line number ',current_line,
+C     *     ' ARRAY ',array,' BLOCK ',block,' ind = ',
+C     *   (index(i),i=1,nindex),' seg = ',(seg(i),i=1,nindex),
+C     *   ' actual size = ',n 
+
+         Write(6, "(a,I4,a,I5)") "Printing from task: ", me, 
+     &                           " line number: ", current_line
+     
          if (block .lt. 0) return 
 
          if (type .eq. distributed_array .and.
@@ -151,6 +155,16 @@ c---------------------------------------------------------------------------
          call print_amp2(me, array, block,
      *                   x(indblk), val1(1),val2(1),
      *                   val1(2),val2(2), na1,na2,ni1,ni2)
+      else if (nindex .eq. 1) then
+         if (type .eq. static_array) then
+            na1 = array_table(c_index_range1,array)
+            na2 = array_table(c_index_range2,array)
+         else
+            na1 = val1(1)
+            na2 = val2(1)
+         endif 
+         call print_amp1(me,array,block,x(indblk),val1(1),val2(1),
+     *                   na1,na2)
       endif
       
       return
@@ -180,7 +194,7 @@ c---------------------------------------------------------------------------
          xmax = max(x(a,i,b,j), xmax)
          xmin = min(x(a,i,b,j), xmin)
          sumsq = sumsq + x(a,i,b,j)*x(a,i,b,j)
-         write(6,10) a, i, b, j, x(a,i,b,j) 
+         write(6,*) a, i, b, j, x(a,i,b,j) 
       enddo
       enddo
       enddo
@@ -198,7 +212,6 @@ c---------------------------------------------------------------------------
       enddo
 
 100   format (4I4, F12.8) 
- 10   format (4I4, F20.10) 
  
       print *,'Task ',me,' line ',current_line,
      *        ' Array, block = ',array,block,
@@ -224,28 +237,29 @@ c---------------------------------------------------------------------------
       integer a,i
       double precision val
       double precision xmax, xmin, sumsq
-      integer mxcol, imin,imax
+      integer mxcol, imin,imax,nrow,ncol,lda,ldb
 
-      xmax = x(a1,i1)
-      xmin = x(a1,i1)
-      sumsq = 0.
+#ifdef _NOSKIP
+CSSS      xmax = x(a1,i1)
+CSSS      xmin = x(a1,i1)
+CSSS      sumsq = 0.
 
-      print *,'Task ',me,' line ',current_line,
-     *        ' Array, block = ',array,block 
+CSSS      print *,'Task ',me,' line ',current_line,
+CSSS     *        ' Array, block = ',array,block 
 
-      do i = i1,i2
-      do a = a1,a2
-         xmax = max(x(a,i), xmax)
-         xmin = min(x(a,i), xmin)
-         sumsq = sumsq + x(a,i)*x(a,i)
-c         write(6,*) a, i, x(a,i) 
-      enddo
-      enddo
+CSSS      do i = i1,i2
+CSSS      do a = a1,a2
+CSSS         xmax = max(x(a,i), xmax)
+CSSS         xmin = min(x(a,i), xmin)
+CSSS         sumsq = sumsq + x(a,i)*x(a,i)
+CSSS         write(6,*) a, i, x(a,i) 
+CSSS     enddo
+CSSS      enddo
 
       mxcol = 7
       imin = i1
       imax = i1 + mxcol - 1
-      do while (imin .le. i2) 
+      do while (imin .lt. i2) 
           if(imax .gt. i2) imax = i2
           write(6,9028) (i, i=imin,imax)
           do a = a1,a2
@@ -262,7 +276,7 @@ c         write(6,*) a, i, x(a,i)
 
       do i = i1,i2
       do a = a1,a2
-C         write(1,100) a, i, x(a,i) 
+         write(1,100) a, i, x(a,i) 
       enddo
       enddo
 
@@ -290,6 +304,29 @@ c         do a = a1,a2
 c         enddo
          enddo
       endif
+#endif 
+      nrow = a2-a1+1
+      ncol = i2-i1+1
+      lda  = na2-na1+1
+      ldb  = ni2-ni1+1 
+      call output(x,1,nrow,1,ncol,lda,ldb,1)
       return
       end
 
+      subroutine print_amp1(me,array,block,x,a1,a2,na1,na2)
+      implicit none
+      include 'trace.h'
+
+      integer me, array, block
+      integer a1,a2,i
+      integer na1,na2,Ndim
+      double precision x(na1:na2)
+
+      Ndim = a2-a1+1
+      Write(6,*) me
+      write(6,"(6(1x,F10.5))") (x(i),i=1,Ndim)
+
+      Return
+      End
+
+      

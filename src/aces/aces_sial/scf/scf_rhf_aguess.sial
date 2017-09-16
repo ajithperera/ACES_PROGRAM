@@ -428,6 +428,7 @@
       scalar esuma
       scalar esumb
       scalar tmp
+      scalar do_dkh_order
 
       distributed Fa(mu,nu,kdiis) 
       distributed Fb(mu,nu,kdiis) 
@@ -439,6 +440,7 @@
       temp tdd(d1,d2) 
       temp t1dd(d1,d2) 
       local BB(kdiis,kdiis) 
+      static DKH(mu,nu)
 #
 # ---------------------------------------------------------------------------- 
 #
@@ -1351,10 +1353,14 @@
             #Txx(mu,nu)        = oed_nai(mu,nu)  
             #Txx(mu,nu)       += oed_kin(mu,nu)  
             Txx(mu,nu) = 0.0 
-            execute return_h1 txx 
-#
-             PUT Fpq_a(mu,nu) += Txx(mu,nu) 
-             PUT Fpq_b(mu,nu) += Txx(mu,nu) 
+            If do_dkh_order > 0.0
+               Txx(mu,nu) = DKH(mu,nu)
+            Else
+               execute return_h1 txx
+            Endif
+
+            PUT Fpq_a(mu,nu) += Txx(mu,nu) 
+            PUT Fpq_b(mu,nu) += Txx(mu,nu) 
 #
        ENDDO nu   
        ENDDO mu    
@@ -1409,7 +1415,11 @@
              GET DHFb(mu,nu) 
 #
              Txx(mu,nu)   = 0.0 
-             execute return_h1 txx  
+             If do_dkh_order > 0.0
+                Txx(mu,nu) = DKH(mu,nu)
+             Else
+                execute return_h1 txx
+             Endif
 #
              T1xx(mu,nu)  = Txx(mu,nu) 
              T1xx(mu,nu) += Fpq_a(mu,nu) 
@@ -1427,7 +1437,6 @@
           ENDDO mu 
 
        endif 
-
 
        execute sip_barrier 
 
@@ -2627,6 +2636,7 @@
       diis_end = 5000.0 
       diis_order = 8.0 
       diis_max_order = 10.0 
+      do_dkh_order= dkh_order
 
       diis_start = 0.0
       do kbeg
@@ -2640,7 +2650,23 @@
 
       execute print_scalar diis_start
       execute print_scalar diis_order
+      EXECUTE GET_MY_RANK RANK
 
+      IF DO_DKH_ORDER > 0.0
+          IF RANK == 0.0
+
+            DO mu
+            DO nu
+               TXX(mu,nu) = 0.0
+               EXECUTE RETURN_1EL_DKH TXX
+               DKH(mu,nu) = TXX(mu,nu)
+            ENDDO nu
+            ENDDO mu
+
+          ENDIF
+      ENDIF
+      execute BROADCAST_ARRAY DKH
+      execute sip_barrier
 #
 #     Create the one-particle arrays needed for the computation. 
 #     ---------------------------------------------------------- 

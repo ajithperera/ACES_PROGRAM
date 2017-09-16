@@ -525,5 +525,17 @@
 #define h_IOPPAR_opt_control    259
 #define h_IFLAGS2_opt_control   159
 
+#define h_IOPPAR_lock_orbitals  260
+#define h_IFLAGS2_lock_orbials  160
+
+#define h_IOPPAR_damp_end       261
+#define h_IFLAGS2_damp_end      161
+
+#define h_IOPPAR_ee_guess       262
+#define h_IFLAGS2_ee_guess      162
+
+#define h_IOPPAR_ee_denom       263
+#define h_IFLAGS2_ee_denom      163
+
 #endif /* _FLAGS_H_ */
 

@@ -105,8 +105,8 @@ C
 C             ...the case A = s-shell and B = s-shell.
 C
 C
-C         WRITE (*,*) "SHELLA,SHELLB: ",SHELLA,SHELLB
-C         WRITE (*,*) "NGEXCEN:       ",NGEXCEN
+         WRITE (*,*) "SHELLA,SHELLB: ",SHELLA,SHELLB
+         WRITE (*,*) "NGEXCEN:       ",NGEXCEN
 
          SHELLP = SHELLA + SHELLB
 
@@ -140,7 +140,7 @@ C
 C
     2    CONTINUE
 
-C         WRITE (*,*) "CASE 2 in OED__PVP_1D_INTEGRALS"
+         WRITE (*,*) "CASE 2 in OED__PVP_1D_INTEGRALS"
 
          DO B = 1,SHELLB
             BP = B + 1
@@ -159,7 +159,7 @@ C
 C
     3    CONTINUE
 
-C         WRITE (*,*) "CASE 3 in OED__PVP_1D_INTEGRALS"
+         WRITE (*,*) "CASE 3 in OED__PVP_1D_INTEGRALS"
 
          DO A = 1,SHELLA
             AP = A + 1
@@ -178,7 +178,7 @@ C
 C
     4    CONTINUE
 
-C         WRITE (*,*) "CASE 4 in OED__PVP_1D_INTEGRALS"
+         WRITE (*,*) "CASE 4 in OED__PVP_1D_INTEGRALS"
 
          DO B = 1,SHELLB
             BM = B - 1

@@ -526,6 +526,7 @@
       STATIC A_OCC_NUMS(NbfnsA)
       STATIC B_OCC_NUMS(NbfnsB)
       STATIC DAMP_PARMS(Ithree)
+      STATIC DKH(mu,nu)
 #bgn_debug
      distributed OVC_T(p,mu)
      distributed OVC(p,p1)
@@ -866,7 +867,11 @@
        DO nu   
 #
              Txx(mu,nu)        = 0.0  
-             execute return_h1 txx 
+             If do_dkh_order > 0.0
+                Txx(mu,nu) = DKH(mu,nu)
+             Else
+                execute return_h1 txx
+             Endif
 #
              PUT Fpq_a(mu,nu)  = Txx(mu,nu) 
              PUT Fpq_b(mu,nu)  = Txx(mu,nu) 
@@ -1633,7 +1638,11 @@
        DO nu   
 #
              Txx(mu,nu)        = 0.0  
-             execute return_h1 txx 
+             If do_dkh_order > 0.0
+                Txx(mu,nu) = DKH(mu,nu)
+             Else
+                execute return_h1 txx
+             Endif 
 #
              PUT Fpq_a(mu,nu) += Txx(mu,nu) 
              PUT Fpq_b(mu,nu) += Txx(mu,nu) 
@@ -1692,7 +1701,11 @@
              GET DHFb(mu,nu) 
 #
              Txx(mu,nu)   = 0.0  
-             execute return_h1 txx 
+             If do_dkh_order > 0.0
+                Txx(mu,nu) = DKH(mu,nu)
+             Else
+                execute return_h1 txx
+             Endif
 #
              T1xx(mu,nu)  = Txx(mu,nu) 
              T1xx(mu,nu) += Fpq_a(mu,nu) 
@@ -1751,21 +1764,20 @@
        execute sip_barrier
 
 #bgn_debug
-#      esuma=0.0
-#      esumb=0.0
-#      do mu
-#      do nu
-#         etemp = oed_ovl(mu,nu) * oed_ovl(mu,nu)
-#         esuma += etemp
-#         etemp = x1(mu,nu) * x1(mu,nu)
-#         esumb += etemp
+      esuma=0.0
+      esumb=0.0
+      do mu
+      do nu
+         etemp = oed_ovl(mu,nu) * oed_ovl(mu,nu)
+         esuma += etemp
+         etemp = x1(mu,nu) * x1(mu,nu)
+         esumb += etemp
 #         txx(mu,nu) = x1(mu,nu)
 #         PUT OVLP_INV(mu,nu) = txx(mu,nu)
-#      enddo nu
-#      enddo mu
-#      execute print_scalar esuma
-#      execute print_scalar esumb
-#      execute sip_barrier 
+      enddo nu
+      enddo mu
+      execute print_scalar esuma
+      execute print_scalar esumb
 #end_debug
        
       
@@ -2129,11 +2141,31 @@
 # Generate the core-Hamiltonian guess
 
          PARDO mu, nu
-            execute return_h1 Txx
+            If do_dkh_order > 0.0
+               Txx(mu,nu) = DKH(mu,nu)
+            Else
+               execute return_h1 Txx
+            Endif 
             PUT Fpq_a(mu,nu) = Txx(mu,nu)
             PUT Fpq_b(mu,nu) = Txx(mu,nu)
          ENDPARDO mu, nu
          execute sip_barrier
+#debug_bgn
+      esuma = 0.0
+      esumb = 0.0
+      do mu
+      do nu
+         get Fpq_a(mu,nu)
+         get Fpq_b(mu,nu)
+         tmp  =  Fpq_a(mu,nu) *  Fpq_a(mu,nu)
+         esuma +=tmp
+         tmp  =  Fpq_b(mu,nu) * Fpq_b(mu,nu)
+         esumb +=tmp
+      enddo nu
+      enddo mu
+      execute print_scalar esuma
+      execute print_scalar esumb
+#debug_end
 #
          CALL OVER_HALF
          execute sip_barrier
@@ -3902,7 +3934,11 @@
              GET Fpq_b(mu,nu)
 
              Txx(mu,nu)   = 0.0
-             execute return_h1 txx
+             If do_dkh_order > 0.0
+                Txx(mu,nu) = DKH(mu,nu)
+             Else
+                execute return_h1 txx
+             Endif
 #
              T1xx(mu,nu)  = Txx(mu,nu)
 #           
@@ -4014,7 +4050,11 @@
            GET Pnew_b(mu,nu)
 #
            Txx(mu,nu)   = 0.0
-           execute return_h1 txx
+           If do_dkh_order > 0.0
+              Txx(mu,nu) = DKH(mu,nu)
+           Else
+              execute return_h1 txx
+           Endif
 
            T1xx(mu,nu)  = Txx(mu,nu)
 
@@ -4062,7 +4102,12 @@
           GET Fpq_b(mu,nu)
           GET DHFa(mu,nu)
           GET DHFb(mu,nu)
-          execute return_h1 txx
+
+          If do_dkh_order > 0.0
+            Txx(mu,nu) = DKH(mu,nu)
+          Else
+            execute return_h1 txx
+          Endif
 
           T1xx(mu,nu)  =Txx(mu,nu)
           T1xx(mu,nu) +=Fpq_a(mu,nu)
@@ -4941,33 +4986,30 @@
 
       endif
 
-      If etemp == 9.0
-         CALL IGUESS
-      Endif
-#
-# Do the DKH one-particle transformations.
+      EXECUTE GET_MY_RANK RANK
 
-      IF DO_DKH_ORDER > 0.0 
+      IF DO_DKH_ORDER > 0.0
           IF RANK == 0.0
 
             DO mu
             DO nu
-               TXX(mu,nu)      = 0.0
-               EXECUTE COMPUTE_PVP_XYZBATCH TXX 
-               FOCKROHF_A(mu,nu) = TXX(mu,nu)
+               TXX(mu,nu) = 0.0
+               EXECUTE RETURN_1EL_DKH TXX
+               DKH(mu,nu) = TXX(mu,nu)
             ENDDO nu
             ENDDO mu
-            
-            EXECUTE RETURN_DKH_H1 DO_DKH_ORDER 
 
           ENDIF
+      ENDIF
+      execute BROADCAST_ARRAY DKH
+      execute sip_barrier
 
-      ENDIF 
-
-      EXECUTE SIP_BARRIER 
-#   
+      If etemp == 9.0
+         CALL IGUESS
+      Endif
+#
 # Delete the distributed arrays used in initial guess routines
-
+#
       DELETE IDHFa
       DELETE IDHFb
       DELETE FTpq_a  

@@ -31,6 +31,7 @@
 #
       index kiter    = 1, cc_iter   
       index jiter    = 1, cc_iter
+      index nroots   = 1,12
       index   kptr1  = 1, 2
       index   kptr2  = 1, 2
       index   kone   = 1, 1
@@ -170,34 +171,11 @@
 #
 # CIS vectors 
 # ----------- 
+      distributed cisa_s_vecs(a,i,Nroots)
+      distributed cisb_s_vecs(b,j,Nroots)
+      distributed cisa_t_vecs(a,i,Nroots)
+      distributed cisb_t_vecs(b,j,Nroots)
 #
-      distributed VSTART1A1(a,i)
-      distributed VSTART1A2(a,i)
-      distributed VSTART1A3(a,i)
-      distributed VSTART1A4(a,i)
-      distributed VSTART1A5(a,i)
-      distributed VSTART1A6(a,i)
-      distributed VSTART1A7(a,i)
-      distributed VSTART1A8(a,i)
-      distributed VSTART1A9(a,i)
-      distributed VSTART1A10(a,i)
-      distributed VSTART1A11(a,i)
-      distributed VSTART1A12(a,i)
-#
-      distributed VSTART1B1(b,j)
-      distributed VSTART1B2(b,j)
-      distributed VSTART1B3(b,j)
-      distributed VSTART1B4(b,j)
-      distributed VSTART1B5(b,j)
-      distributed VSTART1B6(b,j)
-      distributed VSTART1B7(b,j)
-      distributed VSTART1B8(b,j)
-      distributed VSTART1B9(b,j)
-      distributed VSTART1B10(b,j)
-      distributed VSTART1B11(b,j)
-      distributed VSTART1B12(b,j) 
-#
-# 
 # Declare static arrays 
 # --------------------- 
 #
@@ -889,58 +867,17 @@
      PROC READ_CIS 
 #    -------------  
 #
-      create VSTART1A1
-      create VSTART1A2
-      create VSTART1A3
-      create VSTART1A4
-      create VSTART1A5
-      create VSTART1A6
-      create VSTART1A7
-      create VSTART1A8
-      create VSTART1A9
-      create VSTART1A10
-      create VSTART1A11
-      create VSTART1A12
-      create VSTART1B1
-      create VSTART1B2
-      create VSTART1B3
-      create VSTART1B4
-      create VSTART1B5
-      create VSTART1B6
-      create VSTART1B7
-      create VSTART1B8
-      create VSTART1B9
-      create VSTART1B10
-      create VSTART1B11
-      create VSTART1B12
-#
+      create cisa_s_vecs
+      create cisb_s_vecs
+      create cisa_t_vecs
+      create cisb_t_vecs
+
       execute sip_barrier 
-#
-      execute list_to_blocks VSTART1A1
-      execute list_to_blocks VSTART1B1
-      execute list_to_blocks VSTART1A2
-      execute list_to_blocks VSTART1B2
-      execute list_to_blocks VSTART1A3
-      execute list_to_blocks VSTART1B3
-      execute list_to_blocks VSTART1A4
-      execute list_to_blocks VSTART1B4
-      execute list_to_blocks VSTART1A5
-      execute list_to_blocks VSTART1B5
-      execute list_to_blocks VSTART1A6
-      execute list_to_blocks VSTART1B6
-      execute list_to_blocks VSTART1A7
-      execute list_to_blocks VSTART1B7
-      execute list_to_blocks VSTART1A8
-      execute list_to_blocks VSTART1B8
-      execute list_to_blocks VSTART1A9
-      execute list_to_blocks VSTART1B9
-      execute list_to_blocks VSTART1A10
-      execute list_to_blocks VSTART1B10
-      execute list_to_blocks VSTART1A11
-      execute list_to_blocks VSTART1B11
-      execute list_to_blocks VSTART1A12
-      execute list_to_blocks VSTART1B12
-#
+      execute list_to_blocks  cisa_s_vecs
+      execute list_to_blocks  cisb_s_vecs
+      execute list_to_blocks  cisa_t_vecs
+      execute list_to_blocks  cisb_t_vecs
+
       execute read_list_to_blocks 
 #
      ENDPROC READ_CIS 
@@ -2030,49 +1967,6 @@
 #
      ENDPROC READ_2EL   
 # 
-#    ------------------------------------------------------------------------ 
-#
-#    ------------------------------------------------------------------------ 
-#
-     PROC WRITE_2EL   
-# 
-#    ------------------------------------------------------------------------ 
-#
-      execute server_barrier
-#
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A1
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B1
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A2
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B2
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A3
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B3
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A4
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B4
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A5
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B5
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A6
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B6
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A7
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B7
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A8
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B8
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A9
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B9
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A10
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B10
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A11
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B11
-      EXECUTE  BLOCKS_TO_LIST  VSTART1A12
-      EXECUTE  BLOCKS_TO_LIST  VSTART1B12
-#
-#    ------------------------------------------------------------------------ 
-#
-     ENDPROC WRITE_2EL   
-# 
-#    ------------------------------------------------------------------------ 
-#
-#    ------------------------------------------------------------------------ 
-#
      PROC IGUESS_UHF  
 # 
 #    ------------------------------------------------------------------------ 
@@ -9201,9 +9095,11 @@
 # Write amplitudes to file
 # ------------------------
 #
-      CALL WRITE_2EL   
-#
       execute sip_barrier
+      execute blocks_to_list                cisa_s_vecs
+      execute blocks_to_list                cisb_s_vecs
+      execute blocks_to_list                cisa_t_vecs
+      execute blocks_to_list                cisb_t_vecs
       execute blocks_to_list                t1a_old
       execute blocks_to_list                t1b_old
       execute blocks_to_list                T2old_aa

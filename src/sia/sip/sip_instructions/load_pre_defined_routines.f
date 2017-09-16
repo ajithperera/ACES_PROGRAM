@@ -53,12 +53,19 @@ C  in the file COPYRIGHT.
       external hcontxy
       external compute_sderivative_integrals
       external read_hess
-      external return_h1
+      external return_h1, return_1el_dkh
+      external form_guess,xgeev,extract_subset,return_max_overlap
+      external form_rpa_guess, guess_4current_root
+      external form_dip_guess,form_dea_guess
+      external genrl_eig_solver,return_inverse
+      external return_selected,addrootindex
+      external process_eigs,print_static,store_static_array 
       external smon_on
       external smon_off
       external scf_rhf
       external array_copy
       external c1_print, c1b_print, c2aa_print, c2ab_print, c2bb_print
+      external c1_full_print 
 
       external comp_ovl3c,dump_amp,open_amp,copy_ff,copy_ba,copy_ab,
      *         remove_dx, remove_sx, remove_sd, removevv_dd,
@@ -138,7 +145,6 @@ C
      *         second_moment
       external return_1st_mom, return_2nd_mom 
       external energy_ty_denominator, reorder_energy
-      external compute_pvp_xyzbatch, return_dkh_h1
 c 
 c VFL SCF instructions 
 
@@ -607,12 +613,9 @@ C
 
       dummy = load_user_sub('print_eom_dens_info'//char(0),
      +                       print_eom_dens_info)
+      dummy = load_user_sub('c1_full_print'//char(0), return_z)
+      call set_upgrade_flag(dummy)
 
-      dummy = load_user_sub('compute_pvp_xyzbatch'//char(0),
-     +                        compute_pvp_xyzbatch)
-
-      dummy = load_user_sub('return_dkh_h1'//char(0),return_dkh_h1)
-c
 c -------------------------------------------------------------------- 
 c VFL Instructions needed to perform 'fast' scf calculations 
 c -------------------------------------------------------------------- 
@@ -683,6 +686,11 @@ c
       dummy = load_user_sub('symm_force_ij'//char(0), symm_force_ij)
       dummy = load_user_sub('return_h1_nodiag'//char(0),
      *                       return_h1_nodiag)
+C
+C DKH 1el integrals
+C
+      dummy = load_user_sub('return_1el_dkh'//char(0),
+     &                       return_1el_dkh)
 c
 c --------------------------------------------------------------------
 c Watson instruction needed to write out density
@@ -799,6 +807,33 @@ c-------------------------------------------------------------------
      &                       place_constanta)
       dummy = load_user_sub('place_constantb'//char(0),
      &                       place_constantb)
+C
+c-----------------------------------------------------------------------
+C New IP-EOM related SIPs.
+
+      dummy = load_user_sub('form_guess'//char(0),
+     &                       form_guess)
+      dummy = load_user_sub('xgeev'//char(0),xgeev)
+      dummy = load_user_sub('process_eigs'//char(0),process_eigs)
+      dummy = load_user_sub('addrootindex'//char(0),addrootindex)
+      dummy = load_user_sub('extract_subset'//char(0),extract_subset)
+      dummy = load_user_sub('return_max_overlap'//char(0),
+     &                       return_max_overlap)
+      dummy = load_user_sub('return_selected'//char(0),return_selected)
+      dummy = load_user_sub('print_static'//char(0),print_static)
+      dummy = load_user_sub('store_static_array'//char(0),
+     &                       store_static_array)
+      dummy = load_user_sub('form_rpa_guess'//char(0),form_rpa_guess)
+      dummy = load_user_sub('guess_4current_root'//char(0),
+     &                       guess_4current_root)
+      dummy = load_user_sub('form_dip_guess'//char(0),
+     &                       form_dip_guess)
+      dummy = load_user_sub('form_dea_guess'//char(0),
+     &                       form_dea_guess)
+      dummy = load_user_sub('genrl_eig_solver'//char(0),
+     &                       genrl_eig_solver)
+      dummy = load_user_sub('return_inverse'//char(0),
+     &                       return_inverse)
 c-----------------------------------------------------------------------
 c Prakash instructions for delta integrals
 c----------------------------------------------------------------------

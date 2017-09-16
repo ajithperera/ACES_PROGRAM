@@ -459,7 +459,7 @@ C
          NGQPCEN = NGQP * NCEN
 
          M = 0
-C         WRITE (*,*) "NGQPCEN: ",NGQPCEN
+         WRITE (*,*) "NGQPCEN: ",NGQPCEN
          DO IJ = 1,MIJ
             I = PRIMA (IJ)
             J = PRIMB (IJ)
@@ -501,13 +501,13 @@ C                the 1DX AB integrals and perform differentiation
 C                sequence, if necessary.
 C
 C
-C         WRITE (*,*) ' ATOMIC = ',ATOMIC
-C         WRITE (*,*) ' NCEN = ',NCEN
-C         WRITE (*,*) ' NGQP = ',NGQP
-C         WRITE (*,*) ' MGIJCEN = ',MGIJCEN
-C         WRITE (*,*) ' NINT1DX = ',NINT1DX
-C         WRITE (*,*) ' NINT1DY = ',NINT1DY
-C         WRITE (*,*) ' NINT1DZ = ',NINT1DZ
+         WRITE (*,*) ' ATOMIC = ',ATOMIC
+         WRITE (*,*) ' NCEN = ',NCEN
+         WRITE (*,*) ' NGQP = ',NGQP
+         WRITE (*,*) ' MGIJCEN = ',MGIJCEN
+         WRITE (*,*) ' NINT1DX = ',NINT1DX
+         WRITE (*,*) ' NINT1DY = ',NINT1DY
+         WRITE (*,*) ' NINT1DZ = ',NINT1DZ
 
          IF (XCOMP .GT. 0) THEN
 
@@ -526,16 +526,17 @@ C         WRITE (*,*) ' NINT1DZ = ',NINT1DZ
      +                                INT1DX )
      +
      +
-C             WRITE (*,*) "NAI X integrals A+1,B+1"
-C             CALL  OED__PRINT_2IND_BATCH
-C     +                  (MGIJCEN,SHELLA+1,SHELLB+1,6,INT1DX)
-C     +
+             WRITE (*,*) "NAI X integrals A+1,B+1"
+             CALL  OED__PRINT_2IND_BATCH
+     +                  (MGIJCEN,SHELLA+1,SHELLB+1,6,INT1DX)
+     +
 C
 C
 C             ...form the pVp integrals now!
 C
 C
              NINT = MGIJCEN * (SHELLA+XCOMP+1) * (SHELLB+XCOMP+1)
+             WRITE (*,*) ' NINT = ',NINT
              DO M = 1,NINT
                 BATCH (M) = INT1DX (M)
              END DO
@@ -550,10 +551,10 @@ C
      +                               INT1DX )
      +
      +
-C             WRITE (*,*) "PVP X integrals A,B"
-C             CALL  OED__PRINT_2IND_BATCH
-C     +                  (MGIJCEN,SHELLA,SHELLB,6,INT1DX)
-C     +
+
+             CALL  OED__PRINT_2IND_BATCH
+     +                  (MGIJCEN,SHELLA,SHELLB,6,INT1DX)
+     +
          ELSE
 
              CALL    OED__NAI_1D_AB_INTEGRALS
@@ -570,10 +571,10 @@ C     +
      +                                INT1DX )
      +
      +
-C             WRITE (*,*) "NAI X integrals A,B"
-C             CALL  OED__PRINT_2IND_BATCH
-C     +                  (MGIJCEN,SHELLA,SHELLB,6,INT1DX)
-C     +
+             WRITE (*,*) "NAI X integrals A,B"
+             CALL  OED__PRINT_2IND_BATCH
+     +                  (MGIJCEN,SHELLA,SHELLB,6,INT1DX)
+     +
          END IF
 C
 C
@@ -598,10 +599,10 @@ C
      +                                INT1DY )
      +
      +
-C             WRITE (*,*) "NAI Y-integrals A+1,B+1"
-C             CALL  OED__PRINT_2IND_BATCH
-C     +                  (MGIJCEN,SHELLA+1,SHELLB+1,6,INT1DY)
-C     +
+             WRITE (*,*) "NAI Y-integrals A+1,B+1"
+             CALL  OED__PRINT_2IND_BATCH
+     +                  (MGIJCEN,SHELLA+1,SHELLB+1,6,INT1DY)
+     +
 C
 C
 C             ...form the pVp integrals!
@@ -622,6 +623,7 @@ C
      +                               INT1DY )
      +
      +
+
          ELSE
 
              CALL    OED__NAI_1D_AB_INTEGRALS
@@ -690,6 +692,7 @@ C
      +                               INT1DZ )
      +
      +
+
          ELSE
 
              CALL    OED__NAI_1D_AB_INTEGRALS
@@ -728,7 +731,7 @@ C
      +
      +                                BATCH )
      +
-     +  
+     +
 
          ELSE IF (SHELLB.EQ.0) THEN
 

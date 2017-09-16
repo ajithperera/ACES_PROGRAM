@@ -236,6 +236,10 @@ C become available.
 #endif 
         endif 
 
+        if (spn_orbt .eq. 1.0) then
+            soi    = .TRUE.
+        Endif
+
          if (do_erd_scratch_calc) then
             do_erd_scratch_calc = .false.   ! only 1 time EVER!
 

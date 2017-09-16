@@ -42,10 +42,12 @@ C  in the file COPYRIGHT.
       integer          nscfa_fock, nscfb_fock
       integer          ieom_temprt, ieom_roots, iexcite    ! Watson Added
       integer          ipolarizability, ig_tensor, ia_tensor! perera Added
-      integer          id_tensor                            ! perera Added
+      integer          id_tensor,ispn_orbt                  ! perera Added
       integer          iguess, ilshfta,  ilshftb
       integer          idamp_type, idamp_tol,ilindep_tol,ilock_orbitals 
       integer          iintgrl_tol, ilock_orbocc, idamp_end, idkh_order
+      integer          ireference 
+      integer          iee_guess,iee_denom,iee_maxcyc
       character*4      atmnam(max_centers)
       logical          cartesian
       logical          uhf
@@ -247,6 +249,7 @@ C Ajith Perera for second-order properties; 04/2014.
        ia_tensor = 0
        ig_tensor = 0
        id_tensor = 0
+       ispn_orbt = 0
        If (Ijunk(18) .EQ. 14 .OR. Ijunk(18) .EQ. 11) 
      &     iPolarizability = 1
        If (Ijunk(18) .EQ. 15 .OR. Ijunk(18) .EQ. 1) ia_tensor = 1
@@ -256,6 +259,7 @@ C Ajith Perera for second-order properties; 04/2014.
        polarizability = DBLE(iPolarizability)
        a_tensor       = DBLE(ia_tensor)
        g_tensor       = DBLE(ig_tensor)
+       spn_orbt       = DBLE(ispn_orbt)
        d_tensor       = DBLE(id_tensor)
 C
 C Ajith Perera, Bruecknere convergence criteria, 12/2014
@@ -280,6 +284,10 @@ C
         Ilock_orbocc   = ijunk(41)
         Idamp_end      = iflags(161)
         Idkh_order     = iflags(157)
+        Ireference     = Ijunk(11)
+        Iee_guess      = iflags(162)
+        Iee_denom      = iflags(163)
+        Iee_maxcyc     = iflags(105)
   
         Damp_type     = DBLE(Idamp_type)
         Damp_tol      = DBLE(Idamp_tol)
@@ -288,7 +296,10 @@ C
         Lock_orbocc   = DBLE(Ilock_orbocc)
         Damp_end      = DBLE(Idamp_end)
         Dkh_order     = DBLE(Idkh_order)
-        Write(6,*) "The dkh order", Dkh_order, iflags(157)
+        Reference      = DBLE(Ireference)
+        ee_guess       = DBLE(iee_guess)
+        ee_denom       = DBLE(iee_denom)
+        ee_maxcyc      = DBLE(iee_maxcyc)
 
 c-------------------------------------------------------------------------
 c   Read IFLAGS2 off JOBARC.

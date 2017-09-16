@@ -29,7 +29,8 @@ C  in the file COPYRIGHT.
      *                       guess, lshft_a1, lshft_b1, damp_type,
      *                       damp_tol,lindep_tol,lock_orbitals,
      *                       lock_orbocc, intgrl_tol, damp_end, 
-     *                       dkh_order,
+     *                       dkh_order,reference,
+     *                       ee_maxcyc,ee_guess,ee_denom,
      * 
      *                       io_company_id, niocompany, need_predef,
      *                       npre_defined, dryrun)
@@ -106,7 +107,8 @@ C  in the file COPYRIGHT.
       integer ibcc_conv ! Ajith Perera
       integer iguess, ilshft_a1, ilshft_b1, idamp_type, idamp_tol ! Ajith perera
       integer ilock_orbitals,ilindep_tol,iintgrl_tol, idamp_end
-      integer ilock_orbocc, idkh_order 
+      integer ilock_orbocc, idkh_order,ireference
+      integer iee_maxcyc,iee_guess,iee_denom
       integer timertype
       integer index, val1, val2
       integer occ_index, index_type, ind, nindex
@@ -119,7 +121,8 @@ C  in the file COPYRIGHT.
       double precision polarizability, a_tensor, g_tensor, d_tensor
       double precision guess, lshft_a1, lshft_b1, damp_type, damp_tol
       double precision lindep_tol,lock_orbitals,intgrl_tol, damp_end
-      double precision lock_orbocc, dkh_order 
+      double precision lock_orbocc, dkh_order,reference
+      double precision ee_maxcyc,ee_guess,ee_denom
 
       double precision xxx(2)
 #ifdef ALTIX
@@ -741,6 +744,18 @@ C Ajith Perera, 05/2014  added
 
       idkh_order       = array_table(c_scalar_index,38)
       scalar_table(idkh_order)   = dkh_order 
+
+      ireference      = array_table(c_scalar_index,39)
+      scalar_table(ireference)   = reference
+
+      iee_maxcyc      = array_table(c_scalar_index,40)
+      scalar_table(iee_maxcyc)   = ee_maxcyc
+
+      iee_guess      = array_table(c_scalar_index,41)
+      scalar_table(iee_guess)   = ee_guess
+
+      iee_denom      = array_table(c_scalar_index,42)
+      scalar_table(iee_denom)   = ee_denom
 C 
       next = 0
       next_server = 0
@@ -750,7 +765,7 @@ C Tom Watson, Changed to 22.
 C Ajith Perera, changed to 27, 05/2014. 
 C Ajith Perera, changed to 28, 12/2014. 
 C
-      do i = 39, narray_table   ! 1st 19 arrays are pre-defined.
+      do i = 43, narray_table   ! 1st 19 arrays are pre-defined.
          type = array_table(c_array_type,i) 
          if (type .eq. static_array) then
 
