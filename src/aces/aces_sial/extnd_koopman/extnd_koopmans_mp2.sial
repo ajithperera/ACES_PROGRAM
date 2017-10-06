@@ -3288,18 +3288,18 @@
       EXECUTE SIP_BARRIER
 #
 #bgn_debug
-      esumb = 0.0
-      esuma = 0.0
-      pardo q, q1
-      get Fexkt_pq_b(q,q1)
-      Tqq(q,q1) = Fexkt_pq_b(q,q1)
-      execute sum_2d_array Tqq esuma
-      endpardo q,q1
-      execute sip_barrier
-      collective esumb += esuma
-      esumb *=2.0
-      esumb += 30.3995440914926
-      execute print_scalar esumb
+#      esumb = 0.0
+#      esuma = 0.0
+#      pardo q, q1
+#      get Fexkt_pq_b(q,q1)
+#      Tqq(q,q1) = Fexkt_pq_b(q,q1)
+#      execute sum_2d_array Tqq esuma
+#      endpardo q,q1
+#      execute sip_barrier
+#      collective esumb += esuma
+#      esumb *=2.0
+#      esumb += 30.3995440914926
+#      execute print_scalar esumb
 #      PARDO p, p1
 #         Do p2
 #            GET Dexkt_pq_a(p,p2)

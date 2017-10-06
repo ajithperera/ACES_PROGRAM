@@ -6625,7 +6625,6 @@
 
           T1xxxx(mu,delta,lambda,sigma) = Txxxx(mu,lambda,delta,sigma)
           PREPARE DC(mu,delta,lambda,sigma) += T1xxxx(mu,delta,lambda,sigma)
-#          PREPARE DC(mu,lambda,delta,sigma) += Txxxx(mu,lambda,delta,sigma)
 
      ENDPARDO mu, delta, lambda, sigma
      EXECUTE SERVER_BARRIER
@@ -6652,48 +6651,54 @@
 #end_debug
 
 #bgn_debug
-     esuma=0.0
-     esumb=0.0
-     PARDO mu, delta, lambda, sigma
-         REQUEST D1(mu,delta,lambda,sigma) sigma
-         Txxxx(mu,delta,lambda,sigma) = D1(mu,delta,lambda,sigma)
-         tmp = Txxxx(mu,delta,lambda,sigma) * Txxxx(mu,delta,lambda,sigma)
-        esuma += tmp
-     ENDPARDO mu,  delta, lambda, sigma
-     execute server_barrier
-     collective esumb += esuma
-     execute print_scalar  esumb
-     esuma=0.0
-     esumb=0.0
-     PARDO mu, delta, lambda, sigma
-         REQUEST D2(mu,delta,lambda,sigma) sigma
-         Txxxx(mu,delta,lambda,sigma) = D2(mu,delta,lambda,sigma)
-         tmp = Txxxx(mu,delta,lambda,sigma) * Txxxx(mu,delta,lambda,sigma)
-        esuma += tmp
-     ENDPARDO mu,  delta, lambda, sigma
-     execute server_barrier
-     collective esumb += esuma
-     execute print_scalar  esumb
-     esuma=0.0
-     esumb=0.0
-     PARDO mu, delta, lambda, sigma
-         REQUEST D3(mu,delta,lambda,sigma) sigma
-         Txxxx(mu,delta,lambda,sigma) = D3(mu,delta,lambda,sigma)
-         tmp = Txxxx(mu,delta,lambda,sigma) * Txxxx(mu,delta,lambda,sigma)
-        esuma += tmp
-     ENDPARDO mu,  delta, lambda, sigma
-     execute server_barrier
-     collective esumb += esuma
-     execute print_scalar  esumb
+#     esuma=0.0
+#     esumb=0.0
+#     PARDO mu, delta, lambda, sigma
+#         REQUEST D1(mu,delta,lambda,sigma) sigma
+#         Txxxx(mu,delta,lambda,sigma) = D1(mu,delta,lambda,sigma)
+#         tmp = Txxxx(mu,delta,lambda,sigma) * Txxxx(mu,delta,lambda,sigma)
+#        esuma += tmp
+#     ENDPARDO mu,  delta, lambda, sigma
+#     execute server_barrier
+#     collective esumb += esuma
+#     execute print_scalar  esumb
+#     esuma=0.0
+#     esumb=0.0
+#     PARDO mu, delta, lambda, sigma
+#         REQUEST D2(mu,delta,lambda,sigma) sigma
+#         Txxxx(mu,delta,lambda,sigma) = D2(mu,delta,lambda,sigma)
+#         tmp = Txxxx(mu,delta,lambda,sigma) * Txxxx(mu,delta,lambda,sigma)
+#        esuma += tmp
+#     ENDPARDO mu,  delta, lambda, sigma
+#     execute server_barrier
+#     collective esumb += esuma
+#     execute print_scalar  esumb
+#     esuma=0.0
+#     esumb=0.0
+#     PARDO mu, delta, lambda, sigma
+#         REQUEST D3(mu,delta,lambda,sigma) sigma
+#         Txxxx(mu,delta,lambda,sigma) = D3(mu,delta,lambda,sigma)
+#         tmp = Txxxx(mu,delta,lambda,sigma) * Txxxx(mu,delta,lambda,sigma)
+#        esuma += tmp
+#     ENDPARDO mu,  delta, lambda, sigma
+#     execute server_barrier
+#     collective esumb += esuma
+#     execute print_scalar  esumb
 #end_debug
 
 
 # This is F(mu,nu):F(int,dens) (mu from dens nu from int)
 
-     Fac1 = 0.03125
-     Fac2 = 0.125
-#     Fac1 = 0.0625
-#     Fac2 = 0.0625
+#bgn_debug
+# This values for debugging, When these are used the trace of the
+# extended Fock is the total electronic energy.
+
+#     Fac1 = 0.03125
+#     Fac2 = 0.125
+#end_debug
+
+     Fac1 = 0.0625
+     Fac2 = 0.25
 
      DO mu
      DO nu
@@ -6934,26 +6939,26 @@
       EXECUTE SERVER_BARRIER
 
 #bgn_debug
-      esumb = 0.0
-      esuma = 0.0
-      pardo mu, nu
-      get Ftmp_ID(mu,nu)
-      tmp =  Ftmp_ID(mu,nu)*Ftmp_ID(mu,nu)
-      esuma += tmp
-      endpardo mu,nu
-      execute sip_barrier
-      collectiVe esumb += esuma
-      execute print_scalar esumb
-      esumb = 0.0
-      esuma = 0.0
-      pardo mu, nu
-      get Ftmp_DI(mu,nu)
-      tmp =  Ftmp_DI(mu,nu)*Ftmp_DI(mu,nu)
-      esuma += tmp
-      endpardo mu,nu
-      execute sip_barrier
-      collectiVe esumb += esuma
-      execute print_scalar esumb
+#      esumb = 0.0
+#      esuma = 0.0
+#      pardo mu, nu
+#      get Ftmp_ID(mu,nu)
+#      tmp =  Ftmp_ID(mu,nu)*Ftmp_ID(mu,nu)
+#      esuma += tmp
+#      endpardo mu,nu
+#      execute sip_barrier
+#      collectiVe esumb += esuma
+#      execute print_scalar esumb
+#      esumb = 0.0
+#      esuma = 0.0
+#      pardo mu, nu
+#      get Ftmp_DI(mu,nu)
+#      tmp =  Ftmp_DI(mu,nu)*Ftmp_DI(mu,nu)
+#      esuma += tmp
+#      endpardo mu,nu
+#      execute sip_barrier
+#      collectiVe esumb += esuma
+#      execute print_scalar esumb
 #end_debug
 
       Create DT_A
@@ -7126,19 +7131,19 @@
       EXECUTE SIP_BARRIER
 #
 #bgn_debug
-      esumb = 0.0
-      esuma = 0.0
-      pardo q, q1
-      get Fexkt_pq_b(q,q1)
-      Tqq(q,q1) = Fexkt_pq_b(q,q1)
-      execute sum_2d_array Tqq esuma
-      endpardo q,q1
-      execute sip_barrier
-      collective esumb += esuma
-      esumb *= 2.0
+#      esumb = 0.0
+#      esuma = 0.0
+#      pardo q, q1
+#      get Fexkt_pq_b(q,q1)
+#      Tqq(q,q1) = Fexkt_pq_b(q,q1)
+#      execute sum_2d_array Tqq esuma
+#      endpardo q,q1
+#      execute sip_barrier
+#      collective esumb += esuma
+#      esumb *= 2.0
 #      esumb += 30.3995440914926
-      esumb += 9.18738712306217
-      execute print_scalar esumb
+#      esumb += 9.18738712306217
+#      execute print_scalar esumb
 #
 #      PARDO p, p1
 #         Do p2
@@ -8235,9 +8240,10 @@
          CALL DIJ 
 
 # The extended Koopman require response density, but litrature seems
-# to be using relaxed density.
+# to be using relaxed density. So, to be consistent I am also using 
+# relaxed density. Thechnically this is not correct. 
 
-         CALL DAI
+#         CALL DAI
 #
 # Compute the HF density 
 # ---------------------- 
