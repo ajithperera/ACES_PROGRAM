@@ -19,7 +19,7 @@
 
       index kiter    = 1, cc_iter
       index Ione     = 1, 1
-      index Spn_mult = 1, 1
+      index Spn_mult = 1, 2
 
       Index Kroots   = 1, 100
       Index Nroots   = 1, 12
@@ -347,7 +347,8 @@
       Static DIP_T(MROOTS,IONE)
       Static DUMMY(Ione,Ione)
       Static INIT_RVEC_AB(i,j)
-      Static DIP_INIT(i,j,i1,j1)
+      Static DIP_INIT_IJIJ(i,j,i1,j1)
+      Static DIP_INIT_IJ(i,j)
       Static VEC_AB(i,j,KROOTS)
 
 #     Scalar arrays
@@ -559,25 +560,27 @@
 #  The Initial guess is form by fully solving the eigenvalue problem
 #   Hbar(ij,kl)R(kl) =ER(ij,p) (p=1,..n; n<= no. of occupied pairs)
 #
-      PARDO i, j, i1, j1
-            REQUEST HBAR_IIII(i,i1,j,j1) j1
-            Tijij(i,i1,j,j1)  = HBAR_IIII(i,i1,j,j1)
-            T1ijij(i,j,i1,j1) = Tijij(i,i1,j,j1)
-            DIP_INIT(i,j,i1,j1) =  T1ijij(i,j,i1,j1)
-      ENDPARDO i,j,i1,j1
 
-#      PARDO i, j, i1, j1
-#            REQUEST HBAR_IIJJ(i,i1,j,j1) j1
-#            Tijij(i,i1,j,j1)  = HBAR_IIJJ(i,i1,j,j1)
-#            T1ijij(i,j,i1,j1) = Tijij(i,i1,j,j1)
-#            DIP_INIT(i,j,i1,j1) =  T1ijij(i,j,i1,j1)
-#      ENDPARDO i,j,i1,j1
+     PARDO i, j
+         GET  HBAR_jj(i,j)
+         tij(i,j)  = HBAR_jj(i,j)
+         tij(i,j)  *= -1.0
+         DIP_INIT_IJ(i,j) = tij(i,j)
+      ENDPARDO i, j
+
+      PARDO i, j, i1, j1
+            REQUEST HBAR_IIJJ(i,i1,j,j1) j1
+            Tijij(i,i1,j,j1)  = HBAR_IIJJ(i,i1,j,j1)
+            T1ijij(i,j,i1,j1) = Tijij(i,i1,j,j1)
+            DIP_INIT_IJIJ(i,j,i1,j1) =  T1ijij(i,j,i1,j1)
+      ENDPARDO i,j,i1,j1
 
       EXECUTE SIP_BARRIER 
       execute get_my_rank rank
 
       If rank == 0.0
-      EXECUTE FORM_DIP_GUESS DIP_INIT VEC_AB
+      EXECUTE  FORM_DIP_HMAT DIP_INIT_IJIJ DIP_INIT_IJ 
+      EXECUTE FORM_DIP_GUESS DIP_INIT_IJIJ VEC_AB
       Endif 
             
      ENDPROC FORM_INITIAL_GUESS

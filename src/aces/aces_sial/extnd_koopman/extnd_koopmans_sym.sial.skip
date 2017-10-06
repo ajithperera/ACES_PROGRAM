@@ -212,8 +212,8 @@
       distributed DT_b(mu,nu)
       distributed DT(mu,nu)
       distributed Ftmp(mu,nu)
-      distributed Ftmp_ID(mu,nu)
       distributed Ftmp_DI(mu,nu)
+      distributed Ftmp_ID(mu,nu)
       distributed Fxx(mu,nu)
       distributed Uxx(mu,nu)
       distributed Ipp(p,p1)
@@ -252,8 +252,6 @@
       temp T1xx(mu,nu) 
       temp T2xx(mu,nu) 
       temp T3xx(mu,nu) 
-      temp T4xx(mu,nu) 
-      temp T5xx(mu,nu) 
       temp Txi(mu,i) 
       temp Txj(mu,j) 
       temp Txp(mu,p)
@@ -285,7 +283,6 @@
       temp TAO_ERI_INTS(mu,nu,lambda,sigma)
       served AO_ERI_INTS(mu,nu,lambda,sigma)
       served D0(mu,nu,lambda,sigma)
-      served DC(mu,nu,lambda,sigma)
       served D1(mu,nu,lambda,sigma)
       served D2(mu,nu,lambda,sigma)
       served D3(mu,nu,lambda,sigma)
@@ -655,8 +652,6 @@
       scalar eacbd 
       scalar sum
       scalar rank
-      scalar Fac1
-      scalar Fac2
 #
 # PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 
 # 
@@ -689,9 +684,8 @@
        CREATE DhfB  
        CREATE DhfA_tmp
        CREATE DhfB_tmp
-       CREATE Ftmp
-       CREATE Ftmp_ID
        CREATE Ftmp_DI
+       CREATE Ftmp_ID
        CREATE OVLP
        CREATE Ca_bar
        CREATE Cb_bar
@@ -5749,16 +5743,16 @@
       Execute sip_barrier 
 
 #bgn_debug
-      esumb = 0.0
-      esuma = 0.0
-      pardo mu, nu
-      get Dhfa(mu,nu)
-      tmp =  Dhfa(mu,nu) * Dhfa(mu,nu)
-      esuma += tmp
-      endpardo mu,nu
-      execute sip_barrier
-      collective esumb += esuma
-      execute print_scalar esumb
+#      esumb = 0.0
+#      esuma = 0.0
+#      pardo mu, nu
+#      get Dhfa(mu,nu)
+#      tmp =  Dhfa(mu,nu) * Dhfa(mu,nu)
+#      esuma += tmp
+#      endpardo mu,nu
+#      execute sip_barrier
+#      collective esumb += esuma
+#      execute print_scalar esumb
 #end_debug
 
 
@@ -6183,32 +6177,36 @@
 
 #      PARDO p, p1
 #            Tpp(p,p1) = Fock_a(p,p1)
+#            execute dump_amp Fock_a(p,p1)
 #           DO mu
 #               Txp(mu,p) = Tpp(p,p1)*ca(mu,p1)
+#               execute dump_amp Fock_a(p,p1)
 #               DO nu
 #                  Txx(mu,nu) = Txp(mu,p)*ca(nu,p)
 #                  PUT Fxx_a(mu,nu) += Txx(mu,nu)
 #               ENDDO nu
 #            ENDDO mu
 #      ENDPARDO p, p1
-#
+
 #      PARDO q, q1
 #            Tqq(q,q1) = Fock_b(q,q1)
 #           DO mu
 #               Txq(mu,q) = Tqq(q,q1)*cb(mu,q1)
+#               execute dump_amp Fock_b(q,q1)
 #               DO nu
 #                  Txx(mu,nu) = Txq(mu,q)*cb(nu,q)
 #                  PUT Fxx_b(mu,nu) += Txx(mu,nu)
 #               ENDDO nu
 #            ENDDO mu
 #      ENDPARDO q, q1
-      execute sip_barrier
-
+#      execute sip_barrier
+#
       esuma = 0.0
       esumb = 0.0
       pardo mu, nu
          GET DT_A(mu,nu)
          GET DT_B(mu,nu)
+         GET Fxx_b(mu,nu)
          execute return_h1 txx(mu,nu)
          tmp = txx(mu,nu) * DT_A(mu,nu)
          esuma += tmp
@@ -6219,8 +6217,7 @@
       collective esumb += esuma
       execute server_barrier
       execute print_scalar esumb
-#      esumb +=  30.3995440914926
-      esumb +=  9.18738712306217
+      esumb += 9.19693438044555
       execute print_scalar esumb
 
       ecorraa += esumb
@@ -6247,61 +6244,7 @@
          PREPARE D1(mu,nu,lambda,sigma) = Txxxx(mu,nu,lambda,sigma)
          PREPARE D2(mu,nu,lambda,sigma) = Txxxx(mu,nu,lambda,sigma)
          PREPARE D3(mu,nu,lambda,sigma) = Txxxx(mu,nu,lambda,sigma)
-         PREPARE DC(mu,nu,lambda,sigma) = Txxxx(mu,nu,lambda,sigma)
      ENDPARDO mu, nu, lambda, sigma
-
-     EXECUTE SERVER_BARRIER
-
-     PARDO mu, nu, lambda, sigma
-
-         Txxxx(mu,nu,lambda,sigma)  = 0.0
-
-         GET DHFa(nu,sigma)
-         GET DHFa(mu,sigma)
-         GET DHFa(mu,nu)
-         GET DHFa(mu,lambda)
-         GET DHFa(sigma,lambda)
-         GET DHFa(nu,lambda)
-
-         GET DHFb(nu,sigma)
-         GET DHFb(mu,sigma)
-         GET DHFb(mu,nu)
-         GET DHFb(mu,lambda)
-         GET DHFb(sigma,lambda)
-         GET DHFb(nu,lambda)
-
-         Txx(nu,sigma)              = DHFa(nu,sigma)
-         Txx(nu,sigma)             += DHFb(nu,sigma)
-         T1xx(mu,lambda)            = DHFa(mu,lambda)
-         T1xx(mu,lambda)           += DHFb(mu,lambda)
-
-         Txxxx(mu,lambda,nu,sigma)  = T1xx(mu,lambda)^Txx(nu,sigma)
-
-         T2xx(nu,lambda)            = DHFa(nu,lambda)
-         T1xxxx(mu,lambda,nu,sigma) = DHFa(mu,sigma)^T2xx(nu,lambda)
-         T1xxxx(mu,lambda,nu,sigma)*= 0.5
-         Txxxx(mu,lambda,nu,sigma) -= T1xxxx(mu,lambda,nu,sigma)
-
-         T3xx(nu,lambda)            = DHFb(nu,lambda)
-         T1xxxx(mu,lambda,nu,sigma) = DHFb(mu,sigma)^T3xx(nu,lambda)
-         T1xxxx(mu,lambda,nu,sigma)*= 0.5
-         Txxxx(mu,lambda,nu,sigma) -= T1xxxx(mu,lambda,nu,sigma)
-
-         T4xx(sigma,lambda)         = DHFa(sigma,lambda)
-         T1xxxx(mu,lambda,nu,sigma) = DHFa(mu,nu)^T4xx(sigma,lambda)
-         T1xxxx(mu,lambda,nu,sigma)*= 0.5
-         Txxxx(mu,lambda,nu,sigma) -= T1xxxx(mu,lambda,nu,sigma)
-
-         T5xx(sigma,lambda)         = DHFb(sigma,lambda)
-         T1xxxx(mu,lambda,nu,sigma) = DHFb(mu,nu)^T5xx(sigma,lambda)
-         T1xxxx(mu,lambda,nu,sigma)*= 0.5
-         Txxxx(mu,lambda,nu,sigma) -= T1xxxx(mu,lambda,nu,sigma)
-
-         Txxxx(mu,lambda,nu,sigma) *= 2.0
-         PREPARE D0(mu,lambda,nu,sigma) += Txxxx(mu,lambda,nu,sigma)
-
-     ENDPARDO mu, nu, lambda, sigma
-
      EXECUTE SERVER_BARRIER
 
      PARDO mu, nu, lambda, sigma
@@ -6309,6 +6252,7 @@
            COMPUTE_INTEGRALS TAO_ERI_INTS(mu, nu, lambda, sigma)
            PREPARE AO_ERI_INTS(mu, nu, lambda, sigma) = TAO_ERI_INTS(mu, nu, lambda, sigma)
 
+            Txxxx(mu,nu,lambda,sigma)  = 0.0
             T2xxxx(mu,nu,lambda,sigma) = 0.0
             T3xxxx(mu,nu,lambda,sigma) = 0.0
 #
@@ -6322,11 +6266,15 @@
             GET DHFa(nu,sigma)
             GET DHFa(mu,sigma)
             GET DHFa(nu,lambda)
+            GET DHFa(sigma,lambda)
+            GET DHFa(mu,nu)
 #
             GET DHFb(mu,lambda)
             GET DHFb(nu,sigma)
             GET DHFb(mu,sigma)
             GET DHFb(nu,lambda)
+            GET DHFb(sigma,lambda)
+            GET DHFb(mu,nu)
 #
             GET DpqA(mu,lambda)
             GET DpqA(nu,sigma)
@@ -6337,10 +6285,35 @@
             GET DpqB(nu,sigma)
             GET DpqB(mu,sigma)
             GET DpqB(nu,lambda)
+#HF part
+            Txx(mu,lambda)             = DHFa(mu,lambda)
+            T1xxxx(mu,nu,lambda,sigma) = Txx(mu,lambda)^DHFa(nu,sigma)
+            Txxxx(mu,nu,lambda,sigma) += T1xxxx(mu,nu,lambda,sigma)
+
+            Txx(mu,lambda)             = DHFb(mu,lambda)
+            T1xxxx(mu,nu,lambda,sigma) = Txx(mu,lambda)^DHFb(nu,sigma)
+            Txxxx(mu,nu,lambda,sigma) += T1xxxx(mu,nu,lambda,sigma)
+
+            T1xxxx(mu,nu,lambda,sigma) = DHFa(mu,lambda)^DHFb(nu,sigma)
+            Txxxx(mu,nu,lambda,sigma) += T1xxxx(mu,nu,lambda,sigma)
+
+            T1xxxx(mu,nu,lambda,sigma) = DHFb(mu,lambda)^DHFa(nu,sigma)
+            Txxxx(mu,nu,lambda,sigma) += T1xxxx(mu,nu,lambda,sigma)
+#Exchange terms
+
+            Txx(mu,sigma)              = DHFa(mu,sigma)
+            T1xxxx(mu,nu,lambda,sigma) = Txx(mu,sigma)^DHFa(nu,lambda)
+            Txxxx(mu,nu,lambda,sigma) -= T1xxxx(mu,nu,lambda,sigma)
+
+            Txx(mu,nu)              = DHFb(mu,nu)
+            T1xxxx(mu,nu,lambda,sigma) = Txx(mu,nu)^DHFb(lambda,sigma)
+            Txxxx(mu,nu,lambda,sigma) -= T1xxxx(mu,nu,lambda,sigma)
+
+            Txxxx(mu,nu,lambda,sigma)*= 0.5
+            PREPARE D0(mu,lambda,nu,sigma) += Txxxx(mu,nu,lambda,sigma)
 
 #           Correlation
 #           -----------
-
             T1xxxx(mu,nu,lambda,sigma) = DpqA(mu,lambda)^DHFA(nu,sigma)
             T2xxxx(mu,nu,lambda,sigma) += T1xxxx(mu,nu,lambda,sigma)
 #
@@ -6369,7 +6342,7 @@
             T1xxxx(mu,nu,lambda,sigma)*= 0.5
             T2xxxx(mu,nu,lambda,sigma) -= T1xxxx(mu,nu,lambda,sigma)
 
-            PREPARE D1(mu,nu,lambda,sigma) += T2xxxx(mu,nu,lambda,sigma)
+            PREPARE D1(mu,lambda,nu,sigma) += T2xxxx(mu,nu,lambda,sigma)
 #
 #           Fully transform Diixx
 #           ---------------------
@@ -6607,353 +6580,451 @@
 
      EXECUTE SERVER_BARRIER
 
-     PARDO mu, delta, lambda, sigma
+     PARDO delta, lambda, sigma
 
-          Txxxx(mu,lambda,delta,sigma) = 0.0
+         DO mu
+         DO nu
 
-          REQUEST D1(mu,lambda,delta,sigma) sigma
-          REQUEST D2(mu,lambda,delta,sigma) sigma
-          REQUEST D3(mu,lambda,delta,sigma) sigma
+            REQUEST AO_ERI_INTS(mu,lambda,delta,sigma) sigma
+            REQUEST D0(nu,delta,lambda,sigma) sigma
+            REQUEST D1(nu,delta,lambda,sigma) sigma
+            REQUEST D2(nu,delta,lambda,sigma) sigma
+            REQUEST D3(nu,delta,lambda,sigma) sigma
 
-          P1xxxx(mu,lambda,delta,sigma) = D1(mu,lambda,delta,sigma)
-          P2xxxx(mu,lambda,delta,sigma) = D2(mu,lambda,delta,sigma)
-          P3xxxx(mu,lambda,delta,sigma) = D3(mu,lambda,delta,sigma)
+            P0xxxx(nu,delta,lambda,sigma) = D0(nu,delta,lambda,sigma)
+            P1xxxx(nu,delta,lambda,sigma) = D1(nu,delta,lambda,sigma)
+            P2xxxx(nu,delta,lambda,sigma) = D2(nu,delta,lambda,sigma)
+            P3xxxx(nu,delta,lambda,sigma) = D3(nu,delta,lambda,sigma)
 
-          Txxxx(mu,lambda,delta,sigma)  = D1(mu,lambda,delta,sigma)
-          Txxxx(mu,lambda,delta,sigma) += D2(mu,lambda,delta,sigma)
-          Txxxx(mu,lambda,delta,sigma) += D3(mu,lambda,delta,sigma)
+            Pxxxx(nu,delta,lambda,sigma)  = P0xxxx(nu,delta,lambda,sigma)
+#            Pxxxx(nu,delta,lambda,sigma) += P1xxxx(nu,delta,lambda,sigma)
+#            Pxxxx(nu,delta,lambda,sigma) += P2xxxx(nu,delta,lambda,sigma)
+#            Pxxxx(nu,delta,lambda,sigma) += P3xxxx(nu,delta,lambda,sigma)
 
-          T1xxxx(mu,delta,lambda,sigma) = Txxxx(mu,lambda,delta,sigma)
-          PREPARE DC(mu,delta,lambda,sigma) += T1xxxx(mu,delta,lambda,sigma)
-#          PREPARE DC(mu,lambda,delta,sigma) += Txxxx(mu,lambda,delta,sigma)
+            Txxxx(nu,lambda,delta,sigma)  = Pxxxx(nu,delta,lambda,sigma)
 
-     ENDPARDO mu, delta, lambda, sigma
-     EXECUTE SERVER_BARRIER
+            Txx(mu,nu) = Txxxx(nu,lambda,delta,sigma) * AO_ERI_INTS(mu,lambda,delta,sigma)
+            Txx(mu,nu) *= 0.5
+            PUT Ftmp_DI(mu,nu) += Txx(mu,nu)
 
-#bgn_debug
-#     esuma=0.0
-#     esumb=0.0
-#     PARDO mu, delta, lambda, sigma
+            ENDDO nu
+            ENDDO mu
+
+      ENDPARDO  delta, lambda, sigma
+
+      PARDO delta, lambda, sigma
+
+         DO mu
+         DO nu
+
+            REQUEST AO_ERI_INTS(delta,lambda,mu,sigma) sigma
+            REQUEST D0(delta,nu,lambda,sigma) sigma
+            REQUEST D1(delta,nu,lambda,sigma) sigma
+            REQUEST D2(delta,nu,lambda,sigma) sigma
+            REQUEST D3(delta,nu,lambda,sigma) sigma
+
+            P0xxxx(delta,nu,lambda,sigma) = D0(delta,nu,lambda,sigma)
+            P1xxxx(delta,nu,lambda,sigma) = D1(delta,nu,lambda,sigma)
+            P2xxxx(delta,nu,lambda,sigma) = D2(delta,nu,lambda,sigma)
+            P3xxxx(delta,nu,lambda,sigma) = D3(delta,nu,lambda,sigma)
+
+            Pxxxx(delta,nu,lambda,sigma)  = P0xxxx(delta,nu,lambda,sigma)
+#            Pxxxx(delta,nu,lambda,sigma) += P1xxxx(delta,nu,lambda,sigma)
+#            Pxxxx(delta,nu,lambda,sigma) += P2xxxx(delta,nu,lambda,sigma)
+#            Pxxxx(delta,nu,lambda,sigma) += P3xxxx(,delta,nu,lambda,sigma)
+
+            Txxxx(delta,lambda,nu,sigma)  = Pxxxx(delta,nu,lambda,sigma)
+
+            Txx(mu,nu) = Txxxx(nu,lambda,delta,sigma) * AO_ERI_INTS(delta,lambda,mu,sigma)
+            Txx(mu,nu) *= 0.5
+            PUT Ftmp_DI(mu,nu) += Txx(mu,nu)
+
+            ENDDO nu
+            ENDDO mu
+
+      ENDPARDO  delta, lambda, sigma
+
+
+#      PARDO delta, lambda, sigma
 #
-#         REQUEST AO_ERI_INTS(mu,delta,lambda,sigma) sigma
-#         REQUEST D0(mu,delta,lambda,sigma) sigma
+#         DO mu
+#         DO nu
 #
-#         P1xxxx(mu,delta,lambda,sigma) = D0(mu,delta,lambda,sigma)
+#            REQUEST AO_ERI_INTS(delta,lambda,mu,sigma) sigma
+#            REQUEST D0(lambda,delta,nu,sigma) sigma
+#            REQUEST D1(lambda,delta,nu,sigma) sigma
+#            REQUEST D2(lambda,delta,nu,sigma) sigma
+#            REQUEST D3(lambda,delta,nu,sigma) sigma
 #
-#         Txxxx(mu,delta,lambda,sigma)   = P1xxxx(mu,delta,lambda,sigma)
+#            P0xxxx(lambda,delta,nu,sigma) = D0(lambda,delta,nu,sigma)
+#            P1xxxx(lambda,delta,nu,sigma) = D1(lambda,delta,nu,sigma)
+#            P2xxxx(lambda,delta,nu,sigma) = D2(lambda,delta,nu,sigma)
+#            P3xxxx(lambda,delta,nu,sigma) = D3(lambda,delta,nu,sigma)
 #
-#        tmp = Txxxx(mu,delta,lambda,sigma) * AO_ERI_INTS(mu,delta,lambda,sigma)
-#        esuma += tmp
+#            Pxxxx(lambda,delta,nu,sigma)  = P0xxxx(lambda,delta,nu,sigma)
+##            Pxxxx(lambda,delta,nu,sigma) += P1xxxx(lambda,delta,nu,sigma)
+##            Pxxxx(lambda,delta,nu,sigma) += P2xxxx(lambda,delta,nu,sigma)
+##            Pxxxx(lambda,delta,nu,sigma) += P3xxxx(lambda,delta,nu,sigma)
 #
-#     ENDPARDO mu,  delta, lambda, sigma
-#     execute server_barrier
-#     collective esumb += esuma
-#     execute print_scalar  esumb
-#end_debug
-
-#bgn_debug
-     esuma=0.0
-     esumb=0.0
-     PARDO mu, delta, lambda, sigma
-         REQUEST D1(mu,delta,lambda,sigma) sigma
-         Txxxx(mu,delta,lambda,sigma) = D1(mu,delta,lambda,sigma)
-         tmp = Txxxx(mu,delta,lambda,sigma) * Txxxx(mu,delta,lambda,sigma)
-        esuma += tmp
-     ENDPARDO mu,  delta, lambda, sigma
-     execute server_barrier
-     collective esumb += esuma
-     execute print_scalar  esumb
-     esuma=0.0
-     esumb=0.0
-     PARDO mu, delta, lambda, sigma
-         REQUEST D2(mu,delta,lambda,sigma) sigma
-         Txxxx(mu,delta,lambda,sigma) = D2(mu,delta,lambda,sigma)
-         tmp = Txxxx(mu,delta,lambda,sigma) * Txxxx(mu,delta,lambda,sigma)
-        esuma += tmp
-     ENDPARDO mu,  delta, lambda, sigma
-     execute server_barrier
-     collective esumb += esuma
-     execute print_scalar  esumb
-     esuma=0.0
-     esumb=0.0
-     PARDO mu, delta, lambda, sigma
-         REQUEST D3(mu,delta,lambda,sigma) sigma
-         Txxxx(mu,delta,lambda,sigma) = D3(mu,delta,lambda,sigma)
-         tmp = Txxxx(mu,delta,lambda,sigma) * Txxxx(mu,delta,lambda,sigma)
-        esuma += tmp
-     ENDPARDO mu,  delta, lambda, sigma
-     execute server_barrier
-     collective esumb += esuma
-     execute print_scalar  esumb
-#end_debug
+#            Txxxx(delta,lambda,nu,sigma)  = Pxxxx(lambda,delta,nu,sigma)
+#
+#            Txx(mu,nu) = Txxxx(delta,lambda,nu,sigma) * AO_ERI_INTS(delta,lambda,mu,sigma)
+#            Txx(mu,nu) *= 0.5
+#            PUT Ftmp_DI(mu,nu) += Txx(mu,nu)
+#
+#            ENDDO nu
+#            ENDDO mu
+#
+#      ENDPARDO  delta, lambda, sigma
+#
+#      PARDO delta, lambda, sigma
+#
+#         DO mu
+#         DO nu
+#
+#            Pxxxx(mu,delta,lambda,sigma)  = 0.0
+#
+#            REQUEST AO_ERI_INTS(nu,lambda,delta,sigma) sigma
+#            REQUEST D0(mu,delta,lambda,sigma) sigma
+#            REQUEST D1(mu,delta,lambda,sigma) sigma
+#            REQUEST D2(mu,delta,lambda,sigma) sigma
+#            REQUEST D3(mu,delta,lambda,sigma) sigma
+#
+#            P0xxxx(mu,delta,lambda,sigma) = D0(mu,delta,lambda,sigma)
+#            P1xxxx(mu,delta,lambda,sigma) = D1(mu,delta,lambda,sigma)
+#            P2xxxx(mu,delta,lambda,sigma) = D2(mu,delta,lambda,sigma)
+#            P3xxxx(mu,delta,lambda,sigma) = D3(mu,delta,lambda,sigma)
+#
+#            Pxxxx(mu,delta,lambda,sigma)  = P0xxxx(mu,delta,lambda,sigma)
+##            Pxxxx(mu,delta,lambda,sigma) += P1xxxx(mu,delta,lambda,sigma)
+##            Pxxxx(mu,delta,lambda,sigma) += P2xxxx(mu,delta,lambda,sigma)
+##            Pxxxx(mu,delta,lambda,sigma) += P3xxxx(mu,delta,lambda,sigma)
+#
+#            Txxxx(mu,lambda,delta,sigma)  = Pxxxx(mu,delta,lambda,sigma)
+#
+#            Txx(mu,nu) = Txxxx(mu,lambda,delta,sigma) * AO_ERI_INTS(nu,lambda,delta,sigma)
+#            Txx(mu,nu) *= 0.5
+#            PUT Ftmp_ID(mu,nu) += Txx(mu,nu)
+#
+#            ENDDO nu
+#            ENDDO mu
+#
+#      ENDPARDO  delta, lambda, sigma
+#
+#      PARDO delta, lambda, sigma
+#
+#         DO mu
+#         DO nu
+#
+#            Pxxxx(mu,delta,lambda,sigma)  = 0.0
+#
+#            REQUEST AO_ERI_INTS(nu,lambda,delta,sigma) sigma
+#            REQUEST D0(mu,delta,lambda,sigma) sigma
+#            REQUEST D1(mu,delta,lambda,sigma) sigma
+#            REQUEST D2(mu,delta,lambda,sigma) sigma
+#            REQUEST D3(mu,delta,lambda,sigma) sigma
+#
+#            P0xxxx(mu,delta,lambda,sigma) = D0(mu,delta,lambda,sigma)
+#            P1xxxx(mu,delta,lambda,sigma) = D1(mu,delta,lambda,sigma)
+#            P2xxxx(mu,delta,lambda,sigma) = D2(mu,delta,lambda,sigma)
+#            P3xxxx(mu,delta,lambda,sigma) = D3(mu,delta,lambda,sigma)
+#
+#            Pxxxx(mu,delta,lambda,sigma)  = P0xxxx(mu,delta,lambda,sigma)
+##            Pxxxx(mu,delta,lambda,sigma) += P1xxxx(mu,delta,lambda,sigma)
+##            Pxxxx(mu,delta,lambda,sigma) += P2xxxx(mu,delta,lambda,sigma)
+##            Pxxxx(mu,delta,lambda,sigma) += P3xxxx(mu,delta,lambda,sigma)
+#
+#            Txxxx(mu,lambda,delta,sigma)  = Pxxxx(mu,delta,lambda,sigma)
+#
+#            Txx(mu,nu) = Txxxx(mu,lambda,delta,sigma) * AO_ERI_INTS(nu,lambda,delta,sigma)
+#            Txx(mu,nu) *= 0.5
+#            PUT Ftmp_ID(mu,nu) += Txx(mu,nu)
+#
+#            ENDDO nu
+#            ENDDO mu
+#
+#      ENDPARDO  delta, lambda, sigma
+#
+###    PARDO delta, lambda, sigma
+##
+#         DO mu
+#         DO nu
+#
+#            REQUEST AO_ERI_INTS(delta,lambda,nu,sigma) sigma
+#            REQUEST D0(lambda,delta,mu,sigma) sigma
+#            REQUEST D1(lambda,delta,mu,sigma) sigma
+#            REQUEST D2(lambda,delta,mu,sigma) sigma
+#            REQUEST D3(lambda,delta,mu,sigma) sigma
+#
+#            P0xxxx(lambda,delta,mu,sigma) = D0(lambda,delta,mu,sigma)
+#            P1xxxx(lambda,delta,mu,sigma) = D1(lambda,delta,mu,sigma)
+#            P2xxxx(lambda,delta,mu,sigma) = D2(lambda,delta,mu,sigma)
+#            P3xxxx(lambda,delta,mu,sigma) = D3(lambda,delta,mu,sigma)
+#
+#            Pxxxx(lambda,delta,mu,sigma)  = P0xxxx(lambda,delta,mu,sigma)
+##            Pxxxx(lambda,delta,mu,sigma) += P1xxxx(lambda,delta,mu,sigma)
+##            Pxxxx(lambda,delta,mu,sigma) += P2xxxx(lambda,delta,mu,sigma)
+##            Pxxxx(lambda,delta,mu,sigma) += P3xxxx(lambda,delta,mu,sigma)
+#
+#            Txxxx(delta,lambda,mu,sigma)  = Pxxxx(lambda,delta,mu,sigma)
+#
+#            Txx(mu,nu) = Txxxx(delta,lambda,mu,sigma) * AO_ERI_INTS(delta,lambda,nu,sigma)
+#            Txx(mu,nu) *= 0.5
+#            PUT Ftmp_DI(mu,nu) += Txx(mu,nu)
+#
+#            ENDDO nu
+#            ENDDO mu
+#
+#      ENDPARDO  delta, lambda, sigma
+#
+      EXECUTE SERVER_BARRIER
 
 
 # This is F(mu,nu):F(int,dens) (mu from dens nu from int)
 
-     Fac1 = 0.03125
-     Fac2 = 0.125
-#     Fac1 = 0.0625
-#     Fac2 = 0.0625
-
-     DO mu
-     DO nu
-        T1xx(mu,nu) = 0.0
-     PARDO delta, lambda, sigma
-
-            REQUEST AO_ERI_INTS(nu,lambda,delta,sigma) sigma
-            REQUEST D0(mu,lambda,delta,sigma) sigma
-            REQUEST DC(mu,lambda,delta,sigma) sigma
-
-            P1xxxx(mu,lambda,delta,sigma) = D0(mu,lambda,delta,sigma)
-            P2xxxx(mu,lambda,delta,sigma) = DC(mu,lambda,delta,sigma)
- 
-            Txxxx(mu,lambda,delta,sigma) =  P1xxxx(mu,lambda,delta,sigma)
-            Txx(mu,nu) = Txxxx(mu,lambda,delta,sigma) * AO_ERI_INTS(nu,lambda,delta,sigma)
-            Txx(mu,nu)  *= Fac1
-            T1xx(mu,nu) += Txx(mu,nu)
-
-            Txxxx(mu,lambda,delta,sigma) = P2xxxx(mu,lambda,delta,sigma)
-            Txx(mu,nu) = Txxxx(mu,lambda,delta,sigma) * AO_ERI_INTS(nu,lambda,delta,sigma)
-            Txx(mu,nu)  *= Fac2
-            T1xx(mu,nu) += Txx(mu,nu)
-
-      ENDPARDO  delta, lambda, sigma
-
-      Put Ftmp_DI(mu,nu) += T1xx(mu,nu)
-
-      ENDDO nu
-      ENDDO mu
-
-      DO mu
-      DO nu
-
-        T1xx(mu,nu) = 0.0
-        PARDO delta, lambda, sigma
-
-            REQUEST AO_ERI_INTS(lambda,nu,delta,sigma) sigma
-            REQUEST D0(lambda,mu,delta,sigma) sigma
-            REQUEST DC(lambda,mu,delta,sigma) sigma
-
-            P1xxxx(lambda,mu,delta,sigma) = D0(lambda,mu,delta,sigma)
-            P2xxxx(lambda,mu,delta,sigma) = DC(lambda,mu,delta,sigma)
-
-            Txxxx(lambda,mu,delta,sigma) =  P1xxxx(lambda,mu,delta,sigma)
-            Txx(mu,nu) = Txxxx(lambda,mu,delta,sigma) * AO_ERI_INTS(lambda,nu,delta,sigma)
-            Txx(mu,nu)  *= Fac1
-            T1xx(mu,nu) += Txx(mu,nu)
-
-            Txxxx(lambda,mu,delta,sigma) = P2xxxx(lambda,mu,delta,sigma)
-            Txx(mu,nu) = Txxxx(lambda,mu,delta,sigma) * AO_ERI_INTS(lambda,nu,delta,sigma)
-            Txx(mu,nu)  *= Fac2
-            T1xx(mu,nu) += Txx(mu,nu)
-
-      ENDPARDO  delta, lambda, sigma
-
-      Put Ftmp_DI(mu,nu) += T1xx(mu,nu)
-
-      ENDDO nu
-      ENDDO mu
-
-      DO mu
-      DO nu
-        T1xx(mu,nu) = 0.0
-      PARDO delta, lambda, sigma
-
-            REQUEST AO_ERI_INTS(lambda,delta,nu,sigma) sigma
-            REQUEST D0(lambda,delta,mu,sigma) sigma
-            REQUEST DC(lambda,delta,mu,sigma) sigma
-
-            P1xxxx(lambda,delta,mu,sigma) = D0(lambda,delta,mu,sigma)
-            P2xxxx(lambda,delta,mu,sigma) = DC(lambda,delta,mu,sigma)
-
-            Txxxx(lambda,delta,mu,sigma) =  P1xxxx(lambda,delta,mu,sigma)
-            Txx(mu,nu) = Txxxx(lambda,delta,mu,sigma) * AO_ERI_INTS(lambda,delta,nu,sigma)
-            Txx(mu,nu)  *= Fac1
-            T1xx(mu,nu) += Txx(mu,nu)
-
-            Txxxx(lambda,delta,mu,sigma) = P2xxxx(lambda,delta,mu,sigma)
-            Txx(mu,nu) = Txxxx(lambda,delta,mu,sigma) * AO_ERI_INTS(lambda,delta,nu,sigma)
-            Txx(mu,nu)  *= Fac2
-            T1xx(mu,nu) += Txx(mu,nu)
-
-      ENDPARDO  delta, lambda, sigma
-
-      Put Ftmp_DI(mu,nu) += T1xx(mu,nu)
-
-      ENDDO nu
-      ENDDO mu
-
-      DO mu
-      DO nu
-        T1xx(mu,nu) = 0.0
-      PARDO delta, lambda, sigma
-
-            REQUEST AO_ERI_INTS(lambda,delta,sigma,nu) sigma
-            REQUEST D0(lambda,delta,sigma,mu) sigma
-            REQUEST DC(lambda,delta,sigma,mu) sigma
-
-            P1xxxx(lambda,delta,sigma,mu) = D0(lambda,delta,sigma,mu)
-            P2xxxx(lambda,delta,sigma,mu) = DC(lambda,delta,sigma,mu)
-
-            Txxxx(lambda,delta,sigma,mu) =  P1xxxx(lambda,delta,sigma,mu)
-            Txx(mu,nu) = Txxxx(lambda,delta,sigma,mu) * AO_ERI_INTS(lambda,delta,sigma,nu)
-            Txx(mu,nu)  *= Fac1
-            T1xx(mu,nu) += Txx(mu,nu)
-
-            Txxxx(lambda,delta,sigma,mu) = P2xxxx(lambda,delta,sigma,mu)
-            Txx(mu,nu) = Txxxx(lambda,delta,sigma,mu) * AO_ERI_INTS(lambda,delta,sigma,nu)
-            Txx(mu,nu)  *= Fac2
-            T1xx(mu,nu) += Txx(mu,nu)
-
-      ENDPARDO  delta, lambda, sigma
-
-      Put Ftmp_DI(mu,nu) += T1xx(mu,nu)
-
-      ENDDO nu
-      ENDDO mu
-
-# This is F(mu,nu):F(int,dens) (mu from int nu from dens)
-
-      DO mu
-      DO nu
-        T1xx(mu,nu) = 0.0
-      PARDO delta, lambda, sigma
-
-            REQUEST AO_ERI_INTS(mu,lambda,delta,sigma) sigma
-            REQUEST D0(nu,lambda,delta,sigma) sigma
-            REQUEST DC(nu,lambda,delta,sigma) sigma
-
-            P1xxxx(nu,lambda,delta,sigma) = D0(nu,lambda,delta,sigma)
-            P2xxxx(nu,lambda,delta,sigma) = DC(nu,lambda,delta,sigma)
-
-            Txxxx(nu,lambda,delta,sigma) =  P1xxxx(nu,lambda,delta,sigma)
-            Txx(mu,nu) = Txxxx(nu,lambda,delta,sigma) * AO_ERI_INTS(mu,lambda,delta,sigma)
-            Txx(mu,nu)  *= Fac1
-            T1xx(mu,nu) += Txx(mu,nu)
-
-            Txxxx(nu,lambda,delta,sigma) = P2xxxx(nu,lambda,delta,sigma)
-            Txx(mu,nu) = Txxxx(nu,lambda,delta,sigma) * AO_ERI_INTS(mu,lambda,delta,sigma)
-            Txx(mu,nu)  *= Fac2
-            T1xx(mu,nu) += Txx(mu,nu)
-
-      ENDPARDO  delta, lambda, sigma
-
-      Put Ftmp_ID(mu,nu) += T1xx(mu,nu)
-
-      ENDDO nu
-      ENDDO mu
-
-      DO mu
-      DO nu
-
-        T1xx(mu,nu) = 0.0
-        PARDO delta, lambda, sigma
-
-            REQUEST AO_ERI_INTS(lambda,mu,delta,sigma) sigma
-            REQUEST D0(lambda,nu,delta,sigma) sigma
-            REQUEST DC(lambda,nu,delta,sigma) sigma
-
-            P1xxxx(lambda,nu,delta,sigma) = D0(lambda,nu,delta,sigma)
-            P2xxxx(lambda,nu,delta,sigma) = DC(lambda,nu,delta,sigma)
-
-            Txxxx(lambda,nu,delta,sigma) =  P1xxxx(lambda,nu,delta,sigma)
-            Txx(mu,nu) = Txxxx(lambda,nu,delta,sigma) * AO_ERI_INTS(lambda,mu,delta,sigma)
-            Txx(mu,nu)  *= Fac1
-            T1xx(mu,nu) += Txx(mu,nu)
-
-            Txxxx(lambda,nu,delta,sigma) = P2xxxx(lambda,nu,delta,sigma)
-            Txx(mu,nu) = Txxxx(lambda,nu,delta,sigma) * AO_ERI_INTS(lambda,mu,delta,sigma)
-            Txx(mu,nu)  *= Fac2
-            T1xx(mu,nu) += Txx(mu,nu)
-
-      ENDPARDO  delta, lambda, sigma
-
-      Put Ftmp_ID(mu,nu) += T1xx(mu,nu)
-
-      ENDDO nu
-      ENDDO mu
-
-      DO mu
-      DO nu
-        T1xx(mu,nu) = 0.0
-      PARDO delta, lambda, sigma
-
-            REQUEST AO_ERI_INTS(lambda,delta,mu,sigma) sigma
-            REQUEST D0(lambda,delta,nu,sigma) sigma
-            REQUEST DC(lambda,delta,nu,sigma) sigma
-
-            P1xxxx(lambda,delta,nu,sigma) = D0(lambda,delta,nu,sigma)
-            P2xxxx(lambda,delta,nu,sigma) = DC(lambda,delta,nu,sigma)
-
-            Txxxx(lambda,delta,nu,sigma) =  P1xxxx(lambda,delta,nu,sigma)
-            Txx(mu,nu) = Txxxx(lambda,delta,nu,sigma) * AO_ERI_INTS(lambda,delta,mu,sigma)
-            Txx(mu,nu)  *= Fac1
-            T1xx(mu,nu) += Txx(mu,nu)
-
-            Txxxx(lambda,delta,nu,sigma) = P2xxxx(lambda,delta,nu,sigma)
-            Txx(mu,nu) = Txxxx(lambda,delta,nu,sigma) * AO_ERI_INTS(lambda,delta,mu,sigma)
-            Txx(mu,nu)  *= Fac2
-            T1xx(mu,nu) += Txx(mu,nu)
-
-      ENDPARDO  delta, lambda, sigma
-
-      Put Ftmp_ID(mu,nu) += T1xx(mu,nu)
-
-      ENDDO nu
-      ENDDO mu
-
-      DO mU
-      DO nu
-        T1xx(mu,nu) = 0.0
-      PARDO delta, lambda, sigma
-
-            REQUEST AO_ERI_INTS(lambda,delta,sigma,mu) sigma
-            REQUEST D0(lambda,delta,sigma,nu) sigma
-            REQUEST DC(lambda,delta,sigma,nu) sigma
-
-            P1xxxx(lambda,delta,sigma,nu) = D0(lambda,delta,sigma,nu)
-            P2xxxx(lambda,delta,sigma,nu) = DC(lambda,delta,sigma,nu)
-
-            Txxxx(lambda,delta,sigma,nu) =  P1xxxx(lambda,delta,sigma,nu)
-            Txx(mu,nu) = Txxxx(lambda,delta,sigma,nu) * AO_ERI_INTS(lambda,delta,sigma,mu)
-            Txx(mu,nu)  *= Fac1
-            T1xx(mu,nu) += Txx(mu,nu)
-
-            Txxxx(lambda,delta,sigma,nu) = P2xxxx(lambda,delta,sigma,nu)
-            Txx(mu,nu) = Txxxx(lambda,delta,sigma,nu) * AO_ERI_INTS(lambda,delta,sigma,mu)
-            Txx(mu,nu)  *= Fac2
-            T1xx(mu,nu) += Txx(mu,nu)
-
-      ENDPARDO  delta, lambda, sigma
-
-      Put Ftmp_ID(mu,nu) += T1xx(mu,nu)
-
-      ENDDO nu
-      ENDDO mu
-
+#     DO mu
+#     DO nu
+#        T1xx(mu,nu) = 0.0
+#     PARDO delta, lambda, sigma
+#
+#            REQUEST AO_ERI_INTS(nu,lambda,delta,sigma) sigma
+#            REQUEST D0(mu,delta,lambda,sigma) sigma
+#            REQUEST D1(mu,delta,lambda,sigma) sigma
+#            REQUEST D2(mu,delta,lambda,sigma) sigma
+#            REQUEST D3(mu,delta,lambda,sigma) sigma
+#
+#            P0xxxx(mu,delta,lambda,sigma) = D0(mu,delta,lambda,sigma)
+##            P0xxxx(mu,lambda,delta,sigma) += D1(mu,lambda,delta,sigma)
+##            P0xxxx(mu,lambda,delta,sigma) += D2(mu,lambda,delta,sigma)
+##            P0xxxx(mu,lambda,delta,sigma) += D3(mu,lambda,delta,sigma)
+#
+#            Txxxx(mu,lambda,delta,sigma) =  P0xxxx(mu,delta,lambda,sigma)
+#            Txx(mu,nu) = Txxxx(mu,lambda,delta,sigma) * AO_ERI_INTS(nu,lambda,delta,sigma)
+##            Txx(mu,nu)  *= 0.25
+#            T1xx(mu,nu) += Txx(mu,nu)
+#
+#      ENDPARDO  delta, lambda, sigma
+#
+#      Put Ftmp_DI(mu,nu) += T1xx(mu,nu)
+#
+#      ENDDO nu
+#      ENDDO mu
+#
+##      DO mu
+##      DO nu
+##
+##        T1xx(mu,nu) = 0.0
+#        PARDO delta, lambda, sigma
+#
+#            REQUEST AO_ERI_INTS(lambda,nu,delta,sigma) sigma
+#            REQUEST D0(lambda,mu,delta,sigma) sigma
+#            REQUEST D1(lambda,mu,delta,sigma) sigma
+#            REQUEST D2(lambda,mu,delta,sigma) sigma
+#            REQUEST D3(lambda,mu,delta,sigma) sigma
+#
+#            P0xxxx(lambda,mu,delta,sigma) = D0(lambda,mu,delta,sigma)
+##            P0xxxx(lambda,mu,delta,sigma) += D1(lambda,mu,delta,sigma)
+##            P0xxxx(lambda,mu,delta,sigma) += D2(lambda,mu,delta,sigma)
+##            P0xxxx(lambda,mu,delta,sigma) += D3(lambda,mu,delta,sigma)
+#
+#            Txxxx(lambda,mu,delta,sigma) =  P0xxxx(lambda,mu,delta,sigma)
+#            Txx(mu,nu) = Txxxx(lambda,mu,delta,sigma) * AO_ERI_INTS(lambda,nu,delta,sigma)
+#            Txx(mu,nu)  *= 0.125
+#            T1xx(mu,nu) += Txx(mu,nu)
+#
+#      ENDPARDO  delta, lambda, sigma
+#
+#      Put Ftmp_DI(mu,nu) += T1xx(mu,nu)
+#
+#      ENDDO nu
+#      ENDDO mu
+#
+#      DO mu
+#      DO nu
+#        T1xx(mu,nu) = 0.0
+#      PARDO delta, lambda, sigma
+#
+#            REQUEST AO_ERI_INTS(lambda,delta,nu,sigma) sigma
+#            REQUEST D0(lambda,delta,mu,sigma) sigma
+#            REQUEST D1(lambda,delta,mu,sigma) sigma
+#            REQUEST D2(lambda,delta,mu,sigma) sigma
+#            REQUEST D3(lambda,delta,mu,sigma) sigma
+#
+#            P0xxxx(lambda,delta,mu,sigma) = D0(lambda,delta,mu,sigma)
+##            P0xxxx(lambda,delta,mu,sigma) += D1(lambda,delta,mu,sigma)
+##            P0xxxx(lambda,delta,mu,sigma) += D2(lambda,delta,mu,sigma)
+##            P0xxxx(lambda,delta,mu,sigma) += D3(lambda,delta,mu,sigma)
+#
+#            Txxxx(lambda,delta,mu,sigma) =  P0xxxx(lambda,delta,mu,sigma)
+#            Txx(mu,nu) = Txxxx(lambda,delta,mu,sigma) * AO_ERI_INTS(lambda,delta,nu,sigma)
+#            Txx(mu,nu)  *= 0.125
+#            T1xx(mu,nu) += Txx(mu,nu)
+#
+#      ENDPARDO  delta, lambda, sigma
+#
+#      Put Ftmp_DI(mu,nu) += T1xx(mu,nu)
+#
+#      ENDDO nu
+#      ENDDO mu
+#
+#      DO mu
+#      DO nu
+#        T1xx(mu,nu) = 0.0
+#      PARDO delta, lambda, sigma
+#
+#            REQUEST AO_ERI_INTS(lambda,delta,sigma,nu) sigma
+#            REQUEST D0(lambda,delta,sigma,mu) sigma
+#            REQUEST D1(lambda,delta,sigma,mu) sigma
+#            REQUEST D2(lambda,delta,sigma,mu) sigma
+#            REQUEST D3(lambda,delta,sigma,mu) sigma
+#
+#            P0xxxx(lambda,delta,sigma,mu) = D0(lambda,delta,sigma,mu)
+##            P0xxxx(lambda,delta,sigma,mu) += D1(lambda,delta,sigma,mu)
+##            P0xxxx(lambda,delta,sigma,mu) += D2(lambda,delta,sigma,mu)
+##            P0xxxx(lambda,delta,sigma,mu) += D3(lambda,delta,sigma,mu)
+#
+#            Txxxx(lambda,delta,sigma,mu) =  P0xxxx(lambda,delta,sigma,mu)
+#            Txx(mu,nu) = Txxxx(lambda,delta,sigma,mu) * AO_ERI_INTS(lambda,delta,sigma,nu)
+#            Txx(mu,nu)  *= 0.125
+#            T1xx(mu,nu) += Txx(mu,nu)
+#
+#      ENDPARDO  delta, lambda, sigma
+#
+#      Put Ftmp_DI(mu,nu) += T1xx(mu,nu)
+#
+#      ENDDO nu
+#      ENDDO mu
+#
+#      EXECUTE SERVER_BARRIER
+#
+## This is F(mu,nu):F(int,dens) (mu from int nu from dens)
+#
+#      DO mu
+#      DO nu
+#        T1xx(mu,nu) = 0.0
+#      PARDO delta, lambda, sigma
+#
+#            REQUEST AO_ERI_INTS(mu,lambda,delta,sigma) sigma
+#            REQUEST D0(nu,lambda,delta,sigma) sigma
+#            REQUEST D1(nu,lambda,delta,sigma) sigma
+#            REQUEST D2(nu,lambda,delta,sigma) sigma
+#            REQUEST D3(nu,lambda,delta,sigma) sigma
+#
+#            P0xxxx(nu,lambda,delta,sigma) = D0(nu,lambda,delta,sigma)
+##            P0xxxx(nu,lambda,delta,sigma) += D1(nu,lambda,delta,sigma)
+##            P0xxxx(nu,lambda,delta,sigma) += D2(nu,lambda,delta,sigma)
+##            P0xxxx(nu,lambda,delta,sigma) += D3(nu,lambda,delta,sigma)
+#
+#            Txxxx(nu,lambda,delta,sigma) =  P0xxxx(nu,lambda,delta,sigma)
+#            Txx(mu,nu) = Txxxx(nu,lambda,delta,sigma) * AO_ERI_INTS(mu,lambda,delta,sigma)
+#            Txx(mu,nu)  *= 0.125
+#            T1xx(mu,nu) += Txx(mu,nu)
+#
+#      ENDPARDO  delta, lambda, sigma
+#
+#      Put Ftmp_ID(mu,nu) += T1xx(mu,nu)
+#
+#      ENDDO nu
+#      ENDDO mu
+#
+#      DO mu
+#      DO nu
+#
+#        T1xx(mu,nu) = 0.0
+#        PARDO delta, lambda, sigma
+#
+#            REQUEST AO_ERI_INTS(lambda,mu,delta,sigma) sigma
+#            REQUEST D0(lambda,nu,delta,sigma) sigma
+#            REQUEST D1(lambda,nu,delta,sigma) sigma
+#            REQUEST D2(lambda,nu,delta,sigma) sigma
+#            REQUEST D3(lambda,nu,delta,sigma) sigma
+#
+#            P0xxxx(lambda,nu,delta,sigma) = D0(lambda,nu,delta,sigma)
+##            P0xxxx(lambda,nu,delta,sigma) += D1(lambda,nu,delta,sigma)
+##            P0xxxx(lambda,nu,delta,sigma) += D2(lambda,nu,delta,sigma)
+##            P0xxxx(lambda,nu,delta,sigma)  D3(lambda,nu,delta,sigma)
+#
+#            Txxxx(lambda,nu,delta,sigma) =  P0xxxx(lambda,nu,delta,sigma)
+#            Txx(mu,nu) = Txxxx(lambda,nu,delta,sigma) * AO_ERI_INTS(lambda,mu,delta,sigma)
+#            Txx(mu,nu)  *= 0.125
+#            T1xx(mu,nu) += Txx(mu,nu)
+#
+#      ENDPARDO  delta, lambda, sigma
+#
+#      Put Ftmp_ID(mu,nu) += T1xx(mu,nu)
+#
+#      ENDDO nu
+#      ENDDO mu
+#
+#      DO mu
+#      DO nu
+#        T1xx(mu,nu) = 0.0
+#      PARDO delta, lambda, sigma
+#
+#            REQUEST AO_ERI_INTS(lambda,delta,mu,sigma) sigma
+#            REQUEST D0(lambda,delta,nu,sigma) sigma
+#            REQUEST D1(lambda,delta,nu,sigma) sigma
+#            REQUEST D2(lambda,delta,nu,sigma) sigma
+#            REQUEST D3(lambda,delta,nu,sigma) sigma
+#
+#            P0xxxx(lambda,delta,nu,sigma) = D0(lambda,delta,nu,sigma)
+##            P0xxxx(lambda,delta,nu,sigma) += D1(lambda,delta,nu,sigma)
+##            P0xxxx(lambda,delta,nu,sigma) += D2(lambda,delta,nu,sigma)
+##            P0xxxx(lambda,delta,nu,sigma) += D3(lambda,delta,nu,sigma)
+#
+#            Txxxx(lambda,delta,nu,sigma) =  P0xxxx(lambda,delta,nu,sigma)
+#            Txx(mu,nu) = Txxxx(lambda,delta,nu,sigma) * AO_ERI_INTS(lambda,delta,mu,sigma)
+#            Txx(mu,nu)  *= 0.125
+#            T1xx(mu,nu) += Txx(mu,nu)
+#
+#      ENDPARDO  delta, lambda, sigma
+#
+#      Put Ftmp_ID(mu,nu) += T1xx(mu,nu)
+#
+#      ENDDO nu
+#      ENDDO mu
+#
+#      DO mu
+#      DO nu
+#        T1xx(mu,nu) = 0.0
+#      PARDO delta, lambda, sigma
+#
+#            REQUEST AO_ERI_INTS(lambda,delta,sigma,mu) sigma
+#            REQUEST D0(lambda,delta,sigma,nu) sigma
+#            REQUEST D1(lambda,delta,sigma,nu) sigma
+#            REQUEST D2(lambda,delta,sigma,nu) sigma
+#            REQUEST D3(lambda,delta,sigma,nu) sigma
+#
+#            P0xxxx(lambda,delta,sigma,nu) = D0(lambda,delta,sigma,nu)
+##            P0xxxx(lambda,delta,sigma,nu) += D1(lambda,delta,sigma,nu)
+##            P0xxxx(lambda,delta,sigma,nu) += D2(lambda,delta,sigma,nu)
+##            P0xxxx(lambda,delta,sigma,nu) += D3(lambda,delta,sigma,nu)
+#
+#            Txxxx(lambda,delta,sigma,nu) =  P0xxxx(lambda,delta,sigma,nu)
+#            Txx(mu,nu) = Txxxx(lambda,delta,sigma,nu) * AO_ERI_INTS(lambda,delta,sigma,mu)
+#            Txx(mu,nu)  *= 0.125
+#            T1xx(mu,nu) += Txx(mu,nu)
+#
+#      ENDPARDO  delta, lambda, sigma
+#
+#      Put Ftmp_ID(mu,nu) += T1xx(mu,nu)
+#
+#      ENDDO nu
+#      ENDDO mu
+#
       EXECUTE SERVER_BARRIER
 
-#bgn_debug
-      esumb = 0.0
-      esuma = 0.0
-      pardo mu, nu
-      get Ftmp_ID(mu,nu)
-      tmp =  Ftmp_ID(mu,nu)*Ftmp_ID(mu,nu)
-      esuma += tmp
-      endpardo mu,nu
-      execute sip_barrier
-      collectiVe esumb += esuma
-      execute print_scalar esumb
-      esumb = 0.0
-      esuma = 0.0
-      pardo mu, nu
-      get Ftmp_DI(mu,nu)
-      tmp =  Ftmp_DI(mu,nu)*Ftmp_DI(mu,nu)
-      esuma += tmp
-      endpardo mu,nu
-      execute sip_barrier
-      collectiVe esumb += esuma
-      execute print_scalar esumb
+##bgn_debug
+#      esumb = 0.0
+#      esuma = 0.0
+#      pardo mu, nu
+#      get Ftmp(mu,nu)
+#      tmp =  Ftmp(mu,nu)*Ftmp(mu,nu)
+#      esuma += tmp
+#      endpardo mu,nu
+#      execute sip_barrier
+#      collective esumb += esuma
+#      execute print_scalar esumb
 #end_debug
 
       Create DT_A
@@ -6974,11 +7045,11 @@
             GET Ftmp_DI(mu,nu)
             Txx(mu,nu) = Ftmp_DI(mu,nu)
             DO p1
-               T1xp(mu,p1) =  Txx(mu,nu) * Ca(nu,p1)
+               Get Ca_bar(nu,p1)
+               T1xp(mu,p1) =  Txx(mu,nu) * Ca_bar(nu,p1)
                Do p
-                  Get Ca_bar(mu,p)
-                  T1pp(p,p1) = T1xp(mu,p1) * Ca_bar(mu,p)
-                  T1pp(p,p1)*= 0.5
+                  T1pp(p,p1) = T1xp(mu,p1) * Ca(mu,p)
+#                  T1pp(p,p1)*= 0.5
                   PUT Fexkt_pq_a(p,p1) += T1pp(p,p1)
                Enddo p
             Enddo p1
@@ -6988,45 +7059,43 @@
             GET Ftmp_DI(mu,nu)
             Txx(mu,nu) = Ftmp_DI(mu,nu)
             DO q1
-               T1xq(mu,q1) =  Txx(mu,nu) * Cb(nu,q1)
-               Do q
-                  Get cb_bar(mu,q)
-                  T1qq(q,q1) = T1xq(mu,q1) * Cb_bar(mu,q)
-                  T1qq(q,q1)*= 0.5
-                  PUT Fexkt_pq_b(q,q1) += T1qq(q,q1)
-               Enddo q
-            Enddo q1
-      ENDPARDO mu, nu
-
-      PARDO mu, nu
-            GET Ftmp_ID(mu,nu)
-            Txx(mu,nu) = Ftmp_ID(mu,nu)
-            DO p1
-               get Ca_bar(nu,p1)
-               T1xp(mu,p1) =  Txx(mu,nu) * Ca_bar(nu,p1)
-               Do p
-                  Get Ca_bar(mu,p)
-                  T1pp(p,p1) = T1xp(mu,p1) * Ca(mu,p)
-                  T1pp(p,p1)*= 0.5
-                  PUT Fexkt_pq_a(p,p1) += T1pp(p,p1)
-               Enddo p
-            Enddo p1
-      ENDPARDO mu, nu
-
-      PARDO mu, nu
-            GET Ftmp_ID(mu,nu)
-            Txx(mu,nu) = Ftmp_ID(mu,nu)
-            DO q1
-               Get Cb_bar(nu,q1)
+               Get cb_bar(nu,q1)
                T1xq(mu,q1) =  Txx(mu,nu) * Cb_bar(nu,q1)
                Do q
-                  Get cb_bar(mu,q)
                   T1qq(q,q1) = T1xq(mu,q1) * Cb(mu,q)
-                  T1qq(q,q1)*= 0.5
+#                  T1qq(q,q1)*= 0.5
                   PUT Fexkt_pq_b(q,q1) += T1qq(q,q1)
                Enddo q
             Enddo q1
       ENDPARDO mu, nu
+
+#     PARDO mu, nu
+#            GET Ftmp_ID(mu,nu)
+#            Txx(mu,nu) = Ftmp_ID(mu,nu)
+#            DO p1
+#               T1xp(mu,p1) =  Txx(mu,nu) * Ca(nu,p1)
+#               Do p
+#                  Get  Ca_bar(mu,p)
+#                  T1pp(p,p1) = T1xp(mu,p1) * Ca_bar(mu,p)
+#                  T1pp(p,p1)*= 0.5
+#                  PUT Fexkt_pq_a(p,p1) += T1pp(p,p1)
+#               Enddo p
+#            Enddo p1
+#      ENDPARDO mu, nu
+#
+#      PARDO mu, nu
+#            GET Ftmp_ID(mu,nu)
+#            Txx(mu,nu) = Ftmp_ID(mu,nu)
+#            DO q1
+#               T1xq(mu,q1) =  Txx(mu,nu) * Cb(nu,q1)
+#               Do q
+#                  Get Cb_bar(mu,q)
+#                  T1qq(q,q1) = T1xq(mu,q1) * Cb_bar(mu,q)
+#                  T1qq(q,q1)*= 0.5
+#                  PUT Fexkt_pq_b(q,q1) += T1qq(q,q1)
+#               Enddo q
+#            Enddo q1
+#      ENDPARDO mu, nu
 
       PARDO mu, nu
             execute return_h1 Txx(mu,nu)
@@ -7056,7 +7125,7 @@
            T1xx(mu,delta) = DpqA(mu,delta)
            Txx(mu,delta)  = DHfA(mu,delta)
            Put DT_a(mu,delta) += Txx(mu,delta)
-           Put DT_a(mu,delta) += T1xx(mu,delta)
+#           Put DT_a(mu,delta) += T1xx(mu,delta)
       ENDPARDO mu, delta
 
       PARDO mu, delta
@@ -7065,7 +7134,7 @@
            T1xx(mu,delta) = DpqB(mu,delta)
            Txx(mu,delta)  = DHfB(mu,delta)
            Put DT_b(mu,delta) += Txx(mu,delta)
-           Put DT_b(mu,delta) += T1xx(mu,delta)
+#           Put DT_b(mu,delta) += T1xx(mu,delta)
       ENDPARDO mu, delta
       execute sip_barrier
 
@@ -7126,19 +7195,18 @@
       EXECUTE SIP_BARRIER
 #
 #bgn_debug
-      esumb = 0.0
-      esuma = 0.0
-      pardo q, q1
-      get Fexkt_pq_b(q,q1)
-      Tqq(q,q1) = Fexkt_pq_b(q,q1)
-      execute sum_2d_array Tqq esuma
-      endpardo q,q1
-      execute sip_barrier
-      collective esumb += esuma
-      esumb *= 2.0
-#      esumb += 30.3995440914926
-      esumb += 9.18738712306217
-      execute print_scalar esumb
+#      esumb = 0.0
+#      esuma = 0.0
+#      pardo q, q1
+#      get Fexkt_pq_b(q,q1)
+#      Tqq(q,q1) = Fexkt_pq_b(q,q1)
+#      execute sum_2d_array Tqq esuma
+#      endpardo q,q1
+#      execute sip_barrier
+#      collective esumb += esuma
+#      esumb *= 2.0
+#      esumb += 9.19693438044555
+#      execute print_scalar esumb
 #
 #      PARDO p, p1
 #         Do p2
@@ -7212,7 +7280,6 @@
       Delete Fexkt_pq_b
       Delete Dexkt_pq_a
       Delete Dexkt_pq_b
-      Delete Ftmp
       Delete Ftmp_ID
       Delete Ftmp_DI
 #
@@ -8237,7 +8304,7 @@
 # The extended Koopman require response density, but litrature seems
 # to be using relaxed density.
 
-         CALL DAI
+#         CALL DAI
 #
 # Compute the HF density 
 # ---------------------- 
@@ -8330,7 +8397,6 @@
       CALL DMAIN 
 
       execute sip_barrier 
-
 #
                     ENDSIAL EXTENDED_KOOPMANS 
 #                   -------------------------

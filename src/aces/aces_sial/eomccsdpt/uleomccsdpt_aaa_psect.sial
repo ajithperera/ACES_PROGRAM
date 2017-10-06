@@ -6500,7 +6500,7 @@
 
          REQUEST             R2BB_T_VECS (bb,jj1,bb1,jj2,indstate) jj2
          REQUEST             LSbjbj (bb,jj1,bb1,jj2) bb1
-         tbjbj (bb,jj1,bb1,jj2) = R2BB_S_VECS (bb,jj1,bb1,jj2,indstate)
+         tbjbj (bb,jj1,bb1,jj2) = R2BB_T_VECS (bb,jj1,bb1,jj2,indstate)
          etemp  = tbjbj (bb,jj1,bb1,jj2) * LSbjbj (bb,jj1,bb1,jj2)
          etemp  = etemp/4.0
          esum  += etemp
