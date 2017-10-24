@@ -6,7 +6,8 @@
      &                              zmax, intmax, npfps, ncfps, 
      &                              ivangmom,
      &                              ixalpha, indx_cc, Atm_4shell,
-     &                              ixpcoef,ispherical, out_kin,
+     &                              ixpcoef,ispherical,Contract,
+     &                              out_kin,
      &                              out_ovl,out_nai,out_pvp,
      &                              coreham,
      &                              nsend, 
@@ -46,7 +47,7 @@ c
       double precision xn(max_centers), yn(max_centers),
      *                 zn(max_centers)
 
-      logical spherical
+      logical spherical, Contract 
 
       double precision x1,y1,z1
       double precision x2,y2,z2
@@ -93,7 +94,7 @@ C
          call Errex
       endif
 C
-CSSS#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       Write(6,*)
       Write(6,*) "The atom label for each shell and coordinates"
       Write(6,"(4(1x,I4))") (Atm_4shell(i), i=1, Nshells)
@@ -107,7 +108,7 @@ CSSS#ifdef _DEBUG_LVL0
       Write(6,"(4(1x,I4))") (npfps(i), i=1, Nshells)
       write(6,*) "The contracted functions." 
       Write(6,"(4(1x,I4))") (ncfps(i), i=1, Nshells)
-CSSS#endif
+#endif
 
 c-----------------------------------------------------------------------
 c   Find the shell blocks for which we shall loop through.
@@ -156,7 +157,7 @@ C
            ncsum = ncfps(m) + ncfps(n) 
 
 
-CSS#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       Write(6,*)
       Write(6,*) "@-entry to ERD_batch"
       Write(6,"((a,4(1x,i4)))") "m, n :", m, n
@@ -182,7 +183,7 @@ CSS#ifdef _DEBUG_LVL0
       Write(6,*)
       Write(6,"(3(1x,F12.6))") x1, y1, z1
       Write(6,"(3(1x,F12.6))") x2, y2, z2
-CSSS#endif 
+#endif 
 C Kinetic energy
 
            call oed__gener_kin_batch(intmax,zmax,
@@ -375,10 +376,17 @@ C
       Call dkh__init(Dkh_order,Nprims,out_kin,out_nai,out_pvp,out_ovl,
      +               zcore,maxcor,coreham)
 
-      Call Dzero(out_pvp,nprims*nprims)
-      Call dkh__contract(zcore,maxcor,coreham,out_pvp,coeffs,nshells,
-     +                   nprims,ncnfns,npfps,npcoef,npcoef_uc,ncfps,
-     +                   spherical)
+      If (Contract) Then
 
+         Call Dzero(out_pvp,nprims*nprims)
+         Call dkh__contract(zcore,maxcor,coreham,out_pvp,coeffs,
+     +                   nshells,nprims,ncnfns,npfps,npcoef,
+     +                   npcoef_uc,ncfps,Ivangmom,spherical)
+
+      Else 
+         Call Dzero(out_pvp,nprims*nprims)
+         Call Dcopy(nprims*nprims,coreham,1,out_pvp,1)
+      Endif 
+           
       return
       end

@@ -426,6 +426,7 @@ C
       dummy = load_user_sub('form_rpa_guess'//char(0),0)
       dummy = load_user_sub('guess_4current_root'//char(0),0)
       dummy = load_user_sub('form_dip_guess'//char(0),0)
+      dummy = load_user_sub('form_dip_hmat'//char(0),0)
       dummy = load_user_sub('form_dea_guess'//char(0),0)
       dummy = load_user_sub('genrl_eig_solver'//char(0),0)
       dummy = load_user_sub('return_inverse'//char(0),0)

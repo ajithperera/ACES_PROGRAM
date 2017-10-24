@@ -156,17 +156,22 @@ C
 
 C Hbar is non-symmetric matrix, and we obtain both left/right eigenvectors.
 
-#ifdef _DEBUG_LVL0
+C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a,i4)")"@-Entry to Gnrl_eig_solver order of the matrix", 
      +                  Ndim 
       Write(6,"(a)") " The F_ext(p,q)"
       call output(H,1,Ndim,1,Ndim,Ndim,Ndim,1)
-      Write(6,*) 
-      Write(6,"(a)") " The Density matrix D(p,q)"
-      call output(D,1,Ndim,1,Ndim,Ndim,Ndim,1)
+      Call Dcopy(Ndim*Ndim,H, 1, Z, 1)
+      Call Dgeev("V","V",Ndim,Z,Ndim,EigR,EigI,EvecL,Ndim,
+     &            U,Ndim,Work,4*Ndim,Ierror)
+      Write(6,"(a)") " Eigenvalues of fock matrix."
+      Write(6,"(6(1x,F12.6))") (EigR(i),i=1,Ndim)
+C      Write(6,*) 
+C      Write(6,"(a)") " The Density matrix D(p,q)"
+C      call output(D,1,Ndim,1,Ndim,Ndim,Ndim,1)
       Endif 
-#endif
+C#endif
 C
 C Symmetrize the EXKT matrix (in place)
       
@@ -216,7 +221,8 @@ C Filter out the Noise in Density and Fock matrix.
          If (EigR(I) .lt. 0.0D0) Neg = Neg + 1
       Enddo 
       If (Neg .Ne. 0) Then
-         Write(6,"(a)") " The Density matrix is not positive definite"
+         If (me.eq.0) Write(6,"(a,a)") " The Density matrix is not",
+     &                                 " positive definite"
          Useqz = .True.
       Endif 
 
@@ -277,8 +283,10 @@ C Form F'=X^tFX
          Call output(h,1,Ndim,1,Ndim,Ndim,Ndim,1)
          endif 
 #endif
+CSSS         if (me .eq. 0) then
          Call Dgeev("V","V",Ndim,H,Ndim,EigR,EigI,U,Ndim,
      &            EvecR,Ndim,Work,4*Ndim,Ierror)
+CSSS         endif 
 
 C Transform the eigenvectors to the original basis.
 
@@ -297,17 +305,18 @@ C Form (DC)^t(DC)
            EigI(i) = EvecR(i,i)
         Enddo 
 
-#ifdef _DEBUG_LVL0
+C#ifdef _DEBUG_LVL0
          if (me .eq. 0) then
          Write(6,*)
-         Write(6,"(a)") " Eigenvalues and vectors before reordering"
+C         Write(6,"(a)") " Eigenvalues and vectors before reordering"
+         Write(6,"(a)") " Eigenvalues and vectors (before reordering"
          Write(6,"(6(1x,F12.6))") (EigR(i),i=1,Ndim)
 C         call output(EvecR,1,Ndim,1,Ndim,Ndim,Ndim,1)
          Write(6,*)
          Write(6,"(a)") " (DC)^tDC: Pole strength"
          Write(6,"(6(1x,F12.6))") (EigI(i),i=1,Ndim)
          endif 
-#endif
+C#endif
 
       Else
 
@@ -381,15 +390,15 @@ C          Enddo
 C          Enddo
 C      Endif 
 
-#ifdef _DEBUG_LVL0
+C#ifdef _DEBUG_LVL0
          if (me .eq. 0) then
          Write(6,*)
-         Write(6,"(a)") " Eigenvalues and PS after reordering"
+         Write(6,"(a)") " Eigenvalues and Pol. str. after reordering"
          Write(6,"(6(1x,F12.6))") (EigR(i),i=1,Ndim)
          Write(6,*)
          Write(6,"(6(1x,F12.6))") (EigI(i),i=1,Ndim)
          endif 
-#endif
+C#endif
 C Zero out all the orbital energies except for the occupied orbitals 
 
       Do i =1, Noccupied 
@@ -447,13 +456,13 @@ C Solve the generalized eigenvalue problem
             Write(6,20) -EigR(i),-EigR(i)*Conv,EigI(i)
          Enddo
       Endif 
-      Write(6,5)
+      If (me. eq. 0) Write(6,5) 
 
    5  format(12x,63("-"))
   10  format(12x,'Exkt-IP(a.u) ',7x,'Exkt-IP (eV)',11x,
      +                               "Pole Strength (a.u.)")
   20  format(3x,F20.8,x,F20.8,x,F20.8)
-      Write(6,*)
+      If (me .eq. 0) Write(6,*)
 
       Return
       End

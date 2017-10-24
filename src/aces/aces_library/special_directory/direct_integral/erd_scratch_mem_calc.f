@@ -90,6 +90,12 @@ c--------------------------------------------------------------------------
       m2 = min(m1 + mrange - 1, nshells)
       if (m1 .gt. nshells) return   ! no work to do
 
+CSSS      Write(6,"(a,(1x,6i3))") "Nshells,Nprocs,mrange,mleft,m1,m2:",
+CSSS     &             Nshells,nprocs,
+CSSS     &             mrange,mleft,m1,m2
+CSSS       Write(6,"(1x,i4)") (ncfps(i),i=1,Nshells)
+CSSS       Write(6,"(1x,i4)") (npfps(i),i=1,Nshells)
+
       do m = m1, m2
        n = m
        r = m
@@ -115,8 +121,8 @@ c-------------------------------------------------------------------------
      *                   coords(1,s),coords(2,s),coords(3,s), 
      *                   alpha_pack, pcoeff_pack, spherical,
      *                   imin, iblk, zmin, zblk)
-         imax = max0(imax, imin)
-         zmax = max0(zmax, zmin)
+         imax = max0(imax, iblk)
+         zmax = max0(zmax, zblk)
 
       enddo
 
@@ -210,11 +216,10 @@ c--------------------------------------------------------------------------
      *                 der_flags(10),der_flags(11), der_flags(12),    
      *                   alpha_pack, pcoeff_pack, spherical,
      *                   imin, iblk, zmin, zblk)   
-            imax = max0(imax, imin)
-            zmax = max0(zmax, zmin)
+            imax = max0(imax, iblk)
+            zmax = max0(zmax, zblk)
 
          enddo
- 
 c----------------------------------------------------------------------------
 c   Second-derivative integrals. Loop through all possible flag combinations.  
 c----------------------------------------------------------------------------
@@ -304,8 +309,8 @@ c--------------------------------------------------------------------------
      *                   alpha_pack, pcoeff_pack, spherical,
      *                   imin, iblk, zmin, zblk)   
 
-            imax = max0(imax, imin)
-            zmax = max0(zmax, zmin)
+            imax = max0(imax, iblk)
+            zmax = max0(zmax, zblk)
          enddo
          enddo
  2000    continue
@@ -314,7 +319,6 @@ c--------------------------------------------------------------------------
       enddo
       enddo
       enddo
-
 c------------------------------------------------------------------------
 c   Now calculate the memory for the one-electron integrals.
 c------------------------------------------------------------------------
@@ -411,6 +415,8 @@ c------------------------------------------------------------------------
  1000    continue
       enddo
       enddo
+
+      Write(6,"(a,2i10)") "imax and zmax",imax,zmax
 
       return
       end

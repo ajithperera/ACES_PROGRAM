@@ -23,19 +23,19 @@ c---------------------------------------------------------------------------
       include 'int_gen_parms.h'
       include 'machine_types.h'
       include 'parallel_info.h'
+      include 'dropmo.h'
 
       integer nsend
       integer da1, da2, db1, db2
-      integer a,b
+      integer a,b,i,k,j,ierror 
       integer adim, bdim, ndim
       double precision z(da1:da2, db1:db2)
       double precision w,ws
       
+      logical DKH,Bexist
 
-      logical DKH
-
-      double precision  Dkh_ints
-      common /DKH/ndim, Dkh_ints(2500,2500)
+      double precision Etemp(max_basis*max_basis)
+      double precision  Dkh_ints(max_basis,max_basis)
 
       integer iflags(100),iflags2(500)
       common /flags/ iflags
@@ -63,9 +63,11 @@ c----------------------------------------------------------------------------
 
       DKH = (iflags2(157) .GT. 0)
 
+#ifdef _DEBUG_LVL0
       If (me .EQ. 0 .and. DKH) 
-     *    Write(6, "(a,i,a)")  " The DKH-1el of order ", 
+     *    Write(6, "(a,i1,a)")  " The DKH-1el of order ", 
      *    iflags2(157), " is added to the 1-el Hamiltonian" 
+#endif 
 
       if (intpkg .ne. flocke_package) then
          Write(6, "(1x,a,a)") "@-comp_return_1el_dkh:Error: ",
@@ -73,17 +75,50 @@ c----------------------------------------------------------------------------
          call abort_job()
       endif
 
+      Inquire(file='dkhint.dat',exist=Bexist)
+
+      if (Bexist) then
+      Open (Unit = 71, File = 'dkhint.dat', Form = 'Unformatted',
+     *      Status = 'Old', Iostat = Ierror)
+
+      rewind 71
+      read(71)  Ndim
+      If (Ndim .Gt. max_basis) then
+         Write(6,"(a,a,i4)") " The maximum number of basis functions",
+     +                    " allowed with the DKH option is",max_basis
+         Write(6,"(a,i5)") " The current calculation requested", Ndim,
+     +                    "functions."
+         call abort_job()
+      Endif 
+      Read(71) (Etemp(i), i=1, Ndim*(Ndim+1)/2)
+      Close(71)
+
+      else
+           Write(6,"(a,a)") " DKH option is requested but dkhint.dat",
+     +                      " file is not found!"
+           Call abort_job()
+      endif 
+
+      k = 0
+      do i = 1, ndim
+      do j = 1, i
+           k = k + 1
+           Dkh_ints(i,j) = Etemp(k) 
+           Dkh_ints(j,i) = Etemp(k) 
+      enddo
+      enddo
+
       do b = db1,db2
       do a = da1,da2
          z(a,b) = Dkh_ints(a,b)
       enddo
       enddo
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       write(6,*)
       write(6,"(a)") "@-comp_return_1el_dkh: The DKH 1-el Hamiltonian"
 C      write(6,"(6(1x,F10.5))")((z(a,b),a=da1,da2),b=db1,db2)
-C      call output(z,db1,db2,da1,da2,adim,bdim,1)
+      call output(z,db1,db2,da1,da2,adim,bdim,1)
       ws = 0.0d0
       w  = 0.0d0
       do b = db1,db2
@@ -94,7 +129,7 @@ C      call output(z,db1,db2,da1,da2,adim,bdim,1)
       enddo
       write(6,"(a,2F20.10)")"The linear and square-root checksum:",
      +                       w, dsqrt(ws)
-C#endif
+#endif
 
       return
       end

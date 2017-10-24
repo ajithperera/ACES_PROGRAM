@@ -427,6 +427,9 @@
       scalar n1 
       scalar n2 
       scalar do_dkh_order
+      scalar tmp
+      scalar esuma 
+      scalar esumb
 
       distributed Fa(mu,nu,kdiis) 
       distributed Fb(mu,nu,kdiis) 
@@ -467,6 +470,9 @@
 #
       PROC HFDENS
 #     -----------
+
+      execute print_scalar damp 
+      execute print_scalar damp1
 #
 #     The HF density is computed. Davidson damping is incorporated thus
 #     knowledge of the previous iteration is needed. 
@@ -511,6 +517,39 @@
             PUT Dhfb(mu,nu) = Tpq(mu,nu)
 #
       ENDPARDO mu, nu 
+
+#bgn_debug
+      execute sip_barrier 
+      esuma = 0.0
+      esumb = 0.0
+      do mu
+      do nu
+         get DHFa(mu,nu)
+         get DHFb(mu,nu)
+         tmp = DHFa(mu,nu) * DHFa(mu,nu)
+         esuma += tmp
+         tmp = DHFb(mu,nu) * DHFb(mu,nu)
+         esumb += tmp
+      enddo nu
+      enddo mu
+      execute print_scalar esuma
+      execute print_scalar esumb
+      esuma = 0.0
+      esumb = 0.0
+      do mu
+      do nu
+         get DHFa_old(mu,nu)
+         get DHFb_old(mu,nu)
+         tmp = DHFa_old(mu,nu) * DHFa_old(mu,nu)
+         esuma += tmp
+         tmp = DHFb_old(mu,nu) * DHFb_old(mu,nu)
+         esumb += tmp
+      enddo nu
+      enddo mu
+      execute print_scalar esuma
+      execute print_scalar esumb
+#end_debug
+
 #
       ENDPROC HFDENS
 #     --------------
@@ -1380,6 +1419,29 @@
        ENDDO nu   
        ENDDO mu    
        endif 
+
+#bgn_debug
+       execute sip_barrier
+       if rank==0.0
+       esuma = 0.0
+       esumb = 0.0
+       DO mu
+       DO nu
+          get Fpq_a(mu,nu)
+          get Fpq_b(mu,nu)
+#          execute dump_amp Fpq_a(mu,nu)
+          etemp  = Fpq_a(mu,nu) * Fpq_a(mu,nu)
+          esuma += etemp
+          etemp  = Fpq_b(mu,nu) * Fpq_b(mu,nu)
+          esumb += etemp
+       ENDDO nu
+       ENDDO mu
+       execute print_scalar esuma
+       execute print_scalar esumb
+       endif
+#end_debug
+
+
 
 #
        ENDPROC FOCK_MATRIX_FAST   
@@ -3364,6 +3426,8 @@
       DO kiter 
          diis_count += 1.0 
          pcount     += 1.0 
+
+         execute print_scalar pcount 
 #
 #        Create 1-particle arrays 
 #        ------------------------ 

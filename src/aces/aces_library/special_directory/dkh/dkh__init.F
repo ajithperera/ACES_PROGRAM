@@ -109,10 +109,10 @@ C
      +      ( NDIM*NDIM, ZCORE (1), 1, COREHAM, 1)
      +
      +
-CSSS#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       Write(6,*) "The DKH transformed one-electron Hamiltonian."
       call output(coreham,1,ndim,1,ndim,ndim,ndim,1)
-CSSS#endif
+#endif
 C
 C             ...ready!
 C

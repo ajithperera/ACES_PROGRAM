@@ -90,6 +90,9 @@ c---------------------------------------------------------------------------
          npmax = max(npmax, npfps(i))
       enddo
 
+      Write(6,*) "Shell type"
+      Write(6,*) (shtype(i),i=1,nshells)
+
       n = m
       r = m
       s = m

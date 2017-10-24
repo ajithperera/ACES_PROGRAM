@@ -172,6 +172,7 @@
       Distributed R2_ABAA(i,j,i1,a)
       Distributed R2_ABBB(i,j,j1,b)
 
+      SERVED DIP_HMAT_IJKL(i,i1,j,j1)
       SERVED R2_ABAA_HIST(i,j,i1,a,subsp_dim)
       SERVED R2_ABBB_HIST(i,j,j1,b,subsp_dim)
 
@@ -561,28 +562,36 @@
 #   Hbar(ij,kl)R(kl) =ER(ij,p) (p=1,..n; n<= no. of occupied pairs)
 #
 
-     PARDO i, j
-         GET  HBAR_jj(i,j)
-         tij(i,j)  = HBAR_jj(i,j)
-         tij(i,j)  *= -1.0
-         DIP_INIT_IJ(i,j) = tij(i,j)
-      ENDPARDO i, j
-
-      PARDO i, j, i1, j1
-            REQUEST HBAR_IIJJ(i,i1,j,j1) j1
-            Tijij(i,i1,j,j1)  = HBAR_IIJJ(i,i1,j,j1)
-            T1ijij(i,j,i1,j1) = Tijij(i,i1,j,j1)
-            DIP_INIT_IJIJ(i,j,i1,j1) =  T1ijij(i,j,i1,j1)
-      ENDPARDO i,j,i1,j1
-
+      DO i
+      DO j
+          GET  HBAR_jj(i,j)
+          tij(i,j)  = HBAR_jj(i,j)
+          tij(i,j)  *= -1.0
+          DIP_INIT_IJ(i,j) = tij(i,j)
+      ENDDO j
+      ENDDO i
+      
+      DO i
+      DO i1
+      DO j
+      DO j1
+         REQUEST HBAR_IIJJ(i,i1,j,j1) j1
+         Tijij(i,i1,j,j1)  = HBAR_IIJJ(i,i1,j,j1)
+         T1ijij(i,j,i1,j1) = Tijij(i,i1,j,j1)
+         DIP_INIT_IJIJ(i,j,i1,j1) =  T1ijij(i,j,i1,j1)
+      ENDDO j1
+      ENDDO j
+      ENDDO i1
+      ENDDO i
+ 
       EXECUTE SIP_BARRIER 
       execute get_my_rank rank
 
-      If rank == 0.0
+#      If rank == 0.0
       EXECUTE  FORM_DIP_HMAT DIP_INIT_IJIJ DIP_INIT_IJ 
       EXECUTE FORM_DIP_GUESS DIP_INIT_IJIJ VEC_AB
-      Endif 
-            
+#      Endif 
+
      ENDPROC FORM_INITIAL_GUESS
 #    --------------------------
 

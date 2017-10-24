@@ -301,7 +301,6 @@ C
      *                          intmax, zmax, me, company_size)  
              
              else
-
                    call erd_scratch_mem_calc(nshells, ivangmom, 
      *                          ncfps, npfps,
      *                          atom, dbuf(icoord), dbuf(ialpha),

@@ -56,7 +56,7 @@ C  in the file COPYRIGHT.
       external return_h1, return_1el_dkh
       external form_guess,xgeev,extract_subset,return_max_overlap
       external form_rpa_guess, guess_4current_root
-      external form_dip_guess,form_dea_guess
+      external form_dip_guess,form_dea_guess,form_dip_hmat 
       external genrl_eig_solver,return_inverse
       external return_selected,addrootindex
       external process_eigs,print_static,store_static_array 
@@ -828,6 +828,8 @@ C New IP-EOM related SIPs.
      &                       guess_4current_root)
       dummy = load_user_sub('form_dip_guess'//char(0),
      &                       form_dip_guess)
+      dummy = load_user_sub('form_dip_hmat'//char(0),
+     &                       form_dip_hmat)
       dummy = load_user_sub('form_dea_guess'//char(0),
      &                       form_dea_guess)
       dummy = load_user_sub('genrl_eig_solver'//char(0),

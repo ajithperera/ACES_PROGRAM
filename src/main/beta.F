@@ -888,19 +888,20 @@ c          go to 333
 
       else 
 
+         Write(6,"(a,i4)") "iflags(71);ECP===>", iflags(71)
          if (iflags(71) .eq. 1) then 
-            write(6,*) ' Calling ECP main ' 
+            write(6,"(a)") ' The ECP integrals are computed' 
+             Write(6,*)
             call ecpmain() 
-            write(6,*) ' Out Of Calling ECP main ' 
          endif 
 C
 C Add the DKH transformed integrals of a given DKH order. 
 C
-         Write(6,*) "iflags2(157)===>", iflags2(157)
+         Write(6,"(a,i4)") "iflags2(157);DKH===>", iflags2(157)
          If (iflags2(157) .NE. 0) then
              Idkh_order = iflags2(157)
-             Write(6,"(a,i1,a)") " The DKH-1el ints. of order ",
-     +                             dkh_order," is computed."
+             Write(6,"(a,i4,a)") " The DKH-1el ints. of order ",
+     +                             idkh_order," is computed."
              Write(6,*)
              call dkh__main(Idkh_order)
           Endif

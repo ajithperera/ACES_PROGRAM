@@ -185,7 +185,7 @@ c--------------------------------------------------------------------------
       persistent_list_tail = 0
 
       blkmgr_init_flag = .true.
-      dbg = .true. 
+      dbg = .false. 
       if (dbg) then
          print *,'Task ',blkmgr_comm_rank,
      *        ' BLKMGR has been initialized with ',

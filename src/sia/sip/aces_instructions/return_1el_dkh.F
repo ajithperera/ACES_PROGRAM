@@ -157,7 +157,6 @@ c   Compute data block of integrals.
 c---------------------------------------------------------------------------
 
       if (intpkg .eq.flocke_package) then
-         Write(6,*) "a1, a2, b1, b2:", a1, a2, b1, b2
          call comp_return_1el_dkh(x(indblk), a1, a2, b1, b2,nsend)
       else
         write(6,*) "@-return_1el_dkh: The OED/ERD must be used."

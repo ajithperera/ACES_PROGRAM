@@ -38,8 +38,8 @@ c---------------------------------------------------------------|
       integer array_in_type, array_out_type
       integer*8 indblk1, indblk2, get_block_index
       integer stack,ind_in(mx_array_index),ind_out(mx_array_index)
+      integer ind_in_bgn(mx_array_index),ind_in_end(mx_array_index)
       integer nsend
-
       integer comm
 
       integer fop1(mx_array_index), fop2(mx_array_index)
@@ -65,27 +65,41 @@ c---------------------------------------------------------------|
       array_in_type   = array_table(c_array_type, array_in)
       array_out_type  = array_table(c_array_type, array_out)
 C
-      if (array_in_type .ne. static_array .or.array_out_type 
+      if (array_in_type .ne. temp_array .or.array_out_type 
      &                  .ne. static_array) then
          Write(6,"(a)") "@-FORM_DIP_GUESS: Both arrays must be static."
          call abort_job()
       endif
+
+      block  = find_current_block(array_in, array_table(1,array_in),
+     *                            index_table, nindex_table,
+     *                            segment_table, nsegment_table,
+     *                            block_map_table, blkndx)
+      stack = array_table(c_array_stack,array_in)
+      iarray_in = get_block_index(array_in, block, stack, blkndx,
+     *                            x, .true.)
 
       nindex_in  = array_table(c_nindex, array_in)
       nindex_out = array_table(c_nindex,array_out)
 
       do i = 1, nindex_in
          ind_in(i) = array_table(c_index_array1+i-1,array_in)
+         type(i) = index_table(c_index_type, ind_in(i))
+         seg = index_table(c_current_seg,ind_in(i))
+
+c-------------------------------------------------------------------------
+c   Get segment ranges.
+c-------------------------------------------------------------------------
+
+         call get_index_segment(ind_in(i), seg, segment_table,
+     *                          nsegment_table, index_table,
+     *                          nindex_table, ind_in_bgn(i),
+     *                          ind_in_end(i))
       enddo
 
       do j = 1, nindex_out
          ind_out(j) = array_table(c_index_array1+j-1,array_out)
       enddo
-
-       n1 = index_table(c_index_size, ind_in(1))  
-       n2 = index_table(c_index_size, ind_in(2)) 
-       n3 = index_table(c_index_size, ind_in(3)) 
-       n4 = index_table(c_index_size, ind_in(4)) 
 
        m1 = index_table(c_index_size, ind_out(1))  
        m2 = index_table(c_index_size, ind_out(2)) 
@@ -95,16 +109,16 @@ c---------------------------------------------------------------------------
 c   Look up each array's address.
 c---------------------------------------------------------------------------
 
-      iarray_in  = get_index_from_base(address_table(array_in), x, 2)
       iarray_out = get_index_from_base(address_table(array_out), x, 2)
 
-      Idim = n1
-      Jdim = n2
-      Kdim = n3
-      Ldim = n4
+      Idim = ind_in_end(1)-ind_in_bgn(1)+1
+      Jdim = ind_in_end(2)-ind_in_bgn(2)+1
+      Kdim = ind_in_end(3)-ind_in_bgn(3)+1
+      Ldim = ind_in_end(4)-ind_in_bgn(4)+1
      
       IJdim = n1*n2
       KLdim = n3*n4
+
 #ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a,9i4)") "@-Entry to pack4d_to_2D variables",

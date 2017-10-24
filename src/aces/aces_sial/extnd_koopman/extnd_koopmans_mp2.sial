@@ -3360,9 +3360,9 @@
 
       EXECUTE GET_MY_RANK RANK
 
-      IF RANK == 0.0
+#      IF RANK == 0.0
          EXECUTE GENRL_EIG_SOLVER Fpqa_cor_static P2a_ao_cor_static
-      ENDIF 
+#      ENDIF 
 
       Delete DT_A
       Delete DT_B

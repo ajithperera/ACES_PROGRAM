@@ -557,6 +557,8 @@
       scalar MX
       scalar Max_D_diff 
       scalar damp_thres
+      scalar constant_damp_thres 
+      scalar karls_damp_thres 
       scalar esuma
       scalar esumb
       scalar tmp
@@ -4200,6 +4202,7 @@
 
       ENDPROC KARLS_DAMP_FACTOR 
 #    --------------------------
+
       PROC APPLY_CONSTANT_DAMP
 #     ------------------------
 #
@@ -4229,15 +4232,17 @@
          TXX_a(mu,nu)  = Txx(mu,nu)
 
          T1xx(mu,nu)   = DHFa_prev(mu,nu)
-         T1xx(mu,nu)  *= DAMP_FACTOR
+         T1xx(mu,nu)  *= DAMP_CONSTANT 
          TXX_a(mu,nu) += T1xx(mu,nu)
+         TXX_a(mu,nu) *= DAMP_FACTOR
 
          Txx(mu,nu)    = DHFb(mu,nu)
-         TXX_a(mu,nu)  = Txx(mu,nu)
+         TXX_b(mu,nu)  = Txx(mu,nu)
 
          T1xx(mu,nu)   = DHFb_prev(mu,nu)
-         T1xx(mu,nu)  *= DAMP_FACTOR
+         T1xx(mu,nu)  *= DAMP_CONSTANT 
          TXX_b(mu,nu) += T1xx(mu,nu)
+         TXX_b(mu,nu) *= DAMP_FACTOR
 
          PUT Dpqa_DMP(mu,nu) = TXX_a(mu,nu)
          PUT Dpqb_DMP(mu,nu) = TXX_b(mu,nu)
@@ -4261,6 +4266,37 @@
       ENDPARDO mu, nu
 
       execute sip_barrier
+
+#bgn_debug
+      esuma = 0.0
+      esumb = 0.0
+      do mu
+      do nu
+         get DHFa(mu,nu)
+         get DHFb(mu,nu)
+         tmp = DHFa(mu,nu) * DHFa(mu,nu)
+         esuma += tmp
+         tmp = DHFb(mu,nu) * DHFb(mu,nu)
+         esumb += tmp
+      enddo nu
+      enddo mu
+      execute print_scalar esuma
+      execute print_scalar esumb
+      esuma = 0.0
+      esumb = 0.0
+      do mu
+      do nu
+         get DHFa_prev(mu,nu)
+         get DHFb_prev(mu,nu)
+         tmp = DHFa_prev(mu,nu) * DHFa_prev(mu,nu)
+         esuma += tmp
+         tmp = DHFb_prev(mu,nu) * DHFb_prev(mu,nu)
+         esumb += tmp
+      enddo nu
+      enddo mu
+      execute print_scalar esuma
+      execute print_scalar esumb
+#end_debug
 
       ENDPROC APPLY_CONSTANT_DAMP
 #     ---------------------------
@@ -4671,6 +4707,7 @@
       diis_end = 150.0 
       diis_order = 8.0 
       diis_max_order = 10.0 
+      MAX_D_Diff = 0.0
 
       diis_start = 0.0
       do kbeg
@@ -4711,6 +4748,11 @@
       lock_orbs   = lock_orbitals
       lock_occs   = lock_orbocc 
       do_dkh_order= dkh_order 
+      constant_damp_thres  = scf_conv
+      constant_damp_thres *= 10.0
+      karls_damp_thres     = scf_conv 
+      karls_damp_thres    *= 10.0
+    
 
 #bgn_debug
       execute print_scalar diis_start  
@@ -4770,6 +4812,9 @@
       If Shiftb > 0.0
          level_shift = 1.0
       Endif
+
+      Karls_dynamic    = 1.0
+      constant_damping = 0.0
 #
 #     Create the one-particle arrays needed for the computation. 
 #     ---------------------------------------------------------- 
@@ -5107,9 +5152,7 @@
 # is above a predermined threshold and the number of iterations less than a
 # preset values. Then only do the dynamic damping. After the denisty 
 # difference is below the threshold, start DIIS. 
-
-         MAX_D_Diff = 0.0
-
+        
          IF DONEA >= DONEB
             MAX_D_Diff = DONEA
          ELSE
@@ -5147,40 +5190,15 @@
                 DIIS_START   += DIIS_ORDER
              ENDIF
 
-           ENDIF
+          ENDIF
 #
 # Damping techniquies other than level shifting
 #
-            CAN_DAMP = 0.0
+          CAN_DAMP = 0.0
 
-            IF CONSTANT_DAMPING == 1.0
- 
-               IF ITER_COUNT > 2.0
-#
-# Constant damp factor is computed in the APPLY_CONSTANT_DAMP
-# procedure.
-                  IF MAX_D_DIFF > DAMP_THRES
-                     CALL APPLY_CONSTANT_DAMP
-                     CAN_DAMP = 1.0
-                   ENDIF 
+          IF DAVID_DYNAMIC == 1.0
 
-                   IF CAN_DAMP == 0.0
-                      CONSTANT_DAMPING  = 0.0
-                      DIIS_START       += DIIS_ORDER
-                   ENDIF 
-
-                   IF ITER_COUNT  >  KILL_DAMP
-                      CONSTANT_DAMPING  = 0.0
-                      DIIS_START       += DIIS_ORDER
-                   ENDIF
-
-               ENDIF
-
-            ENDIF
-#
-            IF DAVID_DYNAMIC == 1.0
-
-               IF ITER_COUNT == 2.0
+              IF ITER_COUNT == 2.0
 
                   E1    = E0
                   E0    = ENERGY
@@ -5274,12 +5292,11 @@
             ENDIF 
 #
             IF KARLS_DYNAMIC == 1.0
-
 #bgn_debug
       execute print_scalar MAX_D_DIFF
-      execute print_scalar damp_thres
+      execute print_scalar karls_damp_thres
 #end_debug
-                IF MAX_D_DIFF >= DAMP_THRES
+                IF MAX_D_DIFF >= KARLS_DAMP_THRES
 
                    CALL CREATE_PMATRIX
                    CALL KARLS_DAMP_FACTOR
@@ -5415,6 +5432,28 @@
          CALL HFDENS
          execute sip_barrier
 
+         IF CONSTANT_DAMPING == 1.0
+
+# Constant damp factor is computed in the APPLY_CONSTANT_DAMP
+# procedure.
+
+           IF MAX_D_DIFF > CONSTANT_DAMP_THRES
+              CALL APPLY_CONSTANT_DAMP
+              CAN_DAMP = 1.0
+           ENDIF
+
+           IF CAN_DAMP == 0.0
+              CONSTANT_DAMPING  = 0.0
+              DIIS_START       += DIIS_ORDER
+           ENDIF
+
+          IF ITER_COUNT  >  KILL_DAMP
+             CONSTANT_DAMPING  = 0.0
+             DIIS_START       += DIIS_ORDER
+          ENDIF
+
+         ENDIF
+
 # Now we have a new density. During the first-iteration, the
 # following density difference is the difference between guess
 # density and the iteration one density.
@@ -5468,7 +5507,7 @@
             endif
          ENDDO kptr1
 
-            ncount1 = 0.0
+         ncount1 = 0.0
          DO kptr1
             ncount1 = ncount1 + 1.0
             if ncount1 == two

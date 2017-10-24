@@ -5717,7 +5717,7 @@
                 t1xp(mu,p) = ovlp(mu,nu)*ca(nu,p)
                 txp(mu,p) += t1xp(mu,p)
              ENDDO nu
-             PUT ca_bar(mu,p) = txp(mu,p)
+             PUT ca_bar(mu,p) += txp(mu,p)
       ENDPARDO mu, p
 #
       PARDO mu, q
@@ -5727,7 +5727,7 @@
                 t1xq(mu,q) = ovlp(mu,nu)*cb(nu,q)
                 txq(mu,q) += t1xq(mu,q)
              ENDDO nu
-             PUT cb_bar(mu,q) = txq(mu,q)
+             PUT cb_bar(mu,q) += txq(mu,q)
       ENDPARDO mu, q
 
       PARDO mu, nu, i
@@ -6939,10 +6939,27 @@
       EXECUTE SERVER_BARRIER
 
 #bgn_debug
+#bgn_debug
+      esumb = 0.0
+      esuma = 0.0
+      pardo mu, nu
+      get Ftmp_ID(mu,nu)
+      get Ftmp_DI(mu,nu)
+      Txx(mu,nu)  =  Ftmp_ID(mu,nu)
+      T1xx(mu,nu) =  Ftmp_ID(mu,nu)
+      Txx(mu,nu) += Txx(mu,nu)
+      execute sum_2d_array Txx esuma
+      endpardo mu, nu
+      execute sip_barrier
+      collective esumb += esuma
+#      esumb *= 2.0
+#      esumb += 30.3995440914926
+#      esumb += 9.18738712306217
+      execute print_scalar esumb
+
 #      esumb = 0.0
 #      esuma = 0.0
 #      pardo mu, nu
-#      get Ftmp_ID(mu,nu)
 #      tmp =  Ftmp_ID(mu,nu)*Ftmp_ID(mu,nu)
 #      esuma += tmp
 #      endpardo mu,nu
@@ -7131,19 +7148,19 @@
       EXECUTE SIP_BARRIER
 #
 #bgn_debug
-#      esumb = 0.0
-#      esuma = 0.0
-#      pardo q, q1
-#      get Fexkt_pq_b(q,q1)
-#      Tqq(q,q1) = Fexkt_pq_b(q,q1)
-#      execute sum_2d_array Tqq esuma
-#      endpardo q,q1
-#      execute sip_barrier
-#      collective esumb += esuma
+      esumb = 0.0
+      esuma = 0.0
+      pardo p, p1
+      get Fexkt_pq_a(p,p1)
+      Tpp(p,p1) = Fexkt_pq_a(p,p1)
+      execute sum_2d_array Tpp esuma
+      endpardo p,p1
+      execute sip_barrier
+      collective esumb += esuma
 #      esumb *= 2.0
 #      esumb += 30.3995440914926
 #      esumb += 9.18738712306217
-#      execute print_scalar esumb
+      execute print_scalar esumb
 #
 #      PARDO p, p1
 #         Do p2
@@ -7190,6 +7207,8 @@
       ENDDO p1
       ENDDO p
 
+      Execute get_my_rank rank 
+
       DO p
       DO p1
          GET Fexkt_pq_a(p,p1)
@@ -7203,11 +7222,28 @@
 
       EXECUTE SIP_BARRIER 
 
-      Execute get_my_rank rank 
+#bgn_debug
+      esumb = 0.0
+      esuma = 0.0
+      pardo p1, p2
+          tmp =  Fpqa_cor_static(p1,p2) * Fpqa_cor_static(p1,p2)
+          esuma += tmp
+      endpardo p1, p2
+      execute sip_barrier
+      collective esumb += esuma
+      execute print_scalar esumb
+      esumb = 0.0
+      esuma = 0.0
+      pardo p1, p2
+          tmp =   Dpqa_cor_static(p1,p2) *  Dpqa_cor_static(p1,p2)
+          esuma += tmp
+      endpardo p1, p2
+      execute sip_barrier
+      collective esumb += esuma
+      execute print_scalar esumb
+#end_debug
 
-      If rank == 0.0
          EXECUTE GENRL_EIG_SOLVER Fpqa_cor_static Dpqa_cor_static 
-      Endif 
 
       Delete DT_A
       Delete DT_B

@@ -1,7 +1,7 @@
 C
       subroutine dkh__contract(zcore,maxcor,coreham,dkh_ints,coeffs,
      +                         nshells,nprims,ncnfns,npfps,npcoef,
-     +                         npcoef_uc,ncfps,Spherical)
+     +                         npcoef_uc,ncfps,Ivangmom,Spherical)
 
       Implicit Double Precision (a-h, o-z)
 
@@ -10,6 +10,7 @@ C
       Dimension zcore(maxcor),coreham(nprims*nprims),coeffs(npcoef)
       Dimension dkh_ints(ncnfns*ncnfns)
       Integer npfps(nshells),ncfps(nshells)
+      Integer ivangmom(Nshells)
       Integer coef_start,zcor_start,prim_off(max_shells)
       Integer cont_off(max_shells),Ccoef_off(max_shells)
       Integer Tot_prm_fns,Tot_cnt_fns,Tot_cnt_ish,Tot_cnt_jsh
@@ -26,9 +27,9 @@ C
          nprim_shell = npfps(ishell-1)
 
          if (spherical) then
-            ndegen = 2*(ishell-2) + 1
+            ndegen = 2*ivangmom(ishell-1) + 1
          else
-            ndegen = (ishell-1) * (ishell)/2
+            ndegen = (ivangmom(ishell-1)+1) * (ivangmom(ishell-1)+2)/2
          endif
 
          prim_off(ishell) = prim_off(ishell-1) + nprim_shell * ndegen
@@ -37,7 +38,7 @@ C
      +                      ncont_shell * nprim_shell
       Enddo
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       write(6,*) "The primitive DKH integrals"
       call output(coreham,1,nprims,1,nprims,nprims,nprims,1)
       write(6,*) "The contraction coefs."
@@ -66,11 +67,11 @@ C
             Jcntr_4shell = Ncfps(Jshell)
 
             If (Spherical) Then
-               Idegen = 2 * Ishell - 1
-               Jdegen = 2 * Jshell - 1
+               Idegen = 2*ivangmom(ishell) + 1
+               Jdegen = 2*ivangmom(jshell) + 1
             Else 
-               Idegen = ((Ishell + 1) * Ishell)/2
-               Jdegen = ((Jshell + 1) * Jshell)/2
+               Idegen = (ivangmom(ishell)+1) * (ivangmom(ishell)+2)/2
+               Jdegen = (ivangmom(jshell)+1) * (ivangmom(jshell)+2)/2
             Endif
            
             Iprimfns = Iprim_4shell * Idegen
@@ -93,17 +94,7 @@ C
             Ict_block   = Jcn_block  + Tot_cnt_jsh
             Inext       = Ict_block  + Tot_cnt_fns 
 
-            If (Inext .Gt. Maxcor) Then
-               Write(6,"(a,a)") " @-dkh__contract: The memory", 
-     +         " available is less than the memory required"
-               Write(6,"(a,I10)") " The memory required = ", 
-     +                              Inext
-               Write(6,"(a,I10)") " The memory available  = ",
-     +                              Maxcor
-               Call Errex
-            Endif 
-C
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       write(6,*)
       write(6,"(a,2(1x,i4))")"Ishell,Jshell",Ishell,Jshell
       write(6,"(a,2(1x,i4))")"Iprim_4shell,Iprim_4shell",
@@ -132,7 +123,7 @@ C
      +                            Npcoef,Ccoef_off,
      +                            Tot_cnt_jsh,NShells)
 
-#ifdef _DEBUG_LVL0            
+#ifdef _DEBUG_LVLM
       write(6,*) 
       write(6,"(a)") "The DKH integrals for shell-block"
       ncount = ncount + 1
@@ -160,53 +151,13 @@ C
          Enddo
       Enddo
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*)
       Write(6,"(a,a)") "@-dkh__contract: The contracted DKH",
      +                 " 1-el Hamiltonian"
       call output(dkh_ints,1,Ncnfns,1,Ncnfns,Ncnfns,Ncnfns,1)
-      k =0
-      w =0.0d0
-      ws=0.0d0
-      do j=1,ncnfns
-      do i=1,ncnfns
-         k  = k + 1
-         w  = w + dkh_ints(k)
-         ws = ws + dkh_ints(k) * dkh_ints(k)
-      enddo
-      enddo 
-      Write(6,"(a,1x,2F20.10)") "The linear and square-root checksum",
-     +                           w,dsqrt(ws)
-C      Ndim = Ncnfns
-C      Istart = 0
-C      Iend   = Ndim
-C
-C      Do j =1, Ndim
-C         Write(6,*) Istart,iend 
-C         Write(6,"(6(1x,F10.5))") (dkh_ints(Istart+i), i = 1, Iend)
-C         Istart = Istart + Ndim + 1
-C         Iend   = Iend - 1
-C      Enddo 
-C#endif
-
-C
-C At this point DKH-1el formation is complete. Lets write to a 
-C file (similar to ECP-1el ints).
-C
-      Ndim = Ncnfns
-      Open(unit=71, file='dkhint.dat', form='unformatted')
-      Rewind 71
-      write(71) Ndim
-
-      Istart = 0
-      Iend   = Ndim
-
-      Do j =1, Ndim
-         Write(71) (dkh_ints(Istart+i), i = 1, Iend)
-         Istart = Istart + Ndim + 1
-         Iend   = Iend - 1
-      Enddo 
-      Close (71)
+CSS      call dkh__sq_print(Ncnfns,dkh_ints,"")
+#endif 
 
       Return 
       End

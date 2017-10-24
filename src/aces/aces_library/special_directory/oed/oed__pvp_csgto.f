@@ -457,7 +457,7 @@ C
      +                        ZCORE (1) )
      +
      +
-         WRITE (*,*) ' NIJ,NCENA,NCENB,NCENC: ',NIJ,NCENA,NCENB,NCENC
+C         WRITE (*,*) ' NIJ,NCENA,NCENB,NCENC: ',NIJ,NCENA,NCENB,NCENC
 C         WRITE (*,*) ' Finished set derivative ijc triples '
 
          IF (EMPTY) THEN
@@ -522,9 +522,9 @@ C
          CASEII  = NCENB .GT. 0
          CASEIII = NCENC .GT. 0
 
-         WRITE (*,*) ' CASEI   = ',CASEI
-         WRITE (*,*) ' CASEII  = ',CASEII
-         WRITE (*,*) ' CASEIII = ',CASEIII
+C         WRITE (*,*) ' CASEI   = ',CASEI
+C         WRITE (*,*) ' CASEII  = ',CASEII
+C         WRITE (*,*) ' CASEIII = ',CASEIII
 
          ONECASE =      (CASEI  .AND.(.NOT.CASEII).AND.(.NOT.CASEIII))
      +             .OR. (CASEII .AND.(.NOT.CASEI) .AND.(.NOT.CASEIII))
@@ -788,8 +788,8 @@ C
                 MIJCEN  = MIJ * NCENC
                 MGIJCEN = NGQP * MIJCEN
 
-                WRITE (*,*) "MIJCEN,MGIJCEN,NINT1DX,NINT1DY,NINT1DZ: ",
-     +                       MIJCEN,MGIJCEN,NINT1DX,NINT1DY,NINT1DZ
+C                WRITE (*,*) "MIJCEN,MGIJCEN,NINT1DX,NINT1DY,NINT1DZ: ",
+C     +                       MIJCEN,MGIJCEN,NINT1DX,NINT1DY,NINT1DZ
 
 CSSS                CALL  OED__PVP_PCGTO_BLOCK
          CALL  OED__NAI_DERV_3CEN_PCGTO_BLOCK

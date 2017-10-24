@@ -63,12 +63,12 @@ c---------------------------------------------------------------------------
       sval = 0.0d+0 
       do a = a1, a2 
          do b = b1, b2 
-           if (a .eq. b) then
+C           if (a .eq. b) then
 #ifdef _DEBUG_LVL0
            write(6,"(a,1x,2I4,1x,F20.10)") ' SVAL ', a, b, sval 
 #endif
            sval = Sval + array1(a,b) 
-           endif 
+C           endif 
       enddo ! b 
       enddo ! a 
 CSSS      sval = array1(a2,b2)

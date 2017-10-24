@@ -5,11 +5,12 @@
 
 #include "dkhlims.par"
 #include "flags.com"
+#include "flags2.com"
 #include "machsp.com"
 
       Character*4 INP_Fname
       Character*4 ATMNAM(Max_centers), Namat(Max_centers)
-      Logical Spherical, Cartesian 
+      Logical Spherical, Cartesian, Contract 
       Integer*8 Istart_Heap, Ialpha, Ipcoef, Isalpha
       Integer*8 Ispcoef, Ipcoef_uc, Dbuf_start,Inext
       Integer*8 Ioed_ovl, Ioed_kin, Ioed_nai, Ioed_pvp
@@ -51,6 +52,8 @@
       Else
           Cartesian  = .True.
       Endif 
+
+      Contract  =  (IFLAGS2(h_IFLAGS2_uncontract) .eq.0)
 C
 C Note that Iecp is used only as a flag to get certain arrays filled
 C (not as to indicate a wholesale ecp calculation). 
@@ -67,7 +70,7 @@ C (not as to indicate a wholesale ecp calculation).
      &                        Jstrt, Jrs, Atmnam, Charge)
 
 
-CSS#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       Write(6,"(a,a,7(1x,I4))") "natoms,nshells,ITFCT,LNP1,lnpo,",
      &                          "nbasis,NAOBASIS:",ncenters,nshells,
      &                                         ITFCT,LNP1,lnpo,
@@ -77,16 +80,16 @@ CSS#ifdef _DEBUG_LVL0
       Write(6,"(6(1x,I4))") (nCFpS(i), i=1, nshells)
       Write(6,"(a)") "The number of prim. function per shell"
       Write(6,"(6(1x,I4))") (nPFpS(i), i=1, nshells)
-CSS#endif 
+#endif 
 
-CSSS#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVLM
       Write(6,"(a)") "The Iqmstr"
       Write(6,"(6(1x,I4))") (Iqmstr(i), i=1, ncenters)
       Write(6,"(a)") "The jcostr"
       Do i=1, Ncenters
          Write(6,"(4(1x,I4))") (jcostr(i,j),j=1,4)
       Enddo
-CSSS#endif
+#endif
 #ifdef _DEBUG_LVLM
       Write(6,"(a)") "The Nucstr"
       Do i=1, Ncenters
@@ -131,10 +134,10 @@ CSSS#endif
       Enddo
 C
       NBFNS = Nprims
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       Write(6,"(a,4(1x,I4))") "nprims;nalpha;npcoef,Npcoef_uc: ",
      &                         nprims,nalpha,npcoef,Npcoef_uc
-C#endif
+#endif
 C
 C The base memory needed to handle DKH transformtion: The ovrlap
 C kintic, and repulsion integrals and dkh_transfomed integrals
@@ -213,7 +216,7 @@ C
      &                     Work(ISPCOEF), MAX_CENTERS,
      &                     ATMNAM, COORD, CORD, NAOATM)
 C
-CSSS#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       Write(6,*)
       Write(6,"(a)") "The exponents"
       Write(6,"(6(1x,F12.8))") (Work(Ialpha+i), i=0, Nalpha-1)
@@ -230,7 +233,7 @@ CSSS#ifdef _DEBUG_LVL0
       do Iatm =1, Ncenters
          Write(6, "(6(1x,F12.8))") (Cord(i,Iatm), i=1,3)
       Enddo
-CSSS#endif
+#endif
 C
       Ixpcoef(1) = 1
       do i = 1, Nshells 
@@ -244,7 +247,7 @@ C functions.
      &                       Npfps,
      &                       Ixshells, Ixalpha, Ixpcoef, End_nfps, 
      &                       Temp, Ispherical)
-CSSS#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       Write(6,*)
       Write(6,*) "The Ivangmom array" 
       Write(6,"(8(1x,I4))") (Ivangmom(i), i=1, Nshells)
@@ -269,18 +272,18 @@ CSSS#ifdef _DEBUG_LVL0
       Write(6,*)
       Write(6,*) "The Npfps array" 
       Write(6,"(8(1x,I4))") (Npfps(i), i=1, Nshells)
-CSSS#endif 
+#endif 
 C
       call dzero(work(ipcoef_uc), npcoef_uc)
       call dkh__prim_ccoefs(Work(ipcoef_uc), Ixpcoef, Npfps, Nshells,
      &                      Npcoef_uc)
 
-CSSS#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       write(6,*)
       Write(6,"(a)") "The primitive contraction coefs"
       Write(6,"(4(1x,F10.5))") (work(ipcoef_uc +i),i=0,npcoef_uc-1)
       Write(6,*)
-CSSS#endif 
+#endif 
 C
 C Here the number of contracted functions are the same as primitive 
 C functions. 
@@ -288,13 +291,13 @@ C
       Call setup_ccbeg(WORK(Ialpha), IXalpha, Work(Ipcoef_uc),Ixpcoef,
      &                 Npfps, Npfps, Nshells, CCbeg, CCend, Indx_cc)
 C
-CSSS#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       Write(6,*)
       Write(6,*)"The CCbeg, CCend arrays and indx_cc arrays" 
       Write(6,"(10(1x,I4))") (CCbeg(i), i=1, Itfct)
       Write(6,"(10(1x,I4))") (CCend(i), i=1, Itfct)
       Write(6,"(10(1x,I4))") (Indx_cc(i), i=1, Nshells)
-CSSS#endif 
+#endif 
  
       Call Dkh__erd_scratch_mem_calc(nshells, ivangmom, npfps,
      &                               npfps, atom, Coord, 
@@ -328,10 +331,10 @@ CSSS#endif
           Call Errex
       Endif
 
-CSSS#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       Write(6,"(a,1x,I6,1x,I10)") "ERD memmory requirments Ibuf & Dbuf",
      &                            Intmax, Zmax
-CSSS#endif 
+#endif 
 
       Ioed_ovl      = INext
       Ioed_kin      = Ioed_ovl    + Nprims**2
@@ -355,7 +358,7 @@ C
       Val2(1) = Nprims
       Val2(2) = Nprims 
 C
-CSSS#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       Write(6,*)
       Write(6,*) "Atom Coordinates of each shell"
       Do Iatm =1, Ncenters
@@ -368,7 +371,7 @@ CSSS#ifdef _DEBUG_LVL0
       Write(6,"(a,i10)") "Memory for DKH:", Mem_4dkh
       Write(6,"(a,i10)") "Dkh memory test:", 34*nprims*nprims
      +                   +  4 * Nprims + 3 * Nprims * Nprims 
-CSSS#endif 
+#endif 
 
       Call Dkh__compute_oed_integrals(
      &                       val1(1),val2(1),val1(2),val2(2),
@@ -380,10 +383,10 @@ CSSS#endif
      &                       Zmax, Intmax, Npfps, Ncfps, 
      &                       Ivangmom,
      &                       Ixalpha, Indx_cc, Atm_4shell, Ixpcoef,
-     &                       Ispherical,
+     &                       Ispherical,Contract,
+     &                       Work(Ioed_kin),
      &                       Work(Ioed_ovl),
      &                       Work(Ioed_nai),
-     &                       Work(Ioed_kin),
      &                       Work(Ioed_pvp), 
      &                       Work(Icoreham),
      &                       Nsend,
@@ -391,6 +394,34 @@ CSSS#endif
      &                       Ncenters,
      &                       charge,
      &                       max_centers,Work(Idkh),Mem_4dkh,Dkh_order)
+
+      If (Spherical) Then
+         Nbfns = Nbasis
+#ifdef _DEBUG_LVL0
+         Write(6,"(a)") "@DKH-main The DKH integrals (Spherical)"
+         Call output(Work(Ioed_pvp), 1, Nbfns, 1, Nbfns, Nbfns,
+     &               Nbfns, 1)
+#endif 
+         Call Squez2(Work(Ioed_pvp),Work(Idkh),Nbfns)
+         Open(unit=71, file='dkhint.dat', form='unformatted')
+         Rewind 71
+         write(71) Nbfns 
+         Write(71) (Work(Idkh-1+i), i = 1, Nbfns*(Nbfns+1)/2)
+         Close (71)
+      Else
+         Nbfns = Naobasis
+#ifdef _DEBUG_LVL0
+         Write(6,"(a)") "@DKH-main The DKH integrals (Cartesian)"
+         Call output(Work(Ioed_pvp), 1, Nbfns, 1, Nbfns, Nbfns,
+     &               Nbfns, 1)
+#endif 
+         Call Squez2(Work(Ioed_pvp),Work(Idkh),Nbfns)
+         Open(unit=71, file='dkhint.dat', form='unformatted')
+         Rewind 71
+         write(71) Nbfns 
+         Write(71) (Work(Idkh-1+i), i = 1, Nbfns*(Nbfns+1)/2)
+         Close (71)
+      Endif 
 
       Return
       End

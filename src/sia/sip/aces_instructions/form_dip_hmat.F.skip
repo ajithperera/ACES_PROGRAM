@@ -1,0 +1,197 @@
+
+      subroutine Form_DIP_Hmat(
+     *                      array_table, narray_table,
+     *                      index_table,
+     *                      nindex_table, segment_table, nsegment_table,
+     *                      block_map_table, nblock_map_table,
+     *                      scalar_table, nscalar_table,
+     *                      address_table, op)
+
+c---------------------------------------------------------------|
+      implicit none
+      include 'interpreter.h'
+      include 'trace.h'
+      include 'mpif.h'
+      include 'parallel_info.h'
+      include 'int_gen_parms.h'
+#ifdef ALTIX
+      include 'sheap.h'
+#endif
+c---------------------------------------------------------------|
+
+      integer narray_table, nindex_table, nsegment_table,
+     *        nblock_map_table
+      integer op(loptable_entry)
+      integer array_table(larray_table_entry, narray_table)
+      integer index_table(lindex_table_entry, nindex_table)
+      integer segment_table(lsegment_table_entry, nsegment_table)
+      integer block_map_table(lblock_map_entry, nblock_map_table)
+      integer nscalar_table
+      double precision scalar_table(nscalar_table)
+      integer*8 address_table(narray_table)
+      integer*8 iarray_in0, iarray_in1
+      integer*8 indblk1, indblk2, get_block_index
+
+      integer i, j, k,n1,n2,n3,n4,m1,m2,m3
+      integer index, nindex_in0,nindex_in1, ierr
+      integer block, blkndx, seg
+      integer find_current_block
+      integer array_in0_type, array_in1_type
+      integer stack,ind_in0_bgn(mx_array_index)
+      integer       ind_in0_end(mx_array_index)
+      integer ind_in1_bgn(mx_array_index),ind_in1_end(mx_array_index)
+      integer nsend
+      integer array_in0,array_in1
+
+      integer comm
+
+      integer fop1(mx_array_index), fop2(mx_array_index)
+      integer sop1(mx_array_index), sop2(mx_array_index)
+      integer sindex(mx_array_index), findex(mx_array_index)
+      integer type(mx_array_index),ind(mx_array_index)
+      integer na1, na2, ni1, ni2
+      integer Idim,Jdim,Kdim,Ldim,IJDim,KLDim,MMDim
+
+      double precision x(1)
+#ifdef ALTIX
+      pointer (dptr, x)
+#else
+      common x
+#endif
+
+#ifdef ALTIX
+      dptr = dshptr
+#endif
+      array_in0 = op(c_result_array)
+      array_in1 = op(c_op1_array)
+
+      array_in0_type  = array_table(c_array_type, array_in0)
+      array_in1_type  = array_table(c_array_type, array_in1)
+C
+      if (array_in0_type .ne. temp_array .or.array_in1_type
+     &                   .ne. temp_array) then
+         Write(6,"(a)") "@-FORM_DIP_HMAT: Both arrays must be temp."
+         call abort_job()
+      endif
+
+      block  = find_current_block(array_in0, array_table(1,array_in0),
+     *                            index_table, nindex_table,
+     *                            segment_table, nsegment_table,
+     *                            block_map_table, blkndx)
+      stack = array_table(c_array_stack,array_in0)
+      array_in0 = get_block_index(array_in0, block, stack, blkndx,
+     *                            x, .true.)
+
+      block  = find_current_block(array_in1, array_table(1,array_in1),
+     *                            index_table, nindex_table,
+     *                            segment_table, nsegment_table,
+     *                            block_map_table, blkndx)
+      stack = array_table(c_array_stack,array_in1)
+      array_in1 = get_block_index(array_in1, block, stack, blkndx,
+     *                            x, .true.)
+
+      nindex_in0 = array_table(c_nindex, array_in0)
+      nindex_in1 = array_table(c_nindex,array_in1)
+
+      do i = 1, nindex_in0
+         ind(i) = array_table(c_index_array1+i-1,array_in0)
+         type(i) = index_table(c_index_type, ind(i))
+         seg = index_table(c_current_seg,ind(i))
+
+c-------------------------------------------------------------------------
+c   Get segment ranges.
+c-------------------------------------------------------------------------
+
+         call get_index_segment(ind(i), seg, segment_table,
+     *                          nsegment_table, index_table,
+     *                          nindex_table, ind_in0_bgn(i),
+     *                          ind_in0_end(i))
+      enddo
+
+      do j = 1, nindex_in1
+         ind(i) = array_table(c_index_array1+i-1,array_in1)
+         type(i) = index_table(c_index_type, ind(i))
+         seg = index_table(c_current_seg,ind(i))
+
+c-------------------------------------------------------------------------
+c   Get segment ranges.
+c-------------------------------------------------------------------------
+
+         call get_index_segment(ind(i), seg, segment_table,
+     *                          nsegment_table, index_table,
+     *                          nindex_table, ind_in1_bgn(i),
+     *                          ind_in1_end(i))
+      enddo
+
+      Idim = ind_in0_end(1)-ind_in0_bgn(1)+1
+      Jdim = ind_in0_end(2)-ind_in0_bgn(2)+1
+      Kdim = ind_in0_end(3)-ind_in0_bgn(3)+1
+      Ldim = ind_in0_end(4)-ind_in0_bgn(4)+1
+
+      M1   = ind_in1_end(1)-ind_in1_bgn(1)+1
+      M2   = ind_in1_end(2)-ind_in1_bgn(2)+1
+     
+#ifdef _DEBUG_LVL0
+      If(me.eq.0) Then
+      Write(6,"(a,9i4)") "@-Entry to pack4d_to_2D variables",
+     +                   Idim,jdim,kdim,ldim,m1,m2,m3
+      Endif 
+#endif 
+      IJdim= Idim * Jdim
+      KLdim= Kdim * Ldim
+      MMdim= M1 * M2 
+  
+      If (IJdim .Ne. KLdim .And. IJdim .Ne. MMdim .And.
+     +    KLdim .Ne. MMdim) Then
+          Write(6,"(a)") "The dimensions of the matirces do not match"
+          Call abort_job()
+      Endif 
+
+      Call Form_Hmat(x(array_in0),Idim,Jdim,Kdim,Ldim,
+     +               x(array_in1)) 
+
+      Return
+      End
+
+      Subroutine Form_Hmat(Hbar_ijij,Idim,Jdim,Kdim,Ldim,Hbar_ij)
+
+      implicit none 
+      include 'parallel_info.h'
+      include 'int_gen_parms.h'
+
+      Integer I,J,K,L,P,Idim,Jdim,Kdim,Ldim
+
+      Double Precision Hbar_ijij(Idim,Jdim,kdim,Ldim) 
+      Double Precision Hbar_ij(Idim,Jdim)
+
+#ifdef _DEBUG_LVL0
+      If(me.eq.0) Then
+      Write(6,"(a,3i4)") "@-pack4d_to_2D variables;before packing",
+     +                    Idim,jdim,kdim,ldim
+      Endif 
+#endif 
+      
+      DO J =1, Jdim
+      DO I =1, Idim
+         DO L =1, Ldim
+         DO K =1, Kdim
+            IF (J .Eq. L)
+     +       Hbar_IJIJ(I,J,K,L) = Hbar_IJIJ(I,J,K,L) + Hbar_ij(I,K)
+         ENDDO
+         ENDDO
+      ENDDO
+      ENDDO
+
+      DO J =1, Jdim
+      DO I =1, Idim
+         DO L =1, Ldim
+         DO K =1, Kdim
+            IF (I .Eq. K)
+     +       Hbar_IJIJ(I,J,K,L) = Hbar_IJIJ(I,J,K,L) + Hbar_ij(J,L)
+         ENDDO
+         ENDDO
+      ENDDO
+      ENDDO
+
+      Return
+      End
