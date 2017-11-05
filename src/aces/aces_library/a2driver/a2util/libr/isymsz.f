@@ -10,7 +10,6 @@ C VARIABLES MAKES NO DIFFERENCE.
       COMMON /SYMINF/ NSTART,NIRREP,IRREPA(255),IRREPB(255),
      &                DIRPRD(8,8)
       COMMON /SYMPOP/ IRPDPD(8,22),ISYTYP(2,500),NTOT(18)
-
       if ((ITYPL.lt.1).or.(22.lt.ITYPL).or.
      &    (ITYPR.lt.1).or.(22.lt.ITYPR)    ) then
          print *, '@ISYMSZ: Assertion failed.'
@@ -18,7 +17,6 @@ C VARIABLES MAKES NO DIFFERENCE.
          print *, '   ITYPR = ',ITYPR
          call errex
       end if
-
       ISYMSZ = 0
       DO IRREP = 1, NIRREP
          ISYMSZ = ISYMSZ + ( IRPDPD(IRREP,ITYPL)*IRPDPD(IRREP,ITYPR) )

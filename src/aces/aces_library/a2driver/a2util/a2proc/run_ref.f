@@ -23,11 +23,6 @@ c machsp.com : end
 
 
 
-
-
-
-
-
 C
       Double Precision Norm_coords
 C

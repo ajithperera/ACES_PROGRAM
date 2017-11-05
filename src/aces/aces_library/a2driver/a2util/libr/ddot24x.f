@@ -48,13 +48,11 @@ C
       COMMON/SYM/POP(8,2),VRT(8,2),NT(2),NFMI(2),NFEA(2)
       COMMON/SYMINF/NSTART,NIRREP,IRREPY(255,2),DIRPRD(8,8)
       COMMON/SYMLOC/ISYMOFF(8,8,25)
-
       if ((ISYMY.lt.1).or.(22.lt.ISYMY)) then
          print *, '@DDOT24X: Assertion failed.'
          print *, '   ISYMY = ',ISYMY
          call aces_exit(1)
       end if
-
 C
       IF(TYPE.EQ.'STTS')THEN
 C

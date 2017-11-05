@@ -32,13 +32,6 @@ c INTERNAL VARIABLES
       integer nLeft, nPut, iOff
       integer iPos
 
-
-
-
-
-
-
-
 c COMMON BLOCKS
 
 

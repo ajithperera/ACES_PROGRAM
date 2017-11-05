@@ -6,7 +6,6 @@ C DRIVES THE CREATION OF MOIO POINTERS FOR SYMMETRY PACKED LISTS.
       COMMON /SYMINF/ NSTART,NIRREP,IRREPA(255),IRREPB(255),
      &                DIRPRD(8,8)
       COMMON /SYMPOP/ IRPDPD(8,22),ISYTYP(2,500),NTOT(18)
-
       if ((SYTYPL.lt.1).or.(22.lt.SYTYPL).or.
      &    (SYTYPR.lt.1).or.(22.lt.SYTYPR)    ) then
          print *, '@INIPCK: Assertion failed.'
@@ -15,7 +14,6 @@ C DRIVES THE CREATION OF MOIO POINTERS FOR SYMMETRY PACKED LISTS.
          print *, '   LIST   = ',LIST
          call errex
       end if
-
       IARG2 = IARGX2
       DO IRREPR = 1, NIRREP
          IRREPL = DIRPRD(IRREPR,IRREPX)

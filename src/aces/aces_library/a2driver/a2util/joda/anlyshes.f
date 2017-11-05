@@ -36,19 +36,15 @@ C
 C     
 C Let's Print out the eigenvalues and eigenvectors of the Hessian
 C
-
           Write(6,*)
           WRITE(LUOUT,2110)
  2110     FORMAT (T3,' The eigenvectors of the Hessian matrix: ')
           CALL HESSOUT(DIAGHES, NOPT, NOPT, 1)
-
-
           WRITE(LUOUT,2103)
           Write(6,*)
 2103      FORMAT(T3,' The eigenvalues of the Hessian matrix: ')
           WRITE(LUOUT,2101)((HESMOD(I,J),J=I,I),I=1,NOPT)
 2101      FORMAT((T3, 6(F10.5,1X)))
-
 C
       Do Imode = 1, NOPT
          If (Dabs(HesMoD(Imode, Imode)) .LT.  1.0D-09)

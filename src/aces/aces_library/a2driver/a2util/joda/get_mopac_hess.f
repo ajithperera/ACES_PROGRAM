@@ -23,11 +23,6 @@ c machsp.com : end
 
 
 
-
-
-
-
-
 c     Maximum string length of absolute file names
       INTEGER FNAMELEN
       PARAMETER (FNAMELEN=80)

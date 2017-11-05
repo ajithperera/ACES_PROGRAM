@@ -31,13 +31,11 @@ C
          If (Grad_sqr .GT. Threshold)  Call Normal(Grad, 3*Nreals)
       Endif
 C
-
       Write(6,*)
       Write(6,"(a)") "@-Projec_FC At enetry the Coords and grads"
       Write(6, "(3F17.13)") (Coords(i),i=1,3*Nreals)
       Write(6,*)
       Write(6, "(3F17.13)") (Grad(i),i=1,3*Nreals)
-
 C
 C Move to the center of Mass coordinate system.
 C
@@ -71,21 +69,17 @@ C
          Enddo
       Endif
 C
-
       Write(6,*)
       Write(6,"(a)") "@-Projec_FC The center of mass Coords"
       Write(6, "(3F17.13)") (Coords(i),i=1,3*Nreals)
-
 C
 C compute the inverse of inertia matrix.
 c 
       Call CalMOI(NReals, Coords, AtmMass, MO_Inertia)
 C
-
       Write(6,*)
       Write(6,"(a)") "@-Projec_FC the moments of inertia matrix"
       Call output(MO_Inertia, 1, 3, 1, 3, 3, 3,1)
-
 
       Check_3d = MO_Inertia(1,1)*MO_Inertia(2,2)*MO_Inertia(3,3)
       
@@ -160,14 +154,12 @@ C
           Enddo
       Enddo
 C
-
       Write(6,*)
       Write(6,"(a)") "@-Projec_FC Mass weighted center of mass Coords"
       Write(6, "(3F17.13)") (Coords(i),i=1,3*Nreals)
       Write(6,*)
       Write(6,"(a)") "@-Projec_FC Inv. of the moms. of inertia matrix"
       Call output(MO_Inertia, 1, 3, 1, 3, 3, 3,1)
-
 C
 C Build the Hessian projector See, Miller, Handy and Adams, JCP, 
 C 72, 99, (1980).
@@ -179,10 +171,6 @@ CSSS         Itmp = Max(3*(Iatms - 1), 6*(Iatms -1)-3*Nreals)
          Do Jatms = 1, Iatms
           Joff = 3*(Jatms - 1)
 CSSS          Jtmp = Max(3*(Jatms - 1), 6*(Jatms -1)-3*Nreals)
-
-
-
-
 
             Do Iz = 1, 3
                L_index = Ioff + Iz

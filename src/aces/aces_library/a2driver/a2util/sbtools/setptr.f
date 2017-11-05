@@ -16,9 +16,6 @@ c be implemented for multithread processing.
 
 
 
-
-
-
 c Macros beginning with M_ are machine dependant macros.
 c Macros beginning with B_ are blas/lapack routines.
 
@@ -29,9 +26,6 @@ c                 machine
 c  M_IMPLICITNONE set iff the fortran compiler supports "implicit none"
 c  M_TRACEBACK    set to the call which gets a traceback if supported by
 c                 the compiler
-
-
-
 
 
 

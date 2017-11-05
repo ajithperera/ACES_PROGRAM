@@ -1,7 +1,4 @@
 
-
-
-
 c#define _ADD_H_AT_THE_VERY_END
 c#define _PRINTCRAP
 

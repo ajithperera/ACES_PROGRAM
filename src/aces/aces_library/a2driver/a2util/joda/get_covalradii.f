@@ -37,13 +37,6 @@ C         DO 20 JBNDS = JBNDS, NRATMS
      &                                (COVLNTRADI(IATOMICNMBER(IBNDS))
      &                              + COVLNTRADI(IATOMICNMBER(JBNDS)))
      &                              * SCALE * AMTOBOHR
-
-
-
-
-
-
-
             ENDIF
  20      CONTINUE
  10   CONTINUE

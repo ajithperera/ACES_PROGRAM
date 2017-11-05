@@ -268,7 +268,6 @@ C
       Write(6,"(a)") "The reordered Natural order array"
       Write(6, "(10(1x,I3))") (Inatural_order(J), J=1,
      &                        Itot_prim)
-
 C
       Return
       End 

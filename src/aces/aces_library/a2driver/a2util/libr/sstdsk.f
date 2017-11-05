@@ -42,13 +42,11 @@ C
 C
       COMMON /SYMINF/ NSTART,NIRREP,IRRVEC(255,2),DIRPRD(8,8)
       COMMON /SYMPOP/ IRPDPD(8,22),ISYTYP(2,500),ID(18)
-
       if ((LFTTYP.lt.1).or.(22.lt.LFTTYP)) then
          print *, '@SSTDSK: Assertion failed.'
          print *, '   LFTTYP = ',LFTTYP
          call aces_exit(1)
       end if
-
 C
       IF(TYPE.EQ.'1432')THEN
 C

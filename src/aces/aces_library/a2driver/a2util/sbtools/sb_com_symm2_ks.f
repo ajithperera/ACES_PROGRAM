@@ -24,12 +24,6 @@ c machsp.com : end
 
 
 
-
-
-
-
-
-
       integer           iuhf
       common /iuhf_com/ iuhf
       save   /iuhf_com/

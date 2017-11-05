@@ -13,11 +13,7 @@ c the same way dgemm is. I moved the original one to libr/mn_geev.f
       double precision a(lda,*), vl(ldvl,*), vr(ldvr,*)
       double precision wi(*), work(*), wr(*)
 
-
-
-
       integer   int_n, int_lda, int_ldvl, int_ldvr, int_lwork, int_info
-
 
       if (n.eq.0) return
 
@@ -27,13 +23,8 @@ c the same way dgemm is. I moved the original one to libr/mn_geev.f
       int_ldvr  = ldvr
       int_lwork = lwork
 
-
-
-
-
       call dgeev(jobvl,jobvr,int_n,a,int_lda,wr,wi,
      &           vl,int_ldvl,vr,int_ldvr,work,int_lwork,int_info)
-
 
       info = int_info
 

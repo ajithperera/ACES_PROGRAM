@@ -40,7 +40,6 @@ C to a quadratic polynomial.
       Cd = Prv_grad_on_stp
       Ce = Energy(1)
 
-
       Write(6,*) "@-Ln_search, Starting parameters"
       Write(6,*) "The normalized step increment"
       Write(6,"(3F10.5)") (Prv_geo_stpn(I), I=1,Nxm6)
@@ -48,7 +47,6 @@ C to a quadratic polynomial.
       Write(6,"(2F10.5)") Prv_grad_on_stp, Cur_grad_on_stp
       Write(6,*) "Ca-e coefs"
       Write(6,"(5F10.5)") Ca, Cb, Cc, Cd, Ce
-
 
       If ((Prv_grad_on_stp .lt. Dnull) .and. (Cur_grad_on_stp .gt. 
      &      Dnull)) Then
@@ -66,12 +64,6 @@ C
      &               Cur_grad_on_stp))
 C
 
-
-
-
-
-
-
          Do While (Dabs(Grdc) .lt. Gcut) 
 
             Icycle = Icycle + 1
@@ -88,12 +80,10 @@ C
      &             Grdb)*pt5))
             Grdc = ((four*Ca*Crdc + Three*Cb)*Crdc +Two*Cc)*Crdc + Cd
 C
-
       Write(6,*) "@-Ln_search, parameters during the ln search"
       Write(6,"(1x,a,2F10.5)") "Crdb, Grdb: ", Crdb, Grdb 
       Write(6,"(1x,a,2F10.5)") "Crda, Grda: ", Crda, Grda 
       Write(6,"(1x,a,2F10.5)") "Crdc, Grdc: ", Crdc, Grdc
-
 C
             If (Icycle .gt. 200) Then
                Write(6,*)
@@ -122,14 +112,12 @@ C
      &                            + Ce
 
 C
-
       Write(6,*) "@-Ln_search, interpolated, geo., grad. and energy"
       Write(6,*) "The geometry"
       Write(6,"(3F10.5)") (Cur_geo(i), i=1, Nxm6)
       Write(6,*) "The gradients"
       Write(6,"(3F10.5)") (Cur_grad(i), i=1, Nxm6)
       Write(6,"(a,F10.5)") "The energy", Energ_intpl
-
       Else
 C 
          Write(6,*)

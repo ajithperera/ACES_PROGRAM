@@ -59,7 +59,6 @@ C
       CALL OUTPUT(DIFTEMP,1,3*NRATMS,1,3*NRATMS,3*NRATMS,
      &            3*NRATMS,1)
 
-
       RETURN
       END
 

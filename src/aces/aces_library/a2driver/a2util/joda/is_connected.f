@@ -44,11 +44,6 @@ C
          is_connected=shortcircuit
       endif
 C
-
-
-
-
-
 c
       return
       end

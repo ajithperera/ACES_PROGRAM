@@ -115,7 +115,7 @@ c---------------------------------------------------------------------------
       Ndim  = (n2-n1+1)*(m2-m1+1) 
       Kdim  = (l2-l1+1)
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If (me .eq.0) then
          Write(6,"(a,2I)") "Root index:", Root
          Write(6,"(a)") "@-GET_GUESS_4CURRENT; Input vectors"
@@ -123,7 +123,7 @@ C#ifdef _DEBUG_LVL0
            call output(Vecs_in(1,1,k),n1,n2,m1,m2,n2,m2,1)
          Enddo 
       Endif 
-C#endif 
+#endif 
       If (Root.le. 0.0D0) Then
           Triplet = .True.
           Root    = -Root 
@@ -137,12 +137,12 @@ C#endif
          If (Triplet) Call Dscal(Ndim, -1.0D0, Vecs_in(1,1,1), 1)
       Endif 
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If (me .eq.0) then
          Write(6,"(a)") "@-GET_GUESS_4CURRENT; Outgoing vector"
          call output(Vecs_in(1,1,1),n1,n2,m1,m2,n2,m2,1)
       Endif 
-C#endif 
+#endif 
 
       Return
       End

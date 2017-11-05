@@ -64,10 +64,6 @@ C
                   DO JRATMS = 1, JREDATMS                 
 C
                      DO JSHL = 1, NSHL(JATMS)
-
-
-
-
 C
                         JREDCNT = JREDCNT + 1 
 C                        
@@ -79,10 +75,6 @@ C
                         JNCRF   = NCONFUNSHL(JATMS, JSHL)
                         IINTTYP = IOFFST(IANGMOM)
                         JINTTYP = IOFFST(JANGMOM)
-
-
-
-
 C                        
                         ICOORD = (IATMS - 1)*3 
                         JCOORD = (JATMS - 1)*3 
@@ -121,10 +113,6 @@ C
 C Do the actual evaluation of the repulsion integral(A-Term in Eqn). Also bulit 
 C the product function (B-Term in Eqn). 
 C
-
-
-
-
 
 C
                                  CALL A2EVAL_PRDCINT(IPRIM, JPRIM, 

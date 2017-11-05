@@ -10,11 +10,6 @@ c dx(i) *= da
 
       if (incx.eq.1) then
 
-
-
-
-
-
          p = iand(n,3)
          do i = 1, p
             dx(i) = da*dx(i)
@@ -25,7 +20,6 @@ c dx(i) *= da
             dx(i+2) = da*dx(i+2)
             dx(i+3) = da*dx(i+3)
          end do
-
 
       else
 

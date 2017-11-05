@@ -19,7 +19,6 @@ c INTERNAL VARIABLES
 
 c ----------------------------------------------------------------------
 
-
       iStat = 0
 c   o assert iUnit and iRec are natural
       if ((iUnit.lt.1).or.(iRec.lt.1)) then
@@ -35,7 +34,6 @@ c   o assert iLength is whole
          iStat = 1
       end if
       if (iStat.ne.0) call aces_exit(iStat)
-
 
 c ----------------------------------------------------------------------
 

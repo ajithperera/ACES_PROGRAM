@@ -190,6 +190,10 @@ MACHSTATS := \
    crisp:pentium2:freebsd:gnu \
    castor:athlonmp:freebsd:gnu pollux:athlonmp:freebsd:gnu \
    haku01:em64t:linux:gnu linx64:em64t:linux:intel linx32:pentium4:linux:intel \
+   i21a-s1:em64t:linux:intel \
+   i21a-s2:em64t:linux:intel \
+   i21b-s1:em64t:linux:intel \
+   i21b-s2:em64t:linux:intel \
    crunchb:native64:sunos:forte \
    hrothgar:x86_64:linux:intel \
    solx:x86:sunos:pg \

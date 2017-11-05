@@ -5,13 +5,11 @@ c BEWARE - IMINPOS is 1 if n=0
       INTEGER FUNCTION IMINPOS(N,T,INC)
       IMPLICIT DOUBLE PRECISION(A-H,O-Z)
       DIMENSION T(*)
-
       if (n.lt.0) then
          print *, '@IMINPOS: Assertion failed.'
          print *, '          n = ',n
          call errex
       end if
-
       itmp = 1
       XMIN = T(1)
       ndx  = 1 + inc

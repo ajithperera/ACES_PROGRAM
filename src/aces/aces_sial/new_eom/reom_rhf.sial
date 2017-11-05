@@ -8185,10 +8185,6 @@
       ROOT_COUNT -= 1.0
       execute print_static EOM_EES ROOT_COUNT
 #end_debug
-#
-# This DENS2JOBARC to call simply write a record named "EOM     " to
-# JOBARC file. It will be used in a2proc.
-#
 
 #bgn_debug
 #      ncount = 0.0
@@ -8231,11 +8227,16 @@
 #      execute print_scalar suma
 #      enddo nroots 
 #end_debug
-       Etemp  = -2.0
-       EXECUTE DENS2JOBARC EOM_EES Etemp
 #
        SEVEN_ZERO = 70.0
        EXECUTE  PRINT_REL_INFO  SEVEN_ZERO EOM_EES
+
+#
+# This DENS2JOBARC to call simply write a record named "EOM     " to
+# JOBARC file. It will be used in a2proc.
+#
+       Etemp  = -2.0
+       EXECUTE DENS2JOBARC EOM_EES Etemp
 
        EXECUTE  SERVER_BARRIER
 

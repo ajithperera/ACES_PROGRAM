@@ -12,9 +12,6 @@ c (There is no practical reason why this would be anything but 600.)
 
 
 
-
-
-
       data ilnbuf /600/
       end
 

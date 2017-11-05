@@ -26,7 +26,6 @@ c INTERNAL VARIABLES
 
 c ----------------------------------------------------------------------
 
-
       i = 0
 c   o assert iDimScr is > 0
       if (iDimScr.lt.1) then
@@ -35,7 +34,6 @@ c   o assert iDimScr is > 0
          i = 1
       end if
       if (i.ne.0) call aces_exit(i)
-
 
 c ----------------------------------------------------------------------
 

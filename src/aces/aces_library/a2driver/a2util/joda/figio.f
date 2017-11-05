@@ -8,7 +8,6 @@ c to match these goals.
 c SG 11/15/97
 
 
-
       SUBROUTINE FIGIO(TOTMEM,RECNUM,RECSIZ)
       IMPLICIT NONE
 

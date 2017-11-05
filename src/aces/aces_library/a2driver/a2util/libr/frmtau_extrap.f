@@ -13,13 +13,11 @@ C WHICH IS USED TO COMPUTE THE RLE ENERGY APPROXIMANT.
       LOGICAL SINGLE
       INTEGER RLETYP
       DIMENSION ETOT(IORDER),ET2(IORDER),TAU(IORDER)
-
       if (iorder.lt.0) then
          print *, '@FRMTAU_EXTRAP: Assertion failed.'
          print *, '                iorder = ',iorder
          call errex
       end if
-
       IF (RLETYP.EQ.1) THEN
          ERLE = 0.0
          DO I = 1, IORDER

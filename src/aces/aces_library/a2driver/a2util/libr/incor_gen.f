@@ -16,30 +16,6 @@ C already in memory.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       SUBROUTINE INCOR_GEN(I0,ICRSIZ,IUHF)
       IMPLICIT NONE
       INTEGER I0,ICRSIZ,IUHF

@@ -15,6 +15,3 @@ c of the compilable code in the .f file.
       end
 
 
-
-
-

@@ -1,11 +1,13 @@
       subroutine molden_nlorb(ener,iocc,orb,dens,nlorb,edens,scr,
      &                        nao,nbas,maxcor,iuhf,iexx,iunit,
-     +                        DLABEL,iroot,dens_diff)
+     +                        DLABEL,iroot,dens_diff,Oed2AScale,
+     +                        Ioed2Aorder)
 c-----------------------------------------------------------------------
       implicit double precision (a-h,o-z)
       double precision ener(nbas),orb(nao,nbas),scr(maxcor)
       double precision dens(nbas,nbas),edens(nbas,nbas),nlorb(nbas,nbas)
-      double precision nelec
+      double precision nelec, Oed2AScale
+       
       logical  dens_diff
       character*8 DLABEL
       character*2 iroot
@@ -15,7 +17,7 @@ c-----------------------------------------------------------------------
       character*8 cnumdrop(2)
       character*5 sptype(2)
       double precision  iocc(nbas)
-      integer  idrppop(8),idrpvrt(8)
+      integer  idrppop(8),idrpvrt(8), Ioed2Aorder
 
 
 
@@ -53,6 +55,26 @@ c sym.com : begin
       integer      pop(8,2), vrt(8,2), nt(2), nfmi(2), nfea(2)
       common /sym/ pop,      vrt,      nt,    nfmi,    nfea
 c sym.com : end
+C MXATMS     : Maximum number of atoms currently allowed
+C MAXCNTVS   : Maximum number of connectivites per center
+C MAXREDUNCO : Maximum number of redundant coordinates.
+C
+      INTEGER MXATMS, MAXCNTVS, MAXREDUNCO
+      PARAMETER (MXATMS=200, MAXCNTVS = 10, MAXREDUNCO = 3*MXATMS)
+
+
+c ***NOTE*** This is a genuine (though not serious) limit on what Aces3 can do.
+c     12 => s,p,d,f,g,h,i,j,k,l,m,n
+      integer maxangshell
+      parameter (maxangshell=12)
+
+
+C
+      Dimension Oed2AScale(Nao), Ioed2Aorder(Nao)
+      Dimension Nprim_shell(Maxangshell*Mxatms)
+      Dimension Orig_nprim_shell(Maxangshell*Mxatms)
+      Integer   Reorder_Shell(Maxangshell*Mxatms)
+C
       parameter (one=1.0D0)
       parameter (zilch=0.0D0)
       parameter (DENS_THRESH=1.0D-08)
@@ -77,13 +99,22 @@ c the so ordering is zmat
 c the mo ordering is correlated if calc is greater than scf 
 c or if this is a vibrational calculation
 c
+      Call Getrec(20, "JOBARC", "NSHELLS" , 1, nshells)
+      Call Getrec(20, "JOBARC", "NPRMSHEL", nshells, Nprim_shell)
+      Call Getrec(20, "JOBARC", "BNPAKORD", nshells, Reorder_Shell)
+C
+      Call Getrec(20, "JOBARC", "ERD2A2CS", Nbas*Iintfp, Oed2AScale)
+      Call Getrec(20, "JOBARC", "ERDORDER", Nbas, Ioed2Aorder)
+C
       i000=1
       i010=i000+nbas*nbas
       i020=i010+nbas*nbas
       i030=i020+nbas*nbas
-      iend=i030+2*nbas*nbas
+      i040=i030+2*nbas*nbas
+      i050=i040+nbas
+      iend=i050+nbas
 
-      if(i030.gt.maxcor/iintfp)
+      if(iend.gt.maxcor/iintfp)
      &  call insmem('NLORB-F',iend*iintfp,maxcor)
 
       do 10 ispin=1,iuhf+1
@@ -159,8 +190,34 @@ C
            nelec = nelec + iocc(imo)
         ENDDO
         WRITE (*,*) ' Trace of diagonalized MO density matrix - ',nelec
-
+C
+C At this point orbitals are scaled accroding to ACES III normalization
+C and binpacked (what unfortunate name for reordering). Undo those.
+C 
+        Call Do_oed_to_vmol(Nbas, Nbas, Ioed2Aorder, Oed2AScale,
+     &                      nlorb, Scr(I020))
+        Call Dcopy(Nbas*Nbas, Scr(I020), 1, Nlorb, 1)
+        Call undo_binpack(Nlorb, Nshells, Nprim_shell,
+     &                   Orig_nprim_shell, Reorder_Shell, Scr(I040),
+     &                   Scr(I050), Nbas, Nbas)
+C 
         call getrec(20,'JOBARC','SCFEVCA0',nbas*nbas*iintfp,dens)
+C 
+C Do the same mess for the SCF eigenvectors. These need to binpacked
+C before reordering and scalling (what an ugly mess).
+
+        Call binpack(dens, Nshells, Nprim_shell,
+     &               Orig_nprim_shell, Reorder_Shell, Scr(I040),
+     &               Scr(I050), Nbas, Nbas)
+        Call Do_oed_to_vmol(Nbas, Nbas, Ioed2Aorder, Oed2AScale,
+     &                      dens, Scr(I020))
+        Call Dcopy(Nbas*Nbas, Scr(I020), 1, dens, 1)
+        Call undo_binpack(dens, Nshells, Nprim_shell,
+     &                   Orig_nprim_shell, Reorder_Shell, Scr(I040),
+     &                   Scr(I050), Nbas, Nbas)
+C
+C --- Now it is ready to convert to AO basis.
+C
         CALL XGEMM('N','N',nbas,nbas,nbas,
      +                     1.0D0,DENS,   nbas,
      +                           NLORB,  nbas,

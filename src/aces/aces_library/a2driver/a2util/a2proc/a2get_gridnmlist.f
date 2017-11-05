@@ -20,13 +20,6 @@ C charaters.
       READ(4,'(A)', END=900) WRK
       GRID_FILE = WRK(1:12)
 C
-
-
-
-
-
-
-
 C
       GO TO 99
 900   WRITE(6,901)

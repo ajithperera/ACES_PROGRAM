@@ -12,13 +12,11 @@ c       This version only accepts integer arrays.
       integer n, ia(*), inc, target, index(*), nn
       integer i, ndx
 
-
       if (n.lt.0) then
          print *, '@WHENEQ: Assertion failed.'
          print *, '         n = ',n
          call errex
       end if
-
 
       if (inc.ge.0) then
          if (inc.eq.1) then

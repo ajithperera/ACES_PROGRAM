@@ -27,14 +27,6 @@ c            = 1; spin-unrestricted (UHF)
 
 
 
-
-
-
-
-
-
-
-
 c#define _DEBUG_ACES_INIT
 
       subroutine aces_init(iCore,iCoreNdx,iCoreDim,iUHF,bAllocMem)

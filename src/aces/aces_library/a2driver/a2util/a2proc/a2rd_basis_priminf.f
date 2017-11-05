@@ -144,10 +144,8 @@ C     their respective matrices, ALPHA and PCOEFF.
 C
 C Reinitilize the NCONFUNTSHL array, Ajith Perer 01/2001
 C
-
       Write(6,*) "The offset array @a2_get_priminf"
       Write(6, "(8i4)") (ISHLOFF(I), i=1, Natoms)
-
 C
       NTOTSHL = 0
       ITOTATM = 0
@@ -168,12 +166,10 @@ C
          ENDDO
       ENDDO
 
-
       Write(6,*) "The NCONFUNTSHL array @a2_get_priminf"
       Write(6, "(8i4)") (NCONFUNTSHL(I), i=1, NTOTSHL)
       Write(6,*) "The NPRMFUNTSHL array @a2_get_priminf"
       Write(6, "(8i4)") (NPRMFUNTSHL(I), i=1, NTOTSHL)
-
 
 C
  1120 FORMAT(2I5)

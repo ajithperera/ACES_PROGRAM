@@ -35,7 +35,6 @@ c INTERNAL VARIABLES
 
 c ----------------------------------------------------------------------
 
-
       iInts = 0
 c   o assert nMax is natural
       if (nMax.lt.1) then
@@ -47,7 +46,6 @@ c   o assert nMax is natural
       if (iInts.ne.0) then
          call errex
       end if
-
 
 c ----------------------------------------------------------------------
 

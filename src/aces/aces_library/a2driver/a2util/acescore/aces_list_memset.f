@@ -3,7 +3,6 @@ c DO NOT USE THIS ROUTINE
 
 c#define _VERBOSE_MEMSET
 
-
       subroutine aces_list_memset(iLeft,iRight,iConst)
       implicit none
 
@@ -16,13 +15,6 @@ c INTERNAL VARIABLES
       integer nRows, nCols
       integer iRec, iRecNdx, iTmp
       integer nLeft, nPut
-
-
-
-
-
-
-
 
 c COMMON BLOCKS
 

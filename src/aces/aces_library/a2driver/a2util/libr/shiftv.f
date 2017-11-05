@@ -9,7 +9,6 @@ C THIS ROUTINE IS A DEPENDENT OF SCANVC.
       SUBROUTINE SHIFTV(RV,IV,ISKIP,NUMEL)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       DIMENSION RV(NUMEL),IV(NUMEL)
-
       if (iskip.lt.1) then
          print *, '@SHIFTV: Assertion failed.'
          print *, '         iskip = ',iskip
@@ -21,7 +20,6 @@ C THIS ROUTINE IS A DEPENDENT OF SCANVC.
          print *, '         iskip = ',iskip
          call errex
       end if
-
       if ((numel.gt.1).and.(iskip.lt.numel)) then
          DO I = NUMEL-1, ISKIP, -1
             RV(I+1) = RV(I)

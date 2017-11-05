@@ -30,9 +30,6 @@ C     LSCR should be Max(NAO, NBas, 3, NAtoms)
       CHARACTER*4 CMPPGP
 
 
-
-
-
       IONE=1
       ITHR=3*IINTFP
 C
@@ -56,19 +53,11 @@ C
 
 C     Reorder CENTERBF, already in core.
       Call ISctr(NAO,IDummy,ICheck,IAngCmp)
-
-
-
-
       Call PutRec(20,'JOBARC','CNTERBF0',NAO,IAngCmp)
 
 C     Reorder ANGMOMBF
       Call GetRec(20,'JOBARC','ANGMOMBF',NAO,IDummy)
       Call ISctr(NAO,IDummy,ICheck,IAngCmp)
-
-
-
-
       Call PutRec(20,'JOBARC','ANMOMBF0',NAO,IAngCmp)
 
 cSSS      Call GetRec( 20, 'JOBARC', 'CNTERBF0', NAO, IDummy)
@@ -83,9 +72,6 @@ C
       Call xCOPY(NAO*NBas, Scr, 1, Evec, 1)
 C
  9000 Format(1X,'new style ', A,':'/(2I5))
-
-
-
 
 
       RETURN 

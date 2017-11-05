@@ -18,7 +18,6 @@ C
      &          Grad_K1PM(3*Nreals), Coord_K1C(3*Nreals), 
      &          AtmMass(Nreals)
 C
-
       Write(6,*)
       Write(6,"(a,a)") "@-Ln_interpol M.W. prev., ",
      &                  "current point, N.M.W. current point"
@@ -43,7 +42,6 @@ C
       Write(6, "(3F17.13)") (Grad_K1PM(i),i=1,3*Nreals)
       Write(6,"(a)")  "The M.W current gradient"
       Write(6, "(3F17.13)") (Grad_K1CM(i),i=1,3*Nreals)
-
 C
       Do Iatom = 1, Nreals
          Ioff = 1 + 3*(Iatom - 1)
@@ -63,14 +61,12 @@ C
       Theta_prime  = PAng_K1C_K1P
 
 C
-
       Write(6,*)
       Write(6,"(a)") "The norms of the vectors for theta prime"
       write(6,"(3F17.13)") dsqrt(Vec_K1P_Norm), (K1P_K1C_Norm),
      &                    dsqrt(Vec_K1C_Norm )
       Write(6,*)
       Write(6,"(a,F17.13)") "The Theta_prime", Theta_prime
-
 C
       Do Iatom = 1, Nreals
          Ioff = 1 + 3*(Iatom - 1)
@@ -81,17 +77,13 @@ C
       G1_prime = Ddot(3*Nreals, Vec_K1C_K1P, 1, Grad_on_K1C, 1)
       G2_Prime = Ddot(3*Nreals, Vec_K1C_K1P, 1, Grad_on_K1P, 1)
 
-
       Write(6,*)
       Write(6,"(a)") "The norms of the vectors for theta "
       write(6,"(2F17.13)") G1_prime, G2_Prime
-
 C
       Theta = Theta_prime*G2_prime/(G2_Prime - G1_Prime)
-
       Write(6,*)
       Write(6,"(a, F17.13)") "The theta", theta
-
 C
       If (Theta .LT. 0.0D0 .AND. Theta_prime .LT. Ln_Intrp_Tol) Then
          Write(6, "(a)") "@-Ln_interpol, Interpolation is invlaid"
@@ -119,7 +111,6 @@ C
      &                         Ratio_1)*Grad_K1PM(Ioff)
          Enddo
       Enddo 
-
       Write(6,*)
       Write(6,"(a)") "@-ln_interpol, geo. and gradient updates"
       Write(6,"(a)")  "The M.W. geo. update"
@@ -127,7 +118,6 @@ C
       Write(6,"(a)")  "The M.W. gradient update" 
       Write(6, "(3F17.13)") (Grad_K1int(i),i=1,3*Nreals)
       Write(6,*) 
-
 C
       Call Daxpy(3*Nreals, 1.0D0, Coord_PV, 1, Vec_K1Int, 1)
       Call Dcopy(3*Nreals, Vec_K1Int, 1, Coord_K1CM, 1)

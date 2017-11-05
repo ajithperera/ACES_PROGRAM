@@ -20,20 +20,6 @@ c icore.com : end
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 c istart.com : begin
       integer         i0, icrsiz
       common /istart/ i0, icrsiz

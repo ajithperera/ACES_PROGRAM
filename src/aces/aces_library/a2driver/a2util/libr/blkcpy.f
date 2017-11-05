@@ -9,13 +9,11 @@ C IN MATTAR.
       IMPLICIT INTEGER (A-Z)
       DOUBLE PRECISION MATTAR(NROWTAR*NCOLTAR),MATFRM(NROWFRM,NCOLFRM)
       COMMON /MACHSP/ IINTLN,IFLTLN,IINTFP,IALONE,IBITWD
-
       if (ncolfrm.lt.0) then
          print *, '@BLKCPY: Assertion failed.'
          print *, '         ncolfrm = ',ncolfrm
          call errex
       end if
-
       ISTART = IROWTAR + (ICOLTAR-1)*NROWTAR
       DO ICOL = 1, NCOLFRM
          CALL XCOPY(NROWFRM,MATFRM(1,ICOL),1,MATTAR(ISTART),1)

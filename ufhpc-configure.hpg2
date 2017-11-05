@@ -8,3 +8,6 @@
             CFLAGS="-DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -xcore-avx2 -axcore-avx-i" \
             CXXFLAGS="-DMPIF2C -DC_SUFFIX -DCB_SUFFIX  -DMPI2 -shared-intel -O2 -xcore-avx2 -axcore-avx-i" \
             --enable-mkl 
+
+
+-msse3 -axcore-avx2,core-avx-i

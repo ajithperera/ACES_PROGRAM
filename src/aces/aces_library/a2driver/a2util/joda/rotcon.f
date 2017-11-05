@@ -27,7 +27,6 @@ c machsp.com : end
 
 
 
-
       DATA FACTOR /60.198D0/
       Z=0.D0
       IBOT=0

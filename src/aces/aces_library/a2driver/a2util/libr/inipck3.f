@@ -14,7 +14,6 @@ C
      &             'SVAVB2','SOAOB2','SVAVB2','SOAVA2',
      &             'SOBVB2','SOAVB2','SVAVA2','SVBVB2',
      &             'SOAOA2','SOBOB2'/
-
       if ((SYTYPL.lt.1).or.(22.lt.SYTYPL).or.
      &    (SYTYPR.lt.1).or.(22.lt.SYTYPR)    ) then
          print *, '@INIPCK3: Assertion failed.'
@@ -23,7 +22,6 @@ C
          print *, '   LIST   = ',LIST
          call errex
       end if
-
       IARG2=IARGX2
       CALL GETREC(20,'JOBARC',SYMLST(SYTYPL)//'X ',NIRREP,POPLFT)
       CALL GETREC(20,'JOBARC',SYMLST(SYTYPR)//'X ',NIRREP,POPRHT)

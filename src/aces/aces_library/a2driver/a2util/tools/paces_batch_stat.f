@@ -26,7 +26,6 @@ c INTERNAL VARIABLES
 
 c ----------------------------------------------------------------------
 
-
       iTmp = 0
 c   o assert 0 <= (iNode|iRoot) < nNodes
       if ((nNodes.le.iNode).or.(iNode.lt.0).or.
@@ -38,7 +37,6 @@ c   o assert 0 <= (iNode|iRoot) < nNodes
          iTmp = 1
       end if
       if (iTmp.ne.0) call aces_exit(iTmp)
-
 
 c ----------------------------------------------------------------------
 

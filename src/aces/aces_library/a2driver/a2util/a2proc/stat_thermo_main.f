@@ -38,13 +38,6 @@ c machsp.com : end
 
 
 
-
-
-
-
-
-
-
 C
       Parameter(Mxdata = 100)
 C

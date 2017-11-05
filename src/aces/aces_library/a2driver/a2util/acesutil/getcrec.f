@@ -21,12 +21,6 @@ c char*(*) SZDEST : (same as getrec)
 
 
 
-
-
-
-
-
-
       subroutine getcrec(iFlag,szArchive,szRecName,iLength,szDest)
       implicit none
 
@@ -38,7 +32,6 @@ c INTERNAL VARIABLES
       integer i, iNdx, nLeft, iBuf(1024), iRecLen
 
 c ----------------------------------------------------------------------
-
 
       i = 0
 c   o assert substring fits in iBuf
@@ -57,7 +50,6 @@ c         print *, '   len(sz) = ',len(szDest)
 c         i = 1
 c      end if
       if (i.ne.0) call aces_exit(i)
-
 
 c ----------------------------------------------------------------------
 

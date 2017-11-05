@@ -8,37 +8,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       SUBROUTINE T1RING(ICORE,MAXCOR,IUHF,LAMBDA)
 C
 C DRIVER FOR W(MBEJ) <- T1 CONTRIBUTIONS.  SELECTS BETWEEN INCORE

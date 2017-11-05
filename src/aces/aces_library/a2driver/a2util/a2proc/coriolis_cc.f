@@ -25,9 +25,6 @@ c machsp.com : end
 
 
 
-
-
-
 C MXATMS     : Maximum number of atoms currently allowed
 C MAXCNTVS   : Maximum number of connectivites per center
 C MAXREDUNCO : Maximum number of redundant coordinates.

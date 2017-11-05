@@ -182,7 +182,7 @@ C         enddo
       Elseif (Root .eq. 2) then
           Vecs(1,2) = 1.0D0
           Vecs(2,1) = 1.0D0
-      Elseif (Root .eq. 2) then
+      Elseif (Root .eq. 3) then
           Vecs(1,1) = 1.0D0
           Vecs(2,2) = 1.0D0
       Endif 

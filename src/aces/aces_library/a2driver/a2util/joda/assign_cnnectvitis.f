@@ -61,9 +61,7 @@ C
       IF (CONN_FILE_EXISTS) THEN
           OPEN(UNIT=IUNIT,FILE='CONNECT',FORM='FORMATTED',
      &         STATUS='OLD')
-
           Write(6,*) "Entering Read Connectivities"
-
           CALL READ_CNTVTES(IBNDTO, IUNIT, NRATMS)
           CLOSE (IUNIT)
           RETURN
@@ -85,11 +83,9 @@ C pair of atoms
 C     
 cSSS CALL GETREC(20, 'JOBARC', 'ATOMCHRG', NRATMS, IATOMICNMBER)
 C      
-
           Write(6,*)
           Write(6,*) "Entering GETCOVLRADI: Atomic numbers"
           Write(6,"(4I2)") (IATOMICNMBER(j),j=1,NRATMS)
-
       CALL GETCOVLRADI(IATOMICNMBER, SMOFCOVRADI, NRATMS)
 C      
 C Now assign preliminary connectivites based on simple fact that
@@ -105,12 +101,6 @@ C
      &          BNDLENTHS(JBNDS,IBNDS).LE.SMOFCOVRADI(JBNDS,IBNDS)
      &         ) THEN
                 IBNDTO(JBNDS,IBNDS) = IONE
-
-
-
-
-
-
             END IF
          END DO
       END DO
@@ -155,10 +145,6 @@ C
   9   FORMAT(T4, 'The maximum no. of connectvities allowed for',
      &       'for a center ', I2, ' exceeded')
 C
-
-
-
-
 C
 C Lets identify hydrogen bonds. H-bonds are assigned if H-X distance
 C is within the sum of the covalent radii of H and X(=N, O, P, Cl, F,
@@ -215,17 +201,9 @@ C
                         SMOFVRADII = (VRADII(KATOM)+VRADII(IATOM))
      &                               *0.9D0
                         SMOFVRADII = AMTOBOHR*SMOFVRADII
-
-
-
-
-
                         IF ((DIST_HY .GT. SMOFCOVLRAD).AND.
      &                      (DIST_HY .LT. SMOFVRADII).AND.
      &                      (ANG_XHY .GT. 90.0D0)) THEN
-
-
-
                            NHBONDS = NHBONDS + 1
                            IF (IBNDS .GT. KBNDS) THEN
                               IBNDTO(KBNDS, IBNDS) = IONE
@@ -241,10 +219,8 @@ C
       END DO
 C
 C
-
       Write(6,*)
       Write(6,"(a,I4)") "The no. of H bonds", NHBONDS
-
 C Replaced by new non-recursive routine developed by Tom Watson, 03/2011.
 C#ifdef _NOSKIP
 C
@@ -259,18 +235,13 @@ CSSS      enddo
 C                       
 C Watson                   
 C                          
-
       iprint = 0
-
-
-
 
       CALL  FRAG__INIT (nratms,ibndto,iprint,ierr,fragscr,
      +                  nfrags,length_fragments,mark_fragments)
 C                          
 C Watson                
 C      
-
       Write(6,"(a,i3)"), "The number of isolated fragments per center", 
      &  nfrags
       Write(6,*)
@@ -283,7 +254,6 @@ C
       do i=1, nratms
       Write(6,"(4I3)"), (mark_fragments(I, J), j=1, nratms)
       enddo 
-
 C
 C Assign the primary interfragment connectivity
 C
@@ -301,11 +271,9 @@ C
                      DIST_IJFRAG = BNDLENTHS(IFRAG_CENT,
      &                                       JFRAG_CENT)
 C               
-
                      Write(6,"(4I4)") IATMS, JATMS, IFRAG_CENT, 
      &                                JFRAG_CENT
                      Write(6,"(2F10.5)") DIST_IJFRAG, ARCH_DIST
-
 
                      IF (DIST_IJFRAG .LE. ARCH_DIST) THEN
                          ARCH_DIST = DIST_IJFRAG
@@ -315,13 +283,6 @@ C
                   ENDDO
                ENDDO
 C
-
-
-
-
-
-
-
 C
 C In order to avoid connecting fragments that are way too far apart
 C let's have a minimum reasonble threshold to the distance between the 
@@ -361,13 +322,6 @@ C
 C
                      DIST_IJFRAG  = BNDLENTHS(IFRAG_CENT,
      &                                        JFRAG_CENT)
-
-
-
-
-
-
-
 
                      IF (DIST_IJFRAG .LT. 1.30D0*ARCH_DIST
      &                   .OR. DIST_IJFRAG .LT. 2.0D0*

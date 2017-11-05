@@ -10,13 +10,11 @@ c       This version only accepts integer arrays.
       integer function isrchne(n,ia,inc,target)
       implicit none
       integer n, ia(*), inc, target, i, ndx
-
       if (n.lt.0) then
          print *, '@ISRCHNE: Assertion failed.'
          print *, '          n = ',n
          call errex
       end if
-
       if (n.lt.1) then
          isrchne=0
          return

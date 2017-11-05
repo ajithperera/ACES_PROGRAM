@@ -125,14 +125,14 @@ c These modules require heap space, but do not require lists.
       end if
 C
 C This call to xjoda (which should be in the directory where xaces3).
-C In addition to the ACES_EXE_PATH usesrs must set the PATH to recignize
+C In addition to the ACES_EXE_PATH usesrs must set the PATH to recognize
 C the location of xjoda and xa2proc to do pre/post processing of 
 C ACES III files set (JOBARC and JAINDX). 07/2013, Ajith Perera.
 C
       Inquire(FILE='OPTARC',EXIST=OPTARC_EXIST)
       If (OPTARC_EXIST) Call runit("rm OPTARC")
 
-      if (module(1:5).ne.'parfd') then
+      if (module(1:8).eq.'symadapt') then
          call runit("xjoda")
          call v2ja(icore(I0), icrsiz)
       endif

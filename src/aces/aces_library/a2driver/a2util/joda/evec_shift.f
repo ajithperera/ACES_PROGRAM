@@ -4,11 +4,9 @@
 
       DIMENSION EIGEN(NOPT, NOPT), VEC(NOPT, NOPT), SCR(NOPT, NOPT)
 C
-
       Write(6,"(a)") "Unsorted Eigen values and vectors"
       call output(eigen, 1, nopt, 1, nopt, nopt, nopt, 1)
       call output(vec, 1, nopt, 1, nopt, nopt, nopt, 1)
-
 
       NTR=0
       DO I=NOPT,1,-1
@@ -41,11 +39,9 @@ C
          ENDDO
       ENDDO
 C
-
       Write(6,"(a)") "Sorted Eigen values and vectors"
       call output(eigen, 1, nopt, 1, nopt, nopt, nopt, 1)
       call output(vec, 1, nopt, 1, nopt, nopt, nopt, 1)
-
       
       RETURN
       END

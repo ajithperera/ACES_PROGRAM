@@ -9,7 +9,6 @@ c blanks in the file name, then f_remove_core will not remove it and the process
 c will die.
 
 
-
       subroutine f_remove(szFile)
       implicit none
 
@@ -26,7 +25,6 @@ c INTERNAL VARIABLES
 
 c ----------------------------------------------------------------------
 
-
       iTmp = 0
 c   o assert szFile fits in sz
       if (len(szFile).ge.256) then
@@ -36,7 +34,6 @@ c   o assert szFile fits in sz
          iTmp = 1
       end if
       if (iTmp.ne.0) call c_exit(iTmp)
-
 
       iLength = 1
       do while (szFile(iLength:iLength).ne.' '.and.
@@ -49,12 +46,8 @@ c   o assert szFile fits in sz
 c ----------------------------------------------------------------------
 
       if (iLength.lt.256) then
-
-
-
          sz   = szFile(1:iLength)//achar(0)
          iTmp = f_remove_core(sz)
-
          if (iTmp.eq.0) return
          print *, '@F_REMOVE: The file "',szFile,
      &            '" could not be removed.'

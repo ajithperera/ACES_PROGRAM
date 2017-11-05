@@ -19,7 +19,6 @@ c INTERNAL VARIABLES
 
 c ----------------------------------------------------------------------
 
-
       iTmp = 0
 c   o assert ienter=0
       if (ienter.ne.0) then
@@ -28,7 +27,6 @@ c   o assert ienter=0
          iTmp = 1
       end if
       if (iTmp.ne.0) call aces_exit(iTmp)
-
 
 c ----------------------------------------------------------------------
 

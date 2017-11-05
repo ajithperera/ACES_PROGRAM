@@ -19,12 +19,10 @@ C
 C
 C Mass weigh the Hessian and obtain the eigenvectors.
 C
-
       Write(6,*)
       Write(6,*) "The Hessian"
       Call output(Hess_K1C, 1, 3*Nreals, 1, 3*Nreals, 3*Nreals, 
      &            3*Nreals, 1)
-
       Call Dcopy(9*Nreals*Nreals, Hess_K1C, 1,
      &                            Work(18*nreals*nreals + 1), 1)
 C
@@ -39,12 +37,10 @@ C
          Enddo
       Enddo
 C
-
       Write(6,*)
       Write(6,*) "The mass weighted Hessian"
       Call output(Hess_K1C, 1, 3*Nreals, 1, 3*Nreals, 3*Nreals, 
      &            3*Nreals, 1)
-
 C
 C Project the mass-weighted Hessian and diagonalize to define normal
 C modes.
@@ -53,31 +49,25 @@ C modes.
      &               WorK(9*Nreals*Nreals+1), 1.0D-8, Nreals, .True., 
      &               .True., .False.)
 C
-
       NX = 3*Nreals
       Write(6,"(a)") "The projected Hessian"
       CALL OUTPUT(Hess_K1C, 1, NX, 1, Nx, Nx, Nx, 1)
 
-
       Call Eig(Hess_K1C, Evecs, 3*Nreals, 3*Nreals, 0)
 C
-
       Write(6,*)
       NX = 3*Nreals
       Write(6,"(a)") "The eigen vectors of the projected Hessian"
       CALL OUTPUT(Evecs, 1, NX, 1, Nx, Nx, Nx, 1)
       Write(6,"(a)") "The eigenvalues of the  projected Hessian"
       Write(6, "(4F17.13)") (Hess_K1C(I,I), I=1, NX)
-
 C
-
       Write(6,*)
       Write(6,*) "@-get_lambda Grad_K1CM (ZMAT order)"
       Write(6, "(3F17.13)") (Grad_K1CM(i), i=1,3*Nreals)
       Write(6,*)
       Write(6,*) "@-get_lambda VEC_K1C (ZMAT order)"
       Write(6, "(3F17.13)") (Vec_K1C(i), i=1,3*Nreals)
-
 C
 C Gradient along the eigenvectors of the Hessian
 C   
@@ -95,13 +85,11 @@ C
 C
       Enddo
 C 
-
       Write(6,*)
       Write(6,*) "The position and gradient vectors along e-vecs"
       Write(6, "(F17.13)") (Grad_K1C_on_EvecS(I), I=1, 3*Nreals)
       Write(6,*)
       Write(6, "(F17.13)") (Vec_K1C_on_EvecS(I), I=1, 3*Nreals)
-
 C
       Imode = 3*Nreals
       Eval_min  = Hess_K1C(Imode, Imode) 
@@ -111,12 +99,10 @@ C
      &                                Hess_K1C(Imode, Imode) 
       Enddo 
 C
-
       Write(6,*)
       Write(6,*) "The lowest eiegnvalue of hess. and the tolerance"
       Write(6, "(a,F17.13,a,F13.10)") "Eval_min =", Eval_min, 
      &          " Hess_Eval_Tol =",Hess_Eval_Tol 
-
 C
 C The solution to Eq. 26 im JPC, vol. 94, 5525, 1990 must be
 C lower than the lowst eigenvalue of the Hessian. Another words
@@ -132,11 +118,6 @@ C
       Ubound_Tol = max(1.0D03, Abs(Eval_min))
       Ubound_Tol = 1.0D03*Ubound_Tol
 C
-
-
-
-
-
 C
       Bracket_end = .FALSE. 
       Do while (.NOT. Bracket_end) 
@@ -151,10 +132,6 @@ C
             Denomi = Hess_K1C(Imode, Imode) - U_bound 
             F_Uppr = Dnumer**2/Denomi**2 + F_Uppr
          Enddo
-
-
-
-
 C
          F_Lowr = F_lowr - Halfs2
          F_Uppr = F_Uppr - Halfs2
@@ -167,10 +144,6 @@ C
          L_bound = Eval_min - (2.0D0)**niter*Delta
          U_bound = Eval_min - (1.0D0/(2.0D0)**niter)*Delta
 c
-
-
-
-
          
          If (L_bound .LT. -Ubound_Tol .AND. ABS(Eval_min-U_bound) .LT. 
      &       Lbound_Tol)  Then 
@@ -185,12 +158,10 @@ c
 C
    10 Continue
 C
-
       Write(6,*)
       Write(6,*) "The upper and lower bound for lambda"
       Write(6, "(a,F17.13,a,F17.13)") " L_bound =",  L_bound,
      &          " U_bound  =",U_bound
-
 C
 C The binary search portion to extract the value in the range 
 C L_bound - U_bound.
@@ -204,10 +175,6 @@ C
          F_Uppr = 0.0D0
          F_Midl = 0.0D0
          Lamda  = 0.50D0*(L_bound + U_bound) 
-
-
-
-
          Do Imode = 1, 3*Nreals
             Dnumer = Hess_k1C(Imode, Imode)*Vec_K1C_on_Evecs(Imode) -
      &               Grad_K1C_on_Evecs(Imode)
@@ -218,10 +185,6 @@ C
             Denomi = Hess_K1C(Imode, Imode) - Lamda       
             F_Midl = Dnumer**2/Denomi**2 + F_Midl
          Enddo
-
-
-
-
 
             F_Lowr = F_lowr - Halfs2
             F_Uppr = F_Uppr - Halfs2
@@ -239,17 +202,9 @@ C
 C
             Tmp_lamda = Lamda
 C
-
-
-
-
             if (F_Lowr*F_Midl .LT. 0.0D0) U_bound = Lamda
             If (F_Uppr*F_Midl .LT. 0.0D0) L_bound = Lamda
 C
-
-
-
-
        Enddo
        
        If (Lamda .GT. Eval_min) Then 
@@ -265,11 +220,9 @@ C
      &                             Eval_min 
           Call Errex
        Endif 
-
       Write(6,*)
       Write(6,*) "The value of lambda after binary search"
       Write(6, "(a,F17.13)") " Lambda  =", Lamda 
-
 C
 C Make the Newton-Raphson Step
 C
@@ -294,11 +247,9 @@ C
           Endif
        Enddo
 C
-
       Write(6,*)
       Write(6,*) "The M. W. updated vector (Vec_K1C_Updated)"
       Write(6,"(3F17.13)") (Vec_K1C_Updated(i), i=1,3*Nreals) 
-
 C
 C Eleminate mass weighing from the updated vector.
 C
@@ -314,12 +265,6 @@ C
       Call Dcopy(9*Nreals*Nreals, Work(18*Nreals*Nreals+1), 1,
      &           Hess_K1C, 1)
 C
-
-
-
-
-
-
 C
        Return
        End

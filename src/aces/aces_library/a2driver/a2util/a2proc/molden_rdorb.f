@@ -116,8 +116,8 @@ c new routine a3_symadapt_scfvecs).
               call getrec(20, "JOBARC", 'OCCUPYA0', 1, POP(1,1))
               Vrt(1,1) = NMO - POP(1,1)
               If (iuhf.eq.1) then
-                  call getrec(20, "JOBARC", 'OCCUPYB0', 1, POP(2,1))
-                  Vrt(2,1) = NMO - POP(2,1)
+                  call getrec(20, "JOBARC", 'OCCUPYB0', 1, POP(1,2))
+                  Vrt(1,2) = NMO - POP(1,2)
               Endif
            else
                call getrec(20,'JOBARC',cscforb(ispin),
@@ -149,7 +149,11 @@ c
               vrt(irrep,ispin)=vrt(irrep,ispin)+idrpvrt(irrep)
               nvrto(ispin)=nvrto(ispin)+idrpvrt(irrep)
 20          continue
-          endif
+          else
+              do irrep =1, nirrep
+                 nocco(ispin)=nocco(ispin)+pop(irrep,ispin)
+              enddo
+          endif 
           if(iuhf.eq.0)then
             do 30 imo=1,nocco(ispin)
               iocc(imo)=2
@@ -172,6 +176,7 @@ c
             do 50 irrep=1,nirrep
               do 51 imo=ioff,ioff+pop(irrep,ispin)-1
                 iocc(imo)=2
+                Write(6,*) iocc(imo)
 51            continue
               ioff=ioff+pop(irrep,ispin)
               do 52 imo=ioff,ioff+vrt(irrep,ispin)-1

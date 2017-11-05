@@ -3,13 +3,11 @@
       DOUBLE PRECISION JFC,JFC2
       DIMENSION JFC(NCOORD,NCOORD),JFC2(3*NCOORD,3*NCOORD)
 
-
       if (ncoord.lt.0) then
          print *, '@EXPJFC: Assertion failed.'
          print *, '         ncoord = ',ncoord
          call errex
       end if
-
 
       CALL ZERO(JFC2,9*NCOORD*NCOORD)
 

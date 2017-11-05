@@ -1,8 +1,9 @@
-      subroutine a3_symadapt_estate_norbs(ener,iocc,orb,dens,nlorb,
+      subroutine a3_symadapt_eom_estate_norbs(ener,iocc,orb,dens,nlorb,
      &                                    edens,Oed2AScal, Ioed2Aord,
      &                                    tmp1,scr,nao,nbas,maxcor,
      &                                    iuhf,iroot,Nbfirr, Nirrep,
-     &                                    O_MOS, T_MOS, Eneg)
+     &                                    O_MOS, T_MOS, Eneg, Eom_exes,
+     &                                    Smult,Nroots,Root_count,Ipick)
 c-----------------------------------------------------------------------
       implicit double precision (a-h,o-z)
 
@@ -29,18 +30,51 @@ C
 C
       character*2 iroot
       character*6 denstype(2)
-      character*6 string
+      character*8 denstyper_aa(24)
+      character*8 denstypel_aa(24)
+      character*8 denstyper_bb(24)
+      character*8 denstypel_bb(24)
       character*8 cscforb(2), Transform(4), Scfvecs(2)
       character*8 cexxcoef(2)
-      character*8 cnumdrop(2)
+      character*8 String
+      character*6 Rhf_string 
+      character*6 cnumdrop(2)
+      Character*8 Dump_string
       character*5 sptype(2)
 
       double precision  iocc(nao), Eneg(Nao)
+      double precision  EOm_exes(24), Smult(24)
       integer  idrppop(8),idrpvrt(8)
-      integer  nocc(8,2), Nbfirr(8)
+      integer  nocc(8,2), Nbfirr(8) 
+      integer  Root_count 
       integer  O_MOS(Nao), T_MOS(Nao)
 C
       data denstype /'REOMDN','LEOMDN'/
+      data denstyper_aa /'REOMDN1A','REOMDN2A','REOMDN3A','REOMDN4A',
+     +                   'REOMDN5A','REOMDN6A','REOMDN7A','REOMDN8A',
+     +                   'REOMDN9A','REOMD10A','REOMD11A','REOMD12A',
+     +                   'REOMD13A','REOMD14A','REOMD15A','REOMD16A',
+     +                   'REOMD17A','REOMD18A','REOMD19A','REOMD20A',
+     +                   'REOMD21A','REOMD22A','REOMD23A','REOMD24A'/
+      data denstyper_bb /'REOMDN1B','REOMDN2B','REOMDN3B','REOMDN4B',
+     +                   'REOMDN5B','REOMDN6B','REOMDN7B','REOMDN8B',
+     +                   'REOMDN9B','REOMD10B','REOMD11B','REOMD12B',
+     +                   'REOMD13B','REOMD14B','REOMD15B','REOMD16B',
+     +                   'REOMD17B','REOMD18B','REOMD19B','REOMD20B',
+     +                   'REOMD21B','REOMD22B','REOMD23B','REOMD24B'/
+      data denstypel_aa /'LEOMDN1A','LEOMDN2A','LEOMDN3A','LEOMDN4A',
+     +                   'LEOMDN5A','LEOMDN6A','LEOMDN7A','LEOMDN8A',
+     +                   'LEOMDN9A','LEOMD10A','LEOMD11A','LEOMD12A',
+     +                   'LEOMD13A','LEOMD14A','LEOMD15A','LEOMD16A',
+     +                   'LEOMD17A','LEOMD18A','LEOMD19A','LEOMD20A',
+     +                   'LEOMD21A','LEOMD22A','LEOMD23A','LEOMD24A'/
+      data denstypel_bb /'LEOMDN1B','LEOMDN2B','LEOMDN3B','LEOMDN4B',
+     +                   'LEOMDN5B','LEOMDN6B','LEOMDN7B','LEOMDN8B',
+     +                   'LEOMDN9B','LEOMD10B','LEOMD11B','LEOMD12B',
+     +                   'LEOMD13B','LEOMD14B','LEOMD15B','LEOMD16B',
+     +                   'LEOMD17B','LEOMD18B','LEOMD19B','LEOMD20B',
+     +                   'LEOMD21B','LEOMD22B','LEOMD23B','LEOMD24B'/
+
       data sptype   /'Alpha','Beta '/
       data Transform /"OOTRANSA", "VVTRNASA", "OOTRANSB", "VVTRANSB"/
       data Scfvecs /"SCFEVCA0", "SCFEVCB0"/
@@ -80,91 +114,74 @@ C
 
      &  call insmem('a3_symadapt_estate_norbs',iend,maxcor)
 
+      If (Nroot .Gt. 12) Then
+        Write(6,"(a,a)") "More than 12 roots is"
+     &                   " not allowed for this analysis."
+        Call Errex
+      Endif
+
       N_o_mos = 0
       N_t_mos = 0
+      Nrootsp1= Nroots+1
+
+      If (Ipick .EQ. 1) Then
+         Do i=1, Nroots
+            Smult(i) = 1.0
+         Enddo
+      else if (Ipick .EQ. Nrootsp1) Then
+         Do i=1,Nroots
+            Ioff = i+Nroots
+            Smult(Ioff) = 2.0
+         Enddo
+         Call Dcopy(Nroots,EOM_exes,1,EOM_exes(Nroots+1),1)
+      Endif
+
+#ifdef _DEBUG_LVL0
+      If (Ipick .eq. 1) then
+      Write(6,"(a)") " The singlet EOM-CCSD excitation energies"
+      Write(6,"(6(1x,F12.6))") (EOM_exes(i),i=1,Nroots)
+      Write(6,"(a)") " The spin mutiplicities of the EOM-CCSD states"
+      Write(6,"(6(1x,F12.6))") (Smult(i),i=1,Nroots)
+      Else
+      Write(6,"(a)") " The triplet EOM-CCSD excitation energies"
+      Write(6,"(6(1x,F12.6))") (EOM_exes(i),i=1,Nroots)
+      Write(6,"(a)") " The spin mutiplicities of the EOM-CCSD states"
+      Write(6,"(6(1x,F12.6))") (Smult(i),i=1,Nroots)
+      Endif 
+#endif
        
       do ispin=1,iuhf+1
 
-C Loop over Idens is for OO and VV blocks of the transition density.
-
          Do Idens = 1, 2
-C
-C Watson
-C   Grab the AO density and transform to MO basis
-C
-CSSS        call getrec(20,'JOBARC','SCFVECA0',nbas*nbas*iintfp,scr(i000))
-CSSS        call getrec(20,'JOBARC','AOOVRLAP',nbas*nbas*iintfp,scr(i010))
-C#ifdef _DEBUG_LVL0
-CSSS        write(6,*) "The SCF eigenvectors"
-CSSS        call output(scr(i000), 1, nbas, 1, nbas, nbas, nbas, 1)
-CSSS        write(6,*) "The overlap"
-CSSS        call output(scr(i010), 1, nbas, 1, nbas, nbas, nbas, 1)
-C#endif
-CSSS
-CSSS        CALL XGEMM('N','N',nbas,nbas,nbas,
-CSSS     +                     1.0D0,SCR(I010),  nbas,  ! Overlap
-CSSS     +                           SCR(I000),  nbas,  ! Coeff
-CSSS     +                     0.0D0,SCR(I020),  nbas ) ! SC
-CSSS
-CSSS        CALL XGEMM('T','N',nbas,nbas,nbas,
-CSSS     +                     1.0D0,SCR(I000),  nbas,  ! Ct
-CSSS     +                           SCR(I020),  nbas,  ! SC
-CSSS     +                     0.0D0,DENS     ,  nbas ) ! Ct SC
-CSSS
-C#ifdef _DEBUG_LVL0
-CSSS        Write(6,"(a)") "CtSC = 1 check"
-CSSS        CALL OUTPUT(DENS,1,NBAS,1,NBAS,NBAS,NBAS,1) ! = 1
-C#endif
-          String = Denstype(Idens)
-          call getrec(20,'JOBARC',String//iroot,
-     +                    nbas*nbas*iintfp,edens)
 
-CSSS        call getrec(20,'JOBARC',"TDENSITY",nbas*nbas*iintfp,dens)
-CSSS        CALL  DAXPY (NBAS*NBAS, -1.0D0, DENS, 1, EDENS, 1)
-CSSS        CALL  DSCAL (NBAS*NBAS,0.5D0,EDENs,1)
-CSSS        CALL  DCOPY (NBAS*NBAS,EDENS,1,SCR(I000),1)
-
-#ifdef _DEBUG_LVL0
-        write(6,*) 
-        Write(6,"(a,a)") "Excited state density: ", String//iroot
-        CALL OUTPUT(EDENS,1,NBAS,1,NBAS,NBAS,NBAS,1) 
-#endif
-
-CSSS        CALL XGEMM('N','N',nbas,nbas,nbas,
-CSSS     +                     1.0D0,SCR(I000),  nbas,
-CSSS     +                           SCR(I010),  nbas,
-CSSS     +                     0.0D0,SCR(I020),  nbas )
-CSSS
-CSSS        CALL XGEMM('N','N',nbas,nbas,nbas,
-CSSS     +                     1.0D0,SCR(I010),  nbas,
-CSSS     +                           SCR(I020),  nbas,
-CSSS     +                     0.0D0,SCR(I000),  nbas )
-CSSS        CALL  DCOPY (NBAS*NBAS,SCR(I000),1,DENS,1)
-CSSS        call ao2mo2(scr(i000),dens,nlorb,scr(i030),nbas,nbas,ispin)
-C#ifdef _DEBUG_LVL0
-CSSS        WRITE (6,"(a)") ' CSDSC before eig! '
-CSSS        CALL OUTPUT(DENS,1,NBAS,1,NBAS,NBAS,NBAS,1) ! = 1
-C#endif
-
-C
 C Generate the occupation numbers for each irrep based on eigen
 C values (SCF) and the number of basis functions per irrep.
 C
-        If (Idens .EQ. 1) Call Getrec(20, "JOBARC", "SCFEVLA0", 
+        If (Ispin .EQ. 1) Call Getrec(20, "JOBARC", "SCFEVLA0", 
      &                                Nbas*Iintfp, Ener)
-        If (Ispin .EQ. 2 .and. Idens .EQ. 1) Call Getrec(20, "JOBARC", 
-     &                                                   "SCFEVLB0",
-     &                                                    Nbas*Iintfp, 
-     &                                                    Ener)
+        If (Ispin .EQ. 2) Call Getrec(20, "JOBARC",
+     &                                             "SCFEVLB0",
+     &                                              Nbas*Iintfp, 
+     &                                              Ener)
+#ifdef _DEBUG_LVLM
+      Write(6,"(a)") "The orbital energies"
+      If (ispin .eq. 1) Write(6,"(6(1x,F12.6))")(Ener(i),i=1,Nbas)
+      If (ispin .eq. 2) Write(6,"(6(1x,F12.6))")(Ener(i),i=1,Nbas)
+#endif
 C
-        Call Occupy(Nirrep, Nbfirr, Nbas, ener, scr, Nocc(1,1),
-     &              1)
+        If (ispin .EQ. 1) Then
+            Call Occupy(Nirrep, Nbfirr, Nbas, ener, scr, Nocc(1,1),
+     &                  1)
+        Else 
+            Call Occupy(Nirrep, Nbfirr, Nbas, ener, scr, Nocc(1,2),
+     &                  1)
+        Endif 
         If (Iuhf .EQ. 0) Call Icopy(8, Nocc(1, 1), 1, Nocc(1,2), 1)
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
         Write(6,"(a)") "The number of occupied orbital per irrep"
         Write(6,"(6(1x,i3))") (Nocc(i,1),i=1,Nirrep)
-        If (Iuhf .EQ.1) Write(6,"(6(1x,i3))") (Nocc(i,2),i=1,Nirrep)
+        If (Iuhf .EQ.0) Write(6,"(6(1x,i3))") (Nocc(i,2),i=1,Nirrep)
 #endif
 
       Noccs = 0
@@ -184,21 +201,39 @@ C
          Norbs = Nvrts
          Ioff  = Noccs
       Endif
-   
-      Do Jc = 1, Norbs
-         Do Ir = 1, Norbs
-            indx = ir + (jc-1)*Norbs
-            Dens(Indx) = Edens(Ioff+ir, Ioff+jc)
-         Enddo
-      Enddo
-
-#ifdef _DEBUG_LVL0
-        If (idens .Eq.1) Then
-           WRITE (6,"(a)") ' The OO block of trans. density matrices'
+C
+C Get the occ-occ and vrt-vrt MO density matrices 
+C
+      If (Iuhf .eq. 0) Then
+          Length = Norbs * Norbs * iintfp 
+          RHF_String = Denstype(Idens)
+          call getrec(20,'JOBARC',RHF_string//iroot,
+     +                    Length,Dens)
+C
+C The RHF case only a half of the density is stored. Scale it by
+C two.
+          call dscal(Length, 2.0D0,Dens,1)
+      Else
+          If (Ispin .Eq. 1) Then
+              Length = Norbs * Norbs * iintfp 
+              If (Idens .EQ. 1) String = Denstyper_aa(Root_count)
+              If (Idens .EQ. 2) String = Denstypel_aa(Root_count)
+              call getrec(20,'JOBARC',String,Length,Dens)
+          Else if (Ispin .eq. 2) Then
+              Length = Norbs * Norbs * iintfp 
+              If (Idens .EQ. 1) String = Denstyper_bb(Root_count)
+              If (Idens .EQ. 2) String = Denstypel_bb(Root_count)
+              call getrec(20,'JOBARC',String,Length,Dens)
+          Endif 
+      Endif 
+#ifdef _DEBUG_LVLM
+        write(6,*)
+        If (iuhf .EQ. 0) Then
+        Write(6,"(a,a)") "Excited state density: ", RHF_String//iroot 
         Else
-           WRITE (6,"(a)") ' The VV block of trans. density matrices'
+        Write(6,"(a,a)") "Excited state density: ", String
         Endif
-        CALL OUTPUT(dens,1,Norbs,1,Norbs,Norbs,Norbs,1) 
+        CALL OUTPUT(DENS,1,Norbs,1,Norbs,Norbs,Norbs,1)
 #endif
 C
 C     Symmetrize and Diagonalize MO basis density
@@ -213,7 +248,7 @@ C
         Else
          WRITE (6,"(a)") 'The VV eigenvalues and natural orbitals'
         Endif
-        CALL OUTPUT(dens,1,Norbs,1,Norbs,Norbs,NOrbs,1) 
+        CALL OUTPUT(dens,1,Norbs,1,Norbs,Norbs,Norbs,1) 
         CALL OUTPUT(NlOrb,1,Norbs,1,NOrbs,Norbs,Norbs,1) 
 #endif
         If (Idens .EQ. 1) call dcopy(Norbs,dens,Norbs+1,iocc,1)
@@ -225,32 +260,41 @@ C
         If (Idens .EQ. 2) Call IZero(T_mos, Nao)
 
         DO imo = 1, Norbs
-           nelec = nelec + iocc(imo)
+           If (Idens .eq. 1) nelec = nelec + (iocc(imo))
+           If (Idens .eq. 2) nelec = nelec + (iocc(Noccs+imo))
 C
 C Track the occ-occ and virtual orbitals that at least have 0.5
-C contribution to the transition. Note that 0.5 is simply a choice
-C that I made and also those are the only orbitals that are 
+C contribution to the transition. Note that cutoff value is simply a choice
+C that I made and also those  above the cutoff are the only orbitals that are 
 C printed. 
+C 
+           If (Iuhf .EQ. 0) Cutoff = 0.40D0
+           If (Iuhf .EQ. 1) Cutoff = 0.40D0
+  
            If (Idens .EQ. 1) Then
-              If (iocc(imo) .GT. 0.50D0) Then
+              If (Abs(iocc(imo)) .GT. Cutoff) Then
                  I = I + 1
                  O_mos(I) = imo
               Endif 
            Else if (Idens .EQ. 2) then
-              If (iocc(Noccs+ imo) .GT. 0.50D0) Then
+              If (Abs(iocc(Noccs+ imo)) .GT. Cutoff) Then
                  I = I + 1
                  T_mos(I) = imo + noccs 
               Endif
            Endif
 
         ENDDO
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
         Write(6,*)
         WRITE (6,"(a)") ' Trace of diagonalized MO density matrix: '
         WRITE (6,"(F10.5)")  nelec
         Write(6,"(a)") "Eigenvalues"
-        Write(6,"(6(1x,F10.5))") (iocc(imo), imo=1, Nbas)
-
+        If (Idens .EQ. 1) Write(6,"(6(1x,F10.5))") 
+     &                         (iocc(imo), imo=1, Norbs)
+        If (Idens .EQ. 2) Write(6,"(6(1x,F10.5))") 
+     &                         (iocc(imo+noccs), imo=1, Norbs)
+        If (Idens .EQ. 1) Write(6,"(6(1x,I4))") (O_mos(I),I=1,Norbs)
+        If (Idens .EQ. 2) Write(6,"(6(1x,I4))") (T_mos(I),I=1,Norbs)
 #endif 
 C
 C Write the OO and VV transformation matrices to JOBARC 
@@ -280,7 +324,7 @@ C
      &               Orig_nprim_shell, Reorder_Shell, Scr(I030),
      &               Scr(I040), Nbas, Nbas)
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
            WRITE (6,"(a)") ' The Alpha MO vectors (after binpack)'
            CALL OUTPUT(Dens,1,NBAS,1,Nbas,NBAS,Nbas,1) 
            If (Iuhf .Eq. 1 .AND. Ispin .eq. 2) Then
@@ -293,7 +337,7 @@ C
         If (Idens .EQ. 2) Call Dcopy(Nbas*Norbs, Dens(Noccs*Nbas+1), 1, 
      &                               Scr(I000), 1)
 
-        CALL XGEMM('N','N',Nbas,Nbas,Norbs,
+        CALL XGEMM('N','N',Nbas,Norbs,Norbs,
      +                     1.0D0, Scr(I000), nbas,
      +                           Nlorb, Norbs,
      +                     0.0D0,SCR(I010),    Nbas )
@@ -302,8 +346,9 @@ C
      &                                Scr(I020), 1)
         If (Idens .EQ. 2) Call Dcopy (Nbas*Norbs, SCR(I010), 1, 
      &                                Scr(I020+Noccs*Nbas), 1)
+
 C       
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
         If (Idens .EQ. 1) Then
            WRITE (6,"(a)") ' The OO rotated MO vectors'
            CALL OUTPUT(SCR(I010),1,NBAS,1,Norbs,NBAS,Norbs,1) 
@@ -314,9 +359,8 @@ C
 #endif
 CSSS      Enddo 
 
-C#ifdef _EXPERIMENTAL
-
         If (Idens .EQ. 1) then
+           N_o_mos = 0
            Do Imo = 1, Nao
               If (O_MOS(Imo) .Gt. 0) N_o_mos = N_o_mos + 1
            Enddo
@@ -330,7 +374,7 @@ C#ifdef _EXPERIMENTAL
            enddo
            enddo
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
         Write(6,*)
         WRITE (6,"(a)") "The OO|MO overlap"
         do i=1, N_o_mos
@@ -343,7 +387,7 @@ C#ifdef _EXPERIMENTAL
              Ioff = Imo*Norbs 
           Do Jmo = 1, Norbs
              Joff = Ioff - (Jmo-1)
-             If (dabs(orb(Joff)) .Gt. 0.5D0) Then
+             If (dabs(orb(Joff)) .Gt. Cutoff) Then
                  I = I + 1
                  O_MOS(I) = Joff
              Endif
@@ -358,6 +402,7 @@ C#ifdef _EXPERIMENTAL
         Endif 
 C
         I = 0
+        N_t_mos = 0
         If (Idens .EQ. 2) then
            Do Imo = 1, Nao
               If (T_MOS(Imo) .Gt. 0) N_t_mos = N_t_mos + 1
@@ -372,7 +417,7 @@ C
            enddo
            enddo 
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
         Write(6,*)
         WRITE (6,"(a)") "The VV|MO overlap"
         do i=1, N_t_mos 
@@ -385,7 +430,7 @@ C
              Ioff = (Imo-1)*Norbs + 1
           Do Jmo = 1, Norbs
              Joff = Ioff + (Jmo-1)
-             If (dabs(orb(Joff)) .Gt. 0.5D0) Then
+             If (dabs(orb(Joff)) .Gt. Cutoff) Then
                 I = I +1
                 T_MOS(I) = Joff + Noccs
              Endif
@@ -397,13 +442,11 @@ C
         WRITE (6,"(a)") "The active virtuals orbitals"
         Write(6,"(6(i3))") (T_MOS(i), i=1, N_t_mos)
 #endif
-
         Endif 
-C#endif 
-
+C
       Enddo 
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
         Write(6,*)
         WRITE (6,"(a)") "The OO and VV Rotated Eigenvetros"
         CALL OUTPUT(scr(I020),1,NAO,1,NBAS,NAO,NBAS,1) 
@@ -419,25 +462,32 @@ C
      &                   Orig_nprim_shell, Reorder_Shell, Scr(I030),
      &                   Scr(I040), Nbas, Norbs)
 C
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
         Write(6,*)
         WRITE (6,"(a)") "The Rotated ACES II like Eigenvectors"
         CALL OUTPUT(SCR(I020),1,NBAS,1,Norbs,NBAS,Norbs,1)
 #endif
         call getrec(20,'JOBARC','CMP2ZMAT',nao*nbas*iintfp,scr(i000))
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
         WRITE (6,"(a)") "The CMP2ZMAT "
         CALL OUTPUT(scr(i000),1,NAO,1,NBAS,NAO,NBAS,1) ! = 1 
 #endif
         call xgemm('n','n',nao,nbas,nbas,one,scr(i000),nao,scr(i020),
      &              nbas,zilch,orb,nao)
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
         WRITE (6,"(a)") ' Nat. Orbs. NAOBFNS x MO ! '
         CALL OUTPUT(orb,1,NAO,1,NBAS,NAO,NBAS,1) ! = 1
 #endif 
 C
+C Lets write these corrsponding orbitals to the JOBARC file so 
+C that the MOLDEN file can be written.
+C
+        If (Ispin .EQ. 1) Dump_String = "CRORBA"//iroot
+        If (Ispin .EQ. 2) Dump_String = "CRORBB"//iroot
+        Call Putrec(20,'JOBARC', Dump_String, nao*nbas*iintfp, Orb)
+C 
         Do Imo = 1,  N_o_mos
            Eneg(Imo) = Ener(O_MOS(Imo))
         Enddo 
@@ -450,18 +500,30 @@ C
         Call Dcopy(N_o_mos*Nao, Orb, 1, Nlorb, 1)
         Call Dcopy(N_t_mos*Nao, Orb(Noccs*Nao+1), 1, 
      &             Nlorb(N_o_mos*Nao+1), 1)
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
         Write(6,*) 
+        WRITE (6,"(a)") ' The Orbital energies that we are interested'
         Write(6, "(6F10.5)") (Eneg(i), i=1, N_ot_total)
         Write(6,*)
-        WRITE (6,"(a)") ' Orbitals that we are interested'
-        CALL OUTPUT(Nlorb,1,NAO,1,N_ot_total,NAO,N_ot_total,1)
+CSSS        WRITE (6,"(a)") ' Orbitals that we are interested'
+CSSS        CALL OUTPUT(Nlorb,1,NAO,1,N_ot_total,NAO,N_ot_total,1)
 #endif
+        Write(6, "(1x,a,F12.6,a)") " The Excitation Energy :" ,
+     &                               EOM_Exes(Root_count), " eV"
+        If (Iuhf .EQ. 0) Then
+           Write(6,"(1x,a,a)") " The spin-state :"," Singlet" 
+        Else
+           If (Int(Smult(Root_count)) .EQ. 1) Write(6,"(1x,a,a)") 
+     &                                  " The spin-state :"," Singlet"
+           If (Int(Smult(Root_count)) .EQ. 2) Write(6,"(1x,a,a)") 
+     &                                  " The spin-state :"," Triplet"
+        Endif 
+        Write(6,*) 
         Call Get_irreps(Nlorb, Eneg, Scr, Imemleft*Iintfp, N_ot_total,
-     &                  Nao, Ispin, Nocc, Iuhf, "EXCITED")
+     &                  Nao, 1, Nocc, Iuhf, Ispin, "EXCITED")
 
       Enddo
-
+C
       return
       end
 

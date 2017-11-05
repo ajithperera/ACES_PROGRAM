@@ -36,19 +36,19 @@ C
       If (Iuhf .EQ. 1) then
          Call Getrec(20, "JOBARC", "SCFEVCB0", Nbfns*Nbfns*Iintfp,
      &               Tmp2_b)
-      Call Filter(Tmp2_b, Nbfns*Nbfns, Tol)
+         Call Filter(Tmp2_b, Nbfns*Nbfns, Tol)
          Call Getrec(20, "JOBARC", "SCFEVLB0", Nbfns*Iintfp, Scfevl_b)
 
       Endif 
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,"(a)") "The SCF eigenvectors from ACES III run"
       Call output(Tmp2_a, 1, Nbfns, 1, Nbfns, Nbfns, Nbfns, 1)
       Write(6,"(a)") " Alpha Eigenvalues"
       Write(6,"(6(1x,F10.5))") (Scfevl_a(i), i=1, Nbfns)
       if (Iuhf .Gt. 0) Call output(Tmp2_b, 1, Nbfns, 1, Nbfns, 
      &                             Nbfns, Nbfns, 1)
-       If (Iuhf .Gt. 0) Write(6,"(a)") " Beta Eigenvalues"
+      If (Iuhf .Gt. 0) Write(6,"(a)") " Beta Eigenvalues"
       if (Iuhf .Gt. 0) Write(6,"(6(1x,F10.5))") (Scfevl_b(i), 
      &                                           i=1, Nbfns)
 #endif 
@@ -76,7 +76,7 @@ C
 
       Endif
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,"(a)") "The SCF eigenvectors after binpack ACES III run"
       Call output(Tmp2_a, 1, Nbfns, 1, Nbfns, Nbfns, Nbfns, 1)
       Write(6,"(a)") "The Eigenvalues"
@@ -110,7 +110,7 @@ C
      &                      Work(Iscr1), Work(Iscr2), Nbfns, Nbfns)
       Endif
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*) "The SCF eigenvectors from ACES III after unbinpack"
       Call output(Scfvec_a, 1, Nbfns, 1, Nbfns, Nbfns, Nbfns, 1)
       if (Iuhf .Gt. 0) Call output(Scfvec_b, 1, Nbfns, 1, Nbfns, 
@@ -141,7 +141,7 @@ c results!
       If (Iuhf .EQ. 1) Call Putrec(20, "JOBARC", "SCFVECB0",
      &                             Nbfns*Nbfns*Iintfp, Scfvec_b)
 C
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,"(a)") "The occupation numbers"
       Write(6,"(8(1x,I3))") (Nocc(i, 1), i=1, Nirrep)
       Write(6,"(8(1x,I3))") (Nocc(i, 2), i=1, Nirrep)
@@ -153,7 +153,7 @@ C in Cartesian this should do nothing).
       Call Getrec(20, "JOBARC", "CMP2ZMAT", Nbfns*Naobfns*Iintfp,
      &            Tmp1)
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*) "CMP2ZMAT transformation"
       Call output(Tmp1, 1, Naobfns, 1, Nbfns, Naobfns, Nbfns, 1)
 #endif
@@ -176,7 +176,7 @@ C in Cartesian this should do nothing).
 
       Endif
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*) "The SCF eigenvectors from ACES III (Cartesian basis)"
       Call output(Scfvec_a, 1, Naobfns, 1, Nbfns, Naobfns, Nbfns, 1)
       if (Iuhf .Gt. 0) Call output(Scfvec_b, 1, Naobfns, 1, Nbfns, 
@@ -187,11 +187,11 @@ C because alpha and beta eigenvectors are kept in two different
 C arrays instead of a one in which beta vectors comes latter.
 C
       Call Get_irreps(Scfvec_a, Scfevl_a, Work, Imemleft*Iintfp, 
-     &                Nbfns, Naobfns, 1, Nocc, Iuhf)
+     &                Nbfns, Naobfns, 1, Nocc, Iuhf, 1, "GROUND")
       If (Iuhf .EQ. 1) Call Get_irreps(Scfvec_b, Scfevl_b, Work, 
      &                                 Imemleft*Iintfp, Nbfns, 
      &                                 Naobfns, 1, Nocc, Iuhf,
-     &                                 "GROUND ")
+     &                                 2, "GROUND ")
 C
       Return
       End

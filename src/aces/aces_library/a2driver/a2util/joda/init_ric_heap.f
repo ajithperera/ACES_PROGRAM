@@ -25,9 +25,6 @@ c machsp.com : end
 
 
 
-
-
-
 c ric_heap.com : begin
 
 c This common block contains the heap address and array indices for

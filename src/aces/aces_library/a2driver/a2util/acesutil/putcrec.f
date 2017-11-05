@@ -15,12 +15,6 @@ c char*(*) SZSRC     : (same as putrec)
 
 
 
-
-
-
-
-
-
       subroutine putcrec(xFlag,szArchive,szRecName,iLength,szSrc)
       implicit none
 
@@ -35,7 +29,6 @@ c INTERNAL VARIABLES
       integer i, iNdx, nLeft, iBuf(1024), iRecLen
 
 c ----------------------------------------------------------------------
-
 
       i = 0
 c   o assert substring fits in iBuf
@@ -61,7 +54,6 @@ c   o assert ichar and iachar are the same
          i = 1
       end if
       if (i.ne.0) call aces_exit(i)
-
 
 c ----------------------------------------------------------------------
 

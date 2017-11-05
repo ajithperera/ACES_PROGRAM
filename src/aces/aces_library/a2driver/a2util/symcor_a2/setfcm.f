@@ -117,7 +117,6 @@ c            o if any gradient is exactly 0, then something is PROBABLY wrong
                call aces_exit(1)
             end if
          end do
-
          CALL GETREC(20,'JOBARC','DIPPOINT',
      &               3*NPOINT*IINTFP,DSCR(lDIPPNT))
          CALL GETREC(20,'JOBARC','POLPOINT',
@@ -173,17 +172,13 @@ C USE FIRST NVIBUNQ VECTORS FOR DEGENERATE REPS SINCE THEY ARE SORTED
 C ACCORDING TO SUBGROUP IRREPS.  OTHERS ARE REDUNDANT.
 
          IF (ENERONLY) THEN
-
             Print*, "Entering ener2fcm"
-
             CALL ENER2FCM(NVIBUNQ,DSCR(lENGPNT+IFIRST),SYMHESS(IOFF),
      &                    INVOP(IOFFINV),STPSIZ,E0,DSCR(lFREE),NDSCRLFT)
             IFIRST=IFIRST+NPTSIRR(IRREP)
          ELSE
 C 08/16, Extensions to do Raman Intensities, Ajith and John.
-
             Print*, "Entering the grad2fcm"
-
             CALL GRAD2FCM(NATOM,NVIBUNQ,
      &                    DSCR(lGRDPNT+IFIRSTG),SYMHESS(IOFF),
      &                    DSCR(lDIPPNT+IFIRSTD),DIPDER(IOFFD),

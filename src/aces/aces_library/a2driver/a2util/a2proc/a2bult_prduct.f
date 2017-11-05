@@ -32,12 +32,6 @@ C
 
       TMP2(INDX, JNDX) = PREFCTI*EXPFCTI*PREFCTJ*EXPFCTJ
 
-
-
-
-
-
-
 C
       RETURN
       END

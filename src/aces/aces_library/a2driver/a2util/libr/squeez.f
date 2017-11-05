@@ -6,13 +6,11 @@ C IDIAG IS SET TO 0, AND NOT INCLUDED IF IDIAG = 1.
       SUBROUTINE SQUEEZ(V,N,IDIAG)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       DIMENSION V(N*N)
-
       if ((idiag.lt.0).or.(idiag.gt.1)) then
          print *, '@SQUEEZ: Assertion failed.'
          print *, '         idiag = ',idiag
          call errex
       end if
-
       if (n.lt.1) return
       IX = 0
       DO J = 1+IDIAG, N

@@ -181,349 +181,6 @@ c Ken Wilson March 1998
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       subroutine molden_main (args,dimargs)
 
       implicit double precision (a-h,o-z)
@@ -534,7 +191,7 @@ c ARGUMENT LIST
       integer dimargs
       character*80 args(dimargs)
       
-      logical LNAT_ORBS, dens_diff
+      logical LNAT_ORBS, dens_diff, CORS_ORBS
       character*8 DLABEL
       character*2 iroot
 
@@ -680,40 +337,55 @@ C
         call getrec(-1,'JOBARC','NAOBASFN',1,nao)
         call getrec(-1,'JOBARC','NBASTOT',1,nmo)
 C
-C Watson, added
+C Watson, added; Ajith extended to transition density based corresponding 
+C orbitals. 
 C
         iroot = "00"
         dens_diff=.FALSE.
         LNAT_ORBS = .FALSE.
+        CORS_ORBS = .FALSE.
         iLst = linblnk(args(1))
         IF (args(1)(1:iLst) .EQ. "nlo") LNAT_ORBS = .TRUE.
+C
+C Setup to print the corresponding orbitals; another analytical 
+C tool, perhaps better than the Natural orbitals; Ajith Perera
+C The initial suggestion came from Marcel Nooijen but it turns 
+C out the JCP, 118, 4775, 2013 describe the same procedue. 
+C
+        IF (args(1)(1:iLst) .EQ. "cors") CORS_ORBS = .TRUE.
 
-        iLst = linblnk(args(2))
-        IF (iLst .NE. 0) THEN
-          DLABEL = args(2)(1:iLst)
-          IF (DLABEL(1:iLst) .EQ. "ediff") THEN
-            iLst = linblnk(args(3))
-            dens_diff=.TRUE.
-            IF (iLst .EQ. 0) THEN
-               WRITE (*,*) ' Density difference requested',
-     +                     ' but no root number specified!'
-               call errex
-            ELSE IF (iLst .NE. 2) THEN
-               WRITE (*,*) ' Incorrect root number specified',
-     +                     ' for density difference!'
-               WRITE (*,*) ' Must be in form XX (i.e. 01, 02, etc)!'
-               call errex
-            ELSE
-               DLABEL="TDENSITY"
-               iroot = args(3)(1:iLst)
-            ENDIF
-          ENDIF
+        IF (CORS_ORBS) THEN
+            iroot = args(2)(1:iLst)
         ELSE
-          DLABEL = 'TDENSITY'
+            iLst = linblnk(args(2))
+            IF (iLst .NE. 0) THEN
+                DLABEL = args(2)(1:iLst)
+                IF (DLABEL(1:iLst) .EQ. "ediff") THEN
+                    iLst = linblnk(args(3))
+                    dens_diff=.TRUE.
+                    IF (iLst .EQ. 0) THEN
+                       WRITE (*,*) ' Density difference requested',
+     +                             ' but no root number specified!'
+                       call errex
+                    ELSE IF (iLst .NE. 2) THEN
+                       WRITE (*,*) ' Incorrect root number specified',
+     +                             ' for density difference!'
+                       WRITE (*,*) ' Must be in form XX',
+     +                             ' (i.e. 01, 02, etc)!'
+                      call errex
+                    ELSE
+                      DLABEL="TDENSITY"
+                      iroot = args(3)(1:iLst)
+                   ENDIF
+                ENDIF
+            ELSE 
+                DLABEL = 'TDENSITY'
+            ENDIF
         ENDIF
 
 CSSS        WRITE (*,*) 'DLABEL - ', DLABEL, LNAT_ORBS
-        IF ( .NOT. LNAT_ORBS) THEN
+        IF (CORS_ORBS) THEN
+
            iener=inext
            iocc=iener+nmo*iintfp
            iorb=iocc+nmo+mod(nmo,2)
@@ -723,25 +395,44 @@ CSSS        WRITE (*,*) 'DLABEL - ', DLABEL, LNAT_ORBS
            
            if(inext-i0.gt.maxcor)call insmem('rdorb-f',inext-i0,maxcor)
 
-           call molden_rdorb(icore(iener),icore(iocc),icore(iorb),
+           call molden_corsorb(icore(iener),icore(iocc),icore(iorb),
      &          icore(iorbr),icore(imom),icore(inext),nao,nmo,
-     &          maxcor-(inext-i0),iuhf,iexx,iunit)
+     &          maxcor-(inext-i0),iuhf,iexx,iunit,iroot)
 
-        ELSE
+        ELSE IF (LNAT_ORBS) THEN
+
            iener=inext
            iocc=iener+nmo*iintfp
            iorb=iocc+nmo+mod(nmo,2)
            igden=iorb+nao*nmo*iintfp
            ivec=igden+nmo*nmo*iintfp
            ieden=ivec+nmo*nmo*iintfp
-           inext=ieden+nmo*nmo*iintfp
+           iscal=ieden+nmo*nmo*iintfp
+           iordr=iscal+nao*iintfp
+           inext=iordr+nao
 
            if(inext-i0.gt.maxcor)call insmem('nlorb ',inext-i0,maxcor)
 
            call molden_nlorb (icore(iener),icore(iocc),icore(iorb),
      &       icore(igden),icore(ivec),icore(ieden),
      &       icore(inext),nao,nmo,maxcor-(inext-i0),iuhf,iexx,iunit,
-     &       DLABEL,iroot,dens_diff)
+     &       DLABEL,iroot,dens_diff,icore(iscal),icore(iordr))
+
+         ELSE
+
+           iener=inext
+           iocc=iener+nmo*iintfp
+           iorb=iocc+nmo+mod(nmo,2)
+           iorbr=iorb+nao*nmo*iintfp
+           imom =iorbr+nao*iintfp
+           inext=imom+nao
+
+           if(inext-i0.gt.maxcor)call insmem('rdorb-f',inext-i0,maxcor)
+
+           call molden_rdorb(icore(iener),icore(iocc),icore(iorb),
+     &          icore(iorbr),icore(imom),icore(inext),nao,nmo,
+     &          maxcor-(inext-i0),iuhf,iexx,iunit)
+
         ENDIF
       endif
 c-------------------------------------------------------------------------

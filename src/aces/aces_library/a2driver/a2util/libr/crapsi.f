@@ -51,15 +51,9 @@ c     /LINEAR/
       LINCC  = .FALSE.
       CICALC = .FALSE.
 
-
-
-
-
-
       MINTPRC = .TRUE.
       MVDINT2 = .TRUE.
       MANTI   = .TRUE.
-
 
 c ----------------------------------------------------------------------
 

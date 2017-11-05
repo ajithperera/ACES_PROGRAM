@@ -26,11 +26,7 @@ c Be careful here. If you build your own generic gemm, then make sure
 c you use the same integer type. Otherwise, if you link against
 c system-BLAS, make sure you cast the arguments correctly.
 
-
-
-
       integer   int_m, int_n, int_k, int_lda, int_ldb, int_ldc
-
 
 c ----------------------------------------------------------------------
 

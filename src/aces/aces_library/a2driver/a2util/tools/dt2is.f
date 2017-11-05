@@ -24,7 +24,6 @@ c INTERNAL VARIABLES
 
 c ----------------------------------------------------------------------
 
-
 c   o assert date and time are all positive
       if ((yr.lt.1).or.
      &    (mo.lt.1).or.
@@ -37,7 +36,6 @@ c   o assert date and time are all positive
          print *, '   hh:mm:ss = ',hh,mm,ss
          call c_exit(1)
       end if
-
 
 c ----------------------------------------------------------------------
 

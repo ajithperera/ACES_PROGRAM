@@ -6,14 +6,6 @@
 
 
 
-
-
-
-
-
-
-
-
 c#define _ABORT_ON_OVERLAP
 
       subroutine xcopy(n,dx,incx,dy,incy)

@@ -22,8 +22,6 @@ c    subroutine callstack_print
 c    subroutine callstack_pop
 c    subroutine callstack_term
 
-
-
 c#define _CALLSTACK_TRACE /* for verbose program tracing */
 
 
@@ -54,7 +52,6 @@ c BE GOOD AND RESET CURR ON EXIT!
       save   /callstack_curr_com/
 
 
-
       external callstack_bd
       character*(32) callstack(100)
       integer csn
@@ -68,9 +65,6 @@ c BE GOOD AND RESET CURR ON EXIT!
          callstack(i) = ' '
       end do
       csn = 1
-
-
-
       return
       end
 

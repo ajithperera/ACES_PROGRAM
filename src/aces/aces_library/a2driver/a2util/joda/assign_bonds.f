@@ -13,12 +13,6 @@ C
 
       TOTNOFBND = IZERO
 C
-
-
-
-
-
-
 C
       DO 10 IBNDS = 2, NRATMS
          DO 20 JBNDS = 1, IBNDS - 1

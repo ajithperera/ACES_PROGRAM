@@ -16,7 +16,6 @@ c int     ILENGTH : the character length of SZEXT
 
 c#define _DEBUG_GFNAME
 
-
       subroutine gfname(szInt,szExt,iLength)
       implicit none
 

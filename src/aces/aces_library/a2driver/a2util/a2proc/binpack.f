@@ -9,12 +9,6 @@
       Integer   Reorder_Shell(Nshells)
       Dimension Iscr(Nrows), Dscr(Nrows)
 
-
-
-
-
-
-
       if (Nrows .gt. 0) then
 
          do i = 1, nshells

@@ -129,11 +129,6 @@ C        Calculate degeneracy in the atomic case
 C        -------------------------------------------------------------
 C
 *        --- print out ---
-
-
-
-
-
 C        Read total energy
 C        -------------------------------------------------------------
          CALL Getrec(20,'JOBARC','TOTENERG',IINTFP,Etot)
@@ -278,10 +273,8 @@ C
 C
       Enddo
 C
-
       Write(6,*) "The vibrational Frequencies"
       Write(*,"(4(2X,F10.4))") (Omega(I), I = 1, Nvibs)
-
 C
       Open(IUnitO,File='Freq.rate',Status='Unknown')
       ierr = 0

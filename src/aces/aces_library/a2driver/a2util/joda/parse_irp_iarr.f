@@ -29,7 +29,6 @@ c INTERNAL VARIABLES
 
 c ----------------------------------------------------------------------
 
-
       iIrp = 0
 c   o assert nIrrps is in [0,inf)
       if (nIrrps.lt.0) then
@@ -57,7 +56,6 @@ c   o assert dim1 is not less than nIrrps
       if (iIrp.ne.0) then
          call errex
       end if
-
 
 c ----------------------------------------------------------------------
 

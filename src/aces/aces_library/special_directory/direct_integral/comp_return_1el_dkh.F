@@ -63,6 +63,8 @@ c----------------------------------------------------------------------------
 
       DKH = (iflags2(157) .GT. 0)
 
+      If (.NOT. DKH) Return
+
 #ifdef _DEBUG_LVL0
       If (me .EQ. 0 .and. DKH) 
      *    Write(6, "(a,i1,a)")  " The DKH-1el of order ", 

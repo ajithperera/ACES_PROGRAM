@@ -6,8 +6,6 @@ c in order for getrec and putrec to work properly.
 
 
 
-
-
       subroutine aces_ja_init
       implicit none
 

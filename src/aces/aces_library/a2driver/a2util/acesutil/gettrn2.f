@@ -29,7 +29,6 @@ c INTERNAL VARIABLES
 
 c ----------------------------------------------------------------------
 
-
       i = 0
 c   o assert dimensions are properly bound (zero cols returns)
       if ((iRow.lt.1).or.(iRow.gt.aces_list_rows(iLeft,iRight)).or.
@@ -44,7 +43,6 @@ c   o assert dimensions are properly bound (zero cols returns)
          i = 1
       end if
       if (i.ne.0) call aces_exit(i)
-
 
 c ----------------------------------------------------------------------
 

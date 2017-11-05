@@ -29,7 +29,6 @@ c machsp.com : end
 
 
 
-
 c icore.com : begin
 
 c icore(1) is an anchor in memory that allows subroutines to address memory

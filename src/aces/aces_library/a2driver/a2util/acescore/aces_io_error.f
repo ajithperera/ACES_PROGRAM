@@ -12,9 +12,6 @@ c int      ISTAT     : the I/O error number (from IOSTAT=iStat)
       integer iUnit, iStat
       print '(/)'
       print *, '@',szRoutine,': An ACES I/O Error has occurred.'
-
-
-
       call c_strerror
       call aces_exit(iStat)
       end

@@ -577,7 +577,8 @@ c---------------------------------------------------------------------------
 c----------------------------------------------------------------------------
 c   Warning flags (911:EOM)
 c---------------------------------------------------------------------------
-      if (scalar_table(sind) .eq. 911.0) then 
+      if (scalar_table(sind) .eq. 911.0 .or.
+     *    scalar_table(sind) .eq. 99.0 ) then 
           call print_warning(x(iarray),scalar_table(sind),
      *             1,n1,1,n2)
       endif 
@@ -1351,6 +1352,8 @@ c
 
       if (me .eq. 0)then
 
+         Call Dputrec(20,"JOBARC","MARKER  ",1,Conv)
+
          If (singlet) then
             write(66,10) 
             write(66,100) 
@@ -1372,7 +1375,7 @@ c
             do i = 1, ieom_roots
                write(66,20) i, array1(i,1), array1(i,1)*conv
             enddo 
-            Call Dputrec(20,"JOBARC","CIS_EXES",ieom_roots,Array1)
+            Call Dputrec(20,"JOBARC","CIS_EXET",ieom_roots,Array1)
             write(66,100) 
 
          Endif 
@@ -1454,7 +1457,7 @@ c
             do i = 1, ieom_roots
                write(66,20) i, array1(i,1), array1(i,1)*conv
             enddo 
-            Call Dputrec(20,"JOBARC","EOM_EXES",ieom_roots,Array1(1,1))
+            Call Dputrec(20,"JOBARC","EOM_EXET",ieom_roots,Array1(1,1))
             write(66,100) 
 
          Endif 
@@ -1485,7 +1488,7 @@ c
       double precision array1(a1:a2,b1:b2), sval
 
       If (me   .eq. 0) then
-      If (Sval .eq.911) then
+      If (Sval .eq. 911) then
 
       Write(66,*)
       Write(66,"(2x,a)") "Warnings!!"
@@ -1497,6 +1500,14 @@ c
       Write(66,"(2x,a,a,a)") "Possible solutions:"
       Write(66,"(2x,a)")"1. Increase the number of iterations (<50)."
       Write(66,"(2x,a)")"2. Change the denominator from Fock to Hbar."
+
+      Elseif (Sval .eq. 99) then
+   
+      Write(66,*)
+      Write(66,"(2x,a,a)") "Singles excitations amplitude above 0.1 is",
+     &                     "printed in the same"
+      Write(66,"(2x,a,a)") "order as the excitation energies appears in",
+     &                     "the above tables." 
 
       Endif
       Endif
@@ -1723,7 +1734,6 @@ c
             write(66,20) i, array1(i,1)/conv, array1(i,1)
             endif
          enddo
-         Write(6,*) "Writing to JOBARC"
          Call Dputrec(20,"JOBARC","EOM_EXES",ieom_roots,Array1)
 
       endif

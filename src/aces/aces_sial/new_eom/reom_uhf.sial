@@ -11366,9 +11366,6 @@
       ENDIF
 #end_debug
       ENDDO SPN_MULT
-#
-# This DENS2JOBARC to call simply write a record named "EOM     " to
-# JOBARC file. It will be used in a2proc.
 
       SEVEN_ZERO = 70.0
       SEVEN_ONE  = 71.0
@@ -11416,6 +11413,10 @@
 #      execute print_scalar suma
 #      enddo nroots
 #end_debug
+
+#
+# This DENS2JOBARC to call simply write a record named "EOM     " to
+# JOBARC file. It will be used in a2proc.
 
       Etemp = -5.0 
       EXECUTE DENS2JOBARC  ROOT_IND Etemp

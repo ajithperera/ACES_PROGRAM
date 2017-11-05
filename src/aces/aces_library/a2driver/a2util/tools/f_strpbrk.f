@@ -4,8 +4,6 @@ c charset. WARNING: Since Fortran pads the end of all strings with spaces,
 c be sure to pass only the relevant substring.
 
 
-
-
       integer function f_strpbrk(sz,charset)
       implicit none
 

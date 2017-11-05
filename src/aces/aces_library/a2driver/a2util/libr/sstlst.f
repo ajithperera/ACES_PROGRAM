@@ -29,14 +29,12 @@ C
       COMMON /SYMINF/ NSTART,NIRREP,IRRVEC(255,2),DIRPRD(8,8)
       COMMON /MACHSP/ IINTLN,IFLTLN,IINTFP,IALONE,IBITWD
       COMMON /SYMPOP/ IRPDPD(8,22),ISYTYP(2,500),ID(18)
-
       if ((LFTTYP.lt.1).or.(22.lt.LFTTYP)) then
          print *, '@SSTLST: Assertion failed.'
          print *, '   LFTTYP  = ',LFTTYP
          print *, '   LISTOUT = ',LISTOUT
          call aces_exit(1)
       end if
-
 C
 C CALCULATE SIZE OF INPUT AND OUTPUT LISTS
 C

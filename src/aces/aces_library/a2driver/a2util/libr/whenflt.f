@@ -10,13 +10,11 @@ c The UNICOS man page for whenflt is appended to this file.
       double precision x(*), target
       integer i, ndx
 
-
       if (n.lt.0) then
          print *, '@WHENFLT: Assertion failed.'
          print *, '          n = ',n
          call errex
       end if
-
 
       if (incx.ge.0) then
          if (incx.eq.1) then

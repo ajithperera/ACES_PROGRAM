@@ -28,7 +28,6 @@ c machsp.com : end
 
 
 
-
       DIMENSION SCRATCH(NX*NX), GRADINT(NOPT), HESIAN(NOPT, NOPT)
 
       DATA HALF /0.50D0/, TS_RMIN /0.70D0/, TS_RMAX /0.85D0/,

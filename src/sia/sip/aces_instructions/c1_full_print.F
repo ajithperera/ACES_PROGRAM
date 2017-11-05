@@ -43,14 +43,10 @@ c--------------------------------------------------------------------------
       b1 = bdim2(2)
       b2 = edim2(2)
 
-      Write(6,*) "I am here"
       call uuu (x, x2, i1, i2, a1, a2, j1, j2, b1, b2)
 
       return
       end
-
-
-
 
       subroutine uuu (c1a, c1b, i1, i2, a1, a2, j1, j2, b1, b2)
 
@@ -69,11 +65,9 @@ c--------------------------------------------------------------------------
 50    FORMAT(2x,'A',10x,'I',10x,'C1-Beta  (A,I)')
 
        open (unit=66,file="summary.out")
-      Write(6,*) "I am here2"
        if (me .eq. 0)then
 
          write(66,*) ' '
-         write(66,10)
          write(66,20)
          write(66,40)
 c
@@ -81,9 +75,6 @@ c
          do a = i1, i2
          stemp=dabs(c1a(a,b))
 c
-          write(6,30) a, b, c1a(a,b)
-
-
          if(stemp .gt. 1.0d-1)then
            write(66,30) a, b, c1a(a,b)
          endif
@@ -114,6 +105,7 @@ c
             enddo
          endif
          write(66,20)
+         write(66,"(18x,25a)") "--+++++++++++++++++++++--"
 
 c
        endif

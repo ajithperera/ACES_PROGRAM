@@ -7,7 +7,6 @@ C
       TWOPI = (ATAN(DFLOAT(1))*DFLOAT(8))
       DINVPI = (ATAN(DFLOAT(1))*DFLOAT(4))/180.0D0
 C
-
       Print*, "The Two Phi, TOTNFBND, TOTNOFANG: ",
      &         TwOPI/DINVPI, TOTNOFBND, TOTNOFANG
       Write(6,*)
@@ -15,7 +14,6 @@ C
       Write(6,*)
       Write(6,10) (DQ(I)/DINVPI, I = (TOTNOFBND + 1), TOTREDUNCO)
    10 Format (5(1X,F10.6)) 
-
 C  
       DO IANG = TOTNOFANG+TOTNOFBND+1, TOTREDUNCO
 C
@@ -27,11 +25,9 @@ C
 C
       ENDDO
 C
-
       Print*, "The angles: @Exist"
       Write(6,*)
       Write(6,10) (DQ(I)/DINVPI, I = (TOTNOFBND + 1), TOTREDUNCO)
-
 C
       RETURN
       END

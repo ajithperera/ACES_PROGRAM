@@ -5,6 +5,7 @@
       Index secmom   = 1, 6
       Index octmom   = 1, 10
       index indone   = 1, 1
+      index jndone   = 1, 1
       Index kindex26 = 1, 26
       Index kindex12 = 1, 12
       Index Kroot    = 1, 12
@@ -50,12 +51,12 @@
       mobindex q2= bbocc, ebvirt
       mobindex q3= bbocc, ebvirt
 
-      LOCAL  GRDSECM (secmom,indone)
-      LOCAL  EXCSECM (secmom,indone)
-      LOCAL  GRDQUAD (secmom,indone)
-      LOCAL  EXCQUAD (secmom,indone)
-      LOCAL  GRDOCTM (octmom,indone)
-      LOCAL  EXCOCTM (octmom,indone)
+      LOCAL  GRDSECM (secmom,jndone)
+      LOCAL  EXCSECM (secmom,jndone)
+      LOCAL  GRDQUAD (secmom,jndone)
+      LOCAL  EXCQUAD (secmom,jndone)
+      LOCAL  GRDOCTM (octmom,jndone)
+      LOCAL  EXCOCTM (octmom,jndone)
 
       SERVED  R2AA_S_VECS (a,i,a1,i1,kroot)
       SERVED  R2BB_S_VECS (b,j,b1,j1,kroot)
@@ -163,6 +164,7 @@
       TEMP  tjb2 (j,b)
       TEMP  tjb3 (j,b)
       TEMP  tbj  (b,j)
+      TEMP  tbj1 (b,j)
       TEMP  tbj2 (b,j)
       TEMP  tbj3 (b,j)
       TEMP  tii  (i1,i)
@@ -258,10 +260,10 @@
       DISTRIBUTED D_T_LEE(NROOTS,INDONE)
 
 #
-      STATIC DENS_OO_AA(i,i1)
-      STATIC DENS_OO_BB(j,j1)
-      STATIC DENS_VV_AA(a,a1)
-      STATIC DENS_VV_BB(b,b1)
+      STATIC TDENS_OO_AA(i,i1)
+      STATIC TDENS_OO_BB(j,j1)
+      STATIC TDENS_VV_AA(a,a1)
+      STATIC TDENS_VV_BB(b,b1)
       STATIC AMP_PRINT_A(A,I)
       STATIC AMP_PRINT_B(B,J)
       STATIC R0_VEC(NROOTS,INDONE)
@@ -272,6 +274,8 @@
       STATIC T_REE(NROOTS,INDONE)
       STATIC T_LEE(NROOTS,INDONE)
       STATIC DIFF(NROOTS,INDONE)
+      STATIC AMP_PRINT_AA(a,i)
+      STATIC AMP_PRINT_BB(b,j)
 
       DISTRIBUTED  AO_DENS (mu,nu)
       DISTRIBUTED  DHF (mu,nu)
@@ -423,6 +427,10 @@
       SCALAR NORM_THRESH
       SCALAR MULT
       SCALAR IDENS
+      SCALAR IKEEP
+      SCALAR PRINT_FLAG 
+      SCALAR KCOUNT
+      SCALAR NINE_NINE
 #
 #    ------------------
       PROC  HF_DENSITY
@@ -454,6 +462,19 @@
       ENDPARDO mu, nu, j
 
       EXECUTE  SIP_BARRIER
+
+      DO mu
+      DO nu
+
+         GET            DHF (mu,nu)
+         txx (mu,nu)  = DHF (mu,nu)
+         DENSITY (mu,nu) = txx (mu,nu)
+
+      ENDDO nu
+      ENDDO mu
+
+      IDENS = 0.0
+      EXECUTE  DENS2JOBARC  DENSITY  IDENS
 #
 #
 #          ...ready!
@@ -470,27 +491,29 @@
 #             Write to JOBARC
 #
 #
-      DO mu
-      DO nu
 
-         GET            AO_DENS (mu,nu)
-         txx (mu,nu)  = AO_DENS (mu,nu)
-         DENSITY (mu,nu) = txx (mu,nu)
+         DO mu
+         DO nu
 
-      ENDDO nu
-      ENDDO mu
+            GET            AO_DENS (mu,nu)
+            txx (mu,nu)  = AO_DENS (mu,nu)
+            DENSITY (mu,nu) = txx (mu,nu)
+
+         ENDDO nu
+         ENDDO mu
 
 #bgn_debug
 #      EXECUTE  PRINT_SCALAR  IDENS
 #end_debug
 
-      EXECUTE  DENS2JOBARC  DENSITY  IDENS
-#
+         EXECUTE  DENS2JOBARC  DENSITY  IDENS
+
 #
 #          ...ready!
 #
 #
       ENDPROC  WRITE_TO_JOBARC
+
 #     ------------------------
 
 #    ---------------------
@@ -852,7 +875,7 @@
       OMEGA2  = TWO / THREE
       OMEGA2 *= OMEGA
 #bgn_debug
-      EXECUTE  PRINT_SCALAR  R0
+#      EXECUTE  PRINT_SCALAR  R0
 #bgn_debug
 #
 #
@@ -1074,17 +1097,17 @@
       ENDPARDO  i, a, b, j
 
 #bgn_debug
-      execute sip_barrier
-      tmpa=0.0
-      suma=0.0
-      pardo i,i1
-         get DENS_OO_A (i,i1)
-         tmp = DENS_OO_A (i,i1) * DENS_OO_A (i,i1)
-         tmpa += tmp
-      endpardo i,i1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
+#      execute sip_barrier
+#      tmpa=0.0
+#      suma=0.0
+#      pardo i,i1
+#         get DENS_OO_A (i,i1)
+#         tmp = DENS_OO_A (i,i1) * DENS_OO_A (i,i1)
+#         tmpa += tmp
+#      endpardo i,i1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
 #endif
 
 #
@@ -1201,17 +1224,17 @@
 
          ENDPARDO  a, b, j
 #bgn_debug
-      execute sip_barrier
-      tmpa=0.0
-      suma=0.0
-      pardo i,i1
-         get DENS_OO_A (i,i1)
-         tmp = DENS_OO_A (i,i1) * DENS_OO_A (i,i1)
-         tmpa += tmp
-      endpardo i,i1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
+#      execute sip_barrier
+#      tmpa=0.0
+#      suma=0.0
+#      pardo i,i1
+#         get DENS_OO_A (i,i1)
+#         tmp = DENS_OO_A (i,i1) * DENS_OO_A (i,i1)
+#         tmpa += tmp
+#      endpardo i,i1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
 #endif
 
 
@@ -2348,88 +2371,88 @@
 #
 #
 #bgn_debug
-      tmpa=0.0
-      suma=0.0
-      pardo i,i1
-         get DENS_OO_A (i,i1)
-         tmp = DENS_OO_A (i,i1) * DENS_OO_A (i,i1)
-         tmpa += tmp
-      endpardo i,i1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      tmpa=0.0
-      suma=0.0
-      pardo j,j1
-         get DENS_OO_B (j,j1)
-         tmp = DENS_OO_B (j,j1) * DENS_OO_B (j,j1)
-         tmpa += tmp
-      endpardo j,j1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo a,a1
-         get DENS_VV_A (a,a1)
-         tmp = DENS_VV_A (a,a1) * DENS_VV_A (a,a1)
-         tmpa += tmp
-      endpardo a,a1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo b,b1
-         get DENS_VV_B (b,b1)
-         tmp = DENS_VV_B (b,b1) * DENS_VV_B (b,b1)
-         tmpa += tmp
-      endpardo b,b1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo i,a
-         get DENS_OV_A (i,a)
-         tmp = DENS_OV_A (i,a) * DENS_OV_A (i,a)
-         tmpa += tmp
-      endpardo i,a
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo j,b
-         get DENS_OV_B (j,b)
-         tmp = DENS_OV_B (j,b) *DENS_OV_B (j,b) 
-         tmpa += tmp
-      endpardo j,b
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo i,a
-         get DENS_VO_A (a,i)
-         tmp = DENS_VO_A (a,i) * DENS_VO_A (a,i)
-         tmpa += tmp
-      endpardo i,a
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo j,b
-         get DENS_VO_B (b,j)
-         tmp = DENS_VO_B (b,j) *DENS_VO_B (b,j) 
-         tmpa += tmp
-      endpardo j,b
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo i,i1
+#         get DENS_OO_A (i,i1)
+#         tmp = DENS_OO_A (i,i1) * DENS_OO_A (i,i1)
+#         tmpa += tmp
+#      endpardo i,i1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      pardo j,j1
+#         get DENS_OO_B (j,j1)
+#         tmp = DENS_OO_B (j,j1) * DENS_OO_B (j,j1)
+#         tmpa += tmp
+#      endpardo j,j1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo a,a1
+#         get DENS_VV_A (a,a1)
+#         tmp = DENS_VV_A (a,a1) * DENS_VV_A (a,a1)
+#         tmpa += tmp
+#      endpardo a,a1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo b,b1
+#         get DENS_VV_B (b,b1)
+#         tmp = DENS_VV_B (b,b1) * DENS_VV_B (b,b1)
+#         tmpa += tmp
+#      endpardo b,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo i,a
+#         get DENS_OV_A (i,a)
+#         tmp = DENS_OV_A (i,a) * DENS_OV_A (i,a)
+#         tmpa += tmp
+#      endpardo i,a
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo j,b
+#         get DENS_OV_B (j,b)
+#         tmp = DENS_OV_B (j,b) *DENS_OV_B (j,b) 
+#         tmpa += tmp
+#      endpardo j,b
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo i,a
+#         get DENS_VO_A (a,i)
+#         tmp = DENS_VO_A (a,i) * DENS_VO_A (a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo j,b
+#         get DENS_VO_B (b,j)
+#         tmp = DENS_VO_B (b,j) *DENS_VO_B (b,j) 
+#         tmpa += tmp
+#      endpardo j,b
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
 #end_debug
 
          PARDO  i, i1
@@ -2541,88 +2564,88 @@
       IF GROUNDSTATE != ONE
          execute print_scalar LRNORM
 #bgn_debug
-      tmpa=0.0
-      suma=0.0
-      pardo i,i1
-         get DENS_OO_A (i,i1)
-         tmp = DENS_OO_A (i,i1) * DENS_OO_A (i,i1)
-         tmpa += tmp
-      endpardo i,i1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      tmpa=0.0
-      suma=0.0
-      pardo j,j1
-         get DENS_OO_B (j,j1)
-         tmp = DENS_OO_B (j,j1) * DENS_OO_B (j,j1)
-         tmpa += tmp
-      endpardo j,j1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo a,a1
-         get DENS_VV_A (a,a1)
-         tmp = DENS_VV_A (a,a1) * DENS_VV_A (a,a1)
-         tmpa += tmp
-      endpardo a,a1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo b,b1
-         get DENS_VV_B (b,b1)
-         tmp = DENS_VV_B (b,b1) * DENS_VV_B (b,b1)
-         tmpa += tmp
-      endpardo b,b1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo i,a
-         get DENS_OV_A (i,a)
-         tmp = DENS_OV_A (i,a) * DENS_OV_A (i,a)
-         tmpa += tmp
-      endpardo i,a
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo j,b
-         get DENS_OV_B (j,b)
-         tmp = DENS_OV_B (j,b) *DENS_OV_B (j,b) 
-         tmpa += tmp
-      endpardo j,b
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo i,a
-         get DENS_VO_A (a,i)
-         tmp = DENS_VO_A (a,i) * DENS_VO_A (a,i)
-         tmpa += tmp
-      endpardo i,a
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo j,b
-         get DENS_VO_B (b,j)
-         tmp = DENS_VO_B (b,j) *DENS_VO_B (b,j) 
-         tmpa += tmp
-      endpardo j,b
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo i,i1
+#         get DENS_OO_A (i,i1)
+#         tmp = DENS_OO_A (i,i1) * DENS_OO_A (i,i1)
+#         tmpa += tmp
+#      endpardo i,i1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      pardo j,j1
+#         get DENS_OO_B (j,j1)
+#         tmp = DENS_OO_B (j,j1) * DENS_OO_B (j,j1)
+#         tmpa += tmp
+#      endpardo j,j1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo a,a1
+#         get DENS_VV_A (a,a1)
+#         tmp = DENS_VV_A (a,a1) * DENS_VV_A (a,a1)
+#         tmpa += tmp
+#      endpardo a,a1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo b,b1
+#         get DENS_VV_B (b,b1)
+#         tmp = DENS_VV_B (b,b1) * DENS_VV_B (b,b1)
+#         tmpa += tmp
+#      endpardo b,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo i,a
+#         get DENS_OV_A (i,a)
+#         tmp = DENS_OV_A (i,a) * DENS_OV_A (i,a)
+#         tmpa += tmp
+#      endpardo i,a
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo j,b
+#         get DENS_OV_B (j,b)
+#         tmp = DENS_OV_B (j,b) *DENS_OV_B (j,b) 
+#         tmpa += tmp
+#      endpardo j,b
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo i,a
+#         get DENS_VO_A (a,i)
+#         tmp = DENS_VO_A (a,i) * DENS_VO_A (a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo j,b
+#         get DENS_VO_B (b,j)
+#         tmp = DENS_VO_B (b,j) *DENS_VO_B (b,j) 
+#         tmpa += tmp
+#      endpardo j,b
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
 #end_debug
 
          PARDO  i, i1
@@ -2723,16 +2746,16 @@
 
       EXECUTE  SIP_BARRIER
 #bgn_debug
-      tmpa=0.0
-      suma=0.0
-      pardo mu,nu
-         get  AO_DENS (mu,nu) 
-         tmp = AO_DENS (mu,nu) * AO_DENS (mu,nu)
-         tmpa += tmp
-      endpardo mu,nu
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo mu,nu
+#         get  AO_DENS (mu,nu) 
+#         tmp = AO_DENS (mu,nu) * AO_DENS (mu,nu)
+#         tmpa += tmp
+#      endpardo mu,nu
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
 #end_debug
 #
 #
@@ -2974,7 +2997,7 @@
 #
       EXECUTE  PRINT_SCALAR  ZERO
       imomcount = 0
-      DO indone
+      DO jndone
       DO secmom
          imomcount += 1
 
@@ -2996,15 +3019,15 @@
 
          EXECUTE  PRINT_SCALAR  SECONDMOM
          IF GROUNDSTATE == ONE
-            GRDSECM (secmom,indone) = SECONDMOM
+            GRDSECM (secmom,jndone) = SECONDMOM
          ENDIF
 
          IF EXCITESTATE == ONE
-            EXCSECM (secmom,indone) = SECONDMOM
+            EXCSECM (secmom,jndone) = SECONDMOM
          ENDIF
 
       ENDDO secmom
-      ENDDO indone
+      ENDDO jndone
 #
 #
 #          ...ready!
@@ -3061,14 +3084,14 @@
       EXECUTE  SIP_BARRIER
       COLLECTIVE  RNORM += esum
 #bgn_debug
-      execute print_scalar rnorm 
+#      execute print_scalar rnorm 
 #end_debug
 
       EXECUTE  SQUARE_ROOT  RNORM  HALF
 
       RNORM  = 1.0 / RNORM
 #bgn_debug
-      execute print_scalar rnorm 
+#      execute print_scalar rnorm 
 #end_debug
 #
 #
@@ -3136,7 +3159,7 @@
       EXECUTE  SIP_BARRIER
       COLLECTIVE  LNORM += esum
 #bgn_debug
-     execute print_scalar lnorm
+#     execute print_scalar lnorm
 #end_debug
 
       LNORM *= RNORM
@@ -3144,106 +3167,6 @@
 #
       ENDPROC COMP_RL_NORM
 #     --------------------
-
-     PROC BUILD_TDENS
-#    ----------------
-#
-# Create transition densities for analysis of excited states. These
-# get read from a2proc program to print out the nature and symmetry
-# of the excited states.
-
-      DO i
-      DO i1
-         tmpii(i,i1) = 0.0
-         DENS_OO_AA(i,i1) = tmpii(i,i1)
-      ENDDO i1
-      ENDDO i
-
-      DO j
-      DO j1
-         tmpjj(j,j1) = 0.0
-         DENS_OO_BB(j,j1) = tmpjj(j,j1)
-      ENDDO j1
-      ENDDO j
-
-      DO a
-      DO a1
-         tmpaa1(a,a1) = 0.0
-         DENS_VV_AA(a,a1) = tmpaa1(a,a1)
-      ENDDO a1
-      ENDDO a
-
-      DO b
-      DO b1
-         tmpbb1(b,b1) = 0.0
-         DENS_VV_BB(b,b1) = tmpbb1(b,b1)
-      ENDDO b1
-      ENDDO b
-
-      execute sip_barrier
-
-      DO i
-      DO i1
-      DO a
-         tmpii(i,i1)  = amp_print_a(a,i)*amp_print_a(a,i1)
-         DENS_OO_AA(i,i1) += tmpii(i,i1)
-      ENDDO a
-      ENDDO i1
-      ENDDO i
-
-      DO j
-      DO j1
-      DO b
-         tmpjj(j,j1)  = amp_print_b(b,j)*amp_print_b(b,j1)
-         DENS_OO_BB(j,j1) += tmpjj(j,j1)
-      ENDDO b
-      ENDDO j1
-      ENDDO j
-
-      DO a1
-      DO a
-      DO i
-         tia(i,a1)     = amp_print_a(a1,i)
-         tmpaa1(a,a1)   = amp_print_a(a,i) * tia(i,a1)
-        DENS_VV_AA(a,a1) += tmpaa1(a,a1)
-      ENDDO i
-      ENDDO a
-      ENDDO a1
-
-      DO b1
-      DO b
-      DO j
-         tjb(j,b1)    = amp_print_b(b1,j)
-         tmpbb1(b,b1)  = amp_print_b(b,j) * tjb(j,b1)
-         DENS_VV_BB(b,b1) += tmpbb1(b,b1)
-      ENDDO j
-      ENDDO b
-      ENDDO b1
-#bgn_dbg
-       sum1=0.0
-       do a
-       do a1
-       tmpaa1(a,a1) = DENS_VV_AA(a,a1)
-       esum = tmpaa1(a,a1) * tmpaa1(a,a1)
-       sum1 +=esum
-       enddo a1
-       enddo a
-       execute print_scalar sum1
-       sum1=0.0
-       do b
-       do b1
-       tmpbb1(b,b1) = DENS_VV_BB(b,b1)
-       esum = tmpbb1(b,b1) * tmpbb1(b,b1)
-       sum1 +=esum
-       enddo b1
-       enddo b
-       execute print_scalar sum1
-#end_dbg
-
-      execute sip_barrier
-
-     ENDPROC BUILD_TDENS
-#    -------------------
 
      PROC READ_RL_VECS
 #    ------------------
@@ -3388,7 +3311,7 @@
      ENDDO INDONE
 
 #bgn_debug
-     execute print_scalar DIFF_NORM
+#     execute print_scalar DIFF_NORM
 #end_debug
 
      IF DIFF_NORM > EOM_THRES
@@ -3419,7 +3342,7 @@
      ENDDO INDONE
 
 #bgn_debug
-     execute print_scalar DIFF_NORM
+#     execute print_scalar DIFF_NORM
 #end_debug
 
      IF DIFF_NORM > EOM_THRES
@@ -3442,7 +3365,7 @@
         RNN(NROOTS,INDONE) = S_REE(NROOTS,INDONE)
         EXECUTE RETURN_SVAL RNN OMEGA
 #bgn_debug
-     execute print_scalar omega
+#     execute print_scalar omega
 #end_debug
 
         PARDO  i, a
@@ -3493,7 +3416,7 @@
         RNN(NROOTS,INDONE) = T_REE(NROOTS,INDONE)
         EXECUTE RETURN_SVAL RNN OMEGA
 #bgn_debug
-     execute print_scalar omega
+#     execute print_scalar omega
 #end_debug
 
         PARDO  i, a
@@ -3567,6 +3490,11 @@
       CALL  COMPUTE_DENSITY
       CALL  BACK_TRANS_COMP_DIP
 
+# Write correlated ground state density to JOBARC
+
+      IDENS = ONE
+      CALL WRITE_TO_JOBARC
+
       DIP_GRD_X  = DIP_MOM_X
       DIP_GRD_Y  = DIP_MOM_Y
       DIP_GRD_Z  = DIP_MOM_Z
@@ -3596,7 +3524,7 @@
       POLTOTXZ = 0.0
       POLTOTYZ = 0.0
 
-# The right transition density <0|(1+L)e^-T{p+q}e^T|0>
+# The right transition density <0|(1+L)e^-T{p+q}R_ke^T|0>
 # Get the right vectors; the left vectors are lambda and they
 # already in.
 
@@ -3606,10 +3534,11 @@
       CALL COMP_R_NORM
       LRNORM = RNORM
 #bgn_debug
-      execute print_scalar r0
-      execute print_scalar OMEGA2
-      execute print_scalar lrnorm
+#      execute print_scalar r0
+#      execute print_scalar OMEGA2
+#      execute print_scalar lrnorm
 #end_debug
+
       CALL COMPUTE_DENSITY
       CALL BACK_TRANS_COMP_DIP
 
@@ -3617,9 +3546,9 @@
       DIP_MOM_Y_R = DIP_MOM_Y
       DIP_MOM_Z_R = DIP_MOM_Z
 #bgn_debug
-      execute print_scalar DIP_MOM_X_R
-      execute print_scalar DIP_MOM_Y_R
-      execute print_scalar DIP_MOM_Z_R
+#      execute print_scalar DIP_MOM_X_R
+#      execute print_scalar DIP_MOM_Y_R
+#      execute print_scalar DIP_MOM_Z_R
 #end_debug
 
 # The left transition densities  <0|L_kde^-T{p+q}e^T|0>
@@ -3637,9 +3566,9 @@
       DIP_MOM_Z_L = DIP_MOM_Z
 
 #bgn_debug
-      execute print_scalar DIP_MOM_X_L
-      execute print_scalar DIP_MOM_Y_L
-      execute print_scalar DIP_MOM_Z_L
+#      execute print_scalar DIP_MOM_X_L
+#      execute print_scalar DIP_MOM_Y_L
+#      execute print_scalar DIP_MOM_Z_L
 #end_debug
 
 # The excited state densities <0|L_kde^-T{p+q}R_ke^T|0>
@@ -3709,14 +3638,89 @@
       DEALLOCATE  GRDQUAD (*,*)
       DEALLOCATE  EXCQUAD (*,*)
 
+# Reset the  OMEGA2 to OMEGA to print
+
+      OMEGA  = THREE/TWO
+      OMEGA *= OMEGA2
       CALL PRINT_ESTATE_RESP_PROPS
 
       EXECUTE SIP_BARRIER
-
 #                                                                        #
      ENDPROC EXCITED_STATES_RESP_PROPS
 #    ---------------------------------
 
+     PROC DUMP_TDENS_2JOBARC
+#    ----------------------
+
+      DO i
+      DO i1
+      DO a
+         GET R1A(a,i)
+         GET R1A(a,i1)
+         Tai(a,i)    = R1A(a,i)
+         Tai1(a,i1)  = R1A(a,i1)
+         Tii1(i,i1)  = Tai(a,i) * Tai1(a,i1)
+         TDENS_OO_AA(i,i1) += tii1(i,i1)
+         AMP_PRINT_AA(a,i) = Tai(a,i)
+      ENDDO a
+      ENDDO i1
+      ENDDO i
+
+      DO j 
+      DO j1
+      DO b
+         GET R1B(b,j)
+         GET R1B(b,j1)
+         Tbj(b,j)    = R1B(b,j)
+         Tbj1(b,j1)  = R1B(b,j1)
+         Tjj1(j,j1)  = Tbj(b,j) * Tbj1(b,j1)
+         TDENS_OO_BB(j,j1) += tjj1(j,j1)
+         AMP_PRINT_BB(b,j) = Tbj(b,j)
+      ENDDO b
+      ENDDO j1
+      ENDDO j
+
+      DO a
+      DO a1
+      DO i
+         GET R1A(a,i)
+         GET R1A(a1,i)
+         Tai(a,i)    = R1A(a,i)
+         Tai1(a1,i)  = R1A(a1,i)
+         Taa1(a,a1)  = Tai(a,i) * Tai1(a1,i)
+         TDENS_VV_AA(a,a1) += taa1(a,a1)
+      ENDDO i
+      ENDDO a1
+      ENDDO a
+
+      DO b
+      DO b1
+      DO j
+         GET R1B(b,j)
+         GET R1B(b1,j)
+         Tbj(b,j)    = R1B(b,j)
+         Tbj1(b1,j)  = R1B(b1,j)
+         Tbb1(b,b1)  = Tbj(b,j) * Tbj1(b1,j)
+         TDENS_VV_BB(b,b1) += Tbb1(b,b1)
+      ENDDO j
+      ENDDO b1
+      ENDDO b
+
+      IDENS += 1.0
+      EXECUTE  DENS2JOBARC  TDENS_OO_AA IDENS
+      IDENS += 1.0
+      EXECUTE  DENS2JOBARC  TDENS_OO_BB IDENS
+      IDENS += 1.0
+      EXECUTE  DENS2JOBARC  TDENS_VV_AA IDENS
+      IDENS += 1.0
+      EXECUTE  DENS2JOBARC  TDENS_VV_BB IDENS
+      IDENS += 1.0
+      EXECUTE  DENS2JOBARC  DENSITY IDENS
+
+      EXECUTE C1_FULL_PRINT AMP_PRINT_AA AMP_PRINT_BB
+
+     ENDPROC DUMP_TDENS_2JOBARC
+#    --------------------------
 #    ------------
 # Main driver of excited state properties.
 
@@ -3899,6 +3903,16 @@
 
      EXECUTE GET_MY_RANK RANK
 
+# The following DENS2JOBARC call add record "EOM" to the JOBARC file.
+# R0_VEC is only act as a dummy array.
+
+     IF RANK == 0.0
+       NINE_NINE = 99.0
+       EXECUTE PRINT_REL_INFO NINE_NINE R0_VEC
+       PRINT_FLAG = -2.0
+       EXECUTE DENS2JOBARC R0_VEC PRINT_FLAG
+     ENDIF
+
      MULT = ZERO
      DO SPN_MULT
 
@@ -3934,27 +3948,34 @@
           CALL CHECK_S_RL_EES
           CALL GET_S_R0
 
-          MCOUNT = ZERO
+          KCOUNT = ZERO
+          IKEEP  = ONE
           DO INDONE
-          DO MROOTS
+          DO IROOTS
 
-              MCOUNT += 1.00
-              IF MCOUNT > TARGET_ROOTS
+              KCOUNT += 1.00
+              IF KCOUNT > TARGET_ROOTS
                  EXIT
               ENDIF
+#bgn_debug
+#              execute print_scalar kcount 
+#end_debug
 
-              MYROOT = MCOUNT
-              RNN(MROOTS,INDONE) = R0_VEC(MROOTS,INDONE)
+              MYROOT = KCOUNT
+              RNN(IROOTS,INDONE) = R0_VEC(IROOTS,INDONE)
               EXECUTE RETURN_SVAL RNN R0_KEEP
-              ONN(MROOTS,INDONE) = OMEGA2_VEC(MROOTS,INDONE)
+              ONN(IROOTS,INDONE) = OMEGA2_VEC(IROOTS,INDONE)
               EXECUTE RETURN_SVAL ONN OMEGA2
 
               CALL BEGIN_PREP
               CALL GROUND_STATE_RESP_PROPS
+              IDENS = IKEEP
               CALL EXCITED_STATES_RESP_PROPS
+              CALL DUMP_TDENS_2JOBARC 
+              IKEEP = IDENS 
               CALL END_PREP
 
-           ENDDO MROOTS
+           ENDDO IROOTS
            ENDDO INDONE
 
         ENDIF 
@@ -3981,27 +4002,34 @@
            CALL CHECK_T_RL_EES
            CALL GET_T_R0
 
-           MCOUNT = ZERO
+           KCOUNT = ZERO
+           IDENS  = IKEEP 
            DO INDONE
-           DO MROOTS
+           DO IROOTS
 
-              MCOUNT += 1.00
-              IF MCOUNT > TARGET_ROOTS
+              KCOUNT += 1.00
+              IF KCOUNT > TARGET_ROOTS
                  EXIT
               ENDIF
+#bgn_debug
+#              execute print_scalar kcount 
+#end_debug
 
-              MYROOT = MCOUNT
-              RNN(MROOTS,INDONE) = R0_VEC(MROOTS,INDONE)
+              MYROOT = KCOUNT
+              RNN(IROOTS,INDONE) = R0_VEC(IROOTS,INDONE)
               EXECUTE RETURN_SVAL RNN R0_KEEP
-              ONN(MROOTS,INDONE) = OMEGA2_VEC(MROOTS,INDONE)
+              ONN(IROOTS,INDONE) = OMEGA2_VEC(IROOTS,INDONE)
               EXECUTE RETURN_SVAL ONN OMEGA2
 
               CALL BEGIN_PREP
               CALL GROUND_STATE_RESP_PROPS
+              IDENS = IKEEP
               CALL EXCITED_STATES_RESP_PROPS
+              CALL DUMP_TDENS_2JOBARC 
+              IKEEP = IDENS 
               CALL END_PREP
 
-           ENDDO MROOTS
+           ENDDO IROOTS
            ENDDO INDONE
 
         ENDIF 

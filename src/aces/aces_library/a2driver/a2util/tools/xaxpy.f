@@ -10,11 +10,6 @@ c dy(i) += da*dx(i)
 
       if (incx.eq.1.and.incy.eq.1) then
 
-
-
-
-
-
          p = iand(n,3)
          do i = 1, p
             dy(i) = dy(i) + da*dx(i)
@@ -25,7 +20,6 @@ c dy(i) += da*dx(i)
             dy(i+2) = dy(i+2) + da*dx(i+2)
             dy(i+3) = dy(i+3) + da*dx(i+3)
          end do
-
 
       else
 

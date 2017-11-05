@@ -17,7 +17,7 @@
       Index Ndim       = 1, 100
       Index Nroots     = 1, 12
       Index Mroots     = 1, 12
-      Index Dbl_mroots = 1, 60
+      Index Dbl_mroots = 1, 24
       Index Subsp_dim  = 1, 50
       Index Nindex50   = 1, 50
       Index Mindex50   = 1, 50
@@ -259,6 +259,8 @@
       Scalar IDENS 
       Scalar ROOT_ID
       Scalar EOM_MAXCYC
+      Scalar RHF_UHF 
+      Scalar NINE_NINE 
 #
       temp  Tx(MROOTS)
       temp TS(MINDEX50,NINDEX50)
@@ -3205,19 +3207,29 @@
       ENDDO b
 
       EXECUTE SIP_BARRIER
-
       IF RANK == 0.0
-         IDENS +=  1.0
-         EXECUTE  DENS2JOBARC  DENS_OO_AA IDENS
-         IDENS += 1.0
-         EXECUTE  DENS2JOBARC  DENS_OO_BB IDENS
-         IDENS += 1.0
-         EXECUTE  DENS2JOBARC  DENS_VV_AA IDENS
-         IDENS += 1.0
-         EXECUTE  DENS2JOBARC  DENS_VV_BB IDENS
-         IDENS += 1.0
-         EXECUTE  DENS2JOBARC  AO_DENSITY IDENS
-      ENDIF
+         IF RHF_UHF == ONE
+            IDENS +=  1.0
+            EXECUTE  DENS2JOBARC  DENS_OO_AA IDENS
+            IDENS += 1.0
+            EXECUTE  DENS2JOBARC  DENS_VV_AA IDENS
+            IDENS += 1.0
+            EXECUTE  DENS2JOBARC  AO_DENSITY IDENS
+         ENDIF 
+         IF RHF_UHF == TWO
+            IDENS +=  1.0
+            EXECUTE  DENS2JOBARC  DENS_OO_AA IDENS
+            IDENS += 1.0
+            EXECUTE  DENS2JOBARC  DENS_OO_BB IDENS
+            IDENS += 1.0
+            EXECUTE  DENS2JOBARC  DENS_VV_AA IDENS
+            IDENS += 1.0
+            EXECUTE  DENS2JOBARC  DENS_VV_BB IDENS
+            IDENS += 1.0
+            EXECUTE  DENS2JOBARC  AO_DENSITY IDENS
+         ENDIF 
+      ENDIF 
+
       EXECUTE  C1_FULL_PRINT  amp_print_a amp_print_b
 
       ENDPROC DUMP_DENS_2JOBARC 
@@ -3512,6 +3524,9 @@
           IF MCOUNT > TARGET_ROOTS
              EXIT
           ENDIF 
+#bgn_debug
+#             execute print_scalar mcount 
+#end_debug
 
           DO i
           DO a
@@ -3553,53 +3568,54 @@
 #end_debug
           CALL XPROP
 
+# Note that the only twelve roots can be handle through JOBARC.
+
+          CALL DUMP_DENS_2JOBARC 
+
        ENDDO MROOTS
 
 # The triplet states 
 
-       MCOUNT = 0.0
-       DO MROOTS
-          MCOUNT += 1.0
-          IF MCOUNT > TARGET_ROOTS
-             EXIT
-          ENDIF
-          execute print_scalar mcount 
+       IF RHF_UHF == TWO
+          MCOUNT = 0.0
+          DO MROOTS
+             MCOUNT += 1.0
+             IF MCOUNT > TARGET_ROOTS
+                EXIT
+             ENDIF
+#bgn_debug
+             execute print_scalar mcount 
+#end_debug
+             DO i
+             DO a
+               GET CISA_T_VECS(a,i,mroots)
+               amp_print_a (a,i) =  CISA_T_VECS(a,i,mroots)
+             ENDDO a
+             ENDDO i
 
-          DO i
-          DO a
-            GET CISA_T_VECS(a,i,mroots)
-            amp_print_a (a,i) =  CISA_T_VECS(a,i,mroots)
-          ENDDO a
-          ENDDO i
+             DO j
+             DO b
+               GET  CISB_T_VECS(b,j,mroots)
+               amp_print_b (b,j) = CISB_T_VECS(b,j,mroots)
+             ENDDO b
+             ENDDO j
 
-          DO j
-          DO b
-            GET  CISB_T_VECS(b,j,mroots)
-            amp_print_b (b,j) = CISB_T_VECS(b,j,mroots)
-          ENDDO b
-          ENDDO j
-
-          ROOT_ID = MCOUNT 
-          EXECUTE RETURN_SELECTED CIS_T_EES ROOT_ID
-          CIS_ENEG = ROOT_ID
+             ROOT_ID = MCOUNT 
+             EXECUTE RETURN_SELECTED CIS_T_EES ROOT_ID
+             CIS_ENEG = ROOT_ID
 
 #bgn_debug
 #     execute print_scalar CIS_ENEG
 #end_debug
-          CALL XPROP
-
-       ENDDO MROOTS
+             CALL XPROP
 
 # Note that the only twelve roots can be handle through JOBARC.
 
-       NCOUNT = 0.0
-       DO TWELVE 
-          NCOUNT += 1.0
-          IF NCOUNT > TARGET_ROOTS
-             EXIT
-          ENDIF 
-          CALL DUMP_DENS_2JOBARC 
-       ENDDO TWELVE 
+             CALL DUMP_DENS_2JOBARC 
+
+          ENDDO MROOTS
+
+       ENDIF 
 
      ENDPROC ANALYZE_STATE
 #    ---------------------
@@ -3612,9 +3628,12 @@
       TARGET_ROOTS = eom_roots  
       CIS_THRES    = EOM_TOL
       EOM_MAXCYC   = EE_MAXCYC
+      RHF_UHF      = REFERENCE 
+      RHF_UHF     += 1
 
 #bgn_debug
       EXECUTE  PRINT_SCALAR  eom_maxcyc
+      EXECUTE  PRINT_SCALAR  RHF_UHF 
 #end_debug
 
       CALL CREATE_ARRAYS
@@ -3644,6 +3663,10 @@
       DO SPN_MULT 
 
          MULT  += 1.0
+   
+         IF MULT  > RHF_UHF
+            EXIT
+         ENDIF 
 
          IF MULT == ONE 
             SINGLET = ONE
@@ -3830,33 +3853,15 @@
 # The following DENS2JOBARC call add record "CIS" to the JOBARC file.
 
       IF RANK == 0.0
+        NINE_NINE = 99.0 
+        execute print_rel_info NINE_NINE CIS_T_EES 
         PRINT_FLAG = -1.0
         EXECUTE DENS2JOBARC HF_DENSITY PRINT_FLAG
       ENDIF 
       IDENS = 1.0
       CALL ANALYZE_STATE 
 
-# The following DENS2JOBARC call identify the nature of the state 
-# (triplet=1.0, singlet=0.0).
-
-      DO IONE
-         MCOUNT = 0.0
-         DO DBL_MROOTS 
-            MCOUNT += 1.0
-            IF MCOUNT <= TARGET_ROOTS 
-               ROOT_MULT(DBL_MROOTS,IONE)  = ZERO 
-            ELSE 
-               ROOT_MULT(DBL_MROOTS,IONE)  = ONE
-            ENDIF 
-         ENDDO DBL_MROOTS 
-      ENDDO IONE
-
-      IF RANK == 0.0
-         PRINT_FLAG = -5.0
-         EXECUTE DENS2JOBARC ROOT_MULT PRINT_FLAG
-      ENDIF 
-#
-      EXECUTE SIP_BARRIER 
+      EXECUTE SERVER_BARRIER 
       EXECUTE BLOCKS_TO_LIST  CISA_S_VECS
       EXECUTE BLOCKS_TO_LIST  CISB_S_VECS 
       EXECUTE BLOCKS_TO_LIST  CISA_T_VECS

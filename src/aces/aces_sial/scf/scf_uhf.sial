@@ -5045,9 +5045,12 @@
             ENDDO mu
 
           ENDIF
+          execute BROADCAST_ARRAY DKH
       ENDIF
-      execute BROADCAST_ARRAY DKH
       execute sip_barrier
+#
+# If etemp is 9; then Ca and Cb files do not exist and we need to
+# generate a GUESS. 
 
       If etemp == 9.0
          CALL IGUESS

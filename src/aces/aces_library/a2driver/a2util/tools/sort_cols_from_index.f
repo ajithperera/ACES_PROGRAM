@@ -51,7 +51,6 @@ c   o VARIABLES
 
 c ----------------------------------------------------------------------
 
-
       if (lda.lt.nRows) then
          print *, '@SORT_COLS_FROM_INDEX: Assertion failed.'
          print *, '                       nRows = ',nRows
@@ -59,7 +58,6 @@ c ----------------------------------------------------------------------
          iErr = -1
          return
       end if
-
 
       iErr = 0
       if (nRows.lt.1.or.nCols.lt.1) return

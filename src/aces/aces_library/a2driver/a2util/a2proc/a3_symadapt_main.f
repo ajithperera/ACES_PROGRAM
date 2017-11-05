@@ -165,365 +165,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       subroutine A3_symadapt_main(Work, Icrsiz)
 c
       implicit double precision (a-h,o-z)
@@ -659,20 +300,24 @@ c     MXCONT - ???
 
 C
       character*32 szFile
-      Character*2 Iroot(10)
+      Character*2 Iroot(24)
       logical bExist, Spherical, Estate_calcs, Dens_diff 
+      Logical Cis, Eom
       Character*4 Comp_pgrp, Full_pgrp
-      Integer Roots
+      Integer Roots, Root_count 
       Dimension Atommass(Mxatms), Iatmchrg(Mxatms),  
      &          Fucoord(3,Mxatms), Coord(3,Mxatms),
      &          Norbits_fullG(Mxatms), NOrbits_compG(Mxatms),
      &          Nbfns_4irrep(8)
+      Dimension Exes(24),SMult(24)
 C
       Dimension Work(Icrsiz/iintfp)
 C
       Data Ione, Ieight, Iunit /1, 8, 10/
       Data Iroot /"01", "02", "03", "04", "05", "06", "07",
-     &            "08", "09", "10"/
+     &            "08", "09", "10", "11", "12", "13", "14",
+     &            "15", "16", "17", "18", "19", "20", "21",
+     &            "22", "23", "24"/
 C    
       Iuhf = 1
       If (iflags(11).eq.0) iuhf = 0 
@@ -752,7 +397,19 @@ C
 
       if (Estate_calcs) Then
          call Getrec(20,'JOBARC','EESYMINF',1, Nroots)
+C
+C Check whether a CIS calculation. It is handled slightly differently.
+C
+         Call  Getrec(0,'JOBARC','CIS     ',ICis, Ijunk)
+         Call  Getrec(0,'JOBARC','EOM     ',IEom, Ijunk)
 
+         Cis = .False.
+         Eom = .False.
+
+         Cis  = (Icis .Gt. 0)
+         Eom  = (IEom .Gt. 0)
+         If (Eom) Cis = .False.
+  
          Iexsvec_a  = 1
          Igdens     = Iexsvec_a  + Naobfns*Naobfns
          Iedens     = Igdens     + Naobfns*Naobfns
@@ -772,8 +429,65 @@ C
       
          Imemleft = (Maxcor - Inext)
 
-         Do Roots = 1, Nroots 
-            Call a3_symadapt_estate_norbs(Work(Iexseval_a), Work(Iocc),
+         If (Cis) Then
+
+C The new cis codes generate both singlets and triplets. The 
+C first Nroots are singlets and the second Nroots are triplets. Here
+C I have two-different paths for UHF and RHF but the CIS sial code is 
+C simply UHF (there is no reason not to). 
+
+            If (Iuhf .NE. 0) Then 
+               Call Getrec(20,"JOBARC","CIS_EXES",Nroots*IINTFP,exes) 
+               Call Getrec(20,"JOBARC","CIS_EXET",Nroots*IINTFP,
+     &                     exes(Nroots+1)) 
+
+            Else
+               Call Getrec(20,"JOBARC","CIS_EXES",Nroots*IINTFP,exes) 
+            Endif 
+            
+            Do Mult  = 1, (Iuhf+1)
+
+            Ipick = 1 + Nroots*(Mult-1)
+
+            Do Roots = 1, Nroots 
+               Root_count = Ipick + (Roots - 1)
+               Call a3_symadapt_cis_estate_norbs(Work(Iexseval_a),  
+     &                                    Work(Iocc),
+     &                                    Work(Iexsvec_a), 
+     &                                    Work(Igdens), Work(Inorbs), 
+     &                                    Work(Iedens), 
+     &                                    Work(Ioed2a_sc), 
+     &                                    Work(Ioed2a_or),
+     &                                    Work(Itmp1),
+     &                                    Work(Inext), 
+     &                                    Naobfns, Nbfns, Imemleft,
+     &                                    Iuhf, Iroot(Root_Count),
+     &                                    Nbfns_4irrep, Nirrep,
+     &                                    Work(Io_mos), 
+     &                                    Work(It_mos),
+     &                                    Work(Ieng),Exes(Ipick),
+     &                                    Smult(Ipick),Nroots,
+     &                                    Root_count,Ipick)
+            Enddo
+            Enddo
+
+         Else 
+
+            If (Iuhf .NE. 0) Then
+               Call Getrec(20,"JOBARC","EOM_EXES",Nroots*IINTFP,exes)
+               Call Getrec(20,"JOBARC","EOM_EXET",Nroots*IINTFP,
+     &                     exes(Nroots+1))
+            Else
+               Call Getrec(20,"JOBARC","EOM_EXES",Nroots*IINTFP,exes)
+            Endif
+
+            Do Mult  = 1, (Iuhf+1)
+
+            Ipick = 1 + Nroots*(Mult-1)
+            Do Roots = 1, Nroots 
+               Root_count = Ipick + (Roots - 1)
+               Call a3_symadapt_eom_estate_norbs(Work(Iexseval_a),  
+     &                                    Work(Iocc),
      &                                    Work(Iexsvec_a), 
      &                                    Work(Igdens), Work(Inorbs), 
      &                                    Work(Iedens), 
@@ -786,11 +500,16 @@ C
      &                                    Nbfns_4irrep, Nirrep,
      &                                    Work(Io_mos), 
      &                                    Work(It_mos),
-     &                                    Work(Ieng))
-         Enddo
+     &                                    Work(Ieng),Exes(Ipick),
+     &                                    Smult(Ipick),Nroots,
+     &                                    Root_count,Ipick) 
+            Enddo
+            Enddo
+ 
+         Endif
 
-      Endif
-
+      Endif 
+C
       Return
       End
 

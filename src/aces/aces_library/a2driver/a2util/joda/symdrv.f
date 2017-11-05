@@ -5,7 +5,6 @@ c to Sun/SPARC causes problems. If anyone decides to spend more time
 c on this than me, then switching this define on should activate all
 c the right code.
 
-
       SUBROUTINE SYMDRV(ICORE,ZCORE,MAXINT,MAXREA,DUMMY,LABEL)
       IMPLICIT INTEGER (A-Z)
 

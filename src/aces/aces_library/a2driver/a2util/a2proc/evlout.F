@@ -1,5 +1,5 @@
       SUBROUTINE EVLOUT(EVAL, IRERDR, IVMLSYM, IREPS, NBAS, NIRREP,
-     &                  NOCC, ISPIN, STATE)
+     &                  NOCC, ISPIN, IFLAG, STATE)
 C
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 C
@@ -89,17 +89,17 @@ C
   210   CONTINUE
 C
         IF(IFLAGS(77).NE.0)THEN
-          WRITE(LUOUT,5000)SPIN(ISPIN)
+          WRITE(LUOUT,5000)SPIN(IFLAG)
  5000     FORMAT(T3,'DIAGONAL FOCK MATRIX ELEMENTS (',A5,')',
      &              '  (1H = 27.2113957 eV)',/)
         ELSE
-          WRITE(LUOUT,5002)SPIN(ISPIN)
+          WRITE(LUOUT,5002)SPIN(IFLAG)
           IF (STATE .EQ. "EXCITED") Then
           Write(6, "(2x,a)")
-     &    "THE EIGENVALUES REFER TO THE REFERENCE STATE ORBITALS" 
+     &    "The eigenvalues refer to the reference state orbitals"
           write(6,*)
           ENDIF
- 5002     FORMAT(T3,'ORBITAL EIGENVALUES (',A5,')',
+ 5002     FORMAT(T3,'Orbital eigenvalues (',A5,')',
      &              '  (1H = 27.2113957 eV)',/)
         ENDIF
         WRITE(LUOUT,5009)

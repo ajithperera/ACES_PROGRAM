@@ -7,13 +7,11 @@ C MATRIX "GOOFY".
 
       DIMENSION OPS(9*IORDGP),GOOFY(9),SCR(9)
 
-
       if (iordgp.lt.0) then
          print *, '@TRNOPS: Assertion failed.'
          print *, '         iordgp = ',iordgp
          call errex
       end if
-
 
       DO I = 1, IORDGP
          IADD = -8 + (9*I)

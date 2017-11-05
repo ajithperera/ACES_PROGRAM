@@ -22,12 +22,6 @@ c machsp.com : end
 
 
 
-
-
-
-
-
-
 C
       Dimension HESS(NXM6, NXM6), PMAT(NXM6, NXM6), PHESS(NXM6, NXM6),
      &          GMATRX_M(NXM6, NXM6), GMATRX_N(NXM6, NXM6),

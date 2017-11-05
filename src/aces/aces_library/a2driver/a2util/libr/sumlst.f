@@ -6,13 +6,11 @@ C (ISPIN,LIST2) WITH THE SUM.
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       DIMENSION T2(NDSSIZ),Z(NDSSIZ,NDIS)
       PARAMETER (ONE=1.0D0)
-
       if (ndis.lt.0) then
          print *, '@SUMLST: Assertion failed.'
          print *, '         ndis = ',ndis
          call errex
       end if
-
       CALL GETLST(Z,1,NDIS,1,ISPIN,LIST1)
       DO I = 1, NDIS
          CALL GETLST(T2,I,1,1,ISPIN,LIST2)

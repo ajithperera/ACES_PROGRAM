@@ -22,12 +22,6 @@ c machsp.com : end
 
 
 
-
-
-
-
-
-
 C
       Double Precision Na
 C

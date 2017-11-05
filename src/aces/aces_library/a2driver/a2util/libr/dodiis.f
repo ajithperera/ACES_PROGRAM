@@ -8,14 +8,12 @@ C GENERATE DIIS EXPANSION COEFFICIENTS, GIVEN THE ERROR MATRIX
       integer    MaxDim
       parameter (MaxDim=64)
       integer ipiv(MaxDim)
-
       if (ndim.lt.0) then
          print *, '@DODIIS: Assertion failed.'
          print *, '         ndim = ',ndim
          call errex
       end if
 c what if ndim == 0?
-
       if (ndim.ge.MaxDim) then
          print *, '@DODIIS: Assertion failed.'
          print *, '         maxdim = ',maxdim

@@ -33,13 +33,6 @@ c INTERNAL VARIABLES
       integer nLeft, nGet, iOff
       integer iPos
 
-
-
-
-
-
-
-
 c COMMON BLOCKS
 
 

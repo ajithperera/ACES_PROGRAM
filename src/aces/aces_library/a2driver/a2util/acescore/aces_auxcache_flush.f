@@ -31,9 +31,6 @@ c icore.com : end
 
 
 
-
-
-
 c auxcache.com : begin
 
 c The auxiliary cache is a programmer-controlled list cache. The dimensions are

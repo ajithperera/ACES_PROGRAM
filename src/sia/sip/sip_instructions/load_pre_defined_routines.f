@@ -613,7 +613,7 @@ C
 
       dummy = load_user_sub('print_eom_dens_info'//char(0),
      +                       print_eom_dens_info)
-      dummy = load_user_sub('c1_full_print'//char(0), return_z)
+      dummy = load_user_sub('c1_full_print'//char(0), c1_full_print)
       call set_upgrade_flag(dummy)
 
 c -------------------------------------------------------------------- 

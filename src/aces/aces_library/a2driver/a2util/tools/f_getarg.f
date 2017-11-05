@@ -6,11 +6,6 @@ c programs.
 c#define NO_GETARG
 
 
-
-
-
-
-
       integer function f_iargc()
       integer*4 iargc
       f_iargc = iargc()

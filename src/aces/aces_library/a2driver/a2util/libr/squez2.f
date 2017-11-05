@@ -6,13 +6,11 @@ C (VFULL*VFULL+1)/2
       SUBROUTINE SQUEZ2(VFULL,VPACK,NSIZE)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       DIMENSION VFULL(NSIZE,NSIZE),VPACK(NSIZE*(NSIZE+1)/2)
-
       if (nsize.lt.0) then
          print *, '@SQUEZ2: Assertion failed.'
          print *, '         nsize = ',nsize
          call errex
       end if
-
       ITHRU = 0
       DO I = 1, NSIZE
          DO J = 1, I
