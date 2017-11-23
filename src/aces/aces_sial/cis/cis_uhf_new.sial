@@ -1373,43 +1373,52 @@
      PROC FORM_DIAG
 #    --------------
 #
-# -----prepare f_aa diagonal = Sdaa
-#
-     PARDO a, a1
-           Saa(a,a1)      = fock_a(a,a1)
-           execute return_diagonal Saa Sdaa
-           taa(a,a1)      = Sdaa(a,a1)
-        
-           put DDaa(a,a1) = taa(a,a1)
-     ENDPARDO a, a1
-#
 # -----prepare f_ii diagonal = Sdii
 #
      PARDO i, i1
-           Sii(i1,i)      = fock_a(i1,i)
-           execute return_diagonal Sii Sdii
-           tii(i1,i)      = Sdii(i1,i)
+      WHERE i==i1
+#
+           tii(i1,i)      = fock_a(i1,i)
+           execute return_diagonal4 tii
            put DDii(i1,i) = tii(i1,i)
+#
      ENDPARDO i, i1
+
+# -----prepare f_aa diagonal = DDaa
+
+     PARDO a, a1
+      WHERE a==a1
+
+           taa(a,a1)      = fock_a(a,a1)
+           execute return_diagonal4 taa
+           put DDaa(a,a1) = taa(a,a1)
 #
-# -----prepare f_bb diagonal = DDbb
-#
-     PARDO b, b1
-           Sbb(b,b1)      = fock_b(b,b1)
-           execute return_diagonal Sbb Sdbb
-           tbb(b,b1)      = Sdbb(b,b1)
-           put DDbb(b,b1) = tbb(b,b1)
-     ENDPARDO b, b1
+     ENDPARDO a, a1
 #
 # -----prepare f_jj diagonal = DDjj
 #
      PARDO j, j1
-           Sjj(j1,j)      = fock_b(j1,j)
-           execute return_diagonal Sjj Sdjj
-           tjj(j1,j)      = Sdjj(j1,j)
-           put DDjj(j1,j) = tjj(j1,j)
-     ENDPARDO j, j1
+      WHERE j==j1
 #
+        tjj(j1,j)      = fock_b(j1,j)
+        execute return_diagonal4 tjj
+        put DDjj(j1,j) = tjj(j1,j)
+#
+     ENDPARDO j, j1
+
+# -----prepare f_bb diagonal = DDbb
+
+     PARDO b, b1
+      WHERE b==b1
+#
+        tbb(b,b1)      = fock_b(b,b1)
+        execute return_diagonal4 tbb
+        put DDbb(b,b1) = tbb(b,b1)
+#
+     ENDPARDO b, b1
+
+     execute sip_barrier
+
 # -----prepare Hbar_aiai diagonal
 #
      PARDO a, i
@@ -1492,7 +1501,7 @@
 #
            enddo i1
 #
-           PUT R1DA(a,i)=tai(a,i)
+           PUT R1DA(a,i)+=tai(a,i)
 #
      ENDPARDO a, i
 #
@@ -1523,7 +1532,7 @@
 #
            enddo j1
 #
-           PUT R1DB(b,j) = tbj(b,j)
+           PUT R1DB(b,j)+= tbj(b,j)
 #
      ENDPARDO b, j
 #

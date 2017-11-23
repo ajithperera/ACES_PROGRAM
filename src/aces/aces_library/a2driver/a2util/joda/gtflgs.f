@@ -1461,7 +1461,6 @@ c      the jobarc record HAVEGEOM to 0 indicate the geometry optimizations
 c      can proceed.
 c
       Call GetRec(0, 'JOBARC', 'HAVEGEOM', i_length, i_havegeom)
-      Print*, "A geometry for frequency {0,1} present:", i_length 
       if (i_length .lt. 0) Call Putrec(20, 'JOBARC', 'HAVEGEOM', 
      &                                 1, 0) 
 c
@@ -1858,10 +1857,6 @@ C
               endif
            Endif
 C
-      Print*, "The value of grad calc", ioppar(238)
-      Print*, "The Deriv. level, havegeom?, and vib? :",
-     &     ioppar(3),  i_havegeom, 
-     &     ioppar(105), ioppar(54) 
 c
       If (ioppar(54)      .eq. 1 .and. 
      &    ioppar(105) .ne. 0 .and. 
@@ -1869,7 +1864,6 @@ c
               szTmp = 'deriv=first'//achar(0)  
               call asv_update_kv(szTmp,iASV,szData,0)
       Endif
-      Print*, "The derivative level @exit", ioppar(3) 
 
 c    
 c    o If we have not yet change the default deriavative level from
@@ -1958,8 +1952,6 @@ c   o If CC calc, then set MAXCYC and turn on RLE with order equal to 5
       end if
 
 c   o PROPERTY CALCULATION FOR CORRELATED CALCULATION
-      Print*, "First order props and grad flags @enter:",
-     &         ioppar(18),ioppar(238) 
       if (ioppar(18).ge.1) then
          szTmp = 'deriv=first'//achar(0)
          call asv_update_kv(szTmp,iASV,szData,0)
@@ -1968,9 +1960,6 @@ c   o PROPERTY CALCULATION FOR CORRELATED CALCULATION
              call asv_update_kv(szTmp,iASV,szData,0) 
          endif 
       end if
-      Print*, "First order props, deriv level and grad_calc @exit:", 
-     &         ioppar(18), ioppar(3),
-     &         ioppar(238)
      
 cJDW 6/16/95
 c Try to keep ioppar(3)=1 for PROP=J_FC, J_SD, J_SO

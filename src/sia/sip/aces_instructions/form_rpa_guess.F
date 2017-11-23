@@ -107,7 +107,7 @@ c---------------------------------------------------------------------------
       Integer n1,n2,m1,m2,k1,k2,l1,l2,p1,p2
       Integer Ndim,Itmp,Jtmp,Mdim,Ibgn
       Integer i,j,k,Nroots,Max_roots,ondx,vndx
-      Parameter(Max_roots=30)
+      Parameter(Max_roots=12)
 
       Double Precision Diags((n2-n1+1),(m2-m1+1))
       Double Precision Vecs(k1:k2,l1:l2,p1:p2)

@@ -301,20 +301,10 @@ C
             CALL GETREC(20, 'JOBARC', 'OLDENERG', IINTFP, PREV_ENRG)
             ACT_ENRG_CHNG = CURR_ENRG - PREV_ENRG 
 C
-            Write(6,*)
-            Write(6,"(x,a,F10.5)") "The initial trust rad:", 
-     &                               TRUST_RAD
-            Write(6,"(x,a,a,3F10.5)") "The predicted and actual", 
-     &                             " energy change: ", 
-     &                               PRD_ENRG_CHNG,ACT_ENRG_CHNG
-            Write(6,"(x,a,F10.5)") "Ratio of change:",
-     &                              PRD_ENRG_CHNG/ACT_ENRG_CHNG
             TAU = DSQRT(DDOT(NXM6, STEP, 1, STEP, 1))
             CALL TRUST_UPDATE(SCRATCH, GRAD, HES, TRUST_RAD,
      &                        PRD_ENRG_CHNG, DXDX, EPS, NX, NXM6,
      &                        NOPT, NCYCLE, TS)
-            WRITE(6,"(x,a,2F10.5)") "The new trust rad and TAU:", 
-     &                             TRUST_RAD, TAU
             IF (TAU.GT.TRUST_RAD) THEN
                 SCALE = TRUST_RAD/TAU
             ELSE

@@ -33,6 +33,7 @@ c--------------------------------------------------------------------------
 
       implicit none
       include 'trace.h'
+      include 'parallel_info.h'
 
       double precision x(*)
       integer nindex, type(*), bval(*), eval(*)
@@ -44,7 +45,7 @@ c--------------------------------------------------------------------------
       integer n
 
       if (dryrun) return
-
+     
       n = edim(1) - bdim(1) + 1 
       if (nindex .eq. 2) call retdiag2(x,x2,n) 
 
@@ -77,6 +78,7 @@ c---------------------------------------------------------------------------
 CSSS      if (me .eq.0) then
 CSSS         call output(array2,1,n,1,n,n,n,1)
 CSSS      endif 
+
       return
       end
 

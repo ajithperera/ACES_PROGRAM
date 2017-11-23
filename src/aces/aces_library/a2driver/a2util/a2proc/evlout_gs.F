@@ -1,42 +1,11 @@
-      SUBROUTINE EVLOUT(EVAL, IRERDR, IVMLSYM, IREPS, NBAS, NIRREP,
-     &                  NOCC, ISPIN, IFLAG, STATE)
+      SUBROUTINE EVLOUT_GS(EVAL, IRERDR, IVMLSYM, IREPS, NBAS, NIRREP,
+     &                     NOCC, ISPIN, IFLAG, STATE)
 C
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 C
-c maxbasfn.par : begin
-
-c MAXBASFN := the maximum number of (Cartesian) basis functions
-
-c This parameter is the same as MXCBF. Do NOT change this without changing
-c mxcbf.par as well.
-
-      INTEGER MAXBASFN
-      PARAMETER (MAXBASFN=1000)
-c maxbasfn.par : end
-
-
-c machsp.com : begin
-
-c This data is used to measure byte-lengths and integer ratios of variables.
-
-c iintln : the byte-length of a default integer
-c ifltln : the byte-length of a double precision float
-c iintfp : the number of integers in a double precision float
-c ialone : the bitmask used to filter out the lowest fourth bits in an integer
-c ibitwd : the number of bits in one-fourth of an integer
-
-      integer         iintln, ifltln, iintfp, ialone, ibitwd
-      common /machsp/ iintln, ifltln, iintfp, ialone, ibitwd
-      save   /machsp/
-
-c machsp.com : end
-
-
-
-c flags.com : begin
-      integer        iflags(100)
-      common /flags/ iflags
-c flags.com : end
+#include "maxbasfn.par"
+#include "machsp.com"
+#include "flags.com"
 
       INTEGER NBAS
       CHARACTER*8 IRRSYM1(MAXBASFN),IRRSYM2(MAXBASFN)
@@ -64,8 +33,10 @@ C
           CALL GETREC(20,'JOBARC','EVCSYMBC',NBAS*IINTFP,IRRSYM2)
       Endif
 C
+#ifdef _DEBUG_LVL0
       Write(6,"(a)") "Irrep labels" 
       Write(6,"(6(8a))")(IRRSYM1(i),i=1,Nbas)
+#endif 
       DO 101 I=1,NBAS
          IRERDR(I)=I
   101 CONTINUE
@@ -160,7 +131,6 @@ c
 cmn
 c Determine mapping between comp symmetry labels and internal number of irrep.
 c
-        Write(6,*) "I am HERE"
         do j=1,8
            irpchar(j)='XXXX'
         enddo
@@ -172,7 +142,6 @@ c
               enddo
            endif
         enddo
-        Write(6,*) "I am HERE2"
 c
 c write this info to file SYMINFO
 c

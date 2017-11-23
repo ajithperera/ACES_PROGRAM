@@ -53,7 +53,7 @@ C
      &                              (ATMASS(J),J = 1,NATOMS)
  7733 FORMAT(1X,F15.10)
 C
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,"(a, 5I)"), "The number of atoms", Natoms
       Write(6,*)
       Print*, "The Cartesians before translations to CM" 
@@ -86,7 +86,7 @@ cYAU         CLOSE(UNIT=LUARC,STATUS='DELETE')
           Q(3*I-J) = Q(3*I-J)-CM(3-J)
   301   continue
    30 continue
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*), "The Cartesians in center of mass coords"
       Write(6, "(3F12.7)"), (Q(I), I=1, 3*NATOMS)
       Write(6,*)
@@ -212,13 +212,13 @@ C
  3146    FORMAT(T3,'@SYMMETRY-I, The symmetry group is ',i1,'-fold ',
      &          'degenerate.')
 C
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*)
       Print*, "The symmetry processing begins"
 #endif
 
       IF (IFLAGS(h_IFLAGS_symmetry).EQ.0) THEN
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Print*, "The symmetry is not used for anything"
       Write(6,*)
 #endif
@@ -231,7 +231,7 @@ CSSS         DO J = 0,2
 CSSS            Q(3*I-J) = Q(3*I-J)+ CM(3-J)
 CSSS         ENDDO
 CSSS      ENDDO
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Print*, "The Cartesians wrt CM origin"
       Write(6, "(3F10.5)"), (Q(I), I=1, 3*NATOMS)
       Write(6,*)
@@ -326,7 +326,7 @@ C
             ENDIF  
 C
             CALL XGEMM('N','N',3,NATOMS,3,ONE,IV,3,NEWQ,3,ZILCH,Q,3)
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*)
       Print*, "The Cartesians after no-principal axis rot. "
       Write(6, "(3F10.5)"), (Q(I), I=1, 3*NATOMS)
@@ -336,7 +336,7 @@ C
                   Q(3*I-J) = Q(3*I-J)+ CM(3-J)
                ENDDO
             ENDDO
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*)
       Print*, "The Cartesians after no-reorintation CM"
       Write(6, "(3F10.5)"), (Q(I), I=1, 3*NATOMS)
@@ -348,7 +348,7 @@ C in principle this block is inactive.
 C 
             CALL DCOPY(3*nAtoms, NEWQ, 1, Q, 1)
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*)
       Print*, "The Cartesians used when sym=none,noreori=off"
       Write(6, "(3F10.5)"), (NEWQ(I), I=1, 3*NATOMS)
@@ -391,7 +391,7 @@ C
 C
             CALL XGEMM('N','N',3,NATOMS,3,ONE,IV,3,NEWQ,3,ZILCH,
      &                     QOLD,3)
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Print*, "The Cartesians before translations to CM:NO REORIENT"
       Print*, (QOLD(I), I=1, 3*NATOMS)
 #endif
@@ -401,7 +401,7 @@ C
                ENDDO
             ENDDO
 #endif
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Print*, "The Cartesians before entering symmetry auto"
       Write(6, "(3F10.5)"), (NEWQ(I), I=1, 3*NATOMS)
       Write(6, "(3F10.5)"), (QTMP(I), I=1, 3*NATOMS)
@@ -428,7 +428,7 @@ C
                ENDDO
             ENDIF
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*), "The Cartesians in the principal axis rotation ori."
       Write(6, "(3F12.7)"), (NEWQ(I), I=1, 3*NATOMS)                  
       Write(6,*)
@@ -442,7 +442,7 @@ C If no reorientation is requested, undo the rotation and translation.
 C
                CALL XGEMM('N','N',3,NATOMS,3,ONE,IV,3,NEWQ,3,ZILCH,
      &                     QTMP,3)
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*), "The Cartesians in center of mass coords"
       Write(6, "(3F12.7)"), (QTMP(J), J=1, 3*NATOMS)                  
       Write(6,*)
@@ -456,7 +456,7 @@ C
      &                     QTMP)
                CALL DCOPY(3*NATOMS, QTMP, 1, Q, 1)
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*), "The Cartesians after undoing the sym. REORIENT"
       Write(6, "(3F12.7)"), (QTMP(J), J=1, 3*NATOMS)                  
 #endif
@@ -472,7 +472,7 @@ C
                CALL PUTREC(20,'JOBARC','NOREOCOR',3*NATOMS*IINTFP,
      &                     QOLD)
 
-#ifdef _DEBUG_LVL0     
+#ifdef _DEBUG_LVLM
       Print*, "The Cartesians before translations to CM:NO REORIENT"
       Print*, (QOLD(I), I=1, 3*NATOMS)
 #endif

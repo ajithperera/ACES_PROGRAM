@@ -320,8 +320,6 @@ C
             Call ErrEx
          EndIf
  101  Continue
-      Write(6,*)
-      Print*, "Start Reading Archive file NXM6: ", NXM6
 C
       READ(LuArc)CRAP2,iarchx,ICYCLE,NATOMS,NX,NUNIQUE,NOPT,IPRNT,INR,
      $     IVEC,

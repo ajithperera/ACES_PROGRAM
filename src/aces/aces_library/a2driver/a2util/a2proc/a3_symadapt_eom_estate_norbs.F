@@ -124,6 +124,14 @@ C
       N_t_mos = 0
       Nrootsp1= Nroots+1
 
+C Track the occ-occ and virtual orbitals that at least have 0.5
+C contribution to the transition. Note that cutoff value is simply a choice
+C that I made and also those  above the cutoff are the only orbitals that are
+C printed.
+
+      If (Iuhf .EQ. 0) Cutoff = 0.20D0
+      If (Iuhf .EQ. 1) Cutoff = 0.20D0
+
       If (Ipick .EQ. 1) Then
          Do i=1, Nroots
             Smult(i) = 1.0
@@ -239,20 +247,41 @@ C
 C     Symmetrize and Diagonalize MO basis density
 C
         call symmet2(Dens, Norbs)
-        call eig (dens,Nlorb,1,Norbs,-1)
+C
+C Eig would have been fine except that it reorders eigenvalues and
+C vectors.
+CSSS        call eig (dens,Nlorb,1,Norbs,-1)
 
-#ifdef _DEBUG_LVL0
-        Write(6,*)
+        I050 = Iend
+        I060 = I050 + Norbs
+        I070 = I060 + Norbs
+        I080 = I070 + Norbs*Norbs
+        I090 = I080 + Norbs*Norbs
+        Iend = I090 + 4*Norbs
+        If (iend .gt. Maxcor)
+     +     call insmem('a3_symadapt_estate_norbs',iend,maxcor)
+
+        call dgeev("N","V",Norbs,Dens,Norbs,Scr(I050),Scr(I060),
+     +              Scr(I070),Norbs,Scr(I080),Norbs,Scr(I090),
+     +              4*Norbs,Ierror)
+
+        If (Ierr .Ne. 0) Then
+            Write(6,"(a)") "Eigenvector solver failed"
+            Call Errex
+        Endif
+
+        Call Dcopy(Norbs*Norbs,scr(I080),1,Nlorb,1)
+
+#ifdef _DEBUG_LVLM
         If (Idens .EQ. 1) then
          WRITE (6,"(a)") 'The OO eigenvalues and natural orbitals'
         Else
          WRITE (6,"(a)") 'The VV eigenvalues and natural orbitals'
         Endif
-        CALL OUTPUT(dens,1,Norbs,1,Norbs,Norbs,Norbs,1) 
         CALL OUTPUT(NlOrb,1,Norbs,1,NOrbs,Norbs,Norbs,1) 
 #endif
-        If (Idens .EQ. 1) call dcopy(Norbs,dens,Norbs+1,iocc,1)
-        If (Idens .EQ. 2) call dcopy(Norbs,dens,Norbs+1,iocc(Noccs+1),
+        If (Idens .EQ. 1) call dcopy(Norbs,scr(I050),1,iocc,1)
+        If (Idens .EQ. 2) call dcopy(Norbs,scr(I050),1,iocc(Noccs+1),
      &                               1)
         nelec = 0.0D0
         I     = 0
@@ -262,19 +291,11 @@ C
         DO imo = 1, Norbs
            If (Idens .eq. 1) nelec = nelec + (iocc(imo))
            If (Idens .eq. 2) nelec = nelec + (iocc(Noccs+imo))
-C
-C Track the occ-occ and virtual orbitals that at least have 0.5
-C contribution to the transition. Note that cutoff value is simply a choice
-C that I made and also those  above the cutoff are the only orbitals that are 
-C printed. 
-C 
-           If (Iuhf .EQ. 0) Cutoff = 0.40D0
-           If (Iuhf .EQ. 1) Cutoff = 0.40D0
   
            If (Idens .EQ. 1) Then
               If (Abs(iocc(imo)) .GT. Cutoff) Then
                  I = I + 1
-                 O_mos(I) = imo
+                 O_mos(I) = noccs - imo + 1
               Endif 
            Else if (Idens .EQ. 2) then
               If (Abs(iocc(Noccs+ imo)) .GT. Cutoff) Then
@@ -284,7 +305,20 @@ C
            Endif
 
         ENDDO
-#ifdef _DEBUG_LVLM
+
+        If (Idens .EQ. 1) then
+           N_o_mos = 0
+           Do Imo = 1, Nao
+              If (O_MOS(Imo) .Gt. 0) N_o_mos = N_o_mos + 1
+           Enddo
+        Elseif (Idens .EQ. 2) then
+           N_t_mos = 0
+           Do Imo = 1, Nao
+              If (T_MOS(Imo) .Gt. 0) N_t_mos = N_t_mos + 1
+           Enddo
+        Endif
+
+#ifdef _DEBUG_LVL0
         Write(6,*)
         WRITE (6,"(a)") ' Trace of diagonalized MO density matrix: '
         WRITE (6,"(F10.5)")  nelec
@@ -293,7 +327,10 @@ C
      &                         (iocc(imo), imo=1, Norbs)
         If (Idens .EQ. 2) Write(6,"(6(1x,F10.5))") 
      &                         (iocc(imo+noccs), imo=1, Norbs)
+        WRITE (6,"(a)") "The active occupied/virtual orbitals"
+        Write(6,*)
         If (Idens .EQ. 1) Write(6,"(6(1x,I4))") (O_mos(I),I=1,Norbs)
+        Write(6,*)
         If (Idens .EQ. 2) Write(6,"(6(1x,I4))") (T_mos(I),I=1,Norbs)
 #endif 
 C
@@ -306,7 +343,8 @@ C Do the OO and VV transformation. Retrive the SCF vectors of correct
 C spin type during first iteration of the inner loop (OO block)
 C
         call getrec(20,'JOBARC', SCFVECS(Ispin), Nbas*Nbas*iintfp,dens)
-C
+
+#ifdef _NOT_OBSOLETED
 #ifdef _DEBUG_LVLM
            WRITE (6,"(a)") ' The Alpha MO vectors'
            CALL OUTPUT(Dens,1,NBAS,1,Nbas,NBAS,Nbas,1) 
@@ -443,9 +481,11 @@ C
         Write(6,"(6(i3))") (T_MOS(i), i=1, N_t_mos)
 #endif
         Endif 
+#endif (for 1st obsoleted)
 C
       Enddo 
 
+#ifdef _NOT_OBSOLETED
 #ifdef _DEBUG_LVLM
         Write(6,*)
         WRITE (6,"(a)") "The OO and VV Rotated Eigenvetros"
@@ -461,13 +501,16 @@ C
       Call undo_binpack(Scr(I020), Nshells, Nprim_shell,
      &                   Orig_nprim_shell, Reorder_Shell, Scr(I030),
      &                   Scr(I040), Nbas, Norbs)
+#endif (endif for 2nd obsoleted)
 C
 #ifdef _DEBUG_LVLM
         Write(6,*)
         WRITE (6,"(a)") "The Rotated ACES II like Eigenvectors"
         CALL OUTPUT(SCR(I020),1,NBAS,1,Norbs,NBAS,Norbs,1)
 #endif
-        call getrec(20,'JOBARC','CMP2ZMAT',nao*nbas*iintfp,scr(i000))
+        call getrec(20,'JOBARC', SCFVECS(Ispin), Nbas*Nbas*iintfp,
+     +              scr(i020))
+        call getrec(20,'JOBARC','CMP2CART',nao*nbas*iintfp,scr(i000))
 
 #ifdef _DEBUG_LVLM
         WRITE (6,"(a)") "The CMP2ZMAT "
@@ -519,8 +562,10 @@ CSSS        CALL OUTPUT(Nlorb,1,NAO,1,N_ot_total,NAO,N_ot_total,1)
      &                                  " The spin-state :"," Triplet"
         Endif 
         Write(6,*) 
-        Call Get_irreps(Nlorb, Eneg, Scr, Imemleft*Iintfp, N_ot_total,
-     &                  Nao, 1, Nocc, Iuhf, Ispin, "EXCITED")
+        Call Get_irreps_ex(Nlorb, Eneg, Scr, Imemleft*Iintfp, 
+     &                     N_ot_total, Nbas, 1, Nocc, Iuhf, 
+     &                     Ispin, O_MOS, T_MOS, N_o_mos,
+     &                     N_t_mos, "EXCITED")
 
       Enddo
 C

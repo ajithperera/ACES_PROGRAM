@@ -830,7 +830,7 @@ C
         CALL DUMPCORD(NATOMS,NEWQ,IATNUM)
         IF(FPGRP.EQ.'    ')FPGRP=PGRP
         IF(ISYM .EQ. 1)    PGRP='C1  '
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
         Print*, "PGRP, FPGRP:", FPGRP, PGRP
 #endif
         CALL SUBGROUP(IFLAGS(85),PGRP,FPGRP,IROTATE)
@@ -1112,7 +1112,7 @@ C
 C DUMP SOME NECESSARIES TO JOBARC
 C
       IF(FPGRP(2:2).EQ.'X')ILINEAR=1
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Print*, "@-SYM_AUTO The Orientation matrices: ORIEN2 and ORIENT"
       Write(6,*)
       CALL OUTPUT(ORIEN2, 1, 3, 1, 3, 3, 3, 0)
@@ -1130,7 +1130,7 @@ C
       CALL XGEMM('N','N',3,3,3,ONE,ORIEN2,3,ORIENT,3,ZILCH,
      &     SCRATCH,3)
 C
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*)
       Write(6,*) "@-SYM_AUTO ORIENT2=ORIEN2xORIENT" 
       CALL OUTPUT(SCRATCH, 1, 3, 1, 3, 3, 3, 0)

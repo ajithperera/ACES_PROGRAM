@@ -234,7 +234,7 @@
       STATIC REE(NROOTS,INDONE)
       STATIC LEE(NROOTS,INDONE)
       STATIC DIFF(NROOTS,INDONE)
-
+      STATIC MISMATCH(NROOTS,INDONE)
 
       DISTRIBUTED  AO_DENS (mu,nu)
       DISTRIBUTED  DHF (mu,nu)
@@ -2522,7 +2522,11 @@
         DIFF(NROOTS,INDONE) -= LEE(NROOTS,INDONE)
 
         ETEMP = DIFF(NROOTS,INDONE) * DIFF(NROOTS,INDONE)
-        DIFF_NORM += ETEMP
+        DIFF_NORM = ETEMP
+
+        IF DIFF_NORM > EOM_THRES
+           MISMATCH(NROOTS, INDONE) = ONE 
+        ENDIF 
      
      ENDDO NROOTS 
      ENDDO INDONE
@@ -2531,8 +2535,6 @@
 #     execute print_scalar DIFF_NORM
 #end_debug
 
-     IF DIFF_NORM > EOM_THRES
-     ENDIF 
 
      ENDPROC CHECK_RL_EES
 #    --------------------
@@ -2976,8 +2978,8 @@
      CALL CHECK_RL_EES
 
 #bgn_debug
-#     execute print_static ree target_roots 
-#     execute print_static lee target_roots 
+     execute print_static ree target_roots 
+     execute print_static lee target_roots 
 #end_debug
 
      NCOUNT = ZERO 
@@ -2992,6 +2994,7 @@
         EXECUTE RETURN_SVAL RNN OMEGA 
 #bgn_debug
 #     execute print_scalar omega 
+#     execute print_scalar ncount 
 #end_debug
 
         PARDO a, i

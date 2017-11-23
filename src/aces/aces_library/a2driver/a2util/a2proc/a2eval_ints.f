@@ -49,10 +49,6 @@ C Loop over primitives end here!
 C
          ENDDO
       ENDDO
-      Write(6,*) 
-      Write(6,*) "The product integral in primitive basis"
-      CALL OUTPUT(TMP2, 1, NTOTPRIM, 1, NTOTPRIM, NTOTPRIM, 
-     &            NTOTPRIM, 1)
 C
 C Expand to a square matrix to convert to contracted basis
 C
@@ -62,10 +58,6 @@ C
          ENDDO
       ENDDO
 C
-      Write(6,*) 
-      Write(6,*) "The product integral in primitive basis"
-      CALL OUTPUT(TMP2, 1, NTOTPRIM, 1, NTOTPRIM, NTOTPRIM, 
-     &            NTOTPRIM, 1)
 C
 C 
 C Built the contracted product functions for this shell.
@@ -76,8 +68,6 @@ C
       CALL XGEMM('T', 'N', NTOTCRF, NTOTCRF, NTOTPRIM, ONE, PCOEF, 
      &            NTOTPRIM, TMP3, NTOTPRIM, DZERO, PRDTINT, NTOTCRF)
 C
-      Write(6,*) "The product integral in contracted basis"
-      CALL OUTPUT(PRDTINT, 1, NTOTCRF, 1, NTOTCRF, NTOTCRF, NTOTCRF, 1)
 C
       RETURN 
       END

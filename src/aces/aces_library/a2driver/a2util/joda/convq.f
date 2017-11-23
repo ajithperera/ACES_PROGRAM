@@ -294,10 +294,6 @@ C
 
 C
 
-         Write(6,*)
-         Write(6,*) "@-CONVQF,  The outgoing internal gradients"
-         WRITE(6,"(3F13.7)") (FI(IJL), IJL = 1, NXM6)
-         Write(6,*)
 C
 C
 C SYMMETRIZE THE GRADIENT IF NECESSARY

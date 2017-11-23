@@ -39,12 +39,6 @@ C
             ENDDO
       ENDDO
 C
-      Write(6,*)
-      Write(6,"(a,I4)") "The number of primitive functions", 
-     &                   NFUNC_COUNT 
-      Write(6,*)
-      write(6,"(a)") "The angular momentum type of each function"
-      Write(6,"(6i4)") (IANGTYPE(i), i=1, NFUNC_COUNT)
       RETURN
       END
  

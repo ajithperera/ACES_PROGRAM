@@ -123,21 +123,6 @@ C
          Enddo
       Enddo
 C
-      Write(6,*)
-      Write(6,"(a)") "Natural order"
-      Write(6,"(6(1x,i3))")(Inatural_order(i),i=1,Itot_prim)
-      Write(6,*)
-      Write(6,*) "The # of s,p,d..shells per atom"
-      do i=1, Nreal_atoms
-      Write(6,"(7(1x,i2))")(Ispdfgh_4atm(i,j), j=1,Ihigh(i))
-      enddo 
-      Write(6,*)
-      Write(6,*) "The # of s,p,d.. primitives per atom"
-      do i=1, Nreal_atoms
-      Write(6,"(7(1x,i2))")(Inprims_4atm(i,j), j=1,Ihigh(i))
-      enddo 
-      Write(6,*)
-      Write(6,"(6(1x,i2))")(Nprims(i), i=1, Nreal_atoms)
           
       Do Iatm = 1, Nreal_atoms
          Ifwd_4shell(Iatm, 1) = Ispdfgh_4atm(Iatm, 1) 
@@ -163,17 +148,6 @@ CSSS         Ifwd_4shell(Iatm,Ihigh(Iatm))=Ifwd_4shell(Iatm,Ihigh(Iatm))+1
       Enddo
       
 
-      Write(6,*) 
-      Write(6,*) "The fwd and bwd offset for Ang. Moms. and Prims"
-      do i=1, Nreal_atoms
-      Write(6,"(7(1x,i2))")(Ifwd_4shell(i,j), j=1,Ihigh(i))
-      Write(6,"(7(1x,i3))")(Ifwd_4prims(i,j), j=1,Ihigh(i))
-      enddo
-      Write(6,*)
-      do i=1, Nreal_atoms
-      Write(6,"(7(1x,i2))")(Ibwd_4shell(i,j), j=1,Ihigh(i))
-      Write(6,"(7(1x,i2))")(Ibwd_4prims(i,j), j=1,Ihigh(i))
-      enddo
 C
       Iatm_off = 0
       Do Iatm = 1, Nreal_atoms
@@ -250,24 +224,6 @@ C
          Enddo
       Enddo
 C
-      Write(6,*)
-      Write(6,"(a)") "The reordered Ang. Moms. array"
-      joff = 0
-      Do I= 1, Nreal_atoms
-      Write(6, "(4(1x,I3))") (Iangmom(joff+J), J=1,Ishell_4atm(I))
-      joff = joff + IShell_4atm(I) 
-      Enddo
-      Write(6,*)
-      Write(6,"(a)") "The reordered primitive array"
-      joff = 0
-      Do I= 1, Nreal_atoms
-      Write(6, "(4(1x,I3))") (Nprim_4shl(joff+J), J=1,Ishell_4atm(I))
-      joff = joff + IShell_4atm(I)
-      Enddo 
-      Write(6,*)
-      Write(6,"(a)") "The reordered Natural order array"
-      Write(6, "(10(1x,I3))") (Inatural_order(J), J=1,
-     &                        Itot_prim)
 C
       Return
       End 

@@ -385,9 +385,6 @@ C
       Call Getcrec(20, 'JOBARC', 'COMPPTGP', 4, Comp_pgrp)
       Call Getcrec(20, 'JOBARC', 'FULLPTGP', 4, Full_pgrp)
 C
-      print*, "Entering a2_prep4_mol_read"
-      Print*, (Norbits_compG(i), i=1, Icmp_unq_atoms)
-      Print*, (Norbits_fullG(i), i=1, Iful_unq_atoms)
       Call a2_prep4_mol_read(Icore, Maxcor, Natoms, Nbfns, 
      &                       Naobfns, Icmp_unq_atoms, 
      &                       Iful_unq_atoms, Coord, Iatmchrg, 
@@ -399,25 +396,6 @@ C
       Do i=1, 3
       Write(6, "(3F10.5)"), (coord(i,j), J=1,nreal_atoms)
       Enddo
-
-      Write(6,*)
-      Print*, "Offsets for various arrays initilized in Pre4_Den_plo."
-      Write(*, '(31I5)'), IMEMBC,INUC,NUFCT,NUMOM,NFCT,NANGMOM,
-     &                   IATMNAM,NAOUATM,NAOATM,IANGMOMSHL,
-     &                   ICONFUNSHL,IPRMFUNSHL,INPRIMSHL,
-     &                   IANGMOMTSHL,ICONFUNTSHL,IOFFSETPRM,
-     &                   IOFFSETCON,IOFFSETSHL,IMAP_SHL2CNT,
-     &                   IPRMFUNTSHL,NMOMAO,IALPHA,ICOEFFA,
-     &                   ICOEFFB,IDENSA,IDENSB,IPCOEFFA,
-     &                   IPCOEFFB, IPCOEFF,ISCR1,ISCR2
-C
-      Write(6,*) 
-      Print*, "The orbital exponents in main", Itot_prim, ialpha
-      call output(icore(ialpha), 1, Itot_prim, 1, 1, 1, Itot_prim,
-     &            1,1,1)  
-      Print*, "The Contraction Coefs."
-      call output(icore(ipcoeff), 1, Itot_prim, 1, Naobfns, Itot_prim,
-     &            Naobfns, 1)
 
 C
       Icordens_a = Inext
@@ -433,12 +411,6 @@ C
       Iocca      = Iscftmp2   + Nbfns*Nbfns*Iintfp 
       Ioccb      = Iocca      + Nbfns*Iintfp
       Inext      = Ioccb      + Nbfns*Iintfp
-      Write(6,*)
-      print*, "Entering A2make_wfn, The geometry:"
-    
-      Do i=1, 3
-      Write(6, "(3F10.5)") (coord(i,j), J=1,nreal_atoms)
-      Enddo
       Call A2make_wfn(Icore(Icordens_a), Icore(Icordens_b),
      &                Icore(Inatorbs_a), Icore(Inatorbs_b),
      &                Icore(Ieigvecs_a), Icore(Ieigvecs_b),
@@ -465,19 +437,11 @@ C
      &                Icore(Icnterbf), ICore(Inatorbs_a),  
      &                ICore(Inatorbs_reord_a), Icore(Nangmom),
      &                Icore(Nmomao), Icore(Naoatm),.True.)
-      Write(6,*)
-      Write(6,*) "Alpha orbital for Quantum Topology analysis"
-      Call output(Icore(Inatorbs_a), 1, nbfns, 1, Nbfns, Nbfns,
-     &            Nbfns, 1)
 C
       CALL Xgemm('N','N',Itot_prim,Nbfns,Naobfns,1.0D+00,
      &            Icore(Ipcoeff),Itot_prim,Icore(Inatorbs_a),
      &            Naobfns,0.0D+00,Icore(Icoef_a),Itot_prim)
 
-      Write(6,*) 
-      Write(6,*) "Alpha orbital for Quantum Topology analysis"
-      Call output(Icore(Icoef_a), 1, Itot_prim, 1, Nbfns, Itot_prim,
-     &            Nbfns, 1)
       If (Iuhf .ne. 0) Then
          Call Reord_mos(0, Nreal_atoms, Naobfns, Nbfns, 
      &                  Max_prim_4atom, Icore(Icnterbf), 
@@ -490,10 +454,6 @@ C
      &               Icore(Inatorbs_b), Naobfns,0.0D+00,
      &               Icore(Icoef_b),Itot_prim)
 
-      Write(6,*) 
-      Write(6,*) "Beta orbital for Quantum Topology analysis"
-      Call output(Icore(Icoef_b), 1, Itot_prim, 1, Nbfns, Itot_prim,
-     &            Nbfns, 1)
 
       End if
 
@@ -502,13 +462,6 @@ C
 C
       if (Comp_pgrp .Eq. "C1") Iful_unq_atoms = Icmp_unq_atoms
 C
-      Write(6,*)              
-      Write(6,*) "The number of contracted function per shell"
-      Write(6,*) (ICORE(ICONFUNTSHL - 1 + I), I=1, Ntotshl)
-      Write(6,*) "The shell angular momentum"
-      Write(6,*) (ICORE(IANGMOMTSHL - 1 + I), I=1, Ntotshl)
-      Write(6,*) "The number of primitive functions per shell"
-      Write(6,*) (ICORE(IPRMFUNTSHL - 1 + I), I=1, Ntotshl)
       Open(unit=Iunit, File="WFANAL", Form="Formatted", 
      &     Status="New")
 

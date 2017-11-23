@@ -282,15 +282,6 @@ c
      &     .or. num_grad .or. (geomopt.and.num_grad))
       if (do_pes_scan .eq. 1 .and. fd) ignore = .false.
 c
-      Print*, "Finite diffs; ignore and geomopt vars:",
-     &         ignore, geomopt
-      Print*, "The vib calc. related varrs:"
-      Print*, "iflags(h_IFLAGS_vib):", iflags(54)
-      Print*, "The finite diffs:", fd
-      Print*, "iflags2(h_IFLAGS2_geom_opt):",
-     &         iflags2(5)
-      Print*, "first run of popt num. frq:", popt_num_fd
- 
 c
       if (fd) then
 

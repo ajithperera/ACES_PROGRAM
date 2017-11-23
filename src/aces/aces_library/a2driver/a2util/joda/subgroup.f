@@ -20,8 +20,6 @@ C
       ABGRP=ABGRP0(1:3)
       FUGRP=FUGRP0(1:LASTF)
 c
-      Print*, "Abelian group, full group"
-      Print*, ABGRP, FUGRP, GROUP
 
 C
       IROTATE=0

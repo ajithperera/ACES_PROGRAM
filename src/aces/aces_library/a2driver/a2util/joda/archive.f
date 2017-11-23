@@ -138,12 +138,6 @@ c io_units.par : end
 C
 C SQUASH INTERNAL COORDINATE VECTOR IF NEEDED
 C
-      Write(6,*)
-      Print*, "The COORD COMMON BLOCK AT ARCHIVE"
-      Write(6, "(3F10.5)") (Q (I), I= 1, 3*NATOMS)
-      Write(6,*)
-      If (.not. xyzin) Write(6, "(3F10.5)") (R(I), I= 1, 3*NATOMS)
-      Write(6,*)
 C
       IF(NCOMP.EQ.1 .AND. .NOT. XYZIN) CALL SQUSH(R,NX)
 C
@@ -179,7 +173,6 @@ C
  10    Continue
       ENDIF
 C
-      Write(6,*) "@-ARCHIVE, the number of opt. cycles", NCYCLE
       WRITE(LuArc)CRAP,iarch,NCYCLE,NATOMS,NX,NUNIQUE,NOPT,IPRNT,INR,
      $     IVEC,
      $   IDIE,IMXSTP,ISTCRT,IVIB,ICURVY,ICONTL,IRECAL,INTTYP,IDISFD,

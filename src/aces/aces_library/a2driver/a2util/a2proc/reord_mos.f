@@ -21,18 +21,6 @@ C
             CALL GETREC(20,'JOBARC','EVECAO_B',IINTFP*NBAS2,COEFF)
          ENDIF
       ENDIF
-      Write(6,*)
-      Print*, "The eigenvectors in Reord_MOs", NATOMS
-      Call output(COEFF, 1, NBAS, 1, NBASP, NBAS, NBASP, 1)
-      Write(6,*) 
-      Write(6,"(a,I5)") "The value of NTANGM :", NTANGM
-      Write(6,*)
-      Write(6,"(a)") "The NANGMOM array"
-      Write(6,"(4(1x,I3))") (NANGMOM(I), I=1, NATOMS)
-      Write(6,*)
-      Write(6,"(a)") "The NMOMAO array"
-      Write(6,"(4(1x,I3))") (NMOMAO(I), I=1, NATOMS*NTANGM)
-      Write(6,*)
 C  Put higher angular momentum vectors in correct order
 C
       ICNT=1
@@ -173,10 +161,6 @@ C
          IATMOFF=IATMOFF+NAOATM(IATM)
  110  CONTINUE
 
-      Write(6,*)  
-      Print*, "The eigenvectors after reordering in Reord_MOs"
-      Call output(COEFFN, 1, NBAS, 1, NBASP, NBAS, NBASP, 1)
-      Write(6,*)  
 C     
       RETURN
       END

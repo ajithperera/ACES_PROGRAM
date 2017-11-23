@@ -36,8 +36,6 @@ C coord.com : end
 
  80   FORMAT(3(1X,F10.5))
 C
-      WRITE(6,*)'--------------B'
-      WRITE(6,80)(VEC(JAP),JAP=1,3*NATOMS)
 
       CALL SORTXYZ(VEC,scr,NORD(NATOMS+1),NATOMS)
 C

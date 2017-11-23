@@ -31,8 +31,6 @@ C size 9*MXATMS*MXATMS (so it needs to be managed dynamically).
       DO I=1, TOTREDNCO
          IND=3*NRATMS*(I-1)+1
 C
-         Write(6, "(a,4F10.5)"),'The gradients Compkmat: ',
-     &        (FI(J), J=1, TOTREDNCO)
          CALL DSCAL(9*NRATMS*NRATMS,FI(I),DERBMAT(1,IND),1)
       END DO
 
@@ -45,9 +43,6 @@ C
          END DO
       END DO
 C
-      Write(6,"(a)"),'The  Cartesian Hess'
-      CALL OUTPUT(HC,1,3*NRATMS,1,3*NRATMS,3*NRATMS,
-     &            3*NRATMS,1)
 C
       DO I=1,3*NRATMS
          DO J=1,3*NRATMS
@@ -55,9 +50,6 @@ C
          END DO
       END DO
 C
-      Write(6,*),'In COMPKMAT: The (HC-K) Matrix'
-      CALL OUTPUT(DIFTEMP,1,3*NRATMS,1,3*NRATMS,3*NRATMS,
-     &            3*NRATMS,1)
 
       RETURN
       END

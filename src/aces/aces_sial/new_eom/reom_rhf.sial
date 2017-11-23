@@ -6899,38 +6899,38 @@
 
        EXECUTE SERVER_BARRIER
 #bgn_debug
-#      tmpa=0.0
-#      tmpb=0.0
-#      suma=0.0
-#      sumb=0.0
-#      pardo i,a
-#         get vcact1a(a,i)
-#         tmp = vcact1a(a,i) * vcact1a(a,i)
-#         tmpa += tmp
-#      endpardo i,a
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo a,i1,a1,i
-#            request  VCACT2aa(a,i1,a1,i) i
-#            tmp = VCACT2aa(a,i1,a1,i) * VCACT2aa(a,i1,a1,i)
-#            tmpa += tmp
-#      endpardo a,i1,a1,i
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo a,i,b,j
-#            request  VCACT2ab(a,i,b,j) i
-#            tmp = VCACT2ab(a,i,b,j) *  VCACT2ab(a,i,b,j)
-#            tmpa += tmp
-#      endpardo a,i,b,j
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
+      tmpa=0.0
+      tmpb=0.0
+      suma=0.0
+      sumb=0.0
+      pardo i,a
+         get vcact1a(a,i)
+         tmp = vcact1a(a,i) * vcact1a(a,i)
+         tmpa += tmp
+      endpardo i,a
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa =0.0
+      suma =0.0
+      pardo a,i1,a1,i
+            request  VCACT2aa(a,i1,a1,i) i
+            tmp = VCACT2aa(a,i1,a1,i) * VCACT2aa(a,i1,a1,i)
+            tmpa += tmp
+      endpardo a,i1,a1,i
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa =0.0
+      suma =0.0
+      pardo a,i,b,j
+            request  VCACT2ab(a,i,b,j) i
+            tmp = VCACT2ab(a,i,b,j) *  VCACT2ab(a,i,b,j)
+            tmpa += tmp
+      endpardo a,i,b,j
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
 #end_debug
 
      ENDPROC FORM_NEWVECS_ITR1

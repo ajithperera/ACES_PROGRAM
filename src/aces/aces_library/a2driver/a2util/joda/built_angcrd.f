@@ -53,16 +53,11 @@ C
  20      CONTINUE
 C
       ELSE
-          Write(6,*)
-          Write(6, "(a)") "Entering the regular linear angle block"
 C
           CALL NORMAL(VECBC, 3)
           CALL NORMAL(VECBA, 3)
           CALL CROSS(VECBC, VECBA, VECN2AC, 0)
 C
-          Write(6, *)
-          Write(6, *) "The normal vector"
-          Write(6, "(a, 3F10.4)") "VECN2AC", (VECN2AC(I), I=1,3)
 C
           LEN_N2AC = DSQRT(DABS(XDOT(3, VECN2AC, 1, VECN2AC, 1)))
           IF (LEN_N2AC .LE. 1.0D-8) THEN
@@ -71,9 +66,6 @@ C
              VECN2AC(3) = -VECBC(1) - VECBC(2)
           ENDIF
 C
-          Write(6, *)
-          Write(6, *) "The unit vectors"
-          Write(6, "(a, 3F10.4)") "VECN2AC", (VECN2AC(I), I=1,3)
 C
           LEN_N2AC = DSQRT(DABS(XDOT(3, VECN2AC, 1, VECN2AC, 1)))
           IF (LEN_N2AC .LE. 1.0D-8) THEN
@@ -82,19 +74,11 @@ C
              VECN2AC(3) =  VECBC(1) + VECBC(2)
           ENDIF
 C
-          Write(6, *)
-          Write(6, *) "The unit vectors"
-          Write(6, "(a, 3F10.4)") "VECN2AC", (VECN2AC(I), I=1,3)
 C
           CALL NORMAL(VECN2AC, 3)
           CALL CROSS(VECBC, VECN2AC, VECBN2A, 1)
           CALL CROSS(VECN2AC, VECBA, VECBN2B, 1)
 C
-          Write(6, *) 
-          Write(6, *) "The basis vctors for regular angles"
-          Write(6, "(a, 3F10.4)") "VECBN2A", (VECBN2A(I), I=1,3)
-          Write(6, "(a, 3F10.4)") "VECBN2B", (VECBN2B(I), I=1,3)
-          Write(6,*)
 C
           DO IXYZ = 1, 3
              BMATRX(IANGS, (3*ICON3 - 3) + IXYZ) = 

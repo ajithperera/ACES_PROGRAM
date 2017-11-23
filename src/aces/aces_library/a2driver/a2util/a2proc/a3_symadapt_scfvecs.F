@@ -29,29 +29,35 @@ C
       Integer   Reorder_Shell(Maxangshell*Mxatms)
 C
       Call Getrec(20, "JOBARC", "SCFEVCA0", Nbfns*Nbfns*Iintfp,
-     &            Tmp2_a)
-      Call Filter(Tmp2_a, Nbfns*Nbfns, Tol)
+     &            Scfvec_a)
+      Call Filter(Scfvec_a, Nbfns*Nbfns, Tol)
       Call Getrec(20, "JOBARC", "SCFEVLA0", Nbfns*Iintfp, Scfevl_a)
 
       If (Iuhf .EQ. 1) then
          Call Getrec(20, "JOBARC", "SCFEVCB0", Nbfns*Nbfns*Iintfp,
-     &               Tmp2_b)
-         Call Filter(Tmp2_b, Nbfns*Nbfns, Tol)
+     &               Scfvec_b)
+         Call Filter(Scfvec_b, Nbfns*Nbfns, Tol)
          Call Getrec(20, "JOBARC", "SCFEVLB0", Nbfns*Iintfp, Scfevl_b)
 
       Endif 
 
 #ifdef _DEBUG_LVLM
       Write(6,"(a)") "The SCF eigenvectors from ACES III run"
-      Call output(Tmp2_a, 1, Nbfns, 1, Nbfns, Nbfns, Nbfns, 1)
+      Call output(Scfvec_a, 1, Nbfns, 1, Nbfns, Nbfns, Nbfns, 1)
       Write(6,"(a)") " Alpha Eigenvalues"
       Write(6,"(6(1x,F10.5))") (Scfevl_a(i), i=1, Nbfns)
-      if (Iuhf .Gt. 0) Call output(Tmp2_b, 1, Nbfns, 1, Nbfns, 
+      if (Iuhf .Gt. 0) Call output(Scfvec_b, 1, Nbfns, 1, Nbfns, 
      &                             Nbfns, Nbfns, 1)
       If (Iuhf .Gt. 0) Write(6,"(a)") " Beta Eigenvalues"
       if (Iuhf .Gt. 0) Write(6,"(6(1x,F10.5))") (Scfevl_b(i), 
      &                                           i=1, Nbfns)
 #endif 
+C
+C This skipped block seems to be unnessary. The SCF vectors comming
+C out of ACESIII is in the ACES II order (s,p1x,p1y,p1z,p2x,p2y,p2z;..
+C and so on. Neverthelles I am not deleting since things can change. 
+C
+#ifdef _NOSKIP
 C Before reordering/rescaling the vectors from OED/ERD ordering/scaling
 C we need to binpacking (rather silly name to what it actaully does)
 C
@@ -128,6 +134,8 @@ C values and the number of basis functions per irrep.
       Else
          Call Icopy(8, Nocc(1, 1), 1, Nocc(1,2), 1)
       Endif
+#endif 
+C
 C 
 C Write the the scf vectors in ACES II order so molden
 C interface that handle excited state densities will function
@@ -141,16 +149,27 @@ c results!
       If (Iuhf .EQ. 1) Call Putrec(20, "JOBARC", "SCFVECB0",
      &                             Nbfns*Nbfns*Iintfp, Scfvec_b)
 C
+C Generate the occupation numbers for each irrep based on eigen
+C values and the number of basis functions per irrep.
+
+      Call Occupy(Nirrep, Nbfirr, Nbfns, Scfevl_a, Work, Nocc(1,1),
+     &            1)
+      If (Iuhf .EQ. 1) Then
+         Call Occupy(Nirrep, Nbfirr, Nbfns, Scfevl_b, Work, Nocc(1,1),
+     &               2)
+      Else
+         Call Icopy(8, Nocc(1, 1), 1, Nocc(1,2), 1)
+      Endif
+C
 #ifdef _DEBUG_LVLM
       Write(6,"(a)") "The occupation numbers"
       Write(6,"(8(1x,I3))") (Nocc(i, 1), i=1, Nirrep)
       Write(6,"(8(1x,I3))") (Nocc(i, 2), i=1, Nirrep)
 #endif 
-C
 C First convert from Spherical to Cartesian (if the calculation is
 C in Cartesian this should do nothing).
 
-      Call Getrec(20, "JOBARC", "CMP2ZMAT", Nbfns*Naobfns*Iintfp,
+      Call Getrec(20, "JOBARC", "CMP2CART", Nbfns*Naobfns*Iintfp,
      &            Tmp1)
 
 #ifdef _DEBUG_LVLM
@@ -173,9 +192,7 @@ C in Cartesian this should do nothing).
 
          Call Putrec(20, "JOBARC", "SCFVECB3", Naobfns*Naobfns*Iintfp,
      &               Scfvec_b)
-
       Endif
-
 #ifdef _DEBUG_LVLM
       Write(6,*) "The SCF eigenvectors from ACES III (Cartesian basis)"
       Call output(Scfvec_a, 1, Naobfns, 1, Nbfns, Naobfns, Nbfns, 1)
@@ -186,12 +203,12 @@ C Note that seventh argument to both calls is the same. This is
 C because alpha and beta eigenvectors are kept in two different
 C arrays instead of a one in which beta vectors comes latter.
 C
-      Call Get_irreps(Scfvec_a, Scfevl_a, Work, Imemleft*Iintfp, 
-     &                Nbfns, Naobfns, 1, Nocc, Iuhf, 1, "GROUND")
-      If (Iuhf .EQ. 1) Call Get_irreps(Scfvec_b, Scfevl_b, Work, 
-     &                                 Imemleft*Iintfp, Nbfns, 
-     &                                 Naobfns, 1, Nocc, Iuhf,
-     &                                 2, "GROUND ")
+      Call Get_irreps_gs(Scfvec_a, Scfevl_a, Work, Imemleft*Iintfp, 
+     &                Nbfns, Naobfns, 1, Nocc, Iuhf, 1, "GROUND ")
+      If (Iuhf .EQ. 1) Call Get_irreps_gs(Scfvec_b, Scfevl_b, Work, 
+     &                                    Imemleft*Iintfp, Nbfns, 
+     &                                    Naobfns, 1, Nocc, Iuhf,
+     &                                    2, "GROUND ")
 C
       Return
       End

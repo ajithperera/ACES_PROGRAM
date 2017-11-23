@@ -1,5 +1,5 @@
-      SUBROUTINE EVLOUT(EVAL, IRERDR, IVMLSYM, IREPS, NBAS, NIRREP,
-     &                  NOCC, ISPIN, IFLAG, STATE)
+      SUBROUTINE EVLOUT_GS(EVAL, IRERDR, IVMLSYM, IREPS, NBAS, NIRREP,
+     &                     NOCC, ISPIN, IFLAG, STATE)
 C
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 C
@@ -64,8 +64,6 @@ C
           CALL GETREC(20,'JOBARC','EVCSYMBC',NBAS*IINTFP,IRRSYM2)
       Endif
 C
-      Write(6,"(a)") "Irrep labels" 
-      Write(6,"(6(8a))")(IRRSYM1(i),i=1,Nbas)
       DO 101 I=1,NBAS
          IRERDR(I)=I
   101 CONTINUE
@@ -160,7 +158,6 @@ c
 cmn
 c Determine mapping between comp symmetry labels and internal number of irrep.
 c
-        Write(6,*) "I am HERE"
         do j=1,8
            irpchar(j)='XXXX'
         enddo
@@ -172,7 +169,6 @@ c
               enddo
            endif
         enddo
-        Write(6,*) "I am HERE2"
 c
 c write this info to file SYMINFO
 c

@@ -75,7 +75,7 @@ c
      &     .or. num_grad .or. (geomopt.and.num_grad))
       if (do_pes_scan .eq. 1 .and. fd) ignore = .false.
 c
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Print*, "Finite diffs; ignore and geomopt vars:",
      &         ignore, geomopt
       Print*, "The vib calc. related varrs:"

@@ -9,7 +9,7 @@
       Integer   Reorder_Shell(Nshells)
       Dimension Iscr(Nrows), Dscr(Nrows)
 
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*) Nrows, Ncolumns,Nshells,(Nprims_shell(i), i=1,Nshells)
       Write(6,*) (reorder_shell(i), i=1,Nshells)
 #endif

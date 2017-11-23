@@ -21,6 +21,7 @@ c--------------------------------------------------------------------------
       implicit none
       include 'interpreter.h'
       include 'epsilon.h'
+      include 'parallel_info.h'
 
       double precision x(*)
       integer nindex, type(*), bval(*), eval(*)
@@ -85,8 +86,9 @@ c--------------------------------------------------------------------------
      *                      epsilon, epsilonb)
       implicit none
       include 'interpreter.h'
+      include 'parallel_info.h'
 
-      integer a1,a2,b1,b2,i1,i2,j1,j2
+      integer a1,a2,b1,b2,i1,i2,j1,j2,n,m
       integer atype, itype, btype, jtype
       double precision x(a1:a2,i1:i2)
 
@@ -106,6 +108,13 @@ c--------------------------------------------------------------------------
          x(a,i) = val 
       enddo
       enddo
+
+CSSS      if (me .eq.0) then
+CSSS         n=a2-a1+1
+CSSS         m=i2-i1+1
+CSSS         Write(6,*) "Returing array with diags"
+CSSS         call output(x,1,n,1,m,n,n,1)
+CSSS      endif
 
       return
       end

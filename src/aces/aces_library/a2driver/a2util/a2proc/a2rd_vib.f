@@ -142,8 +142,6 @@ C
         READ(5) LABEL, PTGRP, NRX, NIMAG, ZMAS, ZIX, ZIY, ZIZ,
      &          (Freq(IVIB), IVIB=1, Nvib)
         Nimag = 0
-        Print*,LABEL, PTGRP, NRX, NIMAG, ZMAS, ZIX, ZIY, ZIZ,
-     &         (Freq(IVIB), IVIB=1, Nvib)
 
 C
 C Scale coordinates to bohr from angstrom, do not know what

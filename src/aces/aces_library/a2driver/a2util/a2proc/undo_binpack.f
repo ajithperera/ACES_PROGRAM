@@ -9,8 +9,6 @@
       Integer   Reorder_Shell(Nshells)
       Dimension Iscr(Nrows), Dscr(Nrows)
 
-      Write(6,*) Nrows, Ncolumns,Nshells,(Nprims_shell(i), i=1,Nshells)
-      Write(6,*) (reorder_shell(i), i=1,Nshells)
 
       if (Nrows .gt. 0) then
 

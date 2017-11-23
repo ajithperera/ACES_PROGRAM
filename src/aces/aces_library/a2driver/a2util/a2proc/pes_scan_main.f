@@ -342,20 +342,6 @@ C pass from the dynamics program.
 c
          Call a2_reset_jarc()
 C
-         Call Getrec(20, "JOBARC", "COORD  ", Natoms*3*IINTFP, 
-     &               Coords)
-         Write(6, "(3F10.5)") (Coords(i),i=1,3*Natoms)
-C
-         Ioff = 1
-         Do Iatm = 1, 2
-            Do Ixyz = 1, 3
-               Coords(ioff) = (Coords(ioff)) + 0.01
-               ioff = ioff + 1
-            Enddo
-         Enddo
-         Write(6,*)
-         Write(6, "(3F10.5)") (Coords(i),i=1,3*Natoms)
-         Wrt_Extrnl = .True.
 C
 C Write the new incomming geometry. The next calculation is performed
 C at this geometry.
@@ -423,9 +409,6 @@ C
                   Read(13,*,End=20) (Coords(Ioff + I), I=1, 3)
                Enddo
 C       
-                Write(6,*)
-                Write(6, "(a)") "Grid points read from Grid_file"
-                Write(6, "(3F10.5)") (Coords(i),i=1,3*Natoms)
     
                Call Putrec(20, "JOBARC", "COORD  ", Natoms*3*IINTFP, 
      &                    Coords)
@@ -475,21 +458,6 @@ C
 C
             Call a2_reset_jarc()
 C 
-            Write(6,*) 
-            Write(6,*) "The vibrational frequencies and symmetries"
-            Write(6, "(4F12.5,1x)") (Omega(I), I = 1, Nvibs)
-            Write(6,*)
-            Write(6, "(4a4)") (SymLabel(I), I = 1, Nvibs)
-            Write(6,*)
-            Write(6,*) "The reference geometry"
-            Write(6, "(3F10.5)") (Coords(i),i=1,3*Natoms)
-            Write(6,*) "Normal modes"
-            Do I = 1, Nvibs
-               Ioff = (I-1)*3*Nvibs
-                  Write(6,"(3F10.5)") (Norm_coords(Ioff + k), k=1, 
-     &                                 3*Nreals)
-                  Write(6,*)
-            Enddo
 C
 C The vibrational SCF, averaging etc and many other post electronic
 C structure calcualtions depends on having PES on normal modes.
@@ -502,8 +470,6 @@ C
             Delx = 0.50D0
             Call Stpsize(Omega, Deltaq, Delx, Nvibs)
 C
-         Write(6,"(a)") "Dimensionless step size will be"
-         Write(6, "(4F15.5)") (Deltaq(I), I=1, Nvibs)
 C
             Call Dscal(Nvibs, 0.0D0, Deltaq, 1)
             Call Dcopy(3*Nreals, Coords, 1, Deltax, 1)
@@ -555,25 +521,6 @@ C
      &                          B2ang, Au2Invcm, Trans_state, 
      &                          Mass_weigh_nm, Mass_weigh_gr, 
      &                          Get_hess, Get_grad)
-      Write(6,*)
-      Write(6,*) "The Hessian @-PES_scan"
-      Call output(Rhess, 1, 3*Nreals, 1, 3*Nreals, 3*Nreals,
-     &            3*Nreals, 1)
-            Write(6,*)             
-            Write(6,*) "The vibrational frequencies and symmetries"
-            Write(6, "(4F12.5,1x)") (Omega(I), I = 1, Nvibs)
-            Write(6,*)
-            Write(6, "(4a4)") (SymLabel(I), I = 1, Nvibs)
-            Write(6,*)
-            Write(6,*) "The reference geometry"
-            Write(6, "(3F10.5)") (Coords(i),i=1,3*Natoms)
-            Write(6,*) "Normal modes"
-            Do I = 1, Nvibs
-               Ioff = (I-1)*3*Nvibs
-                  Write(6,"(3F17.13)") (Norm_coords(Ioff + k), k=1, 
-     &                                 3*Nreals)
-                  Write(6,*)
-            Enddo 
 C           
            Call Getrec(20,'JOBARC','TOTENERG', IINTFP, E_refrence)
            Call a2_reset_jarc()
@@ -620,9 +567,6 @@ C
                            Ioff = Ioff + 1 
                         Enddo
                      Enddo
-            Write(6,*) 
-            Write(6,*) "@-PES_scan The steepest decent path"
-            Write(6, "(3F17.13)") (Steep_DPath(i),i=1,3*Nreals)
                      Dpath_Norm = DSqrt(Dpath_Norm)
 C
                      If (Dpath_Norm .LT. Small) Then
@@ -636,9 +580,6 @@ C
      &                          Steep_DPath, 1)
 C
                   Else
-            Write(6,*)
-            Write(6,*) "Gradients for non saddle starting point"
-            Write(6, "(3F17.13)") (Grad_K1CM(i),i=1,3*Nreals)
                      Grad_Norm = Ddot(3*Nreals, Grad_K1CM, 1, 
      &                                Grad_K1CM, 1)
 C
@@ -654,9 +595,6 @@ C
 C
                      Call Dscal(3*Nreals, -0.5D0*Stride/Grad_Norm, 
      &                          Grad_K1CM, 1)
-            Write(6,"(a,a)") "Normalized and scalled mass weighted ",
-     &                      "Gradients for non saddle starting point"
-            Write(6, "(3F17.13)") (Grad_K1CM(i),i=1,3*Nreals)
                      Ioff = 1
                      Do Iatom = 1, Nreals
                         Sqrtmass = Dsqrt(AtmMass(Iatom))
@@ -665,9 +603,6 @@ C
                            Ioff = Ioff + 1
                         Enddo
                      Enddo
-            Write(6,"(a,a)") "Normalized and scalled Gradients for ",
-     &                       "non saddle starting point"
-            Write(6, "(3F17.13)") (Grad_K1CM(i),i=1,3*Nreals)
 C
                   Endif 
 C                  
@@ -707,13 +642,6 @@ C
      &                           Coords_K1CM, 1)
                   Endif
  
-            Write(6,*)
-            Write(6,*) "The current geometry"
-            Write(6, "(3F17.13)") (Coords_K1C(i),i=1,3*Natoms)
-            Write(6,*) "The pivot point geometry"
-            Write(6, "(3F17.13)") (Coords_K1P(i),i=1,3*Natoms)
-            Write(6,*) "The previous geometry"
-            Write(6, "(3F17.13)") (Coords_K0O(i),i=1,3*Natoms)
 C
                   Ncycles    = 1 
                   N_IRC_Step = 1
@@ -745,20 +673,6 @@ C
      &                                        Binsearch_Tol,
      &                                        G_cutoff, R_Cutoff,
      &                                        E_currnt) 
-
-            Write(6,*) Ncycles, Constr_Min
-            Write(6,*) "@-pes_scan, updated geoemtries"
-            Write(6,*) "The previous geometry"
-            Write(6, "(3F17.13)") (Coords_K0O(i),i=1,3*Nreals)
-            Write(6,*) "The current geometry"
-            Write(6, "(3F17.13)") (Coords_K1CM(i),i=1,3*Nreals)
-            Write(6,*) "The pivot point geometry"
-            Write(6, "(3F17.13)") (Coords_K1P(i),i=1,3*Nreals)
-            Write(6,*) "The M.W. current gradient "
-            Write(6, "(3F17.13)") (Grad_K1CM(i),i=1,3*Nreals)
-            Write(6,*) "The N.M.W. current gradient "
-            Write(6, "(3F17.13)") (A2grad(i),i=1,3*Nreals)
-            Write(6, "(2F17.13)") E_refrence, E_currnt
 
                            Begin_IRC  = .False.
                            New_IRC    = .False.
@@ -803,8 +717,6 @@ C
                   Call Dcopy(3*Nreals, Grad_K1CM, 1, Work, 1)
                   Call Dscal(3*Nreals, 1.0D0/Dsqrt(Grad_length), 
      &                       Work, 1)
-           Write(6,*) "The normalized M.W. current gradient"
-           Write(6, "(3F17.13)") (Work(i),i=1,3*Nreals)
                   Ioff = 1
                   Do Iatom = 1, Nreals
                      Sqrtmass = Dsqrt(AtmMass(Iatom)) 
@@ -816,8 +728,6 @@ C
 C
                   Call Dscal(3*Nreals, -Halfs, Work, 1)
 C
-           Write(6,*) "The gradient update"
-           Write(6, "(3F17.13)") (Work(i),i=1,3*Nreals)
 C
                   Call Dcopy(3*Nreals, Coords_K1C, 1, Coords_K1P, 1)
                   Call Daxpy(3*Nreals, 1.0D0, Work, 1, Coords_K1P, 1)
@@ -825,12 +735,6 @@ C
                   Call Daxpy(3*Nreals, 1.0D0, Work, 1, Coords_K1C, 1)
                   Call Dcopy(3*Nreals, Coords_K1C, 1, Coords_K1CM, 1)
 C
-            Write(6,*) "The current geometry"
-            Write(6, "(3F17.13)") (Coords_K1C(i),i=1,3*Nreals)
-            Write(6,*) "The pivot point geometry"
-            Write(6, "(3F17.13)") (Coords_K1P(i),i=1,3*Nreals)
-            Write(6,*) "previous geometry"
-            Write(6, "(3F17.13)") (Coords_K0O(i),i=1,3*Nreals)
 C
                   N_IRC_Step = N_IRC_Step + 1
                   Ncycles    = 1

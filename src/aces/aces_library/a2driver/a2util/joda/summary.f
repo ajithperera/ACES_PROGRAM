@@ -539,20 +539,6 @@ C
      &                      .AND. Iflags2(5)
      &                      .NE. 0)
 c
-         Write(6,*), "The internal coord:"
-         Write(6,10), (R(I), I=1, NXM6)
-         Write(6,*)
-         Write(6,*), "The step size:"
-         Write(6,*)
-         Write(6,10)   (STEP(I), I=1, NXM6)
-         Write(6,*)
-         Print*, "The optimization cycle:", NCYCLE
-         Print*, "Joda flag, grad_calc and geoom_opt",
-     &            Iflags2(138),
-     &            Iflags2(5) 
-         Print*, "Internal flags; Hessian & geo. optimization:",
-     &            Hessian_calcs,  Geomopt_numrcl 
-  10     Format(5(1X,F10.6))
 c
          If (Hessian_calcs .OR. Geomopt_numrcl) Then 
             Call GMetry(.TRUE., .FALSE.)
@@ -565,11 +551,6 @@ c
      &                    Scratch(IQtmp), .FALSE.)
             Call Putrec(20, 'JOBARC', 'COORD   ', NX*IINTFP, Q)
             Call Putrec(20, 'JOBARC', 'CORD_INT', NX*IINTFP, R)
-         Write(6,*)
-         Print*, "The variable from summary" 
-         Write(6,20), "The Cartesian coord:", (Q(i), i=1, NX)
-   20    Format(A20, 3(1X, F10.6))
-
          Endif
 c
 c         call Putrec(20, 'JOBARC', 'CYCL2CON', 1, NCYCLE)

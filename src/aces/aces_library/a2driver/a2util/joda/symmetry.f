@@ -325,11 +325,6 @@ C
      &                              (ATMASS(J),J = 1,NATOMS)
  7733 FORMAT(1X,F15.10)
 C
-      Write(6,"(a, 5I)"), "The number of atoms", Natoms
-      Write(6,*)
-      Print*, "The Cartesians before translations to CM" 
-      Write(6, "(3F10.5)"), (Q(I), I=1, 3*NATOMS)
-      Write(6,*)
       CALL DCOPY(3*NATOMS, Q, 1, QOLD, 1)
 C
       CMX=0.D0
@@ -356,9 +351,6 @@ cYAU         CLOSE(UNIT=LUARC,STATUS='DELETE')
           Q(3*I-J) = Q(3*I-J)-CM(3-J)
   301   continue
    30 continue
-      Write(6,*), "The Cartesians in center of mass coords"
-      Write(6, "(3F12.7)"), (Q(I), I=1, 3*NATOMS)
-      Write(6,*)
       IF(IPRNT .GE. 4 .AND. NOSILENT)WRITE(LUOUT,*)
      &     'After translation to center of mass coordinates '
       IF(IPRNT .GE. 4 .AND. NOSILENT)WRITE(LUOUT,80)(Q(I),I = 1,NX)
@@ -477,12 +469,8 @@ C
  3146    FORMAT(T3,'@SYMMETRY-I, The symmetry group is ',i1,'-fold ',
      &          'degenerate.')
 C
-      Write(6,*)
-      Print*, "The symmetry processing begins"
 
       IF (IFLAGS(60).EQ.0) THEN
-      Print*, "The symmetry is not used for anything"
-      Write(6,*)
 C        
 C Undo the rotation and translation
 C 
@@ -492,9 +480,6 @@ CSSS         DO J = 0,2
 CSSS            Q(3*I-J) = Q(3*I-J)+ CM(3-J)
 CSSS         ENDDO
 CSSS      ENDDO
-      Print*, "The Cartesians wrt CM origin"
-      Write(6, "(3F10.5)"), (Q(I), I=1, 3*NATOMS)
-      Write(6,*)
 c
 C The user does not want to use symmetry. Therefore, skip
 C all symmetry-related work beside automatically setting the
@@ -585,17 +570,11 @@ C
             ENDIF  
 C
             CALL XGEMM('N','N',3,NATOMS,3,ONE,IV,3,NEWQ,3,ZILCH,Q,3)
-      Write(6,*)
-      Print*, "The Cartesians after no-principal axis rot. "
-      Write(6, "(3F10.5)"), (Q(I), I=1, 3*NATOMS)
             DO I = 1,NATOMS
                DO J = 0,2
                   Q(3*I-J) = Q(3*I-J)+ CM(3-J)
                ENDDO
             ENDDO
-      Write(6,*)
-      Print*, "The Cartesians after no-reorintation CM"
-      Write(6, "(3F10.5)"), (Q(I), I=1, 3*NATOMS)
          ELSE
 C
 C When symmetry is none NOREORI is turned on by default and so
@@ -603,9 +582,6 @@ C in principle this block is inactive.
 C 
             CALL DCOPY(3*nAtoms, NEWQ, 1, Q, 1)
 
-      Write(6,*)
-      Print*, "The Cartesians used when sym=none,noreori=off"
-      Write(6, "(3F10.5)"), (NEWQ(I), I=1, 3*NATOMS)
          END IF
 C
          IF (IPRNT .GT. 4 .AND. NOSILENT) THEN
@@ -637,10 +613,6 @@ C
 C
       ELSE
 C
-      Print*, "The Cartesians before entering symmetry auto"
-      Write(6, "(3F10.5)"), (NEWQ(I), I=1, 3*NATOMS)
-      Write(6, "(3F10.5)"), (QTMP(I), I=1, 3*NATOMS)
- 
 
             CALL SYMMETRY_AUTO(SCRATCH, QTMP, NEWQ, IT, IDEGEN, 
      &                         ORIEN2, NOSILENT)
@@ -662,21 +634,12 @@ C
                ENDDO
             ENDIF
 
-      Write(6,*), "The Cartesians in the principal axis rotation ori."
-      Write(6, "(3F12.7)"), (NEWQ(I), I=1, 3*NATOMS)                  
-      Write(6,*)
-      Write(6,*) "The transformation matrix"
-      Write(6,"(3F12.7)")((Iv(I,J),J = 1,3),I = 1,3)
-      Write(6,*)
 C
 C Reorientation is due to rotation of the principal axis.
 C If no reorientation is requested, undo the rotation and translation. 
 C
                CALL XGEMM('N','N',3,NATOMS,3,ONE,IV,3,NEWQ,3,ZILCH,
      &                     QTMP,3)
-      Write(6,*), "The Cartesians in center of mass coords"
-      Write(6, "(3F12.7)"), (QTMP(J), J=1, 3*NATOMS)                  
-      Write(6,*)
                DO I = 1,NATOMS
                   DO J = 0,2
                      QTMP(3*I-J) = QTMP(3*I-J)+CM(3-J)
@@ -686,8 +649,6 @@ C
      &                     QTMP)
                CALL DCOPY(3*NATOMS, QTMP, 1, Q, 1)
 
-      Write(6,*), "The Cartesians after undoing the sym. REORIENT"
-      Write(6, "(3F12.7)"), (QTMP(J), J=1, 3*NATOMS)                  
 C
             ELSE
 C
@@ -700,8 +661,6 @@ C
                CALL PUTREC(20,'JOBARC','NOREOCOR',3*NATOMS*IINTFP,
      &                     QOLD)
 
-      Print*, "The Cartesians before translations to CM:NO REORIENT"
-      Print*, (QOLD(I), I=1, 3*NATOMS)
 C
             END IF
          END IF

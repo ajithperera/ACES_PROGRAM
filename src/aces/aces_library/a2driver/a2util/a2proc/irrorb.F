@@ -20,7 +20,7 @@ C ALGORITHM USED IN JODA FOR DETERMINING SYMMETRIES OF NORMAL MODES.
       DIMENSION EVEC(NBASX,NBAS),SCR(1),IANGMOM(NBASX)
       DIMENSION ICENTER(NBASX),SCR1(1),Z(1)
       DIMENSION IBFATM(NATOMS),ILCATM(NATOMS),IPTR(MXATMS*120)
-      DIMENSION EVAL(NBAS),SYOPS(1080),ORIENT(9)
+      DIMENSION EVAL(NBASX),SYOPS(1080),ORIENT(9)
       DIMENSION JFLAGS(16)
 
       COMMON /FLAGS/ IFLAGS(100)
@@ -63,7 +63,7 @@ CSSS      CALL GETREC(-1,'JOBARC','EVALORDR',IINTFP*NBAS,EVAL)
       CALL GETREC(-1,'JOBARC','ANMOMBF0',NBASX,IANGMOM)
       CALL GETREC(-1,'JOBARC','CNTERBF0',NBASX,ICENTER)
 C
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*)
       Write(6,"(a,2I4)") "The NBAS and NBASX: ", Nbas, Nbasx
       Write(6,"(a)")"Eigenvalues, ang. momentum and center of basis fns"
@@ -87,7 +87,7 @@ C
          CALL GETREC(-1,'JOBARC','COMPSYOP',IINTFP*9*IORDGRP,SYOPS)
       end if
 C
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*) 
       Write(6,"(a)")" Computational,full PG, order, iptr and syops"
       Write(6,"(2a4)") PTGRP, szSitGrpTmp

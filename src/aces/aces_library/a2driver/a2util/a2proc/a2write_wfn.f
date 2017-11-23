@@ -268,28 +268,6 @@ C
      &  "ACCSD",        "HFDFT",        "ACCSD(T)",     "CCSD(TQf)",
      &  "CCSDT(Qf)" /
 C    
-      Write(6,*)
-      Write(6, "(a)") "The number of functions on each atom"
-      Write(6, "(4(1x,I3))") (Nangmom(I), I=1, Nreal_atoms)
-      Write(6,*)
-      Write(6, "(a)") "The number of prim. functions on each atom"
-      Do I =1, Nreal_atoms
-      Write(6, "(4(1x,I3))") (NPrim_4shl(ioff+J),J=1,IShell_4atm(I))
-      ioff = ioff + IShell_4atm(I)
-      Enddo 
-      Write(6,*) 
-      Write(6,*) "The number of shells per atom"
-      Write(6, "(4(1x,I3))") (IShell_4atm(I), I=1, Nreal_atoms)
-      Write(6,*) 
-      Write(6,*) "The shell angular momentum per atom s=1,p=3,d=6,,"
-      Ioff = 0 
-      Do I= 1, Nreal_atoms
-      Write(6, "(4(1x,I3))") (Iangmom(ioff + J), J=1,IShell_4atm(I))
-      ioff = ioff + IShell_4atm(I)
-      Enddo
-      Write(6,*)
-      Write(6, "(3F10.5)"), (coord(i), i=1,3*Nreal_atoms)
-      Write(*,*)
 
       Ioff = 0
       Ifun = 0

@@ -349,9 +349,6 @@ C that this is in ZMAT order. 01/2006, Ajith Perera.
 C
       CALL PUTREC(20,'JOBARC','CART_HES',NX*NX*IINTFP,HC)
 C
-      Print*, "Writing Internal or Cartesian Hessian"
-      Print*, "XYZIN, NX, NXM6:", XYZIN, NX, NXM6 
-      CALL OUTPUT(HC, 1, NX, 1, NX, NX, NX, 1)
       IF(ID.EQ.-1)THEN
          CALL GFNAME('FCMINT  ',FNAME,ILENGTH)
          OPEN(UNIT=50,FILE=FNAME(1:ILENGTH),FORM='FORMATTED',

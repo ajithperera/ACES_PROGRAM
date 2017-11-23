@@ -274,13 +274,6 @@ c
       Call Getcrec(20, 'JOBARC', "ABL_PTGP", 4, BPGRP)
       Call Getcrec(20, 'JOBARC', "CMP_PTGP", 4, PGRP)
       Call Getcrec(20, 'JOBARC', "ZSYM", 5*NATOMS, ZSYM)
-           Print*, "The data read from JOBARC in post_opt_update"
-           Print*, "The NATOMS:", NATOMS
-           Print*, "Internal coords:",(R(I), I=1, NX)
-           Print*, "The Cartesian coords:", (Q(I), I=1, NX) 
-           print*, "The connectivities:", (NCON(I), I=1, NX)
-           Print*, "The atomic charges:", (IATNUM(I), I=1, NX/3)
-           Print*, "The point group", PGRP 
 c
 c The scratch and Nunique are not used. Genby, istat and Genby
 c are internal 
@@ -288,7 +281,6 @@ c are internal
       Call MkVMOL(Q, PGrp, NAtoms, NUnique, ZSym, IAtNum,
      &            GenBy, Scratch, IStat, BasNam)
       
-      Print*, "out from Mkvmol in post_opt_update"
       Return
       End
 

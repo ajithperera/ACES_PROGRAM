@@ -324,7 +324,22 @@ C
       If (OPTARC_EXIST) Call runit("rm OPTARC")
 
       if (module(1:8).eq.'symadapt') then
+         Write(6,*)
          call runit("xjoda")
+         call getrec(1,'JOBARC','IFLAGS', 100,iflags)
+         call getrec(1,'JOBARC','IFLAGS2',500,iflags2)
+         If (Iflags(60) .ge. 2) Then
+         Write(6,*)
+         Write(6,"(a,a)") " Symmertry is turned on. However, ACESIII",
+     +                    " run has not used symmetry by default." 
+         Write(6,"(a,a)") " In order symmetry adapt ACES III vectors",
+     +                    " the user need to add symmetry=off"
+         Write(6,"(a,a)") " to the input. This does not require",
+     +                    " rerunning ACES III, but requires simply"
+         Write(6,"(a,a)") " adding sym=off key-word and rerunning",
+     +                    " xa2proc symadapt."
+         Call Errex 
+         Endif 
          call v2ja(icore(I0), icrsiz)
       endif
 

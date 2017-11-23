@@ -332,51 +332,7 @@ C
       DATA LUNIT_2D, LUNIT_3D /10, 20/
       DATA XTANG /0.529177249D0/ 
 C
-       Write(6,"(a,6I4)"), "Input varaibles:", Iuatms, Natoms, 
-     &         nunqshl, lnp1, nbfns, nfct
-       Write(6,*)
-       write(*, '(a)'), "The exponents"
-       Write(*, '(4F10.5)') (alpha(i), i=1, NFCT)
-       Write(6,*)
-       Write(*, '(a)'), "Cartesian Coords."
-       Write(*, '(3F10.5)') (Coord(i), i=1, 3*NATOMS)
-       Write(6,*)
-       Write(*, '(a)'), "The NSHL array"
-       Write(*, '(4I5)') (Nshl(i), i=1, iuatms)
-       Write(6,*)
-       Write(6,*) "The ipopf array"
-       Write(*, '(4I5)') (ipopf(i), i=1, iuatms)
-       Write(6,*)   
-       Write(6, *) "The NOFFSETATMC and NOFFSETATMP arrays"
-       Write(*, '(4I5)') (NOFFSETATMC(i), i=1, iuatms) 
-       Write(*, '(4I5)') (NOFFSETATMP(i), i=1, iuatms)
-       write(6,*)
-       Write(6,*) "The number of primitive in a shell"
-       Write(6, '(4I5)') ((NPRIMFUNSHL(i,j), J=1, Nshl(i)),  
-     &                    i=1,iuatms)
-       Write(6,*)
-       Write(6,*) "The number of contracted functions in a shell"
-       Write(6, '(4I5)') ((NCONFUNSHL(i,j), J=1, Nshl(i)),  
-     &                    i=1,iuatms)
-       Write(6,*)
-       Write(6,*) "The angular momentum of shells"
-       Write(6, '(4I5)') ((NANGMOMSHL(i,j), J=1, Nshl(i)), 
-     &                    I=1,iuatms)
-       Write(6,*)
-       Write(6,*) "The offset for primitives"
-       Write(6, '(4I5)') ((NOFFSETPRM(i,j), J=1, Nshl(i)), 
-     &                    I=1,iuatms)
-       Write(6,*)
-       Write(6,*) "The offset for contracted functions"
-       Write(6, '(4I5)') ((NOFFSETCON(i,j), J=1, Nshl(i)), 
-     &                    I=1,iuatms)
-       write(6,*)
-       Write(*, '(a)') "The Contractions Coef."
-       write(*, '(6F10.5)') ((pcoef(i, j), i=1, nfct), 
-     &                        j=1,nbfns)
              
-      Write(6,*)
-      Print*, "Entering ZMAT READ"
           POST_SCF = .FALSE.
       TRIPLET_PERT = .FALSE.
       If (iflags(2) .GT. 1)    POST_SCF = .TRUE.
@@ -416,23 +372,11 @@ C
         ENDIF
       ENDIF
 C
-      Write(6,*)
-      Write(6,'(1x,a,a,2I3)') "The total number of perturbations ",
-     & "and the perturbation of interest", NMBR_OF_PERTS, 
-     & IPICK_PERT
-      Write(6,*)
-      Write(6,*) "The reorder array"
-      Write(6,"(6I4)") (IREORDER(I), I=1, NAOBFNS)
       CALL A2GET_DEN(WORK, ILEFT, IREORDER, DENSITY_TYPE, SPIN_D, 
      &               NMBR_OF_PERTS, NBFNS, NAOBFNS, ISCF_TDEN,
      &               ICOR_TDEN, ISCF_DDEN, ICOR_DDEN, IBEGIN_P_DENS,
      &               IUHF)
 C
-      Write(6,*)
-      Print*, "Offsets for 0/1-order density"
-      Write(*,'(7(1x,i5))') ISCF_TDEN,ICOR_TDEN,ISCF_DDEN,ICOR_DDEN,
-     &                       IBEGIN_P_DENS, NMBR_OF_PERTS, IPICK_PERT
-      Write(6,*)
 C
       IF (GRID_TYPE .EQ. "2D") THEN
          D2_GRID = .TRUE.
@@ -655,14 +599,6 @@ C
      &                          YPOINT, ZPOINT, ALPHA, PCOEF, 
      &                          PRDUCINT, CNT_COORD, TMP1, TMP2,
      &                          TMP3)
-      Print*, "Offsets for 0-order density"
-      Write(*,'(7(1x,i5))') ISCF_TDEN,ICOR_TDEN,ISCF_DDEN,ICOR_DDEN,
-     &                       IBEGIN_P_DENS, NMBR_OF_PERTS, IPICK_PERT
-      Write(6,*)
-      Print*, "The product integrals"
-      CALL OUTPUT(PRDUCINT, 1, NAOBFNS, 1, NAOBFNS, NAOBFNS,
-     &            NAOBFNS, 1)
-      
                CALL A2BUILD_QUANTITY(WORK, ILEFT, PRDUCINT,
      &                               QUANTITY, SPIN_D, DENSITY_TYPE,
      &                               NMBR_OF_PERTS, IPICK_PERT,

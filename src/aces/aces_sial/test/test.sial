@@ -41,6 +41,7 @@
       Distributed MO_OVRLP_VAOB(a,j)
       Distributed MO_OVRLP_VAVB(a,b)
       Distributed MO_OVRLP_OAOB(i,j)
+      Distributed DDaa(a,a1)
 
       Temp TOAVB1(I,b)
       Temp TOAVB2(I,b)
@@ -55,6 +56,9 @@
       Temp TDVBVB(b,b1)
       Temp Tmp_pq(p,q)
       Temp TXP(mu,P)
+      Temp Taa(a,a1)
+      Static Saa(a,a1)
+      Static SDaa(a,a1)
       Scalar check_sum
       Scalar tmp_sum
 
@@ -197,7 +201,25 @@
       ENDPROC  CHECK_PUTS
 #--------------------------------
 
+      PROC CHECK_RETURN_DIAGS 
+#     -----------------------
+
+      CREATE DDaa(a,a1)
+      EXECUTE  SIP_BARRIER 
+      PARDO a, a1
+           Saa(a,a1)      = fock_a(a,a1)
+           execute return_diagonal Saa  Sdaa 
+           execute dump_amp Sdaa
+           taa(a,a1)      = Sdaa(a,a1)
+           put DDaa(a,a1) = taa(a,a1)
+      ENDPARDO a, a1
+      EXECUTE  SIP_BARRIER 
+
+      ENDPROC CHECK_RETURN_DIAGS 
+#     -----------------------
       CALL MO_OVERLAP
       CALL FORM_DELTABLOCKS
       CALL CHECK_PUTS # Watson routine
+
+      CALL CHECK_RETURN_DIAGS 
       ENDSIAL TEST

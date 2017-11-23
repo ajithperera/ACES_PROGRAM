@@ -9,7 +9,7 @@ C
       PI = (ATAN(DFLOAT(1))*DFLOAT(4))
       DINVPI = (ATAN(DFLOAT(1))*DFLOAT(4))/180.0D0
 C
-C#ifdef 1
+C#ifdef _DEBUG_LVL0
       Write(6,*) ' In CHECK4_180...'
       DINVPI = PI/180.0D0
       Print*, "TOTNFBND, TOTNOFANG: ",

@@ -223,9 +223,6 @@ C
        H(I,J)=H(I,J)/FACT
       ENDIF
    15 CONTINUE
-      Write(6,*)
-      Write(6,*) "@-VIB1 Hessian after mass weighing"
-      call output(h, 1, nrx, 1, nrx, nrx, nrx, 1)
 C
 C WRITE OUT FCM TO SCRATCH FILE IN CASE IT IS NEEDED LATER.
 C
@@ -255,9 +252,6 @@ C   COLUMNS OF HBUF.  EIGENVECTORS ARE IN *MASS-WEIGHTED* CARTESIAN
 C   COORDINATES HERE.
 C
       CALL EIG(H,HBUF,NRX,NRX,0)
-      Write(6,*)
-      Write(6,*) "Eigenvalues of the un-projected Hessian"
-      Write(6, "(5F10.5)") (H(I,I), I=1, nrx)
 C
 C CHECK FOR NEGATIVE EIGENVALUES - SET BIT TO PRINT 'i' IF ENCOUNTERED.
 C
@@ -1179,8 +1173,6 @@ c      ENDIF
 c10    CONTINUE
 C
 C COMPUTE ROTATIONAL PART OF PROJECTOR.
-      Write(6,*) "The coordinates used in Vib/rot projection"
-      Write(6, "(3F10.7)") (Q(I), I=1, NX)
 C
       DO 10 I=1,NRX-2,3
       NAT=1+(I-1)/3
@@ -1202,10 +1194,6 @@ C
       IF(ILINER.EQ.1)ITIM=2
       CALL ZERO(HBUF,NRX*NRX)
       CALL OUTERP(HBUF,SCRATCH,NRX,ITIM,0)
-      Write(6,*)
-      Write(6,*) "@-VIB1 The rot. projector"
-      call output(Hbuf, 1, Nrx, 1, Nrx, Nrx, Nrx, 1)
-CSSS      CALL ZERO(HBUF,NRX*NRX)
 C
 C NOW DO TRANSLATIONAL PART OF PROJECTOR.
 C
@@ -1223,9 +1211,6 @@ C
       ITIM=3
       CALL OUTERP(H,SCRATCH,NRX,ITIM,1)
       CALL VADD (HBUF,H,HBUF,NRX*NRX,-1.D0)
-      Write(6,*)
-      Write(6,*) "@-VIB1 The trn. projector"
-      call output(Hbuf, 1, Nrx, 1, Nrx, Nrx, Nrx, 1)
       REWIND(78)
       READ(78)((H(I,J),J=1,NRX),I=1,NRX)
       CALL MODMATMUL(H,H,HBUF,NRX,NRX,NRX,NRX,NRX,NRX)
@@ -1236,14 +1221,8 @@ C
       READ(78)((HBUF(I,J),J=1,NRX),I=1,NRX)
       CALL MODMATMUL(H,H,HBUF,NRX,NRX,NRX,NRX,NRX,NRX)
       CALL ZERO(HBUF,NRX*NRX)
-      Write(6,*)
-      Write(6,*) "The projected Hessian"
-      call output(H, 1, nrx, 1, nrx, nrx, nrx, 1)
 
       CALL EIG(H,HBUF,NRX,NRX,0)
-      Write(6,*)
-      Write(6,*) "Eigenvalues of the projected Hessian"
-      Write(6, "(5F10.5)") (H(I,I), I=1, nrx)
 
 c   o gather the diagonal eigenvalues back into column 1 for dumping to JOBARC
 c     (Obviously we cannot use this matrix afterward.)

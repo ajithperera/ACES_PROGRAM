@@ -44,7 +44,7 @@ C
       IND(I,J)=I*3-2+J
 c
       DET=0.D0
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*)
       Print*, "The Cartesians, internals and connec. @-buildb" 
       Print*, "The NATOMS", NATOMS

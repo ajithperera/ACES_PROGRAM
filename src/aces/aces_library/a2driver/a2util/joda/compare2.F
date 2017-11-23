@@ -18,7 +18,7 @@ C TOL      tolerance for comparison of coords (input only)
 
  80   FORMAT(3(1X,F10.5))
 C
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       WRITE(6,*)'--------------B'
       WRITE(6,80)(VEC(JAP),JAP=1,3*NATOMS)
 #endif

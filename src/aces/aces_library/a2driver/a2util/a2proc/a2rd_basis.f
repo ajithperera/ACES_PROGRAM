@@ -125,11 +125,6 @@ C
           Enddo
         Endif
 
-      Write(6,*)
-      Write(6,"(a)") "The basis set definitions"
-      do i=1,natoms
-         Write(6,"(1x,i3,1x,A20)") iatchrg(i), cbasnam(i)
-      enddo
 C
         call getrec(-1,'JOBARC','12SWITCH',1,iswitch)
         if (iswitch.gt.0) then

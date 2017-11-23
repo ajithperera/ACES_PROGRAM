@@ -416,7 +416,5 @@ c------------------------------------------------------------------------
       enddo
       enddo
 
-      Write(6,"(a,2i10)") "imax and zmax",imax,zmax
-
       return
       end

@@ -30,7 +30,7 @@ C
       ENDIF
 C
       CALL GETREC(20,'JOBARC','ZMAT2MOL',NTOTATOM,IZMT2MOL)
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*) norbit
       Print*, "ZMAT2MOL", (IZMT2MOL(I), I=1, NTOTATOM)
       Print*, "ISHELTP", (ISHELTP(I), I=1, NTOTSHEL)

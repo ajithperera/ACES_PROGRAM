@@ -306,9 +306,6 @@ C     &             WORK(ISCF_TDEN))
 C      CALL GETREC(-20, 'JOBARC', LABELDENS, NAOBFNS2*IINTFP, 
 C     &             WORK(ICOR_TDEN))
 
-      Write(6,*) "The SCF and Cor. tot. density matrices in AO basis"
-      CALL OUTPUT(WORK(ISCF_TDEN), 1, NAOBFNS, 1, NAOBFNS, NAOBFNS, 
-     &            NAOBFNS, 1)
       
       IF (SPIN_D .AND. (IUHF .GT. 0)) THEN
          
@@ -324,23 +321,6 @@ C     &             WORK(ICOR_TDEN))
      &                 WORK(ICOR_DDEN))
       ENDIF
 C      
-      Write(6,*) "The SCF and Cor. tot. density matrices in AO basis"
-      CALL OUTPUT(WORK(ISCF_TDEN), 1, NAOBFNS, 1, NAOBFNS, NAOBFNS, 
-     &            NAOBFNS, 1)
-      Write(6,*)
-C      CALL OUTPUT(WORK(ICOR_TDEN), 1, NAOBFNS, 1, NAOBFNS, NAOBFNS, 
-C     &            NAOBFNS, 1)
-C      Write(6,*)
-C
-      IF (SPIN_D .AND. IUHF .GT. 0) THEN
-      Write(6,*) "The SCF and Cor. spin. density matrices in AO basis"
-      CALL OUTPUT(WORK(ISCF_DDEN), 1, NAOBFNS, 1, NAOBFNS, NAOBFNS, 
-     &            NAOBFNS, 1)
-      Write(6,*)
-      CALL OUTPUT(WORK(ICOR_DDEN), 1, NAOBFNS, 1, NAOBFNS, NAOBFNS, 
-     &            NAOBFNS, 1)
-      Write(6,*)
-      ENDIF
 C
       ELSE IF (DENSITY_TYPE .EQ. "1-ORDER") THEN
 C

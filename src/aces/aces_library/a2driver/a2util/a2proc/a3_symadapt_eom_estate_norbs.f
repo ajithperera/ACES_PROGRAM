@@ -164,6 +164,14 @@ C
       N_t_mos = 0
       Nrootsp1= Nroots+1
 
+C Track the occ-occ and virtual orbitals that at least have 0.5
+C contribution to the transition. Note that cutoff value is simply a choice
+C that I made and also those  above the cutoff are the only orbitals that are
+C printed.
+
+      If (Iuhf .EQ. 0) Cutoff = 0.20D0
+      If (Iuhf .EQ. 1) Cutoff = 0.20D0
+
       If (Ipick .EQ. 1) Then
          Do i=1, Nroots
             Smult(i) = 1.0
@@ -258,18 +266,33 @@ C
 C     Symmetrize and Diagonalize MO basis density
 C
         call symmet2(Dens, Norbs)
-        call eig (dens,Nlorb,1,Norbs,-1)
+C
+C Eig would have been fine except that it reorders eigenvalues and
+C vectors.
+CSSS        call eig (dens,Nlorb,1,Norbs,-1)
 
-        Write(6,*)
-        If (Idens .EQ. 1) then
-         WRITE (6,"(a)") 'The OO eigenvalues and natural orbitals'
-        Else
-         WRITE (6,"(a)") 'The VV eigenvalues and natural orbitals'
+        I050 = Iend
+        I060 = I050 + Norbs
+        I070 = I060 + Norbs
+        I080 = I070 + Norbs*Norbs
+        I090 = I080 + Norbs*Norbs
+        Iend = I090 + 4*Norbs
+        If (iend .gt. Maxcor)
+     +     call insmem('a3_symadapt_estate_norbs',iend,maxcor)
+
+        call dgeev("N","V",Norbs,Dens,Norbs,Scr(I050),Scr(I060),
+     +              Scr(I070),Norbs,Scr(I080),Norbs,Scr(I090),
+     +              4*Norbs,Ierror)
+
+        If (Ierr .Ne. 0) Then
+            Write(6,"(a)") "Eigenvector solver failed"
+            Call Errex
         Endif
-        CALL OUTPUT(dens,1,Norbs,1,Norbs,Norbs,Norbs,1) 
-        CALL OUTPUT(NlOrb,1,Norbs,1,NOrbs,Norbs,Norbs,1) 
-        If (Idens .EQ. 1) call dcopy(Norbs,dens,Norbs+1,iocc,1)
-        If (Idens .EQ. 2) call dcopy(Norbs,dens,Norbs+1,iocc(Noccs+1),
+
+        Call Dcopy(Norbs*Norbs,scr(I080),1,Nlorb,1)
+
+        If (Idens .EQ. 1) call dcopy(Norbs,scr(I050),1,iocc,1)
+        If (Idens .EQ. 2) call dcopy(Norbs,scr(I050),1,iocc(Noccs+1),
      &                               1)
         nelec = 0.0D0
         I     = 0
@@ -279,19 +302,11 @@ C
         DO imo = 1, Norbs
            If (Idens .eq. 1) nelec = nelec + (iocc(imo))
            If (Idens .eq. 2) nelec = nelec + (iocc(Noccs+imo))
-C
-C Track the occ-occ and virtual orbitals that at least have 0.5
-C contribution to the transition. Note that cutoff value is simply a choice
-C that I made and also those  above the cutoff are the only orbitals that are 
-C printed. 
-C 
-           If (Iuhf .EQ. 0) Cutoff = 0.40D0
-           If (Iuhf .EQ. 1) Cutoff = 0.40D0
   
            If (Idens .EQ. 1) Then
               If (Abs(iocc(imo)) .GT. Cutoff) Then
                  I = I + 1
-                 O_mos(I) = imo
+                 O_mos(I) = noccs - imo + 1
               Endif 
            Else if (Idens .EQ. 2) then
               If (Abs(iocc(Noccs+ imo)) .GT. Cutoff) Then
@@ -301,6 +316,32 @@ C
            Endif
 
         ENDDO
+
+        If (Idens .EQ. 1) then
+           N_o_mos = 0
+           Do Imo = 1, Nao
+              If (O_MOS(Imo) .Gt. 0) N_o_mos = N_o_mos + 1
+           Enddo
+        Elseif (Idens .EQ. 2) then
+           N_t_mos = 0
+           Do Imo = 1, Nao
+              If (T_MOS(Imo) .Gt. 0) N_t_mos = N_t_mos + 1
+           Enddo
+        Endif
+
+        Write(6,*)
+        WRITE (6,"(a)") ' Trace of diagonalized MO density matrix: '
+        WRITE (6,"(F10.5)")  nelec
+        Write(6,"(a)") "Eigenvalues"
+        If (Idens .EQ. 1) Write(6,"(6(1x,F10.5))") 
+     &                         (iocc(imo), imo=1, Norbs)
+        If (Idens .EQ. 2) Write(6,"(6(1x,F10.5))") 
+     &                         (iocc(imo+noccs), imo=1, Norbs)
+        WRITE (6,"(a)") "The active occupied/virtual orbitals"
+        Write(6,*)
+        If (Idens .EQ. 1) Write(6,"(6(1x,I4))") (O_mos(I),I=1,Norbs)
+        Write(6,*)
+        If (Idens .EQ. 2) Write(6,"(6(1x,I4))") (T_mos(I),I=1,Norbs)
 C
 C Write the OO and VV transformation matrices to JOBARC 
 C
@@ -311,111 +352,14 @@ C Do the OO and VV transformation. Retrive the SCF vectors of correct
 C spin type during first iteration of the inner loop (OO block)
 C
         call getrec(20,'JOBARC', SCFVECS(Ispin), Nbas*Nbas*iintfp,dens)
-C
-C
-C The eigenvectors in the JOBARC are not ACESIII order (not binpacked).
-C So, binpack them becacuse OO and VV bolcks are in that order.
-C
-        Call binpack(Dens, Nshells, Nprim_shell,
-     &               Orig_nprim_shell, Reorder_Shell, Scr(I030),
-     &               Scr(I040), Nbas, Nbas)
 
-        If (Idens .EQ. 1) Call Dcopy(Nbas*Norbs, Dens, 1, Scr(I000), 1)
-        If (Idens .EQ. 2) Call Dcopy(Nbas*Norbs, Dens(Noccs*Nbas+1), 1, 
-     &                               Scr(I000), 1)
-
-        CALL XGEMM('N','N',Nbas,Norbs,Norbs,
-     +                     1.0D0, Scr(I000), nbas,
-     +                           Nlorb, Norbs,
-     +                     0.0D0,SCR(I010),    Nbas )
-
-        If (Idens .EQ. 1) Call Dcopy (Nbas*Norbs, SCR(I010), 1,
-     &                                Scr(I020), 1)
-        If (Idens .EQ. 2) Call Dcopy (Nbas*Norbs, SCR(I010), 1, 
-     &                                Scr(I020+Noccs*Nbas), 1)
-
-C       
-CSSS      Enddo 
-
-        If (Idens .EQ. 1) then
-           N_o_mos = 0
-           Do Imo = 1, Nao
-              If (O_MOS(Imo) .Gt. 0) N_o_mos = N_o_mos + 1
-           Enddo
-         
-           k = 0
-           do j=1,N_o_mos
-              Ioff = I010 + (j-1)*Nbas
-           do i=1, Norbs
-               k = k + 1
-               orb(k)=Ddot(nbas,Scr(Ioff), 1, Scr(I000+(i-1)*Nbas), 1)
-           enddo
-           enddo
-
-          I = 0
-          Do Imo = 1, N_o_mos
-             Ioff = Imo*Norbs 
-          Do Jmo = 1, Norbs
-             Joff = Ioff - (Jmo-1)
-             If (dabs(orb(Joff)) .Gt. Cutoff) Then
-                 I = I + 1
-                 O_MOS(I) = Joff
-             Endif
-          Enddo
-          Enddo 
-
-        Write(6,*)
-        WRITE (6,"(a)") "The active occupied orbitals"
-        Write(6,"(6(i3))") (O_MOS(i), i=1, N_o_mos)
-        Endif 
-C
-        I = 0
-        N_t_mos = 0
-        If (Idens .EQ. 2) then
-           Do Imo = 1, Nao
-              If (T_MOS(Imo) .Gt. 0) N_t_mos = N_t_mos + 1
-           Enddo
-
-           k = 0
-           do j=1,N_t_mos
-              Ioff = I010 + (j-1)*Nbas
-           do i=1, Norbs
-               k = k +1 
-               orb(k)=Ddot(nbas,Scr(Ioff), 1, Scr(I000+(i-1)*Nbas), 1)
-           enddo
-           enddo 
-
-          I = 0
-          Do Imo = 1, N_t_mos
-             Ioff = (Imo-1)*Norbs + 1
-          Do Jmo = 1, Norbs
-             Joff = Ioff + (Jmo-1)
-             If (dabs(orb(Joff)) .Gt. Cutoff) Then
-                I = I +1
-                T_MOS(I) = Joff + Noccs
-             Endif
-          Enddo
-          Enddo
-
-        Write(6,*)
-        WRITE (6,"(a)") "The active virtuals orbitals"
-        Write(6,"(6(i3))") (T_MOS(i), i=1, N_t_mos)
-        Endif 
 C
       Enddo 
 
 C
-C Before we proceed further we need to convert the vectors from 
-C OED (ACESIII) scaling and order to ACESII scaling and order. 
-C
-      Call Do_oed_to_vmol(Nbas, Norbs, Ioed2Aorder, Oed2AScale, 
-     &                    Scr(I020), Tmp1)
-      Call Dcopy(Nbas*Norbs, Tmp1, 1, Scr(I020), 1)
-      Call undo_binpack(Scr(I020), Nshells, Nprim_shell,
-     &                   Orig_nprim_shell, Reorder_Shell, Scr(I030),
-     &                   Scr(I040), Nbas, Norbs)
-C
-        call getrec(20,'JOBARC','CMP2ZMAT',nao*nbas*iintfp,scr(i000))
+        call getrec(20,'JOBARC', SCFVECS(Ispin), Nbas*Nbas*iintfp,
+     +              scr(i020))
+        call getrec(20,'JOBARC','CMP2CART',nao*nbas*iintfp,scr(i000))
 
         call xgemm('n','n',nao,nbas,nbas,one,scr(i000),nao,scr(i020),
      &              nbas,zilch,orb,nao)
@@ -451,8 +395,10 @@ C
      &                                  " The spin-state :"," Triplet"
         Endif 
         Write(6,*) 
-        Call Get_irreps(Nlorb, Eneg, Scr, Imemleft*Iintfp, N_ot_total,
-     &                  Nao, 1, Nocc, Iuhf, Ispin, "EXCITED")
+        Call Get_irreps_ex(Nlorb, Eneg, Scr, Imemleft*Iintfp, 
+     &                     N_ot_total, Nbas, 1, Nocc, Iuhf, 
+     &                     Ispin, O_MOS, T_MOS, N_o_mos,
+     &                     N_t_mos, "EXCITED")
 
       Enddo
 C

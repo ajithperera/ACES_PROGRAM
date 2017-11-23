@@ -121,13 +121,6 @@ C
       IND(I,J)=I*3-2+J
 c
       DET=0.D0
-      Write(6,*)
-      Print*, "The Cartesians, internals and connec. @-buildb" 
-      Print*, "The NATOMS", NATOMS
-      Write(6,"(3F10.5)"), (Q(I), I=1, NX)
-      Write(6,*)
-      Write(6,"(3F10.5)"), (R(I), I=1, NX)
-      Write(6,"(4I5)")  (NCON(I), I=1, NX)
 C
 C
 C FILL IN WITH DERIVATIVES OF INTERATOMIC DISTANCES WRT COORDINATE

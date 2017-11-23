@@ -271,11 +271,6 @@ C
       CALL GETREC(20,'JOBARC', 'COMPMEMB', NATOMS, ICORE(IMEMBC))
       IPRINT = iflags(1)
 C     
-      print*, "Entering A2RD_BASIS_4INTGRT: Orbits and Cart. Coord."
-      Write(6,"(4I4)"), (Norbits_compG(i), i=1, iucatms)
-      Write(*,*)
-      Write(6, "(3F10.5)"), (coord(i), i=1,3*natoms)
-      Write(*,*)
       CALL A2RD_BASIS_4INTGRT(IUCATMS,NATOMS,ITFCT,LNP1,LNPO,NTANGM,
      &                        ICORE(IMEMBC),ICORE(INUC),ICORE(NFCT),
      &                        ICORE(NUFCT),ICORE(NANGMOM), 
@@ -307,10 +302,6 @@ C
       INEXT    = ISCR1
 C     
       IF(ISTOP.GE.MAXCOR) CALL INSMEM('P4_DEN_PLOTS',ISTOP,MAXCOR)
-      Write(*,*)
-      print*, "Entering A2RD_BASIS_PRIMINF", ITFCT, NTANGM, IALPHA,
-     &          LNP1,NUNQSHL
-
 C
       CALL A2RD_BASIS_PRIMINF(NATOMS,IUCATMS,ITFCT,NBAS,LNP1,LNPO,
      &                        NTANGM,Norbits_compG,ICORE(NFCT),
@@ -323,28 +314,6 @@ C
      &                        ICORE(IPCOEFF),ICORE(NAOATM),
      &                        ICORE(ISCR1),ICORE(ISCR2),
      &                        ICORE(ISHLOFF),MAXSHELL,ISHL,MAXANG)
-      Write(6,*)
-      Write(6,*) "The number of contracted function per shell"
-      Write(6,"(4I4)") (ICORE(ICONFUNTSHL - 1 + I), I=1, NTOTSHL)
-      Write(6,*) "The shell angular momentum"
-      Write(6,"(4I5)") (ICORE(IANGMOMTSHL - 1 + I), I=1, NTOTSHL)
-      Write(6,*) "The number of primitive functions per shell"
-      Write(6,"(4I5)") (ICORE(IPRMFUNTSHL - 1 + I), I=1, NTOTSHL)
-      Print*, "Offsets for various arrays initilized in Pre4_Den_plo."
-      Write(*, '(31I9)'), IMEMBC,INUC,NUFCT,NUMOM,NFCT,NANGMOM,
-     &                   IATMNAM,NAOUATM,NAOATM,IANGMOMSHL,
-     &                   ICONFUNSHL,IPRMFUNSHL,INPRIMSHL,
-     &                   IANGMOMTSHL,ICONFUNTSHL,IOFFSETPRM,
-     &                   IOFFSETCON,IOFFSETSHL,IMAP_SHL2CNT,
-     &                   IPRMFUNTSHL,NMOMAO,IALPHA,ICOEFFA,
-     &                   ICOEFFB,IDENSA,IDENSB,IPCOEFFA,
-     &                   IPCOEFFB, IPCOEFF,ISCR1,ISCR2
-      Print*, "The exponents"
-      Call output(icore(ialpha), 1, nfct, 1, 1, 1, nfct, 1, 1, 1)
-      Call output(icore(ipcoeff), 1, nfct, 1, nbasp, nfct, nbasp, 1)
-      Write(*,*)
-      print*, "Exit Prep4_density_plots"
-      Write(*,*)
 C     
       RETURN
       END

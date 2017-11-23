@@ -15,13 +15,6 @@ C
 
       Enddo
 
-       if (print) then
-       write(6,*)
-       Write(6,"(a)") "The orginal array"
-       write(6,"(5(1x,e14.7))") (Scratch(i),i=1, Length)
-       Write(6,"(a)") "The reordered array"
-       write(6,"(5(1x,e14.7))") (vector(i),i=1, Length)
-       endif 
 
       Return
       End

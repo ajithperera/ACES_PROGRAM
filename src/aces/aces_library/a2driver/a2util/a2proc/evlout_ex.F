@@ -1,50 +1,21 @@
-      SUBROUTINE EVLOUT(EVAL, IRERDR, IVMLSYM, IREPS, NBAS, NIRREP,
-     &                  NOCC, ISPIN, IFLAG, STATE)
+      SUBROUTINE EVLOUT_EX(EVAL, IRERDR, IVMLSYM, IREPS, NBAS, NBASX,
+     &                     NIRREP, NOCC, ISPIN, IFLAG, O_MOS, 
+     &                     T_MOS, N_o_mos, N_t_mos, STATE)
 C
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 C
-c maxbasfn.par : begin
-
-c MAXBASFN := the maximum number of (Cartesian) basis functions
-
-c This parameter is the same as MXCBF. Do NOT change this without changing
-c mxcbf.par as well.
-
-      INTEGER MAXBASFN
-      PARAMETER (MAXBASFN=1000)
-c maxbasfn.par : end
-
-
-c machsp.com : begin
-
-c This data is used to measure byte-lengths and integer ratios of variables.
-
-c iintln : the byte-length of a default integer
-c ifltln : the byte-length of a double precision float
-c iintfp : the number of integers in a double precision float
-c ialone : the bitmask used to filter out the lowest fourth bits in an integer
-c ibitwd : the number of bits in one-fourth of an integer
-
-      integer         iintln, ifltln, iintfp, ialone, ibitwd
-      common /machsp/ iintln, ifltln, iintfp, ialone, ibitwd
-      save   /machsp/
-
-c machsp.com : end
-
-
-
-c flags.com : begin
-      integer        iflags(100)
-      common /flags/ iflags
-c flags.com : end
+#include "maxbasfn.par"
+#include "machsp.com"
+#include "flags.com"
 
       INTEGER NBAS
+      INTEGER O_MOS(NBAS), T_MOS(NBAS)
       CHARACTER*8 IRRSYM1(MAXBASFN),IRRSYM2(MAXBASFN)
       CHARACTER*4 IRPCHAR
       CHARACTER*5 SPIN(2)
       CHARACTER*7 STATE
       LOGICAL FANDUP, SYMINFO_EXIST
-      DIMENSION EVAL(NBAS),IRERDR(NBAS)
+      DIMENSION EVAL(NBASX),IRERDR(NBASX)
       DIMENSION IVMLSYM(NBAS),IREPS(9)
       DIMENSION IRPCHAR(8), NOCC(8,2)
 C
@@ -52,21 +23,26 @@ C
       DATA SPIN /'ALPHA',' BETA'/
 C
 C  Now go get the eigenvalues.
-C
 C This is not needed for ACES III interface
 CSSS      CALL GETREC(20,'JOBARC','SCFEVLA0',NBAS*IINTFP,EVAL(1))
 C
       If (ispin.eq.1) then
-          CALL GETREC(20,'JOBARC','EVCSYMAF',NBAS*IINTFP,IRRSYM1)
-          CALL GETREC(20,'JOBARC','EVCSYMAC',NBAS*IINTFP,IRRSYM2)
+          CALL GETREC(20,'JOBARC','EVCSYMAF',NBASX*IINTFP,IRRSYM1)
+          CALL GETREC(20,'JOBARC','EVCSYMAC',NBASX*IINTFP,IRRSYM2)
       Else
-          CALL GETREC(20,'JOBARC','EVCSYMBF',NBAS*IINTFP,IRRSYM1)
-          CALL GETREC(20,'JOBARC','EVCSYMBC',NBAS*IINTFP,IRRSYM2)
+          CALL GETREC(20,'JOBARC','EVCSYMBF',NBASX*IINTFP,IRRSYM1)
+          CALL GETREC(20,'JOBARC','EVCSYMBC',NBASX*IINTFP,IRRSYM2)
       Endif
 C
+#ifdef _DEBUG_LVLM
       Write(6,"(a)") "Irrep labels" 
       Write(6,"(6(8a))")(IRRSYM1(i),i=1,Nbas)
-      DO 101 I=1,NBAS
+      Write(6,"(a)") "Active occ. and vrt. orbitals" 
+      Write(6,"(6(i3))") (O_MOS(i), i=1, Nbas)
+      Write(6,"(6(i3))") (T_MOS(i), i=1, Nbas)
+      Write(6,"(6(F10.5))") (Eval(i), i=1, 2*Nbas)
+#endif 
+      DO 101 I=1,NBASX
          IRERDR(I)=I
   101 CONTINUE
 C
@@ -77,7 +53,7 @@ C
       LUOUT  = 6
       IF(ISPIN.EQ.1) THEN
         FANDUP=.FALSE.
-        DO 102 I=1,NBAS
+        DO 102 I=1,NBASX
            IF(IRRSYM1(I).EQ.'----') FANDUP=.TRUE.
   102   CONTINUE
 C
@@ -91,25 +67,8 @@ C
      &                 ' as the symmetry.',/)
           ENDIF
         ENDIF
-C
-        DO 110 J=1,NBAS
-          EMIN=EVAL((ISPIN-1)*NBAS+J)
-          IMIN=J
-          DO 115 K=J,NBAS
-            IF(EVAL((ISPIN-1)*NBAS+K).LT.EMIN) THEN
-              EMIN=EVAL((ISPIN-1)*NBAS+K)
-              IMIN=K
-            ENDIF
-  115     CONTINUE
-          SJUNK=EVAL((ISPIN-1)*NBAS+J)
-          EVAL((ISPIN-1)*NBAS+J)=EVAL((ISPIN-1)*NBAS+IMIN)
-          EVAL((ISPIN-1)*NBAS+IMIN)=SJUNK
-          IJUNK=IRERDR(J)
-          IRERDR(J)=IRERDR(IMIN)
-          IRERDR(IMIN)=IJUNK
-  110   CONTINUE
-C
-        DO 200 I=1,NBAS
+
+        DO 200 I=1,NBASX
           DO 201 J=1,NIRREP
             IF(IRERDR(I).GE.IREPS(J).AND.IRERDR(I).LT.IREPS(J+1)) 
      &        IVMLSYM(I)=J
@@ -143,24 +102,26 @@ C
         WRITE(LUOUT,5015)
  5015   FORMAT(T8,'----',3X,'--------------------',3X,
      &            '--------------------',3X,'-------',3X,'---------')
-        DO 125 J=1,NBAS
-          WRITE(LUOUT,5020)J,IRERDR(J),EVAL((ISPIN-1)*NBAS+J),
+        DO J=N_o_mos, 1, -1
+          WRITE(LUOUT,5020)J,IRERDR(O_MOS(J)),EVAL((ISPIN-1)*NBAS+J),
      &                     EVAL((ISPIN-1)*NBAS+J)*FACTOR,
-     &                     IRRSYM1(J)(1:4),IRRSYM2(J)(1:4)
-CSS     &                     IVMLSYM(J)
+     &                     IRRSYM1(O_MOS(J))(1:4),IRRSYM2(J)(1:4)
+        ENDDO 
+        WRITE(LUOUT,5021)
+        DO J=1,N_t_mos
+           K= N_t_mos + J
+          WRITE(LUOUT,5020)K,IRERDR(T_MOS(J)),EVAL((ISPIN-1)*NBAS+K),
+     &                     EVAL((ISPIN-1)*NBAS+K)*FACTOR,
+     &                     IRRSYM1(T_MOS(J))(1:4),IRRSYM2(K)(1:4)
+        ENDDO 
+
  5020     FORMAT(T3,I3,3X,I3,3X,F20.10,3X,F20.10,4X,A4,6X,A4)
-CSS     &           1X,'(',I1,')')
-          IF(J.EQ.ITOTOCC) WRITE(LUOUT,5021)
  5021     FORMAT(T3,77('+'))
-C
-  125   CONTINUE
-c
         WRITE(LUOUT,5022)
  5022   FORMAT(T3,77("-"))
 cmn
 c Determine mapping between comp symmetry labels and internal number of irrep.
 c
-        Write(6,*) "I am HERE"
         do j=1,8
            irpchar(j)='XXXX'
         enddo
@@ -172,7 +133,6 @@ c
               enddo
            endif
         enddo
-        Write(6,*) "I am HERE2"
 c
 c write this info to file SYMINFO
 c

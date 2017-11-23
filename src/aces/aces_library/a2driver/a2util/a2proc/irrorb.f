@@ -53,7 +53,7 @@ C
       DIMENSION EVEC(NBASX,NBAS),SCR(1),IANGMOM(NBASX)
       DIMENSION ICENTER(NBASX),SCR1(1),Z(1)
       DIMENSION IBFATM(NATOMS),ILCATM(NATOMS),IPTR(MXATMS*120)
-      DIMENSION EVAL(NBAS),SYOPS(1080),ORIENT(9)
+      DIMENSION EVAL(NBASX),SYOPS(1080),ORIENT(9)
       DIMENSION JFLAGS(16)
 
       COMMON /FLAGS/ IFLAGS(100)
@@ -93,14 +93,6 @@ CSSS      CALL GETREC(-1,'JOBARC','EVALORDR',IINTFP*NBAS,EVAL)
       CALL GETREC(-1,'JOBARC','ANMOMBF0',NBASX,IANGMOM)
       CALL GETREC(-1,'JOBARC','CNTERBF0',NBASX,ICENTER)
 C
-      Write(6,*)
-      Write(6,"(a,2I4)") "The NBAS and NBASX: ", Nbas, Nbasx
-      Write(6,"(a)")"Eigenvalues, ang. momentum and center of basis fns"
-      Write(6,"(6(1x,F10.5))") (Eval(i), i=1, nbas)
-      Write(6,*)
-      Write(6,"(6I5)") (IANGMOM(i), i=1, NBASX)
-      Write(6,*)
-      Write(6,"(6I5)") (ICENTER(i), i=1, NBASX)
       if (itime.eq.1) then
          CALL GETCREC(-1,'JOBARC','FULLPTGP',4,PTGRP)
          CALL GETCREC(-1,'JOBARC','FULLSTGP',8*NATOMS,szSitGrpTmp)
@@ -115,14 +107,6 @@ C
          CALL GETREC(-1,'JOBARC','COMPSYOP',IINTFP*9*IORDGRP,SYOPS)
       end if
 C
-      Write(6,*) 
-      Write(6,"(a)")" Computational,full PG, order, iptr and syops"
-      Write(6,"(2a4)") PTGRP, szSitGrpTmp
-      Write(6,"(I5)")  IORDGRP
-      Write(6,"(6I5)") (IPTR(i), i=1, IORDGRP*NATOMS)
-      Write(6,*) 
-      Write(6,"(6(1x,F10.5))") (SYOPS(i), i=1, 9*IORDGRP)
-      Write(6,*)
 C
       CALL GETREC(-1,'JOBARC','ORIENTMT',IINTFP*9,ORIENT)
 
@@ -264,26 +248,14 @@ c     END DO IMO = 1, NBAS
       if (iblk.eq.1) then
          if (itime.eq.1) then
            CALL PUTCREC(20,'JOBARC','EVCSYMAF',8*NBAS,IRRSYM)
-         Write(6,"(a)") "The full point group sym. labels: A spin"
-         Write(6,"(8A4)") (IRRSYM(i), i=1, Nbas)
-         Write(6,*)
          else
            CALL PUTCREC(20,'JOBARC','EVCSYMAC',8*NBAS,IRRSYM)
-         Write(6,"(a)") "The comp. point group sym. labels: A spin"
-         Write(6,"(8A4)") (IRRSYM(i), i=1, Nbas)
-         Write(6,*)
          end if
       else
          if (itime.eq.1) then
            CALL PUTCREC(20,'JOBARC','EVCSYMBF',8*NBAS,IRRSYM)
-         Write(6,"(a)") "The full point group sym. labels: B spin" 
-         Write(6,"(8A4)") (IRRSYM(i), i=1, Nbas)
-         Write(6,*)
          else
            CALL PUTCREC(20,'JOBARC','EVCSYMBC',8*NBAS,IRRSYM)
-         Write(6,"(a)") "The comp. point group sym. labels: B spin"
-         Write(6,"(8A4)") (IRRSYM(i), i=1, Nbas)
-         Write(6,*)
          end if
       end if
 

@@ -587,10 +587,8 @@
       EXECUTE SIP_BARRIER 
       execute get_my_rank rank
 
-#      If rank == 0.0
       EXECUTE  FORM_DIP_HMAT DIP_INIT_IJIJ DIP_INIT_IJ 
       EXECUTE FORM_DIP_GUESS DIP_INIT_IJIJ VEC_AB
-#      Endif 
 
      ENDPROC FORM_INITIAL_GUESS
 #    --------------------------

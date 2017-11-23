@@ -285,8 +285,6 @@ C
 C
          ENDIF
          TENERGY = TENERGYA + TENERGYB
-      Write(6,*)
-      Write(6,"(a,F10.5)") "The total kinetic energy = ", TENERGY
 C
       ELSE IF (COR) THEN
 C
@@ -308,8 +306,6 @@ C
          CALL XGEMM('N','N',NBAS,NBAS,NBAS,ONE,DENSA,NBAS,SCR1, 
      &               NBAS,ZILCH,EVECA,NBAS)
 C
-      Write(6,*) "The Alpha Natural orbitals AOxMO"
-      call output(EVECA, 1, NBAS, 1, NBAS, NBAS, NBAS, 1)
 C
         IF (IUHF.EQ.1) THEN
            CALL GETREC(20,'JOBARC','RELDENSB',NBAS*NBAS*IINTFP,DENSB)
@@ -320,8 +316,6 @@ C
 C
            CALL GETREC(20,'JOBARC','RELDENSB',NBAS*NBAS*IINTFP,DENSB)
 C
-       Write(6,*) "The Beta Density read"
-       call output(DENSB, 1, NBAS, 1, NBAS, NBAS, NBAS, 1)
            CALL EIG(DENSB, SCR1, 1, NBAS, -1)
            CALL DCOPY(NBAS, DENSB, NBAS+1, OCCB, 1)
            CALL DZERO(EVALB, NBAS)
@@ -329,13 +323,9 @@ C
            CALL GETREC(20,'JOBARC','SCFEVECB',NBAS*NBAS*IINTFP,DENSB)
            CALL XGEMM('N','N',NBAS,NBAS,NBAS,ONE,DENSB,NBAS,SCR1,
      &                 NBAS,ZILCH,EVECB,NBAS)
-      Write(6,*) "The Beta Natural orbitals AOxMO"
-      call output(EVECB, 1, NBAS, 1, NBAS, NBAS, NBAS, 1)
         ENDIF
         TENERGY = TENERGYA + TENERGYB
 
-      Write(6,*)
-      Write(6,"(a,F10.5)") "The total kinetic energy = ", TENERGY
 C
       ENDIF
 C
@@ -343,9 +333,6 @@ C
       CALl XGEMM('N','N', NAOBFNS, NBAS, NBAS, ONE, SCR1, NAOBFNS, 
      &            EVECA, NBAS, ZILCH, NATORBA, NAOBFNS)
 C
-      Write(6,*)
-      Write(6,*) "The Alpha Natural orbitals NAOBFNSxNMO"
-      call output(NATORBA, 1, NAOBFNS, 1, NBAS, NAOBFNS,  NBAS, 1)
 C
       IF (IUHF .EQ. 1) THEN
          CALL XGEMM('N','N', NAOBFNS, NBAS, NBAS, ONE, SCR1, NAOBFNS,

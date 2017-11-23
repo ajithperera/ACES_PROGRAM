@@ -60,80 +60,24 @@ C
       Integer   Reorder_Shell(Maxangshell*Mxatms)
 C
       Call Getrec(20, "JOBARC", "SCFEVCA0", Nbfns*Nbfns*Iintfp,
-     &            Tmp2_a)
-      Call Filter(Tmp2_a, Nbfns*Nbfns, Tol)
+     &            Scfvec_a)
+      Call Filter(Scfvec_a, Nbfns*Nbfns, Tol)
       Call Getrec(20, "JOBARC", "SCFEVLA0", Nbfns*Iintfp, Scfevl_a)
 
       If (Iuhf .EQ. 1) then
          Call Getrec(20, "JOBARC", "SCFEVCB0", Nbfns*Nbfns*Iintfp,
-     &               Tmp2_b)
-         Call Filter(Tmp2_b, Nbfns*Nbfns, Tol)
+     &               Scfvec_b)
+         Call Filter(Scfvec_b, Nbfns*Nbfns, Tol)
          Call Getrec(20, "JOBARC", "SCFEVLB0", Nbfns*Iintfp, Scfevl_b)
 
       Endif 
 
-C Before reordering/rescaling the vectors from OED/ERD ordering/scaling
-C we need to binpacking (rather silly name to what it actaully does)
 C
-      Call Getrec(20, "JOBARC", "NSHELLS" , 1, nshells)
-      Call Getrec(20, "JOBARC", "NPRMSHEL", nshells, Nprim_shell)
-      Call Getrec(20, "JOBARC", "BNPAKORD", nshells, Reorder_Shell)
+C This skipped block seems to be unnessary. The SCF vectors comming
+C out of ACESIII is in the ACES II order (s,p1x,p1y,p1z,p2x,p2y,p2z;..
+C and so on. Neverthelles I am not deleting since things can change. 
 C
-      Iscr1 = 1
-      Iscr2 = Iscr1 + Nbfns
-      INext = IScr2 + Nbfns
-      If (Inext .Gt. Imemleft) Call Insmem("a3_symadapt_scfvecs",
-     &                                      Inext, Imemleft)
-
-      Call Binpack(Tmp2_a, Nshells, Nprim_shell,
-     &                  Orig_nprim_shell, Reorder_Shell, Work(Iscr1),
-     &                  Work(Iscr2), Nbfns, Nbfns)
-
-      If (IUhf .EQ. 1) then
-          Call Binpack(Tmp2_b, Nshells, Nprim_shell,
-     &                  Orig_nprim_shell, Reorder_Shell, Work(Iscr1),
-     &                  Work(Iscr2), Nbfns, Nbfns)
-
-      Endif
-
-C Get the OED/ERD to ACES scaling and ordering vectors.
-  
-      Call Getrec(20, "JOBARC", "ERD2A2CS", Nbfns*Iintfp,
-     &            Oed2AScale)
-      Call Getrec(20, "JOBARC", "ERDORDER", Nbfns, Ioed2Aorder)
 C
-      Call Do_oed_to_vmol(Nbfns, Nbfns, Ioed2Aorder, Oed2AScale, 
-     &                    Tmp2_a, Scfvec_a)
-
-      If (Iuhf .EQ. 1) then
-         Call Do_oed_to_vmol(Nbfns, Nbfns, Ioed2Aorder, Oed2AScale, 
-     &                      Tmp2_b, Scfvec_b)
-      Endif
-C
-C Undo the binpacking from ACES III (binpacking 
-C
-      Call undo_binpack(Scfvec_a, Nshells, Nprim_shell, 
-     &                  Orig_nprim_shell, Reorder_Shell, Work(Iscr1),
-     &                  Work(Iscr2), Nbfns, Nbfns)
-
-      If (IUhf .EQ. 1) then
-          Call undo_binpack(Scfvec_b, Nshells, Nprim_shell, 
-     &                      Orig_nprim_shell, Reorder_Shell, 
-     &                      Work(Iscr1), Work(Iscr2), Nbfns, Nbfns)
-      Endif
-
-C
-C Generate the occupation numbers for each irrep based on eigen
-C values and the number of basis functions per irrep.
-
-      Call Occupy(Nirrep, Nbfirr, Nbfns, Scfevl_a, Work, Nocc(1,1),
-     &            1)
-      If (Iuhf .EQ. 1) Then
-         Call Occupy(Nirrep, Nbfirr, Nbfns, Scfevl_b, Work, Nocc(1,1),
-     &               2)
-      Else
-         Call Icopy(8, Nocc(1, 1), 1, Nocc(1,2), 1)
-      Endif
 C 
 C Write the the scf vectors in ACES II order so molden
 C interface that handle excited state densities will function
@@ -147,11 +91,22 @@ c results!
       If (Iuhf .EQ. 1) Call Putrec(20, "JOBARC", "SCFVECB0",
      &                             Nbfns*Nbfns*Iintfp, Scfvec_b)
 C
+C Generate the occupation numbers for each irrep based on eigen
+C values and the number of basis functions per irrep.
+
+      Call Occupy(Nirrep, Nbfirr, Nbfns, Scfevl_a, Work, Nocc(1,1),
+     &            1)
+      If (Iuhf .EQ. 1) Then
+         Call Occupy(Nirrep, Nbfirr, Nbfns, Scfevl_b, Work, Nocc(1,1),
+     &               2)
+      Else
+         Call Icopy(8, Nocc(1, 1), 1, Nocc(1,2), 1)
+      Endif
 C
 C First convert from Spherical to Cartesian (if the calculation is
 C in Cartesian this should do nothing).
 
-      Call Getrec(20, "JOBARC", "CMP2ZMAT", Nbfns*Naobfns*Iintfp,
+      Call Getrec(20, "JOBARC", "CMP2CART", Nbfns*Naobfns*Iintfp,
      &            Tmp1)
 
       Call Xgemm("N", "N", Naobfns, Nbfns, Nbfns, 1.0D0, Tmp1,
@@ -170,19 +125,17 @@ C in Cartesian this should do nothing).
 
          Call Putrec(20, "JOBARC", "SCFVECB3", Naobfns*Naobfns*Iintfp,
      &               Scfvec_b)
-
       Endif
-
 C Note that seventh argument to both calls is the same. This is
 C because alpha and beta eigenvectors are kept in two different
 C arrays instead of a one in which beta vectors comes latter.
 C
-      Call Get_irreps(Scfvec_a, Scfevl_a, Work, Imemleft*Iintfp, 
-     &                Nbfns, Naobfns, 1, Nocc, Iuhf, 1, "GROUND")
-      If (Iuhf .EQ. 1) Call Get_irreps(Scfvec_b, Scfevl_b, Work, 
-     &                                 Imemleft*Iintfp, Nbfns, 
-     &                                 Naobfns, 1, Nocc, Iuhf,
-     &                                 2, "GROUND ")
+      Call Get_irreps_gs(Scfvec_a, Scfevl_a, Work, Imemleft*Iintfp, 
+     &                Nbfns, Naobfns, 1, Nocc, Iuhf, 1, "GROUND ")
+      If (Iuhf .EQ. 1) Call Get_irreps_gs(Scfvec_b, Scfevl_b, Work, 
+     &                                    Imemleft*Iintfp, Nbfns, 
+     &                                    Naobfns, 1, Nocc, Iuhf,
+     &                                    2, "GROUND ")
 C
       Return
       End

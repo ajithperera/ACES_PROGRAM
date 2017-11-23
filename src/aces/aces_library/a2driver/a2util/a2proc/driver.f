@@ -88,8 +88,8 @@ C
        Call PutRec( 20, 'JOBARC', 'FULLSOAO', NAO*NAO*IIntFP, SOAO)
       ENDIF
 C
-cSSS      write(6,*) ' @DRIVER-I, Matrix SOAO (SYMTRANS) '
-cSSS      CALL OUTPUT(SOAO,1,NAO,1,NAO,NAO,NAO,1)
+CSSS      write(6,*) ' @DRIVER-I, Matrix SOAO (SYMTRANS) '
+CSSS      CALL OUTPUT(SOAO,1,NAO,1,NAO,NAO,NAO,1)
 C
 C     **********************************
 C     * Invert the SOAO transformation *

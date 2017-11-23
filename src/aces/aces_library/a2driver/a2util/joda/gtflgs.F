@@ -1191,7 +1191,7 @@ c      the jobarc record HAVEGEOM to 0 indicate the geometry optimizations
 c      can proceed.
 c
       Call GetRec(0, 'JOBARC', 'HAVEGEOM', i_length, i_havegeom)
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Print*, "A geometry for frequency {0,1} present:", i_length 
 #endif 
       if (i_length .lt. 0) Call Putrec(20, 'JOBARC', 'HAVEGEOM', 
@@ -1598,7 +1598,7 @@ C
               endif
            Endif
 C
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Print*, "The value of grad calc", ioppar(h_IOPPAR_grad_calc)
       Print*, "The Deriv. level, havegeom?, and vib? :",
      &     ioppar(h_IOPPAR_deriv_lev),  i_havegeom, 
@@ -1611,7 +1611,7 @@ c
               szTmp = 'deriv=first'//achar(0)  
               call asv_update_kv(szTmp,iASV,szData,0)
       Endif
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Print*, "The derivative level @exit", ioppar(h_IOPPAR_deriv_lev) 
 #endif
 
@@ -1702,7 +1702,7 @@ c   o If CC calc, then set MAXCYC and turn on RLE with order equal to 5
       end if
 
 c   o PROPERTY CALCULATION FOR CORRELATED CALCULATION
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Print*, "First order props and grad flags @enter:",
      &         ioppar(h_IOPPAR_props),ioppar(h_IOPPAR_grad_calc) 
 #endif
@@ -1714,7 +1714,7 @@ c   o PROPERTY CALCULATION FOR CORRELATED CALCULATION
              call asv_update_kv(szTmp,iASV,szData,0) 
          endif 
       end if
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Print*, "First order props, deriv level and grad_calc @exit:", 
      &         ioppar(h_IOPPAR_props), ioppar(h_IOPPAR_deriv_lev),
      &         ioppar(h_IOPPAR_grad_calc)

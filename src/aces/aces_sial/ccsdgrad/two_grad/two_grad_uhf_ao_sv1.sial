@@ -6324,7 +6324,7 @@
          GET Hz(mu,nu)
 
          Tpq(mu,nu)  = DHFA(mu,nu)
-         Tpq(mu,nu) += DHFA(mu,nu)
+         Tpq(mu,nu) += DHFB(mu,nu)
          Tpq(mu,nu) += DpqA(mu,nu)
          Tpq(mu,nu) += DpqB(mu,nu)
 

@@ -204,12 +204,6 @@ C
 C
       IBREAK = 0
 C
-      Write(6,*)
-      WRITE(6, "(a,(4F10.5))") "The step size at entry",
-     &          (SCRATCH(J+NOPT), J=1, NOPT)
-      WRITE(6, "(a,(4F10.5))") "The gradhes at entry",
-     &          (GRDHES(J), J=1, NOPT)
-      Write(6,*)
 
       IF (.NOT.QSTLST_CLIMB) THEN
 C
@@ -250,10 +244,6 @@ C
 C     ENDIF (.NOT.QSTLST_CLIMB)
       ENDIF
 C
-      Write(6,*)
-      WRITE(6, "(a,(4F10.5))") "The step size before Morse",
-     &          (SCRATCH(J+NOPT), J=1, NOPT)
-      Write(6,*)
 
       IF (MORSE) THEN
          IF (iFlags2(5) .ge. 3) THEN
@@ -277,10 +267,6 @@ C
 C     
  30   CONTINUE
 C
-      Write(6,*)
-      WRITE(6,"(a,(4F10.5))") "The unscaled step size", 
-     &            (SCRATCH(J+NOPT), J=1, NOPT)
-      Write(6,*)
 C
       RETURN
       END

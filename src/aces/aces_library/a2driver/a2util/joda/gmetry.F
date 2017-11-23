@@ -48,7 +48,7 @@ CSSS      CALL GETREC(-1,'JOBARC', 'VIB_POPT',IONE, ipost_vib)
          Write (LuOut,'((I3,1X,f12.6))') (i,R(i),i=1,NX)
       EndIf
 C
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Print*, "In Gmetry; ncycle, ix, and ipost_vib"
       Print*, ncycle, is, ipost_vib
 #endif

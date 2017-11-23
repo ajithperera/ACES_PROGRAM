@@ -125,8 +125,6 @@ CSSS      CALL GETREC(-1,'JOBARC', 'VIB_POPT',IONE, ipost_vib)
          Write (LuOut,'((I3,1X,f12.6))') (i,R(i),i=1,NX)
       EndIf
 C
-      Print*, "In Gmetry; ncycle, ix, and ipost_vib"
-      Print*, ncycle, is, ipost_vib
       IF (ncycle .NE. 0. or. ix.ne.0) THEN
 C
 C DECOMPRESS R
@@ -198,6 +196,5 @@ C
 C Only one out-of-bound is all it takes to regenerate Cartesians.
       IF (NOT_IN_BOUND) CALL GEN_CART_COORD(Q0, NOSILENT)
 C
-      Call geomout
       RETURN
       END

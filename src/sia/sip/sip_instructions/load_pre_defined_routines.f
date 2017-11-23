@@ -341,12 +341,12 @@ c
       dummy = load_user_sub('read_list_to_blocks'//char(0), 
      *             read_list_to_blocks)
       dummy = load_user_sub('remove_diagonal'//char(0), remove_diagonal)
-      call set_upgrade_flag(dummy) 
+      call set_upgrade_flag(dummy)  
       dummy = load_user_sub('return_diagonal'//char(0), return_diagonal)
       call set_upgrade_flag(dummy) 
-      dummy = load_user_sub('fock_denominator'//char(0),
+      dummy = load_user_sub('Fock_denominator'//char(0),
      *            fock_denominator)
-      call set_upgrade_flag(dummy) 
+CSSS      call set_upgrade_flag(dummy) 
       dummy = load_user_sub('set_flags'//char(0), set_flags)
       dummy = load_user_sub('set_flags2'//char(0), set_flags2)
       dummy = load_user_sub('der2_comp'//char(0), der2_comp)
@@ -613,7 +613,7 @@ C
 
       dummy = load_user_sub('print_eom_dens_info'//char(0),
      +                       print_eom_dens_info)
-      dummy = load_user_sub('c1_full_print'//char(0), c1_full_print)
+      dummy = load_user_sub('c1_full_print'//char(0),c1_full_print)
       call set_upgrade_flag(dummy)
 
 c -------------------------------------------------------------------- 

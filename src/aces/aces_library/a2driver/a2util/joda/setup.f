@@ -38,7 +38,6 @@ C
 C
 C Let's update the number of cycles right away!
 C
-      Write(6,*) "The number of opt. cycles:", NCYCLE 
 C
       NCYCLE = NCYCLE + 1 
 C

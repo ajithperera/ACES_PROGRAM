@@ -429,6 +429,17 @@ C
       
          Imemleft = (Maxcor - Inext)
 
+         Write(6,"(a)")   " Warning"
+         Write(6,"(a)")   " ------- "
+         
+         Write(6,"(a,a)") " The following excited state symmetry",
+     &                    " analysis while useful can also show"
+         Write(6,"(a,a)") " incorrect assignments of excitations.",
+     &                    " Combine this analysis with the data"
+         Write(6,"(a,a)") " printed in summary.out for reliable",
+     &                    "  outcome."
+         Write(6,*) 
+        
          If (Cis) Then
 
 C The new cis codes generate both singlets and triplets. The 
