@@ -430,7 +430,11 @@ C
       dummy = load_user_sub('form_dea_guess'//char(0),0)
       dummy = load_user_sub('genrl_eig_solver'//char(0),0)
       dummy = load_user_sub('return_inverse'//char(0),0)
-
+      dummy = load_user_sub('form_hphp_matrix'//char(0),0)
+      dummy = load_user_sub('set_aces3_vars'//char(0),0)
+      dummy = load_user_sub('form_cis_amat'//char(0),0)
+      dummy = load_user_sub('full_diag_hphp_matrix'//char(0),0)
+      dummy = load_user_sub('copy_alpha_to_beta'//char(0),0)
 c -----------------------------------------------------------------
 c Prakash instructions need for delta integrals
 c ------------------------------------------------------------------

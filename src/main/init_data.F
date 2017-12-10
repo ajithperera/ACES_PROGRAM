@@ -47,7 +47,7 @@ C  in the file COPYRIGHT.
       integer          idamp_type, idamp_tol,ilindep_tol,ilock_orbitals 
       integer          iintgrl_tol, ilock_orbocc, idamp_end, idkh_order
       integer          ireference 
-      integer          iee_guess,iee_denom,iee_maxcyc
+      integer          iee_guess,iee_denom,iee_maxcyc,icis_tol
       character*4      atmnam(max_centers)
       logical          cartesian
       logical          uhf
@@ -288,6 +288,7 @@ C
         Iee_guess      = iflags(162)
         Iee_denom      = iflags(163)
         Iee_maxcyc     = iflags(105)
+        Icis_tol       = iflags(164)
   
         Damp_type     = DBLE(Idamp_type)
         Damp_tol      = DBLE(Idamp_tol)
@@ -300,6 +301,7 @@ C
         ee_guess       = DBLE(iee_guess)
         ee_denom       = DBLE(iee_denom)
         ee_maxcyc      = DBLE(iee_maxcyc)
+        cis_tol        = 10.0d0**(-icis_tol) 
 
 c-------------------------------------------------------------------------
 c   Read IFLAGS2 off JOBARC.

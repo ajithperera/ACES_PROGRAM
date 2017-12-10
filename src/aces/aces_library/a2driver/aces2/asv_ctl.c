@@ -377,9 +377,10 @@ const ASV_nl_t ASV_nl[] =
 {/*261*/ "IDAMP_END",   "DAMP_END"     ,h_ICHAR_handle, 20,     ""},
 {/*262*/ "EE_GUESS",    "EE_GUESS"     ,h_ICHAR_handle, 0,      ""},
 {/*263*/ "EE_DENOM",    "EE_DENOM"     ,h_ICHAR_handle, 0,      ""},
-{/*264*/ "",   ""     ,h_ICHAR_handle,0,""},
+{/*264*/ "ICIS_TOL",    "CIS_TOL#"     ,h_ICHAR_f_int,  5,     "tol"},
+{/*265*/ "",   ""     ,h_ICHAR_handle,0,""},
 }; /* end ASV_nl[] definition */
-#define MAX_ASVs 264
+#define MAX_ASVs 265
 
 /******************************************************************************/
 

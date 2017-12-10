@@ -374,7 +374,7 @@ C is no reason to crash!
             If (Type .EQ. 81) JALABEL  = denstype_tl (16)
 
          ELSE IF (Type .EQ. 82 .OR. Type .EQ. 83 .OR. Type .EQ. 84 .OR.
-     +            Type .EQ. 84 .OR. Type .EQ. 85) THEN
+     +            Type .EQ. 85 .OR. Type .EQ. 86) THEN
             If (Type .EQ. 82) JALABEL  = denstyper_aa(17)
             If (Type .EQ. 83) JALABEL  = denstyper_bb(17)
             If (Type .EQ. 84) JALABEL  = denstypel_aa(17)
@@ -677,7 +677,6 @@ C
      +      THEN 
             WRITE (*,*)
             WRITE (*,*) ' No density for this integer label! '
-             if (me.eq.0) write(6,*) "type", type
             ENDIF 
            
             RETURN

@@ -24,6 +24,7 @@ c--------------------------------------------------------------------------
       implicit none
       include 'interpreter.h'
       include 'trace.h'
+      include 'parallel_info.h'
 
       double precision x(*)
       integer nindex, type(*), bval(*), eval(*)
@@ -63,6 +64,7 @@ c
 c---------------------------------------------------------------------------
 
       implicit none
+      include 'parallel_info.h'
       integer a, a1, a2, b, b1, b2   
       double precision array1(a1:a2,b1:b2), sval   
 
@@ -88,11 +90,13 @@ c
 c---------------------------------------------------------------------------
 
       implicit none
+      include 'parallel_info.h'
       integer a, a1, a2
       double precision array1(a1:a2), sval   
 
       sval = 0.0d+0 
-c     write(6,*) ' RANGE :', a1, a2, b1, b2 
+C      if (me.eq.0) write(6,*) ' RANGE :', a1, a2, array1(a1), 
+C     + array1(a2)
 c      do a = a1, a2 
 c      do b = b1, b2 
 c           sval = array1(a,b) 

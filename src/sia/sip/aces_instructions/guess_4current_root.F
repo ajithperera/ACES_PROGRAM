@@ -119,8 +119,9 @@ c---------------------------------------------------------------------------
       If (me .eq.0) then
          Write(6,"(a,2I)") "Root index:", Root
          Write(6,"(a)") "@-GET_GUESS_4CURRENT; Input vectors"
-         Do k =1, eom_roots 
-           call output(Vecs_in(1,1,k),n1,n2,m1,m2,n2,m2,1)
+         Do k =1, Kdim
+           If (k .eq. Root) 
+     +        call output(Vecs_in(1,1,k),n1,n2,m1,m2,n2,m2,1)
          Enddo 
       Endif 
 #endif 

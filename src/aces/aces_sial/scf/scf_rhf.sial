@@ -2642,7 +2642,6 @@
           n1 = 0.0 
           DO d1 
              n1 += 1.0 
-             execute print_scalar n1
              GET          Fa(mu,nu,d1) 
              tpq(mu,nu) = Fa(mu,nu,d1) 
              n2 = 0.0 

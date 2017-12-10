@@ -3635,7 +3635,7 @@
 # Some initialization of constants 
 #
       TARGET_ROOTS = eom_roots  
-      CIS_THRES    = EOM_TOL
+      CIS_THRES    = CIS_TOL
       EOM_MAXCYC   = EE_MAXCYC
       RHF_UHF      = REFERENCE 
       RHF_UHF     += 1
@@ -3643,6 +3643,7 @@
 #bgn_debug
       EXECUTE  PRINT_SCALAR  eom_maxcyc
       EXECUTE  PRINT_SCALAR  RHF_UHF 
+      EXECUTE  PRINT_SCALAR  CIS_THRES
 #end_debug
 
       CALL CREATE_ARRAYS
@@ -3765,6 +3766,7 @@
                   CALL CHECK_CONVERGENCE
 #bgn_debug
       execute print_scalar RESIDUAL_NORM
+#      execute print_scalar CIS_THRES 
 #end_debug
                   IF RESIDUAL_NORM  < CIS_THRES
                      EXIT

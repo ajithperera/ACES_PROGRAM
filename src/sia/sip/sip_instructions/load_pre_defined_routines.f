@@ -58,6 +58,9 @@ C  in the file COPYRIGHT.
       external form_rpa_guess, guess_4current_root
       external form_dip_guess,form_dea_guess,form_dip_hmat 
       external genrl_eig_solver,return_inverse
+      external form_hphp_matrix,set_aces3_vars,form_cis_amat 
+      external full_diag_hphp_matrix
+      external copy_alpha_to_beta
       external return_selected,addrootindex
       external process_eigs,print_static,store_static_array 
       external smon_on
@@ -836,6 +839,26 @@ C New IP-EOM related SIPs.
      &                       genrl_eig_solver)
       dummy = load_user_sub('return_inverse'//char(0),
      &                       return_inverse)
+      dummy = load_user_sub('form_hphp_matrix'//char(0),
+     &                       form_hphp_matrix)
+      dummy = load_user_sub('set_aces3_vars'//char(0),
+     &                       set_aces3_vars)
+      dummy = load_user_sub('form_cis_amat'//char(0),
+     &                       form_cis_amat)
+      dummy = load_user_sub('full_diag_hphp_matrix'//char(0),
+     &                       full_diag_hphp_matrix)
+      dummy = load_user_sub('copy_alpha_to_beta'//char(0),
+     &                       copy_alpha_to_beta)
+c-----------------------------------------------------------------------
+c Prakash instructions for delta integrals
+c----------------------------------------------------------------------
+      dummy=load_user_sub('compute_delta_int'//char(0),
+     *                     compute_delta_int)
+      dummy=load_user_sub('print_esr_tensors'//char(0),
+     *                     print_esr_tensors)
+      call set_upgrade_flag(dummy)
+c---------------------------------------------------------------------
+c Instructions needed in the CCSD(T) gradient and ecpgradient   
 c-----------------------------------------------------------------------
 c Prakash instructions for delta integrals
 c----------------------------------------------------------------------

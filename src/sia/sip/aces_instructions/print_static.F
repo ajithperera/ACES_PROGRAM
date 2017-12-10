@@ -111,9 +111,16 @@ C
 
 CSSS#ifdef _DEBUG_LVL0 
       If (me .eq. 0) Then
+          If (Ldb .ne. 1) then
           write(6,"(a,i3)") "The input data stored in a static array" 
           Call output(Data,1,Ndim,1,Ndim,Lda,Ldb,1)
           Write(6,*)
+          Else
+          Write(6,*)
+          write(6,"(a,i3)") "The input data stored in a static array" 
+          Write(6,"(4(1x,F15.8))") ((Data(i,j),i=1,ndim),j=1,Ldb)
+          Write(6,*)
+          Endif 
       Endif 
 CSSS#endif 
 

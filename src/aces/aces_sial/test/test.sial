@@ -1,9 +1,13 @@
       SIAL TEST
+      
+      Index occ_vrt0   = 1, 7000
+      Index occ_vrt1   = 1, 7000
 #
       aoindex mu     = 1, norb
       aoindex nu     = 1, norb
       aoindex lambda = 1, norb
       aoindex sigma  = 1, norb
+      
 #
       moaindex i = baocc, eaocc
       moaindex i1= baocc, eaocc
@@ -57,10 +61,15 @@
       Temp Tmp_pq(p,q)
       Temp TXP(mu,P)
       Temp Taa(a,a1)
+      Temp Tov(occ_vrt0,occ_vrt1)
+
       Static Saa(a,a1)
+
+      Local  Array(occ_vrt0,occ_vrt1)
       Static SDaa(a,a1)
       Scalar check_sum
       Scalar tmp_sum
+    
 
 # Declare served arrays
 # ---------------------
@@ -217,9 +226,19 @@
 
       ENDPROC CHECK_RETURN_DIAGS 
 #     -----------------------
+
+      Allocate Array(*,*)
+      DO occ_vrt0
+      DO occ_vrt1
+         Tov(occ_vrt0,occ_vrt1) = 0.0
+         Array(occ_vrt0,occ_vrt1) =  Tov(occ_vrt0,occ_vrt1)
+      ENDDO occ_vrt1
+      ENDDO occ_vrt0
+
       CALL MO_OVERLAP
       CALL FORM_DELTABLOCKS
       CALL CHECK_PUTS # Watson routine
 
       CALL CHECK_RETURN_DIAGS 
+      DeAllocate Array(*,*)
       ENDSIAL TEST

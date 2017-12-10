@@ -8,8 +8,9 @@
       index mindex20          = 1, 20
       index nindex20          = 1, 20
       index kindex20          = 1, 20
-      index MAXIMUM_SUBSP_DIM = 1, 20
+      index SUBSP_DIM         = 1, 50
       index MAX_NO_ROOTS      = 1, 10
+      index Spn_mult          = 1, 2
 
       aoindex mu     = 1, norb
       aoindex nu     = 1, norb
@@ -111,6 +112,8 @@
       DISTRIBUTED FOCK_B_OO(J1,J)
       DISTRIBUTED FOCK_A_VV(A1,A)
       DISTRIBUTED FOCK_B_VV(B1,B)
+      DISTRIBUTED R1DA(a,i)
+      DISTRIBUTED R1DB(b,j)
 
 # Local and static arrays 
 
@@ -133,6 +136,8 @@
       STATIC OVLPA_HISTORY_M_L(NINDEX20)
       STATIC OVLPB_HISTORY_P_R(NINDEX20)
       STATIC OVLPB_HISTORY_M_L(NINDEX20)
+      STATIC DIAGA(A,I)
+      STATIC DIAGB(B,J)
      
 # Served arrays
 
@@ -248,7 +253,6 @@
       SCALAR COUNT_NO_ROOTS
 #      SCALAR MAX_NO_ROOTS 
       SCALAR ITER_COUNT
-      SCALAR SUBSP_DIM
       SCALAR TMP
       SCALAR SUMP
       SCALAR SUMM
@@ -294,79 +298,58 @@
       SCALAR SUMAM
       SCALAR SUMBP
       SCALAR SUMBM
+      SCALAR RPA_THRES 
+      SCALAR RHF_UHF 
+      SCALAR RPA_MAXCYC
+      SCALAR MULT
+      SCALAR ZERO 
+      SCALAR ONE
+      SCALAR TWO 
+      SCALAR THREE 
+      SCALAR SINGLET 
+      SCALAR TRIPLET 
+      SCALAR MAX_SUBSP_DIM 
 
       PROC FORM_INTIAL_GUESS
 #     ----------------------
 
-      STWO = 2.0
-      HALF = 0.5
+      DO MAX_NO_ROOTS
+         PARDO A, I
+             GUESS_A(A,I,MAX_NO_ROOTS) = 0.0
+             DIAGA(a,i)                = 0.0
+         ENDPARDO A, I
+      ENDDO MAX_NO_ROOTS 
 
-      EXECUTE SQUARE_ROOT STWO HALF
-      INV_SQR_TWO = 1.0/STWO 
+      DO MAX_NO_ROOTS
+         PARDO B, J
+             GUESS_B(B,J,MAX_NO_ROOTS) = 1.0
+             DIAGB(b,j)                = 0.0
+         ENDPARDO B, J
+      ENDDO MAX_NO_ROOTS 
 
-      RCOUNT = 0.0
+      DO a
+      DO i
+         GET R1DA(a,i)
+         Tai(a,i)   = R1DA(a,i)
+         DIAGA(a,i) = Tai(a,i)
+      ENDDO i
+      ENDDO a
 
-      PARDO A, I
-            DO MAX_NO_ROOTS
-               GUESS_A(A,I,MAX_NO_ROOTS) = 0.0
-            ENDDO MAX_NO_ROOTS 
-      ENDPARDO A, I
+     DO b
+     DO j
+        GET R1DB(b,j)
+        Tbj(b,j)   = R1DB(b,j)
+        DIAGB(b,j) = Tbj(b,j)
+     ENDDO j
+     ENDDO b
 
-      PARDO B, J
-            DO MAX_NO_ROOTS
-               GUESS_B(B,J,MAX_NO_ROOTS) = 1.0
-            ENDDO MAX_NO_ROOTS 
-      ENDPARDO B, J
+     EXECUTE SIP_BARRIER
 
-      execute sip_barrier 
+     EXECUTE FORM_RPA_GUESS DIAGA GUESS_A
+     EXECUTE FORM_RPA_GUESS DIAGB GUESS_B
 
-      PARDO A, I 
+     EXECUTE SIP_BARRIER
 
-
-            DO MAX_NO_ROOTS
-               RCOUNT += 1.0
-
-               IF RCOUNT == COUNT_NO_ROOTS
-
-                  EXECUTE PLACE_CONSTANTA GUESS_A INV_SQR_TWO
-
-                  TAIP_R(A,I) = GUESS_A(A,I,MAX_NO_ROOTS)
-                  TAIM_L(A,I) = GUESS_A(A,I,MAX_NO_ROOTS)
-                  
-                  PUT R1A_MO_P_START_R(A,I,MAX_NO_ROOTS) = TAIP_R(A,I)
-                  PUT R1A_MO_M_START_L(A,I,MAX_NO_ROOTS) = TAIM_L(A,I)
-
-               ENDIF 
-           
-            ENDDO MAX_NO_ROOTS
-
-      ENDPARDO A, I 
-
-      RCOUNT = 0.0
-
-      PARDO B, J
-
-
-            DO MAX_NO_ROOTS
-               RCOUNT += 1.0
-
-               IF RCOUNT == COUNT_NO_ROOTS
-
-                  EXECUTE PLACE_CONSTANTB GUESS_B INV_SQR_TWO
-
-                  TBJP_R(B,J) = GUESS_B(B,J,MAX_NO_ROOTS)
-                  TBJM_L(B,J) = GUESS_B(B,J,MAX_NO_ROOTS)
-              
-                  PUT R1B_MO_P_START_R(B,J,MAX_NO_ROOTS) = TBJP_R(B,J)
-                  PUT R1B_MO_M_START_L(B,J,MAX_NO_ROOTS) = TBJM_L(B,J) 
-
-                ENDIF 
-
-            ENDDO MAX_NO_ROOTS
-
-      ENDPARDO B, J
-
-      execute sip_barrier 
 #bgn_debug
      execute get_my_rank rank
      execute print_scalar rank
@@ -1147,7 +1130,7 @@
                DO MINDEX20
                   MCOUNT += 1.0
 
-                  IF MCOUNT  == SUBSP_DIM
+                  IF MCOUNT  == ITER_COUNT 
 
                      GET HR1A_MO_P_CURRENT_R(A,I)
                      GET HR1A_MO_M_CURRENT_L(A,I)
@@ -1209,7 +1192,7 @@
                DO MINDEX20
                   MCOUNT += 1.0
 
-                  IF MCOUNT == SUBSP_DIM
+                  IF MCOUNT == ITER_COUNT 
 
                      GET HR1B_MO_P_CURRENT_R(B,J)
                      GET HR1B_MO_M_CURRENT_L(B,J)
@@ -1273,7 +1256,7 @@
                DO MINDEX20
                   MCOUNT += 1.0
 
-                  IF MCOUNT < SUBSP_DIM
+                  IF MCOUNT < ITER_COUNT
 
                      GET R1A_MO_P_HIST_R(A,I,MINDEX20)
                      GET R1A_MO_M_HIST_L(A,I,MINDEX20)
@@ -1284,7 +1267,7 @@
                      DO NINDEX20
                         NCOUNT += 1.0
 
-                        IF NCOUNT == SUBSP_DIM
+                        IF NCOUNT == ITER_COUNT 
 
                            GET HR1A_MO_P_CURRENT_R(A,I)
                            GET HR1A_MO_M_CURRENT_L(A,I)
@@ -1322,7 +1305,7 @@
                DO MINDEX20
                   MCOUNT += 1.0
 
-                  IF MCOUNT < SUBSP_DIM
+                  IF MCOUNT < ITER_COUNT 
 
                      GET R1B_MO_P_HIST_R(B,J,MINDEX20)
                      GET R1B_MO_M_HIST_L(B,J,MINDEX20)
@@ -1333,7 +1316,7 @@
                       DO NINDEX20
                          NCOUNT += 1.0
 
-                         IF NCOUNT == SUBSP_DIM
+                         IF NCOUNT == ITER_COUNT 
 
                             GET HR1B_MO_P_CURRENT_R(B,J)
                             GET HR1B_MO_M_CURRENT_L(B,J)
@@ -2258,7 +2241,7 @@
              DO MINDEX20
                 MCOUNT += 1.0
 
-                IF MCOUNT < SUBSP_DIM
+                IF MCOUNT < ITER_COUNT
 
                    GET R1A_MO_P_HIST_R(A,I,MINDEX20)
                    GET R1A_MO_M_HIST_L(A,I,MINDEX20)
@@ -2298,7 +2281,7 @@
              DO MINDEX20
                 MCOUNT += 1.0
 
-                IF MCOUNT < SUBSP_DIM
+                IF MCOUNT < ITER_COUNT 
 
                    GET R1B_MO_P_HIST_R(B,J,MINDEX20)
                    GET R1B_MO_M_HIST_L(B,J,MINDEX20)
@@ -2450,19 +2433,9 @@
        ENDPROC FORM_BIORTHOGANAL_VECS
 #      ------------------------------
 
-#
-#     BEGIN MAIN PROGRAM
-#     -----------------
-#
-# Read the maximum number of roots and the convergence threshold from
-# input.
 
-       TARGET_ROOTS   = eom_roots
-       CONV_TOLERANCE = eom_tol
-
-       EXECUTE  PRINT_SCALAR  TARGET_ROOTS
-       EXECUTE  PRINT_SCALAR  CONV_TOLERANCE
-
+       PROC CREATE_ARRAYS
+#      ------------------
        CREATE R1A_MO_P_START_R(A,I,MAX_NO_ROOTS)
        CREATE R1A_MO_M_START_L(A,I,MAX_NO_ROOTS)
        cREATE R1B_MO_P_START_R(B,J,MAX_NO_ROOTS)
@@ -2521,82 +2494,15 @@
        CREATE ORTHO_COEFSB_M_RL(MINDEX20,MINDEX20)
        CREATE H_A_DIAGONAL(A,I)
        CREATE H_B_DIAGONAL(B,J)
-#  
-       CALL FORM_MO_FOCK
-       CALL FORM_AO_APLUSB_AMINUSB
-       execute server_barrier 
 
-       COUNT_NO_ROOTS = 0.0
+       ENDPROC CREATE_ARRAYS
+#      ---------------------
 
-       DO MAX_NO_ROOTS
+       PROC DELETE_ARRAYS
+#      ------------------
 
-          COUNT_NO_ROOTS += 1.0
-
-          IF COUNT_NO_ROOTS > TARGET_ROOTS
-             EXIT
-          ENDIF 
-
-          ITER_COUNT = 0.0
-          CALL FORM_INTIAL_GUESS
-
-          CALL MOVE_GUESS_2CURRENT
-
-          DO MAXIMUM_SUBSP_DIM
-
-             ITER_COUNT  += 1.0
-
-             IF ITER_COUNT >= 2.0
-                CALL MOVE_HISTORY_2CURRENT
-             ENDIF
-
-# Lets denote the eigenvalue problem we are trying to solve as
-# H C = E C and {c_1, c_2, c_3...} expansion vector for a given
-# root.
-
-             CALL SAVE_C_VECTORS
-
-# The vector-matrix product in the following step  is really the time
-# consuming step in this. The Direct AO based alogrithm implemented
-# here is described in several papers: G. B. Bacskay,
-# Chemical Physics,61,385,1981 and J. Olsen and co-workers,
-# Chemical Physics,119,297,1988.
-
-             CALL DIRECT_AO_HC_MULT
-
-             CALL SAVE_HC_VECTORS
-
-#  A(i,j) = <R_i | H | R_j>, where R_i, i=1,2,3... are the sub-space
-# vectors. The diagonalization of the sub-space matrix A gives a
-# set of vectors of the dimension of the sub-space matrix (N=1,2..)
-# that can be used to form a set of N vectors. One of them will be
-# chosen to built the correction vector.
-#
-            CALL CONSTRUCT_A_MATRIX
-
-            CALL DIAG_A_MATRIX
-
-# The FORM_NEW_VECTORS and SELECT_VECTOR_TOGO do two things. The first one
-# will form the set of new vectors using the formula
-# C_k (m,n) = A_k(1,1)*R_1 + A_k(2,1)*R_2 +... Following that We will
-# have C_k  k=1,.., N where N is curent dimension of
-# the sub-space). We select a vector from them based on the criteria
-# on the maximum overlap criteria with the starting guess vector.
-
-             CALL FORM_NEW_VECTORS
-
-             CALL SELECT_VECTOR_TOGO
-
-             CALL FORM_RESIDUAL_VECTOR
-
-             CALL FORM_CORRECTION_VECTOR
-
-             CALL FORM_BIORTHOGANAL_VECS
-
-          ENDDO MAXIMUM_SUBSP_DIM
-
-       ENDDO MAX_NO_ROOTS
-
-
+       ENDPROC DELETE_ARRAYS
+#      ---------------------
        DELETE R1A_MO_P_START_R(A,I,MAX_NO_ROOTS)
        DELETE R1A_MO_M_START_L(A,I,MAX_NO_ROOTS)
        DELETE R1B_MO_P_START_R(B,J,MAX_NO_ROOTS)
@@ -2656,6 +2562,128 @@
        DELETE H_A_DIAGONAL(A,I)
        DELETE H_B_DIAGONAL(B,J)
 #  
+
+#     BEGIN MAIN PROGRAM
+#     -----------------
+#
+# Read the maximum number of roots and the convergence threshold from
+# input.
+
+       TARGET_ROOTS   = EOM_ROOTS
+       RPA_THRES      = CIS_TOL 
+       RPA_MAXCYC     = EE_MAXCYC
+       RHF_UHF        = REFERENCE 
+ 
+       MULT  = 0.0
+       ZERO  = 0.0
+       ONE   = 1.0
+       TWO   = 2.0
+       THREE = 3.0
+
+       SINGLET = ZERO
+       TRIPLET = ZERO
+
+#bgn_debug
+      EXECUTE  PRINT_SCALAR  RPA_MAXCYC
+      EXECUTE  PRINT_SCALAR  RHF_UHF
+      EXECUTE  PRINT_SCALAR  RPA_THRES
+#end_debug
+#  
+       CALL CREATE_ARRAYS 
+       CALL FORM_MO_FOCK
+       CALL FORM_AO_APLUSB_AMINUSB
+       execute server_barrier 
+
+       COUNT_NO_ROOTS = 0.0
+
+       DO SPN_MULT
+
+          MULT  += 1.0
+
+          IF MULT  > RHF_UHF
+             EXIT
+          ENDIF
+
+          IF MULT == ONE
+             SINGLET = ONE
+             TRIPLET = ZERO
+          ELSE
+             SINGLET = ZERO
+             TRIPLET = ONE
+          ENDIF
+
+        DO MAX_NO_ROOTS
+
+          COUNT_NO_ROOTS += 1.0
+
+          IF COUNT_NO_ROOTS > TARGET_ROOTS
+             EXIT
+          ENDIF 
+
+          CALL FORM_INTIAL_GUESS
+          CALL MOVE_GUESS_2CURRENT
+
+          ITER_COUNT = 0.0
+          DO SUBSP_DIM
+
+#             CALL SET_TO_ZERO
+
+             ITER_COUNT  += 1.0
+
+             IF ITER_COUNT > MAX_SUBSP_DIM
+                EXIT
+             ENDIF
+
+             CALL MOVE_HISTORY_2CURRENT
+
+# Lets denote the eigenvalue problem we are trying to solve as
+# H C = E C and {c_1, c_2, c_3...} expansion vector for a given
+# root.
+
+             CALL SAVE_C_VECTORS
+
+# The vector-matrix product in the following step  is really the time
+# consuming step in this. The Direct AO based alogrithm implemented
+# here is described in several papers: G. B. Bacskay,
+# Chemical Physics,61,385,1981 and J. Olsen and co-workers,
+# Chemical Physics,119,297,1988.
+
+             CALL DIRECT_AO_HC_MULT
+
+             CALL SAVE_HC_VECTORS
+
+#  A(i,j) = <R_i | H | R_j>, where R_i, i=1,2,3... are the sub-space
+# vectors. The diagonalization of the sub-space matrix A gives a
+# set of vectors of the dimension of the sub-space matrix (N=1,2..)
+# that can be used to form a set of N vectors. One of them will be
+# chosen to built the correction vector.
+#
+            CALL CONSTRUCT_A_MATRIX
+
+            CALL DIAG_A_MATRIX
+
+# The FORM_NEW_VECTORS and SELECT_VECTOR_TOGO do two things. The first one
+# will form the set of new vectors using the formula
+# C_k (m,n) = A_k(1,1)*R_1 + A_k(2,1)*R_2 +... Following that We will
+# have C_k  k=1,.., N where N is curent dimension of
+# the sub-space). We select a vector from them based on the criteria
+# on the maximum overlap criteria with the starting guess vector.
+
+             CALL FORM_NEW_VECTORS
+
+             CALL SELECT_VECTOR_TOGO
+
+             CALL FORM_RESIDUAL_VECTOR
+
+             CALL FORM_CORRECTION_VECTOR
+
+             CALL FORM_BIORTHOGANAL_VECS
+
+          ENDDO SUBSP_DIM
+
+       ENDDO MAX_NO_ROOTS
+
+      ENDDO SPN_MULT
 
                           ENDSIAL DIRECT_RPA_UHF
 #                         ----------------------

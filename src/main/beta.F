@@ -313,7 +313,6 @@ c---------------------------------------------------------------------
          call igetparam('SIP_SUB_AO_SEGSIZE', 1, sip_sub_ao_segsize)
          call rgetparam('REGULARIZER',1,reg)
 
-
          call decode_fmo_params()
 
 c-------------------------------------------------------------------------

@@ -537,5 +537,8 @@
 #define h_IOPPAR_ee_denom       263
 #define h_IFLAGS2_ee_denom      163
 
+#define h_IOPPAR_cis_tol        264
+#define h_IFLAGS2_cis_tol       164
+
 #endif /* _FLAGS_H_ */
 
