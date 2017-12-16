@@ -3076,6 +3076,8 @@
       
      ENDDO NINDEX50
 
+     EXECUTE SIP_BARRIER 
+
      ENDPROC SET_TO_ZERO
 #    -------------------
 

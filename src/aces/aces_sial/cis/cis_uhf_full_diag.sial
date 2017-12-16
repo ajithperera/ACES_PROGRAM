@@ -45,25 +45,25 @@
       moaindex a2= bavirt, eavirt
       moaindex a3= bavirt, eavirt
 #
-      moaindex j = baocc, eaocc
-      moaindex j1= baocc, eaocc
-      moaindex j2= baocc, eaocc
-      moaindex j3= baocc, eaocc
+      mobindex j = bbocc, ebocc
+      mobindex j1= bbocc, ebocc
+      mobindex j2= bbocc, ebocc
+      mobindex j3= bbocc, ebocc
 #
-      moaindex b = bavirt, eavirt
-      moaindex b1= bavirt, eavirt
-      moaindex b2= bavirt, eavirt
-      moaindex b3= bavirt, eavirt
+      mobindex b = bbvirt, ebvirt
+      mobindex b1= bbvirt, ebvirt
+      mobindex b2= bbvirt, ebvirt
+      mobindex b3= bbvirt, ebvirt
 #
       moaindex p = baocc, eavirt
       moaindex p1= baocc, eavirt
       moaindex p2= baocc, eavirt
       moaindex p3= baocc, eavirt
 #
-      moaindex q = baocc, eavirt
-      moaindex q1= baocc, eavirt
-      moaindex q2= baocc, eavirt
-      moaindex q3= baocc, eavirt
+      mobindex q = bbocc, ebvirt
+      mobindex q1= bbocc, ebvirt
+      mobindex q2= bbocc, ebvirt
+      mobindex q3= bbocc, ebvirt
 #
       served Viaai(i,a1,a,i1)
       served Vaaii(a,a1,i,i1)
@@ -154,6 +154,7 @@
       Static CIS_AI_FDIAG_B(b,j) 
       Static UHF_CIS_AMAT(occ_vrt1,occ_vrt1) 
       Static CIS_VECS(a,i,Nroots_dbl) 
+      Static CIS_VECS_B(b,j,Nroots_dbl) 
 #
       Scalar ROOT_COUNT
       Scalar TARGET_ROOTS
@@ -440,7 +441,7 @@
                 ENDDO i
 #
                 DO j
-                   txxxj(mu,nu,lambda,j)  = daoint(mu,nu,lambda,sigma)*ca(sigma,j)
+                   txxxj(mu,nu,lambda,j)  = daoint(mu,nu,lambda,sigma)*cb(sigma,j)
                    L0xxxj(mu,nu,lambda,j) += txxxj(mu,nu,lambda,j)
                 ENDDO j
 #
@@ -469,12 +470,12 @@
               txxjx(nu,mu,j,lambda) = L0xxxj(mu,nu,lambda,j)
 #
               DO j1
-                 Txxjj(nu,mu,j,j1)  = txxjx(nu,mu,j,lambda)*ca(lambda,j1)
+                 Txxjj(nu,mu,j,j1)  = txxjx(nu,mu,j,lambda)*cb(lambda,j1)
                  prepare Vxxjj(nu,mu,j,j1) += Txxjj(nu,mu,j,j1)
               ENDDO j1
 #
               DO j1
-                 Tjxxj(j1,nu,lambda,j)  = L0xxxj(mu,nu,lambda,j)*ca(mu,j1)
+                 Tjxxj(j1,nu,lambda,j)  = L0xxxj(mu,nu,lambda,j)*cb(mu,j1)
                  prepare Vjxxj(j1,nu,lambda,j) += Tjxxj(j1,nu,lambda,j)
               ENDDO j1
 #
@@ -504,7 +505,7 @@
                 ENDDO i
 #
                 DO j
-                   txxxj(mu,nu,lambda,j)  = daoint(mu,nu,lambda,sigma)*ca(sigma,j)
+                   txxxj(mu,nu,lambda,j)  = daoint(mu,nu,lambda,sigma)*cb(sigma,j)
                    L0xxxj(mu,nu,lambda,j) += txxxj(mu,nu,lambda,j)
                 ENDDO j
 #
@@ -533,12 +534,12 @@
               txxjx(nu,mu,j,lambda) = L0xxxj(mu,nu,lambda,j)
 #
               DO j1
-                 Txxjj(nu,mu,j,j1)  = txxjx(nu,mu,j,lambda)*ca(lambda,j1)
+                 Txxjj(nu,mu,j,j1)  = txxjx(nu,mu,j,lambda)*cb(lambda,j1)
                  prepare Vxxjj(nu,mu,j,j1) += Txxjj(nu,mu,j,j1)
               ENDDO j1
 #
               DO j1
-                 Tjxxj(j1,nu,lambda,j)  = L0xxxj(mu,nu,lambda,j)*ca(mu,j1)
+                 Tjxxj(j1,nu,lambda,j)  = L0xxxj(mu,nu,lambda,j)*cb(mu,j1)
                  prepare Vjxxj(j1,nu,lambda,j) += Tjxxj(j1,nu,lambda,j)
               ENDDO j1
 #
@@ -569,7 +570,7 @@
                 ENDDO i
 #
                 DO j
-                   txxxj(mu,nu,lambda,j)  = daoint(mu,nu,lambda,sigma)*ca(sigma,j)
+                   txxxj(mu,nu,lambda,j)  = daoint(mu,nu,lambda,sigma)*cb(sigma,j)
                    L0xxxj(mu,nu,lambda,j) += txxxj(mu,nu,lambda,j)
                 ENDDO j
 #
@@ -598,12 +599,12 @@
               txxjx(nu,mu,j,lambda) = L0xxxj(mu,nu,lambda,j)
 #
               DO j1
-                 Txxjj(nu,mu,j,j1)  = txxjx(nu,mu,j,lambda)*ca(lambda,j1)
+                 Txxjj(nu,mu,j,j1)  = txxjx(nu,mu,j,lambda)*cb(lambda,j1)
                  prepare Vxxjj(nu,mu,j,j1) += Txxjj(nu,mu,j,j1)
               ENDDO j1
 #
               DO j1
-                 Tjxxj(j1,nu,lambda,j)  = L0xxxj(mu,nu,lambda,j)*ca(mu,j1)
+                 Tjxxj(j1,nu,lambda,j)  = L0xxxj(mu,nu,lambda,j)*cb(mu,j1)
                  prepare Vjxxj(j1,nu,lambda,j) += Tjxxj(j1,nu,lambda,j)
               ENDDO j1
 #
@@ -779,7 +780,7 @@
 #
               DO b
 #
-                 Txbjj(mu,b,j,j1)  = Vxxjj(mu,nu,j,j1)*ca(nu,b)
+                 Txbjj(mu,b,j,j1)  = Vxxjj(mu,nu,j,j1)*cb(nu,b)
                  Lxbjj(mu,b,j,j1) += Txbjj(mu,b,j,j1)
 #
               ENDDO b
@@ -809,7 +810,7 @@
 # 
               DO b1
 #
-                 Tbbjj(b1,b,j,j1)  = Vxbjj(mu,b,j,j1)*ca(mu,b1)
+                 Tbbjj(b1,b,j,j1)  = Vxbjj(mu,b,j,j1)*cb(mu,b1)
                  Lbbjj(b1,b,j,j1) += Tbbjj(b1,b,j,j1)
 #
               ENDDO b1
@@ -848,7 +849,7 @@
 #
               DO b
 #
-                 Tjxbj(j,mu,b,j1)  = Vjxxj(j,mu,nu,j1)*ca(nu,b)
+                 Tjxbj(j,mu,b,j1)  = Vjxxj(j,mu,nu,j1)*cb(nu,b)
                  Ljxbj(j,mu,b,j1) += Tjxbj(j,mu,b,j1)
 #
               ENDDO b
@@ -878,7 +879,7 @@
 #
               DO b1
 #
-                 Tjbbj(j,b1,b,j1)  = Vjxbj(j,mu,b,j1)*ca(mu,b1)
+                 Tjbbj(j,b1,b,j1)  = Vjxbj(j,mu,b,j1)*cb(mu,b1)
                  Ljbbj(j,b1,b,j1) += Tjbbj(j,b1,b,j1)
 #
               ENDDO b1
@@ -920,7 +921,7 @@
 #
               DO b
 #
-                 Tixbj(i,mu,b,j)  = Vixxj(i,mu,nu,j)*ca(nu,b)
+                 Tixbj(i,mu,b,j)  = Vixxj(i,mu,nu,j)*cb(nu,b)
                  Lixbj(i,mu,b,j) += Tixbj(i,mu,b,j)
 #
               ENDDO b
@@ -1050,7 +1051,7 @@
      PARDO j, j1
       WHERE j==j1
 #
-        tjj(j1,j)      = fock_a(j1,j)
+        tjj(j1,j)      = fock_b(j1,j)
         execute return_diagonal4 tjj
         put DDjj(j1,j) = tjj(j1,j)
 #
@@ -1061,7 +1062,7 @@
      PARDO b, b1
       WHERE b==b1
 #
-        tbb(b,b1)      = fock_a(b,b1)
+        tbb(b,b1)      = fock_b(b,b1)
         execute return_diagonal4 tbb
         put DDbb(b,b1) = tbb(b,b1)
 #
@@ -1280,7 +1281,6 @@
          PARDO a, i
              Tai(a,i) =  CIS_VECS(a,i,MROOTS_DBL)
              PUT CISA_S_VECS(a,i,NROOTS) =  Tai(a,i)
-             PUT CISB_S_VECS(a,i,NROOTS) =  Tai(a,i)
          ENDPARDO a, i
 
        ENDDO MROOTS_DBL
@@ -1313,7 +1313,7 @@
              Tai(a,i) =  CIS_VECS(a,i,MROOTS_DBL)
              PUT CISA_T_VECS(a,i,NROOTS) =  Tai(a,i)
              Tai(a,i) *= -1.0
-             PUT CISB_T_VECS(a,i,NROOTS) =  Tai(a,i)
+#             EXECUTE COPY_ALPHA_TO_BETA CISA_T_VECS CISB_T_VECS
          ENDPARDO a, i
 
          ENDDO MROOTS_DBL
@@ -1397,9 +1397,9 @@
       DO j1
          tmpjj(j,j1) = DENS_OO_BB(j,j1)
          DO mu
-            txj(mu,j1) = tmpjj(j,j1) * CA(mu,j)
+            txj(mu,j1) = tmpjj(j,j1) * CB(mu,j)
             DO nu
-               txx1(mu,nu) = txj(mu,j1) * CA(nu,j1)
+               txx1(mu,nu) = txj(mu,j1) * CB(nu,j1)
                AO_DENSITY (mu,nu) += txx1(mu,nu)
             ENDDO nu
          ENDDO mu
@@ -1435,9 +1435,9 @@
       DO b1
          tmpbb(b,b1) = DENS_VV_BB(b,b1)
          DO mu
-            txb(mu,b1) = tmpbb(b,b1) * CA(mu,b)
+            txb(mu,b1) = tmpbb(b,b1) * CB(mu,b)
             DO nu
-               txx1(mu,nu) = txb(mu,b1) * CA(nu,b1)
+               txx1(mu,nu) = txb(mu,b1) * CB(nu,b1)
                AO_DENSITY (mu, nu) += txx1(mu,nu)
             ENDDO nu
          ENDDO mu
@@ -1594,7 +1594,7 @@
 
       PARDO mu, b
       DO j
-         tmpxb(mu,b)  = amp_print_b(b,j)*CA(mu,j)
+         tmpxb(mu,b)  = amp_print_b(b,j)*CB(mu,j)
          PUT INTxb(mu,b) += tmpxb(mu,b)
       ENDDO j
       ENDPARDO mu, b
@@ -1611,7 +1611,7 @@
       PARDO mu, nu
       DO b
          GET INTxb(mu,b)
-         tmpxx(mu,nu)  = INTxb(mu,b)*CA(nu,b)
+         tmpxx(mu,nu)  = INTxb(mu,b)*CB(nu,b)
          PUT CIS_VEC_AO(mu,nu) += tmpxx(mu,nu)
       ENDDO b
       ENDPARDO mu,nu
@@ -1741,8 +1741,8 @@
        DO mu
        Do nu
        DO j
-          txj(nu, j) = CA (nu,j)
-          txx1 (mu,nu) = CA (mu,j) * txj (nu,j)
+          txj(nu, j) = CB (nu,j)
+          txx1 (mu,nu) = CB (mu,j) * txj (nu,j)
           HF_DENSITY(mu,nu) +=  txx1 (mu,nu)
 
        ENDDO j

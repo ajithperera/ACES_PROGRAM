@@ -1,7 +1,7 @@
       SIAL TEST
       
-      Index occ_vrt0   = 1, 7000
-      Index occ_vrt1   = 1, 7000
+      Index ione   =1, 1
+      Index iten   =1, 10
 #
       aoindex mu     = 1, norb
       aoindex nu     = 1, norb
@@ -61,14 +61,20 @@
       Temp Tmp_pq(p,q)
       Temp TXP(mu,P)
       Temp Taa(a,a1)
-      Temp Tov(occ_vrt0,occ_vrt1)
+      Temp Tee(Iten,Ione)
 
       Static Saa(a,a1)
+      static Ree(iten,ione)
+      static Iam_zero(iten,ione)
 
-      Local  Array(occ_vrt0,occ_vrt1)
       Static SDaa(a,a1)
       Scalar check_sum
       Scalar tmp_sum
+      scalar icount
+      scalar Zero
+      scalar Zeros 
+      scalar Value 
+      
     
 
 # Declare served arrays
@@ -169,7 +175,7 @@
             TOAVB1(I, b) = MO_OVRLP(I, b)
             TOAVB1(I, b) -= MO_OVRLP_OAVB(I, b)
 
-            EXECUTE  DUMP_AMP  TOAVB1
+#            EXECUTE  DUMP_AMP  TOAVB1
       ENDPARDO I, b
 
       EXECUTE  SIP_BARRIER # To separate PRINT statements
@@ -180,7 +186,7 @@
             TVAOB(A, j) = MO_OVRLP(A, j)
             TVAOB(A, j) -= MO_OVRLP_VAOB(A, j)
 
-            EXECUTE  DUMP_AMP  TVAOB
+#            EXECUTE  DUMP_AMP  TVAOB
       ENDPARDO A, j
 
       EXECUTE  SIP_BARRIER # To separate PRINT statements
@@ -191,7 +197,7 @@
             TVAVB1(A, b) = MO_OVRLP(A, b)
             TVAVB1(A, b) -= MO_OVRLP_VAVB(A, b)
 
-            EXECUTE  DUMP_AMP  TVAVB1
+#            EXECUTE  DUMP_AMP  TVAVB1
       ENDPARDO A, b
 
       EXECUTE  SIP_BARRIER # To separate PRINT statements
@@ -202,7 +208,7 @@
             TOAOB1(I, j) = MO_OVRLP(I, j)
             TOAOB1(I, j) -= MO_OVRLP_OAOB(I, j)
 
-            EXECUTE  DUMP_AMP  TOAOB1
+#            EXECUTE  DUMP_AMP  TOAOB1
       ENDPARDO I, j
 
       EXECUTE  SIP_BARRIER # To separate PRINT statements
@@ -227,18 +233,77 @@
       ENDPROC CHECK_RETURN_DIAGS 
 #     -----------------------
 
-      Allocate Array(*,*)
-      DO occ_vrt0
-      DO occ_vrt1
-         Tov(occ_vrt0,occ_vrt1) = 0.0
-         Array(occ_vrt0,occ_vrt1) =  Tov(occ_vrt0,occ_vrt1)
-      ENDDO occ_vrt1
-      ENDDO occ_vrt0
-
       CALL MO_OVERLAP
       CALL FORM_DELTABLOCKS
       CALL CHECK_PUTS # Watson routine
 
-      CALL CHECK_RETURN_DIAGS 
-      DeAllocate Array(*,*)
+      Zero = 0.0
+
+      DO Ione
+         Icount = 0.0
+         DO Iten
+            Icount += 1.0
+            If Icount == 1.0
+               Ree(Iten,ione) = 5.0
+            Endif 
+            If Icount == 2.0
+               Ree(Iten,ione) = 4.0
+            Endif 
+            If Icount == 3.0
+               Ree(Iten,ione) = 4.0
+            Endif 
+            If Icount == 4.0
+               Ree(Iten,ione) = 0.0
+            Endif 
+            If Icount == 5.0
+               Ree(Iten,ione) = 0.0
+            Endif 
+            If Icount == 6.0
+               Ree(Iten,ione) = 2.0
+            Endif 
+            If Icount == 6.0
+               Ree(Iten,ione) = 1.0
+            Endif 
+            If Icount == 7.0
+               Ree(Iten,ione) = 0.0
+            Endif 
+            If Icount == 8.0
+               Ree(Iten,ione) = 1.0
+            Endif 
+            If Icount == 9.0
+               Ree(Iten,ione) = 1.0
+            Endif 
+            If Icount == 10.0
+               Ree(Iten,ione) = 1.0
+            Endif 
+         ENDDO Iten
+      ENDDO Ione
+
+      Zeros = Zero 
+      DO Ione
+         DO iten
+             Tee(Iten,Ione) = Ree(Iten,IOne)
+             execute return_sval Tee Value 
+             execute print_scalar value 
+             If Value == Zero 
+             Zeros += 1.0
+             Endif 
+         ENDDO Iten
+     ENDDO Ione
+
+     Execute print_scalar zeros 
+
+     EXECUTE  FIND_ZEROS Ree Iam_zero 
+
+     DO Ione
+        DO iten
+             Tee(Iten,Ione) = Iam_zero(Iten,Ione)
+             execute return_sval Tee Value 
+             execute print_scalar value 
+         ENDDO Iten
+     ENDDO Ione
+
+#      CALL CHECK_RETURN_DIAGS 
       ENDSIAL TEST
+
+

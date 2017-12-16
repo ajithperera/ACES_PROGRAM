@@ -273,6 +273,7 @@
       STATIC S_LEE(NROOTS,INDONE)
       STATIC T_REE(NROOTS,INDONE)
       STATIC T_LEE(NROOTS,INDONE)
+      STATIC IAM_ZERO(NROOTS,INDONE)
       STATIC DIFF(NROOTS,INDONE)
       STATIC AMP_PRINT_AA(a,i)
       STATIC AMP_PRINT_BB(b,j)
@@ -431,6 +432,7 @@
       SCALAR PRINT_FLAG 
       SCALAR KCOUNT
       SCALAR NINE_NINE
+      SCALAR FLAG
 #
 #    ------------------
       PROC  HF_DENSITY
@@ -3351,12 +3353,25 @@
      ENDPROC CHECK_T_RL_EES
 #    ----------------------
 
-
      PROC GET_S_R0
 #    ------------
      DO INDONE
      NCOUNT = 0.0
      DO NROOTS
+
+# Check whether there are any non-converged states (they appear having
+# excitation energy zero. If we do, skip them to avoid dividing by
+# zero error.
+
+        EXECUTE FIND_ZEROS S_REE IAM_ZERO
+        LNN(NROOTS,INDONE) = IAM_ZERO(NROOTS,INDONE)
+        EXECUTE RETURN_SVAL LNN FLAG
+#bgn_debug
+#     execute print_scalar flag
+#end_debug
+
+        IF FLAG != ONE
+
         NCOUNT += 1.0
         IF NCOUNT > TARGET_ROOTS
            EXIT
@@ -3397,6 +3412,8 @@
         R0_VEC(NROOTS,INDONE) = R0
         OMEGA2_VEC(NROOTS,INDONE) = OMEGA2
 
+        ENDIF 
+
      ENDDO NROOTS
      ENDDO INDONE
 
@@ -3408,6 +3425,17 @@
      DO INDONE
      NCOUNT = 0.0
      DO NROOTS
+
+# Check whether there are any non-converged states (they appear having
+# excitation energy zero. If we do, skip them to avoid dividing by
+# zero error.
+
+        EXECUTE FIND_ZEROS S_REE IAM_ZERO
+        LNN(NROOTS,INDONE) = IAM_ZERO(NROOTS,INDONE)
+        EXECUTE RETURN_SVAL LNN FLAG
+
+        IF FLAG != ONE
+
         NCOUNT += 1.0
         IF NCOUNT > TARGET_ROOTS
            EXIT
@@ -3447,7 +3475,8 @@
         CALL R0_COMPUTE
         R0_VEC(NROOTS,INDONE) = R0
         OMEGA2_VEC(NROOTS,INDONE) = OMEGA2
-
+ 
+        ENDIF 
      ENDDO NROOTS
      ENDDO INDONE
 
@@ -3882,7 +3911,12 @@
 #      execute print_scalar sumab
 #      enddo nroots
 #end_debug
-
+ 
+     DO INDONE
+     DO NROOTS 
+         IAM_ZERO(NROOTS,INDONE) = 0.0
+     ENDDO NROOTS 
+     ENDDO INDONE
 
      DO a
      DO i
@@ -3953,6 +3987,16 @@
           DO INDONE
           DO IROOTS
 
+# Check whether there are any non-converged states (they appear having
+# excitation energy zero. If we do, skip them to avoid dividing by
+# zero error.
+
+          EXECUTE FIND_ZEROS S_REE IAM_ZERO
+          LNN(IROOTS,INDONE) = IAM_ZERO(IROOTS,INDONE)
+          EXECUTE RETURN_SVAL LNN FLAG
+
+          IF FLAG != ONE
+
               KCOUNT += 1.00
               IF KCOUNT > TARGET_ROOTS
                  EXIT
@@ -3975,6 +4019,7 @@
               IKEEP = IDENS 
               CALL END_PREP
 
+           ENDIF 
            ENDDO IROOTS
            ENDDO INDONE
 
@@ -4007,6 +4052,12 @@
            DO INDONE
            DO IROOTS
 
+           EXECUTE FIND_ZEROS T_REE IAM_ZERO
+           LNN(IROOTS,INDONE) = IAM_ZERO(IROOTS,INDONE)
+           EXECUTE RETURN_SVAL LNN FLAG
+
+           IF FLAG != ONE
+
               KCOUNT += 1.00
               IF KCOUNT > TARGET_ROOTS
                  EXIT
@@ -4029,6 +4080,7 @@
               IKEEP = IDENS 
               CALL END_PREP
 
+           ENDIF 
            ENDDO IROOTS
            ENDDO INDONE
 

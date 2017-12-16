@@ -60,7 +60,7 @@ C  in the file COPYRIGHT.
       external genrl_eig_solver,return_inverse
       external form_hphp_matrix,set_aces3_vars,form_cis_amat 
       external full_diag_hphp_matrix
-      external copy_alpha_to_beta
+      external copy_alpha_to_beta,find_zeros 
       external return_selected,addrootindex
       external process_eigs,print_static,store_static_array 
       external smon_on
@@ -849,6 +849,8 @@ C New IP-EOM related SIPs.
      &                       full_diag_hphp_matrix)
       dummy = load_user_sub('copy_alpha_to_beta'//char(0),
      &                       copy_alpha_to_beta)
+      dummy = load_user_sub('find_zeros'//char(0),
+     &                       find_zeros)
 c-----------------------------------------------------------------------
 c Prakash instructions for delta integrals
 c----------------------------------------------------------------------

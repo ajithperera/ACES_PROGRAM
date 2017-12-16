@@ -435,6 +435,7 @@ C
       dummy = load_user_sub('form_cis_amat'//char(0),0)
       dummy = load_user_sub('full_diag_hphp_matrix'//char(0),0)
       dummy = load_user_sub('copy_alpha_to_beta'//char(0),0)
+      dummy = load_user_sub('find_zeros'//char(0),0)
 c -----------------------------------------------------------------
 c Prakash instructions need for delta integrals
 c ------------------------------------------------------------------
