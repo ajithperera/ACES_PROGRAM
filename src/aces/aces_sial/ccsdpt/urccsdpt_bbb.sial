@@ -4181,7 +4181,7 @@
 
       enddo kiter
 
-         etemp = 18.0
+         etemp = 38.0
          execute print_rel_info etemp pinf
 #
 

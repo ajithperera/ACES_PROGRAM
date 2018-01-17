@@ -83,6 +83,7 @@
       served Vxaii(mu,a,i,i1)   
       served Vixbj(i,mu,b,j) 
       served Vixxj(i,mu,nu,j) 
+      served saoint(mu,nu,lambda,sigma)
 #
       local lai(a,i)
       local lia(i,a)
@@ -142,6 +143,10 @@
       DISTRIBUTED CIS_VEC_AO(mu,nu)
       DISTRIBUTED INTXA(mu,a)
       DISTRIBUTED INTXB(mu,b)
+      DISTRIBUTED HR1A_AO(NU,MU)
+      DISTRIBUTED HR1B_AO(NU,MU)
+      DISTRIBUTED R1A_AO(MU,NU)
+      DISTRIBUTED R1B_AO(MU,NU)
 
       static Sii(i,i1)
       static Sdii(i,i1)
@@ -261,6 +266,7 @@
       Scalar EOM_MAXCYC
       Scalar RHF_UHF 
       Scalar NINE_NINE 
+      Scalar AO_DIRECT
 #
       temp  Tx(MROOTS)
       temp TS(MINDEX50,NINDEX50)
@@ -312,6 +318,8 @@
       temp t1xxjx(nu,mu,j,lambda)
       temp t2xxjx(nu,mu,j,lambda)
       temp t3xxjx(nu,mu,j,lambda)
+      temp tiaia(i1,a1,i,a)
+      temp tjbjb(j1,b1,j,b)
 #
       temp tmpii(i,i1)
       temp tmpjj(j,j1)
@@ -350,6 +358,24 @@
       temp T1aix(a,i,NINDEX50)
       temp T1bjx(b,j,NINDEX50)
       temp TXX(MINDEX50,MINDEX50)
+      temp Taip_R(a,i)
+      temp Tbjp_R(b,j)
+      temp Txxp(mu,nu)
+      temp Txxp_t(mu,nu)
+      temp Txip_t(mu,i)
+      temp Txjp_t(mu,j)
+      temp Txx_t(mu,nu)
+      temp Txap(mu,a)
+      temp Txbp(mu,b)
+      temp aoint(mu,nu,lambda,sigma)
+      temp Tapxx(mu,lambda)
+      temp Tbpxx(mu,lambda)
+      temp taxxp(mu,nu)
+      temp tbxxp(mu,nu)
+      temp tapxx_int(mu,lambda)
+      temp tbpxx_int(mu,lambda)
+      temp Tc0xxxx(mu,nu,lambda,sigma)
+      temp Te1xxxx(mu,nu,lambda,sigma)
 #
       temp  Tiaai(i1,a1,a,i)
       temp  TSiaai(i,a,a1,i1)
@@ -1061,14 +1087,244 @@
       CREATE INTXa
       CREATE INTXb
       CREATE CIS_VEC_AO
+      CREATE R1A_AO
+      CREATE R1B_AO
+      CREATE HR1A_AO
+      CREATE HR1B_AO
 
       EXECUTE SIP_BARRIER
 
      ENDPROC CREATE_ARRAYS
 #    ---------------------
-# 
-      PROC HC_MULT
-#     ------------
+
+     PROC FORM_FOCK_CONTRIBUTION
+#    ---------------------------
+
+      PARDO a, i
+#
+            tai(a,i) = 0.0
+#
+            DO i1
+               GET         R1A(a,i1)
+               t2ai(a,i) = R1A(a,i1)*fock_a(i1,i)
+               tai(a,i) -= t2ai(a,i)
+            ENDDO i1
+#
+            DO a1
+#
+               GET         R1A(a1,i)
+               t1ai(a,i) = R1A(a1,i)*fock_a(a,a1)
+               tai(a,i) += t1ai(a,i)
+#
+            ENDDO a1
+#
+            PUT HR1A(a,i) += tai(a,i)
+#
+      ENDPARDO a, i
+#
+      PARDO b, j
+#
+            tbj(b,j) = 0.0
+#
+            DO j1
+#
+               GET         R1B(b,j1)
+               t2bj(b,j) = R1B(b,j1)*fock_b(j1,j)
+               tbj(b,j) -= t2bj(b,j)
+#
+            eNDDO j1
+#
+            DO b1
+#
+               GET         R1B(b1,j)
+               t1bj(b,j) = R1B(b1,j)*fock_b(b,b1)
+               tbj(b,j) += t1bj(b,j)
+#
+            ENDDO b1
+
+            PUT HR1B(b,j) += tbj(b,j)
+#
+      ENDPARDO b, j
+
+     EXECUTE SIP_BARRIER
+
+     ENDPROC FORM_FOCK_CONTRIBUTION
+#    ---------------------------
+
+     PROC FORM_AO_R1AB
+#    -----------------
+
+      PARDO A, I
+
+          GET R1A(A,I)
+          TAIP_R(A,I) = R1A(A,I)
+
+          DO MU
+             TXIP_T(MU,I) = TAIP_R(A,I) * CA(MU,A)
+             DO NU
+                TXXP_T(MU,NU)      = TXIP_T(MU,I) * CA(NU,I)
+                PUT R1A_AO(MU,NU) +=  TXXP_T(MU,NU)
+             ENDDO NU
+          ENDDO MU
+
+      ENDPARDO A, I
+
+      PARDO B, J
+
+          GET R1B(B,J)
+          TBJP_R(B,J) = R1B(B,J)
+
+          DO MU
+            TXJP_T(MU,J) = TBJP_R(B,J) * CB(MU,B)
+            DO NU
+               TXXP_T(MU,NU)      = TXJP_T(MU,J) * CB(NU,J)
+               PUT R1B_AO(MU,NU) +=  TXXP_T(MU,NU)
+            ENDDO NU
+          ENDDO MU
+
+      ENDPARDO B, J
+
+      EXECUTE SIP_BARRIER
+
+   ENDPROC FORM_AO_R1AB
+#  --------------------
+
+     PROC FORM_MO_R1AB
+#    -----------------
+
+     PARDO MU, NU
+
+         GET HR1A_AO(NU,MU)
+         TXXP(NU,MU) = HR1A_AO(NU,MU)
+         DO A
+            TXAP(NU,A) = TXXP(NU,MU) * CA(MU,A)
+            DO I
+               TAIP_R(A,I)    = TXAP(NU,A) * CA(NU,I)
+               PUT HR1A(A,I) += TAIP_R(A,I)
+            ENDDO I
+         ENDDO A
+
+     ENDPARDO MU, NU
+
+    PARDO MU, NU
+
+         GET HR1B_AO(NU,MU)
+         TXXP(NU,MU) = HR1B_AO(NU,MU)
+         DO B
+            TXBP(NU,B) = TXXP(NU,MU) * CB(MU,B)
+            DO J
+               TBJP_R(B,J)    = TXBP(NU,B) * CB(NU,J)
+               PUT HR1B(B,J) += TBJP_R(B,J)
+             ENDDO J
+         ENDDO B
+     ENDPARDO MU, NU
+
+     EXECUTE SIP_BARRIER
+
+     ENDPROC FORM_MO_R1AB
+#    --------------------
+
+     PROC GET_2INTS
+#    --------------
+     PARDO MU, NU, LAMBDA, SIGMA
+
+        COMPUTE_INTEGRALS AOINT(MU,LAMBDA,NU,SIGMA)
+        PREPARE SAOINT(MU,LAMBDA,NU,SIGMA) = AOINT(MU,LAMBDA,NU,SIGMA)
+
+     ENDPARDO MU, NU, LAMBDA, SIGMA
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC GET_2INTS
+#    -----------------
+
+     PROC AO_HC_MULTIPLY
+#    -------------------
+
+#  (A+B)(ai,bj)  R+_old(b,J)  = R+_new(a,i)
+#  (A-B)(ai,bj)  R-_old(b,J)  = R__new(a,i)
+
+#  All possible spin-combinations are included.
+
+     PARDO MU, NU, LAMBDA, SIGMA
+
+         TAPXX(MU,LAMBDA) = 0.0
+         TBPXX(MU,LAMBDA) = 0.0
+
+         REQUEST SAOINT(MU,LAMBDA,NU,SIGMA) SIGMA
+         REQUEST SAOINT(MU,SIGMA,LAMBDA,NU) SIGMA
+
+         TC0XXXX(MU,LAMBDA,NU,SIGMA) = SAOINT(MU,LAMBDA,NU,SIGMA)
+         TE1XXXX(MU,SIGMA,LAMBDA,NU) = SAOINT(MU,SIGMA,LAMBDA,NU)
+
+         GET R1A_AO(NU,SIGMA)
+         GET R1B_AO(NU,SIGMA)
+
+         TAXXP(NU,SIGMA) = R1A_AO(NU,SIGMA)
+         TBXXP(NU,SIGMA) = R1B_AO(NU,SIGMA)
+
+         TAPXX_INT(MU,LAMBDA)  = TAXXP(NU,SIGMA) * TC0XXXX(MU,LAMBDA,NU,SIGMA)
+         TAPXX_INT(MU,LAMBDA)     *= 2.0
+         TAPXX(MU,LAMBDA)     += TAPXX_INT(MU,LAMBDA)
+
+         TAPXX_INT(MU,LAMBDA)  = TAXXP(NU,SIGMA) * TE1XXXX(MU,SIGMA,LAMBDA,NU)
+         TAPXX_INT(MU,LAMBDA) *= -1.0
+         TAPXX(MU,LAMBDA)     += TAPXX_INT(MU,LAMBDA)
+
+         TBPXX_INT(MU,LAMBDA)  = TBXXP(NU,SIGMA) * TC0XXXX(MU,LAMBDA,NU,SIGMA)
+         TBPXX_INT(MU,LAMBDA)     *= 2.0
+         TBPXX(MU,LAMBDA)     += TBPXX_INT(MU,LAMBDA)
+
+         TBPXX_INT(MU,LAMBDA)  = TBXXP(NU,SIGMA) * TE1XXXX(MU,SIGMA,LAMBDA,NU)
+         TBPXX_INT(MU,LAMBDA) *= -1.0
+         TBPXX(MU,LAMBDA)     += TBPXX_INT(MU,LAMBDA)
+
+         PUT HR1A_AO(MU,LAMBDA) += TAPXX(MU,LAMBDA)
+         PUT HR1B_AO(MU,LAMBDA) += TBPXX(MU,LAMBDA)
+
+     ENDPARDO MU, NU, LAMBDA, SIGMA
+
+     EXECUTE SIP_BARRIER
+
+     ENDPROC AO_HC_MULTIPLY
+#    ----------------------
+
+    PROC DIRECT_AO_HC_MULT
+#    ----------------------
+
+     PARDO A, I
+        TAIP_R(A,I)   = 0.0
+        PUT HR1A(A,I) = TAIP_R(A,I)
+     ENDPARDO A, I
+
+     PARDO B, J
+        TBJP_R(B,J)   = 0.0
+        PUT HR1B(B,J) = TBJP_R(B,J)
+     ENDPARDO B, J
+
+     PARDO mu, nu
+          TXXP_T(MU,NU)     = 0.0
+
+          PUT R1A_AO(MU,NU) =  TXXP_T(MU,NU)
+          PUT R1B_AO(MU,NU) =  TXXP_T(MU,NU)
+
+          PUT HR1A_AO(MU,NU) =  TXXP_T(MU,NU)
+          PUT HR1B_AO(MU,NU) =  TXXP_T(MU,NU)
+     ENDPARDO mu, nu
+     EXECUTE SIP_BARRIER
+
+     CALL FORM_AO_R1AB
+
+     CALL AO_HC_MULTIPLY
+
+     CALL FORM_FOCK_CONTRIBUTION
+
+     CALL FORM_MO_R1AB
+
+     ENDPROC DIRECT_AO_HC_MULT
+#    ----------------------
+
+      PROC HC_MULT_MO
+#     ---------------
       PARDO a, i
             tai(a,i) = 0.0
             PUT HR1A(a,i) = tai(a,i)
@@ -1078,7 +1334,7 @@
             tbj(b,j) = 0.0
             PUT HR1B(b,j) = tbj(b,j)
       ENDPARDO b, j
-      execute sip_barrier 
+      EXECUTE SIP_BARRIER 
 #
       PARDO a, i
 #
@@ -1203,8 +1459,8 @@
 #      execute print_scalar sumb
 #end_debug
 #
-      ENDPROC HC_MULT
-#     --------------
+      ENDPROC HC_MULT_MO
+#     -----------------
 #
      PROC FORM_INITIAL_GUESS
 #    -----------------------
@@ -1346,26 +1602,26 @@
       EXECUTE SIP_BARRIER
 
 #bgn_debug
-#      tmpb=0.0
-#      tmpa=0.0
-#      suma=0.0
-#      sumb=0.0
-#      pardo i,a
-#         get r1a(a,i)
-#         Tmp =  r1a(a,i) *  r1a(a,i)
-#         tmpa += tmp
-#      endpardo i,a
-#      pardo j,b
-#         get r1b(b,j)
-#         tmp = r1b(b,j) * r1b(b,j)
-#         tmpb += tmp
-#      endpardo j,b
-#      execute server_barrier
-#      collective suma +=tmpa
-#      collective sumb +=tmpb
-#      execute sip_barrier
-#      execute print_scalar suma
-#      execute print_scalar sumb
+      tmpb=0.0
+      tmpa=0.0
+      suma=0.0
+      sumb=0.0
+      pardo i,a
+         get r1a(a,i)
+         Tmp =  r1a(a,i) *  r1a(a,i)
+         tmpa += tmp
+      endpardo i,a
+      pardo j,b
+         get r1b(b,j)
+        tmp = r1b(b,j) * r1b(b,j)
+         tmpb += tmp
+      endpardo j,b
+      execute server_barrier
+      collective suma +=tmpa
+      collective sumb +=tmpb
+      execute sip_barrier
+      execute print_scalar suma
+      execute print_scalar sumb
 #end_debug
 
      ENDPROC PREP_RPA_GUESS
@@ -2645,7 +2901,11 @@
 
       EXECUTE SIP_BARRIER
 
-      CALL HC_MULT
+      IF AO_DIRECT == ONE
+         CALL DIRECT_AO_HC_MULT
+      ELSE
+         CALL HC_MULT_MO
+      ENDIF 
 
       PARDO a, i
          GET HR1a(a,i)
@@ -3642,7 +3902,6 @@
       EOM_MAXCYC   = EE_MAXCYC
       RHF_UHF      = REFERENCE 
       RHF_UHF     += 1.0
-
 #bgn_debug
       EXECUTE  PRINT_SCALAR  eom_maxcyc
       EXECUTE  PRINT_SCALAR  RHF_UHF 
@@ -3670,8 +3929,13 @@
       TWO   = 2.0
       THREE = 3.0
 
-      SINGLET = ZERO
-      TRIPLET = ZERO 
+      SINGLET   = ZERO
+      TRIPLET   = ZERO 
+      AO_DIRECT = ZERO
+
+      IF AO_DIRECT == ONE
+         CALL GET_2INTS 
+      ENDIF 
 
       DO SPN_MULT 
 
@@ -3725,13 +3989,17 @@
 
                 CALL SAVE_C_VECTORS
 #bgn_debug
-#            call c_check
+            call c_check
 #end_debug
-                CALL HC_MULT
+                IF AO_DIRECT == ONE
+                   CALL DIRECT_AO_HC_MULT
+                ELSE
+                   CALL HC_MULT_MO
+                ENDIF 
 
                 CALL SAVE_HC_VECTORS
 
-                IF ITER_COUNT == 1.0
+                IF ITER_COUNT ==  ONE
                    CALL FORM_A_MATRIX_11
                 ELSE
                   CALL FORM_A_MATRIX_IJ
