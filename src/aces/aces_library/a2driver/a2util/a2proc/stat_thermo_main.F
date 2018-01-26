@@ -158,7 +158,7 @@ C
       end if
  925  format(' Rotational constants (cm-1):',3(2x,f9.5))
  930  format('                      (GHz) :',3(2x,f9.5))
- 935  format(' Moments of inertia (a.u.)  :',3(2x,f9.5))
+ 935  format(' Moments of inertia (AMU Boh^2) :',3(2x,f9.5))
  940  format(' Rotational temperatures (K):',3(2x,f9.5))
 C
 C Calculate thermodynamic properties

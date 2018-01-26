@@ -49,7 +49,7 @@ c
 c            15      EOM-CCSD(T) RHF ENERGY
 c            16      EOM-CCSD(T) UHF ENERGY; Singlets 
 c            16,17   EOM-CCSD(T) UHF ENERGY; Triplets 
-c
+C
 c            21   RHF T2 amplitude header 
 c            22   RHF T1 amplitude header 
 c            23   UHF T2ab amplitude header 
@@ -67,6 +67,14 @@ c
 c            28   RHF CIS energies 
 c            32   RHF LCCD iteration, energy  
 c            33   RHF LCCD iteration, energy  
+C
+c            35   CCSD(T) RHF ENERGY/AAA
+c            36   CCSD(T) RHF ENERGY/AAB
+c
+c            37   CCSD(T) UHF ENERGY/AAA
+c            38   CCSD(T) UHF ENERGY/BBB
+c            39   CCSD(T) UHF ENERGY/AAB
+c            40   CCSD(T) UHF ENERGY/BBA
 C
 c            70   RHF EOM-CCSD energies (singlets)
 c            71   UHF EOM-CCSD energies (triplets)
@@ -313,13 +321,13 @@ c     enddo
       endif 
 
       if (scalar_table(sind) .eq. 15.0) then  
-          call print_ccsdpt_rhf(x(iarray),scalar_table(sind),
+          call print_eom_ccsdpt_rhf(x(iarray),scalar_table(sind),
      *             1,n1,1,n2)
       endif 
 
       if (scalar_table(sind) .eq. 16.0 .OR. 
      *    scalar_table(sind) .eq. 17.0) then  
-          call print_ccsdpt_uhf(x(iarray),scalar_table(sind),
+          call print_eom_ccsdpt_uhf(x(iarray),scalar_table(sind),
      *             1,n1,1,n2)
       endif 
 
@@ -583,6 +591,37 @@ c---------------------------------------------------------------------------
      *             1,n1,1,n2)
       endif 
 c----------------------------------------------------------------------------
+
+      if (scalar_table(sind) .eq. 35.0) then
+          call print_ccsdpt_rhf_aaa(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+      endif
+
+      if (scalar_table(sind) .eq. 36.0) then
+          call print_ccsdpt_rhf_aab(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+      endif
+
+      if (scalar_table(sind) .eq. 37.0) then
+          call print_ccsdpt_uhf_aaa(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+      endif
+
+      if (scalar_table(sind) .eq. 38.0) then
+          call print_ccsdpt_uhf_bbb(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+      endif
+
+      if (scalar_table(sind) .eq. 39.0) then
+          call print_ccsdpt_uhf_aab(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+      endif
+
+      if (scalar_table(sind) .eq. 40.0) then
+          call print_ccsdpt_uhf_bba(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+      endif
+C--------------------------------------------------------------------------
 
       call flush(66) 
 
@@ -1088,7 +1127,7 @@ c-----------------------------------------------------------------------------
       end 
 c---------------------------------------------------------------------------
 
-      subroutine print_ccsdpt_rhf(array1,sval,a1,a2,b1,b2) 
+      subroutine print_eom_ccsdpt_rhf(array1,sval,a1,a2,b1,b2) 
 
 c---------------------------------------------------------------------------
 
@@ -1144,7 +1183,7 @@ CSSS#endif
 
 c---------------------------------------------------------------------------
 
-      subroutine print_ccsdpt_uhf(array1,sval,a1,a2,b1,b2) 
+      subroutine print_eom_ccsdpt_uhf(array1,sval,a1,a2,b1,b2) 
 
 c---------------------------------------------------------------------------
 
@@ -2525,3 +2564,263 @@ c              write(66,99) a-1, (array1(a-1,i), i=b1, b2)
 
       return
       end
+
+      subroutine print_ccsdpt_rhf_aaa(array1,sval,a1,a2,b1,b2)
+
+c---------------------------------------------------------------------------
+c
+c
+c---------------------------------------------------------------------------
+
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+c
+      integer i, ival, amax, a, a1, a2, b, b1, b2
+      double precision array1(a1:a2,b1:b2), sval, stemp
+      double precision efinal, conv
+
+      open(66,file='summary.out')
+
+       if (me .eq. 0)then
+
+          write(66,*)
+          write(66,*)
+          write(66,97)
+          write(66,101)
+          write(66,99) array1(1,1)
+          write(66,100) array1(1,2)
+          write(66,101)
+          write(66,102) array1(1,1) + array1(1,2) + totenerg
+          write(66,101)
+          write(66,*)
+          write(66,*)
+
+      endif
+
+97    format(2x,"SUMMARY OF RHF PERTURBATIVE TRIPLES CALCULATION AAA")
+99    format(2x,'E5(T) =',3x,F20.10)
+100   format(2x,'E4(T) =',3x,F20.10)
+101   format(2x,60('-'))
+102   format(2x,"Final CCSD(T) energy after aaa = ",3x,F20.10)
+
+      return
+      end
+
+      subroutine print_ccsdpt_rhf_aab(array1,sval,a1,a2,b1,b2)
+
+c---------------------------------------------------------------------------
+c
+c
+c---------------------------------------------------------------------------
+
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+c
+      integer i, ival, amax, a, a1, a2, b, b1, b2
+      double precision array1(a1:a2,b1:b2), sval, stemp
+      double precision efinal, conv
+
+      open(66,file='summary.out')
+
+       if (me .eq. 0)then
+
+          write(66,*)
+          write(66,*)
+          write(66,97)
+          write(66,101)
+          write(66,99) array1(1,1)
+          write(66,100) array1(1,2)
+          write(66,101)
+          write(66,102) array1(1,1) + array1(1,2) + totenerg
+          write(66,101)
+          write(66,*)
+          write(66,*)
+
+      endif
+
+97    format(2x,"SUMMARY OF RHF PERTURBATIVE TRIPLES CALCULATION AAB")
+99    format(2x,'E5(T) =',3x,F20.10)
+100   format(2x,'E4(T) =',3x,F20.10)
+101   format(2x,60('-'))
+102   format(2x,"Final CCSD(T) energy after aab = ",3x,F20.10)
+
+      return
+      end
+
+      subroutine print_ccsdpt_uhf_aaa(array1,sval,a1,a2,b1,b2)
+
+c---------------------------------------------------------------------------
+c
+c
+c---------------------------------------------------------------------------
+
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+c
+      integer i, ival, amax, a, a1, a2, b, b1, b2
+      double precision array1(a1:a2,b1:b2), sval, stemp
+      double precision efinal, conv
+
+      open(66,file='summary.out')
+
+       if (me .eq. 0)then
+
+          write(66,*)
+          write(66,*)
+          write(66,97)
+          write(66,101)
+          write(66,99) array1(1,1)
+          write(66,100) array1(1,2)
+          write(66,101)
+          write(66,102) array1(1,1) + array1(1,2) + totenerg
+          write(66,101)
+          write(66,*)
+          write(66,*)
+
+      endif
+
+97    format(2x,"SUMMARY OF UHF PERTURBATIVE TRIPLES CALCULATION AAA")
+99    format(2x,'E5(T) =',3x,F20.10)
+100   format(2x,'E4(T) =',3x,F20.10)
+101   format(2x,60('-'))
+102   format(2x,"Final CCSD(T) energy after aaa = ",3x,F20.10)
+
+      return
+      end
+
+      subroutine print_ccsdpt_uhf_bbb(array1,sval,a1,a2,b1,b2)
+
+c---------------------------------------------------------------------------
+c
+c
+c---------------------------------------------------------------------------
+
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+c
+      integer i, ival, amax, a, a1, a2, b, b1, b2
+      double precision array1(a1:a2,b1:b2), sval, stemp
+      double precision efinal, conv
+
+      open(66,file='summary.out')
+
+       if (me .eq. 0)then
+
+          write(66,*)
+          write(66,*)
+          write(66,97)
+          write(66,101)
+          write(66,99) array1(1,1)
+          write(66,100) array1(1,2)
+          write(66,101)
+          write(66,102) array1(1,1) + array1(1,2) + totenerg
+          write(66,101)
+          write(66,*)
+          write(66,*)
+
+      endif
+
+97    format(2x,"SUMMARY OF UHF PERTURBATIVE TRIPLES CALCULATION BBB")
+99    format(2x,'E5(T) =',3x,F20.10)
+100   format(2x,'E4(T) =',3x,F20.10)
+101   format(2x,60('-'))
+102   format(2x,"Final CCSD(T) energy after bbb = ",3x,F20.10)
+
+      return
+      end
+
+      subroutine print_ccsdpt_uhf_aab(array1,sval,a1,a2,b1,b2)
+
+c---------------------------------------------------------------------------
+c
+c
+c---------------------------------------------------------------------------
+
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+c
+      integer i, ival, amax, a, a1, a2, b, b1, b2
+      double precision array1(a1:a2,b1:b2), sval, stemp
+      double precision efinal, conv
+
+      open(66,file='summary.out')
+
+       if (me .eq. 0)then
+
+          write(66,*)
+          write(66,*)
+          write(66,97)
+          write(66,101)
+          write(66,99) array1(1,1)
+          write(66,100) array1(1,2)
+          write(66,101)
+          write(66,102) array1(1,1) + array1(1,2) + totenerg
+          write(66,101)
+          write(66,*)
+          write(66,*)
+
+      endif
+
+97    format(2x,"SUMMARY OF UHF PERTURBATIVE TRIPLES CALCULATION AAB")
+99    format(2x,'E5(T) =',3x,F20.10)
+100   format(2x,'E4(T) =',3x,F20.10)
+101   format(2x,60('-'))
+102   format(2x,"Final CCSD(T) energy after aab = ",3x,F20.10)
+
+      return
+      end
+
+      subroutine print_ccsdpt_uhf_bba(array1,sval,a1,a2,b1,b2)
+
+c---------------------------------------------------------------------------
+c
+c
+c---------------------------------------------------------------------------
+
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+c
+      integer i, ival, amax, a, a1, a2, b, b1, b2
+      double precision array1(a1:a2,b1:b2), sval, stemp
+      double precision efinal, conv
+
+      open(66,file='summary.out')
+
+       if (me .eq. 0)then
+
+          write(66,*)
+          write(66,*)
+          write(66,97)
+          write(66,101)
+          write(66,99) array1(1,1)
+          write(66,100) array1(1,2)
+          write(66,101)
+          write(66,102) array1(1,1) + array1(1,2) + totenerg
+          write(66,101)
+          write(66,*)
+          write(66,*)
+
+      endif
+
+97    format(2x,"SUMMARY OF UHF PERTURBATIVE TRIPLES CALCULATION BBA")
+99    format(2x,'E5(T) =',3x,F20.10)
+100   format(2x,'E4(T) =',3x,F20.10)
+101   format(2x,60('-'))
+102   format(2x,"Final CCSD(T) energy after bba = ",3x,F20.10)
+
+      return
+      end
+
+

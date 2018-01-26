@@ -973,7 +973,7 @@ void asv_handle_proc(const f_int * index, const char * value)
 
         case h_IOPPAR_damp_typ:
         {
-            const char *handles[] = { "NONE", "DAVIDSON", "OTHER", "" };
+            const char *handles[] = { "NONE", "DAVIDSON", "CONSTANT", "OTHER", "" };
             asv_update_handle(index,value,handles);
             break;
         }
