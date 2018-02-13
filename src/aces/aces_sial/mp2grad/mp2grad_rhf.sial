@@ -3989,7 +3989,7 @@
 
       ENDDO XYZ
 
-      PRINT_FLAG = 717.0
+      PRINT_FLAG = 718.0
       EXECUTE PRINT_REL_INFO  PRINT_FLAG DIPOLE_MOMS
 #
 # Contract the 'two-particle' contributions

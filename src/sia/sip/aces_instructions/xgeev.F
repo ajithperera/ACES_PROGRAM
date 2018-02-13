@@ -102,6 +102,7 @@ C
       implicit none 
       include 'parallel_info.h'
       include 'int_gen_parms.h'
+      include 'aces3_vars.h'
 
       Integer i,j,k,l,i1,i2,j1,j2,a1,a2,b1,b2,Ndim,Nroots 
       Integer Istart,Maxdim, Ierror 
@@ -116,7 +117,7 @@ C
 C Hbar is non-symmetric matrix, and we obtain both left/right eigenvectors.
 
       Ndim = (i2 -i1) + 1
-#ifdef _DEBUG_LVL0
+C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a,i4)") "@-Entry to XGEEV order of the matrix", 
      +                Ndim 
@@ -126,7 +127,7 @@ C Hbar is non-symmetric matrix, and we obtain both left/right eigenvectors.
       enddo 
       call output(Hbar,1,k,1,k,Ndim,Ndim,1)
       Endif 
-#endif 
+C#endif 
 
       If (Ndim .Gt. Maxdim) Then
          Write(6,"(a,a)") "@-XGEEV: Exceeded the max",
@@ -136,11 +137,30 @@ C Hbar is non-symmetric matrix, and we obtain both left/right eigenvectors.
          
       Call Dgeev("V","V",Ndim, Hbar, Ndim, EigR, EigI,EvecL,NDIM,
      +            EvecR,Ndim,Work,4*Ndim,Ierror)
-C
+
+C#ifdef _DEBUG_LVL0
+      If(me.eq.0) Then
+      Write(6,"(a)") "The eigenvectors of the incoming matrix"
+      Write(6,"(a)") "The right-hand side"
+      call output(EvecR,1,k,1,k,Ndim,Ndim,1)
+      Write(6,"(a)") "The left-hand side"
+      call output(EvecL,1,k,1,k,Ndim,Ndim,1)
+      write(6,*) Lhs,rhs
+      endif
+C#endif 
 C Copy the eigenvectors to returned array (Guess_Vec) and replace
 C the digonal of incoming matrix (Hbar) with eigenvalues. 
-C
+C (by defalut copy the right eigenvector). If RHS or LHS is set
+C then we choose. 
+
       Call Dcopy(Ndim*Ndim, EvecR, 1, Guess_vec,1)
+
+      If (RHS .EQ. 1 .AND. LHS .EQ. 0) Then
+         Call Dcopy(Ndim*Ndim, EvecR, 1, Guess_vec,1)
+      Elseif (RHS .EQ. 0 .AND. LHS .EQ. 1) Then
+         Call Dcopy(Ndim*Ndim, EvecL, 1, Guess_vec,1)
+      Endif 
+
       Call Zero(Hbar,Ndim*Ndim)
       Do i = 1, Ndim
          Hbar(i,i) = Eigr(i)

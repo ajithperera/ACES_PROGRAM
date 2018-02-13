@@ -1,4 +1,4 @@
-#  This program is free software; you can redistribute it and/or modify
+
 #  it under the terms of the GNU General Public License as published by 
 #  the Free Software Foundation; either version 2 of the License, or
 #  (at your option) any later version.
@@ -1319,11 +1319,9 @@
          TBXXP(NU,SIGMA) = R1B_AO(NU,SIGMA)
 
          TAPXX_INT(MU,LAMBDA)  = TAXXP(NU,SIGMA) * TC0XXXX(MU,LAMBDA,NU,SIGMA)
-         TAPXX_INT(MU,LAMBDA) *= 1.0
          TAPXX(MU,LAMBDA)     += TAPXX_INT(MU,LAMBDA)
 
          TAPXX_INT(MU,LAMBDA)  = TBXXP(NU,SIGMA) * TC0XXXX(MU,LAMBDA,NU,SIGMA)
-         TAPXX_INT(MU,LAMBDA) *= 1.0
          TAPXX(MU,LAMBDA)     += TAPXX_INT(MU,LAMBDA)
 
          TAPXX_INT(MU,LAMBDA)  = TAXXP(NU,SIGMA) * TE1XXXX(MU,SIGMA,LAMBDA,NU)
@@ -1331,11 +1329,9 @@
          TAPXX(MU,LAMBDA)     += TAPXX_INT(MU,LAMBDA)
 
          TBPXX_INT(MU,LAMBDA)  = TBXXP(NU,SIGMA) * TC0XXXX(MU,LAMBDA,NU,SIGMA)
-         TBPXX_INT(MU,LAMBDA) *= 1.0
          TBPXX(MU,LAMBDA)     += TBPXX_INT(MU,LAMBDA)
 
          TBPXX_INT(MU,LAMBDA)  = TAXXP(NU,SIGMA) * TC0XXXX(MU,LAMBDA,NU,SIGMA)
-         TBPXX_INT(MU,LAMBDA) *= 1.0
          TBPXX(MU,LAMBDA)     += TBPXX_INT(MU,LAMBDA)
 
          TBPXX_INT(MU,LAMBDA)  = TBXXP(NU,SIGMA) * TE1XXXX(MU,SIGMA,LAMBDA,NU)
