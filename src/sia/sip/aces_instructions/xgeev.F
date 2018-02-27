@@ -117,7 +117,7 @@ C
 C Hbar is non-symmetric matrix, and we obtain both left/right eigenvectors.
 
       Ndim = (i2 -i1) + 1
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a,i4)") "@-Entry to XGEEV order of the matrix", 
      +                Ndim 
@@ -127,7 +127,7 @@ C#ifdef _DEBUG_LVL0
       enddo 
       call output(Hbar,1,k,1,k,Ndim,Ndim,1)
       Endif 
-C#endif 
+#endif 
 
       If (Ndim .Gt. Maxdim) Then
          Write(6,"(a,a)") "@-XGEEV: Exceeded the max",
@@ -138,7 +138,7 @@ C#endif
       Call Dgeev("V","V",Ndim, Hbar, Ndim, EigR, EigI,EvecL,NDIM,
      +            EvecR,Ndim,Work,4*Ndim,Ierror)
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a)") "The eigenvectors of the incoming matrix"
       Write(6,"(a)") "The right-hand side"
@@ -147,7 +147,7 @@ C#ifdef _DEBUG_LVL0
       call output(EvecL,1,k,1,k,Ndim,Ndim,1)
       write(6,*) Lhs,rhs
       endif
-C#endif 
+#endif 
 C Copy the eigenvectors to returned array (Guess_Vec) and replace
 C the digonal of incoming matrix (Hbar) with eigenvalues. 
 C (by defalut copy the right eigenvector). If RHS or LHS is set

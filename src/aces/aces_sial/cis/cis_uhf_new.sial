@@ -3739,7 +3739,7 @@
                   CALL FORM_A_MATRIX_II
                 ENDIF
 #bgn_debug
-            execute print_static A_MATRIX ITER_COUNT
+#            execute print_static A_MATRIX ITER_COUNT
 #end_debug
               EXECUTE XGEEV A_MATRIX DVECTORS
 #bgn_debug
@@ -3810,7 +3810,6 @@
                    PARDO a, i
                       GET R1A(a,i) 
 #bgn_debug
-#                      execute dump_amp R1A(a,i)
 #end_debug
                       PUT CISA_S_VECS(a,i,MROOTS) = R1A(a,i)
                    ENDPARDO a, i

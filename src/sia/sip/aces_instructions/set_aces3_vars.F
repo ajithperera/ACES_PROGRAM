@@ -85,7 +85,7 @@ c-------------------------------------------------------------------
          LHS = 0
       Elseif (qq .EQ. 2) Then
          RHS = 0
-         LHS = qq
+         LHS = (qq-1)
       Endif
 #ifdef _DEBUG_LVL0
       If (me .eq.0) Write(6,"(a,2i2)") "The right and left sides: ",

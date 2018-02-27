@@ -11,7 +11,7 @@
       index lindex20          = 1, 20
       index SUBSP_DIM         = 1, 20
       index MAX_NO_ROOTS      = 1, 12
-      index Spn_mult          = 1, 1
+      index Spn_mult          = 1, 2
       Index Mroots            = 1, 12
 
       aoindex mu     = 1, norb
@@ -69,6 +69,11 @@
       DISTRIBUTED R1A_MO_M_CURRENT_L(A,I)
       DISTRIBUTED R1B_MO_P_CURRENT_R(B,J)
       DISTRIBUTED R1B_MO_M_CURRENT_L(B,J)
+      DISTRIBUTED R1A_MO_M_CURRENT_R(A,I)
+      DISTRIBUTED R1A_MO_P_CURRENT_L(A,I)
+      DISTRIBUTED R1B_MO_M_CURRENT_R(B,J)
+      DISTRIBUTED R1B_MO_P_CURRENT_L(B,J)
+
       DISTRIBUTED R1A_AO_P_CURRENT_R(MU,NU)
       DISTRIBUTED R1A_AO_M_CURRENT_L(MU,NU)
       DISTRIBUTED R1B_AO_P_CURRENT_R(MU,NU)
@@ -146,10 +151,11 @@
       STATIC INIT_RVEC_AA(A,I,MAX_NO_ROOTS)
       STATIC INIT_RVEC_BB(B,J,MAX_NO_ROOTS)
 
-      STATIC A_A_MATRIX_P(NINDEX20,MINDEX20)
-      STATIC A_A_MATRIX_M(NINDEX20,MINDEX20)
       STATIC B_A_MATRIX_P(NINDEX20,MINDEX20)
       STATIC B_A_MATRIX_M(NINDEX20,MINDEX20)
+      STATIC B_A_MATRIX_P_KEEP(NINDEX20,MINDEX20)
+      STATIC B_A_MATRIX_M_KEEP(NINDEX20,MINDEX20)
+
       STATIC TMNP_R(NINDEX20,MINDEX20)
       STATIC TMNM_L(NINDEX20,MINDEX20)
       STATIC EIG_VECS_P_R(NINDEX20,MINDEX20)
@@ -413,6 +419,7 @@
       SCALAR RIGHT
       SCALAR DO_CIS 
       SCALAR NNN
+      SCALAR MARKER 
 
       PROC FORM_INITIAL_GUESS
 #     -----------------------
@@ -508,37 +515,37 @@
      EXECUTE SIP_BARRIER 
 
 #bgn_debug
-     execute get_my_rank rank
-     if rank == 0.0
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     do a
-     do i
-        get R1A_MO_P_INTMD_R(A,I)
-        get R1A_MO_M_INTMD_L(A,I)
-        tmp   = R1A_MO_P_INTMD_R(A,I) * R1A_MO_P_INTMD_R(A,I)
-        sumap += tmp
-        tmp   = R1A_MO_M_INTMD_L(A,I) * R1A_MO_M_INTMD_L(A,I)
-        sumam += tmp
-     enddo i
-     enddo a
-     do b
-     do j
-        get R1B_MO_P_INTMD_R(B,J)
-        get R1B_MO_M_INTMD_L(B,J)
-        tmp = R1B_MO_P_INTMD_R(B,J) * R1B_MO_P_INTMD_R(B,J)
-        sumbp += tmp
-        tmp = R1B_MO_M_INTMD_L(B,J) * R1B_MO_M_INTMD_L(B,J)
-        sumbm += tmp
-     enddo j
-     enddo b
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     endif
+#     execute get_my_rank rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get R1A_MO_P_INTMD_R(A,I)
+#        get R1A_MO_M_INTMD_L(A,I)
+#        tmp   = R1A_MO_P_INTMD_R(A,I) * R1A_MO_P_INTMD_R(A,I)
+#        sumap += tmp
+#        tmp   = R1A_MO_M_INTMD_L(A,I) * R1A_MO_M_INTMD_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get R1B_MO_P_INTMD_R(B,J)
+#        get R1B_MO_M_INTMD_L(B,J)
+#        tmp = R1B_MO_P_INTMD_R(B,J) * R1B_MO_P_INTMD_R(B,J)
+#        sumbp += tmp
+#        tmp = R1B_MO_M_INTMD_L(B,J) * R1B_MO_M_INTMD_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
 #end_debug
 
      NORM_INTMD_P_R_A = 0.0
@@ -632,37 +639,37 @@
      ENDPARDO B, J
      EXECUTE SIP_BARRIER 
 #bgn_debug
-     execute get_my_rank rank
-     if rank == 0.0
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     do a
-     do i
-        get R1A_MO_P_CURRENT_R(A,I)
-        get R1A_MO_M_CURRENT_L(A,I)
-        tmp   = R1A_MO_P_CURRENT_R(A,I) * R1A_MO_P_CURRENT_R(A,I)
-        sumap += tmp
-        tmp   = R1A_MO_M_CURRENT_L(A,I) * R1A_MO_M_CURRENT_L(A,I)
-        sumam += tmp
-     enddo i
-     enddo a
-     do b
-     do j
-        get R1B_MO_P_CURRENT_R(B,J)
-        get R1B_MO_M_CURRENT_L(B,J)
-        tmp = R1B_MO_P_CURRENT_R(B,J) * R1B_MO_P_CURRENT_R(B,J)
-        sumbp += tmp
-        tmp = R1B_MO_M_CURRENT_L(B,J) * R1B_MO_M_CURRENT_L(B,J)
-        sumbm += tmp
-     enddo j
-     enddo b
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     endif
+#     execute get_my_rank rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get R1A_MO_P_CURRENT_R(A,I)
+#        get R1A_MO_M_CURRENT_L(A,I)
+#        tmp   = R1A_MO_P_CURRENT_R(A,I) * R1A_MO_P_CURRENT_R(A,I)
+#        sumap += tmp
+#        tmp   = R1A_MO_M_CURRENT_L(A,I) * R1A_MO_M_CURRENT_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get R1B_MO_P_CURRENT_R(B,J)
+#        get R1B_MO_M_CURRENT_L(B,J)
+#        tmp = R1B_MO_P_CURRENT_R(B,J) * R1B_MO_P_CURRENT_R(B,J)
+#        sumbp += tmp
+#        tmp = R1B_MO_M_CURRENT_L(B,J) * R1B_MO_M_CURRENT_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
 #end_debug
 
      ENDPROC MOVE_GUESS_2CURRENT
@@ -709,45 +716,45 @@
      EXECUTE SIP_BARRIER 
 
 #bgn_debug
-     execute get_my_rank rank
-     execute print_scalar rank
-     if rank == 0.0
-     ncount = 0.0
-     do mindex20
-     ncount += 1.0
-     if ncount > iter_count
-        exit
-     endif 
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     do a
-     do i
-        get R1A_MO_P_HIST_R(A,I,MINDEX20)
-        get R1A_MO_M_HIST_L(A,I,MINDEX20)
-        tmp   = R1A_MO_P_HIST_R(A,I,MINDEX20) * R1A_MO_P_HIST_R(A,I,MINDEX20)
-        sumap += tmp
-        tmp   = R1A_MO_M_HIST_L(A,I,MINDEX20) * R1A_MO_M_HIST_L(A,I,MINDEX20)
-        sumam += tmp
-     enddo i
-     enddo a
-     do b
-     do j
-        get R1B_MO_P_HIST_R(B,J,MINDEX20)
-        get R1B_MO_M_HIST_L(B,J,MINDEX20)
-        tmp = R1B_MO_P_HIST_R(B,J,MINDEX20) * R1B_MO_P_HIST_R(B,J,MINDEX20)
-        sumbp += tmp
-        tmp = R1B_MO_M_HIST_L(B,J,MINDEX20) * R1B_MO_M_HIST_L(B,J,MINDEX20)
-        sumbm += tmp
-     enddo j
-     enddo b
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     enddo mindex20
-     endif
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     ncount = 0.0
+#     do mindex20
+#     ncount += 1.0
+#     if ncount > iter_count
+#        exit
+#     endif 
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get R1A_MO_P_HIST_R(A,I,MINDEX20)
+#        get R1A_MO_M_HIST_L(A,I,MINDEX20)
+#        tmp   = R1A_MO_P_HIST_R(A,I,MINDEX20) * R1A_MO_P_HIST_R(A,I,MINDEX20)
+#        sumap += tmp
+#        tmp   = R1A_MO_M_HIST_L(A,I,MINDEX20) * R1A_MO_M_HIST_L(A,I,MINDEX20)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get R1B_MO_P_HIST_R(B,J,MINDEX20)
+#        get R1B_MO_M_HIST_L(B,J,MINDEX20)
+#        tmp = R1B_MO_P_HIST_R(B,J,MINDEX20) * R1B_MO_P_HIST_R(B,J,MINDEX20)
+#        sumbp += tmp
+#        tmp = R1B_MO_M_HIST_L(B,J,MINDEX20) * R1B_MO_M_HIST_L(B,J,MINDEX20)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     enddo mindex20
+#     endif
 #end_debug
 
 
@@ -832,40 +839,40 @@
      EXECUTE SIP_BARRIER 
 
 #bgn_debug
-     execute get_my_rank rank
-     execute print_scalar rank
-     if rank == 0.0
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     do a
-     do i
-        get HR1A_MO_P_CURRENT_R(A,I)
-        get HR1A_MO_M_CURRENT_L(A,I)
-
-        tmp   = HR1A_MO_P_CURRENT_R(A,I) * HR1A_MO_P_CURRENT_R(A,I)
-        sumap += tmp
-        tmp   = HR1A_MO_M_CURRENT_L(A,I) * HR1A_MO_M_CURRENT_L(A,I)
-        sumam += tmp
-     enddo i
-     enddo a
-     do b
-     do j
-
-        get HR1B_MO_P_CURRENT_R(B,J)
-        get HR1B_MO_M_CURRENT_L(B,J)
-        tmp = HR1B_MO_P_CURRENT_R(B,J) * HR1B_MO_P_CURRENT_R(B,J)
-        sumbp += tmp
-        tmp = HR1B_MO_M_CURRENT_L(B,J) * HR1B_MO_M_CURRENT_L(B,J)
-        sumbm += tmp
-     enddo j
-     enddo b
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     endif
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get HR1A_MO_P_CURRENT_R(A,I)
+#        get HR1A_MO_M_CURRENT_L(A,I)
+#
+#        tmp   = HR1A_MO_P_CURRENT_R(A,I) * HR1A_MO_P_CURRENT_R(A,I)
+#        sumap += tmp
+#        tmp   = HR1A_MO_M_CURRENT_L(A,I) * HR1A_MO_M_CURRENT_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#
+#        get HR1B_MO_P_CURRENT_R(B,J)
+#        get HR1B_MO_M_CURRENT_L(B,J)
+#        tmp = HR1B_MO_P_CURRENT_R(B,J) * HR1B_MO_P_CURRENT_R(B,J)
+#        sumbp += tmp
+#        tmp = HR1B_MO_M_CURRENT_L(B,J) * HR1B_MO_M_CURRENT_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
 #end_debug
 
      ENDPROC FORM_FOCK_CONTRIBUTION
@@ -928,38 +935,38 @@
       EXECUTE SIP_BARRIER 
 
 #bgn_debug
-     execute get_my_rank rank
-     if rank == 0.0
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     do mu
-     do nu
-        get R1A_AO_P_CURRENT_R(mu,nu)
-        get R1A_AO_M_CURRENT_L(mu,nu)
-        tmp   = R1A_AO_P_CURRENT_R(mu,nu) * R1A_AO_M_CURRENT_L(mu,nu)
-        sumap += tmp
-        tmp   = R1A_AO_M_CURRENT_L(mu,nu) * R1A_AO_M_CURRENT_L(mu,nu)
-        sumam += tmp
-     enddo nu
-     enddo mu
-     do mu
-     do nu
-
-        get R1B_AO_P_CURRENT_R(mu,nu)
-        get R1B_AO_M_CURRENT_L(mu,nu)
-        tmp = R1B_AO_P_CURRENT_R(mu,nu) * R1B_AO_P_CURRENT_r(mu,nu)
-        sumbp += tmp
-        tmp = R1B_AO_M_CURRENT_L(mu,nu) * R1B_AO_P_CURRENT_r(mu,nu)
-        sumbm += tmp
-     enddo nu
-     enddo mu
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     endif
+#     execute get_my_rank rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do mu
+#     do nu
+#        get R1A_AO_P_CURRENT_R(mu,nu)
+#        get R1A_AO_M_CURRENT_L(mu,nu)
+#        tmp   = R1A_AO_P_CURRENT_R(mu,nu) * R1A_AO_M_CURRENT_L(mu,nu)
+#        sumap += tmp
+#        tmp   = R1A_AO_M_CURRENT_L(mu,nu) * R1A_AO_M_CURRENT_L(mu,nu)
+#        sumam += tmp
+#     enddo nu
+#     enddo mu
+#     do mu
+#     do nu
+#
+#        get R1B_AO_P_CURRENT_R(mu,nu)
+#        get R1B_AO_M_CURRENT_L(mu,nu)
+#        tmp = R1B_AO_P_CURRENT_R(mu,nu) * R1B_AO_P_CURRENT_r(mu,nu)
+#        sumbp += tmp
+#        tmp = R1B_AO_M_CURRENT_L(mu,nu) * R1B_AO_P_CURRENT_r(mu,nu)
+#        sumbm += tmp
+#     enddo nu
+#     enddo mu
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
 #end_debug
 
      ENDPROC FORM_AO_R1AB
@@ -978,8 +985,8 @@
      ENDPROC GET_2INTS
 #    -----------------
 
-     PROC HC_MULTIPLY_RPA
-#    --------------------
+     PROC HC_MULTIPLY_RPA_RL
+#    ----------------------
 #  (A+B)(ai,bj)  R+_old(b,J)  = R+_new(a,i)
 #  (A-B)(ai,bj)  R-_old(b,J)  = R__new(a,i)
 
@@ -1069,37 +1076,37 @@
      EXECUTE SIP_BARRIER
 
 #bgn_debug
-     execute get_my_rank rank
-     if rank == 0.0
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     do mu
-     do nu
-        get HR1A_AO_P_CURRENT_R(mu,nu)
-        get HR1A_AO_M_CURRENT_L(mu,nu)
-        tmp   = HR1A_AO_P_CURRENT_R(mu,nu) * HR1A_AO_P_CURRENT_R(mu,nu)
-        sumap += tmp
-        tmp   = HR1A_AO_M_CURRENT_L(mu,nu) * HR1A_AO_M_CURRENT_L(mu,nu)
-        sumam += tmp
-     enddo nu
-     enddo mu
-     do mu
-     do nu
-        get HR1B_AO_P_CURRENT_R(mu,nu)
-        get HR1B_AO_M_CURRENT_L(mu,nu)
-        tmp = HR1B_AO_P_CURRENT_R(mu,nu) * HR1B_AO_P_CURRENT_R(mu,nu)
-        sumbp += tmp
-        tmp = HR1B_AO_M_CURRENT_L(mu,nu) * HR1B_AO_M_CURRENT_L(mu,nu)
-        sumbm += tmp
-     enddo nu
-     enddo mu
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     endif
+#     execute get_my_rank rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do mu
+#     do nu
+#        get HR1A_AO_P_CURRENT_R(mu,nu)
+#        get HR1A_AO_M_CURRENT_L(mu,nu)
+#        tmp   = HR1A_AO_P_CURRENT_R(mu,nu) * HR1A_AO_P_CURRENT_R(mu,nu)
+#        sumap += tmp
+#        tmp   = HR1A_AO_M_CURRENT_L(mu,nu) * HR1A_AO_M_CURRENT_L(mu,nu)
+#        sumam += tmp
+#     enddo nu
+#     enddo mu
+#     do mu
+#     do nu
+#        get HR1B_AO_P_CURRENT_R(mu,nu)
+#        get HR1B_AO_M_CURRENT_L(mu,nu)
+#        tmp = HR1B_AO_P_CURRENT_R(mu,nu) * HR1B_AO_P_CURRENT_R(mu,nu)
+#        sumbp += tmp
+#        tmp = HR1B_AO_M_CURRENT_L(mu,nu) * HR1B_AO_M_CURRENT_L(mu,nu)
+#        sumbm += tmp
+#     enddo nu
+#     enddo mu
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
 #end_debug
 #bgn_debug
 # Form 1/2(A-B)(A+B)=A i.e. CIS. A fantastic debugging option.
@@ -1114,7 +1121,7 @@
 #           PUT HR1A_AO_P_TMP(mu,lambda) =  TAPXX(MU,LAMBDA)
 #     endpardo mu,lambda
 #     EXECUTE SIP_BARRIER
-#     pardo mu,lambda
+#    pardo mu,lambda
 #           GET HR1A_AO_P_TMP(mu,lambda)
 #           TAPXX(MU,LAMBDA) = HR1A_AO_P_TMP(mu,lambda)
 #           PUT HR1A_AO_P_CURRENT_R(mu,lambda)=TAPXX(MU,LAMBDA)
@@ -1125,46 +1132,13 @@
 #     EXECUTE SIP_BARRIER
 #end_debug
          
-     ENDPROC HC_MULTIPLY_RPA
-#    -----------------------
+     ENDPROC HC_MULTIPLY_RPA_RL
+#    --------------------------
 
      PROC HC_MULTIPLY_CIS
 #    --------------------
 #  (A+B)(ai,bj)  R+_old(b,J)  = R+_new(a,i)
 #  (A-B)(ai,bj)  R-_old(b,J)  = R__new(a,i)
-
-#bgn_debug
-     if rank == 0.0
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     do mu
-     do nu
-        get R1A_AO_P_CURRENT_R(mu,nu)
-        get R1A_AO_M_CURRENT_L(mu,nu)
-        tmp   = R1A_AO_P_CURRENT_R(mu,nu) * R1A_AO_M_CURRENT_L(mu,nu)
-        sumap += tmp
-        tmp   = R1A_AO_M_CURRENT_L(mu,nu) * R1A_AO_M_CURRENT_L(mu,nu)
-        sumam += tmp
-     enddo nu
-     enddo mu
-     do mu
-     do nu
-        get R1B_AO_P_CURRENT_R(mu,nu)
-        get R1B_AO_M_CURRENT_L(mu,nu)
-        tmp = R1B_AO_P_CURRENT_R(mu,nu) * R1B_AO_P_CURRENT_r(mu,nu)
-        sumbp += tmp
-        tmp = R1B_AO_M_CURRENT_L(mu,nu) * R1B_AO_P_CURRENT_r(mu,nu)
-        sumbm += tmp
-     enddo nu
-     enddo mu
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     endif
-#end_debug
 
 #  All possible spin-combinations are included.
 
@@ -1223,37 +1197,37 @@
 
      EXECUTE SIP_BARRIER
 #bgn_debug
-     execute get_my_rank rank
-     if rank == 0.0
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     do mu
-     do nu
-        get HR1A_AO_P_CURRENT_R(mu,nu)
-        get HR1A_AO_M_CURRENT_L(mu,nu)
-        tmp   = HR1A_AO_P_CURRENT_R(mu,nu) * HR1A_AO_P_CURRENT_R(mu,nu)
-        sumap += tmp
-        tmp   = HR1A_AO_M_CURRENT_L(mu,nu) * HR1A_AO_M_CURRENT_L(mu,nu)
-        sumam += tmp
-     enddo nu
-     enddo mu
-     do mu
-     do nu
-        get HR1B_AO_P_CURRENT_R(mu,nu)
-        get HR1B_AO_M_CURRENT_L(mu,nu)
-        tmp = HR1B_AO_P_CURRENT_R(mu,nu) * HR1B_AO_P_CURRENT_R(mu,nu)
-        sumbp += tmp
-        tmp = HR1B_AO_M_CURRENT_L(mu,nu) * HR1B_AO_M_CURRENT_L(mu,nu)
-        sumbm += tmp
-     enddo nu
-     enddo mu
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     endif
+#     execute get_my_rank rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do mu
+#     do nu
+#        get HR1A_AO_P_CURRENT_R(mu,nu)
+#        get HR1A_AO_M_CURRENT_L(mu,nu)
+#        tmp   = HR1A_AO_P_CURRENT_R(mu,nu) * HR1A_AO_P_CURRENT_R(mu,nu)
+#        sumap += tmp
+#        tmp   = HR1A_AO_M_CURRENT_L(mu,nu) * HR1A_AO_M_CURRENT_L(mu,nu)
+#        sumam += tmp
+#     enddo nu
+#     enddo mu
+#     do mu
+#     do nu
+#        get HR1B_AO_P_CURRENT_R(mu,nu)
+#        get HR1B_AO_M_CURRENT_L(mu,nu)
+#        tmp = HR1B_AO_P_CURRENT_R(mu,nu) * HR1B_AO_P_CURRENT_R(mu,nu)
+#        sumbp += tmp
+#        tmp = HR1B_AO_M_CURRENT_L(mu,nu) * HR1B_AO_M_CURRENT_L(mu,nu)
+#        sumbm += tmp
+#     enddo nu
+#     enddo mu
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
 #end_debug
          
      ENDPROC HC_MULTIPLY_CIS
@@ -1319,47 +1293,47 @@
      EXECUTE SIP_BARRIER 
    
 #bgn_debug
-     execute get_my_rank rank
-     execute print_scalar rank
-     if rank == 0.0
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     do a
-     do i
-        get HR1A_MO_P_CURRENT_R(A,I)
-        get HR1A_MO_M_CURRENT_L(A,I)
-
-        tmp   = HR1A_MO_P_CURRENT_R(A,I) * HR1A_MO_P_CURRENT_R(A,I)
-        sumap += tmp
-        tmp   = HR1A_MO_M_CURRENT_L(A,I) * HR1A_MO_M_CURRENT_L(A,I)
-        sumam += tmp
-     enddo i
-     enddo a
-     do b
-     do j
-      
-        get HR1B_MO_P_CURRENT_R(B,J)
-        get HR1B_MO_M_CURRENT_L(B,J)
-        tmp = HR1B_MO_P_CURRENT_R(B,J) * HR1B_MO_P_CURRENT_R(B,J)
-        sumbp += tmp
-        tmp = HR1B_MO_M_CURRENT_L(B,J) * HR1B_MO_M_CURRENT_L(B,J)
-        sumbm += tmp
-     enddo j
-     enddo b
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     endif
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get HR1A_MO_P_CURRENT_R(A,I)
+#        get HR1A_MO_M_CURRENT_L(A,I)
+#
+#        tmp   = HR1A_MO_P_CURRENT_R(A,I) * HR1A_MO_P_CURRENT_R(A,I)
+#        sumap += tmp
+#        tmp   = HR1A_MO_M_CURRENT_L(A,I) * HR1A_MO_M_CURRENT_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#      
+#        get HR1B_MO_P_CURRENT_R(B,J)
+#        get HR1B_MO_M_CURRENT_L(B,J)
+#        tmp = HR1B_MO_P_CURRENT_R(B,J) * HR1B_MO_P_CURRENT_R(B,J)
+#        sumbp += tmp
+#        tmp = HR1B_MO_M_CURRENT_L(B,J) * HR1B_MO_M_CURRENT_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
 #end_debug
 
      ENDPROC FORM_MO_R1AB
 #    --------------------
 
-     PROC DIRECT_AO_HC_MULT
-#    ----------------------
+     PROC DIRECT_AO_HC_MULT_RL
+#    -------------------------
 
      PARDO A, I
 
@@ -1404,15 +1378,15 @@
      IF DO_CIS == ONE
         CALL HC_MULTIPLY_CIS
      ELSE 
-        CALL HC_MULTIPLY_RPA
+        CALL HC_MULTIPLY_RPA_RL
      ENDIF 
 
      CALL FORM_FOCK_CONTRIBUTION
 
      CALL FORM_MO_R1AB
 
-     ENDPROC DIRECT_AO_HC_MULT
-#    ----------------------
+     ENDPROC DIRECT_AO_HC_MULT_RL
+#    ---------------------------
 
      PROC SAVE_HC_VECTORS
 #    --------------------
@@ -1455,48 +1429,46 @@
      EXECUTE SIP_BARRIER
 
 #bgn_debug
-     execute get_my_rank rank
-     execute print_scalar rank
-     if rank == 0.0
-     ncount = 0.0
-     do mindex20
-     ncount += 1.0
-     if ncount > iter_count
-        exit
-     endif
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     do a
-     do i
-        get HR1A_MO_P_HIST_R(A,I,MINDEX20)
-        get HR1A_MO_M_HIST_L(A,I,MINDEX20)
-        tmp   = HR1A_MO_P_HIST_R(A,I,MINDEX20) * HR1A_MO_P_HIST_R(A,I,MINDEX20)
-        sumap += tmp
-        tmp   = HR1A_MO_M_HIST_L(A,I,MINDEX20) * HR1A_MO_M_HIST_L(A,I,MINDEX20)
-        sumam += tmp
-     enddo i
-     enddo a
-     do b
-     do j
-        get HR1B_MO_P_HIST_R(B,J,MINDEX20)
-        get HR1B_MO_M_HIST_L(B,J,MINDEX20)
-        tmp = HR1B_MO_P_HIST_R(B,J,MINDEX20) * HR1B_MO_P_HIST_R(B,J,MINDEX20)
-        sumbp += tmp
-        tmp = HR1B_MO_M_HIST_L(B,J,MINDEX20) * HR1B_MO_M_HIST_L(B,J,MINDEX20)
-        sumbm += tmp
-     enddo j
-     enddo b
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     enddo mindex20
-     endif
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     ncount = 0.0
+#     do mindex20
+#     ncount += 1.0
+#     if ncount > iter_count
+#        exit
+#     endif
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get HR1A_MO_P_HIST_R(A,I,MINDEX20)
+#        get HR1A_MO_M_HIST_L(A,I,MINDEX20)
+#        tmp   = HR1A_MO_P_HIST_R(A,I,MINDEX20) * HR1A_MO_P_HIST_R(A,I,MINDEX20)
+#        sumap += tmp
+#        tmp   = HR1A_MO_M_HIST_L(A,I,MINDEX20) * HR1A_MO_M_HIST_L(A,I,MINDEX20)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get HR1B_MO_P_HIST_R(B,J,MINDEX20)
+#        get HR1B_MO_M_HIST_L(B,J,MINDEX20)
+#        tmp = HR1B_MO_P_HIST_R(B,J,MINDEX20) * HR1B_MO_P_HIST_R(B,J,MINDEX20)
+#        sumbp += tmp
+#        tmp = HR1B_MO_M_HIST_L(B,J,MINDEX20) * HR1B_MO_M_HIST_L(B,J,MINDEX20)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     enddo mindex20
+#     endif
 #end_debug
-
-
     ENDPROC SAVE_HC_VECTORS
 #   -----------------------
 
@@ -1583,8 +1555,8 @@
         SUMM  = HC_A_M
         SUMM += HC_B_M
 #bgn_debug
-     execute print_scalar sump
-     execute print_scalar summ
+#     execute print_scalar sump
+#     execute print_scalar summ
 #end_debug
 
         MCOUNT = 0.0
@@ -1620,6 +1592,7 @@
       ELSE 
           TMP  = SUMP
           TMP *= SUMM
+          EXECUTE SQUARE_ROOT TMP HALF 
           A_VALUE_P = TMP
           A_VALUE_M = TMP
       ENDIF 
@@ -1708,12 +1681,7 @@
                  SUMP += HC_B_P
                  SUMM  = HC_A_M
                  SUMM += HC_B_M
-#bgn_debug
-     execute print_scalar ncount
-     execute print_scalar mcount
-     execute print_scalar sump
-     execute print_scalar summ
-#end_debug
+
                  KCOUNT = ZERO
                  DO KINDEX20
                    KCOUNT += ONE
@@ -1827,10 +1795,10 @@
            SUMM  = HC_A_M
            SUMM += HC_B_M
 #bgn_debug
-         execute print_scalar ncount 
-         execute print_scalar mcount 
-         execute print_scalar SUMP
-         execute print_scalar SUMM
+#         execute print_scalar ncount 
+#         execute print_scalar mcount 
+#         execute print_scalar SUMP
+#         execute print_scalar SUMM
 #end_debug
 
            KCOUNT = ZERO
@@ -1943,10 +1911,10 @@
            SUMM  = HC_A_M
            SUMM += HC_B_M
 #bgn_debug
-         execute print_scalar ncount
-         execute print_scalar mcount
-         execute print_scalar SUMP
-         execute print_scalar SUMM
+#         execute print_scalar ncount
+#         execute print_scalar mcount
+#         execute print_scalar SUMP
+#         execute print_scalar SUMM
 #end_debug
 
            KCOUNT = ZERO
@@ -2029,39 +1997,68 @@
 
         RIGHT = ONE 
         LEFT  = ZERO 
-        EXECUTE SET_ACES3_VARS LEFT RIGHT 
+        EXECUTE SET_ACES3_VARS RIGHT LEFT
         EXECUTE XGEEV  B_A_MATRIX_P  EIG_VECS_P_R
 
         RIGHT = ZERO 
-        LEFT  = ONE
+        LEFT  = TWO 
         EXECUTE SET_ACES3_VARS LEFT RIGHT 
         EXECUTE XGEEV  B_A_MATRIX_M  EIG_VECS_M_L
 
      ELSE
-        EXECUTE FORM_RPA_SMALL_MATRIX B_A_MATRIX_M B_A_MATRIX_P
 
-# It seems like SIPs can return data only from the second argument.
-# Therefore I am forced to copy here something I could have done easily in
-# the SI. The A-matrix A=(A_M)^(1/2)A_P(A_M)^1/2. 
+# Save a copy of the two small matrices; This is a lots work to 
+# do a simple thing; time wise these cost nothing.
 
         DO MINDEX20
            DO NINDEX20
-              B_A_MATRIX_M(MINDEX20,NINDEX20) =  B_A_MATRIX_P(MINDEX20,NINDEX20)
+              B_A_MATRIX_P_KEEP(MINDEX20,NINDEX20) =  B_A_MATRIX_P(MINDEX20,NINDEX20)
+           ENDDO NINDEX20
+        ENDDO MINDEX20
+
+        DO MINDEX20
+           DO NINDEX20
+              B_A_MATRIX_M_KEEP(MINDEX20,NINDEX20) =  B_A_MATRIX_M(MINDEX20,NINDEX20)
            ENDDO NINDEX20
         ENDDO MINDEX20
 
         RIGHT = ONE 
         LEFT  = ZERO 
-        EXECUTE SET_ACES3_VARS LEFT RIGHT 
-        EXECUTE XGEEV  B_A_MATRIX_P  EIG_VECS_P_R
+        EXECUTE SET_ACES3_VARS RIGHT LEFT
+        EXECUTE FORM_RPA_SMALL_MATRIX B_A_MATRIX_M B_A_MATRIX_P
+
+        DO MINDEX20
+           DO NINDEX20
+              EIG_VECS_P_R(MINDEX20,NINDEX20) =  B_A_MATRIX_P(MINDEX20,NINDEX20)
+           ENDDO NINDEX20
+        ENDDO MINDEX20
+
+        DO MINDEX20
+           DO NINDEX20
+              B_A_MATRIX_P(MINDEX20,NINDEX20) =  B_A_MATRIX_M(MINDEX20,NINDEX20)
+           ENDDO NINDEX20
+        ENDDO MINDEX20
 
         RIGHT = ZERO 
-        LEFT  = ONE
+        LEFT  = TWO 
         EXECUTE SET_ACES3_VARS LEFT RIGHT 
-        EXECUTE XGEEV  B_A_MATRIX_M  EIG_VECS_M_L
+        EXECUTE FORM_RPA_SMALL_MATRIX B_A_MATRIX_M_KEEP B_A_MATRIX_P_KEEP
+
+        DO MINDEX20
+           DO NINDEX20
+              EIG_VECS_M_L(MINDEX20,NINDEX20) =  B_A_MATRIX_P_KEEP(MINDEX20,NINDEX20)
+           ENDDO NINDEX20
+        ENDDO MINDEX20
+
+        DO MINDEX20
+           DO NINDEX20
+              B_A_MATRIX_M(MINDEX20,NINDEX20) =  B_A_MATRIX_M_KEEP(MINDEX20,NINDEX20)
+           ENDDO NINDEX20
+        ENDDO MINDEX20
+
 #bgn_debug
-      execute print_static EIG_VECS_P_R  ITER_COUNT
-      execute print_static EIG_VECS_M_L  ITER_COUNT
+#      execute print_static EIG_VECS_P_R  ITER_COUNT
+#      execute print_static EIG_VECS_M_L  ITER_COUNT
 #end_debug
      ENDIF 
 
@@ -2159,44 +2156,44 @@
        EXECUTE SIP_BARRIER 
 
 #bgn_debug
-     if rank == 0.0
-     ncount = 0.0
-     do mindex20
-     ncount += 1.0
-     if ncount > iter_count
-        exit
-     endif
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     do a
-     do i
-        get Y1P_A_R(A,I,MINDEX20)
-        get Y1M_A_L(A,I,MINDEX20)
-        tmp   = Y1P_A_R(A,I,MINDEX20) * Y1P_A_R(A,I,MINDEX20)
-        sumap += tmp
-        tmp   = Y1M_A_L(A,I,MINDEX20) * Y1M_A_L(A,I,MINDEX20)
-        sumam += tmp
-     enddo i
-     enddo a
-     do b
-     do j
-        get Y1P_B_R(B,J,MINDEX20) 
-        get Y1M_B_L(B,J,MINDEX20)
-        tmp = Y1P_B_R(B,J,MINDEX20) * Y1P_B_R(B,J,MINDEX20)
-        sumbp += tmp
-        tmp = Y1M_B_L(B,J,MINDEX20) * Y1M_B_L(B,J,MINDEX20)
-        sumbm += tmp
-     enddo j
-     enddo b
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     enddo mindex20
-     endif
-
+#     if rank == 0.0
+#     ncount = 0.0
+#     do mindex20
+#     ncount += 1.0
+#     if ncount > iter_count
+#        exit
+#     endif
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get Y1P_A_R(A,I,MINDEX20)
+#        get Y1M_A_L(A,I,MINDEX20)
+#        tmp   = Y1P_A_R(A,I,MINDEX20) * Y1P_A_R(A,I,MINDEX20)
+#        sumap += tmp
+#        tmp   = Y1M_A_L(A,I,MINDEX20) * Y1M_A_L(A,I,MINDEX20)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get Y1P_B_R(B,J,MINDEX20) 
+#        get Y1M_B_L(B,J,MINDEX20)
+#        tmp = Y1P_B_R(B,J,MINDEX20) * Y1P_B_R(B,J,MINDEX20)
+#        sumbp += tmp
+#        tmp = Y1M_B_L(B,J,MINDEX20) * Y1M_B_L(B,J,MINDEX20)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     enddo mindex20
+#     endif
+#
 #end_debug
 
 
@@ -2286,50 +2283,50 @@
        execute sip_barrier
 
 #bgn_debug
-     execute get_my_rank rank
-     execute print_scalar rank
-     if rank == 0.0
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     ncount = 0.0
-     do a
-     do i
-        do nindex20 
-        ncount += 1.0
-        if ncount == iter_count 
-        get HY1P_A_R(A,I,nindex20)
-        get HY1M_A_L(A,I,nindex20)
-        tmp   = HY1P_A_R(A,I,nindex20) * HY1P_A_R(A,I,nindex20)
-        sumap += tmp
-        tmp   = HY1M_A_L(A,I,nindex20) * HY1M_A_L(A,I,nindex20)
-        sumam += tmp
-        endif 
-        enddo nindex20
-     enddo i
-     enddo a
-     ncount=0.0
-     do b
-     do j
-        do nindex20
-        ncount += 1.0
-        if ncount == iter_count
-        get HY1P_B_R(B,J,nindex20)
-        get HY1M_B_L(B,J,nindex20)
-        tmp = HY1P_B_R(B,J,nindex20) * HY1P_B_R(B,J,nindex20)
-        sumbp += tmp
-        tmp = HY1M_B_L(B,J,nindex20) * HY1M_B_L(B,J,nindex20)
-        sumbm += tmp
-        endif 
-        enddo nindex20
-     enddo j
-     enddo b
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     endif
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     ncount = 0.0
+#     do a
+#     do i
+#        do nindex20 
+#        ncount += 1.0
+#        if ncount == iter_count 
+#        get HY1P_A_R(A,I,nindex20)
+#        get HY1M_A_L(A,I,nindex20)
+#        tmp   = HY1P_A_R(A,I,nindex20) * HY1P_A_R(A,I,nindex20)
+#        sumap += tmp
+#        tmp   = HY1M_A_L(A,I,nindex20) * HY1M_A_L(A,I,nindex20)
+#        sumam += tmp
+#        endif 
+#        enddo nindex20
+#     enddo i
+#     enddo a
+#     ncount=0.0
+#     do b
+#     do j
+#        do nindex20
+#        ncount += 1.0
+#        if ncount == iter_count
+#        get HY1P_B_R(B,J,nindex20)
+#        get HY1M_B_L(B,J,nindex20)
+#        tmp = HY1P_B_R(B,J,nindex20) * HY1P_B_R(B,J,nindex20)
+#        sumbp += tmp
+#        tmp = HY1M_B_L(B,J,nindex20) * HY1M_B_L(B,J,nindex20)
+#        sumbm += tmp
+#        endif 
+#        enddo nindex20
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
 #end_debug
 
      ENDPROC FORM_NEW_HBAR_Y_VECTORS 
@@ -2486,7 +2483,7 @@
 
      ENDIF 
 
-     execute sip_barrier 
+     EXECUTE SIP_BARRIER 
 #
 # This SIPs returns the index corresponding to the maximum value 
 # in the first static array. The return scalar gives the pointer
@@ -2559,36 +2556,36 @@
 
      ENDDO MINDEX20
 
-     execute sip_barrier 
+     EXECUTE SIP_BARRIER 
 
 #bgn_debug
-     execute get_my_rank rank
-     if rank == 0.0
-     do a
-     do i
-        get HR1A_MO_P_PICKED_R(A,I)
-        get HR1A_MO_M_PICKED_L(A,I)
-        tmp   = HR1A_MO_P_PICKED_R(A,I) * HR1A_MO_P_PICKED_R(A,I)
-        sumap += tmp
-        tmp   = HR1A_MO_M_PICKED_L(A,I) * HR1A_MO_M_PICKED_L(A,I)
-        sumam += tmp
-     enddo i
-     enddo a
-     do b
-     do j
-        get HR1B_MO_P_PICKED_R(B,J)
-        get HR1B_MO_M_PICKED_L(B,J)
-        tmp = HR1B_MO_P_PICKED_R(B,J) * HR1B_MO_P_PICKED_R(B,J)
-        sumbp += tmp
-        tmp = HR1B_MO_M_PICKED_L(B,J) * HR1B_MO_M_PICKED_L(B,J)
-        sumbm += tmp
-     enddo j
-     enddo b
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     endif
+#    execute get_my_rank rank
+#     if rank == 0.0
+#     do a
+#     do i
+#        get HR1A_MO_P_PICKED_R(A,I)
+#        get HR1A_MO_M_PICKED_L(A,I)
+#        tmp   = HR1A_MO_P_PICKED_R(A,I) * HR1A_MO_P_PICKED_R(A,I)
+#        sumap += tmp
+#        tmp   = HR1A_MO_M_PICKED_L(A,I) * HR1A_MO_M_PICKED_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get HR1B_MO_P_PICKED_R(B,J)
+#        get HR1B_MO_M_PICKED_L(B,J)
+#        tmp = HR1B_MO_P_PICKED_R(B,J) * HR1B_MO_P_PICKED_R(B,J)
+#        sumbp += tmp
+#        tmp = HR1B_MO_M_PICKED_L(B,J) * HR1B_MO_M_PICKED_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
 #end_debug
 
      ENDPROC SELECT_HBAR_Y_VECTOR_TOGO
@@ -2732,8 +2729,8 @@
               OVLPAB_M_L  = OVLPA_M_L
               OVLPAB_M_L += OVLPB_M_L
 #bgn_debug
-     execute print_scalar OVLPAB_P_R
-     execute print_scalar OVLPAB_M_L
+#     execute print_scalar OVLPAB_P_R
+#     execute print_scalar OVLPAB_M_L
 #end_debug
 
               KCOUNT = ZERO
@@ -2764,8 +2761,8 @@
      EXECUTE RETURN_MAX_OVERLAP OVLPAB_HISTORY_P_R OVLPAB_P_MAX_R
      EXECUTE RETURN_MAX_OVERLAP OVLPAB_HISTORY_M_L OVLPAB_M_MAX_L
 #bgn_debug
-     execute print_scalar OVLPAB_P_MAX_R
-     execute print_scalar OVLPAB_M_MAX_L
+#     execute print_scalar OVLPAB_P_MAX_R
+#     execute print_scalar OVLPAB_M_MAX_L
 #end_debug
 #
 # Get vectors corresponding to the maximum overlap and put them
@@ -2835,33 +2832,33 @@
      EXECUTE SIP_BARRIER 
 
 #bgn_debug
-     execute get_my_rank rank
-     if rank == 0.0
-     do a
-     do i
-        get R1A_MO_P_PICKED_R(A,I)
-        get R1A_MO_M_PICKED_L(A,I)
-        tmp   = R1A_MO_P_PICKED_R(A,I) * R1A_MO_P_PICKED_R(A,I)
-        sumap += tmp
-        tmp   = R1A_MO_M_PICKED_L(A,I) * R1A_MO_M_PICKED_L(A,I)
-        sumam += tmp
-     enddo i
-     enddo a
-     do b
-     do j
-        get R1B_MO_P_PICKED_R(B,J)
-        get R1B_MO_M_PICKED_L(B,J)
-        tmp = R1B_MO_P_PICKED_R(B,J) * R1B_MO_P_PICKED_R(B,J)
-        sumbp += tmp
-        tmp = R1B_MO_M_PICKED_L(B,J) * R1B_MO_M_PICKED_L(B,J)
-        sumbm += tmp
-     enddo j
-     enddo b
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     endif
+#     execute get_my_rank rank
+#     if rank == 0.0
+#     do a
+#     do i
+#        get R1A_MO_P_PICKED_R(A,I)
+#        get R1A_MO_M_PICKED_L(A,I)
+#        tmp   = R1A_MO_P_PICKED_R(A,I) * R1A_MO_P_PICKED_R(A,I)
+#        sumap += tmp
+#        tmp   = R1A_MO_M_PICKED_L(A,I) * R1A_MO_M_PICKED_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get R1B_MO_P_PICKED_R(B,J)
+#        get R1B_MO_M_PICKED_L(B,J)
+#        tmp = R1B_MO_P_PICKED_R(B,J) * R1B_MO_P_PICKED_R(B,J)
+#        sumbp += tmp
+#        tmp = R1B_MO_M_PICKED_L(B,J) * R1B_MO_M_PICKED_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
 #end_debug
 
      ENDPROC SELECT_VECTOR_TOGO
@@ -2894,7 +2891,7 @@
 
      EXECUTE SIP_BARRIER 
 
-     CALL DIRECT_AO_HC_MULT 
+     CALL DIRECT_AO_HC_MULT_RL
 
     PARDO A, I
          GET HR1A_MO_P_CURRENT_R(A,I)
@@ -2988,7 +2985,7 @@
      ELSE
          EXECUTE RETURN_SELECTED AB_DIAGS_P  OVLPAB_P_MAX_R
          EXECUTE RETURN_SELECTED AB_DIAGS_M  OVLPAB_M_MAX_L
-         IF DO_CIS == ONE
+         IF DO_CIS == ZERO 
             EXECUTE SQUARE_ROOT OVLPAB_P_MAX_R HALF 
             EXECUTE SQUARE_ROOT OVLPAB_M_MAX_L HALF 
          ENDIF 
@@ -2997,8 +2994,8 @@
      ENDIF 
 
 #bgn_debug
-      execute print_scalar IMAX_P
-      execute print_scalar IMAX_M
+#      execute print_scalar IMAX_P
+#      execute print_scalar IMAX_M
 #end_debug
 
       OMEGA_P   = IMAX_P
@@ -3024,7 +3021,7 @@
 
           T1AIP_R(A,I) = HR1A_MO_P_PICKED_R(A,I)
           T1AIM_L(A,I) = HR1A_MO_M_PICKED_L(A,I)
- 
+
           IF DO_CIS == ONE
              T1AIP_R(A,I) += TAIP_R(A,I)
              T1AIM_L(A,I) += TAIM_L(A,I)
@@ -3037,8 +3034,8 @@
              PUT RESIDUEA_P_VEC_R(A,I) = T1AIP_R(A,I) 
              PUT RESIDUEA_M_VEC_L(A,I) = T1AIM_L(A,I) 
           ELSE 
-             PUT RESIDUEA_P_VEC_R(A,I) = T1AIM_L(A,I) 
-             PUT RESIDUEA_M_VEC_L(A,I) = T1AIP_R(A,I) 
+             PUT RESIDUEA_P_VEC_R(A,I) = T1AIP_R(A,I) 
+             PUT RESIDUEA_M_VEC_L(A,I) = T1AIM_L(A,I) 
           ENDIF 
 
        ENDPARDO A, I
@@ -3072,8 +3069,8 @@
                 PUT RESIDUEB_P_VEC_R(B,J) = T1BJP_R(B,J)
                 PUT RESIDUEB_M_VEC_L(B,J) = T1BJM_L(B,J)
              ELSE
-                PUT RESIDUEB_P_VEC_R(B,J) = T1BJM_L(B,J)
-                PUT RESIDUEB_M_VEC_L(B,J) = T1BJP_R(B,J)
+                PUT RESIDUEB_P_VEC_R(B,J) = T1BJP_R(B,J)
+                PUT RESIDUEB_M_VEC_L(B,J) = T1BJM_L(B,J)
              ENDIF 
 
        ENDPARDO B, J
@@ -3081,41 +3078,40 @@
        EXECUTE SIP_BARRIER 
 
 #bgn_debug
-     execute get_my_rank rank
-     execute print_scalar rank
-     if rank == 0.0
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     do a
-     do i
-        get RESIDUEA_P_VEC_R(A,I)
-        get RESIDUEA_M_VEC_L(A,I)
-        T1AIM_L(A,I) =  RESIDUEA_M_VEC_L(A,I)
-        tmp   = RESIDUEA_P_VEC_R(A,I) * RESIDUEA_P_VEC_R(A,I)
-        sumap += tmp
-        tmp   = RESIDUEA_M_VEC_L(A,I) *  RESIDUEA_M_VEC_L(A,I)
-        sumam += tmp
-     enddo i
-     enddo a
-     do b
-     do j
-        get RESIDUEB_P_VEC_R(B,J)
-        get RESIDUEB_M_VEC_L(B,J)
-        tmp = RESIDUEB_P_VEC_R(B,J) *  RESIDUEB_P_VEC_R(B,J)
-        sumbp += tmp
-        tmp = RESIDUEB_M_VEC_L(B,J) *  RESIDUEB_M_VEC_L(B,J)
-        sumbm += tmp
-     enddo j
-     enddo b
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     endif
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get RESIDUEA_P_VEC_R(A,I)
+#        get RESIDUEA_M_VEC_L(A,I)
+#        T1AIM_L(A,I) =  RESIDUEA_M_VEC_L(A,I)
+#        tmp   = RESIDUEA_P_VEC_R(A,I) * RESIDUEA_P_VEC_R(A,I)
+#        sumap += tmp
+#        tmp   = RESIDUEA_M_VEC_L(A,I) *  RESIDUEA_M_VEC_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get RESIDUEB_P_VEC_R(B,J)
+#        get RESIDUEB_M_VEC_L(B,J)
+#        tmp = RESIDUEB_P_VEC_R(B,J) *  RESIDUEB_P_VEC_R(B,J)
+#        sumbp += tmp
+#        tmp = RESIDUEB_M_VEC_L(B,J) *  RESIDUEB_M_VEC_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
 #end_debug
-
 
       ENDPROC FORM_RESIDUAL_VECTOR
 #     ----------------------------
@@ -3191,38 +3187,38 @@
 
        execute sip_barrier
 #bgn_debug
-     execute get_my_rank rank
-     execute print_scalar rank
-     if rank == 0.0
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     do a
-     do i
-        get CORR_VECA_INTMD_P_R(A,I)
-        get CORR_VECA_INTMD_M_L(A,I)
-        tmp   = CORR_VECA_INTMD_P_R(A,I) * CORR_VECA_INTMD_P_R(A,I)
-        sumap += tmp
-        tmp   = CORR_VECA_INTMD_M_L(A,I) * CORR_VECA_INTMD_M_L(A,I)
-        sumam += tmp
-     enddo i
-     enddo a
-     do b
-     do j
-        get CORR_VECB_INTMD_P_R(B,J)
-        get CORR_VECB_INTMD_M_L(B,J)
-        tmp = CORR_VECB_INTMD_P_R(B,J) *  CORR_VECB_INTMD_P_R(B,J)
-        sumbp += tmp
-        tmp = CORR_VECB_INTMD_M_L(B,J) *  CORR_VECB_INTMD_M_L(B,J)
-        sumbm += tmp
-     enddo j
-     enddo b
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     endif
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get CORR_VECA_INTMD_P_R(A,I)
+#        get CORR_VECA_INTMD_M_L(A,I)
+#        tmp   = CORR_VECA_INTMD_P_R(A,I) * CORR_VECA_INTMD_P_R(A,I)
+#        sumap += tmp
+#        tmp   = CORR_VECA_INTMD_M_L(A,I) * CORR_VECA_INTMD_M_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get CORR_VECB_INTMD_P_R(B,J)
+#        get CORR_VECB_INTMD_M_L(B,J)
+#        tmp = CORR_VECB_INTMD_P_R(B,J) *  CORR_VECB_INTMD_P_R(B,J)
+#        sumbp += tmp
+#        tmp = CORR_VECB_INTMD_M_L(B,J) *  CORR_VECB_INTMD_M_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
 #end_debug
 
 
@@ -3383,65 +3379,64 @@
        EXECUTE SIP_BARRIER 
 
 #bgn_debug
-     execute get_my_rank rank
-     execute print_scalar rank
-     if rank == 0.0
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     ncount = zero
-     do mindex20
-     ncount += one
-     if ncount > iter_count 
-        exit
-     endif
-     sumap = 0.0
-     sumam = 0.0
-     do a
-     do i
-        Get R1A_MO_P_INTMD_R(A,I)
-        get R1A_MO_M_INTMD_L(A,I)
-        get R1A_MO_P_HIST_R(A,I,MINDEX20)
-        get R1A_MO_M_HIST_L(A,I,MINDEX20)
-        tap_r(a,i)=R1a_MO_P_HIST_R(A,I,MINDEX20)
-        tam_l(a,i)=R1a_MO_M_HIST_L(A,I,MINDEX20)
-        tmp   = R1A_MO_P_INTMD_R(A,I) * tam_l(a,i)
-        sumap += tmp
-        tmp   = R1A_MO_M_INTMD_L(A,I) * tap_r(a,i)
-        sumam += tmp
-     enddo i
-     enddo a
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     enddo mindex20
-     ncount=zero
-     do mindex20
-     ncount += one
-     if ncount > iter_count 
-        exit
-     endif
-     sumbp = 0.0
-     sumbm = 0.0
-     do b
-     do j
-        get R1B_MO_P_INTMD_R(B,J)
-        get R1B_MO_M_INTMD_L(B,J)
-        get R1B_MO_P_HIST_R(B,J,MINDEX20)
-        get R1B_MO_M_HIST_L(B,J,MINDEX20)
-        tbp_r(b,j)= R1B_MO_P_HIST_R(B,J,MINDEX20)
-        tbm_l(b,j)= R1B_MO_M_HIST_L(B,J,MINDEX20)
-        tmp = R1B_MO_P_INTMD_R(B,J) * tbm_l(b,j)
-        sumbp += tmp
-        tmp = R1B_MO_M_INTMD_L(B,J) *  tbp_r(b,j)
-        sumbm += tmp
-     enddo j
-     enddo b
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     enddo mindex20
-     endif
-#end_debug
+#     execute get_my_rank rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     ncount = zero
+#     do mindex20
+#     ncount += one
+#     if ncount > iter_count 
+#        exit
+#     endif
+#     sumap = 0.0
+#     sumam = 0.0
+#     do a
+#     do i
+#        Get R1A_MO_P_INTMD_R(A,I)
+#        get R1A_MO_M_INTMD_L(A,I)
+#        get R1A_MO_P_HIST_R(A,I,MINDEX20)
+#        get R1A_MO_M_HIST_L(A,I,MINDEX20)
+#        tap_r(a,i)=R1a_MO_P_HIST_R(A,I,MINDEX20)
+#        tam_l(a,i)=R1a_MO_M_HIST_L(A,I,MINDEX20)
+#        tmp   = R1A_MO_P_INTMD_R(A,I) * tam_l(a,i)
+#        sumap += tmp
+#        tmp   = R1A_MO_M_INTMD_L(A,I) * tap_r(a,i)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     enddo mindex20
+#     ncount=zero
+#     do mindex20
+#     ncount += one
+#     if ncount > iter_count 
+#        exit
+#     endif
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do b
+#     do j
+#        get R1B_MO_P_INTMD_R(B,J)
+#        get R1B_MO_M_INTMD_L(B,J)
+#        get R1B_MO_P_HIST_R(B,J,MINDEX20)
+#        get R1B_MO_M_HIST_L(B,J,MINDEX20)
+#        tbp_r(b,j)= R1B_MO_P_HIST_R(B,J,MINDEX20)
+#        tbm_l(b,j)= R1B_MO_M_HIST_L(B,J,MINDEX20)
+#        tmp = R1B_MO_P_INTMD_R(B,J) * tbm_l(b,j)
+#        sumbp += tmp
+#        tmp = R1B_MO_M_INTMD_L(B,J) *  tbp_r(b,j)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     enddo mindex20
+#     endif
+##end_debug
        ENDPROC FORM_BIORTHOGANAL_VECS
 #      ------------------------------
 
@@ -3602,38 +3597,38 @@
        EXECUTE SIP_BARRIER 
 
 #bgn_debug
-     execute get_my_rank rank
-     execute print_scalar rank
-     if rank == 0.0
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     do a
-     do i
-        Get R1A_MO_P_INTMD_R(A,I)
-        get R1A_MO_M_INTMD_L(A,I)
-        tmp   = R1A_MO_P_INTMD_R(A,I) * R1A_MO_P_INTMD_R(A,I)
-        sumap += tmp
-        tmp   = R1A_MO_M_INTMD_L(A,I) * R1A_MO_M_INTMD_L(A,I)
-        sumam += tmp
-     enddo i
-     enddo a
-     do b
-     do j
-        get R1B_MO_P_INTMD_R(B,J)
-        get R1B_MO_M_INTMD_L(B,J)
-        tmp = R1B_MO_P_INTMD_R(B,J) * R1B_MO_P_INTMD_R(B,J)
-        sumbp += tmp
-        tmp = R1B_MO_M_INTMD_L(B,J) * R1B_MO_M_INTMD_L(B,J) 
-        sumbm += tmp
-     enddo j
-     enddo b
-     execute print_scalar  sumap
-     execute print_scalar  sumam
-     execute print_scalar  sumbp
-     execute print_scalar  sumbm
-     endif
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        Get R1A_MO_P_INTMD_R(A,I)
+#        get R1A_MO_M_INTMD_L(A,I)
+#        tmp   = R1A_MO_P_INTMD_R(A,I) * R1A_MO_P_INTMD_R(A,I)
+#        sumap += tmp
+#        tmp   = R1A_MO_M_INTMD_L(A,I) * R1A_MO_M_INTMD_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get R1B_MO_P_INTMD_R(B,J)
+#        get R1B_MO_M_INTMD_L(B,J)
+#        tmp = R1B_MO_P_INTMD_R(B,J) * R1B_MO_P_INTMD_R(B,J)
+#        sumbp += tmp
+#        tmp = R1B_MO_M_INTMD_L(B,J) * R1B_MO_M_INTMD_L(B,J) 
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
 #end_debug
        ENDPROC FORM_BIORTHOGANAL_VECS_OLD
 #      ----------------------------------
@@ -3681,13 +3676,13 @@
      NORMA_P_R += NORMA_P_R_B 
 
 #bgn_debug
-     execute print_scalar NORMA_P_R
+#     execute print_scalar NORMA_P_R
 #end_debug
 
      INV_NORM_PR = ONE/NORMA_P_R
 
 #bgn_debug
-     execute print_scalar INV_SQRT_NORM_PR
+#     execute print_scalar INV_SQRT_NORM_PR
 #end_debug
 
      PARDO A, I
@@ -3710,33 +3705,33 @@
 
      EXECUTE SIP_BARRIER 
 #bgn_debug
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     tmpap = 0
-     tmpam = 0
-     tmpbp = 0
-     tmpbm = 0
-     pardo a,i
-        GET R1A_MO_P_CURRENT_R(A,I)
-        GET R1A_MO_M_CURRENT_L(A,I)
-        tmp   = R1A_MO_P_CURRENT_R(A,I) * R1A_MO_M_CURRENT_L(A,I)
-        tmpap += tmp
-     endpardo a,i
-     pardo b,j
-        GET R1B_MO_P_CURRENT_R(B,J)
-        GET R1B_MO_M_CURRENT_L(B,J)
-        tmp   = R1B_MO_P_CURRENT_R(B,J) * R1B_MO_M_CURRENT_L(B,J)
-        tmpbp += tmp
-     endpardo b,j
-     execute sip_barrier 
-     collective sumap+=tmpap
-     collective sumbp+=tmpbp
-     if rank == 0.0
-     execute print_scalar  sumap
-     execute print_scalar  sumbp
-     endif
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     tmpap = 0
+#     tmpam = 0
+#     tmpbp = 0
+#     tmpbm = 0
+#     pardo a,i
+#        GET R1A_MO_P_CURRENT_R(A,I)
+#        GET R1A_MO_M_CURRENT_L(A,I)
+#        tmp   = R1A_MO_P_CURRENT_R(A,I) * R1A_MO_M_CURRENT_L(A,I)
+#        tmpap += tmp
+#     endpardo a,i
+#     pardo b,j
+#        GET R1B_MO_P_CURRENT_R(B,J)
+#        GET R1B_MO_M_CURRENT_L(B,J)
+#        tmp   = R1B_MO_P_CURRENT_R(B,J) * R1B_MO_M_CURRENT_L(B,J)
+#        tmpbp += tmp
+#     endpardo b,j
+#     execute sip_barrier 
+#     collective sumap+=tmpap
+#     collective sumbp+=tmpbp
+#     if rank == 0.0
+#     execute print_scalar  sumap
+#     execute print_scalar  sumbp
+#     endif
 #end_debug
 
      ENDPROC RESCALE_NEW_L
@@ -3760,7 +3755,7 @@
          TAIP_R(A,I) = R1A_MO_P_INTMD_R(A,I)
          TMP = TAIP_R(A,I) * TAIP_R(A,I)
          NORM_INTMD_P_R_A += TMP 
-         execute dump_amp TAIP_R(A,I)
+
      ENDPARDO A, I
 
      PARDO B, J
@@ -3781,7 +3776,7 @@
      NORMA_P_R += NORMA_P_R_B 
 
 #bgn_debug
-     execute print_scalar NORMA_P_R
+#     execute print_scalar NORMA_P_R
 #end_debug
 
      EXPONENT = HALF 
@@ -3789,7 +3784,7 @@
      INV_SQRT_NORM_PR = NORMA_P_R
 
 #bgn_debug
-     execute print_scalar INV_SQRT_NORM_PR
+#     execute print_scalar INV_SQRT_NORM_PR
 #end_debug
 
      PARDO A, I
@@ -3815,31 +3810,31 @@
      ENDPARDO B, J
      EXECUTE SIP_BARRIER 
 #bgn_debug
-     sumap = 0.0
-     sumam = 0.0
-     sumbp = 0.0
-     sumbm = 0.0
-     tmpap = 0
-     tmpam = 0
-     tmpbp = 0
-     tmpbm = 0
-     pardo a,i
-        GET R1A_MO_P_CURRENT_R(A,I)
-        tmp   = R1A_MO_P_CURRENT_R(A,I) * R1A_MO_P_CURRENT_R(A,I)
-        tmpap += tmp
-     endpardo a,i
-     pardo b,j
-        GET R1B_MO_P_CURRENT_R(B,J)
-        tmp   = R1B_MO_P_CURRENT_R(B,J) * R1B_MO_P_CURRENT_R(B,J)
-        tmpbp += tmp
-     endpardo b,j
-     execute sip_barrier 
-     collective sumap+=tmpap
-     collective sumbp+=tmpbp
-     if rank == 0.0
-     execute print_scalar  sumap
-     execute print_scalar  sumbp
-     endif
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     tmpap = 0
+#     tmpam = 0
+#     tmpbp = 0
+#     tmpbm = 0
+#     pardo a,i
+#        GET R1A_MO_P_CURRENT_R(A,I)
+#        tmp   = R1A_MO_P_CURRENT_R(A,I) * R1A_MO_P_CURRENT_R(A,I)
+#        tmpap += tmp
+#     endpardo a,i
+#     pardo b,j
+#        GET R1B_MO_P_CURRENT_R(B,J)
+#        tmp   = R1B_MO_P_CURRENT_R(B,J) * R1B_MO_P_CURRENT_R(B,J)
+#        tmpbp += tmp
+#     endpardo b,j
+#     execute sip_barrier 
+#     collective sumap+=tmpap
+#     collective sumbp+=tmpbp
+#     if rank == 0.0
+#     execute print_scalar  sumap
+#     execute print_scalar  sumbp
+#     endif
 #end_debug
 
      ENDPROC RESCALE_NEW_R
@@ -4447,8 +4442,8 @@
        RESIDUAL_NORM_M = NORMAB_M
 
 #bgn_debug
-       execute print_scalar RESIDUAL_NORM_P
-       execute print_scalar RESIDUAL_NORM_M
+#       execute print_scalar RESIDUAL_NORM_P
+#       execute print_scalar RESIDUAL_NORM_M
 #endif
 
         ENDPROC CHECK_CONVERGENCE_RPA
@@ -4472,7 +4467,6 @@
              GET RESIDUEA_P_VEC_R(A,I)
 
              TAP_R(A,I) = RESIDUEA_P_VEC_R(A,I)
-             TAM_L(A,I) = RESIDUEA_M_VEC_L(A,I)
 
              TMP = TAP_R(A,I) * TAP_R(A,I)
              NORM_INTMD_P_R_A += TMP
@@ -4484,7 +4478,6 @@
              GET RESIDUEB_P_VEC_R(B,J)
 
              TBP_R(B,J) = RESIDUEB_P_VEC_R(B,J)
-             TBM_L(B,J) = RESIDUEB_M_VEC_L(B,J)
 
              TMP = TBP_R(B,J) * TBP_R(B,J)
              NORM_INTMD_P_R_B += TMP
@@ -4503,7 +4496,7 @@
        RESIDUAL_NORM_P = NORMAB_P
 
 #bgn_debug
-       execute print_scalar RESIDUAL_NORM_P
+#       execute print_scalar RESIDUAL_NORM_P
 #endif 
 
         ENDPROC CHECK_CONVERGENCE_CIS
@@ -4541,7 +4534,7 @@
       EXECUTE  PRINT_SCALAR  RPA_MAXCYC
       EXECUTE  PRINT_SCALAR  RHF_UHF
       EXECUTE  PRINT_SCALAR  RPA_THRES
-      EXECUTE  PRINT_SCALAR  Do_CIS
+      EXECUTE  PRINT_SCALAR  DO_CIS
 #end_debug
 #  
        CALL CREATE_ARRAYS 
@@ -4600,8 +4593,8 @@
 
              CALL SAVE_C_VECTORS
 #bgn_debug
-             execute print_scalar nnn
-             call c_check
+#             execute print_scalar nnn
+#             call c_check
 #end_debug
 
 # The vector-matrix product in the following step  is really the time
@@ -4610,7 +4603,7 @@
 # Chemical Physics,61,385,1981 and J. Olsen and co-workers,
 # Chemical Physics,119,297,1988.
 
-             CALL DIRECT_AO_HC_MULT
+             CALL DIRECT_AO_HC_MULT_RL
 
              CALL SAVE_HC_VECTORS
 
@@ -4622,14 +4615,14 @@
 #
             CALL CONSTRUCT_A_MATRIX
 #bgn_debug
-            execute print_static B_A_MATRIX_P ITER_COUNT
-            execute print_static B_A_MATRIX_M ITER_COUNT
+#            execute print_static B_A_MATRIX_P ITER_COUNT
+#            execute print_static B_A_MATRIX_M ITER_COUNT
 #end_debug
 
             CALL DIAG_A_MATRIX
 #bgn_debug
-            execute print_static B_A_MATRIX_P ITER_COUNT
-            execute print_static B_A_MATRIX_M ITER_COUNT
+#            execute print_static B_A_MATRIX_P ITER_COUNT
+#            execute print_static B_A_MATRIX_M ITER_COUNT
 #end_debug
 
 # The FORM_NEW_VECTORS and SELECT_VECTOR_TOGO do two things. The first one
@@ -4666,6 +4659,7 @@
             ENDIF 
 #bgn_debug
           execute print_scalar RESIDUAL_NORM_P
+          execute print_scalar RESIDUAL_NORM_M
           execute print_scalar OMEGA_P
 #end_debug
 
@@ -4748,13 +4742,13 @@
       COUNT_NO_ROOTS -= 1.0
       IF SINGLET == ONE
          execute print_static RPA_S_EES COUNT_NO_ROOTS
-#         MARKER = 28.0
-#         execute print_rel_info MARKER RPA_S_EES
+         MARKER = 72.0
+         execute print_rel_info MARKER RPA_S_EES
       ENDIF
       IF TRIPLET == ONE
          execute print_static RPA_T_EES COUNT_NO_ROOTS
-#         MARKER = 29.0
-#         execute print_rel_info MARKER RPA_T_EES
+         MARKER = 73.0
+         execute print_rel_info MARKER RPA_T_EES
       ENDIF
 #end_debug
 

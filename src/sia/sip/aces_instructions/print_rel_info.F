@@ -79,6 +79,9 @@ C
 c            70   RHF EOM-CCSD energies (singlets)
 c            71   UHF EOM-CCSD energies (triplets)
 c           911   EOM warnings 
+C
+c            72   RHF RPA energies 
+c            73   UHF RPA energies 
 c   
 c--------------------------------------------------------------------------
 C Changes to make GNU complier happy, C. Taylor, 08/2013.
@@ -511,6 +514,14 @@ c---------------------------------------------------------------------------
           call print_cis_cinfo(x(iarray),scalar_table(sind),
      *             1,n1,1,n2)
       endif 
+c----------------------------------------------------------------------------
+c   RPA excitation energy(RHF,UHF) Print Flag = 72,73
+c---------------------------------------------------------------------------
+      st_flag = scalar_table(sind)
+      if (st_flag .eq. 72.0 .or. st_flag .eq. 73.0) then
+          call print_rpa_cinfo(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+      endif
 c----------------------------------------------------------------------------
 c   EOM-CCSD excitation energy(RHF,UHF) Print Flag = 70,71 (Right)
 c                                                    80,81 (Left)
@@ -1428,6 +1439,74 @@ c
 20    format(2x,I4,5x,F20.8,x,F20.8)  
 30    format(2x,'ROOT',15x,'Hartree',15x,'eV')  
 C 
+
+      return
+      end
+
+      subroutine print_rpa_cinfo(array1,sval,a1,a2,b1,b2) 
+
+c---------------------------------------------------------------------------
+c
+c 
+c---------------------------------------------------------------------------
+
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+c
+      integer i, ival, amax, a, a1, a2, b, b1, b2   
+      integer ieom_roots 
+      double precision array1(a1:a2,b1:b2), sval, stemp   
+      double precision efinal, conv   
+      logical singlet, triplet 
+
+      open(66,file='summary.out') 
+
+      ival = sval 
+      conv = 27.21138505 
+      ieom_roots = eom_roots 
+      amax = max(ieom_roots,6) 
+      singlet = (Sval .eq. 72)
+      triplet = (Sval .eq. 73)
+
+      if (me .eq. 0)then
+
+         Call Dputrec(20,"JOBARC","MARKER  ",1,Conv)
+
+         If (singlet) then
+            write(66,10) 
+            write(66,100) 
+            write(66,30) 
+            write(66,100) 
+            do i = 1, ieom_roots
+               write(66,20) i, array1(i,1), array1(i,1)*conv
+            enddo 
+            write(66,100) 
+            Call Dputrec(20,"JOBARC","RPA_EXES",ieom_roots,Array1)
+
+         Elseif (Triplet) then
+
+            write(66,*)
+            write(66,40) 
+            write(66,100) 
+            write(66,30) 
+            write(66,100) 
+            do i = 1, ieom_roots
+               write(66,20) i, array1(i,1), array1(i,1)*conv
+            enddo 
+            Call Dputrec(20,"JOBARC","RPA_EXET",ieom_roots,Array1)
+            write(66,100) 
+
+         Endif 
+
+      endif 
+
+100   format(2x,60('-'))
+10    format(2x,"RPA singlet excitation energies")  
+40    format(2x,"RPA Triplet excitation energies")  
+20    format(2x,I4,5x,F20.8,x,F20.8)  
+30    format(2x,'ROOT',15x,'Hartree',15x,'eV')  
 
       return
       end

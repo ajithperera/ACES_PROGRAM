@@ -223,7 +223,7 @@ C It is square (always).
 C Copy very small eigenvalues to the end. Do the same thing for
 c eigenvectors. This is really to handle nearly zero eigenvalues.
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a)") "H(IJ,KL) eigenvalues/vectors"
       Write(6,"(a)") "The right-hand side"
@@ -233,7 +233,7 @@ C      Write(6,"(6(1x,F10.5))") (EigI(i),i=1,Ndim)
 C      Write(6,"(a)") "The left-hand side"
 C      call output(EvecL,1,Ndim,1,Ndim,Ndim,Ndim,1)
       endif 
-C#endif 
+#endif 
 
       If (Ndim .Ne. 1) Then
 
@@ -261,7 +261,7 @@ CSSS
 CSSS      Call Process_vecs(Eigr,EvecR,EvecL,Guess_intmd,Ndim,
 CSSS     +                  1,Ndim,1,Ndim)
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       if (me.eq.0) then
       Write(6,*)
       Write(6,"(a,a)") "@-FORM_DIP_GUESS: The reordered eigenvalues",
@@ -270,7 +270,7 @@ C#ifdef _DEBUG_LVL0
       Write(6,"(a)") "The right-hand side"
       call output(EvecR,1,Ndim,1,Ndim,Ndim,Ndim,1)
       Endif
-C#endif
+#endif
 C
       Nill = 0
       Do i = 1, Ndim
@@ -282,7 +282,7 @@ C
       Nbgn = Nill+1 
       Nend = Nbgn+Nroots 
 
-      if (me.eq.0) write(6,*) Nbgn,Nend,Nill,Ndim-Nill,nroots 
+CSSS      if (me.eq.0) write(6,*) Nbgn,Nend,Nill,Ndim-Nill,nroots 
 
       If (Nend .Gt. Nroots) Then
 
@@ -309,7 +309,7 @@ C
          Write(6,"(a)") "No non-zero guess eigenvalues" 
       Endif 
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       if (me.eq.0) then
       do p=1,Nroots
       Write(6,"(a)") "Initial Right guess vectors for EOM-DIP/EA"
@@ -320,7 +320,7 @@ C#ifdef _DEBUG_LVL0
          ENDDO
       enddo 
       endif 
-C#endif 
+#endif 
 
       Return
       End
