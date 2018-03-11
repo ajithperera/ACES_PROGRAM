@@ -171,12 +171,6 @@
       STATIC RPA_S_EES(MROOTS)  
       STATIC RPA_T_EES(MROOTS)  
      
-# Served arrays
-
-      SERVED SAOINT(MU,NU,LAMBDA,SIGMA)
-      SERVED APBXXXX(MU,NU,LAMBDA,SIGMA) 
-      SERVED AMBXXXX(MU,NU,LAMBDA,SIGMA) 
-
 # Temporaray arrays
 
       TEMP AOINT(MU,NU,LAMBDA,SIGMA)
@@ -420,6 +414,8 @@
       SCALAR DO_CIS 
       SCALAR NNN
       SCALAR MARKER 
+      SCALAR E_OLD 
+      SCALAR EDIFF 
 
       PROC FORM_INITIAL_GUESS
 #     -----------------------
@@ -972,19 +968,6 @@
      ENDPROC FORM_AO_R1AB
 #    --------------------
 
-     PROC GET_2INTS
-#    --------------
-     PARDO MU, NU, LAMBDA, SIGMA
-
-        COMPUTE_INTEGRALS AOINT(MU,LAMBDA,NU,SIGMA)
-        PREPARE SAOINT(MU,LAMBDA,NU,SIGMA) = AOINT(MU,LAMBDA,NU,SIGMA)
-
-     ENDPARDO MU, NU, LAMBDA, SIGMA
-     EXECUTE SERVER_BARRIER 
-   
-     ENDPROC GET_2INTS
-#    -----------------
-
      PROC HC_MULTIPLY_RPA_RL
 #    ----------------------
 #  (A+B)(ai,bj)  R+_old(b,J)  = R+_new(a,i)
@@ -998,14 +981,13 @@
          TAMXX(MU,LAMBDA) = 0.0
          TBPXX(MU,LAMBDA) = 0.0
          TBMXX(MU,LAMBDA) = 0.0
-
-         REQUEST SAOINT(MU,LAMBDA,NU,SIGMA) SIGMA
-         REQUEST SAOINT(MU,SIGMA,LAMBDA,NU) SIGMA
-         REQUEST SAOINT(MU,NU,LAMBDA,SIGMA) SIGMA
-
-         TC0XXXX(MU,LAMBDA,NU,SIGMA) = SAOINT(MU,LAMBDA,NU,SIGMA)
-         TE1XXXX(MU,SIGMA,LAMBDA,NU) = SAOINT(MU,SIGMA,LAMBDA,NU)
-         TE2XXXX(MU,NU,LAMBDA,SIGMA) = SAOINT(MU,NU,LAMBDA,SIGMA) 
+         
+         COMPUTE_INTEGRALS AOINT(MU,LAMBDA,NU,SIGMA)
+         TC0XXXX(MU,LAMBDA,NU,SIGMA) = AOINT(MU,LAMBDA,NU,SIGMA)
+         COMPUTE_INTEGRALS AOINT(MU,SIGMA,LAMBDA,NU)
+         TE1XXXX(MU,SIGMA,LAMBDA,NU) = AOINT(MU,SIGMA,LAMBDA,NU)
+         COMPUTE_INTEGRALS AOINT(MU,NU,LAMBDA,SIGMA) 
+         TE2XXXX(MU,NU,LAMBDA,SIGMA) = AOINT(MU,NU,LAMBDA,SIGMA) 
 
          GET R1A_AO_P_CURRENT_R(NU,SIGMA)
          GET R1B_AO_P_CURRENT_R(NU,SIGMA)  
@@ -1149,11 +1131,10 @@
          TBPXX(MU,LAMBDA) = 0.0
          TBMXX(MU,LAMBDA) = 0.0
 
-         REQUEST SAOINT(MU,LAMBDA,NU,SIGMA) SIGMA
-         REQUEST SAOINT(MU,SIGMA,LAMBDA,NU) SIGMA
- 
-         TC0XXXX(MU,LAMBDA,NU,SIGMA) = SAOINT(MU,LAMBDA,NU,SIGMA)
-         TE1XXXX(MU,SIGMA,LAMBDA,NU) = SAOINT(MU,SIGMA,LAMBDA,NU)
+         COMPUTE_INTEGRALS AOINT(MU,LAMBDA,NU,SIGMA)
+         TC0XXXX(MU,LAMBDA,NU,SIGMA) = AOINT(MU,LAMBDA,NU,SIGMA)
+         COMPUTE_INTEGRALS AOINT(MU,SIGMA,LAMBDA,NU)
+         TE1XXXX(MU,SIGMA,LAMBDA,NU) = AOINT(MU,SIGMA,LAMBDA,NU)
 
          GET R1A_AO_P_CURRENT_R(NU,SIGMA)
          GET R1B_AO_P_CURRENT_R(NU,SIGMA)  
@@ -2196,7 +2177,6 @@
 #
 #end_debug
 
-
       ENDPROC FORM_NEW_VECTORS 
 #     ------------------------
 
@@ -2204,17 +2184,17 @@
 #     ---------------------------
        PARDO A, I 
 
-           NCOUNT = 0.0
+           NCOUNT = ZERO
            DO NINDEX20 
-              NCOUNT += 1.0
+              NCOUNT += ONE
 
               IF NCOUNT > ITER_COUNT
                  EXIT
               ENDIF 
 
-              MCOUNT = 0.0
+              MCOUNT = ZERO
               DO MINDEX20 
-                 MCOUNT += 1.0
+                 MCOUNT += ONE
 
                  IF MCOUNT >  ITER_COUNT
                     EXIT
@@ -2243,17 +2223,17 @@
 
        PARDO B, J
 
-           NCOUNT      = 0.0
+           NCOUNT      = ZERO
            DO NINDEX20
-              NCOUNT += 1.0
+              NCOUNT += ONE
 
                 IF NCOUNT > ITER_COUNT
                    EXIT
                 ENDIF 
 
-                MCOUNT = 0.0
+                MCOUNT = ZERO
                 DO MINDEX20
-                   MCOUNT += 1.0
+                   MCOUNT += ONE
 
                    IF MCOUNT > ITER_COUNT
                       EXIT
@@ -2280,7 +2260,7 @@
  
        ENDPARDO B, J
 
-       execute sip_barrier
+       EXECUTE SIP_BARRIER 
 
 #bgn_debug
 #     execute get_my_rank rank
@@ -2334,168 +2314,6 @@
 
      PROC SELECT_HBAR_Y_VECTOR_TOGO
 #    ------------------------------
-
-     IF ITER_COUNT == ONE
-
-       NCOUNT = 0.0
-       DO MINDEX20
-          NCOUNT += ONE
-          IF NCOUNT > ONE
-             EXIT
-          ENDIF 
-
-         PARDO A, I 
-
-             GET HR1A_MO_P_HIST_R(A,I,MINDEX20)
-             GET HR1A_MO_M_HIST_L(A,I,MINDEX20)
-
-             T1AP_R(A,I) = HR1A_MO_P_HIST_R(A,I,MINDEX20)
-             T1AM_L(A,I) = HR1A_MO_M_HIST_L(A,I,MINDEX20)
-
-             PUT HR1A_MO_P_PICKED_R(A,I) = T1AP_R(A,I)
-             PUT HR1A_MO_M_PICKED_L(A,I) = T1AM_L(A,I)
-
-             GET R1A_MO_P_HIST_R(A,I,MINDEX20)
-             GET R1A_MO_M_HIST_L(A,I,MINDEX20)
-
-             TAP_R(A,I) = R1A_MO_P_HIST_R(A,I,MINDEX20)
-             TAM_L(A,I) = R1A_MO_M_HIST_L(A,I,MINDEX20)
-
-             PUT R1A_MO_P_PICKED_R(A,I) = TAP_R(A,I)
-             PUT R1A_MO_M_PICKED_L(A,I) = TAM_L(A,I)
-
-         ENDPARDO A, I 
-
-         PARDO B, J
-
-             GET HR1B_MO_P_HIST_R(B,J,MINDEX20)
-             GET HR1B_MO_M_HIST_L(B,J,MINDEX20)
-
-             T1BP_R(B,J) = HR1B_MO_P_HIST_R(B,J,MINDEX20)
-             T1BM_L(B,J) = HR1B_MO_M_HIST_L(B,J,MINDEX20)
-
-             PUT HR1B_MO_P_PICKED_R(B,J) = T1BP_R(B,J)
-             PUT HR1B_MO_M_PICKED_L(B,J) = T1BM_L(B,J)
-
-             GET R1B_MO_P_HIST_R(B,J,MINDEX20)
-             GET R1B_MO_M_HIST_L(B,J,MINDEX20)
-
-             TBP_R(B,J) = R1B_MO_P_HIST_R(B,J,MINDEX20)
-             TBM_L(B,J) = R1B_MO_M_HIST_L(B,J,MINDEX20)
-
-             PUT R1B_MO_P_PICKED_R(B,J) = TBP_R(B,J)
-             PUT R1B_MO_M_PICKED_L(B,J) = TBM_L(B,J)
-
-          ENDPARDO B, J
-
-       ENDDO MINDEX20
-       EXECUTE SIP_BARRIER 
-
-    ELSE
-
-        DO NINDEX20
-           NCOUNT += 1.0
-                    
-           IF NCOUNT > ONE
-              EXIT
-           ENDIF 
-
-           MCOUNT = 0.0
-           DO MINDEX20
-              MCOUNT += 1.0
-              IF NCOUNT > ITER_COUNT 
-                 EXIT
-              ENDIF 
-              OVLPA_P_R_INTMD = ZERO
-              OVLPA_M_L_INTMD = ZERO
-              OVLPB_P_R_INTMD = ZERO
-              OVLPB_M_L_INTMD = ZERO
-              OVLPA_P_R       = ZERO
-              OVLPA_M_L       = ZERO
-              OVLPB_P_R       = ZERO
-              OVLPB_M_L       = ZERO
-
-              PARDO A, I
-                  GET  HR1A_MO_P_HIST_R(A,I,NINDEX20)
-                  GET  HR1A_MO_M_HIST_L(A,I,NINDEX20)
-
-                  GET  HY1P_A_R(A,I,MINDEX20)
-                  GET  HY1M_A_L(A,I,MINDEX20)
-
-                  TAP_R(A,I) = HR1A_MO_P_HIST_R(A,I,NINDEX20)
-                  TAM_L(A,I) = HR1A_MO_M_HIST_L(A,I,NINDEX20)
-
-                  T1AP_R(A,I) = HY1P_A_R(A,I,MINDEX20)
-                  T1AM_L(A,I) = HY1M_A_L(A,I,MINDEX20)
-
-                  TMP = TAP_R(A,I) * TAP_R(A,I)
-                  OVLPA_P_R_INTMD += TMP
-
-                  TMP = TAM_L(A,I) * TAM_L(A,I)
-                  OVLPA_M_L_INTMD += TMP
-
-              ENDPARDO A, I
-
-              PARDO B,J 
-                  GET  HR1B_MO_P_HIST_R(B,J,NINDEX20)
-                  GET  HR1B_MO_M_HIST_L(B,J,NINDEX20)
-
-                  GET  HY1P_B_R(B,J,NINDEX20)
-                  GET  HY1M_B_L(B,J,NINDEX20)
-
-                  TBP_R(B,J) = HR1B_MO_P_HIST_R(B,J,NINDEX20)
-                  TBM_L(B,J) = HR1B_MO_M_HIST_L(B,J,NINDEX20)
-
-                  T1BP_R(B,J) = HY1P_B_R(B,J,MINDEX20)
-                  T1BM_L(B,J) = HY1M_B_L(B,J,MINDEX20)
-
-                  TMP = TBP_R(B,J) * TBP_R(B,J)
-                  OVLPB_P_R_INTMD += TMP
-
-                  TMP = TBM_L(B,J) * TBM_L(B,J)
-                  OVLPB_M_L_INTMD += TMP
-
-              ENDPARDO B, J
-
-              EXECUTE SIP_BARRIER 
-              COLLECTIVE OVLPA_P_R += OVLPA_P_R_INTMD 
-              COLLECTIVE OVLPA_M_L += OVLPA_M_L_INTMD
-              COLLECTIVE OVLPB_P_R += OVLPB_P_R_INTMD 
-              COLLECTIVE OVLPB_M_L += OVLPB_M_L_INTMD
-
-              OVLPAB_P_R  = OVLPA_P_R
-              OVLPAB_P_R += OVLPB_P_R
-              OVLPAB_M_L  = OVLPA_M_L
-              OVLPAB_M_L += OVLPB_M_L
-
-              KCOUNT = 0.0
-                  DO KINDEX20
-                     KCOUNT += 1.0
-
-                     IF KCOUNT == MCOUNT
-                        OVLPAB_HISTORY_P_R(MINDEX20) = OVLPAB_P_R
-                        OVLPAB_HISTORY_M_L(MINDEX20) = OVLPAB_M_L
-                     ENDIF
-                  ENDDO KINDEX20
- 
-           ENDDO MINDEX20
-        ENDDO NINDEX20
-
-     ENDIF 
-
-     EXECUTE SIP_BARRIER 
-#
-# This SIPs returns the index corresponding to the maximum value 
-# in the first static array. The return scalar gives the pointer
-# to vector that has the maximum overlap with the guess. 
-# 
-
-     OVLPAB_P_MAX_R = 0.0
-     OVLPAB_M_MAX_L = 0.0
-   
-     EXECUTE RETURN_MAX_OVERLAP OVLPAB_HISTORY_P_R OVLPAB_P_MAX_R
-     EXECUTE RETURN_MAX_OVERLAP OVLPAB_HISTORY_M_L OVLPAB_M_MAX_L
-#
 # Get vectors corresponding to the maximum overlap and put them
 # in the distributed arrrays labelled as _PICKED_ and return.
 #
@@ -4525,7 +4343,7 @@
    
        SINGLET = ZERO
        TRIPLET = ZERO
-       EXACT_HY= ONE 
+       EXACT_HY= ZERO 
        DO_CIS  = ZERO
 
        MAX_SUBSP_DIM = RPA_MAXCYC
@@ -4539,7 +4357,6 @@
 #  
        CALL CREATE_ARRAYS 
        CALL FORM_FOCK_DIAGS 
-       CALL GET_2INTS 
 
        DO SPN_MULT
 
@@ -4563,6 +4380,7 @@
 
         DO MAX_NO_ROOTS
 
+          EDIFF           = ZERO 
           COUNT_NO_ROOTS += ONE
 
           IF COUNT_NO_ROOTS > TARGET_ROOTS
@@ -4644,6 +4462,8 @@
 
                ELSE
 
+                  CALL FORM_NEW_VECTORS
+                  CALL SELECT_VECTOR_TOGO
                   CALL FORM_NEW_HBAR_Y_VECTORS
                   CALL SELECT_HBAR_Y_VECTOR_TOGO
 
@@ -4657,10 +4477,19 @@
             ELSE
                CALL CHECK_CONVERGENCE_RPA
             ENDIF 
+
+            IF ITER_COUNT > ONE 
+               EDIFF = E_OLD - OMEGA_P
+            ENDIF 
+            E_OLD = OMEGA_P
+            EDIFF *=EDIFF 
+            EXECUTE SQUARE_ROOT EDIFF HALF
+  
 #bgn_debug
           execute print_scalar RESIDUAL_NORM_P
           execute print_scalar RESIDUAL_NORM_M
           execute print_scalar OMEGA_P
+          execute print_scalar EDIFF
 #end_debug
 
             IF RESIDUAL_NORM_P  < RPA_THRES
@@ -4679,8 +4508,13 @@
 
           IF ITER_COUNT == MAX_SUBSP_DIM 
              IF RESIDUAL_NORM_P > RPA_THRES  
-                OMEGA_P = ZERO 
-                OMEGA_M = ZERO
+                IF EDIFF < RPA_THRES 
+                   OMEGA_P = OMEGA_P
+                   OMEGA_M = OMEGA_M
+                ELSE 
+                   OMEGA_P = ZERO 
+                   OMEGA_M = ZERO
+                ENDIF 
              ENDIF 
           ENDIF 
 
