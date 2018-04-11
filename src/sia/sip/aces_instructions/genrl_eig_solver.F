@@ -155,8 +155,11 @@ C
       Parameter (Thres = 1.0D-07,Conv=27.21138505)
 
 C Hbar is non-symmetric matrix, and we obtain both left/right eigenvectors.
+C In the current set up Hbar is symmetrized (artificially for no good 
+C reason). Also, Dgeev is causing degeneracies losses (for degenerate 
+C systems). So, It was turned off. 04/11/2018
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a,i4)")"@-Entry to Gnrl_eig_solver order of the matrix", 
      +                  Ndim 
@@ -171,7 +174,7 @@ C      Write(6,*)
 C      Write(6,"(a)") " The Density matrix D(p,q)"
 C      call output(D,1,Ndim,1,Ndim,Ndim,Ndim,1)
       Endif 
-C#endif
+#endif
 C
 C Symmetrize the EXKT matrix (in place)
       
@@ -203,8 +206,13 @@ C Filter out the Noise in Density and Fock matrix.
 
       Call Dcopy(Ndim*Ndim,D,1,Q,1)
 
-      Call Dgeev("V","V",Ndim,D,Ndim,EigR,EigI,EvecL,Ndim,
-     &            U,Ndim,Work,4*Ndim,Ierror)
+CSSS      Call Dgeev("V","V",Ndim,D,Ndim,EigR,EigI,EvecL,Ndim,
+CSSS  &            U,Ndim,Work,4*Ndim,Ierror)
+
+      Call Eig(D,U,0,Ndim,1)
+      do i=1,Ndim
+         EigR(i) = D(i,i)
+      enddo 
 
       if (me .eq.0) then
       Write(6,*)
@@ -274,7 +282,6 @@ C Form F'=X^tFX
      &              Ndim,0.0D0,EvecR,Ndim)
          Call Dgemm("N","N",Ndim,Ndim,Ndim,1.0D0,EvecR,Ndim,EvecL,
      &              Ndim,0.0D0,U,Ndim)
-         Call Zero (H,Ndim*Ndim)
          Call Dcopy(Ndim*Ndim,U,1,H,1)
 
 #ifdef _DEBUG_LVL0
@@ -284,9 +291,13 @@ C Form F'=X^tFX
          endif 
 #endif
 CSSS         if (me .eq. 0) then
-         Call Dgeev("V","V",Ndim,H,Ndim,EigR,EigI,U,Ndim,
-     &            EvecR,Ndim,Work,4*Ndim,Ierror)
-CSSS         endif 
+CSSS         Call Dgeev("V","V",Ndim,H,Ndim,EigR,EigI,U,Ndim,
+CSSS     &            EvecR,Ndim,Work,4*Ndim,Ierror)
+
+         Call eig(H,EvecR,0,Ndim,1)
+         Do i=1,Ndim
+            EigR(i) = H(i,i)
+         Enddo 
 
 C Transform the eigenvectors to the original basis.
 

@@ -563,12 +563,12 @@ c---------------------------------------------------------------------------
       endif 
 
 c----------------------------------------------------------------------------
-c   DEA total energies (singlet and triplet) Flag = 40, 41
+c   DEA total energies (singlet and triplet) Flag = 41, 42
 c---------------------------------------------------------------------------
 
      
-      if (scalar_table(sind) .eq. 40.0 .or. 
-     *    scalar_table(sind) .eq. 41.0) then 
+      if (scalar_table(sind) .eq. 41.0 .or. 
+     *    scalar_table(sind) .eq. 42.0) then 
           call print_dea_einfo(x(iarray),scalar_table(sind),
      *             1,n1,1,n2)
       endif 
@@ -1716,8 +1716,8 @@ c
 
       if (me .eq. 0)then
 
-         if (sval .eq. 40) write(66,10)
-         if (sval .eq. 41) write(66,20)
+         if (sval .eq. 41) write(66,10)
+         if (sval .eq. 42) write(66,20)
          write(66,100)
          write(66,40)
          write(66,100)

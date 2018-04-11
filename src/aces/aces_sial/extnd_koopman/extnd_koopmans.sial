@@ -6306,9 +6306,6 @@
 
      PARDO mu, nu, lambda, sigma
 
-           COMPUTE_INTEGRALS TAO_ERI_INTS(mu, nu, lambda, sigma)
-           PREPARE AO_ERI_INTS(mu, nu, lambda, sigma) = TAO_ERI_INTS(mu, nu, lambda, sigma)
-
             T2xxxx(mu,nu,lambda,sigma) = 0.0
             T3xxxx(mu,nu,lambda,sigma) = 0.0
 #
@@ -6699,13 +6696,20 @@
 
      Fac1 = 0.0625
      Fac2 = 0.25
+ 
+     PARDO mu, nu
+         T1xx(mu,nu)=0.0
+         Put Ftmp_DI(mu,nu) = T1xx(mu,nu)
+         Put Ftmp_ID(mu,nu) = T1xx(mu,nu)
+     ENDPARDO mu, nu
+     execute sip_barrier 
 
      DO mu
      DO nu
         T1xx(mu,nu) = 0.0
      PARDO delta, lambda, sigma
 
-            REQUEST AO_ERI_INTS(nu,lambda,delta,sigma) sigma
+            COMPUTE_INTEGRALS TAO_ERI_INTS(nu,lambda,delta,sigma)
             REQUEST D0(mu,lambda,delta,sigma) sigma
             REQUEST DC(mu,lambda,delta,sigma) sigma
 
@@ -6713,12 +6717,12 @@
             P2xxxx(mu,lambda,delta,sigma) = DC(mu,lambda,delta,sigma)
  
             Txxxx(mu,lambda,delta,sigma) =  P1xxxx(mu,lambda,delta,sigma)
-            Txx(mu,nu) = Txxxx(mu,lambda,delta,sigma) * AO_ERI_INTS(nu,lambda,delta,sigma)
+            Txx(mu,nu) = Txxxx(mu,lambda,delta,sigma) * TAO_ERI_INTS(nu,lambda,delta,sigma)
             Txx(mu,nu)  *= Fac1
             T1xx(mu,nu) += Txx(mu,nu)
 
             Txxxx(mu,lambda,delta,sigma) = P2xxxx(mu,lambda,delta,sigma)
-            Txx(mu,nu) = Txxxx(mu,lambda,delta,sigma) * AO_ERI_INTS(nu,lambda,delta,sigma)
+            Txx(mu,nu) = Txxxx(mu,lambda,delta,sigma) * TAO_ERI_INTS(nu,lambda,delta,sigma)
             Txx(mu,nu)  *= Fac2
             T1xx(mu,nu) += Txx(mu,nu)
 
@@ -6735,7 +6739,7 @@
         T1xx(mu,nu) = 0.0
         PARDO delta, lambda, sigma
 
-            REQUEST AO_ERI_INTS(lambda,nu,delta,sigma) sigma
+            COMPUTE_INTEGRALS TAO_ERI_INTS(lambda,nu,delta,sigma)
             REQUEST D0(lambda,mu,delta,sigma) sigma
             REQUEST DC(lambda,mu,delta,sigma) sigma
 
@@ -6743,12 +6747,12 @@
             P2xxxx(lambda,mu,delta,sigma) = DC(lambda,mu,delta,sigma)
 
             Txxxx(lambda,mu,delta,sigma) =  P1xxxx(lambda,mu,delta,sigma)
-            Txx(mu,nu) = Txxxx(lambda,mu,delta,sigma) * AO_ERI_INTS(lambda,nu,delta,sigma)
+            Txx(mu,nu) = Txxxx(lambda,mu,delta,sigma) * TAO_ERI_INTS(lambda,nu,delta,sigma)
             Txx(mu,nu)  *= Fac1
             T1xx(mu,nu) += Txx(mu,nu)
 
             Txxxx(lambda,mu,delta,sigma) = P2xxxx(lambda,mu,delta,sigma)
-            Txx(mu,nu) = Txxxx(lambda,mu,delta,sigma) * AO_ERI_INTS(lambda,nu,delta,sigma)
+            Txx(mu,nu) = Txxxx(lambda,mu,delta,sigma) * TAO_ERI_INTS(lambda,nu,delta,sigma)
             Txx(mu,nu)  *= Fac2
             T1xx(mu,nu) += Txx(mu,nu)
 
@@ -6764,7 +6768,7 @@
         T1xx(mu,nu) = 0.0
       PARDO delta, lambda, sigma
 
-            REQUEST AO_ERI_INTS(lambda,delta,nu,sigma) sigma
+            COMPUTE_INTEGRALS TAO_ERI_INTS(lambda,delta,nu,sigma)
             REQUEST D0(lambda,delta,mu,sigma) sigma
             REQUEST DC(lambda,delta,mu,sigma) sigma
 
@@ -6772,12 +6776,12 @@
             P2xxxx(lambda,delta,mu,sigma) = DC(lambda,delta,mu,sigma)
 
             Txxxx(lambda,delta,mu,sigma) =  P1xxxx(lambda,delta,mu,sigma)
-            Txx(mu,nu) = Txxxx(lambda,delta,mu,sigma) * AO_ERI_INTS(lambda,delta,nu,sigma)
+            Txx(mu,nu) = Txxxx(lambda,delta,mu,sigma) * TAO_ERI_INTS(lambda,delta,nu,sigma)
             Txx(mu,nu)  *= Fac1
             T1xx(mu,nu) += Txx(mu,nu)
 
             Txxxx(lambda,delta,mu,sigma) = P2xxxx(lambda,delta,mu,sigma)
-            Txx(mu,nu) = Txxxx(lambda,delta,mu,sigma) * AO_ERI_INTS(lambda,delta,nu,sigma)
+            Txx(mu,nu) = Txxxx(lambda,delta,mu,sigma) * TAO_ERI_INTS(lambda,delta,nu,sigma)
             Txx(mu,nu)  *= Fac2
             T1xx(mu,nu) += Txx(mu,nu)
 
@@ -6793,7 +6797,8 @@
         T1xx(mu,nu) = 0.0
       PARDO delta, lambda, sigma
 
-            REQUEST AO_ERI_INTS(lambda,delta,sigma,nu) sigma
+
+            COMPUTE_INTEGRALS TAO_ERI_INTS(lambda,delta,sigma,nu) 
             REQUEST D0(lambda,delta,sigma,mu) sigma
             REQUEST DC(lambda,delta,sigma,mu) sigma
 
@@ -6801,12 +6806,12 @@
             P2xxxx(lambda,delta,sigma,mu) = DC(lambda,delta,sigma,mu)
 
             Txxxx(lambda,delta,sigma,mu) =  P1xxxx(lambda,delta,sigma,mu)
-            Txx(mu,nu) = Txxxx(lambda,delta,sigma,mu) * AO_ERI_INTS(lambda,delta,sigma,nu)
+            Txx(mu,nu) = Txxxx(lambda,delta,sigma,mu) * TAO_ERI_INTS(lambda,delta,sigma,nu)
             Txx(mu,nu)  *= Fac1
             T1xx(mu,nu) += Txx(mu,nu)
 
             Txxxx(lambda,delta,sigma,mu) = P2xxxx(lambda,delta,sigma,mu)
-            Txx(mu,nu) = Txxxx(lambda,delta,sigma,mu) * AO_ERI_INTS(lambda,delta,sigma,nu)
+            Txx(mu,nu) = Txxxx(lambda,delta,sigma,mu) * TAO_ERI_INTS(lambda,delta,sigma,nu)
             Txx(mu,nu)  *= Fac2
             T1xx(mu,nu) += Txx(mu,nu)
 
@@ -6824,7 +6829,7 @@
         T1xx(mu,nu) = 0.0
       PARDO delta, lambda, sigma
 
-            REQUEST AO_ERI_INTS(mu,lambda,delta,sigma) sigma
+            COMPUTE_INTEGRALS TAO_ERI_INTS(mu,lambda,delta,sigma) 
             REQUEST D0(nu,lambda,delta,sigma) sigma
             REQUEST DC(nu,lambda,delta,sigma) sigma
 
@@ -6832,12 +6837,12 @@
             P2xxxx(nu,lambda,delta,sigma) = DC(nu,lambda,delta,sigma)
 
             Txxxx(nu,lambda,delta,sigma) =  P1xxxx(nu,lambda,delta,sigma)
-            Txx(mu,nu) = Txxxx(nu,lambda,delta,sigma) * AO_ERI_INTS(mu,lambda,delta,sigma)
+            Txx(mu,nu) = Txxxx(nu,lambda,delta,sigma) * TAO_ERI_INTS(mu,lambda,delta,sigma)
             Txx(mu,nu)  *= Fac1
             T1xx(mu,nu) += Txx(mu,nu)
 
             Txxxx(nu,lambda,delta,sigma) = P2xxxx(nu,lambda,delta,sigma)
-            Txx(mu,nu) = Txxxx(nu,lambda,delta,sigma) * AO_ERI_INTS(mu,lambda,delta,sigma)
+            Txx(mu,nu) = Txxxx(nu,lambda,delta,sigma) * TAO_ERI_INTS(mu,lambda,delta,sigma)
             Txx(mu,nu)  *= Fac2
             T1xx(mu,nu) += Txx(mu,nu)
 
@@ -6854,7 +6859,7 @@
         T1xx(mu,nu) = 0.0
         PARDO delta, lambda, sigma
 
-            REQUEST AO_ERI_INTS(lambda,mu,delta,sigma) sigma
+            COMPUTE_INTEGRALS TAO_ERI_INTS(lambda,mu,delta,sigma) 
             REQUEST D0(lambda,nu,delta,sigma) sigma
             REQUEST DC(lambda,nu,delta,sigma) sigma
 
@@ -6862,12 +6867,12 @@
             P2xxxx(lambda,nu,delta,sigma) = DC(lambda,nu,delta,sigma)
 
             Txxxx(lambda,nu,delta,sigma) =  P1xxxx(lambda,nu,delta,sigma)
-            Txx(mu,nu) = Txxxx(lambda,nu,delta,sigma) * AO_ERI_INTS(lambda,mu,delta,sigma)
+            Txx(mu,nu) = Txxxx(lambda,nu,delta,sigma) * TAO_ERI_INTS(lambda,mu,delta,sigma)
             Txx(mu,nu)  *= Fac1
             T1xx(mu,nu) += Txx(mu,nu)
 
             Txxxx(lambda,nu,delta,sigma) = P2xxxx(lambda,nu,delta,sigma)
-            Txx(mu,nu) = Txxxx(lambda,nu,delta,sigma) * AO_ERI_INTS(lambda,mu,delta,sigma)
+            Txx(mu,nu) = Txxxx(lambda,nu,delta,sigma) * TAO_ERI_INTS(lambda,mu,delta,sigma)
             Txx(mu,nu)  *= Fac2
             T1xx(mu,nu) += Txx(mu,nu)
 
@@ -6883,7 +6888,7 @@
         T1xx(mu,nu) = 0.0
       PARDO delta, lambda, sigma
 
-            REQUEST AO_ERI_INTS(lambda,delta,mu,sigma) sigma
+            COMPUTE_INTEGRALS TAO_ERI_INTS(lambda,delta,mu,sigma) 
             REQUEST D0(lambda,delta,nu,sigma) sigma
             REQUEST DC(lambda,delta,nu,sigma) sigma
 
@@ -6891,12 +6896,12 @@
             P2xxxx(lambda,delta,nu,sigma) = DC(lambda,delta,nu,sigma)
 
             Txxxx(lambda,delta,nu,sigma) =  P1xxxx(lambda,delta,nu,sigma)
-            Txx(mu,nu) = Txxxx(lambda,delta,nu,sigma) * AO_ERI_INTS(lambda,delta,mu,sigma)
+            Txx(mu,nu) = Txxxx(lambda,delta,nu,sigma) * TAO_ERI_INTS(lambda,delta,mu,sigma)
             Txx(mu,nu)  *= Fac1
             T1xx(mu,nu) += Txx(mu,nu)
 
             Txxxx(lambda,delta,nu,sigma) = P2xxxx(lambda,delta,nu,sigma)
-            Txx(mu,nu) = Txxxx(lambda,delta,nu,sigma) * AO_ERI_INTS(lambda,delta,mu,sigma)
+            Txx(mu,nu) = Txxxx(lambda,delta,nu,sigma) * TAO_ERI_INTS(lambda,delta,mu,sigma)
             Txx(mu,nu)  *= Fac2
             T1xx(mu,nu) += Txx(mu,nu)
 
@@ -6911,8 +6916,7 @@
       DO nu
         T1xx(mu,nu) = 0.0
       PARDO delta, lambda, sigma
-
-            REQUEST AO_ERI_INTS(lambda,delta,sigma,mu) sigma
+            COMPUTE_INTEGRALS TAO_ERI_INTS(lambda,delta,sigma,mu) 
             REQUEST D0(lambda,delta,sigma,nu) sigma
             REQUEST DC(lambda,delta,sigma,nu) sigma
 
@@ -6920,12 +6924,12 @@
             P2xxxx(lambda,delta,sigma,nu) = DC(lambda,delta,sigma,nu)
 
             Txxxx(lambda,delta,sigma,nu) =  P1xxxx(lambda,delta,sigma,nu)
-            Txx(mu,nu) = Txxxx(lambda,delta,sigma,nu) * AO_ERI_INTS(lambda,delta,sigma,mu)
+            Txx(mu,nu) = Txxxx(lambda,delta,sigma,nu) * TAO_ERI_INTS(lambda,delta,sigma,mu)
             Txx(mu,nu)  *= Fac1
             T1xx(mu,nu) += Txx(mu,nu)
 
             Txxxx(lambda,delta,sigma,nu) = P2xxxx(lambda,delta,sigma,nu)
-            Txx(mu,nu) = Txxxx(lambda,delta,sigma,nu) * AO_ERI_INTS(lambda,delta,sigma,mu)
+            Txx(mu,nu) = Txxxx(lambda,delta,sigma,nu) * TAO_ERI_INTS(lambda,delta,sigma,mu)
             Txx(mu,nu)  *= Fac2
             T1xx(mu,nu) += Txx(mu,nu)
 
@@ -8331,7 +8335,7 @@
 # ---------------------------------------------------------------------- 
 #
 #bgn_debug
-     CALL COMPUTE_ENERGY
+#     CALL COMPUTE_ENERGY
 #end_debug
 
          CALL BUILT_EXTENDED_FOCK_IP

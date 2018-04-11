@@ -279,6 +279,8 @@ c---------------------------------------------------------------------------
 
 c      print *,'Problem size ',n,' Original segsize ',
 c     *           segsize
+
+      If (n .eq. 1) segsize = 1
       nseg = (n +segsize - 1) / segsize
       if (nseg .eq. 1) return   ! pathologically small case
       if (n .lt. max_size) return

@@ -2641,7 +2641,7 @@
 # --------------------------------------------- 
       DO i1 
       DO i2 
-      execute set_ijk_aab iflag jflag # (i1) 
+      execute set_ijk_aab jflag iflag # (i1) 
       ENDDO i2 
       ENDDO i1 
       execute sip_barrier 
