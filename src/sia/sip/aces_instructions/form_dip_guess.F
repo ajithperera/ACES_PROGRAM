@@ -289,7 +289,9 @@ CSSS      if (me.eq.0) write(6,*) Nbgn,Nend,Nill,Ndim-Nill,nroots
       k=0
       Do P=Nbgn, Nend 
 
+#ifdef _DEBUG_LVL0
          if (me.eq.0) write(6,*)
+#endif 
          IJ = 0
          K  = K + 1
          DO I=1, Jdim 

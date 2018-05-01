@@ -158,42 +158,43 @@ c---------------------------------------------------------------------------
 
       Else 
 
-C         do j = m1, m2
-C         do i = n1, n2
-C
-C            Col =  Rootp1
-C            Row =  Rootp1
-C
-C#ifdef _DEBUG_LVL0
-C      if (me .eq.0) then
-C      Write(6,"(a,2i)") "Row,Col", Row,Col
-C      endif 
-C#endif 
-C            If (Col .EQ. j .AND. Row .EQ. i) Then
-C              Vecs(Row,COl) =  1.0D0
-C              Vecs(COl,Row) =  1.0D0
-C            endif
-C
-C         enddo
-C         enddo
+         do j = m1, m2
+         do i = n1, n2
 
-      If (Root .eq. 1) then
-          Vecs(1,1) = 1.0D0
-      Elseif (Root .eq. 2) then
-          Vecs(1,2) = 1.0D0
-          Vecs(2,1) = 1.0D0
-      Elseif (Root .eq. 3) then
-          Vecs(1,1) = 1.0D0
-          Vecs(2,2) = 1.0D0
-      Endif 
+            Col =  Rootp1
+            Row =  Rootp1
+
+#ifdef _DEBUG_LVL0
+      if (me .eq.0) then
+      Write(6,"(a,2i)") "Row,Col", Row,Col
+      endif 
+#endif 
+            If (Col .EQ. j .AND. Row .EQ. i) Then
+              Vecs(Row,COl) =  1.0D0
+              Vecs(COl,Row) =  1.0D0
+            endif
+
+         enddo
+         enddo
+
+CSSS      If (Root .eq. 1) then
+CSSS          Vecs(1,1) = 1.0D0
+CSSS      Elseif (Root .eq. 2) then
+CSSS          Vecs(1,2) = 1.0D0
+CSSS          Vecs(2,1) = 1.0D0
+CSSS      Elseif (Root .eq. 3) then
+CSSS          Vecs(1,1) = 1.0D0
+CSSS          Vecs(2,2) = 1.0D0
+CSSS      Endif 
+
       Endif 
 
-C#ifdef _DEBUG_LVL0 
+#ifdef _DEBUG_LVL0 
       if (me .eq.0) then 
       write(6,"(a)") "@-DEA-GUESS vectors"
       call output(Vecs,1,n2,1,m2,n2,m2,1)
       endif
-C#endif 
+#endif 
 
       Return
       End

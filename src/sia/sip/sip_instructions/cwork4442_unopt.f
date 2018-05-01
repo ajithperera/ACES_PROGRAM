@@ -153,7 +153,7 @@ c---------------------------------------------------------------------------
          econ2 = h2
       endif
 
-      print *,'cwork4442: Unoptimized version lineno ',current_line
+CSSS      print *,'cwork4442: Unoptimized version lineno ',current_line
       do a = a1, a2
          if (ia .ne. 0) ix(ia)  = a
          if (ia2 .ne. 0) ix2(ia2) = a

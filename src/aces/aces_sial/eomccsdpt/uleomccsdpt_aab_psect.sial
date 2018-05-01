@@ -5129,9 +5129,9 @@
             eSaab = 0.0
 
             DO i1 
-            DO i2 
+            DO j1
                execute set_ijk_aab iflag jflag # (i1) 
-            ENDDO i2 
+            ENDDO j1
             ENDDO i1 
             execute server_barrier 
 #            

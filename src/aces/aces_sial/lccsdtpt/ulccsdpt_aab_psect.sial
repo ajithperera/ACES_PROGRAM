@@ -4065,9 +4065,9 @@
 # Set the partitioning of the occupied segments 
 # --------------------------------------------- 
       DO i1 
-      DO i2 
+      DO j1
       execute set_ijk_aab iflag jflag # (i1) 
-      ENDDO i2 
+      ENDDO j1
       ENDDO i1 
       execute sip_barrier 
       execute server_barrier 

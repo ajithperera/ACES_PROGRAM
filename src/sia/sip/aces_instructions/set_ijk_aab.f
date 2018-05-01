@@ -43,23 +43,33 @@ c----------------------------------------------------------------------------
       double precision scalar_table(nscalar_table)
       integer*8 address_table(narray_table)
 
-      integer ierr, array, array_type, ind, nind
-      integer i, nseg, bseg, eseg, start(100), end(100), maxi   
+      integer ierr,arrayi,arrayj,array_type,indi,indj,nindi,nindj
+      integer i, nsegi, bsegi, esegi, start(100), end(100), maxi   
+      integer nsegj,bsegj,esegj 
 
       integer Nt, np(10), ns(100,10), Xijk
       integer e, j, k, ii, jj, is, ie, js, je   
 
-      array = op(c_result_array)
-      if (array .lt. 1 .or. array .gt. narray_table) then
+      arrayi = op(c_result_array)
+      arrayj = op(c_op1_array)
+      if (arrayi .lt. 1 .or. arrayi .gt. narray_table) then
          print *,'Error: Invalid array in set_ijk, line ',
      *     current_line
-         print *,'Array index is ',array,' Allowable values are ',
+         print *,'Array index is ',arrayi,' Allowable values are ',
+     *      ' 1 through ',narray_table
+         call abort_job()
+      endif
+      if (arrayj .lt. 1 .or. arrayj .gt. narray_table) then
+         print *,'Error: Invalid array in set_ijk, line ',
+     *     current_line
+         print *,'Array index is ',arrayj,' Allowable values are ',
      *      ' 1 through ',narray_table
          call abort_job()
       endif
 
-      nind = array_table(c_nindex, array)
-      if (nind .ne. 1) then
+      nindi = array_table(c_nindex, arrayi)
+      nindj = array_table(c_nindex, arrayj)
+      if (nindi .ne. 1 .or. nindj .ne. 1) then
          print *,'Error: set_ijk requires a 1-index array.'
          call abort_job()
       endif
@@ -75,14 +85,19 @@ c-----------------------------------------------------------------------
 c Determine the index 
 c------------------------------------------------------------------------
  
-      ind   = array_table(c_index_array1,array)
+      indi   = array_table(c_index_array1,arrayi)
+      indj   = array_table(c_index_array1,arrayj)
 
-      nseg = index_table(c_nsegments,ind) 
-      bseg = index_table(c_bseg,ind) 
-      eseg = index_table(c_eseg,ind) 
+      nsegi = index_table(c_nsegments,indi) 
+      bsegi = index_table(c_bseg,indi) 
+      esegi = index_table(c_eseg,indi) 
+
+      nsegj = index_table(c_nsegments,indj) 
+      bsegj = index_table(c_bseg,indj) 
+      esegj = index_table(c_eseg,indj) 
 
 c     write(6,*) ' ------------------------------- '  
-c     write(6,*) ' IND :', ind, nseg 
+c     write(6,*) ' IND :', indi, nsegi, indj, nsegj
  
 c-----------------------------------------------------------------------
 c Determine the index ranges  
@@ -90,22 +105,22 @@ c np(i) = number of partitions of segment i
 c ns(i,k) =  
 c------------------------------------------------------------------------
 
-      do i = 1, nseg 
-         call get_index_segment(ind, i, segment_table,
+      do i = 1, nsegi
+         call get_index_segment(indi, i, segment_table,
      *                     nsegment_table, index_table,
      *                     nindex_table, start(i), end(i)) 
       enddo 
-c     write(6,*) '   ', ((start(i),end(i)), i=1,nseg) 
+c      write(6,*) '   ', ((start(i),end(i)), i=1,nsegi) 
 
-      do i = 1, nseg 
+      do i = 1, nsegi 
          np(i) = (end(i) - start(i) + 1)/maxi 
          if (maxi*np(i) .lt. end(i) - start(i) + 1)
      *       np(i) = np(i) + 1 
       enddo 
 
-c     write(6,*) ' N(I):', (np(i), i=1,nseg) 
+c      write(6,*) ' N(I):', (np(i), i=1,nsegi) 
 
-      do i = 1, nseg 
+      do i = 1, nsegi
          e = 0 
          do k = 1, np(i) - 1 
             ns(i,k) = (end(i) - start(i) + 1)/np(i) 
@@ -116,27 +131,27 @@ c     write(6,*) ' N(I):', (np(i), i=1,nseg)
 
       Nt = 0 
       ie = 0 
-      do i = 1, nseg 
+      do i = 1, nsegi 
       do ii = 1, np(i) 
 
          is = ie + 1 
          ie = is + ns(i,ii) - 1 
 
           je = 0 
-          do j = 1, nseg 
+          do j = 1, nsegi
           do jj = 1, np(j) 
 
              js = je + 1 
              je = js + ns(j,jj) - 1 
 
           if (i .le. j) then 
-             do k = 1, nseg 
+             do k = 1, nsegj
 
                 Nt = Nt + 1 
                 Xijk(Nt,1) = i 
                 Xijk(Nt,2) = is  
                 Xijk(Nt,3) = ie  
-                Xijk(Nt,4) = j 
+                xijk(Nt,4) = j 
                 Xijk(Nt,5) = js 
                 Xijk(Nt,6) = je
                 Xijk(Nt,7) = k 

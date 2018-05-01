@@ -20,10 +20,12 @@
       index kiter    = 1, cc_iter
       index jj1      = 1, 1
       index kk1      = 1, 1
+      index Spn_mult = 1, 2
 
       Index Ndim     = 1, 100
       Index Nroots   = 1, 12
       Index Mroots   = 1, 12
+      Index Kroots   = 1, 12
       Index Subsp_dim= 1, 50
       Index Nindex50 = 1, 50
       Index Mindex50 = 1, 50
@@ -245,6 +247,7 @@
       Temp T3bjxj(b,j1,kk1,j)
       Temp Taajj(a,a1,j,j1)
       Temp Tbbii(b,b1,i,i1)
+      Temp T1ijij(i,j,i1,j1)
 
 #     Static arrays
 #     -------------
@@ -266,6 +269,9 @@
       Static Sdbb(b,b1)
       Static ETEMP(mindex50,nindex50)
       Static DIP_SINGS_S(MROOTS)
+      Static DIP_INIT_IJIJ(i,j,i1,j1)
+      Static DIP_INIT_IJ(i,j)
+      Static VEC_AB(i,j,NROOTS)
 
 #     Scalar arrays
 #     -------------
@@ -326,6 +332,9 @@
       Scalar WARNING 
       Scalar EOM_DENOM
       Scalar EOM_MAXCYC
+      Scalar SINGLET 
+      Scalar TRIPLET
+      Scalar MULT
 
 # -----------------------------------------------------------
 
@@ -408,23 +417,63 @@
       ENDPROC CREATE_ARRAYS
 #     --------------------
 
+      PROC FORM_INITIAL_GUESS
+#     -----------------------
+
+      DO i
+      DO j
+          GET  HBAR_jj(i,j)
+          tij(i,j)  = HBAR_jj(i,j)
+          tij(i,j)  *= -1.0
+          DIP_INIT_IJ(i,j) = tij(i,j)
+      ENDDO j
+      ENDDO i
+
+      DO i
+      DO i1
+      DO j
+      DO j1
+         T1ijij(i,j,i1,j1) = 0.0
+         DIP_INIT_IJIJ(i,j,i1,j1) =  T1ijij(i,j,i1,j1)
+      ENDDO j1
+      ENDDO j
+      ENDDO i1
+      ENDDO i
+
+      EXECUTE SIP_BARRIER
+
+      EXECUTE FORM_DIP_HMAT DIP_INIT_IJIJ DIP_INIT_IJ
+      EXECUTE FORM_DIP_GUESS DIP_INIT_IJIJ VEC_AB
+
+      ENDPROC FORM_INITIAL_GUESS
+#     --------------------------
+
       PROC PREP_DIP_GUESS
 #     -------------------
-      DO NROOTS
-         PARDO i, j
-             INIT_RVEC_AB(i,j) = 0.0
-         ENDPARDO i, j
-      ENDDO NROOTS
-      
-      EXECUTE FORM_DIP_GUESS INIT_RVEC_AB MYROOT
-       
-      PARDO i, j
-          Tij(i,j) = INIT_RVEC_AB(i,j)
-          PUT R1_AB_INTMD(i,j) =  Tij(i,j)
-      ENDPARDO i, j
 
-      EXECUTE SIP_BARRIER 
+     EXECUTE GUESS_4CURRENT_ROOT VEC_AB MYROOT
+     IF TRIPLET == ONE
+          MYROOT *= -1.0
+      ENDIF
+      EXECUTE GUESS_4CURRENT_ROOT VEC_AB MYROOT
+#
+# Always copy the position one because the above SIP copies the
+# the guess for the current root to position one.
 
+      DO KROOTS
+
+         COUNTER += 1.0
+         IF COUNTER == ONE
+
+            PARDO i,j
+                Tij(i,j) =  VEC_AB(i,j,KROOTS)
+                PUT R1_AB_intmd(i,j) =  Tij(i,j)
+            ENDPARDO i,j
+
+         ENDIF
+
+      ENDDO KROOTS
+      EXECUTE SIP_BARRIER
 #bgn_debug
       tmpa = 0.0
       suma = 0.0
@@ -1745,7 +1794,7 @@
 
      PARDO i, j
          tij(i,j) = 0.0
-         Put R1_AB(i,j) = 0.0
+         Put R1_AB(i,j) = tij(i,j)
      ENDPARDO i, j
      EXECUTE SIP_BARRIER 
 
@@ -1770,9 +1819,25 @@
 # The default iteration number is 30. Increase if desired.
 
      MAX_SUBSP_DIM  = EOM_MAXCYC
+     Call FORM_INITIAL_GUESS
 
 # The default denominator is 1P-Hbar and can be switched to Hbar
      
+     MULT = ZERO 
+     DO SPN_MULT
+
+        MULT  += 1.0
+
+        IF MULT == ONE
+           SINGLET = ONE
+           TRIPLET = ZERO
+        ELSE
+           SINGLET = ZERO
+           TRIPLET = ONE
+        ENDIF
+
+        ROOT_COUNT = ZERO
+
       DO NROOTS
 
          ROOT_COUNT += 1.0
@@ -1783,7 +1848,7 @@
         execute print_scalar ROOT_COUNT
 #end_debug
          MYROOT = ROOT_COUNT 
-         CALL PREP_DIP_GUESS 
+         CALL PREP_DIP_GUESS
       
          ITER_COUNT = 0.0
 
@@ -1898,6 +1963,7 @@
       ROOT_COUNT -= 1.0
       execute print_static DIP_SINGS_S ROOT_COUNT 
 #end_debug
+       ENDDO SPN_MULT 
 
        EXECUTE BLOCKS_TO_LIST DIPAB_GUESS_S
        EXECUTE SERVER_BARRIER
