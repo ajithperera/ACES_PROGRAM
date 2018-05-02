@@ -19,7 +19,7 @@
 
       index kiter    = 1, cc_iter
       index Ione     = 1, 1
-      index Spn_mult = 1, 1
+      index Spn_mult = 1, 2
 
       Index Ndim     = 1, 100
       Index Nroots   = 1, 12
@@ -265,9 +265,6 @@
       Served Nai_ibia1(i,b,i1,a1)
       Served Nai_ibia2(i,b,i1,a1)
  
-      Served tmp_abaa(a,b,i,a)
-      Served tmp_abaa1(a,b,i,a)
-
 #     Temporary arrays
 #     ---------------
 #
@@ -283,7 +280,6 @@
       distributed Nai_ba(b,i)
       temp tai_ab(a,j)
       temp tai_ba(b,i)
-
 
       Temp Tabia(a,b,i1,a1)
       Temp T1abia(a,b,i1,a1)
@@ -765,16 +761,16 @@
       EXECUTE SIP_BARRIER 
 
 #bgn_debug
-      tmpa=0.0
-      suma=0.0
-      pardo a,b1
-         get r1_ab(a,b1) 
-         Tmp = r1_ab(a,b1) * r1_ab(a,b1)
-         tmpa += tmp
-      endpardo a,b1
-      execute server_barrier 
-      collective suma +=tmpa
-      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo a,b1
+#         get r1_ab(a,b1) 
+#         Tmp = r1_ab(a,b1) * r1_ab(a,b1)
+#         tmpa += tmp
+#      endpardo a,b1
+#      execute server_barrier 
+#      collective suma +=tmpa
+#      execute print_scalar suma
 #end_debug
 
       ENDPROC PREP_DEA_GUESS
@@ -1052,36 +1048,36 @@
     execute server_barrier
 
 #bgn_debug
-      tmpa =0.0
-      suma =0.0
-      pardo a,b1
-            get d1_ab(a,b1)
-            tmp = d1_ab(a,b1) *  d1_ab(a,b1)
-            tmpa+= tmp
-      endpardo a, b1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-     suma =0.0
-      pardo a,b,i1,a1
-            request d2_abaa(a,b,i1,a1) a1
-            tmp = d2_abaa(a,b,i1,a1) * d2_abaa(a,b,i1,a1)
-            tmpa+= tmp
-      endpardo a,b,i1,a1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo a,b,j1,b1
-            request d2_abbb(a,b,j1,b1) b1
-            tmp = d2_abbb(a,b,j1,b1) * d2_abbb(a,b,j1,b1)
-            tmpa+= tmp
-      endpardo a,b,j1,b1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b1
+#            get d1_ab(a,b1)
+#            tmp = d1_ab(a,b1) *  d1_ab(a,b1)
+#            tmpa+= tmp
+#      endpardo a, b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#     suma =0.0
+#      pardo a,b,i1,a1
+#            request d2_abaa(a,b,i1,a1) a1
+#            tmp = d2_abaa(a,b,i1,a1) * d2_abaa(a,b,i1,a1)
+#            tmpa+= tmp
+#      endpardo a,b,i1,a1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo a,b,j1,b1
+#            request d2_abbb(a,b,j1,b1) b1
+#            tmp = d2_abbb(a,b,j1,b1) * d2_abbb(a,b,j1,b1)
+#            tmpa+= tmp
+#      endpardo a,b,j1,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
 #end_debug
 
     ENDPROC FORM_13P1H_DIAG
@@ -1261,18 +1257,6 @@
 
 #    Form Half back transformed cluster arrays: Compute S(Ef,KC)*V(Ab,Ef)
 #    ----------------------------------------
-#bgn_debug
-      tmpa =0.0
-      suma =0.0
-      pardo a,b,i1,a1
-            request r2_abaa(a,b,i1,a1) a1
-            tmp = r2_abaa(a,b,i1,a1) * r2_abaa(a,b,i1,a1)
-            tmpa+= tmp
-      endpardo a,b,i1,a1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-#end_debug
 #
 # DO S(E,f,K,C) -> S(lambda,sigma,K,C)
 # First  S(lambda,sigma,A,A)
@@ -1387,64 +1371,6 @@
 #
      execute server_barrier
 
-#bgn_debug
-#     pardo mu,nu,lambda,a
-#        txxxa(mu,nu,lambda,a) = 0.0
-#        PREPARE Vxxxa(mu,nu,lambda,a)=txxxa(mu,nu,lambda,a)
-#     endpardo mu,nu,lambda,a
-#     pardo mu,nu,a,b
-#         txbxa(mu,b,nu,a)=0.0
-#         PREPARE Vxbxa(mu,b,nu,a)=txbxa(mu,b,nu,a)
-#     endpardo mu,nu,a,b
-#     pardo a,b,i,a
-#         Tabia(a,b,i,a) = 0.0
-#         PREPARE  tmp_ABAA(a,b,i,a) = Tabia(a,b,i,a)
-#     endpardo a,b,i,a
-#     execute server_barrier
-#
-#     PARDO mu, nu, lambda, sigma
-#            compute_integrals aoint(mu,nu,lambda,sigma)
-#            DO a
-#               txxxa(mu,nu,lambda,a) = aoint(mu,nu,lambda,sigma)*ca(sigma,a)
-#               PREPARE Vxxxa(mu,nu,lambda,a) +=  txxxa(mu,nu,lambda,a)
-#            ENDDO a
-#      ENDPARDO mu, nu, lambda, sigma
-#      execute server_barrier
-#
-#      PARDO mu, nu, lambda, a
-#         REQUEST Vxxxa(mu,nu,lambda,a) a
-#            DO b
-#               txbxa(mu,b,lambda,a) = Vxxxa(mu,nu,lambda,a)*ca(nu,b)
-#               PREPARE Vxbxa(mu,b,lambda,a) += txbxa(mu,b,lambda,a)
-#            ENDDO b
-#      ENDPARDO mu, nu, lambda, a
-#      execute server_barrier
-#      destroy Vxxxa
-#
-#      PARDO mu,lambda,b,a
-#          request Vxbxa(mu,b,lambda,a) a
-#           DO i
-#           DO a1
-#              REQUEST T2IAO_xxia(lambda,mu,i,a1) a1
-#              Tabia(a,b,i,a1) = Vxbxa(mu,b,lambda,a) * T2IAO_xxia(lambda,mu,i,a1)
-#              PREPARE tmp_ABAA(a,b,i,a1) += Tabia(a,b,i,a1)
-#            enddo a1
-#            enddo i
-#      endpardo mu,lambda,b,a
-#      execute server_barrier
-#
-#      tmpa =0.0
-#      suma =0.0
-#      pardo a,b,i1,a1
-#            request tmp_abaa(a,b,i1,a1) a1
-#            tmp = tmp_abaa(a,b,i1,a1) * tmp_abaa(a,b,i1,a1)
-#            tmpa+= tmp
-#      endpardo a,b,i1,a1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#end_debug
-#
 # Contract AOINT with half back transformed Amplitudes
 # Form S(lamda,sigma,i,a)W(mu,nu,lambda,sigma) = Taa(mu,nu)
 # Form S(lamda,sigma,i,b)W(mu,nu,lambda,sigma) = Tab(mu,nu)
@@ -1529,11 +1455,6 @@
 #
               REQUEST             T2AO_xbix(mu,b,i,nu) nu
 
-#              REQUEST             T2AO_xbix(nu,b,i,mu) mu
-#              T2xbix(mu,b,i,nu)  = T2AO_xbix(nu,b,i,mu)
-#              T1xbix(mu,b,i,nu) -= T2xbix(mu,b,i,nu)
-#              T1xbix(mu,b,i,nu) *= 0.5
-
               T1xbix(mu,b,i,nu) = T2AO_xbix(mu,b,i,nu)
               T1abix(a,b,i,nu)  = T1xbix(mu,b,i,nu)*Ca(mu,a)
               Tabix(a,b,i,nu)  += T1abix(a,b,i,nu)
@@ -1558,9 +1479,7 @@
              ENDDO mu
 
              PREPARE HR2_ABAA(a,b,i,a1) += Tabia(a,b,i,a1)
-             PREPARE tmp_ABAA(a,b,i,a1) = Tabia(a,b,i,a1)
              
-
      ENDPARDO a, a1, b, i
 
      PARDO a, b, a1, i
@@ -1575,24 +1494,10 @@
 
              Tabia(a,b,i,a1)  *= 0.5
              PREPARE HR2_ABAA(a,b,i,a1) += Tabia(a,b,i,a1)
-             PREPARE tmp_ABAA(a,b,i,a1) += Tabia(a,b,i,a1)
 
      ENDPARDO a, b, a1, i
 
      execute server_barrier
-#bgn_debug
-      tmpa =0.0
-      suma =0.0
-      pardo a,b,i1,a1
-            request tmp_abaa(a,b,i1,a1) a1
-            tmp = tmp_abaa(a,b,i1,a1) * tmp_abaa(a,b,i1,a1)
-            tmpa+= tmp
-      endpardo a,b,i1,a1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-#end_debug
-
 #
      ENDPROC AOLADDER_R2_ABAA
 #    ------------------------
@@ -1703,19 +1608,6 @@
 
      PROC HBARDIR_R2
 #     -------------
-#bgn_debug
-      tmpa =0.0
-      suma =0.0
-      pardo a,b,i1,a1
-            request r2_abaa(a,b,i1,a1) a1
-            tmp = r2_abaa(a,b,i1,a1) * r2_abaa(a,b,i1,a1)
-            tmpa+= tmp
-      endpardo a,b,i1,a1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-#end_debug
-
 # Form S(e,f,k,c)*V(am,ef) + S(e,f,k,c)V(mn,ef)
 #
      PARDO i, j, i1, a
@@ -1774,7 +1666,7 @@
            do i2
               REQUEST                      VSpipi(a1,i1,a2,i2) i2
               tmpaaii(a1,a2,i1,i2)       = VSpipi(a1,i1,a2,i2)
-              tibii(i1,b,i,i2)           = R2_ABAA(a1,b,i,a2)*tmpaaii(a1,a2,i1,i2)
+              tibii(i1,b,i,i2)           = tmpaaii(a1,a2,i1,i2) * R2_ABAA(a1,b,i,a2)
               PREPARE Nibii(i1,b,i,i2)   += tibii(i1,b,i,i2)
            enddo i2
            enddo i1
@@ -1799,8 +1691,7 @@
 #
      ENDPARDO a, b, i1, a1
 #
-# AB(3) S(a,b1,i,a1)*V(a1,i1,b1,j); The factor -1 is to account for the
-# antisymmetric permutation. 
+# AB(3) S(a,b1,i,a1)*V(a1,i1,b1,j);
 
      PARDO i1, a1, b1, j
 #
@@ -1811,7 +1702,6 @@
         DO a
            REQUEST                    R2_ABAA(a,b1,i,a1) a1
            tmpabia(a1,b1,i,a)       = R2_ABAA(a,b1,i,a1)
-#           tmpabia(a1,b1,i,a)      *= -1.0
            tmpijia(i1,j,i,a)        = tmpabij(a1,b1,i1,j)*tmpabia(a1,b1,i,a)
            tajii(a,j,i,i1)          = tmpijia(i1,j,i,a)
            PREPARE Najii(a,j,i,i1) += tajii(a,j,i,i1)
@@ -1925,13 +1815,6 @@
 
      ENDPARDO  a1, a, a2, i1
 
-#bgn_debug
-      pardo a,b,i,a
-         Tabia(a,b,i,a) = 0.0
-         PREPARE  tmp_ABAA1(a,b,i,a) = Tabia(a,b,i,a)
-      endpardo a,b,i,a
-#end_debug
-
      Execute server_barrier 
 
      PARDO a, b, a1, i
@@ -1946,13 +1829,12 @@
            T1abia(a1,b,i,a) = Taibj(a1,i1,b,j) * Tijia(i1,j,i,a)
            PREPARE HR2_ABAA(a1,b,i,a) += T1abia(a1,b,i,a)
            T2abia(a1,b,i,a) += T1abia(a1,b,i,a)
-           prepare tmp_abaa1(a1,b,i,a) = T2abia(a1,b,i,a)
         ENDDO j
         ENDDO i1
-
-# The first factor (0.5) looks OK. But I am not 100% sure why 0.25. However,
-# 0.25 (instead of 0.5) is needed to match with HBAR_ABCD route.
-
+#
+## The first factor (0.5) looks OK. But I am not 100% sure why 0.25. However,
+## 0.25 (instead of 0.5) is needed to match with HBAR_ABCD route.
+#
         DO i1
         DO i2
            REQUEST Nibii(i1,b,i,i2) i2
@@ -1966,11 +1848,10 @@
 
            Taiai(a1,i1,a,i2) = Tau_aa(a1,i1,a,i2)
 
-           T1abia(a1,b,i,a)  = Taiai(a1,i1,a,i2) * Tibii(i1,b,i,i2)
+           T1abia(a1,b,i,a)  = Taiai(a1,i1,a,i2) *  Tibii(i1,b,i,i2) 
            T1abia(a1,b,i,a) *= 0.25
 
            PREPARE HR2_ABAA(a1,b,i,a) += T1abia(a1,b,i,a)
-           prepare tmp_abaa1(a1,b,i,a) += T1abia(a1,b,i,a)
         ENDDO i2
         ENDDO i1
 
@@ -1978,17 +1859,14 @@
         DO j
            REQUEST Najii(a1,j,i,i1) i
            REQUEST Tau_ab(a,i1,b,j) j
-           Tajii(a1,j,i,i1)   = Najii(a1,j,i,i1)
+           Tajii(a1,j,i,i1) = Najii(a1,j,i,i1)
            Taibj(a,i1,b,j)  = Tau_ab(a,i1,b,j)
 
-           T1abia(a1,b,i,a)  = Taibj(a,i1,b,j) * Tajii(a1,j,i,i1)
-#           execute dump_amp  T1abia(a,b,i,a1)
+           T1abia(a1,b,i,a)  = Tajii(a1,j,i,i1) *  Taibj(a,i1,b,j)
            PREPARE HR2_ABAA(a1,b,i,a) += T1abia(a1,b,i,a)
-           prepare tmp_abaa1(a1,b,i,a) += T1abia(a1,b,i,a)
         ENDDO j
         ENDDO i1
 
-#----------------------------------
         DO j
            GET T1b(b,j)
            REQUEST Nai_abia1(a1,j,i,a) a
@@ -1998,14 +1876,12 @@
            T1abia(a1,b,i,a)   = Tbj(b,j) *  Tai_abia(a1,j,i,a)
            T1abia(a1,b,i,a)  *= -1.0
            PREPARE HR2_ABAA(a1,b,i,a) += T1abia(a1,b,i,a)
-           prepare tmp_abaa1(a1,b,i,a) = T1abia(a1,b,i,a)
 
            REQUEST Nai_abia2(a1,j,i,a) a
            Tai_abia(a1,j,i,a) = Nai_abia2(a1,j,i,a)
            T1abia(a1,b,i,a)   = Tbj(b,j) *  Tai_abia(a1,j,i,a)
            T1abia(a1,b,i,a)  *= -1.0
            PREPARE HR2_ABAA(a1,b,i,a) += T1abia(a1,b,i,a)
-           prepare tmp_abaa1(a1,b,i,a) += T1abia(a1,b,i,a)
 
         ENDDO j
 
@@ -2021,75 +1897,29 @@
            T1abia(a,b,i,a1)  = Tai(a1,i1) * Tai_abii(a,b,i,i1)
            T1abia(a,b,i,a1) *= -1.0
            PREPARE HR2_ABAA(a,b,i,a1) += T1abia(a,b,i,a1)
-           prepare tmp_abaa1(a,b,i,a1) += T1abia(a,b,i,a1)
 
            REQUEST Nai_abii2(a,b,i,i1) i1
            Tai_abii(a,b,i,i1) = Nai_abii2(a,b,i,i1)
            T1abia(a,b,i,a1)   = Tai(a1,i1) * Tai_abii(a,b,i,i1)
            T1abia(a,b,i,a1)  *= -0.5
            PREPARE HR2_ABAA(a,b,i,a1) += T1abia(a,b,i,a1)
-           prepare tmp_abaa1(a,b,i,a1) += T1abia(a,b,i,a1)
         
            REQUEST Nai_ibia1(i1,b,i,a1) a1
            Tai_ibia(i1,b,i,a1) = Nai_ibia1(i1,b,i,a1)
            T1abia(a,b,i,a1)    = T1ai(a,i1) * Tai_ibia(i1,b,i,a1)
            T1abia(a,b,i,a1)   *= -1.0
            PREPARE HR2_ABAA(a,b,i,a1) += T1abia(a,b,i,a1)
-           prepare tmp_abaa1(a,b,i,a1) += T1abia(a,b,i,a1)
 
            REQUEST  Nai_ibia2(i1,b,i,a1) a1
            Tai_ibia(i1,b,i,a1) = Nai_ibia2(i1,b,i,a1)
            T1abia(a,b,i,a1)    = T1ai(a,i1) * Tai_ibia(i1,b,i,a1)
            T1abia(a,b,i,a1)   *= 0.5
            PREPARE HR2_ABAA(a,b,i,a1) +=  T1abia(a,b,i,a1)
-           prepare tmp_abaa1(a,b,i,a1) += T1abia(a,b,i,a1)
         ENDDO i1
            
      ENDPARDO a, b, a1, i
 
      EXECUTE SERVER_BARRIER 
-#bgn_debug
-      tmpa =0.0
-      suma =0.0
-      pardo a,b,i1,a1
-            request tmp_abaa1(a,b,i1,a1) a1
-            tmp = tmp_abaa1(a,b,i1,a1) * tmp_abaa1(a,b,i1,a1)
-            tmpa+= tmp
-      endpardo a,b,i1,a1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo i1,j,i,a
-            REQUEST Nijia(i1,j,i,a) a
-            tmp = Nijia(i1,j,i,a) * Nijia(i1,j,i,a)
-            tmpa+= tmp
-      endpardo i1,j,i,a
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo a,j,i,i1
-            REQUEST Najii(a,j,i,i1) i1
-            tmp = Najii(a,j,i,i1) * Najii(a,j,i,i1)
-            tmpa+= tmp
-      endpardo a,j,i,i1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo a,b,i,j
-            REQUEST tau_ab(a,i,b,j) j
-            tmp = tau_ab(a,i,b,j)  * tau_ab(a,i,b,j)
-            tmpa+= tmp
-      endpardo a,b,i,j
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-#end_debug
 
      ENDPROC HBARDIR_R2
 #    ------------------
@@ -2098,7 +1928,6 @@
 
 # 1/2 r^{ef} Hbar^{ab}_{ef}
 
-      NO_AO_LADDER = ZERO
       IF NO_AO_LADDER == ONE 
 
       PARDO a, b, a1, b1
@@ -2118,7 +1947,6 @@
       ENDPARDO a, b, a1, b1
 
       ENDIF 
-      NO_AO_LADDER = ZERO
 
       PARDO a, b, b1
 
@@ -2255,26 +2083,7 @@
 #
 # P(a/b,c)  S(e,f,i,c)*Hbar(ef,ab)
 #
-     NO_AO_LADDER = ZERO
-
      IF NO_AO_LADDER == ONE 
-#bgn_debug
-      tmpa =0.0
-      suma =0.0
-      pardo a,b,i1,a1
-            request r2_abaa(a,b,i1,a1) a1
-            tmp = r2_abaa(a,b,i1,a1) * r2_abaa(a,b,i1,a1)
-            tmpa+= tmp
-      endpardo a,b,i1,a1
-      pardo a,b,i,a
-         Tabia(a,b,i,a) = 0.0
-         PREPARE  tmp_ABAA(a,b,i,a) = Tabia(a,b,i,a)
-      endpardo a,b,i,a
-      execute server_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-     
-#end_debug
 
      PARDO a2, b1, a, b
            REQUEST                            Hbar_aabb(a,a2,b,b1) b1
@@ -2284,8 +2093,6 @@
                  REQUEST                      R2_ABAA(a2,b1,i,a1) a1
                  t1abia(a,b,i,a1)           = Hbar_aabb(a,a2,b,b1)*R2_ABAA(a2,b1,i,a1)
                  PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
-                 PREPARE tmp_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
-                 
                ENDDO a1
            ENDDO i
 
@@ -2306,7 +2113,6 @@
                  tmpaabi(a2,a3,b,i)         = R2_ABAA(a2,b,i,a3)
                  t1abia(a,b,i,a1)           = tpppp(a2,a3,a,a1)*tmpaabi(a2,a3,b,i)
                   PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
-                  PREPARE tmp_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
                ENDDO b
            eNDDO i
 
@@ -2319,30 +2125,13 @@
               DO a
                  REQUEST                      R2_ABAA(a,b1,i,a2) a2
                  t1abia(a,b,i,a1)           = Hbar_aabb(a1,a2,b,b1)*R2_ABAA(a,b1,i,a2)
-#                 execute dump_amp t1abia 
-#                 PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
-#                 PREPARE tmp_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+                 PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
                ENDDO a
            ENDDO i
 
     ENDPARDO a2, b1, a1, b
 
-#bgn_debug
-      execute server_barrier 
-      tmpa =0.0
-      suma =0.0
-      pardo a,b,i1,a1
-            request tmp_abaa(a,b,i1,a1) a1
-            tmp = tmp_abaa(a,b,i1,a1) * tmp_abaa(a,b,i1,a1)
-            tmpa+= tmp
-      endpardo a,b,i1,a1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-#end_debug
-
     ENDIF 
-    NO_AO_LADDER = ZERO
 #
 # P(a/bc) S(e,b,c,i)*Hbar(e,a)
 #
@@ -2575,7 +2364,6 @@
       CALL FORM_R1AB
       CALL FORM_R2AB
 
-      NO_AO_LADDER = ZERO
       IF NO_AO_LADDER == ZERO
          CALL INIT_AOL_ARRAYS 
          CALL HBARDIR_R1
@@ -2583,7 +2371,6 @@
          CALL AOLADDER_R1_AB
          CALL AOLADDER_R2_ABAA
       ENDIF 
-      NO_AO_LADDER=ZERO
 
 #bgn_debug
 #      PARDO a, b, i1, a1
@@ -2651,36 +2438,36 @@
       EXECUTE SERVER_BARRIER 
 
 #bgn_debug
-      tmpa =0.0
-      suma =0.0
-      pardo a,b1
-            get hr1_ab(a,b1)
-            tmp = hr1_ab(a,b1) * hr1_ab(a,b1)
-            tmpa+= tmp
-      endpardo a,b1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo a,b,i1,a1
-            request hr2_abaa(a,b,i1,a1) a1
-            tmp = hr2_abaa(a,b,i1,a1) * hr2_abaa(a,b,i1,a1)
-            tmpa+= tmp
-      endpardo a,b,i1,a1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo a,b,j1,b1
-            request hr2_abbb(a,b,j1,b1) b1
-            tmp = hr2_abbb(a,b,j1,b1) * hr2_abbb(a,b,j1,b1)
-            tmpa+= tmp
-      endpardo a,b,j1,b1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b1
+#            get hr1_ab(a,b1)
+#            tmp = hr1_ab(a,b1) * hr1_ab(a,b1)
+#            tmpa+= tmp
+#      endpardo a,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,i1,a1
+#            request hr2_abaa(a,b,i1,a1) a1
+#            tmp = hr2_abaa(a,b,i1,a1) * hr2_abaa(a,b,i1,a1)
+#            tmpa+= tmp
+#      endpardo a,b,i1,a1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo a,b,j1,b1
+#            request hr2_abbb(a,b,j1,b1) b1
+#            tmp = hr2_abbb(a,b,j1,b1) * hr2_abbb(a,b,j1,b1)
+#            tmpa+= tmp
+#      endpardo a,b,j1,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
 #end_debug
               
       ENDPROC FORM_ABBB
@@ -3163,7 +2950,7 @@
      OMEGA0M  = A_VALUE 
      OMEGA0M *= -1.0
 #bgn_debug
-     execute print_scalar OMEGA0M
+#     execute print_scalar OMEGA0M
 #end_debug
 
 # First the residual vector for iteration 1
@@ -3446,7 +3233,7 @@
      INV_SQRT_NORM_R = SUM_R
 
 #bgn_debug
-     execute print_scalar SUM_R
+#     execute print_scalar SUM_R
 #end_debug
 
      PARDO a, b1
@@ -3479,40 +3266,40 @@
      EXECUTE SERVER_BARRIER
 
 #bgn_debug
-     tmpa=0.0
-     suma=0.0
-     pardo a,b1
-         get r1_AB(a,b1)
-         tmp = r1_AB(a,b1) * r1_AB(a,b1)
-         tmpa += tmp
-      endpardo a,b1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      sumab=suma 
-      tmpa =0.0
-      suma =0.0
-      pardo a,b,i1,a1
-           request R2_ABAA(a,b,i1,a1) a1
-           tmp =  R2_ABAA(a,b,i1,a1) * R2_ABAA(a,b,i1,a1)
-           tmpa += tmp
-      endpardo a,b,i1,a1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      sumab += suma
-      tmpa =0.0
-      suma =0.0
-      pardo a,b,j1,b1
-            request  R2_ABBB(a,b,j1,b1) b1
-            tmp = R2_ABBB(a,b,j1,b1) * R2_ABBB(a,b,j1,b1)
-            tmpa+= tmp
-      endpardo a,b,j1,b1
-      execute server_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      sumab += suma
-      execute print_scalar sumab
+#     tmpa=0.0
+#     suma=0.0
+#     pardo a,b1
+#         get r1_AB(a,b1)
+#         tmp = r1_AB(a,b1) * r1_AB(a,b1)
+#         tmpa += tmp
+#      endpardo a,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab=suma 
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,i1,a1
+#           request R2_ABAA(a,b,i1,a1) a1
+#           tmp =  R2_ABAA(a,b,i1,a1) * R2_ABAA(a,b,i1,a1)
+#           tmpa += tmp
+#      endpardo a,b,i1,a1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab += suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,j1,b1
+#            request  R2_ABBB(a,b,j1,b1) b1
+#            tmp = R2_ABBB(a,b,j1,b1) * R2_ABBB(a,b,j1,b1)
+#            tmpa+= tmp
+#      endpardo a,b,j1,b1
+#      execute server_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab += suma
+#      execute print_scalar sumab
 #end_debug
 
      ENDPROC FORM_NEWVECS_ITR1
@@ -4751,7 +4538,7 @@
      ENDDO NINDEX50
 
 #bgn_debug
-     execute print_static etemp  iter_count 
+#     execute print_static etemp  iter_count 
 #end_debug
 
      ENDPROC C_CHECK
@@ -4812,7 +4599,7 @@
                GET                  t1b(b2,j)
 #
                t1ppqq(a,a1,b2,b3) = Vaabj(a1,a,b3,j)*t1b(b2,j)
-#               tppqq(a,a1,b2,b3) -= t1ppqq(a,a1,b2,b3)
+               tppqq(a,a1,b2,b3) -= t1ppqq(a,a1,b2,b3)
 #
             ENDDO j
 #
@@ -4822,7 +4609,7 @@
                GET                  t1a(a,i)
 #
                t1ppqq(a,a1,b2,b3) = Vbbai(b3,b2,a1,i)*t1a(a,i)
-#               tppqq(a,a1,b2,b3) -= t1ppqq(a,a1,b2,b3)
+               tppqq(a,a1,b2,b3) -= t1ppqq(a,a1,b2,b3)
 #
             ENDDO i
 #
@@ -4903,13 +4690,12 @@
      EOM_DENOM    = EE_DENOM
      EOM_MAXCYC   = EE_MAXCYC
      EXACT_HY     = ZERO 
+     NO_AO_LADDER = ZERO 
 #
       CALL READ_DATA
       CALL CREATE_ARRAYS 
 
-      NO_AO_LADDER = ONE
       IF NO_AO_LADDER == ONE
-         CALL HBAR_ABCD 
          CALL FORM_TAU
       ELSE 
          CALL FORM_TAU
@@ -5055,7 +4841,7 @@
 
            EXECUTE SERVER_BARRIER 
 #bgn_debug
-      execute print_scalar OMEGA 
+#      execute print_scalar OMEGA 
 #end_debug
 
            ITER_COUNT += -1.0

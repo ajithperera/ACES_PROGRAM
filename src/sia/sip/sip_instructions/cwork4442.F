@@ -36,6 +36,7 @@ c--------------------------------------------------------------------------
       implicit none
       include 'trace.h'
       include 'saved_data.h'
+      include 'parallel_info.h'
 
       integer na1,na2,nb1,nb2,nc1,nc2,nd1,nd2,
      *        ne1,ne2,nf1,nf2,ng1,ng2,nh1,nh2,
@@ -485,9 +486,11 @@ c         o y(ab,cd) = scr1(ab|pq) * scr2(pq|cd)
      &                      scr2,ldb,
      &                 0.d0,y,   ldc)
          else
+            If (Debug) Then
             print *, '@CWORK4442: ADD MORE OPTIONS'
             print *,'         (i1a,i1b,op_a) = ',i1a,i1b,op_a
             print *,'     (i2c,i2d,i2p,op_b) = ',i2c,i2d,i2p,op_b
+            Endif 
             call cwork4442_unopt(y, na1,na2,nb1,nb2,nc1,nc2,nd1,nd2,
      &                               a1, a2, b1, b2, c1, c2, d1, d2,
      &                           inda, indb, indc, indd,
@@ -755,9 +758,11 @@ c         o scr3(a,cd,b) -> y(a,b,cd)
             n = na
             call trnsps_ket(i,j,n,scr3,n,i,y,n,j)
          else
+            If (Debug) then
             print *,'@CWORK4442: ADD MORE OPTIONS'
             print *,'          (i1a,i1c,op_a) = ',i1a,i1c,op_a
             print *,'      (i2b,i2d,i2p,op_b) = ',i2b,i2d,i2p,op_b
+            Endif 
             call cwork4442_unopt(y, na1,na2,nb1,nb2,nc1,nc2,nd1,nd2,
      &                               a1, a2, b1, b2, c1, c2, d1, d2,
      &                           inda, indb, indc, indd,
@@ -1027,10 +1032,12 @@ c         o scr3(a,d,bc) -> y(a,bc,d)
             j = nb*nc
             n = na
             call trnsps_ket(i,j,n,scr3,n,i,y,n,j)
-         else
+         else 
+            If (Debug)Then
             print *,'@CWORK4442: ADD MORE OPTIONS'
             print *,'          (i1a,i1d,op_a) = ',i1a,i1d,op_a
             print *,'      (i2b,i2c,i2p,op_b) = ',i2b,i2c,i2p,op_b
+            Endif 
             call cwork4442_unopt(y, na1,na2,nb1,nb2,nc1,nc2,nd1,nd2,
      &                               a1, a2, b1, b2, c1, c2, d1, d2,
      &                           inda, indb, indc, indd,
