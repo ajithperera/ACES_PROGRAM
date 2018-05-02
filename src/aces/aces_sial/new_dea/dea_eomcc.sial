@@ -170,6 +170,7 @@
       Distributed RES1_AB(a,b1)
 
       Distributed HR1_AB(a,b1)
+      Distributed AOHR1_AB(a,b1)
       Distributed HR1_AB_ASYM(a,b1)
 
       Distributed CORR_VEC_AB(a,b1)
@@ -270,10 +271,12 @@
 #
       Temp Tee(mroots,ione)
       Temp Tab(a,b1)
-      Temp Tba(b,a1)
+      Temp Tba(b,a)
+      Temp T1ba(b,a)
+      Temp T1ab(a,b1)
+
       Temp Tmpaj(a,j)
       Temp Tmpbi(b,i)
-      Temp T1ab(a,b1)
       Temp Tji(j,i)
       Temp Tpp(p,p1)
       Temp tij(i,j)
@@ -647,6 +650,7 @@
       CREATE R1_AB
       CREATE HR1_AB_ASYM
       CREATE HR1_AB
+      CREATE AOHR1_AB
       CREATE DDII
       CREATE DDJJ
       CREATE DDAA
@@ -1243,10 +1247,25 @@
 #
               get tttax(a,mu)
               tab(a,b)=tttax(a,mu)*ca(mu,b)
-              put HR1_AB(a,b)+=tab(a,b)
-#
+              put AOHR1_AB(a,b)+=tab(a,b)
      ENDPARDO a, b, mu
 #
+     execute sip_barrier
+
+     Pardo a, b
+         Get AOHR1_AB(a,b) 
+         Tab(a,b)  = AOHR1_AB(a,b)
+         Tab(a,b) *= 0.5
+         Put HR1_AB(a,b) += Tab(a,b)
+
+         Get AOHR1_AB(b,a) 
+         Tab(b,a)  = AOHR1_AB(b,a)
+         T1ab(a,b) = Tab(b,a)
+         T1ab(a,b) *= 0.5
+         Put HR1_AB(a,b) += T1ab(a,b) 
+
+     Endpardo a, b
+
      execute sip_barrier
 
     ENDPROC AOLADDER_R1_AB
@@ -1571,7 +1590,7 @@
             
            Tab(a,b) = Nai_ba(b,i) * T1a(a,i)
            Tab(a,b) *= -1.0
-           Put HR1_AB(a,b) += Tab(a,b)
+           Put AOHR1_AB(a,b) += Tab(a,b)
         ENDDO i
 
         DO j 
@@ -1580,7 +1599,7 @@
      
            Tab(a,b) = Nai_ab(a,j) * T1b(b,j)
            Tab(a,b) *= -1.0
-           Put HR1_AB(a,b) += Tab(a,b) 
+           Put AOHR1_AB(a,b) += Tab(a,b) 
         ENDDO j
 
         DO i
@@ -1589,14 +1608,8 @@
            Request Tau_ab(a,i,b,j) j
            Taibj(a,i,b,j) = Tau_ab(a,i,b,j)
 
-#            Get T1a(a,i)
-#            Get T1b(b,j)
-#            Request T2ab(a,i,b,j) j
-#            Taibj(a,i,b,j)  = T1a(a,i)^T1b(b,j)
-            Taibj(a,i,b,j) = Tau_ab(a,i,b,j)
-
             Tab(a,b)  = Tau_ab(a,i,b,j) * Nij(i,j)
-            Put HR1_AB(a,b) += Tab(a,b) 
+            Put AOHR1_AB(a,b) += Tab(a,b) 
         ENDDO j
         ENDDO i
              
@@ -2335,7 +2348,8 @@
 #   
       PARDO a, b1
           tab(a,b1)      = 0.0
-          PUT HR1_AB(a,b1) = tab(a,b1)
+          PUT HR1_AB(a,b1)   = tab(a,b1)
+          PUT AOHR1_AB(a,b1) = tab(a,b1)
       ENDPARDO a, b1
 
       PARDO b, i
@@ -2371,14 +2385,6 @@
          CALL AOLADDER_R1_AB
          CALL AOLADDER_R2_ABAA
       ENDIF 
-
-#bgn_debug
-#      PARDO a, b, i1, a1
-#          tabia(a,b,i1,a1)       = 0.0
-#          PREPARE HR2_ABAA(a,b,i1,a1) = tabia(a,b,i1,a1)
-#      ENDPARDO a, b, i1, a1
-#      execute server_barrier 
-#end_debug
 
       ENDPROC HR_MULT
 #     ---------------
@@ -2438,36 +2444,36 @@
       EXECUTE SERVER_BARRIER 
 
 #bgn_debug
-#      tmpa =0.0
-#      suma =0.0
-#      pardo a,b1
-#            get hr1_ab(a,b1)
-#            tmp = hr1_ab(a,b1) * hr1_ab(a,b1)
-#            tmpa+= tmp
-#      endpardo a,b1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo a,b,i1,a1
-#            request hr2_abaa(a,b,i1,a1) a1
-#            tmp = hr2_abaa(a,b,i1,a1) * hr2_abaa(a,b,i1,a1)
-#            tmpa+= tmp
-#      endpardo a,b,i1,a1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      tmpa=0.0
-#      suma=0.0
-#      pardo a,b,j1,b1
-#            request hr2_abbb(a,b,j1,b1) b1
-#            tmp = hr2_abbb(a,b,j1,b1) * hr2_abbb(a,b,j1,b1)
-#            tmpa+= tmp
-#      endpardo a,b,j1,b1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
+      tmpa =0.0
+      suma =0.0
+      pardo a,b1
+            get hr1_ab(a,b1)
+            tmp = hr1_ab(a,b1) * hr1_ab(a,b1)
+            tmpa+= tmp
+      endpardo a,b1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa =0.0
+      suma =0.0
+      pardo a,b,i1,a1
+            request hr2_abaa(a,b,i1,a1) a1
+            tmp = hr2_abaa(a,b,i1,a1) * hr2_abaa(a,b,i1,a1)
+            tmpa+= tmp
+      endpardo a,b,i1,a1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa=0.0
+      suma=0.0
+      pardo a,b,j1,b1
+            request hr2_abbb(a,b,j1,b1) b1
+            tmp = hr2_abbb(a,b,j1,b1) * hr2_abbb(a,b,j1,b1)
+            tmpa+= tmp
+      endpardo a,b,j1,b1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
 #end_debug
               
       ENDPROC FORM_ABBB
@@ -4690,13 +4696,13 @@
      EOM_DENOM    = EE_DENOM
      EOM_MAXCYC   = EE_MAXCYC
      EXACT_HY     = ZERO 
-     NO_AO_LADDER = ZERO 
+     NO_AO_LADDER = ZERO
 #
       CALL READ_DATA
       CALL CREATE_ARRAYS 
 
       IF NO_AO_LADDER == ONE
-         CALL FORM_TAU
+         CALL HBAR_ABCD 
       ELSE 
          CALL FORM_TAU
       ENDIF 
