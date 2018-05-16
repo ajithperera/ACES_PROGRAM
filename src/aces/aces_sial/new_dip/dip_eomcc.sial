@@ -2755,6 +2755,24 @@
      PROC SELECT_HBAR_Y_VEC_TOGO
 #    ---------------------------
 
+      PARDO i, j
+         GET Y1_AB_PICKED(i,j)
+         Tij(i,j) = Y1_AB_PICKED(i,j)
+         PUT R1_AB(i,j) =  Tij(i,j)
+      ENDPARDO i, j
+
+      PARDO i, j, i1, a
+         GET Y2_ABAA_picked(i,j,i1,a)
+         Tijia(i,j,i1,a) = Y2_ABAA_picked(i,j,i1,a)
+         PUT R2_ABAA(i,j,i1,a) = Tijia(i,j,i1,a)
+      ENDPARDO i, j, i1, a
+
+      PARdO i, j, j1, b
+         GET Y2_ABBB_picked(i,j,j1,b)
+         Tijjb(i,j,j1,b) = Y2_ABBB_picked(i,j,j1,b)
+         PUT R2_ABBB(i,j,j1,b) = Tijjb(i,j,j1,b)
+      ENDPARDO i, j, j1, b
+
      NCOUNT = 0.0
      DO NINDEX50
         NCOUNT += 1.0

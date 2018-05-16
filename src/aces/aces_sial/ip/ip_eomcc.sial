@@ -170,6 +170,8 @@
 
       Distributed Y1a(i,kk1,subsp_dim)
       Distributed Y1b(j,kk1,subsp_dim)
+      Distributed HY1a(i,kk1,subsp_dim)
+      Distributed HY1b(j,kk1,subsp_dim)
 
       Distributed Y1a_picked(i,kk1)
       Distributed Y1b_picked(j,kk1)
@@ -227,6 +229,11 @@
       SERVED Y2bb_b(b,j,kk1,j1,subsp_dim)
       SERVED Y2aa_b(a,i,kk1,j,subsp_dim)
       SERVED Y2bb_a(b,j,kk1,i,subsp_dim)
+
+      SERVED HY2aa_a(a,i,kk1,i1,subsp_dim)
+      SERVED HY2bb_b(b,j,kk1,j1,subsp_dim)
+      SERVED HY2aa_b(a,i,kk1,j,subsp_dim)
+      SERVED HY2bb_a(b,j,kk1,i,subsp_dim)
 
       Distributed Y2aa_a_picked(a,i,kk1,i1)
       Distributed Y2bb_b_picked(b,j,kk1,j1)
@@ -438,6 +445,9 @@
       Scalar WARNING 
       Scalar EOM_DENOM
       Scalar EOM_MAXCYC
+      Scalar EXACT_HY
+      Scalar E_OLD
+      Scalar EDIFF 
 # -----------------------------------------------------------
 
       PROC READ_DATA
@@ -555,6 +565,8 @@
       CREATE HR2bb_a
       CREATE Y1a
       CREATE Y1b
+      CREATE HY1a
+      CREATE HY1b
       CREATE Y1a_PICKED
       CREATE Y1b_PICKED
       CREATE Y2aa_a_PICKED
@@ -4440,6 +4452,189 @@
      ENDPROC FORM_NEWVECS
 #    ---------------------
 
+     PROC FORM_NEW_HBAR_Y_VECS
+#    -------------------------
+     PARDO i, kk1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT 
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET HR1A_HIST(i,kk1,MINDEX50)
+                       Tixs(i,kk1,MINDEX50)  = HR1A_HIST(i,kk1,MINDEX50)
+                       T1ixs(i,kk1,NINDEX50) = Tixs(i,kk1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT HY1A(i,kk1,NINDEX50) += T1ixs(i,kk1,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO i, kk1
+
+
+     PARDO j, kk1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       GET HR1B_HIST(j,kk1,MINDEX50)
+                       Tjxs(j,kk1,MINDEX50)  = HR1B_HIST(j,kk1,MINDEX50)
+                       T1jxs(j,kk1,NINDEX50) = Tjxs(j,kk1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT HY1B(j,kk1,NINDEX50) += T1jxs(j,kk1,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO  j, kk1
+
+
+     PARDO i, i1, kk1, a
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST HR2aa_a_HIST(a,i,kk1,i1,MINDEX50)  i1
+
+                       Taikis(a,i,kk1,i1,MINDEX50) = HR2aa_a_HIST(a,i,kk1,i1,MINDEX50)
+                       T1aikis(a,i,kk1,i1,NINDEX50) = Taikis(a,i,kk1,i1,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE HY2aa_a(a,i,kk1,i1,NINDEX50) += T1aikis(a,i,kk1,i1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO i, i1, kk1, a
+
+     PARDO j, j1, kk1, b
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0  
+                             
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+                   MCOUNT = 0.0
+                   DO MINDEX50
+                      MCOUNT += 1.0
+
+                      IF MCOUNT > ITER_COUNT
+                         EXIT
+                      ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST HR2bb_b_HIST(b,j,kk1,j1,MINDEX50)  j1
+
+                       Tbjkjs(b,j,kk1,j1,MINDEX50) = HR2bb_b_HIST(b,j,kk1,j1,MINDEX50)
+                       T1bjkjs(b,j,kk1,j1,NINDEX50) = Tbjkjs(b,j,kk1,j1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE HY2bb_b(b,j,kk1,j1,NINDEX50) += T1bjkjs(b,j,kk1,j1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO j, j1, kk1, b
+
+     PARDO i, j, kk1, a
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF 
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST HR2aa_b_HIST(a,i,kk1,j,MINDEX50) j
+
+                       Taikjs(a,i,kk1,j,MINDEX50) = HR2aa_b_HIST(a,i,kk1,j,MINDEX50)
+                       T1aikjs(a,i,kk1,j,NINDEX50) = Taikjs(a,i,kk1,j,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE HY2aa_b(a,i,kk1,j,NINDEX50) += T1aikjs(a,i,kk1,j,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO i, j, kk1, a
+
+     PARDO j, i, kk1, b
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST HR2bb_a_HIST(b,j,kk1,i,MINDEX50) i
+
+                       Tbjkis(b,j,kk1,i,MINDEX50) = HR2bb_a_HIST(b,j,kk1,i,MINDEX50)
+                       T1bjkis(b,j,kk1,i,NINDEX50) = Tbjkis(b,j,kk1,i,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE HY2bb_a(b,j,kk1,i,NINDEX50) += T1bjkis(b,j,kk1,i,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO j, i, kk1, b
+  
+     EXECUTE SERVER_BARRIER 
+                
+     ENDPROC FORM_NEW_HBAR_Y_VECS
+#    ----------------------------
+
      PROC SELECT_VECS
 #    ----------------
 
@@ -4692,6 +4887,144 @@
   
      ENDPROC FORM_SELECTED_Y
 #    -----------------------
+
+     PROC SELECT_HBAR_Y_VEC_TOGO
+#    ---------------------------
+
+     PARDO kk1, i
+         GET Y1a_PICKED(i,kk1)
+         Tikk(i,kk1) = Y1a_PICKED(i,kk1)
+         PUT R1a(i,kk1) =  Tikk(i,kk1)
+     ENDPARDO kk1, i
+
+     PARDO kk1, j
+         GET Y1b_PICKED(j,kk1)
+         Tjkk(j,kk1) = Y1b_PICKED(j,kk1)
+         PUT R1b(j,kk1) =  Tjkk(j,kk1)
+     ENDPARDO kk1, j
+
+     PARDO i, i1, kk1, a
+         GET Y2aa_a_picked(a,i,kk1,i1)
+         Taiki(a,i,kk1,i1) = Y2aa_a_picked(a,i,kk1,i1)
+         PUT R2aa_a(a,i,kk1,i1) = Taiki(a,i,kk1,i1)
+     ENDPARDO i, i1, kk1, a
+
+     PARdO j, j1, kk1, b
+         GET Y2bb_b_picked(b,j1,kk1,j)
+         Tbjkj(b,j1,kk1,j) = Y2bb_b_picked(b,j1,kk1,j)
+         PUT R2bb_b(b,j1,kk1,j) = Tbjkj(b,j1,kk1,j)
+     ENDPARDO j, j1, kk1, b
+
+     PARDO a,i,kk1,j
+         GET Y2aa_b_picked(a,i,kk1,j)
+         Taikj(a,i,kk1,j) = Y2aa_b_picked(a,i,kk1,j)
+         PUT R2aa_b(a,i,kk1,j) = Taikj(a,i,kk1,j)
+     ENDPARDO a, i, kk1, j
+
+     PARDO j, i, kk1, b
+         GET Y2bb_a_picked(b,j,kk1,i)
+         Tbjki(b,j,kk1,i) =  Y2bb_a_picked(b,j,kk1,i)
+         PUT R2bb_a(b,j,kk1,i) = Tbjki(b,j,kk1,i)
+     ENDPARDO j, i, kk1, b
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO i, kk1
+ 
+                 GET HY1a(i,kk1,NINDEX50) 
+                 Tix(i,kk1) = HY1a(i,kk1,NINDEX50)
+                 PUT HY1a_PICKED(i,kk1) = Tix(i,kk1)
+
+           ENDPARDO i, kk1
+        ENDIF 
+     ENDDO NINDEX50
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO j, kk1
+ 
+                 GET HY1b(j,kk1,NINDEX50) 
+                 Tjx(j,kk1) = HY1b(j,kk1,NINDEX50)
+                 PUT HY1b_PICKED(j,kk1) = Tjx(j,kk1)
+
+           ENDPARDO j, kk1
+        ENDIF 
+     ENDDO NINDEX50
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO i, i1, kk1, a
+
+                 REQUEST HY2aa_a(a,i1,kk1,i,NINDEX50) i
+                 Taiki(a,i1,kk1,i) = HY2aa_a(a,i1,kk1,i,NINDEX50) 
+                 PUT HY2aa_a_picked(a,i1,kk1,i) = Taiki(a,i1,kk1,i)
+
+           ENDPARDO i, i1, kk1, a
+
+        ENDIF 
+     ENDDO NINDEX50
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO j, j1, kk1, b
+
+                 REQUEST HY2bb_b(b,j1,kk1,j,NINDEX50) j
+                 Tbjkj(b,j1,kk1,j) = HY2bb_b(b,j1,kk1,j,NINDEX50)
+                 PUT HY2bb_b_picked(b,j1,kk1,j) = Tbjkj(b,j1,kk1,j)
+
+           ENDPARDO j, j1, kk1, b
+
+        ENDIF 
+     ENDDO NINDEX50
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO i, j, kk1, a
+
+                 REQUEST HY2aa_b(a,i,kk1,j,NINDEX50) j
+                 Taikj(a,i,kk1,j) = HY2aa_b(a,i,kk1,j,NINDEX50) 
+                 PUT HY2aa_b_picked(a,i,kk1,j) = Taikj(a,i,kk1,j)
+
+           ENDPARDO i, j, kk1, a
+
+        ENDIF 
+     ENDDO NINDEX50
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO j, i, kk1, b
+
+                 REQUEST HY2bb_a(b,j,kk1,i,NINDEX50) i
+                 Tbjki(b,j,kk1,i) = HY2bb_a(b,j,kk1,i,NINDEX50)
+                 PUT HY2bb_a_picked(b,j,kk1,i) = Tbjki(b,j,kk1,i)
+
+           ENDPARDO j, i, kk1, b
+
+        ENDIF 
+     ENDDO NINDEX50
+        
+     EXECUTE SIP_BARRIER
+
+     ENDPROC SELECT_HBAR_Y_VEC_TOGO
+#    ------------------------------
 
      PROC FORM_HBAR_Y_VECS
 #    ---------------------
@@ -5920,7 +6253,8 @@
      PARDO i
         DO kk1
            tix(i,kk1)      = 0.0
-           PUT Y1a(i,kk1,NINDEX50) = tix(i,kk1)
+           PUT Y1a(i,kk1,NINDEX50)  = tix(i,kk1)
+           PUT HY1a(i,kk1,NINDEX50) = tix(i,kk1)
            PUT R1a_intmd(i,kk1) = tix(i,kk1)
         ENDDO kk1
      ENDPARDO i
@@ -5928,7 +6262,8 @@
      PARDO j
         DO kk1
            tjx(j,kk1)      = 0.0
-           PUT Y1b(j,kk1,NINDEX50) = tjx(j,kk1)
+           PUT Y1b(j,kk1,NINDEX50)  = tjx(j,kk1)
+           PUT HY1b(j,kk1,NINDEX50) = tjx(j,kk1)
            PUT R1b_intmd(j,kk1) =  tjx(j,kk1)
        ENDDO kk1
      ENDPARDO j
@@ -5936,7 +6271,8 @@
      PARDO i, i1, a
            DO kk1
               taixi(a,i1,kk1,i)       = 0.0
-              PREPARE Y2aa_a(a,i1,kk1,i,NINDEX50) = taixi(a,i1,kk1,i)
+              PREPARE Y2aa_a(a,i1,kk1,i,NINDEX50)  = taixi(a,i1,kk1,i)
+              PREPARE HY2aa_a(a,i1,kk1,i,NINDEX50) = taixi(a,i1,kk1,i)
               PUT R2aa_a_intmd(a,i1,kk1,i) = taixi(a,i1,kk1,i)
            ENDDO kk1
      ENDPARDO i, i1, a
@@ -5944,7 +6280,8 @@
      PARDO j, j1, b
            DO kk1
               tbjxj(b,j1,kk1,j)       = 0.0
-              PREPARE Y2bb_b(b,j1,kk1,j,NINDEX50) = tbjxj(b,j1,kk1,j)
+              PREPARE Y2bb_b(b,j1,kk1,j,NINDEX50)  = tbjxj(b,j1,kk1,j)
+              PREPARE HY2bb_b(b,j1,kk1,j,NINDEX50) = tbjxj(b,j1,kk1,j)
               PUT R2bb_b_intmd(b,j1,kk1,j) = tbjxj(b,j1,kk1,j)
            ENDDO kk1
      ENDPARDO j, j1, b
@@ -5952,7 +6289,8 @@
      PARDO j, i1, a
            DO kk1
               taixj(a,i1,kk1,j)       = 0.0
-              PREPARE Y2aa_b(a,i1,kk1,j,NINDEX50) = taixj(a,i1,kk1,j)
+              PREPARE Y2aa_b(a,i1,kk1,j,NINDEX50)  = taixj(a,i1,kk1,j)
+              PREPARE HY2aa_b(a,i1,kk1,j,NINDEX50) = taixj(a,i1,kk1,j)
               PUT R2aa_b_intmd(a,i1,kk1,j) = taixj(a,i1,kk1,j)
            ENDDO kk1
      ENDPARDO j, i1, a
@@ -5960,7 +6298,8 @@
      PARDO i, j1, b
            DO kk1
               tbjxi(b,j1,kk1,i)       = 0.0
-              PREPARE Y2bb_a(b,j1,kk1,i,NINDEX50) = tbjxi(b,j1,kk1,i)
+              PREPARE Y2bb_a(b,j1,kk1,i,NINDEX50)  = tbjxi(b,j1,kk1,i)
+              PREPARE HY2bb_a(b,j1,kk1,i,NINDEX50) = tbjxi(b,j1,kk1,i)
               PUT R2bb_a_intmd(b,j1,kk1,i) = tbjxi(b,j1,kk1,i)
            ENDDO kk1
      ENDPARDO i, j1, b
@@ -6155,7 +6494,7 @@
      EOM_THRES    = EOM_TOL
      EOM_DENOM    = EE_DENOM
      EOM_MAXCYC   = EE_MAXCYC
-
+     EXACT_HY     = ZERO
 #
       CALL READ_DATA
       CALL CREATE_ARRAYS 
@@ -6233,20 +6572,34 @@
               CALL FORM_NEWVECS_ITR1
            ELSE
 
-              CALL FORM_NEWVECS 
-
-              CALL SELECT_VECS
-
-              CALL FORM_SELECTED_Y
-         
-              CALL FORM_HBAR_Y_VECS
+              IF EXACT_HY == ONE
+                 CALL FORM_NEWVECS 
+                 CALL SELECT_VECS
+                 CALL FORM_SELECTED_Y
+                 CALL FORM_HBAR_Y_VECS
+              ELSE
+                 CALL FORM_NEWVECS
+                 CALL SELECT_VECS
+                 CALL FORM_SELECTED_Y
+                 CALL FORM_NEW_HBAR_Y_VECS
+                 CALL SELECT_HBAR_Y_VEC_TOGO
+              ENDIF 
 
               CALL FORM_RESIDUAL_VEC
-
               CALL CHECK_CONVERGENCE
+
+              IF ITER_COUNT > ONE
+                   EDIFF = E_OLD - OMEGA
+                ENDIF
+                E_OLD = OMEGA
+                EDIFF *=EDIFF
+                EXECUTE SQUARE_ROOT EDIFF HALF
 #bgn_debug
       execute print_scalar RESIDUAL_NORM
+      execute print_scalar OMEGA
+      execute print_scalar EDIFF
 #end_debug
+
               IF RESIDUAL_NORM  < EOM_THRES
                 EXIT
               ENDIF 

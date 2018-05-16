@@ -5023,6 +5023,24 @@
 
          endif
          execute sip_barrier
+#bgn_debug
+#       if rank==0.0
+#       esuma = 0.0
+#       esumb = 0.0
+#       DO mu
+#       DO nu
+#          txx(mu,nu)=Fockrohf_a(mu,nu)
+#          etemp  = txx(mu,nu) * txx(mu,nu)
+#          esuma += etemp
+#          txx(mu,nu)=Fockrohf_b(mu,nu)
+#          etemp  =  txx(mu,nu) * txx(mu,nu)
+#          esumb += etemp
+#       ENDDO nu
+#       ENDDO mu
+#       execute print_scalar esuma
+#       execute print_scalar esumb
+#       endif
+##end_debug
 
          CALL OVER_HALF
          execute sip_barrier

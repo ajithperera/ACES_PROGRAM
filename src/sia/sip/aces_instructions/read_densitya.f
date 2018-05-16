@@ -80,7 +80,7 @@ c-----------------------------------------------------------------------
 
             close (135)
 
-            call output(CA,1,n_basis,1,n_basis,n_basis,n_basis,1)
+CSSS            call output(CA,1,n_basis,1,n_basis,n_basis,n_basis,1)
             write(66,*) ' Computing the RHF HF density'
             do m = 1, n_basis
             do n = 1, n_basis

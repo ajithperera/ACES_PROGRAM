@@ -3875,7 +3875,6 @@
       DO NT 
 
          ncount = ncount + 1.0  
-         execute print_scalar ncount 
 
          whichi = 1.0 
          execute get_ijk whichi ncount  

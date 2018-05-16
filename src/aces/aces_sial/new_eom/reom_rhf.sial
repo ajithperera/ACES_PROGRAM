@@ -301,6 +301,7 @@
       SCALAR  evfev 
       SCALAR  Idens 
       SCALAR  SEVEN_ZERO 
+      SCALAR  EXACT_HY
       SCALAR  EOM_GUESS
       SCALAR  EOM_DENOM
       SCALAR  EOM_MAXCYC
@@ -337,6 +338,8 @@
       Distributed ORTHO_COEF(MINDEX50,NINDEX50)
       Distributed Y1A(a,i,subsp_dim)
       Distributed Y1B(b,j,subsp_dim)
+      Distributed HY1A(a,i,subsp_dim)
+      Distributed HY1B(b,j,subsp_dim)
       Distributed Y1A_picked(a,i)
       Distributed Y1B_picked(b,j)
       Distributed HY1A_picked(a,i)
@@ -357,6 +360,9 @@
       Served Y2aa(a,i,a1,i1,subsp_dim)
       Served Y2bb(b,j,b1,j1,subsp_dim)
       Served Y2ab(a,i,b,j,subsp_dim)
+      Served HY2aa(a,i,a1,i1,subsp_dim)
+      Served HY2bb(b,j,b1,j1,subsp_dim)
+      Served HY2ab(a,i,b,j,subsp_dim)
       Served Y2aa_picked(a,i,a1,i1)
       Served Y2bb_picked(b,j,b1,j1)
       Served Y2ab_picked(a,i,b,j)
@@ -454,6 +460,8 @@
       Scalar PRINT_FLAG
       Scalar CIS_GUESS
       Scalar MAX_DIAGS_GUESS
+      Scalar E_OLD
+      Scalar EDIFF
 #
 # Watson
 #
@@ -5908,6 +5916,7 @@
       create VC1A_HIST
       create VCH1A_HIST
       create Y1a
+      create HY1a
       create Y1a_PICKED
       create HY1a_PICKED
       create Res1a
@@ -6055,20 +6064,23 @@
 
          PARDO i, a
                Tai(a,i)  = 0.0
-               PUT Y1A(a,i,NINDEX50) = Tai(a,i)
+               PUT Y1A(a,i,NINDEX50)  = Tai(a,i)
+               PUT HY1A(a,i,NINDEX50) = Tai(a,i)
                PUT R1a_intmd(a,i) = Tai(a,i)
 
          ENDPARDO i, a
 
          PARDO a, a1, i, i1
                Taiai(a,i,a1,i1) = 0.0
-               PREPARE Y2aa(a,i,a1,i1,NINDEX50) = Taiai(a,i,a1,i1)
+               PREPARE Y2aa(a,i,a1,i1,NINDEX50)  = Taiai(a,i,a1,i1)
+               PREPARE HY2aa(a,i,a1,i1,NINDEX50) = Taiai(a,i,a1,i1)
                PREPARE R2_intmd_aa(a,i,a1,i1) = Taiai(a,i,a1,i1)
          ENDPARDO a, a1, i, i1
 #
          PARDO a, b, i, j
                Taibj(a,i,b,j) = 0.0
-               PREPARE Y2ab(a,i,b,j,NINDEX50)  = Taibj(a,i,b,j)
+               PREPARE Y2ab(a,i,b,j,NINDEX50)   = Taibj(a,i,b,j)
+               PREPARE HY2ab(a,i,b,j,NINDEX50)  = Taibj(a,i,b,j)
                PREPARE R2_intmd_ab(a,i,b,j) = Taibj(a,i,b,j)
          ENDPARDO a, b, i, j
 
@@ -7033,6 +7045,103 @@
      ENDPROC FORM_NEWVECS
 #    --------------------
 
+    PROC  FORM_NEW_HBAR_Y_VECS
+#   --------------------------
+
+     PARDO i, a
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET VCH1A_HIST(a,i,MINDEX50)
+                       Tain(a,i,MINDEX50)  = VCH1A_HIST(a,i,MINDEX50)
+                       T1ain(a,i,NINDEX50) = Tain(a,i,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT HY1A(a,i,NINDEX50) += T1ain(a,i,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO i, a
+
+     PARDO i, i1, a1, a
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST VCHACT2aa_HIST(a,i,a1,i1,MINDEX50)  i1
+
+                       Taiain(a,i,a1,i1,MINDEX50) = VCHACT2aa_HIST(a,i,a1,i1,MINDEX50)
+                       T1aiain(a,i,a1,i1,NINDEX50) = Taiain(a,i,a1,i1,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE HY2aa(a,i,a1,i1,NINDEX50) += T1aiain(a,i,a1,i1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO i, i1, a1, a
+
+     PARDO a, i, b, j
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST VCHACT2ab_HIST(a,i,b,j,MINDEX50)  j
+
+                       Taibjn(a,i,b,j,MINDEX50) = VCHACT2ab_HIST(a,i,b,j,MINDEX50)
+                       T1aibjn(a,i,b,j,NINDEX50) = Taibjn(a,i,b,j,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE HY2ab(a,i,b,j,NINDEX50) += T1aibjn(a,i,b,j,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+
+     ENDPARDO a, i, b, j
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC FORM_NEW_HBAR_Y_VECS
+#    ----------------------------
+
      PROC SELECT_VECS
 #    ----------------
 
@@ -7151,6 +7260,79 @@
 
      ENDPROC FORM_SELECTED_Y
 #    -----------------------
+
+     PROC SELECT_HBAR_Y_VEC_TOGO
+#    ---------------------------
+
+     PARDO a, i
+         GET Y1a_PICKED(a,i)
+         Tai(a,i) = Y1a_PICKED(a,i)
+         PUT VCACT1A(a,i) =  Tai(a,i)
+     ENDPARDO a, i
+
+     PARDO i, i1, a1, a
+         REQUEST Y2aa_picked(a,i,a1,i1) i1
+         Taiai(a,i,a1,i1) = Y2aa_picked(a,i,a1,i1)
+         PREPARE VCACT2AA(a,i,a1,i1) = Taiai(a,i,a1,i1)
+     ENDPARDO i, i1, a1, a
+
+     PARDO a,i,b,j
+         REQUEST Y2ab_picked(a,i,b,j) j
+         Taibj(a,i,b,j) = Y2ab_picked(a,i,b,j)
+         PREPARE VCACT2AB(a,i,b,j) = Taibj(a,i,b,j)
+     ENDPARDO a, i, b, j
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO i, a
+
+                 GET HY1a(a,i,NINDEX50)
+                 Tai(a,i) = HY1a(a,i,NINDEX50)
+                 PUT HY1a_PICKED(a,i) = Tai(a,i)
+
+           ENDPARDO i, a
+        ENDIF
+     ENDDO NINDEX50
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO i, i1, a1, a
+
+                 REQUEST HY2aa(a,i1,a1,i,NINDEX50) i
+                 Taiai(a,i1,a1,i) = HY2aa(a,i1,a1,i,NINDEX50)
+                 PREPARE HY2aa_picked(a,i1,a1,i) = Taiai(a,i1,a1,i)
+
+           ENDPARDO i, i1, a1, a
+
+        ENDIF
+     ENDDO NINDEX50
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO i, j, b, a
+
+                 REQUEST HY2ab(a,i,b,j,NINDEX50) j
+                 Taibj(a,i,b,j) = HY2ab(a,i,b,j,NINDEX50)
+                 PREPARE HY2ab_picked(a,i,b,j) = Taibj(a,i,b,j)
+
+           ENDPARDO i, j, b, a
+
+        ENDIF
+     ENDDO NINDEX50
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC SELECT_HBAR_Y_VEC_TOGO
+#    ------------------------------
 
      PROC FORM_HBAR_Y_VECS
 #    ---------------------
@@ -7587,6 +7769,8 @@
 #         tmp = r1a_intmd(a,i) * r1a_intmd(a,i)
 #         tmpa += tmp
 #      endpardo i,a
+#      execute sip_barrier
+#      collective suma +=tmpa
 #      execute print_scalar suma
 #      tmpa =0.0
 #      suma =0.0
@@ -8009,7 +8193,8 @@
      EOM_GUESS        = EE_GUESS
      EOM_DENOM        = EE_DENOM
      EOM_MAXCYC       = EE_MAXCYC
-     IDENS            = 1.0
+     IDENS            = ONE
+     EXACT_HY         = ZERO 
 
 # The default Guess is CIS, can be switched by proper key-values.
 
@@ -8103,26 +8288,38 @@
               CALL FORM_NEWVECS_ITR1
            ELSE
 
-              CALL FORM_NEWVECS
-              CALL SELECT_VECS
-
-              CALL FORM_SELECTED_Y
-
-              CALL FORM_HBAR_Y_VECS
+              IF EXACT_HY == ONE
+                 CALL FORM_NEWVECS
+                 CALL SELECT_VECS
+                 CALL FORM_SELECTED_Y
+                 CALL FORM_HBAR_Y_VECS
+              ELSE
+                 CALL FORM_NEWVECS
+                 CALL SELECT_VECS
+                 CALL FORM_SELECTED_Y
+                 CALL FORM_NEW_HBAR_Y_VECS
+                 CALL SELECT_HBAR_Y_VEC_TOGO
+              ENDIF
 
               CALL FORM_RESIDUAL_VEC
-
               CALL CHECK_CONVERGENCE
+
+              IF ITER_COUNT > ONE
+                   EDIFF = E_OLD - OMEGA
+                ENDIF
+                E_OLD = OMEGA
+                EDIFF *=EDIFF
+                EXECUTE SQUARE_ROOT EDIFF HALF
 #bgn_debug
       execute print_scalar RESIDUAL_NORM
+      execute print_scalar OMEGA
+      execute print_scalar EDIFF
 #end_debug
               IF RESIDUAL_NORM  < EOM_THRES
                 EXIT
               ELSE
                 CALL FORM_CORRECTION_VEC
-
                 CALL DRIVE_ORTHO
-
                 CALL RESCALE_NEW_C
               ENDIF 
 
@@ -8187,6 +8384,18 @@
 #end_debug
 
 #bgn_debug
+#      tmpa=0.0
+#      tmpb=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,a
+#         get VCACT1A(a,i)
+#         tmp = VCACT1A(a,i) * VCACT1A(a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
 #      ncount = 0.0
 #      do nroots
 #      ncount += 1.0
@@ -8199,7 +8408,7 @@
 #      sumb=0.0
 #      pardo i,a
 #         get r1a_vecs(a,i,nroots)
-#         tmp = r1a_vecs(a,i,nroots)*r1a_vecs(a,i,nroots)
+#        tmp = r1a_vecs(a,i,nroots)*r1a_vecs(a,i,nroots)
 #         tmpa += tmp
 #      endpardo i,a
 #      execute sip_barrier
@@ -8227,10 +8436,9 @@
 #      execute print_scalar suma
 #      enddo nroots 
 #end_debug
-#
+
        SEVEN_ZERO = 70.0
        EXECUTE  PRINT_REL_INFO  SEVEN_ZERO EOM_EES
-
 #
 # This DENS2JOBARC to call simply write a record named "EOM     " to
 # JOBARC file. It will be used in a2proc.

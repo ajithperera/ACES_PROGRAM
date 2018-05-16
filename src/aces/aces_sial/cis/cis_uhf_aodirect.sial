@@ -3111,6 +3111,18 @@
 
      PROC SELECT_HBAR_Y_VEC_TOGO
 #    ---------------------------
+     PARDO a, i
+         GET Y1a_PICKED(a,i)
+         Tai(a,i) = Y1a_PICKED(a,i)
+         PUT R1a(a,i) =  Tai(a,i)
+     ENDPARDO a, i
+
+     PARDO b, j
+         GET Y1b_PICKED(b,j)
+         Tbj(b,j) = Y1b_PICKED(b,j)
+         PUT R1b(b,j) =  Tbj(b,j)
+     ENDPARDO b, j
+
      NCOUNT = 0.0
      DO NINDEX50
         NCOUNT += 1.0

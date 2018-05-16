@@ -60,7 +60,7 @@ c--------------------------------------------------------------------------
       integer flag
       integer stack
       integer sind  
-      integer vmax,omax,norbmax,maxhist,diis_start   
+      integer vmax,omax,norbmax,maxhist,diis_start,n_basis 
 
       double precision x(1)
       double precision dbuf(1), temp 
@@ -333,8 +333,7 @@ c        endif
 c        call determine_atom_orb_max(omax,vmax,norbmax) 
 c        call determine_frags() 
 
-
-         if (scalar_table(sind) .lt. 0.0) then 
+         If (scalar_table(sind) .lt. 0.0) then 
 
             INQUIRE(file='ca.data',exist=aExist)
             INQUIRE(file='cb.data',exist=bExist)
@@ -351,9 +350,16 @@ c
      *                          x(farray), x(fbarray)) 
             scalar_table(sind) = 1.0
 
-         endif 
+C         n_basis = nbeta_occupied + nbeta_virtual 
+C         call output(x(farray),1,n_basis,1,n_basis,n_basis,n_basis,1)
+C         call dcopy(n_basis*n_basis,x(farray),1,x(fbarray),1)
+C         write(6,*)
+C         call output(x(fbarray),1,n_basis,1,n_basis,n_basis,n_basis,1)
+         else 
 
             scalar_table(sind) = 9.0
+
+         endif 
 
          else
    

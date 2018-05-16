@@ -12,7 +12,7 @@ C  GNU General Public License for more details.
 
 C  The GNU General Public License is included in this distribution
 C  in the file COPYRIGHT.
-      subroutine read_densityab(nc1,nc2,nd1,nd2,ca,fa,fb)
+      subroutine read_densityab(nc1,nc2,nd1,nd2,ca,cb,fa,fb)
 c---------------------------------------------------------------------------
 
       implicit none

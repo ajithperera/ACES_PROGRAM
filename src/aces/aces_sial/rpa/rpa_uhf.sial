@@ -2314,6 +2314,28 @@
 
      PROC SELECT_HBAR_Y_VECTOR_TOGO
 #    ------------------------------
+     PARDO A, I
+         GET R1A_MO_P_PICKED_R(A,I)
+         GET R1A_MO_M_PICKED_L(A,I)
+
+         TAP_R(A,I)  = R1A_MO_P_PICKED_R(A,I)
+         TAM_L(A,I)  = R1A_MO_M_PICKED_L(A,I)
+
+         PUT R1A_MO_P_CURRENT_R(A,I)  =  TAP_R(A,I)
+         PUT R1A_MO_M_CURRENT_L(A,I)  =  TAM_L(A,I)
+     ENDPARDO A, I
+
+     PARDO B, J
+         GET R1B_MO_P_PICKED_R(B,J)
+         GET R1B_MO_M_PICKED_L(B,J)
+
+         TBP_R(B,J)  = R1B_MO_P_PICKED_R(B,J)
+         TBM_L(B,J)  = R1B_MO_M_PICKED_L(B,J)
+
+         PUT R1B_MO_P_CURRENT_R(B,J)  =  TBP_R(B,J)
+         PUT R1B_MO_M_CURRENT_L(B,J)  =  TBM_L(B,J)
+     ENDPARDO B, J
+
 # Get vectors corresponding to the maximum overlap and put them
 # in the distributed arrrays labelled as _PICKED_ and return.
 #

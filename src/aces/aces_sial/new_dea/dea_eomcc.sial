@@ -2444,36 +2444,36 @@
       EXECUTE SERVER_BARRIER 
 
 #bgn_debug
-      tmpa =0.0
-      suma =0.0
-      pardo a,b1
-            get hr1_ab(a,b1)
-            tmp = hr1_ab(a,b1) * hr1_ab(a,b1)
-            tmpa+= tmp
-      endpardo a,b1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo a,b,i1,a1
-            request hr2_abaa(a,b,i1,a1) a1
-            tmp = hr2_abaa(a,b,i1,a1) * hr2_abaa(a,b,i1,a1)
-            tmpa+= tmp
-      endpardo a,b,i1,a1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa=0.0
-      suma=0.0
-      pardo a,b,j1,b1
-            request hr2_abbb(a,b,j1,b1) b1
-            tmp = hr2_abbb(a,b,j1,b1) * hr2_abbb(a,b,j1,b1)
-            tmpa+= tmp
-      endpardo a,b,j1,b1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b1
+#            get hr1_ab(a,b1)
+#            tmp = hr1_ab(a,b1) * hr1_ab(a,b1)
+#            tmpa+= tmp
+#      endpardo a,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,i1,a1
+#            request hr2_abaa(a,b,i1,a1) a1
+#            tmp = hr2_abaa(a,b,i1,a1) * hr2_abaa(a,b,i1,a1)
+#            tmpa+= tmp
+#      endpardo a,b,i1,a1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo a,b,j1,b1
+#            request hr2_abbb(a,b,j1,b1) b1
+#            tmp = hr2_abbb(a,b,j1,b1) * hr2_abbb(a,b,j1,b1)
+#            tmpa+= tmp
+#      endpardo a,b,j1,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
 #end_debug
               
       ENDPROC FORM_ABBB
@@ -3662,6 +3662,23 @@
 
      PROC SELECT_HBAR_Y_VEC_TOGO
 #    ---------------------------
+     PARDO a, b1
+         GET Y1_AB_PICKED(a,b1)
+         Tab(a,b1) = Y1_AB_PICKED(a,b1)
+         PUT R1_AB(a,b1) =  Tab(a,b1)
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+         REQUEST Y2_ABAA_picked(a,b,i1,a1)  a1
+         Tabia(a,b,i1,a1) = Y2_ABAA_picked(a,b,i1,a1)
+         PREPARE R2_ABAA(a,b,i1,a1) = Tabia(a,b,i1,a1)
+     ENDPARDO a, b, i1, a1
+
+     PARdO a, b, j1, b1
+         REQUEST Y2_ABBB_picked(a,b,j1,b1) b1
+         Tabjb(a,b,j1,b1) = Y2_ABBB_picked(a,b,j1,b1)
+         PREPARE R2_ABBB(a,b,j1,b1) = Tabjb(a,b,j1,b1)
+     ENDPARDO a, b, j1, b1
 
      NCOUNT = 0.0
      DO NINDEX50
