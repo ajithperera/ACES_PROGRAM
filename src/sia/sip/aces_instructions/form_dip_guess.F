@@ -212,7 +212,7 @@ C It is square (always).
 
 #ifdef _DEBUG_LVL0
       If(me.eq.0) Then
-      Write(6,"(a,i4)") "@-Entry to Get_guess order of the matrix", 
+      Write(6,"(a,1x,i4)") "@-Entry to Get_guess order of the matrix", 
      +                IJDim
       Endif 
 #endif 
@@ -229,7 +229,7 @@ c eigenvectors. This is really to handle nearly zero eigenvalues.
       Write(6,"(a)") "The right-hand side"
       Write(6,"(6(1x,F10.5))") (EigR(i),i=1,Ndim)
 C      Write(6,"(6(1x,F10.5))") (EigI(i),i=1,Ndim)
-      call output(EvecR,1,Ndim,1,Ndim,Ndim,Ndim,1)
+C      call output(EvecR,1,Ndim,1,Ndim,Ndim,Ndim,1)
 C      Write(6,"(a)") "The left-hand side"
 C      call output(EvecL,1,Ndim,1,Ndim,Ndim,Ndim,1)
       endif 

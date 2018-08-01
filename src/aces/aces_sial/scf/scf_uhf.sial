@@ -4812,9 +4812,6 @@
       If Shiftb > 0.0
          level_shift = 1.0
       Endif
-
-      Karls_dynamic    = 1.0
-      constant_damping = 0.0
 #
 #     Create the one-particle arrays needed for the computation. 
 #     ---------------------------------------------------------- 

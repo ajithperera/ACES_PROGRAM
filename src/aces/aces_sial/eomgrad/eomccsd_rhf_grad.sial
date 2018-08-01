@@ -4247,17 +4247,22 @@
       allocate St1a(*,*)
       allocate St1b(*,*)
 
-      execute server_barrier
+       execute server_barrier
 
        EXECUTE  LIST_TO_BLOCKS  REE
-       
+       EXECUTE  LIST_TO_BLOCKS  LEE
+
+       EXECUTE  LIST_TO_BLOCKS  HBAR_ia
+       EXECUTE  LIST_TO_BLOCKS  HBAR_jb
+
        EXECUTE  LIST_TO_BLOCKS  R1A_VECS
        EXECUTE  LIST_TO_BLOCKS  R2AA_VECS
        EXECUTE  LIST_TO_BLOCKS  R2AB_VECS
-       
-       EXECUTE  LIST_TO_BLOCKS  HBAR_ia
-       EXECUTE  LIST_TO_BLOCKS  HBAR_jb
-       
+
+       EXECUTE  LIST_TO_BLOCKS  L1A_VECS
+       EXECUTE  LIST_TO_BLOCKS  L2AA_VECS
+       EXECUTE  LIST_TO_BLOCKS  L2AB_VECS
+
        EXECUTE  LIST_TO_BLOCKS  t1a_old
        EXECUTE  LIST_TO_BLOCKS  t1b_old
        EXECUTE  LIST_TO_BLOCKS  T2old_aa 
@@ -4269,20 +4274,12 @@
        EXECUTE  LIST_TO_BLOCKS  A2old_ab
 
        EXECUTE  LIST_TO_BLOCKS  VSpipi(p,i,p1,i1)
+       EXECUTE  LIST_TO_BLOCKS  VSqjqj(q,j,q1,j1)
        EXECUTE  LIST_TO_BLOCKS  Vpiqj(p,i,q,j)
-
-       EXECUTE  LIST_TO_BLOCKS  Vaaii
-       EXECUTE  LIST_TO_BLOCKS  Viaai
-       EXECUTE  LIST_TO_BLOCKS  Vaabj
-
-       EXECUTE  LIST_TO_BLOCKS  LEE
-       EXECUTE  LIST_TO_BLOCKS  L1A_VECS
-       EXECUTE  LIST_TO_BLOCKS  L2AA_VECS
-       EXECUTE  LIST_TO_BLOCKS  L2AB_VECS
+       EXECUTE  LIST_TO_BLOCKS  Vaaai
 
        execute server_barrier
        execute read_list_to_blocks
-       execute sip_barrier
        execute server_barrier
 
          DO a

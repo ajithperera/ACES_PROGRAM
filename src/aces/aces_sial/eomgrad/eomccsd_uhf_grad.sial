@@ -556,6 +556,12 @@
       DISTRIBUTED  R1B_VECS (b,j,kroot)
       DISTRIBUTED  L1A_VECS (i,a,kroot)
       DISTRIBUTED  L1B_VECS (j,b,kroot)
+
+      DISTRIBUTED  R1A_VECS_T (a,i,kroot)
+      DISTRIBUTED  R1B_VECS_T (b,j,kroot)
+      DISTRIBUTED  L1A_VECS_T (i,a,kroot)
+      DISTRIBUTED  L1B_VECS_T (j,b,kroot)
+
       DISTRIBUTED  R1A (a,i)
       DISTRIBUTED  R1B (b,j)
       DISTRIBUTED  L1A (i,a)
@@ -564,12 +570,23 @@
       TEMP         TEE (kroot,indone)
       DISTRIBUTED  REE (kroot,indone)
       DISTRIBUTED  LEE (kroot,indone)
+
+      DISTRIBUTED  REE_T (kroot,indone)
+      DISTRIBUTED  LEE_T (kroot,indone)
+
       SERVED  R2AA_VECS (a,i,a1,i1,kroot)
       SERVED  R2AB_VECS (a,i,b ,j ,kroot)
       SERVED  R2BB_VECS (b,j,b1,j1,kroot)
       SERVED  L2AA_VECS (i,a,i1,a1,kroot)
       SERVED  L2AB_VECS (i,a,j ,b ,kroot)
       SERVED  L2BB_VECS (j,b,j1,b1,kroot)
+
+      SERVED  R2AA_VECS_T (a,i,a1,i1,kroot)
+      SERVED  R2AB_VECS_T (a,i,b ,j ,kroot)
+      SERVED  R2BB_VECS_T (b,j,b1,j1,kroot)
+      SERVED  L2AA_VECS_T (i,a,i1,a1,kroot)
+      SERVED  L2AB_VECS_T (i,a,j ,b ,kroot)
+      SERVED  L2BB_VECS_T (j,b,j1,b1,kroot)
 
       SERVED  R2AA (a,i,a1,i1)
       SERVED  R2BB (b,j,b1,j1)
@@ -6090,7 +6107,14 @@
       allocate St1b(*,*)
 
       execute server_barrier
-      execute list_to_blocks                ree
+      execute list_to_blocks                REE
+      execute list_to_blocks                LEE
+
+      execute list_to_blocks                REE_T
+      execute list_to_blocks                LEE_T
+
+      execute list_to_blocks                HBAR_ia
+      execute list_to_blocks                HBAR_jb
 
       execute list_to_blocks                R1A_VECS
       execute list_to_blocks                R1B_VECS
@@ -6098,8 +6122,23 @@
       execute list_to_blocks                R2BB_VECS(b,j,b1,j1,kroot)
       execute list_to_blocks                R2AB_VECS(a,i,b,j,kroot)
 
-      execute list_to_blocks                HBAR_ia
-      execute list_to_blocks                HBAR_jb
+      execute list_to_blocks                L1A_VECS
+      execute list_to_blocks                L1B_VECS
+      execute list_to_blocks                L2AA_VECS(i,a,i1,a1,kroot)
+      execute list_to_blocks                L2BB_VECS(j,b,j1,b1,kroot)
+      execute list_to_blocks                L2AB_VECS(i,a,j,b,kroot)
+
+      execute list_to_blocks                R1A_VECS_T
+      execute list_to_blocks                R1B_VECS_T
+      execute list_to_blocks                R2AA_VECS_T(a,i,a1,i1,kroot)
+      execute list_to_blocks                R2BB_VECS_T(b,j,b1,j1,kroot)
+      execute list_to_blocks                R2AB_VECS_T(a,i,b,j,kroot)
+
+      execute list_to_blocks                L1A_VECS_T
+      execute list_to_blocks                L1B_VECS_T
+      execute list_to_blocks                L2AA_VECS_T(i,a,i1,a1,kroot)
+      execute list_to_blocks                L2BB_VECS_T(j,b,j1,b1,kroot)
+      execute list_to_blocks                L2AB_VECS_T(i,a,j,b,kroot)
 
       execute list_to_blocks                t1a_old
       execute list_to_blocks                t1b_old
@@ -6113,12 +6152,14 @@
       execute list_to_blocks                A2old_ab
       execute list_to_blocks                A2old_bb
 
-      execute list_to_blocks                lee
-      execute list_to_blocks                L1A_VECS
-      execute list_to_blocks                L1B_VECS
-      execute list_to_blocks                L2AA_VECS(i,a,i1,a1,kroot)
-      execute list_to_blocks                L2BB_VECS(j,b,j1,b1,kroot)
-      execute list_to_blocks                L2AB_VECS(i,a,j,b,kroot)
+      execute list_to_blocks                a1a_old
+      execute list_to_blocks                a1b_old
+      execute list_to_blocks                A2old_aa
+
+      execute list_to_blocks                Vspipi(p,i,p1,i1)
+      execute list_to_blocks                VSqjqj(q,j,q1,j1)
+      execute list_to_blocks                Vpiqj(p,i,q,j)
+
       EXECUTE  SERVER_BARRIER
       execute read_list_to_blocks
       execute server_barrier
@@ -27090,13 +27131,220 @@
 #                  
       ENDPROC  GET_RL_AMPS
 #-------------------------------------------------------------------------
+#
+#     --------------------
+      PROC  GET_RL_T_AMPS
+#     --------------------
+#
+#
+#
+#
+      rootcount = 0.0
 
+      DO indone
+      DO kroot
 
+         GET  REE_T (kroot,indone)
+         tee (kroot,indone) = REE_T (kroot,indone)
 
+         rootcount += 1.0
+         IF rootcount == iroot
+            EXECUTE  RETURN_SVAL  tee  OMEGA
+         ENDIF
 
+      ENDDO kroot
+      ENDDO indone
 
+      EXECUTE  SIP_BARRIER
 
-#-----------------------------------------------------------------------
+      ncount    = 0.0
+      rootcount = 0.0
+      DO indone
+      DO kroot
+
+         GET                  LEE_T (kroot,indone)
+         tee (kroot,indone) = LEE_T (kroot,indone)
+         EXECUTE  RETURN_SVAL  tee  L_OMEGA
+         etemp = L_OMEGA - OMEGA
+         IF etemp < 0.0
+            etemp *= -1.0
+         ENDIF
+
+         rootcount += 1.0
+         IF etemp < root_thresh
+            ncount = rootcount
+            EXIT
+         ENDIF
+
+      ENDDO kroot
+      ENDDO indone
+
+      EXECUTE  PRINT_SCALAR  OMEGA
+      EXECUTE  PRINT_SCALAR  L_OMEGA
+      EXECUTE  PRINT_SCALAR  ncount
+
+      EXECUTE  SIP_BARRIER
+#
+#
+#          ...Grab an R  array...
+#                      k
+#
+#     
+      PARDO  a, i
+         rootcount = 0.0
+         DO kroot
+            GET  R1A_VECS_T (a,i,kroot)
+            rootcount += 1.0
+            IF  rootcount == iroot
+                tai (a,i) = R1A_VECS_T (a,i,kroot)
+                PUT  R1A (a,i) = tai (a,i)
+            ENDIF             
+         ENDDO kroot
+      ENDPARDO  a, i
+         
+      PARDO  b, j
+         rootcount = 0.0
+         DO kroot
+            GET  R1B_VECS_T (b,j,kroot)
+            rootcount += 1.0
+            IF  rootcount == iroot
+                tbj (b,j) = R1B_VECS_T (b,j,kroot)
+                PUT  R1B (b,j) = tbj (b,j)
+            ENDIF
+         ENDDO kroot
+      ENDPARDO  b, j
+
+      PARDO  a, i, a1, i1
+         rootcount = 0.0
+         DO kroot
+            REQUEST  R2AA_VECS_T (a,i,a1,i1,kroot) kroot
+            rootcount += 1.0
+            IF  rootcount == iroot
+                taiai (a,i,a1,i1) = R2AA_VECS_T (a,i,a1,i1,kroot)
+                PREPARE  R2AA (a,i,a1,i1) = taiai (a,i,a1,i1)
+            ENDIF
+         ENDDO kroot
+      ENDPARDO  a, i, a1, i1
+      
+      PARDO  b, j, b1, j1
+         rootcount = 0.0
+         DO kroot
+            REQUEST  R2BB_VECS_T (b,j,b1,j1,kroot) kroot
+            rootcount += 1.0
+            IF  rootcount == iroot
+                tbjbj (b,j,b1,j1) = R2BB_VECS_T (b,j,b1,j1,kroot)
+                PREPARE  R2BB (b,j,b1,j1) = tbjbj (b,j,b1,j1)
+            ENDIF
+         ENDDO kroot
+      ENDPARDO  b, j, b1, j1
+
+      PARDO  a, i, b, j
+         rootcount = 0.0
+         DO kroot
+            REQUEST  R2AB_VECS_T (a,i,b,j,kroot) kroot
+            rootcount += 1.0
+            IF  rootcount == iroot
+                taibj (a,i,b,j) = R2AB_VECS_T (a,i,b,j,kroot)
+                PREPARE  R2AB (a,i,b,j) = taibj (a,i,b,j)
+            ENDIF
+         ENDDO kroot
+      ENDPARDO  a, i, b, j
+#
+#
+#          ...Grab the corresponding L  array...
+#                                     k
+#
+#
+#
+#
+#          We found a matching excitation energy, so grab
+#          the corresponding root!
+#
+#
+      IF ncount > ZERO
+
+         PARDO  i, a
+            rootcount = 0.0
+            DO kroot
+               GET  L1A_VECS_T (i,a,kroot)
+               rootcount += 1.0
+               IF  rootcount == ncount
+                   tia (i,a) = L1A_VECS_T (i,a,kroot)
+                   PUT  L1A (i,a) = tia (i,a)
+               ENDIF
+            ENDDO kroot
+         ENDPARDO  i, a
+
+         PARDO  j, b
+            rootcount = 0.0
+            DO kroot
+               GET  L1B_VECS_T (j,b,kroot)
+               rootcount += 1.0
+               IF  rootcount == ncount
+                   tjb (j,b) = L1B_VECS_T (j,b,kroot)
+                   PUT  L1B (j,b) = tjb (j,b)
+               ENDIF
+            ENDDO kroot
+         ENDPARDO  j, b
+
+         PARDO  i, a, i1, a1
+            rootcount = 0.0
+            DO kroot
+               REQUEST  L2AA_VECS_T (i,a,i1,a1,kroot) kroot
+               rootcount += 1.0
+               IF  rootcount == ncount
+                   tiaia (i,a,i1,a1) = L2AA_VECS_T (i,a,i1,a1,kroot)
+                   PREPARE  L2AA (i,a,i1,a1) = tiaia (i,a,i1,a1)
+               ENDIF
+            ENDDO kroot
+         ENDPARDO  i, a, i1, a1
+
+         PARDO  j, b, j1, b1
+            rootcount = 0.0
+            DO kroot
+               REQUEST  L2BB_VECS_T (j,b,j1,b1,kroot) kroot
+               rootcount += 1.0
+               IF  rootcount == ncount
+                   tjbjb (j,b,j1,b1) = L2BB_VECS_T (j,b,j1,b1,kroot)
+                   PREPARE  L2BB (j,b,j1,b1) = tjbjb (j,b,j1,b1)
+               ENDIF
+            ENDDO kroot
+         ENDPARDO  j, b, j1, b1
+
+         PARDO  i, a, j, b
+            rootcount = 0.0
+            DO kroot
+               REQUEST  L2AB_VECS_T (i,a,j,b,kroot) kroot
+               rootcount += 1.0
+               IF  rootcount == ncount
+                  tiajb (i,a,j,b) = L2AB_VECS_T (i,a,j,b,kroot)
+                  PREPARE  L2AB (i,a,j,b) = tiajb (i,a,j,b)
+               ENDIF
+            ENDDO kroot
+         ENDPARDO  i, a, j, b
+
+      ENDIF # ncount > 0
+#                  
+#                  
+#          In the event that none of the L excitation energies
+#          match the the current R excitation energy, we need
+#          to bomb!
+#                  
+#                  
+      IF ncount == ZERO
+            
+         PARDO  p, p1 
+            GET  BOMB_SHELL (p,p1) # never created array to force crash
+         ENDPARDO  p, p1
+            
+      ENDIF 
+#              
+#              
+#      ...ready!
+#                  
+#                  
+      ENDPROC  GET_RL_T_AMPS
+#-------------------------------------------------------------------------
 #
 #     ------------------
       PROC  COMP_LR_NORM
@@ -32245,8 +32493,14 @@
       CREATE R1B_VECS
       CREATE L1A_VECS
       CREATE L1B_VECS
+      CREATE R1A_VECS_T
+      CREATE R1B_VECS_T
+      CREATE L1A_VECS_T
+      CREATE L1B_VECS_T
       CREATE REE
       CREATE LEE
+      CREATE REE_T
+      CREATE LEE_T
       CREATE R1A
       CREATE R1B
       CREATE L1A
@@ -32274,7 +32528,15 @@
       CREATE  HBAR_ia
       CREATE  HBAR_jb
 
-      CALL  GET_RL_AMPS
+# New eom-codes compute singlet and triplet as separate blocks. The
+# first block of roots (maximum 12) are singlets and the second block 
+# of roots (maximum 12) are triplets. The code is set up to do the gradients for 
+# the last root. If you are interested in singlets use the RHF code
+# since the UHF code currently set up to do the gradients for triplets. 
+
+#      CALL  GET_RL_AMPS
+      CALL  GET_RL_T_AMPS
+  
       EXECUTE  SERVER_BARRIER
       CALL  HBAR
 

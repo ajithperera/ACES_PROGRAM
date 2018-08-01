@@ -137,7 +137,7 @@ c---------------------------------------------------------------------------
 
 #ifdef _DEBUG_LVL0
       If(me.eq.0) Then
-      Write(6,"(a,3i4)") "@-pack4d_to_2D variables;before packing",
+      Write(6,"(a,4i4)") "@-pack4d_to_2D variables;before packing",
      +                    Idim,jdim,kdim,ldim
       Endif 
 #endif 
@@ -163,6 +163,10 @@ c---------------------------------------------------------------------------
          ENDDO
       ENDDO
       ENDDO
-
+#ifdef _DEBUG_LVL0
+      If(me.eq.0) Then
+      Write(6,"(a)") "Forming DIP IJKL matrix is completed"
+      Endif
+#endif
       Return
       End

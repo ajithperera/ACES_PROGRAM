@@ -7,6 +7,7 @@ c-----------------------------------------------------------------------
       character *80 wrk
       character *10 Label
       Character  *4 PTGRP
+      Character *11 Type(Nvib)
       character*2 celemol(nelement)
       logical yesno,Write_molden_file
       inTEger iatchrg(natoms)
@@ -82,19 +83,28 @@ CSSS           read(4,*)(freqco(i,iatom),i=1,3)
          
    40      continue
    30   continue
+C 
+C Use the VIB_TYPE record to write frq. that correspond only to vibrations.
+C Others are written as zeros. 06/2018.
+
+        Call getcrec(20,'JOBARC','VIB_TYPE',Nvib*11*IINTFP,TYPE)
 C
         close(unit=4,status='KEEP')    
 
         do 50 ivib=1,nvib
+           If (type(ivib) .eq." VIBRATION ") then
            if (freq(ivib) .lt. 0.0D0) freq(ivib)= -freq(ivib)
            write(iunit,60)' ',freq(ivib)
+           else
+           write(iunit,60)' ',0.0D0
+           endif 
 60         format(A,f9.4)
 50      continue
         write(iunit,70)'[FR-COORD]'
 70      format(A)
         do 80 iatom=1,natoms
            write(iunit,90)' ',celemol(iatchrg(iatom)),freqco(1,iatom),
-     &     freqco(2,iatom),freqco(3,iatom)
+     &     freqco(2,iatom),freqco(3,iatom) 
 90         format(A,A2,3x,f9.6,3x,f9.6,3x,f9.6)
 80      continue
         write(iunit,100)'[FR-NORM-COORD]'

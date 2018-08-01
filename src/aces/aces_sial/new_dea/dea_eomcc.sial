@@ -799,7 +799,7 @@
             Sbb(b1,b)      = HBAR_aa(b1,b)
             execute return_diagonal Sbb Sdbb
             tbb(b1,b)      = Sdbb(b1,b)
-            put DDbb(b1,b) = taa(b1,b)
+            put DDbb(b1,b) = tbb(b1,b)
 
      ENDPARDO b, b1
 
@@ -941,8 +941,8 @@
 
             t1abia(a,b,i,a1)              = t1pppp(a,b1,i1,a1)*tpppp(i1,i,b,b1)
 
-            PREPARE D2_ABAA(a,b,i,a1) += tabia(a,b,i,a1)
-            PREPARE D2_ABBB(a,b,i,a1) += tabia(a,b,i,a1)
+            PREPARE D2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+            PREPARE D2_ABBB(a,b,i,a1) += t1abia(a,b,i,a1)
           ENDDO i
           ENDDO b
     ENDPARDO a, b1, a1,i1
@@ -4426,24 +4426,36 @@
            tab(a,b1)      = 0.0
            PUT Y1_AB(a,b1,NINDEX50)  = tab(a,b1)
            PUT HY1_AB(a,b1,NINDEX50) = tab(a,b1)
-           PUT R1_AB_intmd(a,b1) = tab(a,b1)
      ENDPARDO a, b1
 
      PARDO a, b, i1, a1
          tabia(a,b,i1,a1) = 0.0
          PREPARE Y2_ABAA(a,b,i1,a1,NINDEX50)  = tabia(a,b,i1,a1)
          PREPARE HY2_ABAA(a,b,i1,a1,NINDEX50) = tabia(a,b,i1,a1)
-         PREPARE R2_ABAA_intmd(a,b,i1,a1) = tabia(a,b,i1,a1)
      ENDPARDO a, b, i1, a1
 
      PARDO a, b, j1, b1
          tabjb(a,b,j1,b1)       = 0.0
          PREPARE Y2_ABBB(a,b,j1,b1,NINDEX50)  = tabjb(a,b,j1,b1)
          PREPARE HY2_ABBB(a,b,j1,b1,NINDEX50) = tabjb(a,b,j1,b1)
-         PREPARE R2_ABBB_intmd(a,b,j1,b1) = tabjb(a,b,j1,b1)
      ENDPARDO a, b, j1, b1
 
      ENDDO NINDEX50 
+
+     PARDO a, b1
+         tab(a,b1) = 0.0
+         PUT R1_AB_intmd(a,b1) = tab(a,b1)
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+         tabia(a,b,i1,a1) = 0.0
+         PREPARE R2_ABAA_intmd(a,b,i1,a1) = tabia(a,b,i1,a1)
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+         tabjb(a,b,j1,b1) = 0.0
+         PREPARE R2_ABBB_intmd(a,b,j1,b1) = tabjb(a,b,j1,b1)
+     ENDPARDO a, b, j1, b1
 
      EXECUTE  SERVER_BARRIER 
 
@@ -4713,7 +4725,7 @@
      EOM_DENOM    = EE_DENOM
      EOM_MAXCYC   = EE_MAXCYC
      EXACT_HY     = ZERO 
-     NO_AO_LADDER = ZERO
+     NO_AO_LADDER = ONE
 #
       CALL READ_DATA
       CALL CREATE_ARRAYS 
