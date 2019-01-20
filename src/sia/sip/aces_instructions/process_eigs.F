@@ -105,7 +105,7 @@ C
       Integer i,l,i1,i2,j1,j2,a1,a2,b1,b2,Ndim,Nroots 
       Integer Istart,Maxdim, Ierror 
 
-      Parameter(Maxdim = 1000)
+      Parameter(Maxdim = 100)
 
       Double precision Eigs(i1:i2),Eigvecs(a1:a2,b1:b2)
 
@@ -123,7 +123,7 @@ C
 
       If (Ndim .Gt. Maxdim) Then
          Write(6,"(a,a)") "@-PROCESS_EIGS: Exceeded the max",
-     +                    " dimension allowed in XGEEV"
+     +                    " dimension allowed in PROCESS_EIGS"
          Call abort_job()
       Endif 
 C

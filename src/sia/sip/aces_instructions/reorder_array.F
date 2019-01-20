@@ -1,5 +1,5 @@
 
-      subroutine Xgeev(
+      subroutine Reorder_array(
      *                 array_table, narray_table,
      *                 index_table,
      *                 nindex_table, segment_table, nsegment_table,
@@ -64,11 +64,11 @@ c---------------------------------------------------------------|
 C
       if (array_in_type .ne. static_array .or.array_out_type 
      &                  .ne. static_array) then
-         Write(6,"(a)") "@-XGEEV: Both arrays must be static."
+         Write(6,"(a)") "@-REORDER_ARRAY: Both arrays must be static."
          call abort_job()
       endif
 
-      nindex_in  = array_table(c_nindex, array_in)
+      nindex_in  = array_table(c_nindex,array_in)
       nindex_out = array_table(c_nindex,array_out)
 
       do i = 1, nindex_in
@@ -80,10 +80,8 @@ C
       enddo
 
        n1 = index_table(c_index_size, ind_in(1))  ! pick up length of index
-       n2 = index_table(c_index_size, ind_in(2))  ! pick up length of index
 
        m1 = index_table(c_index_size, ind_out(1))  ! pick up length of index
-       m2 = index_table(c_index_size, ind_out(2))  ! pick up length of index
 
 c---------------------------------------------------------------------------
 c   Look up each array's address.
@@ -92,93 +90,107 @@ c---------------------------------------------------------------------------
       iarray_in  = get_index_from_base(address_table(array_in), x, 2)
       iarray_out = get_index_from_base(address_table(array_out), x, 2)
 
-      Call diagonalize(x(iarray_in),1,n1,1,n2,x(iarray_out),1,m1,1,m2)
+      Call Do_reord_array(x(iarray_in),1,n1,x(iarray_out),1,m1)
 
       return
       end
 C
-      Subroutine diagonalize(Hbar,i1,i2,j1,j2,Guess_vec,a1,a2,b1,b2)
+      Subroutine Do_reord_array(Vecs,i1,i2,Ireord,a1,a2)
 
       implicit none 
       include 'parallel_info.h'
       include 'int_gen_parms.h'
-      include 'aces3_vars.h'
 
-      Integer i,j,k,l,i1,i2,j1,j2,a1,a2,b1,b2,Ndim,Nroots 
-      Integer Istart,Maxdim, Ierror 
+      Integer i,l,i1,i2,j1,j2,a1,a2,b1,b2,Ndim,Nroots 
+      Integer Istart,Ierror 
 
-      Parameter(Maxdim = 100)
-
-      Double precision Hbar(i1:i2,j1:j2),Guess_vec(a1:a2,b1:b2)
-      Double precision EvecR(Maxdim*Maxdim),EvecL(Maxdim*Maxdim)
-      Double Precision EigR(Maxdim),EigI(Maxdim)
-      Double Precision Work(4*Maxdim)
-
-C Hbar is non-symmetric matrix, and we obtain both left/right eigenvectors.
+      Double precision Vecs(i1:i2),IReord(a1:a2)
 
       Ndim = (i2 -i1) + 1
+
 #ifdef _DEBUG_LVL0
       If(me.eq.0) Then
-      Write(6,"(a,i4)") "@-Entry to XGEEV order of the matrix", 
+      l=0
+      do i=1,ndim
+         if (Vecs(i) .ne. 0.0d0) l=l+1
+      enddo
+      Write(6,"(a,i4)") "@-Entry reorder_array matrix order", 
      +                Ndim 
-      k = 0
-      do i = 1, ndim
-         if (Hbar(i,i) .ne. 0.0D0) k=k+1
-      enddo 
-      call output(Hbar,1,k,1,k,Ndim,Ndim,1)
       Endif 
 #endif 
+
+#ifdef _DEBUG_LVL0
+      If(me.eq.0) Then
+      Write(6,"(a)") "Incoming array"
+      Write(6,"(6(1x,F10.5))") (Vecs(i),i=1,L)
+      endif 
+#endif 
+     
+      Call Reord_array(Vecs,Ireord,Ndim)
+
+      Return
+      End
+
+      Subroutine Reord_array(Vecs,Ireord,Ndim)
+
+      Implicit None
+      include 'parallel_info.h'
+      include 'int_gen_parms.h'
+
+      Integer i,j,Ndim,Maxdim,l
+      Double Precision Vecs(Ndim), Ireord(Ndim)
+      Double Precision Dtmp
+      Parameter (Maxdim=100)
+      Double Precision Save(Ndim)
+
+C Reorder the eigenvalues and vectors Ascending order.
+C Notice that this assumes that all the relavent eigenvalues are
+C non-zero.
+      
+      If (Ndim .Eq. 1) Return
 
       If (Ndim .Gt. Maxdim) Then
-         Write(6,"(a,a)") "@-XGEEV: Exceeded the max",
-     +                    " dimension allowed in XGEEV"
+         Write(6,"(a,a)") "@-reorder_arrays: Exceeded the max",
+     +                    " dimension allowed in reord_arrays"
          Call abort_job()
-      Endif 
-         
-      Call Dgeev("V","V",Ndim, Hbar, Ndim, EigR, EigI,EvecL,NDIM,
-     +            EvecR,Ndim,Work,4*Ndim,Ierror)
+      Endif
 
-#ifdef _DEBUG_LVL0
-      If(me.eq.0) Then
-      Write(6,"(a)") "The eigenvectors of the incoming matrix"
-      Write(6,"(a)") "The right-hand side"
-      call output(EvecR,1,k,1,k,Ndim,Ndim,1)
-      Write(6,"(a)") "The left-hand side"
-      call output(EvecL,1,k,1,k,Ndim,Ndim,1)
-      write(6,*) Lhs,rhs
-      endif
-#endif 
-C Copy the eigenvectors to returned array (Guess_Vec) and replace
-C the digonal of incoming matrix (Hbar) with eigenvalues. 
-C (by defalut copy the right eigenvector). If RHS or LHS is set
-C then we choose. 
+      Call Dcopy(Ndim,Vecs,1,Save,1)
 
-      Call Dcopy(Ndim*Ndim, EvecR, 1, Guess_vec,1)
+      Do i = 1, Ndim-1
+         Do j = i+1, Ndim
 
-      If (RHS .EQ. 1 .AND. LHS .EQ. 0) Then
-         Call Dcopy(Ndim*Ndim, EvecR, 1, Guess_vec,1)
-      Elseif (RHS .EQ. 0 .AND. LHS .EQ. 1) Then
-         Call Dcopy(Ndim*Ndim, EvecL, 1, Guess_vec,1)
-      Endif 
+          If (Vecs(j) .NE. 0.0D0) Then
+          If (Vecs(i) .Gt. Vecs(j)) Then
+              Dtmp    = Vecs(i)
+              Vecs(i) = Vecs(j)
+              Vecs(j) = Dtmp
+          Endif
+          Endif
 
-      Call Zero(Hbar,Ndim*Ndim)
-      Do i = 1, Ndim
-         Hbar(i,i) = Eigr(i)
+         Enddo
+      Enddo      
+ 
+      Do I=1,Ndim
+         Do J=1,Ndim
+            If (Dabs(Vecs(I)-Save(J)) .Eq. 0.0D0) Then
+               Ireord(I) = Dble(j)
+            Endif
+         Enddo 
       Enddo 
 
 #ifdef _DEBUG_LVL0
-      If(me.eq.0) Then
-      Write(6,"(a)") "Eigenvalues/vectors of the incoming matrix"
-      Write(6,"(a)") "The right-hand side"
-      Write(6,"(6(1x,F10.5))") (EigR(i),i=1,k)
-      Write(6,"(a)") "The imaginary eigenvalues"
-      Write(6,"(6(1x,F10.5))") (EigI(i),i=1,k)
-      call output(Guess_vec,1,k,1,k,Ndim,Ndim,1)
-C      Write(6,"(a)") "The left-hand side"
-C      call output(EvecL,1,k,1,k,Ndim,Ndim,1)
+      if (me.eq.0) then
+      l=0
+      do i=1,ndim
+         if (Vecs(i) .ne. 0.0d0) l=l+1
+      enddo
+      Write(6,"(a)") "Reordered vectors and the mappping"
+      Write(6,"(6(1x,F10.5))") (Vecs(i),i=1,L)
+      Write(6,*) 
+      Write(6,"(6(1x,F10.5))") (Ireord(i),i=1,L)
       endif 
 #endif 
 
       Return
       End
-

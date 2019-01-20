@@ -6890,10 +6890,10 @@
       
      ENDDO SPN_MULT
 
-     EXECUTE store_static_array E_ccsd_S   One
+     EXECUTE store_static_array E_ccsd_S One
      EXECUTE store_static_array E4_aaa_S Two
      EXECUTE store_static_array E5_aaa_S Three
-     EXECUTE store_static_array E_ccsd_T   MOne 
+     EXECUTE store_static_array E_ccsd_T MOne 
      EXECUTE store_static_array E4_aaa_T MTwo
      EXECUTE store_static_array E5_aaa_T MThree
 #

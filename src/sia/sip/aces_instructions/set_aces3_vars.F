@@ -17,6 +17,7 @@ c--------------------------------------------------------------------------
       include 'parallel_info.h'
       include 'pst_functions.h'
       include 'aces3_vars.h'
+      include 'eom_truncate.h'
 #ifdef ALTIX
       include 'sheap.h'
 #endif
@@ -25,13 +26,14 @@ c---------------Variables--------------------------------------------
 
       integer narray_table, nindex_table, nsegment_table,
      *        nblock_map_table, array
-      integer op(loptable_entry),sind
+      integer op(loptable_entry),sind1,Sind2
       integer array_table(larray_table_entry, narray_table)
       integer index_table(lindex_table_entry, nindex_table)
       integer segment_table(lsegment_table_entry, nsegment_table)
       integer block_map_table(lblock_map_entry, nblock_map_table)
       integer nscalar_table
       double precision scalar_table(nscalar_table)
+      double precision qq
       integer*8 address_table(narray_table), get_index_from_base
       integer*8 get_block_data_index
       integer find_current_block, block
@@ -40,7 +42,7 @@ c---------------Variables--------------------------------------------
 
       logical direct_flag
 
-      integer i, j, k,qq,qq1,is_it_worker(max_procsx)
+      integer i, j, k,qq1,is_it_worker(max_procsx)
       integer nind, nsend,ind1,w_worker(max_procsx)
       integer ierr, handle,our_workers
       integer blk, blkndx, maxblk
@@ -74,18 +76,18 @@ c-------------------------------------------------------------------
 
       array = op(c_result_array)
       array_type = array_table(c_array_type, array)
-      sind =  array_table(c_scalar_index, array)
+      sind1 =  array_table(c_scalar_index, array)
 
-      qq=scalar_table(sind)
-      If (qq .EQ. 0) Then
+      qq=scalar_table(sind1)
+      If (Int(qq) .EQ. 0) Then
          RHS = 0
          LHS = 0
-      Elseif (qq .EQ. 1) Then
+      Elseif (Int(qq) .EQ. 1) Then
          RHS = qq
          LHS = 0
-      Elseif (qq .EQ. 2) Then
+      Elseif (Int(qq) .EQ. 2) Then
          RHS = 0
-         LHS = (qq-1)
+         LHS = (Int(qq)-1)
       Endif
 #ifdef _DEBUG_LVL0
       If (me .eq.0) Write(6,"(a,2i2)") "The right and left sides: ",
@@ -96,19 +98,19 @@ c------------Information about scalar--------------------------------------
 
       array = op(c_op1_array)
       array_type = array_table(c_array_type, array)
-      sind =  array_table(c_scalar_index, array)
+      sind2 =  array_table(c_scalar_index, array)
 
-      g=scalar_table(sind)
+      g=scalar_table(sind2)
 
-      If (g .EQ. 1) Then 
+      If (Int(g) .EQ. 1) Then 
          AAAA = 1
          BBBB = 0
          ABAB = 0
-      Elseif (g .EQ. 2) Then 
+      Elseif (Int(g) .EQ. 2) Then 
          AAAA = 0
          BBBB = 1
          ABAB = 0
-      Elseif (g .EQ. 3) Then 
+      Elseif (Int(g) .EQ. 3) Then 
          AAAA = 0
          BBBB = 0
          ABAB = 1
@@ -117,6 +119,20 @@ c------------Information about scalar--------------------------------------
       If (me .eq.0) Write(6,"(a,3i2)") "The spin_types: " ,
      +              AAAA,BBBB,ABAB
 #endif 
+C--------------updating eom_truncate variables header file----
+
+      If (Int(g) .EQ. 10) Then
+         Ndim_new = qq
+      Elseif (Int(g) .EQ. 11) Then
+         Ndim_old = qq
+      Elseif (Int(g) .EQ. 12) Then
+         Omega = Dble(qq)
+      Endif 
+C--------------Returning vars in eomdata header file----
+
+      If (Int(g) .EQ. -1) Then
+         scalar_table(sind1) = Iselect 
+      Endif 
 
       return
       end

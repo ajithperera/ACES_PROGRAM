@@ -1453,7 +1453,7 @@
 #      tmpb=0.0
 #      tmpa=0.0
 #      suma=0.0
-#      sumb=0.0
+#     sumb=0.0
 #      pardo i,a
 #         get hr1a(a,i)
 #         Tmp =  hr1a(a,i) *  hr1a(a,i)
@@ -3339,11 +3339,11 @@
       CALL CREATE_ARRAYS
 #
 # Transformation can be done externally; in order to do that uncomment 
-# READ_MO_INTS and comment TRAN_UHF (or vice versa)
+# READ_MO_INTS and comment TRAN_UHF. 
 #
-      CALL READ_MO_INTS 
+#      CALL READ_MO_INTS 
 
-#      CALL TRAN_UHF
+      CALL TRAN_UHF
       CALL FORM_DIAG
       CALL FORM_INITIAL_GUESS
       MAX_SUBSP_DIM = 50.0
@@ -3392,7 +3392,9 @@
                CALL SET_TO_ZERO
    
                ITER_COUNT += 1.0
-
+#bgn_debug
+         execute print_scalar ITER_COUNT
+##end_debug
                IF ITER_COUNT > MAX_SUBSP_DIM
                    EXIT
                 ENDIF
@@ -3417,8 +3419,6 @@
 #end_debug
               EXECUTE XGEEV A_MATRIX DVECTORS
 #bgn_debug
-#            execute print_static A_MATRIX ITER_COUNT
-#end_debug
 
                IF ITER_COUNT != 1.0
                   CALL REORDER_A_EIGS

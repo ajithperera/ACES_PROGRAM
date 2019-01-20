@@ -1,5 +1,5 @@
 
-      subroutine Xgeev(
+      subroutine Find_min_eneg(
      *                 array_table, narray_table,
      *                 index_table,
      *                 nindex_table, segment_table, nsegment_table,
@@ -64,7 +64,7 @@ c---------------------------------------------------------------|
 C
       if (array_in_type .ne. static_array .or.array_out_type 
      &                  .ne. static_array) then
-         Write(6,"(a)") "@-XGEEV: Both arrays must be static."
+         Write(6,"(a)") "@-FIND_MIN_ENEG: Both arrays must be static."
          call abort_job()
       endif
 
@@ -80,7 +80,6 @@ C
       enddo
 
        n1 = index_table(c_index_size, ind_in(1))  ! pick up length of index
-       n2 = index_table(c_index_size, ind_in(2))  ! pick up length of index
 
        m1 = index_table(c_index_size, ind_out(1))  ! pick up length of index
        m2 = index_table(c_index_size, ind_out(2))  ! pick up length of index
@@ -92,93 +91,84 @@ c---------------------------------------------------------------------------
       iarray_in  = get_index_from_base(address_table(array_in), x, 2)
       iarray_out = get_index_from_base(address_table(array_out), x, 2)
 
-      Call diagonalize(x(iarray_in),1,n1,1,n2,x(iarray_out),1,m1,1,m2)
+      Call What_2exclude(x(iarray_in),1,n1,x(iarray_out),1,m1,1,m2)
 
       return
       end
 C
-      Subroutine diagonalize(Hbar,i1,i2,j1,j2,Guess_vec,a1,a2,b1,b2)
+      Subroutine What_2exclude(Eigs_curnt,i1,i2,Roots,a1,a2,b1,b2)
 
       implicit none 
       include 'parallel_info.h'
       include 'int_gen_parms.h'
-      include 'aces3_vars.h'
+      include 'eom_truncate.h'
 
-      Integer i,j,k,l,i1,i2,j1,j2,a1,a2,b1,b2,Ndim,Nroots 
-      Integer Istart,Maxdim, Ierror 
+      Integer i,j,l,m,i1,i2,j1,j2,a1,a2,b1,b2
+      Integer Ndim1,Ndim2,Ndim3,Iloc,Ilocmin
+      Integer Istart,Ierror 
+      Double precision Eigs_curnt(i1:i2),Roots(a1:a2,b1:b2)
+      Double Precision X,X2,Vlocmin,Tol
 
-      Parameter(Maxdim = 100)
+      Parameter(Tol = 1.0D-03)
 
-      Double precision Hbar(i1:i2,j1:j2),Guess_vec(a1:a2,b1:b2)
-      Double precision EvecR(Maxdim*Maxdim),EvecL(Maxdim*Maxdim)
-      Double Precision EigR(Maxdim),EigI(Maxdim)
-      Double Precision Work(4*Maxdim)
+      Double Precision Tmp(Maxdim)
 
-C Hbar is non-symmetric matrix, and we obtain both left/right eigenvectors.
+      Ndim1 = (i2 -i1) + 1
+      Ndim2 = (a2 -a1) + 1
+      Ndim3 = (b2 -b1) + 1
 
-      Ndim = (i2 -i1) + 1
-#ifdef _DEBUG_LVL0
-      If(me.eq.0) Then
-      Write(6,"(a,i4)") "@-Entry to XGEEV order of the matrix", 
-     +                Ndim 
-      k = 0
-      do i = 1, ndim
-         if (Hbar(i,i) .ne. 0.0D0) k=k+1
-      enddo 
-      call output(Hbar,1,k,1,k,Ndim,Ndim,1)
-      Endif 
-#endif 
-
-      If (Ndim .Gt. Maxdim) Then
-         Write(6,"(a,a)") "@-XGEEV: Exceeded the max",
-     +                    " dimension allowed in XGEEV"
+      If (Ndim1 .Gt. Maxdim) Then
+         Write(6,"(a,a)") "@-FIND_MIN_ENEG: Exceeded the max",
+     +                    " dimension allowed in FIND_MIN_ENEG"
          Call abort_job()
       Endif 
-         
-      Call Dgeev("V","V",Ndim, Hbar, Ndim, EigR, EigI,EvecL,NDIM,
-     +            EvecR,Ndim,Work,4*Ndim,Ierror)
-
-#ifdef _DEBUG_LVL0
+      
+C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
-      Write(6,"(a)") "The eigenvectors of the incoming matrix"
-      Write(6,"(a)") "The right-hand side"
-      call output(EvecR,1,k,1,k,Ndim,Ndim,1)
-      Write(6,"(a)") "The left-hand side"
-      call output(EvecL,1,k,1,k,Ndim,Ndim,1)
-      write(6,*) Lhs,rhs
-      endif
-#endif 
-C Copy the eigenvectors to returned array (Guess_Vec) and replace
-C the digonal of incoming matrix (Hbar) with eigenvalues. 
-C (by defalut copy the right eigenvector). If RHS or LHS is set
-C then we choose. 
-
-      Call Dcopy(Ndim*Ndim, EvecR, 1, Guess_vec,1)
-
-      If (RHS .EQ. 1 .AND. LHS .EQ. 0) Then
-         Call Dcopy(Ndim*Ndim, EvecR, 1, Guess_vec,1)
-      Elseif (RHS .EQ. 0 .AND. LHS .EQ. 1) Then
-         Call Dcopy(Ndim*Ndim, EvecL, 1, Guess_vec,1)
+      l=0
+      m=0
+      do i=1,ndim1
+         if (Eigs_curnt(i) .ne. 0.0d0) l=l+1
+      enddo
+      do i=1,Ndim2
+         if (roots(i,1) .ne. 0.0d0) m=m+1
+      enddo
+      Write(6,"(2a,2i4)") "@-Entry to FIND_MIN_ENEG actual order",
+     +                   " of the arrays", l,m
+      Write(6,"(a)") "The current eigenvalues"
+      Write(6,"(6(1x,F10.5))") (Eigs_curnt(i),i=1,L)
+      Write(6,"(a)") "The roots already found"
+      Write(6,"(6(1x,F10.5))") ((Roots(i,j),i=1,M),j=1,Ndim3)
       Endif 
+C#endif 
 
-      Call Zero(Hbar,Ndim*Ndim)
-      Do i = 1, Ndim
-         Hbar(i,i) = Eigr(i)
-      Enddo 
+      Call Dcopy(Ndim1,Eigs_curnt,1,Tmp,1)
 
-#ifdef _DEBUG_LVL0
+      Do I = 1, Ndim2
+         Do J = 1, Ndim1
+            Call Fndclose(Ndim1,Tmp,Roots(J,I),X,Iloc)
+            X2 =Dabs(Roots(J,I)-Tmp(Iloc))
+            If (X2 .LT. Tol) Tmp(Iloc) = 1.0D+30
+         Enddo
+      Enddo
+
+      Vlocmin =  1.0D+30
+      Do I = 1, Ndim1
+         X = Tmp(I)
+         IF (X .LT. Vlocmin) Then
+            Ilocmin = I
+            Vlocmin = Tmp(I)
+         Endif
+      Enddo
+
+      Iselect = Ilocmin 
+
+C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
-      Write(6,"(a)") "Eigenvalues/vectors of the incoming matrix"
-      Write(6,"(a)") "The right-hand side"
-      Write(6,"(6(1x,F10.5))") (EigR(i),i=1,k)
-      Write(6,"(a)") "The imaginary eigenvalues"
-      Write(6,"(6(1x,F10.5))") (EigI(i),i=1,k)
-      call output(Guess_vec,1,k,1,k,Ndim,Ndim,1)
-C      Write(6,"(a)") "The left-hand side"
-C      call output(EvecL,1,k,1,k,Ndim,Ndim,1)
+      Write(6,"(a,a,I2,1X,F10.5)") "The location and the eigevalue",
+     +                            " selected: ", Ilocmin, Vlocmin
       endif 
-#endif 
-
+C#endif 
+     
       Return
       End
-

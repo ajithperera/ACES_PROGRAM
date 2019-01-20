@@ -1,5 +1,5 @@
 
-      subroutine Guess_4current_root (
+      subroutine Guess_4current_dip_root (
      *                      array_table, narray_table,
      *                      index_table,
      *                      nindex_table, segment_table, nsegment_table,
@@ -91,20 +91,20 @@ c---------------------------------------------------------------------------
 
       iarray_in  = get_index_from_base(address_table(array_in), x, 2)
 
-      Call Return_cis_guess(x(iarray_in),type,1,n1,1,n2,1,n3)
+      Call Return_dip_guess(x(iarray_in),type,1,n1,1,n2,1,n3)
  
       If (Type .Lt. 0) scalar_table(sind) = -Type 
 
       return
       end
 
-      Subroutine Return_cis_guess(Vecs_in,Root,n1,n2,m1,m2,l1,l2)
+      Subroutine Return_dip_guess(Vecs_in,Root,n1,n2,m1,m2,l1,l2)
 
       implicit none 
       include 'parallel_info.h'
       include 'int_gen_parms.h'
 
-      Integer n1,n2,m1,m2,l1,l2
+      Integer n1,n2,m1,m2,l1,l2,n,m
       Integer Ndim
       Integer Kdim, k
       INteger Root 
@@ -120,8 +120,8 @@ c---------------------------------------------------------------------------
          Write(6,"(a,2I)") "Root index:", Root
          Write(6,"(a)") "@-GET_GUESS_4CURRENT; Input vectors"
          Do k =1, Kdim
-           If (k .eq. Root) 
-     +        call output(Vecs_in(1,1,k),n1,n2,m1,m2,n2,m2,1)
+           If (k .eq. abs(Root)) 
+     +        call output(Vecs_in(1,1,k),n1,n2,m1,m2,n2,1,1)
          Enddo 
       Endif 
 #endif 
@@ -129,19 +129,27 @@ c---------------------------------------------------------------------------
           Triplet = .True.
           Root    = -Root 
       Endif 
-      If (Root .Eq. 1 .and. .not. Triplet) Return
 
-      If (Root .Eq. 1 .and. Triplet) Then
-         Call Dscal(Ndim, -1.0D0, Vecs_in(1,1,1), 1)
-      Else 
-         Call Dcopy(Ndim, Vecs_in(1,1,Root), 1, Vecs_in(1,1,1), 1)
-         If (Triplet) Call Dscal(Ndim, -1.0D0, Vecs_in(1,1,1), 1)
+      Call Dcopy(Ndim, Vecs_in(1,1,Root), 1, Vecs_in(1,1,1), 1)
+        
+      If (Triplet)  Then
+         Do n=m1,m2
+         Do m=n1,n-1 
+            Vecs_in(m,n,1) = -(Vecs_in(n,m,1))
+         Enddo 
+         Enddo
+      Else
+         Do n=m1,m2
+         Do m=n1,n2
+            Vecs_in(n,m,1) = Dabs(Vecs_in(n,m,1))
+         Enddo
+         Enddo
       Endif 
 
 #ifdef _DEBUG_LVL0
       If (me .eq.0) then
          Write(6,"(a)") "@-GET_GUESS_4CURRENT; Outgoing vector"
-         call output(Vecs_in(1,1,1),n1,n2,m1,m2,n2,m2,1)
+         call output(Vecs_in(1,1,1),n1,n2,m1,m2,n2,1,1)
       Endif 
 #endif 
 

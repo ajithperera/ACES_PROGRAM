@@ -107,7 +107,7 @@ C
       Integer i,j,k,l,i1,i2,j1,j2,a1,a2,b1,b2,Ndim,Nroots 
       Integer Istart,Maxdim, Ierror,Out_dim,In_dim
 
-      Parameter(Maxdim = 1000)
+      Parameter(Maxdim = 100)
 
       Double precision A_in(i1:i2,j1:j2),A_out(a1:a2,b1:b2)
 
@@ -115,7 +115,7 @@ C
       Out_dim = b2-b1+1
 
       If (Out_dim .gt. In_dim) Then
-         Write(6,"(a,a)") "@-TExtract_subset: The sub-matrix is bigger",
+         Write(6,"(a,a)") "@-Extract_subset: The sub-matrix is bigger",
      &                    " than the super-matrix"
          call abort_job()
       Endif 

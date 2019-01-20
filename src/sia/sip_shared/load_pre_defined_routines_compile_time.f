@@ -425,6 +425,7 @@ C
       dummy = load_user_sub('store_static_array'//char(0),0)
       dummy = load_user_sub('form_rpa_guess'//char(0),0)
       dummy = load_user_sub('guess_4current_root'//char(0),0)
+      dummy = load_user_sub('guess_4current_dip_root'//char(0),0)
       dummy = load_user_sub('form_dip_guess'//char(0),0)
       dummy = load_user_sub('form_dip_hmat'//char(0),0)
       dummy = load_user_sub('form_dea_guess'//char(0),0)
@@ -437,6 +438,9 @@ C
       dummy = load_user_sub('copy_alpha_to_beta'//char(0),0)
       dummy = load_user_sub('find_zeros'//char(0),0)
       dummy = load_user_sub('form_rpa_small_matrix'//char(0),0)
+      dummy = load_user_sub('truncate_eom_subspace'//char(0),0)
+      dummy = load_user_sub('reorder_array'//char(0),0)
+      dummy = load_user_sub('find_min_eneg'//char(0),0)
 c -----------------------------------------------------------------
 c Prakash instructions need for delta integrals
 c ------------------------------------------------------------------

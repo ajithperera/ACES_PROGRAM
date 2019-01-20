@@ -62,6 +62,7 @@ c--------------------------------------------------------------------------
       integer component
       
       double precision x(1), y
+      double precision gx, gy, gz
 #ifdef ALTIX
       pointer (dptr, x)
 #else
@@ -160,7 +161,23 @@ c-----------------------------------------------------------------------------
          enddo
          enddo 
       enddo
+#ifdef _DEBUG_LVL0
+C Write the atomic gradient data for debugging 
 
+      If (me .eq. 0) Then
+         Open(Unit=6,File="summary.out")
+         Write(6,*) "Gradient at nuclear centers"
+         do iatom = 1, Ncenters
+            Igrad = (Iatom - 1) * 3
+            gx    = gradient_data(Igrad+1)
+            gy    = gradient_data(Igrad+2)
+            gz    = gradient_data(Igrad+3)
+            Write(6,"(3(3x,F15.9))") gx,gy,gz
+         enddo 
+         close(6)
+      Endif 
+#endif 
+          
       return
       end
 

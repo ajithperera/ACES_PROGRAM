@@ -139,6 +139,10 @@
       DISTRIBUTED CISA_T_VECS(a,i,MROOTS)
       DISTRIBUTED CISB_S_VECS(b,j,MROOTS)
       DISTRIBUTED CISB_T_VECS(b,j,MROOTS)
+      DISTRIBUTED CISA_S_REORD_VECS(a,i,MROOTS)
+      DISTRIBUTED CISA_T_REORD_VECS(a,i,MROOTS)
+      DISTRIBUTED CISB_S_REORD_VECS(b,j,MROOTS)
+      DISTRIBUTED CISB_T_REORD_VECS(b,j,MROOTS)
       DISTRIBUTED CIS_VEC_AO(mu,nu)
       DISTRIBUTED INTXA(mu,a)
       DISTRIBUTED INTXB(mu,b)
@@ -159,6 +163,7 @@
       static A_DIAGS(MINDEX50)
       Static CIS_S_EES(MROOTS)
       Static CIS_T_EES(MROOTS)
+      Static REORD_MAP(MROOTS)
       Static RVEC_AA_INTMD(a,i,NROOTS)
       Static RVEC_BB_INTMD(b,j,NROOTS)
       Static DIAGA(a,i)
@@ -261,6 +266,7 @@
       Scalar EOM_MAXCYC
       Scalar RHF_UHF 
       Scalar NINE_NINE 
+      Scalar IMAP
 #
       temp  Tx(MROOTS)
       temp TS(MINDEX50,NINDEX50)
@@ -394,6 +400,7 @@
       temp  Tbjx(b,j,MINDEX50)
       temp  T2aix(a,i,NROOTS)
       temp  T2bjx(b,j,NROOTS)
+      temp  Tcis_ee(Nroots,Ione)
 #
       local L0xxxi(mu,nu,lambda,i)
       local L1xxxi(nu,mu,lambda,i)
@@ -1058,6 +1065,10 @@
       CREATE CISA_T_VECS  
       CREATE CISB_S_VECS  
       CREATE CISB_T_VECS  
+      CREATE CISA_S_REORD_VECS  
+      CREATE CISA_T_REORD_VECS  
+      CREATE CISB_S_REORD_VECS  
+      CREATE CISB_T_REORD_VECS  
       CREATE INTXa
       CREATE INTXb
       CREATE CIS_VEC_AO
@@ -3542,15 +3553,15 @@
 
           DO i
           DO a
-            GET CISA_S_VECS(a,i,mroots)
-            amp_print_a (a,i) =  CISA_S_VECS(a,i,mroots)
+            GET CISA_S_REORD_VECS(a,i,mroots)
+            amp_print_a (a,i) =  CISA_S_REORD_VECS(a,i,mroots)
           ENDDO a
           ENDDO i
 
           DO j
           DO b
-            GET  CISB_S_VECS(b,j,mroots)
-            amp_print_b (b,j) = CISB_S_VECS(b,j,mroots)
+            GET  CISB_S_REORD_VECS(b,j,mroots)
+            amp_print_b (b,j) = CISB_S_REORD_VECS(b,j,mroots)
           ENDDO b
           ENDDO j
  
@@ -3600,15 +3611,15 @@
 #end_debug
              DO i
              DO a
-               GET CISA_T_VECS(a,i,mroots)
-               amp_print_a (a,i) =  CISA_T_VECS(a,i,mroots)
+               GET CISA_T_REORD_VECS(a,i,mroots)
+               amp_print_a (a,i) =  CISA_T_REORD_VECS(a,i,mroots)
              ENDDO a
              ENDDO i
 
              DO j
              DO b
-               GET  CISB_T_VECS(b,j,mroots)
-               amp_print_b (b,j) = CISB_T_VECS(b,j,mroots)
+               GET  CISB_T_REORD_VECS(b,j,mroots)
+               amp_print_b (b,j) = CISB_T_REORD_VECS(b,j,mroots)
              ENDDO b
              ENDDO j
 
@@ -3631,6 +3642,120 @@
 
      ENDPROC ANALYZE_STATE
 #    ---------------------
+
+     PROC SORT_CIS_SVECS
+#    -------------------
+
+     NCOUNT = ZERO
+     DO IONE
+        PARDO A, I
+            DO NROOTS 
+               NCOUNT += ONE 
+               IF NCOUNT <= TARGET_ROOTS
+                  TCIS_EE(NROOTS,IONE) = REORD_MAP(NROOTS)
+                  EXECUTE RETURN_SVAL TCIS_EE IMAP
+                  IF IMAP != ZERO
+                     MCOUNT = ZERO 
+                     DO MROOTS 
+                        MCOUNT += ONE
+                        IF MCOUNT == IMAP
+                           GET CISA_S_VECS(A,I,MROOTS)
+                           TAI(A,I) =  CISA_S_VECS(A,I,MROOTS)
+                           T2aiX(A,I,NROOTS) = TAI(A,I)
+                           PUT CISA_S_REORD_VECS(A,I,NROOTS) = T2aiX(A,I,NROOTS)
+                        ENDIF
+                     ENDDO MROOTS
+                  ENDIF 
+               ENDIF 
+            ENDDO NROOTS 
+        ENDPARDO A, I 
+     ENDDO IONE
+
+     NCOUNT = ZERO
+     DO IONE
+        PARDO B, J
+            DO NROOTS
+               NCOUNT += ONE
+               IF NCOUNT <= TARGET_ROOTS
+                  TCIS_EE(NROOTS,IONE) = REORD_MAP(NROOTS)
+                  EXECUTE RETURN_SVAL TCIS_EE IMAP
+                  IF IMAP != ZERO
+                     MCOUNT = ZERO
+                     DO MROOTS
+                        MCOUNT += ONE
+                        IF MCOUNT == IMAP
+                           GET CISB_S_VECS(B,J,MROOTS)
+                           TBJ(B,J) =  CISB_S_VECS(B,J,MROOTS)
+                           T2BJX(B,J,NROOTS) = TBJ(B,J)
+                           PUT CISB_S_REORD_VECS(B,J,NROOTS) = T2BJX(B,J,NROOTS)
+                        ENDIF
+                     ENDDO MROOTS
+                  ENDIF
+               ENDIF
+            ENDDO NROOTS
+        ENDPARDO B, J
+     ENDDO IONE
+     EXECUTE SIP_BARRIER 
+
+     ENDPROC SORT_CIS_SVECS
+#    ----------------------
+
+     PROC SORT_CIS_TVECS
+#    -------------------
+
+     NCOUNT = ZERO
+     DO IONE
+        PARDO A, I
+            DO NROOTS
+               NCOUNT += ONE
+               IF NCOUNT <= TARGET_ROOTS
+                  TCIS_EE(NROOTS,IONE) = REORD_MAP(NROOTS)
+                  EXECUTE RETURN_SVAL TCIS_EE IMAP
+                  IF IMAP != ZERO
+                     MCOUNT = ZERO
+                     DO MROOTS
+                        MCOUNT += ONE
+                        IF MCOUNT == IMAP
+                           GET CISA_T_VECS(A,I,MROOTS)
+                           TAI(A,I) =  CISA_T_VECS(A,I,MROOTS)
+                           T2aiX(A,I,NROOTS) = TAI(A,I)
+                           PUT CISA_T_REORD_VECS(A,I,NROOTS) = T2aiX(A,I,NROOTS)
+                        ENDIF
+                     ENDDO MROOTS
+                  ENDIF
+               ENDIF
+            ENDDO NROOTS
+        ENDPARDO A, I
+     ENDDO IONE
+
+     NCOUNT = ZERO
+     DO IONE
+        PARDO B, J
+            DO NROOTS
+               NCOUNT += ONE
+               IF NCOUNT <= TARGET_ROOTS
+                  TCIS_EE(NROOTS,IONE) = REORD_MAP(NROOTS)
+                  EXECUTE RETURN_SVAL TCIS_EE IMAP
+                  IF IMAP != ZERO
+                     MCOUNT = ZERO
+                     DO MROOTS
+                        MCOUNT += ONE
+                        IF MCOUNT == IMAP
+                           GET CISB_T_VECS(B,J,MROOTS)
+                           TBJ(B,J) =  CISB_T_VECS(B,J,MROOTS)
+                           T2BJX(B,J,NROOTS) = TBJ(B,J)
+                           PUT CISB_T_REORD_VECS(B,J,NROOTS) = T2BJX(B,J,NROOTS)
+                        ENDIF
+                     ENDDO MROOTS
+                  ENDIF
+               ENDIF
+            ENDDO NROOTS
+        ENDPARDO B, J
+     ENDDO IONE
+     EXECUTE SIP_BARRIER
+
+     ENDPROC SORT_CIS_TVECS
+#    ----------------------
 
 #     BEGIN MAIN PROGRAM
 #     -----------------
@@ -3842,8 +3967,77 @@
                 ENDDO MROOTS 
               ENDIF 
 
+          CIS_ENEG = ROOT_ID
           ENDDO NROOTS
 
+#bgn_debug
+      mcount=0.0
+      do mroots
+      mcount +=1.0
+      if mcount > target_roots
+      exit
+      Endif
+      tmpb=0.0
+      tmpa=0.0
+      suma=0.0
+      sumb=0.0
+      pardo i,a
+         get CISA_S_VECS(a,i,MROOTS)
+         tai(a,i) = CISA_S_VECS(a,i,MROOTS)
+         Tmp = tai(a,i) * tai(a,i)
+         tmpa += tmp
+      endpardo i,a
+      pardo j,b
+         get CISB_S_VECS(b,j,MROOTS)
+         tbj(b,j) = CISB_S_VECS(b,j,MROOTS)
+         tmpb += tmp
+      endpardo j,b
+      execute server_barrier
+      collective suma +=tmpa
+      collective sumb +=tmpb
+      execute sip_barrier
+      execute print_scalar suma
+      enddo mroots
+#end_debug
+
+          IF MULT == ONE 
+             EXECUTE REORDER_ARRAY CIS_S_EES REORD_MAP 
+             CALL SORT_CIS_SVECS 
+          ENDIF 
+          IF MULT == TWO
+             EXECUTE REORDER_ARRAY CIS_T_EES REORD_MAP 
+             CALL SORT_CIS_TVECS 
+           ENDIF 
+
+#bgn_debug
+      mcount=0.0
+      do mroots
+      mcount +=1.0
+      if mcount > target_roots
+      exit
+      Endif
+      tmpb=0.0
+      tmpa=0.0
+      suma=0.0
+      sumb=0.0
+      pardo i,a
+         get CISA_S_REORD_VECS(a,i,MROOTS)
+         tai(a,i) = CISA_S_REORD_VECS(a,i,MROOTS)
+         Tmp = tai(a,i) * tai(a,i)
+         tmpa += tmp
+      endpardo i,a
+      pardo j,b
+         get CISB_S_REORD_VECS(b,j,MROOTS)
+         tbj(b,j) = CISB_S_REORD_VECS(b,j,MROOTS)
+         tmpb += tmp
+      endpardo j,b
+      execute server_barrier
+      collective suma +=tmpa
+      collective sumb +=tmpb
+      execute sip_barrier
+      execute print_scalar suma
+      enddo mroots
+#end_debug
 
 #bgn_debug
       ROOT_COUNT -= 1.0
@@ -3875,12 +4069,12 @@
       CALL ANALYZE_STATE 
 
       EXECUTE SERVER_BARRIER 
-      EXECUTE BLOCKS_TO_LIST  CISA_S_VECS
-      EXECUTE BLOCKS_TO_LIST  CISB_S_VECS 
-      EXECUTE BLOCKS_TO_LIST  CISA_T_VECS
-      EXECUTE BLOCKS_TO_LIST  CISB_T_VECS
+      EXECUTE BLOCKS_TO_LIST  CISA_S_REORD_VECS
+      EXECUTE BLOCKS_TO_LIST  CISB_S_REORD_VECS 
+      EXECUTE BLOCKS_TO_LIST  CISA_T_REORD_VECS
+      EXECUTE BLOCKS_TO_LIST  CISB_T_REORD_VECS
       EXECUTE WRITE_BLOCKS_TO_LIST
       EXECUTE SERVER_BARRIER 
 
                        ENDSIAL CIS_UHF
-#                      ---------------
+                      ---------------

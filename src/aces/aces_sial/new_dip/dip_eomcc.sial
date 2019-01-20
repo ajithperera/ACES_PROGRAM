@@ -354,6 +354,7 @@
       Static DIP_INIT_IJIJ(i,j,i1,j1)
       Static DIP_INIT_IJ(i,j)
       Static VEC_AB(i,j,KROOTS)
+      Static VEC_AB_T(i,j,KROOTS)
 
 #     Scalar arrays
 #     -------------
@@ -597,17 +598,34 @@
       EXECUTE FORM_DIP_HMAT DIP_INIT_IJIJ DIP_INIT_IJ 
       EXECUTE FORM_DIP_GUESS DIP_INIT_IJIJ VEC_AB
 
+      DO KROOTS 
+         DO I
+         DO J 
+            VEC_AB_T(I,J,KROOTS) = VEC_AB(I,J,KROOTS)
+         ENDDO J
+         ENDDO I
+      ENDDO KROOTS 
+
      ENDPROC FORM_INITIAL_GUESS
 #    --------------------------
 
       PROC PREP_DIP_GUESS
 #     -------------------
 
-     EXECUTE GUESS_4CURRENT_ROOT VEC_AB MYROOT
      IF TRIPLET == ONE
-          MYROOT *= -1.0
-      ENDIF
-     EXECUTE GUESS_4CURRENT_ROOT VEC_AB MYROOT
+       DO KROOTS 
+          DO I
+          DO J 
+             VEC_AB(I,J,KROOTS) = VEC_AB_T(I,J,KROOTS)
+          ENDDO J
+          ENDDO I
+       ENDDO KROOTS 
+
+       MYROOT *= -1.0
+       EXECUTE GUESS_4CURRENT_DIP_ROOT VEC_AB MYROOT
+     ELSE 
+       EXECUTE GUESS_4CURRENT_DIP_ROOT VEC_AB MYROOT
+     ENDIF 
 
      COUNTER = 0.0
      ONE     = 1.0
@@ -1836,7 +1854,10 @@
                      A_VALUE  = HC_A
                      A_VALUE += HC_AAA
                      A_VALUE += HC_BBB
- 
+#bgn_debug
+#         execute print_scalar one
+#         execute print_scalar A_VALUE
+#end_debug  
                      KCOUNT = 0.0
                      DO KINDEX50
                          KCOUNT += 1.0
@@ -1944,6 +1965,10 @@
                      A_VALUE  = HC_A
                      A_VALUE += HC_AAA
                      A_VALUE += HC_BBB
+#bgn_debug
+#         execute print_scalar zero 
+#         execute print_scalar A_VALUE
+#end_debug  
  
                      KCOUNT = 0.0
                      DO KINDEX50
@@ -3672,7 +3697,7 @@
      EOM_THRES    = EOM_TOL
      EOM_DENOM    = EE_DENOM
      EOM_MAXCYC   = EE_MAXCYC
-     EXACT_HY     = ZERO
+     EXACT_HY     = ONE
 #
       CALL READ_DATA
       CALL CREATE_ARRAYS 
@@ -3820,7 +3845,7 @@
 
            EXECUTE SERVER_BARRIER 
 #bgn_debug
-      execute print_scalar OMEGA 
+#      execute print_scalar OMEGA 
 #end_debug
 
            ITER_COUNT += -1.0

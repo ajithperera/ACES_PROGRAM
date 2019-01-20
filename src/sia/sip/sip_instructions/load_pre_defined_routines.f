@@ -56,6 +56,7 @@ C  in the file COPYRIGHT.
       external return_h1, return_1el_dkh
       external form_guess,xgeev,extract_subset,return_max_overlap
       external form_rpa_guess, guess_4current_root
+      external guess_4current_dip_root
       external form_dip_guess,form_dea_guess,form_dip_hmat 
       external genrl_eig_solver,return_inverse
       external form_hphp_matrix,set_aces3_vars,form_cis_amat 
@@ -64,6 +65,7 @@ C  in the file COPYRIGHT.
       external copy_alpha_to_beta,find_zeros 
       external return_selected,addrootindex
       external process_eigs,print_static,store_static_array 
+      external truncate_eom_subspace 
       external smon_on
       external smon_off
       external scf_rhf
@@ -148,7 +150,8 @@ C
      *         dipole_moment, nuc_dipole_moment, nuc_dipole_derivative,
      *         second_moment
       external return_1st_mom, return_2nd_mom 
-      external energy_ty_denominator, reorder_energy
+      external energy_ty_denominator, reorder_energy,reorder_array
+      external find_min_eneg
 c 
 c VFL SCF instructions 
 
@@ -830,6 +833,8 @@ C New IP-EOM related SIPs.
       dummy = load_user_sub('form_rpa_guess'//char(0),form_rpa_guess)
       dummy = load_user_sub('guess_4current_root'//char(0),
      &                       guess_4current_root)
+      dummy = load_user_sub('guess_4current_dip_root'//char(0),
+     &                       guess_4current_dip_root)
       dummy = load_user_sub('form_dip_guess'//char(0),
      &                       form_dip_guess)
       dummy = load_user_sub('form_dip_hmat'//char(0),
@@ -854,6 +859,10 @@ C New IP-EOM related SIPs.
      &                       find_zeros)
       dummy = load_user_sub('form_rpa_small_matrix'//char(0),
      &                       form_rpa_small_matrix)
+      dummy = load_user_sub('truncate_eom_subspace'//char(0),
+     &                       truncate_eom_subspace)
+      dummy = load_user_sub('reorder_array'//char(0),reorder_array)
+      dummy = load_user_sub('find_min_eneg'//char(0),find_min_eneg)
 c-----------------------------------------------------------------------
 c Prakash instructions for delta integrals
 c----------------------------------------------------------------------
