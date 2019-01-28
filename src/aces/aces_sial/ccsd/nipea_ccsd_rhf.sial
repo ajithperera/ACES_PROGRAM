@@ -8268,15 +8268,13 @@
 # ------------------------
 #
       CALL WRITE_2EL   
-#
-      execute sip_barrier
       execute blocks_to_list                t1a_old
       execute blocks_to_list                t1b_old
       execute blocks_to_list                T2old_aa
       execute blocks_to_list                T2old_ab
       execute blocks_to_list                T2old_bb
       execute write_blocks_to_list
-      execute sip_barrier
+      execute server_barrier
 #
                            ENDSIAL CCSD_UHF_SV1    
 #

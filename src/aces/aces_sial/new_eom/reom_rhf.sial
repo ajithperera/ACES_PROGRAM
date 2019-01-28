@@ -8313,7 +8313,7 @@
 
      PROC COPY_NORM_C
 #    ----------------
-      NCOUNT = 0
+      NCOUNT = 0.0
       DO NINDEX50
          NCOUNT += 1.0
 
@@ -8391,7 +8391,6 @@
         ENDIF
 
      ENDDO NINDEX50
-
 
      ENDPROC COPY_NORM_C
 #    -------------------
@@ -8602,72 +8601,6 @@
      ENDPROC TRUNCATE
 #    ----------------
 
-     PROC SET_NEWC_POST_TRUNCATE
-#    ---------------------------
-     
-     NCOUNT = 0
-     DO NINDEX50
-        NCOUNT += 1.0
-    
-        IF NCOUNT <= NREDUCE
-
-        PARDO i, a
-
-            GET  VC1A_HIST(a,i,NINDEX50)
-            Tain(a,i,NINDEX50)  = VC1A_HIST(a,i,NINDEX50)
-            PUT Y1A(a,i,NINDEX50) = Tain(a,i,NINDEX50)
-
-        ENDPARDO i, a
-
-        PARDO i, i1, a1, a
-
-              REQUEST VCACT2AA_HIST(a,i,a1,i1,NINDEX50) i1
-              Taiain(a,i,a1,i1,NINDEX50) = VCACT2AA_HIST(a,i,a1,i1,NINDEX50)
-              PREPARE Y2AA(a,i,a1,i1,NINDEX50) = Taiain(a,i,a1,i1,NINDEX50)
-
-        ENDPARDO i, i1, a1, a
-
-        PARDO i, j, b, a
-
-              REQUEST VCACT2AB_HIST(a,i,b,j,NINDEX50)  j
-              Taibjn(a,i,b,j,NINDEX50)  = VCACT2AB_HIST(a,i,b,j,NINDEX50)
-              PREPARE Y2AB(a,i,b,j,NINDEX50) =  Taibjn(a,i,b,j,NINDEX50)
-
-        ENDPARDO i, j, b, a
-
-       PARDO i, a
-
-            GET  VCH1A_HIST(a,i,NINDEX50)
-            Tain(a,i,NINDEX50)  = VCH1A_HIST(a,i,NINDEX50)
-            PUT HY1A(a,i,NINDEX50) = Tain(a,i,NINDEX50)
-
-        ENDPARDO i, a
-
-        PARDO i, i1, a1, a
-
-              REQUEST VCHACT2AA_HIST(a,i,a1,i1,NINDEX50) i1
-              Taiain(a,i,a1,i1,NINDEX50) = VCHACT2AA_HIST(a,i,a1,i1,NINDEX50)
-              PREPARE HY2AA(a,i,a1,i1,NINDEX50) = Taiain(a,i,a1,i1,NINDEX50)
-
-        ENDPARDO i, i1, a1, a
-
-        PARDO i, j, b, a
-
-              REQUEST VCHACT2AB_HIST(a,i,b,j,NINDEX50)  j
-              Taibjn(a,i,b,j,NINDEX50)  = VCHACT2AB_HIST(a,i,b,j,NINDEX50)
-              PREPARE HY2AB(a,i,b,j,NINDEX50) =  Taibjn(a,i,b,j,NINDEX50)
-
-        ENDPARDO i, j, b, a
-
-
-        ENDIF 
-     ENDDO NINDEX50
-
-     EXECUTE SERVER_BARRIER
-
-     ENDPROC SET_NEWC_POST_TRUNCATE
-#    ------------------------------
-
 #-------------------------------------------------------------------------
 #
 #-------------------------------------------------------------------------
@@ -8739,6 +8672,8 @@
 
      ROOT_COUNT = ZERO
      TRNC_COUNT = ZERO
+ 
+     TARGET_ROOTS = 5.0
 
      DO NROOTS
 
@@ -8769,6 +8704,12 @@
 
             ITER_COUNT += ONE
             SBSP_COUNT += ONE
+
+# There is a misnomer here. The name iter_count and sbsp_count 
+# should have been interchaned. This happened because subspace 
+# truncation was added at a latter stage. Notice that iter_count
+# do not exceed 20 as long as truncation is used. As a result 
+# a test to terminate the loop is done using sbsp_count. 
 
 #bgn_debug
         execute print_scalar ITER_COUNT

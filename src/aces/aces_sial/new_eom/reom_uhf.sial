@@ -104,9 +104,12 @@
       Distributed ORTHO_COEF(MINDEX50,NINDEX50)
       Distributed Y1A(a,i,subsp_dim)
       Distributed Y1B(b,j,subsp_dim)
+      Distributed Y1A_TRUNCT(a,i,subsp_dim)
+      Distributed Y1B_TRUNCT(b,j,subsp_dim)
       Distributed Y1A_picked(a,i)
       Distributed HY1A(a,i,subsp_dim)
       Distributed HY1B(b,j,subsp_dim)
+
       Distributed Y1B_picked(b,j)
       Distributed HY1A_picked(a,i)
       Distributed HY1B_picked(b,j)
@@ -122,6 +125,9 @@
       Served Y2aa(a,i,a1,i1,subsp_dim)
       Served Y2bb(b,j,b1,j1,subsp_dim)
       Served Y2ab(a,i,b,j,subsp_dim) 
+      Served Y2aa_TRUNCT(a,i,a1,i1,subsp_dim)
+      Served Y2bb_TRUNCT(b,j,b1,j1,subsp_dim)
+      Served Y2ab_TRUNCT(a,i,b,j,subsp_dim)
       Served HY2aa(a,i,a1,i1,subsp_dim)
       Served HY2bb(b,j,b1,j1,subsp_dim)
       Served HY2ab(a,i,b,j,subsp_dim) 
@@ -145,6 +151,7 @@
       Static A_MATRIX(MINDEX50,NINDEX50) 
       Static A_DIAGS(MINDEX50)
       Static DVECTORS(MINDEX50,NINDEX50)
+      Static PSEUDO_ROOTS(NROOTS,INDONE)
       Static EOM_S_EES(NROOTS,INDONE)
       Static EOM_T_EES(NROOTS,INDONE)
       Static OVLP_CHECK(MINDEX50,NINDEX50)
@@ -522,6 +529,23 @@
       SCALAR  EOM_GUESS
       SCALAR  EOM_DENOM
       SCALAR  EOM_MAXCYC
+      SCALAR  NINETEEN
+      SCALAR  TWELVE
+      SCALAR  TEN
+      SCALAR  ELV
+      SCALAR  TWL
+      SCALAR  NREDUCE
+      SCALAR  NFULL
+      SCALAR  THRTEN
+      SCALAR  SBSP_COUNT 
+      SCALAR  TRNC_COUNT
+      SCALAR  MAX_OVLP
+      SCALAR  MIN_ENEG
+      SCALAR  CURRENT
+      SCALAR  MONE
+      SCALAR  LOCK
+      SCALAR  LOCK_THRES
+      SCALAR  IMAX_KEEP
 #
 # ENDARRAYS USED IN XPROC 
 #
@@ -5043,6 +5067,8 @@
       create VCH1B_HIST
       create Y1a
       create Y1b
+      create Y1a_TRUNCT
+      create Y1b_TRUNCT
       create HY1a
       create HY1b
       create Y1a_PICKED
@@ -10038,8 +10064,8 @@
      ENDPROC FORM_NEW_HBAR_Y_VECS
 #    ----------------------------
 
-     PROC SELECT_VECS
-#    ----------------
+     PROC SELECT_VECS_MAX_OVLP
+#    -------------------------
 
      NCOUNT = 0.0
      DO NINDEX50
@@ -10110,13 +10136,48 @@
 
      EXECUTE SIP_BARRIER
 
-     EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
+     IF LOCK != ONE
+        EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
+        IMAX_KEEP = IMAX
+      ELSE
+        IMAX = IMAX_KEEP
+      ENDIF
 #bgn_debug
 #     execute print_scalar imax
 #end_debug
 
-     ENDPROC SELECT_VECS
-#    --------------------
+     ENDPROC SELECT_VECS_MAX_OVLP
+#    ---------------------------
+
+    PROC SELECT_VECS_MIN_ENEG
+#   -------------------------
+
+     IF ROOT_COUNT == ONE
+
+# If we are working on the first root then always use the lowest
+# eigenvalue and the corresponding vector. Since we have ordered
+# eigenvalue and vectors in ascending order, the vector to be followed
+# is always one.
+
+        IMAX = ONE
+      ELSE
+# Find the root from the subspace that is not too close to the
+# roots that have already been found.
+
+        IF LOCK != ONE
+           EXECUTE FIND_MIN_ENEG A_DIAGS PSEUDO_ROOTS
+           EXECUTE SET_ACES3_VARS IMAX MONE
+           IMAX_KEEP = IMAX
+        ENDIF
+        IMAX = IMAX_KEEP
+      ENDIF
+
+#bgn_debug
+     execute print_scalar imax
+#end_debug
+
+     ENDPROC SELECT_VECS_MIN_ENEG
+#    ----------------------------
 
      PROC FORM_SELECTED_Y
 #    --------------------
@@ -11349,6 +11410,555 @@
 
      ENDPROC FORCE_EVECS_TO_ZERO
 #    ---------------------------
+
+     PROC INIT_TO_ZERO
+#    -----------------
+
+     NCOUNT = 0
+     DO NINDEX50
+         NCOUNT += 1.0
+
+        IF NCOUNT <= NREDUCE
+        PARDO i,a
+              Tai(a,i)  = 0.0
+              PUT Y1a_TRUNCT(a,i,NINDEX50) = Tai(a,i)
+        ENDPARDO i, a
+
+        PARDO j, b 
+              Tbj(b,j)  = 0.0
+              PUT Y1b_TRUNCT(b,j,NINDEX50) = Tbj(b,j)
+        ENDPARDO j, b
+
+        PARDO a, a1, i, i1
+              Taiai(a,i,a1,i1) = 0.0
+              PREPARE Y2aa_TRUNCT(a,i,a1,i1,NINDEX50) = Taiai(a,i,a1,i1)
+        ENDPARDO a, a1, i, i1
+
+        PARDO b, b1, j, j1
+              Tbjbj(b,j,b1,j1) = 0.0
+              PREPARE Y2bb_TRUNCT(b,j,b1,j1,NINDEX50) = Tbjbj(b,j,b1,j1)
+        ENDPARDO b, b1, j, j1
+
+        PARDO a, b, i, j
+              Taibj(a,i,b,j) = 0.0
+              PREPARE Y2ab_TRUNCT(a,i,b,j,NINDEX50)  = Taibj(a,i,b,j)
+        ENDPARDO a, b, i, j
+
+       ENDIF
+    
+     ENDDO NINDEX50
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC INIT_TO_ZERO
+#    -------------------
+
+     PROC TRANSFORM_C
+#    ----------------  
+
+     PARDO i, a
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET VC1A_HIST(a,i,MINDEX50)
+                       Tain(a,i,MINDEX50)  = VC1A_HIST(a,i,MINDEX50)
+                       T1ain(a,i,NINDEX50) = Tain(a,i,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1A_TRUNCT(a,i,NINDEX50) += T1ain(a,i,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO i, a
+
+     PARDO j, b
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE 
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET VC1B_HIST(b,j,MINDEX50)
+                       Tbjn(b,j,MINDEX50)  = VC1B_HIST(b,j,MINDEX50)
+                       T1bjn(b,j,NINDEX50) = Tbjn(b,j,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1B_TRUNCT(b,j,NINDEX50) += T1bjn(b,j,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO j, b
+
+     PARDO i, i1, a1, a
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE 
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST VCACT2aa_HIST(a,i,a1,i1,MINDEX50)  i1
+
+                       Taiain(a,i,a1,i1,MINDEX50) = VCACT2aa_HIST(a,i,a1,i1,MINDEX50)
+                       T1aiain(a,i,a1,i1,NINDEX50) = Taiain(a,i,a1,i1,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE Y2aa_TRUNCT(a,i,a1,i1,NINDEX50) += T1aiain(a,i,a1,i1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO i, i1, a1, a
+
+     PARDO j, j1, b1, b
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE 
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST VCACT2bb_HIST(b,j,b1,j1,MINDEX50)  j1
+
+                       Tbjbjn(b,j,b1,j1,MINDEX50) = VCACT2bb_HIST(b,j,b1,j1,MINDEX50)
+                       T1bjbjn(b,j,b1,j1,NINDEX50) = Tbjbjn(b,j,b1,j1,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE Y2bb_TRUNCT(b,j,b1,j1,NINDEX50) += T1bjbjn(b,j,b1,j1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO j, j1, b1, b
+
+     PARDO a, i, b, j
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE 
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST VCACT2ab_HIST(a,i,b,j,MINDEX50)  j
+
+                       Taibjn(a,i,b,j,MINDEX50) = VCACT2ab_HIST(a,i,b,j,MINDEX50)
+                       T1aibjn(a,i,b,j,NINDEX50) = Taibjn(a,i,b,j,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE Y2ab_TRUNCT(a,i,b,j,NINDEX50) += T1aibjn(a,i,b,j,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+
+     ENDPARDO a, i, b, j
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC TRANSFORM_C
+#    -------------------
+
+     PROC TRANSFORM_HC
+#    -----------------
+     PARDO i, a
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET VCH1A_HIST(a,i,MINDEX50)
+                       Tain(a,i,MINDEX50)  = VCH1A_HIST(a,i,MINDEX50)
+                       T1ain(a,i,NINDEX50) = Tain(a,i,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1A_TRUNCT(a,i,NINDEX50) += T1ain(a,i,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO i, a
+
+     PARDO j, b
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET VCH1B_HIST(b,j,MINDEX50)
+                       Tbjn(b,j,MINDEX50)  = VCH1B_HIST(b,j,MINDEX50)
+                       T1bjn(b,j,NINDEX50) = Tbjn(b,j,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1B_TRUNCT(b,j,NINDEX50) += T1bjn(b,j,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO j, b
+
+     PARDO i, i1, a1, a
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST VCHACT2aa_HIST(a,i,a1,i1,MINDEX50)  i1
+
+                       Taiain(a,i,a1,i1,MINDEX50) = VCHACT2aa_HIST(a,i,a1,i1,MINDEX50)
+                       T1aiain(a,i,a1,i1,NINDEX50) = Taiain(a,i,a1,i1,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE Y2aa_TRUNCT(a,i,a1,i1,NINDEX50) += T1aiain(a,i,a1,i1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO i, i1, a1, a
+
+     PARDO j, j1, b1, b
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST VCHACT2bb_HIST(b,j,b1,j1,MINDEX50)  j1
+
+                       Tbjbjn(b,j,b1,j1,MINDEX50) = VCHACT2bb_HIST(b,j,b1,j1,MINDEX50)
+                       T1bjbjn(b,j,b1,j1,NINDEX50) = Tbjbjn(b,j,b1,j1,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE Y2bb_TRUNCT(b,j,b1,j1,NINDEX50) += T1bjbjn(b,j,b1,j1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO j, j1, b1, b
+
+     PARDO a, i, b, j
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE 
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST VCHACT2ab_HIST(a,i,b,j,MINDEX50)  j
+
+                       Taibjn(a,i,b,j,MINDEX50) = VCHACT2ab_HIST(a,i,b,j,MINDEX50)
+                       T1aibjn(a,i,b,j,NINDEX50) = Taibjn(a,i,b,j,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE Y2ab_TRUNCT(a,i,b,j,NINDEX50) += T1aibjn(a,i,b,j,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+
+     ENDPARDO a, i, b, j
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC TRANSFORM_HC
+#    --------------------
+
+     PROC COPY_HC
+#    ------------
+
+      NCOUNT = 0
+      DO NINDEX50
+         NCOUNT += 1.0
+
+         IF NCOUNT <= NREDUCE
+
+            PARDO a, i
+                  GET Y1A_TRUNCT(a,i,NINDEX50)
+                  Tai(a,i) = Y1A_TRUNCT(a,i,NINDEX50)
+                  PUT VCH1A_HIST(a,i,NINDEX50) = Tai(a,i)
+            ENDPARDO a, i
+
+            PARDO b, j
+                  GET Y1B_TRUNCT(b,j,NINDEX50)
+                  Tbj(b,j) = Y1B_TRUNCT(b,j,NINDEX50)
+                  PUT VCH1B_HIST(b,j,NINDEX50) = Tbj(b,j)
+            ENDPARDO b, j
+
+            PARDO a, a1, i, i1
+                  REQUEST  Y2aa_TRUNCT(a,i,a1,i1,NINDEX50) i1
+                  Taiai(a,i,a1,i1) = Y2aa_TRUNCT(a,i,a1,i1,NINDEX50)
+                  PREPARE VCHACT2AA_HIST(a,i,a1,i1,NINDEX50) = Taiai(a,i,a1,i1)
+            ENDPARDO a, a1, i, i1
+
+           PARDO b, b1, j, j1
+                  REQUEST  Y2bb_TRUNCT(b,j,b1,j1,NINDEX50) j1
+                  Tbjbj(b,j,b1,j1) = Y2bb_TRUNCT(b,j,b1,j1,NINDEX50)
+                  PREPARE VCHACT2BB_HIST(b,j,b1,j1,NINDEX50) = Tbjbj(b,j,b1,j1)
+            ENDPARDO b, b1, j, j1
+
+            PARDO a, b, i, j
+                  REQUEST Y2ab_TRUNCT(a,i,b,j,NINDEX50) j
+                  Taibj(a,i,b,j) = Y2ab_TRUNCT(a,i,b,j,NINDEX50)
+                  PREPARE VCHACT2AB_HIST(a,i,b,j,NINDEX50) = Taibj(a,i,b,j)
+            ENDPARDO a, b, i, j
+
+        ENDIF
+
+      ENDDO NINDEX50
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC COPY_HC
+#    ---------------
+     PROC COPY_NORM_C
+#    ----------------
+
+      NCOUNT = 0
+      DO NINDEX50
+         NCOUNT += 1.0
+
+         IF NCOUNT <= NREDUCE
+            SUMA  = 0.0
+            SUMB  = 0.0
+            SUMAA = 0.0
+            SUMBB = 0.0
+            SUMAB = 0.0
+            HC_A  = 0.0
+            HC_AA = 0.0
+            HC_BB = 0.0
+            HC_AB = 0.0
+
+            PARDO a, i
+                  GET Y1A_TRUNCT(a,i,NINDEX50)
+                  Tai(a,i) = Y1A_TRUNCT(a,i,NINDEX50)
+                  TMP   = Tai(a,i) * Tai(a,i)
+                  SUMA += TMP
+            ENDPARDO a, i
+
+            PARDO b, j
+                  GET Y1B_TRUNCT(b,j,NINDEX50)
+                  Tai(a,i) = Y1B_TRUNCT(b,j,NINDEX50)
+                  TMP   = Tbj(b,j) * Tbj(b,j)
+                  SUMB += TMP
+            ENDPARDO b, j
+
+            PARDO a, a1, i, i1
+                  REQUEST  Y2aa_TRUNCT(a,i,a1,i1,NINDEX50) i1
+                  Taiai(a,i,a1,i1) = Y2aa_TRUNCT(a,i,a1,i1,NINDEX50)
+                  TMP    = Taiai(a,i,a1,i1) * Taiai(a,i,a1,i1)
+                  SUMAA += TMP
+            ENDPARDO a, a1, i, i1
+
+            PARDO b, b1, j, j1
+                  REQUEST  Y2bb_TRUNCT(b,j,b1,j1,NINDEX50) j1
+                  Tbjbj(b,j,b1,j1) = Y2bb_TRUNCT(b,j,b1,j1,NINDEX50)
+                  TMP    =  Tbjbj(b,j,b1,j1) * Tbjbj(b,j,b1,j1) 
+                  SUMBB += TMP
+            ENDPARDO b, b1, j, j1
+
+            PARDO a, b, i, j
+                  REQUEST Y2ab_TRUNCT(a,i,b,j,NINDEX50) j
+                  Taibj(a,i,b,j) = Y2ab_TRUNCT(a,i,b,j,NINDEX50)
+                  TMP    = Taibj(a,i,b,j) * Taibj(a,i,b,j)
+                  SUMAB +=  TMP
+            ENDPARDO a, b, i, j
+
+            EXECUTE SIP_BARRIER
+            COLLECTIVE HC_A  += SUMA
+            COLLECTIVE HC_B  += SUMB
+            COLLECTIVE HC_AA += SUMAA
+            COLLECTIVE HC_BB += SUMBB
+            COLLECTIVE HC_AB += SUMAB
+
+            SUM_R  = HC_A
+            SUM_R += HC_B
+            SUM_R += HC_AA
+            SUM_R += HC_BB
+            SUM_R += HC_AB
+#bgn_debug
+     execute print_scalar SUM_R
+#end_debug
+            EXPONENT = 0.5
+            EXECUTE NORM_FAC SUM_R EXPONENT
+            INV_SQRT_NORM_R = SUM_R
+
+            EXECUTE SIP_BARRIER
+
+            PARDO a, i
+                  GET Y1A_TRUNCT(a,i,NINDEX50)
+                  Tain(a,i,NINDEX50) = Y1A_TRUNCT(a,i,NINDEX50)
+                  Tain(a,i,NINDEX50)*= INV_SQRT_NORM_R
+                  PUT VC1A_HIST(a,i,NINDEX50) = Tain(a,i,NINDEX50)
+            ENDPARDO a, i
+
+            PARDO b, j 
+                  GET Y1B_TRUNCT(b,j,NINDEX50)
+                  Tbjn(b,j,NINDEX50) = Y1B_TRUNCT(b,j,NINDEX50)
+                  Tbjn(b,j,NINDEX50)*= INV_SQRT_NORM_R
+                  PUT VC1A_HIST(a,i,NINDEX50) = Tain(a,i,NINDEX50)
+            ENDPARDO b, j
+
+            PARDO a, a1, i, i1
+                  REQUEST  Y2aa_TRUNCT(a,i,a1,i1,NINDEX50) i1
+                  Taiain(a,i,a1,i1,NINDEX50) = Y2aa_TRUNCT(a,i,a1,i1,NINDEX50)
+                  Taiain(a,i,a1,i1,NINDEX50)*= INV_SQRT_NORM_R
+                  PREPARE VCACT2AA_HIST(a,i,a1,i1,NINDEX50) =  Taiain(a,i,a1,i1,NINDEX50)
+            ENDPARDO a, a1, i, i1
+
+            PARDO b, b1, j, j1
+                  REQUEST  Y2bb_TRUNCT(b,j,b1,j1,NINDEX50) j1
+                  Tbjbjn(b,j,b1,j1,NINDEX50) = Y2bb_TRUNCT(b,j,b1,j1,NINDEX50)
+                  Tbjbjn(b,j,b1,j1,NINDEX50)*= INV_SQRT_NORM_R
+                  PREPARE VCACT2BB_HIST(b,j,b1,j1,NINDEX50) = Tbjbjn(b,j,b1,j1,NINDEX50)
+            ENDPARDO b, b1, j, j1
+
+            PARDO a, b, i, j
+                  REQUEST Y2ab_TRUNCT(a,i,b,j,NINDEX50) j
+                  Taibjn(a,i,b,j,NINDEX50) = Y2ab_TRUNCT(a,i,b,j,NINDEX50)
+                  Taibjn(a,i,b,j,NINDEX50)*= INV_SQRT_NORM_R
+                  PREPARE VCACT2AB_HIST(a,i,b,j,NINDEX50) = Taibjn(a,i,b,j,NINDEX50)
+            ENDPARDO a, b, i, j
+
+        ENDIF
+
+     ENDDO NINDEX50
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC COPY_NORM_C
+#    -------------------
+
+     PROC TRUNCATE
+#    -------------
+# Reduce the subspace dimension.
+
+     IF EOM_MAXCYC < TWELVE
+        NREDUCE  = EOM_MAXCYC
+        NREDUCE -= THREE
+     ELSE
+        NREDUCE = TWELVE
+     ENDIF
+     NFULL  = ITER_COUNT
+
+     EXECUTE SET_ACES3_VARS NREDUCE TEN
+     EXECUTE SET_ACES3_VARS NFULL   ELV
+     EXECUTE SET_ACES3_VARS OMEGA   TWL
+
+     EXECUTE TRUNCATE_EOM_SUBSPACE A_DIAGS DVECTORS
+#bgn_debug
+#     execute print_static A_DIAGS NREDUCE
+#     execute print_static DVECTORS NFULL
+#end_debug
+
+     IF TRNC_COUNT > ONE
+        CALL INIT_TO_ZERO
+     ENDIF
+     CALL TRANSFORM_C
+     CALL COPY_NORM_C
+     CALL INIT_TO_ZERO
+     CALL TRANSFORM_HC
+     CALL COPY_HC
+
+     ENDPROC TRUNCATE
+#    ----------------
      
 #-------------------------------------------------------------------------
 #                                                                        #
@@ -11369,10 +11979,17 @@
 # Create arrays used and zero out some scalars 
 # -------------------------------------------- 
 #
-     IDENS            = 1.0
-     MULT             = 0.0
-     ONE              = 1.0
-     ZERO             = 0.0
+     MULT     = 0.0
+     ONE      = 1.0
+     ZERO     = 0.0
+     TEN      = 10.0
+     ELV      = 11.0
+     TWELVE   = 12.0
+     THRTEN   = 13.0
+     TWL      = TWELVE
+     NINETEEN = 19.0
+     MONE     = -1.0
+     THREE    = 3.0
 
      TARGET_ROOTS    = EOM_ROOTS
      EOM_THRES       = EOM_TOL
@@ -11380,6 +11997,10 @@
      EOM_DENOM       = EE_DENOM
      EOM_MAXCYC      = EE_MAXCYC
      EXACT_HY        = ZERO
+     IDENS           = ONE
+     MAX_OVLP        = ZERO
+     MIN_ENEG        = ONE
+     LOCK_THRES      = 0.001
 
      SINGLET = ZERO
      TRIPLET = ZERO
@@ -11427,7 +12048,9 @@
          execute print_scalar triplet
 #end_debug
 
-        ROOT_COUNT = 0.0
+        ROOT_COUNT = ZERO
+        TRNC_COUNT = ZERO
+
         DO NROOTS
 
            ROOT_COUNT += 1.0
@@ -11447,16 +12070,27 @@
            ENDIF
 
            ITER_COUNT = 0.0
+           SBSP_COUNT = ZERO
+           LOCK       = ZERO
 
            DO SUBSP_DIM
 
               CALL SET_TO_ZERO
 
               ITER_COUNT += 1.0
+              SBSP_COUNT += ONE
+
+# There is a misnomer here. The name iter_count and sbsp_count
+# should have been interchaned. This happened because subspace
+# truncation was added at a latter stage. Notice that iter_count
+# do not exceed 20 as long as truncation is used. As a result
+# a test to terminate the loop is done using susp_count.
+
 #bgn_debug
         execute print_scalar ITER_COUNT
+        execute print_scalar SBSP_COUNT
 #end_debug
-              IF ITER_COUNT > MAX_SUBSP_DIM
+              IF SBSP_COUNT > MAX_SUBSP_DIM
                  EXIT
               ENDIF
 
@@ -11468,7 +12102,7 @@
 
               CALL SAVE_HC_VECTORS
 
-              IF ITER_COUNT == 1.0
+              IF ITER_COUNT == ONE
                   CALL FORM_A_MATRIX_11
               ELSE
                  CALL FORM_A_MATRIX_IJ
@@ -11480,30 +12114,43 @@
 #end_debug
 
               EXECUTE XGEEV A_MATRIX DVECTORS
-
 #bgn_debug
 #        execute print_static A_MATRIX ITER_COUNT
 #end_debug
 
-              IF ITER_COUNT != 1.0
+              IF ITER_COUNT != ONE
                  CALL REORDER_A_EIGS
               ENDIF
 #
 # The eigen vectors are normalized and ordered in descending order of the
 # eigenvalues. The corresponding eigenvalues are in the diagonal.
 #
-              IF ITER_COUNT == 1.0
+              IF ITER_COUNT == ONE
                  CALL FORM_NEWVECS_ITR1
               ELSE
  
               IF EXACT_HY == ONE
                  CALL FORM_NEWVECS
-                 CALL SELECT_VECS
+
+                 IF MAX_OVLP == ONE
+                    CALL SELECT_VECS_MAX_OVLP
+                 ENDIF
+                 IF MIN_ENEG == ONE
+                    CALL SELECT_VECS_MIN_ENEG
+                 ENDIF
+
                  CALL FORM_SELECTED_Y
                  CALL FORM_HBAR_Y_VECS
               ELSE
                  CALL FORM_NEWVECS
-                 CALL SELECT_VECS
+
+                 IF MAX_OVLP == ONE
+                    CALL SELECT_VECS_MAX_OVLP
+                 ENDIF
+                 IF MIN_ENEG == ONE
+                    CALL SELECT_VECS_MIN_ENEG
+                 ENDIF
+
                  CALL FORM_SELECTED_Y
                  CALL FORM_NEW_HBAR_Y_VECS
                  CALL SELECT_HBAR_Y_VEC_TOGO
@@ -11523,17 +12170,29 @@
       execute print_scalar OMEGA
       execute print_scalar EDIFF
 #end_debug
-
+              IF RESIDUAL_NORM < LOCK_THRES
+                 LOCK = ONE
+              ENDIF
               IF RESIDUAL_NORM  < EOM_THRES
                 EXIT
               ELSE
-
                  CALL FORM_CORRECTION_VEC
-
                  CALL DRIVE_ORTHO
-
                  CALL RESCALE_NEW_C
               ENDIF 
+
+# The subspace truncation. When the iteration count goes above
+# 19 and still have not converged, then select 12 vectors closest
+# to the eigenvalue of interest and start Davidson procedure
+# from iteration 13 again.
+
+              IF ITER_COUNT > NINETEEN
+
+                 TRNC_COUNT += ONE
+                 CALL TRUNCATE
+                 ITER_COUNT  = TWL
+
+              ENDIF
 
           ENDIF
 
@@ -11552,8 +12211,19 @@
 # number of cycles.
 # Lets set energy to zero and inform the user whart that means
 
-                OMEGA = 0.0
-                CALL FORCE_EVECS_TO_ZERO 
+            DO INDONE
+            MCOUNT = 0.0
+            DO KROOT
+               MCOUNT += 1.0
+               IF MCOUNT == ROOT_COUNT
+                  PSEUDO_ROOTS(KROOT,INDONE) = OMEGA
+               ENDIF
+            ENDDO KROOT
+            ENDDO INDONE
+
+            OMEGA = 0.0
+            CALL FORCE_EVECS_TO_ZERO 
+
              ENDIF
          ENDIF
 #bgn_debug
@@ -11567,6 +12237,9 @@
                   MCOUNT += 1.0
                   IF MCOUNT == ROOT_COUNT
                      EOM_S_EES(KROOT,INDONE) = OMEGA
+                     IF OMEGA != ZERO
+                        PSEUDO_ROOTS(KROOT,INDONE) = OMEGA
+                     ENDIF
                      TEE(KROOT,INDONE)     = EOM_S_EES(KROOT,INDONE)
                      PUT REE_S(KROOT,INDONE) = TEE(KROOT,INDONE)
 

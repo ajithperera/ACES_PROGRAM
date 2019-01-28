@@ -119,32 +119,12 @@
       served T2bb(b,j,b1,j1) 
       distributed t1a(a,i) 
       distributed t1b(b,j) 
-#
-      distributed VSTART1A1(a,i)
-      distributed VSTART1A2(a,i)
-      distributed VSTART1A3(a,i)
-      distributed VSTART1A4(a,i)
-      distributed VSTART1A5(a,i)
-      distributed VSTART1A6(a,i)
-      distributed VSTART1A7(a,i)
-      distributed VSTART1A8(a,i)
-      distributed VSTART1A9(a,i)
-      distributed VSTART1A10(a,i)
-      distributed VSTART1A11(a,i)
-      distributed VSTART1A12(a,i)
-#
-      distributed VSTART1B1(b,j)
-      distributed VSTART1B2(b,j)
-      distributed VSTART1B3(b,j)
-      distributed VSTART1B4(b,j)
-      distributed VSTART1B5(b,j)
-      distributed VSTART1B6(b,j)
-      distributed VSTART1B7(b,j)
-      distributed VSTART1B8(b,j)
-      distributed VSTART1B9(b,j)
-      distributed VSTART1B10(b,j)
-      distributed VSTART1B11(b,j)
-      distributed VSTART1B12(b,j)
+
+      served L2aa(i,a,i1,a1)
+      served L2ab(i,a,j,b) 
+      served L2bb(j,b,j1,b1) 
+      distributed l1a(i,a) 
+      distributed l1b(j,b) 
 #
 # Arrays for AO routine
 #
@@ -363,35 +343,7 @@
 # Read transformed two-electron integrals from list
 # -------------------------------------------------
 #
-      create t1a 
-      create t1b 
-      create VSTART1A1
-      create VSTART1A2
-      create VSTART1A3
-      create VSTART1A4
-      create VSTART1A5
-      create VSTART1A6
-      create VSTART1A7
-      create VSTART1A8
-      create VSTART1A9
-      create VSTART1A10
-      create VSTART1A11
-      create VSTART1A12
-      create VSTART1B1
-      create VSTART1B2
-      create VSTART1B3
-      create VSTART1B4
-      create VSTART1B5
-      create VSTART1B6
-      create VSTART1B7
-      create VSTART1B8
-      create VSTART1B9
-      create VSTART1B10
-      create VSTART1B11
-      create VSTART1B12
-      execute server_barrier
-#
-      execute server_barrier
+      execute server_barrier 
       execute list_to_blocks                VSpipi
       execute list_to_blocks                Vaaii
       execute list_to_blocks                Viaai
@@ -414,40 +366,28 @@
       ENDPROC READ_2EL 
 #     ---------------- 
 #
-#    ------------------------------------------------------------------------
-#
       PROC READ_AMP
 #     -------------
 #
+      create t1a 
+      create t1b 
+
+      create l1a 
+      create l1b 
+      execute sip_barrier
+
       execute list_to_blocks t1a
       execute list_to_blocks t1b
       execute list_to_blocks T2aa
       execute list_to_blocks T2ab
       execute list_to_blocks T2bb
-#      execute list_to_blocks VSTART1A1
-#      execute list_to_blocks VSTART1B1
-#      execute list_to_blocks VSTART1A2
-#      execute list_to_blocks VSTART1B2
-#      execute list_to_blocks VSTART1A3
-#      execute list_to_blocks VSTART1B3
-#      execute list_to_blocks VSTART1A4
-#      execute list_to_blocks VSTART1B4
-#      execute list_to_blocks VSTART1A5
-#      execute list_to_blocks VSTART1B5
-#      execute list_to_blocks VSTART1A6
-#      execute list_to_blocks VSTART1B6
-#      execute list_to_blocks VSTART1A7
-#      execute list_to_blocks VSTART1B7
-#      execute list_to_blocks VSTART1A8
-#      execute list_to_blocks VSTART1B8
-#      execute list_to_blocks VSTART1A9
-#      execute list_to_blocks VSTART1B9
-#      execute list_to_blocks VSTART1A10
-#      execute list_to_blocks VSTART1B10
-#      execute list_to_blocks VSTART1A11
-#      execute list_to_blocks VSTART1B11
-#      execute list_to_blocks VSTART1A12
-#      execute list_to_blocks VSTART1B12
+
+      execute list_to_blocks l1a
+      execute list_to_blocks l1b
+      execute list_to_blocks L2aa
+      execute list_to_blocks L2ab
+      execute list_to_blocks L2bb
+
       execute read_list_to_blocks 
       execute server_barrier 
 #
@@ -3539,6 +3479,12 @@
       execute blocks_to_list                T2aa
       execute blocks_to_list                T2ab
       execute blocks_to_list                T2bb 
+
+      execute blocks_to_list                l1a
+      execute blocks_to_list                l1b
+      execute blocks_to_list                L2aa
+      execute blocks_to_list                L2ab
+      execute blocks_to_list                L2bb 
 #
       execute blocks_to_list                HBAR_aa
       execute blocks_to_list                HBAR_bb

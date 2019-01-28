@@ -108,7 +108,7 @@ C
 
       Ndim = (i2 -i1) + 1
 
-#ifdef _DEBUG_LVL0
+C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       l=0
       do i=1,ndim
@@ -117,14 +117,14 @@ C
       Write(6,"(a,i4)") "@-Entry reorder_array matrix order", 
      +                Ndim 
       Endif 
-#endif 
+C#endif 
 
-#ifdef _DEBUG_LVL0
+C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a)") "Incoming array"
       Write(6,"(6(1x,F10.5))") (Vecs(i),i=1,L)
       endif 
-#endif 
+C#endif 
      
       Call Reord_array(Vecs,Ireord,Ndim)
 
@@ -179,7 +179,7 @@ C non-zero.
          Enddo 
       Enddo 
 
-#ifdef _DEBUG_LVL0
+C#ifdef _DEBUG_LVL0
       if (me.eq.0) then
       l=0
       do i=1,ndim
@@ -190,7 +190,7 @@ C non-zero.
       Write(6,*) 
       Write(6,"(6(1x,F10.5))") (Ireord(i),i=1,L)
       endif 
-#endif 
+C#endif 
 
       Return
       End
