@@ -1943,788 +1943,6 @@
     ENDPROC FORM_1HHP_DIAG
 #   ----------------------
 
-     PROC HR_MULT
-#    -----------
-
-
-     PARDO i
-         DO kk1
-            tix(i,kk1)      = 0.0
-            PUT HL1a(i,kk1) = tix(i,kk1)
-         ENDDO kk1
-      ENDPARDO i
-#
-      PARDO j
-         DO kk1
-            tjx(j,kk1)      = 0.0
-            PUT HL1b(j,kk1) = tjx(j,kk1)
-         ENDDO kk1
-      ENDPARDO j
-#
-      PARDO i, i1, a
-            DO kk1
-               taixi(a,i1,kk1,i)       = 0.0
-               PUT HL2aa_a(a,i1,kk1,i) = taixi(a,i1,kk1,i)
-            ENDDO kk1
-      ENDPARDO i, i1, a
-#
-      PARDO j, j1, b
-            DO kk1
-               tbjxj(b,j1,kk1,j)       = 0.0
-               PUT HL2bb_b(b,j1,kk1,j) = tbjxj(b,j1,kk1,j)
-            ENDDO kk1
-      ENDPARDO j, j1, b
-
-      PARDO i, j1, b
-            DO kk1
-               tbjxi(b,j1,kk1,i)       = 0.0
-               PUT HL2bb_a(b,j1,kk1,i) = tbjxi(b,j1,kk1,i)
-            ENDDO kk1
-      ENDPARDO i, j1, b
-
-      PARDO j, i1, a
-            DO kk1
-               taixj(a,i1,kk1,j)       = 0.0
-               PUT HL2aa_b(a,i1,kk1,j) = taixj(a,i1,kk1,j)
-            ENDDO kk1
-      ENDPARDO j, i1, a
-      create Iax
-      create Ibx
-
-      execute sip_barrier
-#
-# Create intermediates for 3-body term
-# ------------------------------------
-#
-      PARDO a, i1, i
-         DO kk1
-            GET L2aa_a(a,i,kk1,i1)
-            DO a1
-               REQUEST            VSpipi(a1,i1,a,i) a1
-               tax(a1,kk1)      = VSpipi(a1,i1,a,i)*L2aa_a(a,i,kk1,i1)
-               tax(a1,kk1)     *= 0.5
-               PUT Iax(a1,kk1) += tax(a1,kk1)
-            ENDDO a1
-         ENDDO kk1
-      ENDPARDO a, i1, i
-#
-      PARDO b, i1, j
-         DO kk1
-            GET L2bb_a(b,j,kk1,i1)
-            DO a1
-               REQUEST            Vpiqj(a1,i1,b,j) a1
-               tax(a1,kk1)      = Vpiqj(a1,i1,b,j)*L2bb_a(b,j,kk1,i1)
-               PUT Iax(a1,kk1) += tax(a1,kk1)
-            ENDDO a1
-         ENDDO kk1
-      ENDPARDO b, i1, j
-
-      PARDO b, j1, j
-         DO kk1
-            GET L2bb_b(b,j,kk1,j1)
-            DO b1
-               REQUEST            VSqjqj(b1,j1,b,j) b1
-               tbx(b1,kk1)      = VSqjqj(b1,j1,b,j)*L2bb_b(b,j,kk1,j1)
-               tbx(b1,kk1)     *= 0.5
-               PUT Ibx(b1,kk1) += tbx(b1,kk1)
-            ENDDO b1
-         ENDDO kk1
-      ENDPARDO b, j1, j
-#
-      PARDO a, j1, i
-         DO kk1
-            GET L2aa_b(a,i,kk1,j1)
-            DO b1
-               REQUEST            Vpiqj(a,i,b1,j1) b1
-               tbx(b1,kk1)      = Vpiqj(a,i,b1,j1)*L2aa_b(a,i,kk1,j1)
-               PUT Ibx(b1,kk1) += tbx(b1,kk1)
-            ENDDO b1
-         ENDDO kk1
-      ENDPARDO a, j1, i
-#
-# (HR)_i
-# ------
-#--------------------------------------------------------------
-      PARDO i, i1
-            DO kk1
-               GET                Uii(i1,i)
-               GET                L1a(i1,kk1)
-               tix(i,kk1)       = Uii(i1,i)*L1a(i1,kk1)
-               tix(i,kk1)      *= -1.0
-               PUT HL1a(i,kk1) += tix(i,kk1)
-            ENDDO kk1
-      ENDPARDO i, i1
-#
-      PARDO i, a, i1, i2
-            DO kk1
-               REQUEST            Wiiia(i2,i,i1,a) i
-               GET                L2aa_a(a,i1,kk1,i2)
-               tix(i,kk1)       = L2aa_a(a,i1,kk1,i2)*Wiiia(i2,i,i1,a)
-               tix(i,kk1)      *= -0.5
-#bgn_dbg
-               tix(i,kk1) *=1.0
-#end_dbg
-               PUT HL1a(i,kk1) += tix(i,kk1)
-            ENDDO kk1
-      ENDPARDO i, a, i1, i2
-
-      PARDO i, b, j1, i2
-            DO kk1
-               REQUEST            Wiijb(i2,i,j1,b) i
-               GET                L2bb_a(b,j1,kk1,i2)
-               tix(i,kk1)       = L2bb_a(b,j1,kk1,i2)*Wiijb(i2,i,j1,b)
-               tix(i,kk1)      *= -1.0
-               PUT HL1a(i,kk1) += tix(i,kk1)
-            ENDDO kk1
-      ENDPARDO i, b, j1, i2
-
-      PARDO i, i1, a
-            DO kk1
-               GET                Uia(i1,a)
-               GET                L2aa_a(a,i1,kk1,i)
-               tix(i,kk1)       = L2aa_a(a,i1,kk1,i)*Uia(i1,a)
-#bgn_dbg
-               tix(i,kk1) *=1.0
-#end_dbg
-               PUT HL1a(i,kk1) += tix(i,kk1)
-            ENDDO kk1
-      ENDPARDO i, i1, a
-#
-      PARDO i, j1, b
-            DO kk1
-               GET                Ujb(j1,b)
-               GET                L2bb_a(b,j1,kk1,i)
-               tix(i,kk1)       = L2bb_a(b,j1,kk1,i)*Ujb(j1,b)
-#bgn_dbg
-               tix(i,kk1) *=1.0
-#end_dbg
-               PUT HL1a(i,kk1) += tix(i,kk1)
-            ENDDO kk1
-      ENDPARDO i, j1, b
-#---------------------------------------------------------------
-      PARDO j, j1
-            DO kk1
-               GET                Ujj(j1,j)
-               GET                L1b(j1,kk1)
-               tjx(j,kk1)       = Ujj(j1,j)*L1b(j1,kk1)
-               tjx(j,kk1)      *= -1.0
-               PUT HL1b(j,kk1) += tjx(j,kk1)
-            ENDDO kk1
-      ENDPARDO j, j1
-#
-      PARDO j, b, j1, j2
-            DO kk1
-               REQUEST            wjjjb(j2,j,j1,b) j
-               GET                L2bb_b(b,j1,kk1,j2)
-               tjx(j,kk1)       = L2bb_b(b,j1,kk1,j2)*Wjjjb(j2,j,j1,b)
-               tjx(j,kk1)      *= -0.5
-#bgn_dbg
-               tjx(j,kk1) *= 1.0
-#end_dbg
-               PUT HL1b(j,kk1) += tjx(j,kk1)
-            ENDDO kk1
-      ENDPARDO j, b, j1, j2
-      PARDO j, a, i1, j2
-            DO kk1
-               REQUEST            Wjjia(j2,j,i1,a) j
-               GET                L2aa_b(a,i1,kk1,j2)
-               tjx(j,kk1)       = L2aa_b(a,i1,kk1,j2)*Wjjia(j2,j,i1,a)
-               tjx(j,kk1)      *= -1.0
-               PUT HL1b(j,kk1) += tjx(j,kk1)
-            ENDDO kk1
-      ENDPARDO j, a, i1, j2
-#
-      PARDO j, j1, b
-            DO kk1
-               GET                Ujb(j1,b)
-               GET                L2bb_b(b,j1,kk1,j)
-               tjx(j,kk1)       = L2bb_b(b,j1,kk1,j)*Ujb(j1,b)
-#bgn_dbg
-               tjx(j,kk1) *= 1.0
-#end_dbg
-               PUT HL1b(j,kk1) += tjx(j,kk1)
-            ENDDO kk1
-      ENDPARDO j, j1, b
-#
-      PARDO j, i1, a
-            DO kk1
-               GET                Uia(i1,a)
-               GET                L2aa_b(a,i1,kk1,j)
-               tjx(j,kk1)       = L2aa_b(a,i1,kk1,j)*Uia(i1,a)
-#bgn_dbg
-               tjx(j,kk1) *= 1.0
-#end_dbg
-               PUT HL1b(j,kk1) += tjx(j,kk1)
-            ENDDO kk1
-      ENDPARDO j, i1, a
-#AAA----------------------------------------------------------------
-
-      PARDO i, i1, a, i2
-            DO kk1
-               REQUEST                   Wiiai(i2,i,a,i1) i
-               GET                       L1a(i2,kk1)
-               taixi(a,i1,kk1,i)       = Wiiai(i2,i,a,i1)*L1a(i2,kk1)
-               taixi(a,i1,kk1,i)      *= -1.0
-#bgn_dbg
-               taixi(a,i1,kk1,i)      *= 1.0
-#end_dbg
-               PUT HL2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
-            ENDDO kk1
-      ENDPARDO i, i1, a, i2
-#
-      PARDO a, i1, i, i2
-            DO kk1
-               GET                       Uii(i2,i1)
-               GET                       L2aa_a(a,i2,kk1,i)
-               taixi(a,i1,kk1,i)       = L2aa_a(a,i2,kk1,i)*Uii(i2,i1)
-               taixi(a,i1,kk1,i)      *= -1.0
-#bgn_dbg
-               taixi(a,i1,kk1,i)      *= 1.0
-#end_dbg
-               PUT HL2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
-            ENDDO kk1
-      ENDPARDO a, i1, i, i2
-#
-      PARDO i, i1, a, i2
-            DO kk1
-               GET                       Uii(i2,i)
-               GET                       L2aa_a(a,i1,kk1,i2)
-               taixi(a,i1,kk1,i)       = L2aa_a(a,i1,kk1,i2)*Uii(i2,i)
-               taixi(a,i1,kk1,i)      *= -1.0
-#bgn_dbg
-               taixi(a,i1,kk1,i)      *= 1.0
-#end_dbg
-               PUT HL2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
-            ENDDO kk1
-      ENDPARDO i, i1, a, i2
-#
-      PARDO a, i, i1, a1
-            DO kk1
-               GET                       L2aa_a(a1,i1,kk1,i)
-               GET                       Uaa(a,a1)
-               taixi(a,i1,kk1,i)       = L2aa_a(a1,i1,kk1,i)*Uaa(a,a1)
-#bgn_dbg
-               taixi(a,i1,kk1,i)      *= 1.0
-#end_dbg
-               PUT HL2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
-            ENDDO kk1
-      ENDPARDO a, i, i1, a1
-
-      PARDO i, i1, i2, i3
-            REQUEST             Wiiii(i2,i,i3,i1) i2
-            Tiiii(i3,i1,i2,i) = Wiiii(i2,i,i3,i1)
-            DO a
-            DO kk1
-               GET                        L2aa_a(a,i3,kk1,i2)
-               taixi(a,i1,kk1,i)        = L2aa_a(a,i3,kk1,i2)*Tiiii(i3,i1,i2,i)
-               taixi(a,i1,kk1,i)       *= 0.5
-#bgn_dbg
-               taixi(a,i1,kk1,i)      *= 1.0
-#end_dbg
-               PUT HL2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
-            ENDDO kk1
-            ENDDO a
-      ENDPARDO i, i1, i2, i3
-
-      PARDO i1, a, a1, i2
-            REQUEST Wiaai(i2,a1,a,i1) a1
-            DO i
-            DO kk1
-               GET                        L2aa_a(a1,i2,kk1,i)
-               taixi(a,i1,kk1,i)        = L2aa_a(a1,i2,kk1,i)*Wiaai(i2,a1,a,i1)  
-#bgn_dbg
-               taixi(a,i1,kk1,i)      *= 1.0
-#end_dbg
-               PUT HL2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
-               t1aixi(a,i,kk1,i1)       = taixi(a,i1,kk1,i)
-               t1aixi(a,i,kk1,i1)      *= -1.0
-#bgn_dbg
-               t1aixi(a,i,kk1,i1)      *= 1.0
-#end_dbg
-               PUT HL2aa_a(a,i,kk1,i1) += t1aixi(a,i,kk1,i1)
-            ENDDO kk1
-            ENDDO i
-      ENDPARDO i1, a, a1, i2
-#
-      PARDO i1, a, b1, j2
-            REQUEST Wjbai(j2,b1,a,i1) b1
-            DO i
-            DO kk1
-               GET                        L2bb_a(b1,j2,kk1,i)
-               taixi(a,i1,kk1,i)        = L2bb_a(b1,j2,kk1,i)*Wjbai(j2,b1,a,i1)  
-#bgn_dbg
-               taixi(a,i1,kk1,i)      *=  1.0
-#end_dbg
-               PUT HL2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
-               t1aixi(a,i,kk1,i1)       = taixi(a,i1,kk1,i)
-               t1aixi(a,i,kk1,i1)      *= -1.0
-#bgn_dbg
-               t1aixi(a,i,kk1,i1)      *= 1.0
-#end_dbg
-               PUT HL2aa_a(a,i,kk1,i1) += t1aixi(a,i,kk1,i1)
-            ENDDO kk1
-            ENDDO i
-      ENDPARDO i1, a, b1, j2
-#BBB------------------------------------------------------------------
-      PARDO j, j1, b, j2
-            DO kk1
-               REQUEST                   Wjjbj(j2,j,b,j1) j
-               GET                       L1b(j2,kk1)
-               tbjxj(b,j1,kk1,j)       = Wjjbj(j2,j,b,j1)*L1b(j2,kk1)
-               tbjxj(b,j1,kk1,j)      *= -1.0
-#bgn_dbg
-               tbjxj(b,j1,kk1,j)      *= 1.0
-#end_dbg
-               PUT HL2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
-            ENDDO kk1
-      ENDPARDO j, j1, b, j2
-#
-      PARDO b, j1, j, j2
-            DO kk1
-               GET                       Ujj(j2,j1)
-               GET                       L2bb_b(b,j2,kk1,j)
-               tbjxj(b,j1,kk1,j)       = L2bb_b(b,j2,kk1,j)*Ujj(j2,j1)
-               tbjxj(b,j1,kk1,j)      *= -1.0
-#bgn_dbg
-               tbjxj(b,j1,kk1,j)      *= 1.0
-#end_dbg
-               PUT HL2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
-            ENDDO kk1
-      ENDPARDO b, j1, j, j2
-#
-      PARDO j, j1, b, j2
-            DO kk1
-               GET                       Ujj(j2,j)
-               GET                       L2bb_b(b,j1,kk1,j2)
-               tbjxj(b,j1,kk1,j)       = L2bb_b(b,j1,kk1,j2)*Ujj(j2,j)           
-               tbjxj(b,j1,kk1,j)      *= -1.0
-#bgn_dbg
-               tbjxj(b,j1,kk1,j)      *= 1.0
-#end_dbg
-               PUT HL2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
-            ENDDO kk1
-      ENDPARDO j, j1, b, j2
-#
-      PARDO b, j, j1, b1
-            DO kk1
-               GET                       L2bb_b(b1,j1,kk1,j)
-               GET                       Ubb(b,b1)
-               tbjxj(b,j1,kk1,j)       = L2bb_b(b1,j1,kk1,j)*Ubb(b,b1)
-#bgn_dbg
-               tbjxj(b,j1,kk1,j)      *= 1.0
-#end_dbg
-               PUT HL2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
-            ENDDO kk1
-      ENDPARDO b, j, j1, b1
-
-      PARDO j, j1, j2, j3
-            REQUEST Wjjjj(j2,j,j3,j1) j2
-            tjjjj(j3,j1,j2,j) = Wjjjj(j2,j,j3,j1)
-            DO b
-            DO kk1
-               GET                        L2bb_b(b,j3,kk1,j2)
-               tbjxj(b,j1,kk1,j)        = L2bb_b(b,j3,kk1,j2)*tjjjj(j3,j1,j2,j)  
-               tbjxj(b,j1,kk1,j)       *= 0.5
-#bgn_dbg
-               tbjxj(b,j1,kk1,j)      *= 1.0
-#end_dbg
-               PUT HL2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
-            ENDDO kk1
-            ENDDO b
-      ENDPARDO j, j1, j2, j3
-#
-      PARDO j1, b, b1, j2
-            REQUEST Wjbbj(j2,b1,b,j1) b1
-            DO j
-            DO kk1
-               GET                        L2bb_b(b1,j2,kk1,j)
-               tbjxj(b,j1,kk1,j)        = L2bb_b(b1,j2,kk1,j)*Wjbbj(j2,b1,b,j1)  
-#bgn_dbg
-               tbjxj(b,j1,kk1,j1)      *= 1.0
-#end_dbg
-               PUT HL2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
-               t1bjxj(b,j,kk1,j1)       = tbjxj(b,j1,kk1,j)
-               t1bjxj(b,j,kk1,j1)      *= -1.0
-#bgn_dbg
-               t1bjxj(b,j,kk1,j1)      *= 1.0
-#end_dbg
-               PUT HL2bb_b(b,j,kk1,j1) += t1bjxj(b,j,kk1,j1)
-            ENDDO kk1
-            ENDDO j
-      ENDPARDO j1, b, b1, j2
-#
-      PARDO j1, b, a1, i2
-            REQUEST Wiabj(i2,a1,b,j1) a1
-            DO j
-            DO kk1
-               GET                        L2aa_b(a1,i2,kk1,j)
-               tbjxj(b,j1,kk1,j)        = L2aa_b(a1,i2,kk1,j)*Wiabj(i2,a1,b,j1)  
-#bgn_dbg
-               tbjxj(b,j1,kk1,j)      *= 1.0
-#end_dbg
-               PUT HL2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
-               t1bjxj(b,j,kk1,j1)       = tbjxj(b,j1,kk1,j)
-               t1bjxj(b,j,kk1,j1)      *= -1.0
-#bgn_dbg
-               t1bjxj(b,j,kk1,j1)      *= 1.0
-#end_dbg
-               PUT HL2bb_b(b,j,kk1,j1) += t1bjxj(b,j,kk1,j1)
-            ENDDO kk1
-            ENDDO j
-      ENDPARDO j1, b, a1, i2
-
-#AAB-----------------------------------------------------------------------
-      PARDO a, j, i, j1
-            DO kk1
-               REQUEST                   Wjjai(j1,j,a,i) a
-               GET                       L1b(j1,kk1)
-               taixj(a,i,kk1,j)        = Wjjai(j1,j,a,i)*L1b(j1,kk1)
-               taixj(a,i,kk1,j)       *= -1.0
-#bgn_dbg
-               taixj(a,i,kk1,j)       *= 1.0
-#end_dbg
-               PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
-            ENDDO kk1
-      ENDPARDO a, j, i, j1
-#
-      PARDO j, a, i1
-            DO kk1
-               GET L2aa_b(a,i1,kk1,j)
-               DO i
-                  GET                       Uii(i1,i)
-                  taixj(a,i,kk1,j)        = L2aa_b(a,i1,kk1,j)*Uii(i1,i)
-                  taixj(a,i,kk1,j)       *= -1.0
-#bgn_dbg
-               taixj(a,i,kk1,j)       *= 1.0
-#end_dbg
-                  PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
-               ENDDO i
-            ENDDO kk1
-      ENDPARDO j, a, i1
-      PARDO a, i, j1
-            DO kk1
-               GET L2aa_b(a,i,kk1,j1)
-               DO j
-                  GET                       Ujj(j1,j)
-                  taixj(a,i,kk1,j)        = L2aa_b(a,i,kk1,j1)*Ujj(j1,j)
-                  taixj(a,i,kk1,j)       *= -1.0
-#bgn_dbg
-               taixj(a,i,kk1,j)       *= 1.0
-#end_dbg
-                  PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
-               ENDDO j
-            ENDDO kk1
-      ENDPARDO a, i, j1
-#
-      PARDO i, j, a1
-            DO kk1
-               GET L2aa_b(a1,i,kk1,j)
-               DO a
-                  GET                       Uaa(a,a1)
-                  taixj(a,i,kk1,j)        = L2aa_b(a1,i,kk1,j)*Uaa(a,a1)
-#bgn_dbg
-               taixj(a,i,kk1,j)       *= 1.0
-#end_dbg
-                  PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
-               ENDDO a
-            ENDDO kk1
-      ENDPARDO i, j, a1
-#
-      PARDO i, j, j1, i1
-            REQUEST Wiijj(i1,i,j1,j) i1
-            DO a
-            DO kk1
-               GET                       L2aa_b(a,i1,kk1,j1)
-               taixj(a,i,kk1,j)        = L2aa_b(a,i1,kk1,j1)*Wiijj(i1,i,j1,j)
-#bgn_dbg
-               taixj(a,i,kk1,j)       *= 1.0
-#end_dbg
-               PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
-            ENDDO kk1
-            ENDDO a
-      ENDPARDO i, j, j1, i1
-
-      PARDO i, a, j1, b
-            REQUEST Wjbai(j1,b,a,i) b
-            DO j
-            DO kk1
-               GET                       L2bb_b(b,j1,kk1,j)
-               taixj(a,i,kk1,j)        = Wjbai(j1,b,a,i)*L2bb_b(b,j1,kk1,j)
-#bgn_dbg
-               taixj(a,i,kk1,j)       *= 1.0
-#end_dbg
-               PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
-            ENDDO kk1
-            ENDDO j
-      ENDPARDO i, a, j1, b
-#
-      PARDO i, a, i1, a1
-            REQUEST Wiaai(i1,a1,a,i) a1
-            DO j
-            DO kk1
-               GET                       L2aa_b(a1,i1,kk1,j)
-               taixj(a,i,kk1,j)        = Wiaai(i1,a1,a,i)*L2aa_b(a1,i1,kk1,j)
-#bgn_dbg
-               taixj(a,i,kk1,j)       *= 1.0
-#end_dbg
-               PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
-            ENDDO kk1
-            ENDDO j
-      ENDPARDO i, a, i1, a1
-#
-# (HR)^b_{j,i)
-# ------------------------------------------------------------------------
-#
-      PARDO b, i, j, i1
-            DO kk1
-               REQUEST                   Wiibj(i1,i,b,j) b
-               GET                       L1a(i1,kk1)
-               tbjxi(b,j,kk1,i)        = Wiibj(i1,i,b,j)*L1a(i1,kk1)
-               tbjxi(b,j,kk1,i)       *= -1.0
-#bgn_dbg
-               tbjxi(b,j,kk1,i)       *= 1.0
-#end_dbg
-               PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
-            ENDDO kk1
-      ENDPARDO b, i, j, i1
-#
-      PARDO i, b, j1
-            DO kk1
-               GET L2bb_a(b,j1,kk1,i)
-               DO j
-                  GET                       Ujj(j1,j)
-                  tbjxi(b,j,kk1,i)        = L2bb_a(b,j1,kk1,i)*Ujj(j1,j)
-                  tbjxi(b,j,kk1,i)       *= -1.0
-#bgn_dbg
-               tbjxi(b,j,kk1,i)       *= 1.0
-#end_dbg
-                  PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
-               ENDDO j
-            ENDDO kk1
-      ENDPARDO i, b, j1
-
-      PARDO b, j, i1
-            DO kk1
-               GET L2bb_a(b,j,kk1,i1)
-               DO i
-                  GET                       Uii(i1,i)
-                  tbjxi(b,j,kk1,i)        = L2bb_a(b,j,kk1,i1)*Uii(i1,i)
-                  tbjxi(b,j,kk1,i)       *= -1.0
-#bgn_dbg
-               tbjxi(b,j,kk1,i)       *= 1.0
-#end_dbg
-                  PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
-               ENDDO i
-            ENDDO kk1
-      ENDPARDO b, j, i1
-#
-      PARDO j, i, b1
-            DO kk1
-               GET L2bb_a(b1,j,kk1,i)
-               DO b
-                  GET                       Ubb(b,b1)
-                  tbjxi(b,j,kk1,i)        = L2bb_a(b1,j,kk1,i)*Ubb(b,b1)
-#bgn_dbg
-               tbjxi(b,j,kk1,i)       *= 1.0
-#end_dbg
-                  PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
-               ENDDO b
-            ENDDO kk1
-      ENDPARDO j, i, b1
-#
-      PARDO i, j, j1, i1
-            REQUEST            Wiijj(i1,i,j1,j) i1
-            tjjii(j1,j,i1,i) = Wiijj(i1,i,j1,j)
-            DO b
-            DO kk1
-               GET                       L2bb_a(b,j1,kk1,i1)
-               tbjxi(b,j,kk1,i)        = L2bb_a(b,j1,kk1,i1)*tjjii(j1,j,i1,i)
-#bgn_dbg
-               tbjxi(b,j,kk1,i)       *= 1.0
-#end_dbg
-               PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
-            ENDDO kk1
-            ENDDO b
-      ENDPARDO i, j, j1, i1
-#
-      PARDO j, b, i1, a
-            REQUEST Wiabj(i1,a,b,j) a
-            DO i
-            DO kk1
-               GET                       L2aa_a(a,i1,kk1,i)
-               tbjxi(b,j,kk1,i)        = Wiabj(i1,a,b,j)*L2aa_a(a,i1,kk1,i)
-#bgn_dbg
-               tbjxi(b,j,kk1,i)       *= 1.0
-#end_dbg
-               PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
-            ENDDO kk1
-            ENDDO i
-      ENDPARDO j, b, i1, a
-#
-      PARDO j, b, j1, b1
-            REQUEST Wjbbj(j1,b1,b,j) b1
-            DO i
-            DO kk1
-               GET                       L2bb_a(b1,j1,kk1,i)
-               tbjxi(b,j,kk1,i)        = Wjbbj(j1,b1,b,j)*L2bb_a(b1,j1,kk1,i)
-#bgn_dbg
-               tbjxi(b,j,kk1,i)       *= 1.0
-#end_dbg
-               PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
-            ENDDO kk1
-            ENDDO i
-      ENDPARDO j, b, j1, b1
-
-#Three body and others----------------------------------------------
-      PARDO a1, a, i1, i
-         DO kk1
-            REQUEST                     T2aa(a1,i1,a,i) a1
-            GET                         Iax(a,kk1)
-            taixi(a1,i1,kk1,i)        = T2aa(a1,i1,a,i)*Iax(a,kk1)
-            taixi(a1,i1,kk1,i)       *= -1.0
-#bgn_dbg
-            taixi(a1,i1,kk1,i)       *= 1.0
-#end_dbg
-            PUT HL2aa_a(a1,i1,kk1,i) += taixi(a1,i1,kk1,i)
-         ENDDO kk1
-      ENDPARDO a1, a, i1, i
-#
-      PARDO b1, a, j1, i
-         DO kk1
-            REQUEST                     T2ab(a,i,b1,j1) b1
-            GET                         Iax(a,kk1)
-            tbjxi(b1,j1,kk1,i)        = T2ab(a,i,b1,j1)*Iax(a,kk1)
-            tbjxi(b1,j1,kk1,i)       *= -1.0
-#bgn_dbg
-            tbjxi(b1,j1,kk1,i)       *= 1.0
-#end_dbg
-            PUT HL2bb_a(b1,j1,kk1,i) += tbjxi(b1,j1,kk1,i)
-         ENDDO kk1
-      ENDPARDO b1, a, j1, i
-#
-      PARDO b1, b, j1, j
-         DO kk1
-            REQUEST                     T2bb(b1,j1,b,j) b1
-            GET                         Ibx(b,kk1)
-            tbjxj(b1,j1,kk1,j)        = T2bb(b1,j1,b,j)*Ibx(b,kk1)
-            tbjxj(b1,j1,kk1,j)       *= -1.0
-#bgn_dbg
-            tbjxj(b1,j1,kk1,j)       *= 1.0
-#end_dbg
-            PUT HL2bb_b(b1,j1,kk1,j) += tbjxj(b1,j1,kk1,j)
-         ENDDO kk1
-      ENDPARDO b1, b, j1, j
-#
-      PARDO a1, b, i1, j
-         DO kk1
-            REQUEST                     T2ab(a1,i1,b,j) a1
-            GET                         Ibx(b,kk1)
-            taixj(a1,i1,kk1,j)        = T2ab(a1,i1,b,j)*Ibx(b,kk1)
-            taixj(a1,i1,kk1,j)       *= -1.0
-#bgn_dbg
-            taixj(a1,i1,kk1,j)       *= 1.0
-#end_dbg
-            PUT HL2aa_b(a1,i1,kk1,j) += taixj(a1,i1,kk1,j)
-         ENDDO kk1
-      ENDPARDO a1, b, i1, j
-
-      PARDO b, b1, i, i1
-          REQUEST                   Wiibb(i1,i,b,b1) b
-          DO j
-          DO kk1
-             GET                       L2bb_a(b1,j,kk1,i1)
-             tbjxi(b,j,kk1,i)        = L2bb_a(b1,j,kk1,i1)*Wiibb(i1,i,b,b1)
-#bgn_dbg
-            tbjxi(b,j,kk1,i)       *= 1.0
-#end_dbg
-             PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
-          ENDDO kk1
-          ENDDO j
-      ENDPARDO b, b1, i, i1
-#
-      PARDO a, a1, j, j1
-          REQUEST                   Wjjaa(j1,j,a,a1) a
-          DO i
-          DO kk1
-             GET                       L2aa_b(a1,i,kk1,j1)
-             taixj(a,i,kk1,j)        = L2aa_b(a1,i,kk1,j1)*Wjjaa(j1,j,a,a1)
-#bgn_db
-            taixj(a,i,kk1,j)       *= 1.0
-#end_dbg
-             PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
-          ENDDO kk1
-          ENDDO i
-      ENDPARDO a, a1, j, j1
-#
-      execute server_barrier
-      delete Iax
-      delete Ibx
-
-#bgn_debug
-      tmpa=0.0
-      tmpb=0.0
-      suma=0.0
-      sumb=0.0
-     pardo i,kk1
-         get hl1a(i,kk1)
-         tmp = hl1a(i,kk1) * hl1a(i,kk1)
-         tmpa += tmp
-      endpardo i,kk1
-      pardo j,kk1
-         get hl1b(j,kk1)
-         tmp = hl1b(j,kk1) * hl1b(j,kk1)
-         tmpb += tmp
-      endpardo j,kk1
-      execute sip_barrier
-      collective suma +=tmpa
-      collective sumb +=tmpb
-      execute print_scalar suma
-      execute print_scalar sumb
-      tmpa =0.0
-      suma =0.0
-      pardo a,i1,kk1,i
-            get  HL2aa_a(a,i1,kk1,i)
-            tmp = HL2aa_a(a,i1,kk1,i) * HL2aa_a(a,i1,kk1,i)
-            tmpa += tmp
-      endpardo a,i1,kk1,i
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo b,j,j1, kk1
-            get  HL2bb_b(b,j1,kk1,j)
-            tmp = HL2bb_b(b,j1,kk1,j) * HL2bb_b(b,j1,kk1,j)
-            tmpa+= tmp
-      endpardo b,j,j1, kk1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo j,i1,a,kk1
-            get HL2aa_b(a,i1,kk1,j)
-            tmp = HL2aa_b(a,i1,kk1,j) * HL2aa_b(a,i1,kk1,j)
-            tmpa+= tmp
-      endpardo j,i1,a,kk1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo i,j1,b,kk1
-            get HL2bb_a(b,j1,kk1,i)
-            tmp = HL2bb_a(b,j1,kk1,i) * HL2bb_a(b,j1,kk1,i)
-            tmpa+= tmp
-      endpardo i,j1,b,kk1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-#end_debug
-
-     ENDPROC HR_MULT
-#     --------------
-
       PROC HL_MULT
 #     ------------
 #
@@ -2873,11 +2091,11 @@
                tix(i,kk1)       = L2aa_a(a,i1,kk1,i2)*Wiiai(i,i2,a,i1)
                tix(i,kk1)      *= -0.5
 #bgn_dbg
-               tix(i,kk1)      *= 1.0
+#               tix(i,kk1)      *= 1.0
+#DB             tix(i,kk1)      *= -1.0
+#AP             tix(i,kk1)      *= -0.5
 #end_dbg
 
-#DB               tix(i,kk1)      *= -1.0
-#AP               tix(i,kk1)      *= -0.5
                PUT HL1a(i,kk1) += tix(i,kk1)
             ENDDO kk1
       ENDPARDO i, a, i1, i2
@@ -2931,11 +2149,11 @@
                tjx(j,kk1)       = L2bb_b(b,j2,kk1,j1)*Wjjbj(j,j1,b,j2)
                tjx(j,kk1)      *= -0.5
 #bgn_dbg
-               tjx(j,kk1)      *= 1.0
+#               tjx(j,kk1)      *= 1.0
+#DB             tjx(j,kk1)      *= -1.0
+#AP             tjx(j,kk1)      *= -0.5
 #end_dbg
 
-#DB               tjx(j,kk1)      *= -1.0
-#AP               tjx(j,kk1)      *= -0.5
                PUT HL1b(j,kk1) += tjx(j,kk1)
             ENDDO kk1
       ENDPARDO j, b, j1, j2
@@ -2978,11 +2196,11 @@
                taixi(a,i2,kk1,i)       = Wiiia(i,i1,i2,a)*L1a(i1,kk1)
                taixi(a,i2,kk1,i)      *= -1.0
 
-#DB               taixi(a,i2,kk1,i)      *= -0.5
-#AP               taixi(a,i2,kk1,i)      *= -1.0
 
 #bgn_dbg
-        taixi(a,i2,kk1,i) *=1.0
+#DB      taixi(a,i2,kk1,i)      *= -0.5
+#AP      taixi(a,i2,kk1,i)      *= -1.0
+#        taixi(a,i2,kk1,i) *=1.0
 #end_dbg
                PUT HL2aa_a(a,i2,kk1,i) += taixi(a,i2,kk1,i)
             ENDDO kk1
@@ -2997,7 +2215,7 @@
                taixi(a,i1,kk1,i)       = L2aa_a(a,i2,kk1,i)*Uii(i1,i2)
                taixi(a,i1,kk1,i)      *= -1.0
 #bgn_dbg
-        taixi(a,i1,kk1,i) *=1.0
+#        taixi(a,i1,kk1,i) *=1.0
 #end_dbg
                PUT HL2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
             ENDDO kk1
@@ -3012,7 +2230,7 @@
                taixi(a,i2,kk1,i)       = L2aa_a(a,i2,kk1,i1)*Uii(i,i1)
                taixi(a,i2,kk1,i)      *= -1.0
 #bgn_dbg
-        taixi(a,i2,kk1,i) *=1.0
+#        taixi(a,i2,kk1,i) *=1.0
 #end_dbg
                PUT HL2aa_a(a,i2,kk1,i) += taixi(a,i2,kk1,i)
             ENDDO kk1
@@ -3026,7 +2244,7 @@
                GET                       Uaa(a1,a)
                taixi(a,i1,kk1,i)       = L2aa_a(a1,i1,kk1,i)*Uaa(a1,a)
 #bgn_dbg
-        taixi(a,i1,kk1,i) *=1.0
+#        taixi(a,i1,kk1,i) *=1.0
 #end_dbg
                PUT HL2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
             ENDDO kk1
@@ -3043,7 +2261,7 @@
                taixi(a,i1,kk1,i)        = L2aa_a(a,i3,kk1,i2)*Tiiii(i,i2,i1,i3)
                taixi(a,i1,kk1,i)       *= 0.5
 #bgn_dbg
-        taixi(a,i1,kk1,i) *=1.0
+#        taixi(a,i1,kk1,i) *=1.0
 #end_dbg
                PUT HL2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
             ENDDO kk1
@@ -3059,13 +2277,13 @@
                GET                        L2aa_a(a1,i2,kk1,i)
                taixi(a,i1,kk1,i)        = L2aa_a(a1,i2,kk1,i)*Wiaai(i1,a,a1,i2)
 #bgn_dbg
-        taixi(a,i1,kk1,i) *=1.0
+#        taixi(a,i1,kk1,i) *=1.0
 #end_dbg
                PUT HL2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
                t1aixi(a,i,kk1,i1)       = taixi(a,i1,kk1,i)
                t1aixi(a,i,kk1,i1)      *= -1.0
 #bgn_dbg
-        t1aixi(a,i,kk1,i1) *=1.0
+#        t1aixi(a,i,kk1,i1) *=1.0
 #end_dbg
                PUT HL2aa_a(a,i,kk1,i1) += t1aixi(a,i,kk1,i1)
             ENDDO kk1
@@ -3082,13 +2300,13 @@
                GET                        L2bb_a(b1,j2,kk1,i)
                taixi(a,i1,kk1,i)        = L2bb_a(b1,j2,kk1,i)*Wjbai(i1,a,b1,j2)
 #bgn_dbg
-        taixi(a,i1,kk1,i) *=1.0
+#        taixi(a,i1,kk1,i) *=1.0
 #end_dbg
                PUT HL2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
                t1aixi(a,i,kk1,i1)       = taixi(a,i1,kk1,i)
                t1aixi(a,i,kk1,i1)      *= -1.0
 #bgn_dbg
-        t1aixi(a,i,kk1,i1) *=1.0
+#        t1aixi(a,i,kk1,i1) *=1.0
 #end_dbg
                PUT HL2aa_a(a,i,kk1,i1) += t1aixi(a,i,kk1,i1)
             ENDDO kk1
@@ -3106,12 +2324,10 @@
                GET                       L1b(j1,kk1)
                tbjxj(b,j2,kk1,j)       = Wjjjb(j,j1,j2,b)*L1b(j1,kk1)
                tbjxj(b,j2,kk1,j)      *= -1.0
-
-#DB               tbjxj(b,j2,kk1,j)      *= -0.5
-#AP               tbjxj(b,j2,kk1,j)      *= -1.0
-
 #bgn_dbg
-        tbjxj(b,j2,kk1,j) *=1.0
+#DB      tbjxj(b,j2,kk1,j)      *= -0.5
+#AP      tbjxj(b,j2,kk1,j)      *= -1.0
+#        tbjxj(b,j2,kk1,j) *=1.0
 #end_dbg
                PUT HL2bb_b(b,j2,kk1,j) += tbjxj(b,j2,kk1,j)
             ENDDO kk1
@@ -3126,7 +2342,7 @@
                tbjxj(b,j1,kk1,j)       = L2bb_b(b,j2,kk1,j)*Ujj(j1,j2)
                tbjxj(b,j1,kk1,j)      *= -1.0
 #bgn_dbg
-        tbjxj(b,j1,kk1,j) *=1.0
+#        tbjxj(b,j1,kk1,j) *=1.0
 #end_dbg
                PUT HL2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
             ENDDO kk1
@@ -3141,7 +2357,7 @@
                tbjxj(b,j2,kk1,j)       = L2bb_b(b,j2,kk1,j1)*Ujj(j,j1)
                tbjxj(b,j2,kk1,j)      *= -1.0
 #bgn_dbg
-        tbjxj(b,j2,kk1,j) *=1.0
+#        tbjxj(b,j2,kk1,j) *=1.0
 #end_dbg
                PUT HL2bb_b(b,j2,kk1,j) += tbjxj(b,j2,kk1,j)
             ENDDO kk1
@@ -3155,7 +2371,7 @@
                GET                       Ubb(b1,b)
                tbjxj(b,j1,kk1,j)       = L2bb_b(b1,j1,kk1,j)*Ubb(b1,b)
 #bgn_dbg
-        tbjxj(b,j1,kk1,j) *=1.0
+#        tbjxj(b,j1,kk1,j) *=1.0
 #end_dbg
                PUT HL2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
             ENDDO kk1
@@ -3172,7 +2388,7 @@
                tbjxj(b,j1,kk1,j)        = L2bb_b(b,j3,kk1,j2)*tjjjj(j,j2,j1,j3)
                tbjxj(b,j1,kk1,j)       *= 0.5
 #bgn_dbg
-        tbjxj(b,j1,kk1,j) *=1.0
+#        tbjxj(b,j1,kk1,j) *=1.0
 #end_dbg
                PUT HL2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
             ENDDO kk1
@@ -3188,13 +2404,13 @@
                GET                        L2bb_b(b1,j2,kk1,j)
                tbjxj(b,j1,kk1,j)        = L2bb_b(b1,j2,kk1,j)*Wjbbj(j1,b,b1,j2) 
 #bgn_dbg
-        tbjxj(b,j1,kk1,j) *=1.0
+#        tbjxj(b,j1,kk1,j) *=1.0
 #end_dbg
                PUT HL2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
                t1bjxj(b,j,kk1,j1)       = tbjxj(b,j1,kk1,j)
                t1bjxj(b,j,kk1,j1)      *= -1.0
 #bgn_dbg
-        t1bjxj(b,j,kk1,j1) *=1.0
+#        t1bjxj(b,j,kk1,j1) *=1.0
 #end_dbg
                PUT HL2bb_b(b,j,kk1,j1) += t1bjxj(b,j,kk1,j1)
             ENDDO kk1
@@ -3210,13 +2426,13 @@
                GET                        L2aa_b(a1,i2,kk1,j)
                tbjxj(b,j1,kk1,j)        = L2aa_b(a1,i2,kk1,j)* Wiabj(j1,b,a1,i2)
 #bgn_dbg
-        tbjxj(b,j1,kk1,j) *=1.0
+#        tbjxj(b,j1,kk1,j) *=1.0
 #end_dbg
                PUT HL2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
                t1bjxj(b,j,kk1,j1)       = tbjxj(b,j1,kk1,j)
                t1bjxj(b,j,kk1,j1)      *= -1.0
 #bgn_dbg
-        t1bjxj(b,j,kk1,j1) *=1.0
+#        t1bjxj(b,j,kk1,j1) *=1.0
 #end_dbg
                PUT HL2bb_b(b,j,kk1,j1) += t1bjxj(b,j,kk1,j1)
             ENDDO kk1
@@ -3235,7 +2451,7 @@
                taixj(a,i,kk1,j)        = Wjjia(j,j1,i,a)*L1b(j1,kk1)
                taixj(a,i,kk1,j)       *= -1.0
 #bgn_dbg
-        taixj(a,i,kk1,j) *=1.0
+#        taixj(a,i,kk1,j) *=1.0
 #end_dbg
                PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
             ENDDO kk1
@@ -3251,7 +2467,7 @@
                   taixj(a,i,kk1,j)        = L2aa_b(a,i1,kk1,j)*Uii(i,i1)
                   taixj(a,i,kk1,j)       *= -1.0
 #bgn_dbg
-        taixj(a,i,kk1,j) *=1.0
+#        taixj(a,i,kk1,j) *=1.0
 #end_dbg
                   PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
                ENDDO i
@@ -3268,7 +2484,7 @@
                   taixj(a,i,kk1,j)        = L2aa_b(a,i,kk1,j1)*Ujj(j,j1)
                   taixj(a,i,kk1,j)       *= -1.0
 #bgn_dbg
-        taixj(a,i,kk1,j) *=1.0
+#        taixj(a,i,kk1,j) *=1.0
 #end_dbg
                   PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
                ENDDO j
@@ -3284,7 +2500,7 @@
                   GET                       Uaa(a1,a)
                   taixj(a,i,kk1,j)        = L2aa_b(a1,i,kk1,j)*Uaa(a1,a)
 #bgn_dbg
-        taixj(a,i,kk1,j) *=1.0
+#        taixj(a,i,kk1,j) *=1.0
 #end_dbg
                   PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
                ENDDO a
@@ -3300,7 +2516,7 @@
                GET                       L2aa_b(a,i1,kk1,j1)
                taixj(a,i,kk1,j)        = L2aa_b(a,i1,kk1,j1)*Wiijj(i,i1,j,j1)
 #bgn_dbg
-        taixj(a,i,kk1,j) *=1.0
+#        taixj(a,i,kk1,j) *=1.0
 #end_dbg
                PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
             ENDDO kk1
@@ -3316,7 +2532,7 @@
                GET                       L2bb_b(b,j1,kk1,j)
                taixj(a,i,kk1,j)        = Wjbai(i,a,b,j1)*L2bb_b(b,j1,kk1,j)
 #bgn_dbg
-        taixj(a,i,kk1,j) *=1.0
+#        taixj(a,i,kk1,j) *=1.0
 #end_dbg
                PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
             ENDDO kk1
@@ -3332,7 +2548,7 @@
                GET                       L2aa_b(a1,i1,kk1,j)
                taixj(a,i,kk1,j)        = Wiaai(i,a,a1,i1)*L2aa_b(a1,i1,kk1,j)
 #bgn_dbg
-        taixj(a,i,kk1,j) *=1.0
+#        taixj(a,i,kk1,j) *=1.0
 #end_dbg
                PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
             ENDDO kk1
@@ -3366,7 +2582,7 @@
                tbjxi(b,j,kk1,i)        = Wiijb(i,i1,j,b)*L1a(i1,kk1)
                tbjxi(b,j,kk1,i)       *= -1.0
 #bgn_dbg
-        tbjxi(b,j,kk1,i) *=1.0
+#        tbjxi(b,j,kk1,i) *=1.0
 #end_dbg
                PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
             ENDDO kk1
@@ -3382,7 +2598,7 @@
                   tbjxi(b,j,kk1,i)        = L2bb_a(b,j1,kk1,i)*Ujj(j,j1)
                   tbjxi(b,j,kk1,i)       *= -1.0
 #bgn_dbg
-        tbjxi(b,j,kk1,i) *=1.0
+#        tbjxi(b,j,kk1,i) *=1.0
 #end_dbg
                   PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
                ENDDO j
@@ -3399,7 +2615,7 @@
                   tbjxi(b,j,kk1,i)        = L2bb_a(b,j,kk1,i1)*Uii(i,i1)
                   tbjxi(b,j,kk1,i)       *= -1.0
 #bgn_dbg
-        tbjxi(b,j,kk1,i) *=1.0
+#        tbjxi(b,j,kk1,i) *=1.0
 #end_dbg
                   PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
                ENDDO i
@@ -3415,7 +2631,7 @@
                   GET                       Ubb(b1,b)
                   tbjxi(b,j,kk1,i)        = L2bb_a(b1,j,kk1,i)*Ubb(b1,b)
 #bgn_dbg
-        tbjxi(b,j,kk1,i) *=1.0
+#        tbjxi(b,j,kk1,i) *=1.0
 #end_dbg
                   PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
                ENDDO b
@@ -3431,7 +2647,7 @@
                GET                       L2bb_a(b,j1,kk1,i1)
                tbjxi(b,j,kk1,i)        = L2bb_a(b,j1,kk1,i1)*Wiijj(i,i1,j,j1)
 #bgn_dbg
-        tbjxi(b,j,kk1,i) *=1.0
+#        tbjxi(b,j,kk1,i) *=1.0
 #end_dbg
                PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
             ENDDO kk1
@@ -3447,7 +2663,7 @@
                GET                       L2aa_a(a,i1,kk1,i)
                tbjxi(b,j,kk1,i)        = Wiabj(j,b,a,i1)*L2aa_a(a,i1,kk1,i)
 #bgn_dbg
-        tbjxi(b,j,kk1,i) *=1.0
+#        tbjxi(b,j,kk1,i) *=1.0
 #end_dbg
                PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
             ENDDO kk1
@@ -3463,7 +2679,7 @@
                GET                       L2bb_a(b1,j1,kk1,i)
                tbjxi(b,j,kk1,i)        = Wjbbj(j,b,b1,j1)*L2bb_a(b1,j1,kk1,i)
 #bgn_dbg
-        tbjxi(b,j,kk1,i) *=1.0
+#        tbjxi(b,j,kk1,i) *=1.0
 #end_dbg
                PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
             ENDDO kk1
@@ -3495,14 +2711,14 @@
             GET L1A(i1,kk1)
             taixi(a,i,kk1,i1) = UIA(i,a)^L1a(i1,kk1)
 #bgn_dbg
-        taixi(a,i,kk1,i1) *=1.0
+#        taixi(a,i,kk1,i1) *=1.0
 #end_dbg
             PUT HL2aa_a(a,i,kk1,i1) +=  taixi(a,i,kk1,i1)
 
             t1aixi(a,i1,kk1,i)  = taixi(a,i,kk1,i1)
             t1aixi(a,i1,kk1,i) *= -1.0
 #bgn_dbg
-        t1aixi(a,i1,kk1,i) *=1.0
+#        t1aixi(a,i1,kk1,i) *=1.0
 #end_dbg
             PUT HL2aa_a(a,i1,kk1,i) +=  t1aixi(a,i1,kk1,i)
 
@@ -3517,14 +2733,14 @@
             GET L1B(j1,kk1)
             tbjxj(b,j,kk1,j1) = UJB(j,b)^L1B(j1,kk1)
 #bgn_dbg
-        tbjxj(b,j,kk1,j1) *=1.0
+#        tbjxj(b,j,kk1,j1) *=1.0
 #end_dbg
             PUT HL2bb_b(b,j,kk1,j1) +=  tbjxj(b,j,kk1,j1)
 
             t1bjxj(b,j1,kk1,j)  = tbjxj(b,j,kk1,j1)
             t1bjxj(b,j1,kk1,j) *= -1.0
 #bgn_dbg
-        t1bjxj(b,j1,kk1,j) *=1.0
+#        t1bjxj(b,j1,kk1,j) *=1.0
 #end_dbg
             PUT HL2bb_b(b,j1,kk1,j) +=  t1bjxj(b,j1,kk1,j)
          ENDDO kk1
@@ -3538,7 +2754,7 @@
             GET L1B(j1,kk1)
             taixj(a,i,kk1,j1) = UIA(i,a)^L1B(j1,kk1)
 #bgn_dbg
-        taixj(a,i,kk1,j1) *=1.0
+#        taixj(a,i,kk1,j1) *=1.0
 #end_dbg
             PUT HL2aa_b(a,i,kk1,j1) +=  taixj(a,i,kk1,j1)
          ENDDO kk1
@@ -3552,7 +2768,7 @@
             GET L1A(i1,kk1)
             tbjxi(b,j,kk1,i1) = UJB(j,b)^L1a(i1,kk1)
 #bgn_dbg
-        tbjxi(b,j,kk1,i1) *=1.0
+#        tbjxi(b,j,kk1,i1) *=1.0
 #end_dbg
             PUT HL2bb_a(b,j,kk1,i1) +=  tbjxi(b,j,kk1,i1)
          ENDDO kk1
@@ -3567,7 +2783,7 @@
             taixi(a1,i1,kk1,i)        = Vspipi(a,i,a1,i1)*Iax(a,kk1)
             taixi(a1,i1,kk1,i)       *= -1.0
 #bgn_dbg
-        taixi(a1,i1,kk1,i) *=1.0
+#        taixi(a1,i1,kk1,i) *=1.0
 #end_dbg
             PUT HL2aa_a(a1,i1,kk1,i) += taixi(a1,i1,kk1,i)
          ENDDO kk1
@@ -3582,7 +2798,7 @@
             tbjxi(b1,j1,kk1,i)        = Vpiqj(a,i,b1,j1)*Iax(a,kk1)
             tbjxi(b1,j1,kk1,i)       *= -1.0
 #bgn_dbg
-        tbjxi(b1,j1,kk1,i) *=1.0
+#        tbjxi(b1,j1,kk1,i) *=1.0
 #end_dbg
             PUT HL2bb_a(b1,j1,kk1,i) += tbjxi(b1,j1,kk1,i)
          ENDDO kk1
@@ -3597,7 +2813,7 @@
             tbjxj(b1,j1,kk1,j)        = Vsqjqj(b,j,b1,j1)*Ibx(b,kk1)
             tbjxj(b1,j1,kk1,j)       *= -1.0
 #bgn_dbg
-        tbjxj(b1,j1,kk1,j) *=1.0
+#        tbjxj(b1,j1,kk1,j) *=1.0
 #end_dbg
             PUT HL2bb_b(b1,j1,kk1,j) += tbjxj(b1,j1,kk1,j)
          ENDDO kk1
@@ -3612,7 +2828,7 @@
             taixj(a1,i1,kk1,j)        = Vpiqj(a1,i1,b,j)*Ibx(b,kk1)
             taixj(a1,i1,kk1,j)       *= -1.0
 #bgn_dbg
-        taixj(a1,i1,kk1,j) *=1.0
+#        taixj(a1,i1,kk1,j) *=1.0
 #end_dbg
             PUT HL2aa_b(a1,i1,kk1,j) += taixj(a1,i1,kk1,j)
          ENDDO kk1
@@ -3627,7 +2843,7 @@
              GET                       L2bb_a(b1,j,kk1,i1)
              tbjxi(b,j,kk1,i)        = L2bb_a(b1,j,kk1,i1)*Wiibb(i,i1,b1,b)
 #bgn_dbg
-        tbjxi(b,j,kk1,i) *=1.0
+#        tbjxi(b,j,kk1,i) *=1.0
 #end_dbg
              PUT HL2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
           ENDDO kk1
@@ -3643,7 +2859,7 @@
              GET                       L2aa_b(a1,i,kk1,j1)
              taixj(a,i,kk1,j)        = L2aa_b(a1,i,kk1,j1)*Wjjaa(j,j1,a1,a)
 #bgn_dbg
-        taixj(a,i,kk1,j) *=1.0
+#        taixj(a,i,kk1,j) *=1.0
 #end_dbg
              PUT HL2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
           ENDDO kk1
@@ -3655,65 +2871,65 @@
       delete Ibx
 
 #bgn_debug
-      tmpa=0.0
-      tmpb=0.0
-      suma=0.0
-      sumb=0.0
-      pardo i,kk1
-         get hl1a(i,kk1)
-         tmp = hl1a(i,kk1) * hl1a(i,kk1)
-         tmpa += tmp
-      endpardo i,kk1
-      pardo j,kk1
-         get hl1b(j,kk1)
-         tmp = hl1b(j,kk1) * hl1b(j,kk1)
-         tmpb += tmp
-      endpardo j,kk1
-      execute sip_barrier
-      collective suma +=tmpa
-      collective sumb +=tmpb
-      execute print_scalar suma
-      execute print_scalar sumb
-      tmpa =0.0
-      suma =0.0
-      pardo a,i1,kk1,i
-            get  HL2aa_a(a,i1,kk1,i)
-            tmp = HL2aa_a(a,i1,kk1,i) * HL2aa_a(a,i1,kk1,i)
-            tmpa += tmp
-      endpardo a,i1,kk1,i
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo b,j,j1, kk1
-            get  HL2bb_b(b,j1,kk1,j)
-            tmp = HL2bb_b(b,j1,kk1,j) * HL2bb_b(b,j1,kk1,j)
-            tmpa+= tmp
-      endpardo b,j,j1, kk1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo j,i1,a,kk1
-            get HL2aa_b(a,i1,kk1,j)
-            tmp = HL2aa_b(a,i1,kk1,j) * HL2aa_b(a,i1,kk1,j)
-            tmpa+= tmp
-      endpardo j,i1,a,kk1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo i,j1,b,kk1
-            get HL2bb_a(b,j1,kk1,i)
-            tmp = HL2bb_a(b,j1,kk1,i) * HL2bb_a(b,j1,kk1,i)
-            tmpa+= tmp
-      endpardo i,j1,b,kk1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
+#      tmpa=0.0
+#      tmpb=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,kk1
+#         get hl1a(i,kk1)
+#         tmp = hl1a(i,kk1) * hl1a(i,kk1)
+#         tmpa += tmp
+#      endpardo i,kk1
+#      pardo j,kk1
+#         get hl1b(j,kk1)
+#         tmp = hl1b(j,kk1) * hl1b(j,kk1)
+#         tmpb += tmp
+#      endpardo j,kk1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute print_scalar suma
+#      execute print_scalar sumb
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,i1,kk1,i
+#            get  HL2aa_a(a,i1,kk1,i)
+#            tmp = HL2aa_a(a,i1,kk1,i) * HL2aa_a(a,i1,kk1,i)
+#            tmpa += tmp
+#      endpardo a,i1,kk1,i
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo b,j,j1, kk1
+#            get  HL2bb_b(b,j1,kk1,j)
+#            tmp = HL2bb_b(b,j1,kk1,j) * HL2bb_b(b,j1,kk1,j)
+#            tmpa+= tmp
+#      endpardo b,j,j1, kk1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo j,i1,a,kk1
+#            get HL2aa_b(a,i1,kk1,j)
+#            tmp = HL2aa_b(a,i1,kk1,j) * HL2aa_b(a,i1,kk1,j)
+#            tmpa+= tmp
+#      endpardo j,i1,a,kk1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo i,j1,b,kk1
+#            get HL2bb_a(b,j1,kk1,i)
+#            tmp = HL2bb_a(b,j1,kk1,i) * HL2bb_a(b,j1,kk1,i)
+#            tmpa+= tmp
+#      endpardo i,j1,b,kk1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
 #end_debug
 #
       ENDPROC HL_MULT
@@ -4519,7 +3735,7 @@
      OMEGA0M  = A_VALUE 
      OMEGA0M *= -1.0
 #bgn_debug
-     execute print_scalar OMEGA0M
+#     execute print_scalar OMEGA0M
 #end_debug
 
 # First the residual vector for iteration 1
@@ -6052,15 +5268,14 @@
       EXECUTE SIP_BARRIER 
 
       CALL HL_MULT
-#      CALL HR_MULT
 
-     PARDO kk1, i
+      PARDO kk1, i
             GET HL1a(i,kk1)
             Tikk(i,kk1) = HL1a(i,kk1)
             PUT HY1a_picked(i,kk1) =  Tikk(i,kk1)
-     ENDPARDO kk1,i
+      ENDPARDO kk1,i
 
-     PARDO kk1, j
+      PARDO kk1, j
             GET HL1b(j,kk1)
             Tjkk(j,kk1) = HL1b(j,kk1)
             PUT HY1b_picked(j,kk1) =  Tjkk(j,kk1)
@@ -8237,7 +7452,6 @@
 #            call c_check 
 #end_debug
             CALL HL_MULT
-#            CALL HR_MULT
 
             CALL SAVE_HC_VECTORS 
 
