@@ -1,5 +1,5 @@
 
-      subroutine Find_min_eneg(
+      subroutine Find_near(
      *                 array_table, narray_table,
      *                 index_table,
      *                 nindex_table, segment_table, nsegment_table,
@@ -64,7 +64,7 @@ c---------------------------------------------------------------|
 C
       if (array_in_type .ne. static_array .or.array_out_type 
      &                  .ne. static_array) then
-         Write(6,"(a)") "@-FIND_MIN_ENEG: Both arrays must be static."
+         Write(6,"(a)") "@-FIND_NEAR: Both arrays must be static."
          call abort_job()
       endif
 
@@ -91,92 +91,112 @@ c---------------------------------------------------------------------------
       iarray_in  = get_index_from_base(address_table(array_in), x, 2)
       iarray_out = get_index_from_base(address_table(array_out), x, 2)
 
-      Call What_2exclude(x(iarray_in),1,n1,x(iarray_out),1,m1,1,m2)
+      Call What_2nclude(x(iarray_in),1,n1,x(iarray_out),1,m1,1,m2)
 
       return
       end
 C
-      Subroutine What_2exclude(Eigs_curnt,i1,i2,Roots,a1,a2,b1,b2)
+      Subroutine What_2nclude(Eigs_curnt,i1,i2,Roots,a1,a2,b1,b2)
 
       implicit none 
       include 'parallel_info.h'
       include 'int_gen_parms.h'
       include 'eom_truncate.h'
 
-      Integer i,j,k,l,m,i1,i2,j1,j2,a1,a2,b1,b2
+      Integer i,j,l,m,i1,i2,j1,j2,a1,a2,b1,b2
       Integer Ndim1,Ndim2,Ndim3,Iloc,Ilocmin
       Integer Istart,Ierror 
       Double precision Eigs_curnt(i1:i2),Roots(a1:a2,b1:b2)
-      Double Precision X,X2,Vlocmin,Tol
+      Double Precision X,X2,Vlocmin,Tol,Xclose 
 
       Parameter(Tol = 1.0D-03)
 
-      Double Precision Tmp(Maxdim), Diffs(Maxdim)
+      Double Precision Tmp(Maxdim)
 
       Ndim1 = Sbsp_dim
       Ndim2 = Root_dim - 1
       Ndim3 = 1
 
-C      Ndim1 = i2 - i1 + 1
-C      Ndim2 = a2 - a1 + 1
-C      Ndim3 = b1 - b2 + 1
-
       If (Ndim1 .Gt. Maxdim) Then
-         Write(6,"(a,a)") "@-FIND_MIN_ENEG: Exceeded the max",
+         Write(6,"(a,a)") "@-FIND_NEAR: Exceeded the max",
      +                    " dimension allowed in FIND_MIN_ENEG"
          Call abort_job()
       Endif 
       
-#ifdef _DEBUG_LVL0
+C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
-      Write(6,"(2a,2i4)") "@-Entry to FIND_MIN_ENEG actual order",
+      Write(6,*) 
+      Write(6,"(a)") "Printing from find_near" 
+      Write(6,"(2a,2i4)") "@-Entry to FIND_NEAR actual order",
      +                   " of the arrays",Ndim1,Ndim2
       Write(6,"(a)") "The current eigenvalues"
       Write(6,"(6(1x,F10.5))") (Eigs_curnt(i),i=1,Ndim1)
       Write(6,"(a)") "The roots already found"
       Write(6,"(6(1x,F10.5))") ((Roots(i,j),i=1,Ndim2),j=1,Ndim3)
+      Write(6,"((a,1x,F10.5))") "Root: ", Root 
       Endif 
-#endif 
+C#endif 
+      If (Ndim2 .EQ. 0) Then
 
-      Call Dcopy(Ndim1,Eigs_curnt,1,Tmp,1)
-
-      Do K = 1, Ndim3
-      Do I = 1, Ndim2
-         Do J = 1, Ndim1
-            Call Fndclose(Ndim1,Tmp,Roots(I,K),X,Iloc)
-            X2 =Dabs(Roots(I,K)-Tmp(Iloc))
-            Diffs(J) = X2
-            If (me .eq. 0) write(6,"(F10.5,1x,F10.5,i4)") Roots(I,K),
-     +                                             Tmp(Iloc),iloc
-            If (X2 .LT. Tol) Tmp(Iloc) = 1.0D+30
+         Call Dcopy(Ndim1,Eigs_curnt,1,Tmp,1)
+         Xclose = Tol
+         Do I = 1, Ndim1
+            X = Dabs(Tmp(I)-Root)
+            if (me .eq. 0 .and. ndim1 .gt.15) then
+               write(6,"(3F10.5)") Tmp(I), Root, X 
+            endif 
+            If (X .LT. Xclose) Then
+               Ilocmin = I
+               Vlocmin = Eigs_curnt(I)
+               Xclose  = X
+            Endif
          Enddo
-      Enddo
-      Enddo 
+
+         If (Ilocmin .EQ. 0) Then
+             Ilocmin = 1
+             Vlocmin = Eigs_curnt(Ilocmin)
+         Endif
+         Iselect = Ilocmin
+
 C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
-      Write(6,"(a,a,I2,1X,F10.5)") "The screened eigenvalues"
-      Write(6,"(6(1x,F10.5))") (Tmp(i),i=1,Ndim1)
-      Write(6,"(6(1x,F10.5))") (Diffs(i),i=1,Ndim1)
-      endif 
-C#endif 
+      Write(6,"(a,a,I2,1X,2F10.5)") "The location and the eigevalue",
+     +                            " selected: ", Ilocmin, Vlocmin,
+     +                              Root 
+      endif
+C#endif
 
-      Vlocmin =  1.0D+30
-      Do I = 1, Ndim1
-         X = Tmp(I)
-         IF (X .LT. Vlocmin) Then
-            Ilocmin = I
-            Vlocmin = Tmp(I)
-         Endif
-      Enddo
+      Else
 
-      Iselect = Ilocmin 
+         Call Dcopy(Ndim1,Eigs_curnt,1,Tmp,1)
 
-#ifdef _DEBUG_LVL0
+         Do I = 1, Ndim2
+            Do J = 1, Ndim1
+               Call Fndclose(Ndim1,Tmp,Roots(J,I),X,Iloc)
+               X2 =Dabs(Roots(J,I)-Tmp(Iloc))
+               If (X2 .LT. Tol) Tmp(Iloc) = 1.0D+30
+            Enddo
+         Enddo
+
+         Xclose =  1.0D+30
+         Do I = 1, Ndim1
+            X = Dabs(Tmp(I)-Root)
+            IF (X .LT. Xclose) Then
+               Ilocmin = I
+               Vlocmin = Eigs_curnt(I)
+               Xclose  = X
+            Endif
+         Enddo
+
+         Iselect = Ilocmin 
+
+C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
-      Write(6,"(a,a,I2,1X,F10.5)") "The location and the eigenvalue",
+      Write(6,"(a,a,I2,1X,F10.5)") "The location and the eigevalue",
      +                            " selected: ", Ilocmin, Vlocmin
       endif 
-#endif 
-     
+C#endif 
+      Endif 
+
       Return
       End

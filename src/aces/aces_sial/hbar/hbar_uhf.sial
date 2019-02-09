@@ -359,9 +359,6 @@
       execute list_to_blocks                Vaajj
       execute list_to_blocks                Viabj
       execute list_to_blocks                Vaabj
-
-      execute read_list_to_blocks 
-      execute server_barrier 
 #
 # Done reading transformed two-electron integrals from list
 # ---------------------------------------------------------
@@ -379,6 +376,7 @@
       create l1a 
       create l1b 
       execute sip_barrier
+
       execute list_to_blocks t1a
       execute list_to_blocks t1b
       execute list_to_blocks T2aa
@@ -390,6 +388,9 @@
       execute list_to_blocks L2aa
       execute list_to_blocks L2ab
       execute list_to_blocks L2bb
+
+      execute read_list_to_blocks 
+      execute server_barrier 
 #
       ENDPROC READ_AMP
 #     ---------------
@@ -3350,8 +3351,8 @@
 #
 #    ------------------------------------------------------------------------
 #
-     CALL READ_AMP 
      CALL READ_2EL
+     CALL READ_AMP 
 
      create HBAR_aa
      create HBAR_bb
@@ -3473,7 +3474,7 @@
       execute blocks_to_list                Vaabj
       execute blocks_to_list                Vaajj
       execute blocks_to_list                Vbbii
-#
+
       execute blocks_to_list                t1a
       execute blocks_to_list                t1b
       execute blocks_to_list                T2aa
@@ -3492,21 +3493,21 @@
       execute blocks_to_list                HBAR_jj
       execute blocks_to_list                HBAR_ia
       execute blocks_to_list                HBAR_jb
-#
+
       execute blocks_to_list HBAR_iiii
       execute blocks_to_list HBAR_jjjj
       execute blocks_to_list HBAR_iijj
-#
+
       execute blocks_to_list HBAR_AIBC_aaaa
       execute blocks_to_list HBAR_AIBC_bbbb
       execute blocks_to_list HBAR_AIBC_aabb
       execute blocks_to_list HBAR_AIBC_bbaa
-#
+
       execute blocks_to_list HBAR_JKIA_aaaa
       execute blocks_to_list HBAR_JKIA_bbbb
       execute blocks_to_list HBAR_JKIA_aabb
       execute blocks_to_list HBAR_JKIA_bbaa
-#
+
       execute blocks_to_list HBAR_IAJK_aaaa
       execute blocks_to_list HBAR_IAJK_aabb
       execute blocks_to_list HBAR_IAJK_bbaa
@@ -3518,12 +3519,12 @@
       execute blocks_to_list HBAR_AJIB_BBAA
       execute blocks_to_list HBAR_AJIB_iibb
       execute blocks_to_list HBAR_AJIB_jjaa
-#
+
       execute blocks_to_list HBAR_ABCI_aaaa
       execute blocks_to_list HBAR_ABCI_bbbb
       execute blocks_to_list HBAR_ABCI_aabb
       execute blocks_to_list HBAR_ABCI_bbaa
-#
+
       execute write_blocks_to_list
       execute server_barrier
 #

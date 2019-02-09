@@ -54,7 +54,8 @@ C  in the file COPYRIGHT.
       external compute_sderivative_integrals
       external read_hess
       external return_h1, return_1el_dkh
-      external form_guess,xgeev,extract_subset,return_max_overlap
+      external xgeev,extract_subset,return_max_overlap
+      external form_guess_r,form_guess_l
       external form_rpa_guess, guess_4current_root
       external guess_4current_dip_root
       external form_dip_guess,form_dea_guess,form_dip_hmat 
@@ -151,7 +152,7 @@ C
      *         second_moment
       external return_1st_mom, return_2nd_mom 
       external energy_ty_denominator, reorder_energy,reorder_array
-      external find_min_eneg
+      external find_min_eneg,find_near 
 c 
 c VFL SCF instructions 
 
@@ -818,8 +819,10 @@ C
 c-----------------------------------------------------------------------
 C New IP-EOM related SIPs.
 
-      dummy = load_user_sub('form_guess'//char(0),
-     &                       form_guess)
+      dummy = load_user_sub('form_guess_r'//char(0),
+     &                       form_guess_r)
+      dummy = load_user_sub('form_guess_l'//char(0),
+     &                       form_guess_l)
       dummy = load_user_sub('xgeev'//char(0),xgeev)
       dummy = load_user_sub('process_eigs'//char(0),process_eigs)
       dummy = load_user_sub('addrootindex'//char(0),addrootindex)
@@ -863,6 +866,7 @@ C New IP-EOM related SIPs.
      &                       truncate_eom_subspace)
       dummy = load_user_sub('reorder_array'//char(0),reorder_array)
       dummy = load_user_sub('find_min_eneg'//char(0),find_min_eneg)
+      dummy = load_user_sub('find_near'//char(0),find_near)
 c-----------------------------------------------------------------------
 c Prakash instructions for delta integrals
 c----------------------------------------------------------------------

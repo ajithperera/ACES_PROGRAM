@@ -847,12 +847,8 @@
 #
 #    ------------------------------------------------------------------------
 #
-      execute list_to_blocks                t1a_old
-      execute list_to_blocks                t1b_old
-      execute list_to_blocks                T2old_aa
-      execute list_to_blocks                T2old_ab
-      execute list_to_blocks                T2old_bb
 
+      execute server_barrier
       execute list_to_blocks                VSpipi
       execute list_to_blocks                Vaaii
       execute list_to_blocks                Viaai
@@ -869,6 +865,12 @@
       execute list_to_blocks                Viabj
       execute list_to_blocks                Vaabj
 
+      execute list_to_blocks                t1a_old
+      execute list_to_blocks                t1b_old
+      execute list_to_blocks                T2old_aa
+      execute list_to_blocks                T2old_ab
+      execute list_to_blocks                T2old_bb
+
       execute read_list_to_blocks
       execute server_barrier
 #
@@ -878,37 +880,6 @@
 #
 #    ------------------------------------------------------------------------
 
-#    ------------------------------------------------------------------------
-#
-     PROC WRITE_2EL
-#
-#    ------------------------------------------------------------------------
-#
-      execute server_barrier
-      execute blocks_to_list                VSpipi(p,i,p1,i1)
-      execute blocks_to_list                Vaaii
-      execute blocks_to_list                Viaai
-      execute blocks_to_list                VSaaai
-      execute blocks_to_list                VSqjqj(q,j,q1,j1)
-      execute blocks_to_list                Vbbjj
-      execute blocks_to_list                Vjbbj
-      execute blocks_to_list                VSbbbj
-      execute blocks_to_list                Vbbii
-      execute blocks_to_list                Vjbii
-      execute blocks_to_list                Vbbai
-      execute blocks_to_list                Vpiqj(p,i,q,j)
-      execute blocks_to_list                Vaajj
-      execute blocks_to_list                Viabj
-      execute blocks_to_list                Vaabj
-#
-#    ------------------------------------------------------------------------
-#
-     ENDPROC WRITE_2EL
-#
-#    ------------------------------------------------------------------------
-#
-#    ------------------------------------------------------------------------ 
-# 
       PROC TAUAA 
 #     ----------
 #
@@ -9652,19 +9623,7 @@
 # Write amplitudes to file
 # ------------------------
 #
-      execute sip_barrier
-      execute blocks_to_list  t1a_old
-      execute blocks_to_list  t1b_old
-      execute blocks_to_list  T2old_aa
-      execute blocks_to_list  T2old_ab
-      execute blocks_to_list  T2old_bb
-
-      execute blocks_to_list  l1a_old
-      execute blocks_to_list  l1b_old
-      execute blocks_to_list  L2old_aa
-      execute blocks_to_list  L2old_ab
-      execute blocks_to_list  L2old_bb
-
+      execute server_barrier
       EXECUTE BLOCKS_TO_LIST  VSpipi(p,i,p1,i1)
       EXECUTE BLOCKS_TO_LIST  Vaaii
       EXECUTE BLOCKS_TO_LIST  Viaai
@@ -9680,6 +9639,18 @@
       EXECUTE BLOCKS_TO_LIST  Vaajj
       EXECUTE BLOCKS_TO_LIST  Viabj
       EXECUTE BLOCKS_TO_LIST  Vaabj
+
+      execute blocks_to_list  t1a_old
+      execute blocks_to_list  t1b_old
+      execute blocks_to_list  T2old_aa
+      execute blocks_to_list  T2old_ab
+      execute blocks_to_list  T2old_bb
+
+      execute blocks_to_list  l1a_old
+      execute blocks_to_list  l1b_old
+      execute blocks_to_list  L2old_aa
+      execute blocks_to_list  L2old_ab
+      execute blocks_to_list  L2old_bb
 
       execute write_blocks_to_list
       execute server_barrier

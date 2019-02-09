@@ -1,5 +1,5 @@
 
-      subroutine Find_min_eneg(
+      subroutine Process_eigs(
      *                 array_table, narray_table,
      *                 index_table,
      *                 nindex_table, segment_table, nsegment_table,
@@ -64,7 +64,7 @@ c---------------------------------------------------------------|
 C
       if (array_in_type .ne. static_array .or.array_out_type 
      &                  .ne. static_array) then
-         Write(6,"(a)") "@-FIND_MIN_ENEG: Both arrays must be static."
+         Write(6,"(a)") "@-POCESS_EIGS: Both arrays must be static."
          call abort_job()
       endif
 
@@ -91,92 +91,104 @@ c---------------------------------------------------------------------------
       iarray_in  = get_index_from_base(address_table(array_in), x, 2)
       iarray_out = get_index_from_base(address_table(array_out), x, 2)
 
-      Call What_2exclude(x(iarray_in),1,n1,x(iarray_out),1,m1,1,m2)
+      Call Process(x(iarray_in),1,n1,x(iarray_out),1,m1,1,m2)
 
       return
       end
 C
-      Subroutine What_2exclude(Eigs_curnt,i1,i2,Roots,a1,a2,b1,b2)
+      Subroutine Process(Eigs,i1,i2,Eigvecs,a1,a2,b1,b2)
 
       implicit none 
       include 'parallel_info.h'
       include 'int_gen_parms.h'
       include 'eom_truncate.h'
 
-      Integer i,j,k,l,m,i1,i2,j1,j2,a1,a2,b1,b2
-      Integer Ndim1,Ndim2,Ndim3,Iloc,Ilocmin
-      Integer Istart,Ierror 
-      Double precision Eigs_curnt(i1:i2),Roots(a1:a2,b1:b2)
-      Double Precision X,X2,Vlocmin,Tol
+      Integer i,l,i1,i2,j1,j2,a1,a2,b1,b2,Ndim,Nroots 
+      Integer Istart,Ierror,Nsub
 
-      Parameter(Tol = 1.0D-03)
+      Double precision Eigs(i1:i2),Eigvecs(a1:a2,b1:b2)
 
-      Double Precision Tmp(Maxdim), Diffs(Maxdim)
+      Ndim = (i2 -i1) + 1
+      Nsub = Sbsp_dim 
 
-      Ndim1 = Sbsp_dim
-      Ndim2 = Root_dim - 1
-      Ndim3 = 1
-
-C      Ndim1 = i2 - i1 + 1
-C      Ndim2 = a2 - a1 + 1
-C      Ndim3 = b1 - b2 + 1
-
-      If (Ndim1 .Gt. Maxdim) Then
-         Write(6,"(a,a)") "@-FIND_MIN_ENEG: Exceeded the max",
-     +                    " dimension allowed in FIND_MIN_ENEG"
-         Call abort_job()
-      Endif 
-      
 #ifdef _DEBUG_LVL0
       If(me.eq.0) Then
-      Write(6,"(2a,2i4)") "@-Entry to FIND_MIN_ENEG actual order",
-     +                   " of the arrays",Ndim1,Ndim2
-      Write(6,"(a)") "The current eigenvalues"
-      Write(6,"(6(1x,F10.5))") (Eigs_curnt(i),i=1,Ndim1)
-      Write(6,"(a)") "The roots already found"
-      Write(6,"(6(1x,F10.5))") ((Roots(i,j),i=1,Ndim2),j=1,Ndim3)
+      Write(6,"(a,i4)") "@-Entry to PROCESS_EIGS order of the matrix", 
+     +                Nsub
       Endif 
 #endif 
 
-      Call Dcopy(Ndim1,Eigs_curnt,1,Tmp,1)
-
-      Do K = 1, Ndim3
-      Do I = 1, Ndim2
-         Do J = 1, Ndim1
-            Call Fndclose(Ndim1,Tmp,Roots(I,K),X,Iloc)
-            X2 =Dabs(Roots(I,K)-Tmp(Iloc))
-            Diffs(J) = X2
-            If (me .eq. 0) write(6,"(F10.5,1x,F10.5,i4)") Roots(I,K),
-     +                                             Tmp(Iloc),iloc
-            If (X2 .LT. Tol) Tmp(Iloc) = 1.0D+30
-         Enddo
-      Enddo
-      Enddo 
-C#ifdef _DEBUG_LVL0
-      If(me.eq.0) Then
-      Write(6,"(a,a,I2,1X,F10.5)") "The screened eigenvalues"
-      Write(6,"(6(1x,F10.5))") (Tmp(i),i=1,Ndim1)
-      Write(6,"(6(1x,F10.5))") (Diffs(i),i=1,Ndim1)
-      endif 
-C#endif 
-
-      Vlocmin =  1.0D+30
-      Do I = 1, Ndim1
-         X = Tmp(I)
-         IF (X .LT. Vlocmin) Then
-            Ilocmin = I
-            Vlocmin = Tmp(I)
-         Endif
-      Enddo
-
-      Iselect = Ilocmin 
-
+      If (Ndim .Gt. Maxdim) Then
+         Write(6,"(a,a)") "@-PROCESS_EIGS: Exceeded the max",
+     +                    " dimension allowed in PROCESS_EIGS"
+         Call abort_job()
+      Endif 
+C
 #ifdef _DEBUG_LVL0
       If(me.eq.0) Then
-      Write(6,"(a,a,I2,1X,F10.5)") "The location and the eigenvalue",
-     +                            " selected: ", Ilocmin, Vlocmin
+      Write(6,"(a)") "Eigenvalues/vectors of incoming matrix"
+      Write(6,"(6(1x,F10.5))") (Eigs(i),i=1,Nsub)
+      call output(Eigvecs,1,Nsub,1,Nsub,Ndim,Ndim,1)
       endif 
 #endif 
      
+      Call Reorder(Eigs,Eigvecs,Nsub,Ndim)
+
+#ifdef _DEBUG_LVL0
+      if (me.eq.0) then
+      Write(6,"(a)") "Reordered Eigen values vectors"
+      Write(6,"(6(1x,F10.5))") (Eigs(i),i=1,Nsub)
+      call output(Eigvecs,1,Nsub,1,Nsub,Ndim,Ndim,1)
+      endif 
+#endif 
+
+      Return
+      End
+
+      Subroutine Reorder(Eigs,Evecs,Ndim,Nld)
+
+      Implicit None
+      include 'parallel_info.h'
+      include 'int_gen_parms.h'
+
+      Integer l,a1,a2,b1,b2,Nld
+      Integer i,j,Ndim,k,Istart,Nroots
+
+      Double Precision Eigs(Nld), Evecs(Nld,Nld)
+      Double Precision Dtmp,DtmpR
+
+C Reorder the eigenvalues and vectors Ascending order.
+C Notice that this assumes that all the relavent eigenvalues are
+C non-zero.
+
+      If (Ndim .Eq. 1) Return
+
+      Do i = 1, Ndim-1
+         Do j = i+1, Ndim
+
+          If (Eigs(j) .NE. 0.0D0) Then
+
+          If (Eigs(i) .Gt. Eigs(j)) Then
+              Dtmp    = Eigs(i)
+              Eigs(i) = Eigs(j)
+              Eigs(j) = Dtmp
+              Do k = 1, Ndim
+                 DtmpR      = Evecs(k,i)
+                 Evecs(k,i) = Evecs(k,j)
+                 Evecs(k,j) = DtmpR
+              Enddo
+          Endif
+          Endif
+
+         Enddo
+      Enddo      
+#ifdef _DEBUG_LVL0
+      if (me.eq.0) then
+      Write(6,"(a)") "Reordered Eigen values vectors"
+      Write(6,"(6(1x,F10.5))") (Eigs(i),i=1,Ndim)
+      call output(Evecs,1,Ndim,1,Ndim,Nld,Nld,1)
+      endif 
+#endif 
+
       Return
       End

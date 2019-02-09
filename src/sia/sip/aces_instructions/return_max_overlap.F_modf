@@ -104,27 +104,25 @@ C
       implicit none 
       include 'parallel_info.h'
       include 'int_gen_parms.h'
+      include 'eom_truncate.h'
 
       Integer i,j,k,l,i1,i2
-      Integer Idim
-      Integer Over_max 
+      Integer Idim,Nsub
+      Integer Over_max
 
       Double Precision Overlap(i1:i2)
 
       Idim = i2 -i1 + 1
+      Nsub = Sbsp_dim
 
 #ifdef _DEBUG_LVL0 
       if (me .eq.0) then
-      l=0
-      do i=1,idim
-         if (Dabs(Overlap(i)) .ne. 0.0d0) l=l+1
-      enddo 
-      write(6,"(a)") "@-RETURN_MAX_OVERLP The overlap array"
-      Write(6,"(6(1x,F10.5))") (Dabs(Overlap(i)),i=1,l)
+      write(6,"(a)") "@-RETURN_MAX_OVERLP The overlapr array"
+      Write(6,"(6(1x,F10.5))") (Dabs(Overlap(i)),i=1,Nsub)
       endif
 #endif 
       Over_max = 1 
-      Do I = 1, Idim
+      Do I = 1, Nsub
         if (Dabs(Overlap(i)) .gt. Dabs(Overlap(over_max))) then
             Over_max = i
         Endif

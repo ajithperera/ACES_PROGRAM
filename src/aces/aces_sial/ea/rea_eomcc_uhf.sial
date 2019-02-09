@@ -13,15 +13,15 @@
 #  The GNU General Public License is included in this distribution
 #  in the file COPYRIGHT.
 #
-                        SIAL EA_EOMCCSD
-#                       ---------------
+                        SIAL REA_UHF_EOMCCSD
+#                       --------------------
 # -----------------------------------------------------------
 
       index kiter    = 1, cc_iter
       index jj1      = 1, 1
       index kk1      = 1, 1
 
-      Index Ndim     = 1, 100
+      Index Ndim     = 1, 50
       Index Nroots   = 1, 12
       Index Mroots   = 1, 12
       Index Subsp_dim= 1, 50
@@ -29,6 +29,7 @@
       Index Mindex50 = 1, 50
       Index Kindex50 = 1, 50
       Index Lindex50 = 1, 50
+      Index Eom_cycle= 1, 150
 #
       aoindex mu     = 1, norb
       aoindex nu     = 1, norb
@@ -70,9 +71,14 @@
 #
       distributed t1a(a,i)
       distributed t1b(b,j)
+      distributed l1a(i,a)
+      distributed l1b(j,b)
       served T2aa(a,i,a1,i1)
       served T2bb(b,j,b1,j1)
       served T2ab(a,i,b,j)
+      served L2aa(i,a,i1,a1)
+      served L2bb(j,b,j1,b1)
+      served L2ab(i,a,j,b)
 #
 #     Transformed integrals
 #     ---------------------
@@ -161,10 +167,10 @@
       served Waibb(a,a1,j,b2) 
       served Wbjaa(b,b1,i,a2) 
 #
-      served Wiaii(i,a,i1,i2)
-      served Wiajj(i,a,j,j1)
-      served Wjbii(j,b,i,i1)
-      served Wjbjj(j,b,j1,j2)
+      served Wiaii(i,i1,a,i2)
+      served Wiajj(i,j,b,j1)
+      served Wjbii(j,i,b,i1)
+      served Wjbjj(j,j1,b,j2)
 
       served Waiia(a,i,i1,a1)
       served Wbjjb(b,j,j1,b1)
@@ -176,6 +182,8 @@
 
       distributed R1a(a,kk1)
       distributed R1b(b,kk1)
+      distributed R1a_VECS(a,kk1,MROOTS)
+      distributed R1b_VECS(b,kk1,MROOTS)
       distributed R2a_aa(a,kk1,a1,i1)
       distributed R2a_bb(a,kk1,b,j)
       distributed R2b_bb(b,kk1,b1,j1)
@@ -216,6 +224,8 @@
       distributed Xixjj(i,kk1,j1,j2)
       Distributed Y1a(a,kk1,subsp_dim)
       Distributed Y1b(b,kk1,subsp_dim)
+      Distributed Y1a_TRUNCT(a,kk1,subsp_dim)
+      Distributed Y1b_TRUNCT(b,kk1,subsp_dim)
       Distributed HY1a(a,kk1,subsp_dim)
       Distributed HY1b(b,kk1,subsp_dim)
       Distributed Y1a_picked(a,kk1)
@@ -246,6 +256,11 @@
       Served Y2a_bb(a,kk1,b,j,subsp_dim)
       Served Y2b_aa(b,kk1,a,i,subsp_dim)
 
+      Served Y2a_aa_TRUNCT(a,kk1,a1,i,subsp_dim)
+      Served Y2b_bb_TRUNCT(b,kk1,b1,j,subsp_dim)
+      Served Y2a_bb_TRUNCT(a,kk1,b,j,subsp_dim)
+      Served Y2b_aa_TRUNCT(b,kk1,a,i,subsp_dim)
+
       Served HY2a_aa(a,kk1,a1,i,subsp_dim)
       Served HY2b_bb(b,kk1,b1,j,subsp_dim)
       Served HY2a_bb(a,kk1,b,j,subsp_dim)
@@ -265,6 +280,11 @@
       Served R2a_bb_HIST(a,kk1,b,j,SUBSP_DIM)
       Served R2b_bb_HIST(b,kk1,b1,j1,SUBSP_DIM)
       Served R2b_aa_HIST(b,kk1,a,i,SUBSP_DIM)
+
+      Served R2a_aa_VECS(a,kk1,a1,i1,MROOTS)
+      Served R2a_bb_VECS(a,kk1,b,j,MROOTS)
+      Served R2b_bb_VECS(b,kk1,b1,j1,MROOTS)
+      Served R2b_aa_VECS(b,kk1,a,i,MROOTS)
 
       Served HR2a_aa_HIST(a,kk1,a1,i1,SUBSP_DIM)
       Served HR2a_bb_HIST(a,kk1,b,j,SUBSP_DIM)
@@ -293,6 +313,7 @@
       Static A_MATRIX(mindex50,nindex50)
       Static A_DIAGS(MINDEX50)
       Static DVECTORS(mindex50,nindex50)
+      Static PSEUDO_ROOTS(NROOTS,kk1)
       Static OVERLAP_R(Nindex50)
       Static ETEMP(NINDEX50,MINDEX50)
       Static EOM_EAS(MROOTS,KK1)
@@ -491,12 +512,39 @@
       Scalar EXACT_HY
       Scalar E_OLD
       Scalar EDIFF
+      Scalar NINETEEN
+      Scalar TWELVE
+      Scalar THREE
+      Scalar TEN
+      Scalar ELV
+      Scalar TWL
+      Scalar NREDUCE
+      Scalar NFULL
+      Scalar THRTEN
+      Scalar TRNC_COUNT
+      Scalar MAX_OVLP
+      Scalar MIN_ENEG
+      Scalar CURRENT
+      Scalar MONE
+      Scalar LOCK
+      Scalar LOCK_THRES
+      Scalar IMAX_KEEP
+      Scalar SBSP_COUNT 
+      Scalar FORT
+      Scalar FIFT
+      Scalar FIRST_VEC
+      Scalar PREVS_VEC
+      Scalar FOLLOW
+      Scalar LEFT
+      Scalar RIGHT 
   
       PROC READ_DATA
 #     --------------
 #
       create t1a
       create t1b
+      create l1a
+      create l1b
       create Uaa
       create Ubb
       create Uii
@@ -520,51 +568,57 @@
       execute list_to_blocks                Vaabj
       execute list_to_blocks                Vaajj
       execute list_to_blocks                Vbbii
-#
+
       execute list_to_blocks                t1a
       execute list_to_blocks                t1b
       execute list_to_blocks                T2aa
       execute list_to_blocks                T2ab
       execute list_to_blocks                T2bb
-#
+
+      execute list_to_blocks                l1a
+      execute list_to_blocks                l1b
+      execute list_to_blocks                L2aa
+      execute list_to_blocks                L2ab
+      execute list_to_blocks                L2bb
+
       execute list_to_blocks                Uaa
       execute list_to_blocks                Ubb
       execute list_to_blocks                Uii
       execute list_to_blocks                Ujj
       execute list_to_blocks                Uia
       execute list_to_blocks                Ujb
-#
+
       execute list_to_blocks                Wiiii
       execute list_to_blocks                Wjjjj
       execute list_to_blocks                Wiijj
-#
+
       execute list_to_blocks                Waiaa # HBAR_AIBC_aaaa
       execute list_to_blocks                Wbjbb # HBAR_AIBC_bbbb
       execute list_to_blocks                Waibb # HBAR_AIBC_aabb
       execute list_to_blocks                Wbjaa # HBAR_AIBC_bbaa
-#
+
       execute list_to_blocks                Wiiia # HBAR_JKIA_aaaa
       execute list_to_blocks                Wjjjb # HBAR_JKIA_bbbb
       execute list_to_blocks                Wiijb # HBAR_JKIA_aabb
       execute list_to_blocks                Wjjia # HBAR_JKIA_bbaa
-#
-      #execute list_to_blocks                Wiaii # HBAR_IAJK_aaaa
-      #execute list_to_blocks                Wiajj # HBAR_IAJK_aabb
-      #execute list_to_blocks                Wjbii # HBAR_IAJK_bbaa
-      #execute list_to_blocks                Wjbjj # HBAR_IAJK_bbbb
-#
+
+      execute list_to_blocks                Wiiai # HBAR_IAJK_aaaa
+      execute list_to_blocks                Wiibj # HBAR_IAJK_aabb
+      execute list_to_blocks                Wjjai # HBAR_IAJK_bbaa
+      execute list_to_blocks                Wjjbj # HBAR_IAJK_bbbb
+
       execute list_to_blocks                Wiaai # HBAR_AJIB_aaaa
       execute list_to_blocks                Wjbbj # HBAR_AJIB_bbbb
       execute list_to_blocks                Wiabj # HBAR_AJIB_aabb
       execute list_to_blocks                Wjbai # HBAR_AJIB_BBAA
       execute list_to_blocks                Wiibb # HBAR_AJIB_iibb
       execute list_to_blocks                Wjjaa # HBAR_AJIB_jjaa
-#
+
       execute list_to_blocks                Waaai # HBAR_ABCI_aaaa
       execute list_to_blocks                Wbbbj # HBAR_ABCI_bbbb
       execute list_to_blocks                Waabj # HBAR_ABCI_aabb
       execute list_to_blocks                Wbbai # HBAR_ABCI_bbaa
-#
+
       execute read_list_to_blocks
       execute server_barrier
 #
@@ -576,6 +630,8 @@
 
       CREATE R1A
       CREATE R1B
+      CREATE R1A_VECS
+      CREATE R1B_VECS
       CREATE HR1A
       CREATE HR1B
       CREATE R1A_GUESS
@@ -596,6 +652,8 @@
       CREATE HR2b_aa
       CREATE Y1a
       CREATE Y1b
+      CREATE Y1a_TRUNCT
+      CREATE Y1b_TRUNCT
       CREATE HY1a
       CREATE HY1b
       CREATE Y1a_PICKED
@@ -640,31 +698,31 @@
 #
 #  The Initial guess is form by fully solving the eigenvalue problem
 #   Hbar(i,k)R(k) =ER(i,p) (p=1,..n; n<= no. of occupied)
-#
+
       DO a
-         DO a1
-            EA_INIT_HAA(a,a1) = 0.0
-         ENDDO a1
+      DO a1
+         EA_INIT_HAA(a,a1) = 0.0
+      ENDDO a1
       ENDDO a
 
       DO b
-         DO b1
-            EA_INIT_HBB(b,b1) = 0.0
-         ENDDO b1
+      DO b1
+         EA_INIT_HBB(b,b1) = 0.0
+      ENDDO b1
       ENDDO b
 
       DO Ndim
-         DO a
-            VEC_AA(a,Ndim) = 0.0
-         ENDDO a
+      DO a
+         VEC_AA(a,Ndim) = 0.0
+      ENDDO a
       ENDDO Ndim
 
       DO Ndim
-         Do b
-            VEC_BB(b,Ndim) = 0.0
-         ENDDO b
+      Do b
+         VEC_BB(b,Ndim) = 0.0
+      ENDDO b
       ENDDO Ndim
-
+#
       DO a
          DO a1
             GET Uaa(a,a1)
@@ -698,8 +756,8 @@
 #      endif
 #end_debug
 
-      EXECUTE FORM_GUESS EA_INIT_HAA  VEC_AA
-      EXECUTE FORM_GUESS EA_INIT_HBB  VEC_BB
+      EXECUTE FORM_GUESS_R EA_INIT_HAA  VEC_AA
+      EXECUTE FORM_GUESS_R EA_INIT_HBB  VEC_BB
 
       EXECUTE SIP_BARRIER
 #
@@ -802,17 +860,17 @@
       ENDPARDO a, kk1
 
 #bgn_debug
-#      execute sip_barrier
-#      tmpa = 0.0
-#      do kk1
-#      do a
-#         get R1a(a,kk1)
-#         Tax(a,kk1) = R1a(a,kk1)
-#         tmp  = Tax(a,kk1) * Tax(a,kk1)
-#         tmpa += tmp
-#      enddo a
-#      enddo kk1
-#      execute print_scalar tmpa
+      execute sip_barrier
+      tmpa = 0.0
+      do kk1
+      do a
+         get R1a_intmd(a,kk1)
+         Tax(a,kk1) = R1a_intmd(a,kk1)
+         tmp  = Tax(a,kk1) * Tax(a,kk1)
+         tmpa += tmp
+      enddo a
+      enddo kk1
+      execute print_scalar tmpa
 #end_debug
 
       PARDO b, kk1
@@ -1098,10 +1156,24 @@
             DO kk1
                GET          Ubb(b,b1)
                GET          R1b(b1,kk1)
-               tbx(b,kk1) = Ubb(b,b1)*R1b(b1,kk1)
+              tbx(b,kk1) = Ubb(b,b1)*R1b(b1,kk1)
                PUT HR1b(b,kk1) += tbx(b,kk1)
             ENDDO kk1
       ENDPARDO b, b1
+#bgn_debug
+#      execute sip_barrier
+#      tmpa=0.0
+#      suma=0.0
+#      pardo b,kk1
+#         get hr1b(b,kk1)
+#         tmp =  hr1b(b,kk1) *  hr1b(b,kk1)
+#         tmpa += tmp
+#      endpardo b,kk1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#end_debug
+
 #
       PARDO b, j, b1
             DO kk1
@@ -1126,7 +1198,7 @@
                REQUEST            Wbjbb(b,b1,j,b2) b
                GET                R2b_bb(b1,kk1,b2,j)
                tbx(b,kk1)       = Wbjbb(b,b1,j,b2)*R2b_bb(b1,kk1,b2,j)
-               tbx(b,kk1)      *= 0.5
+              tbx(b,kk1)      *= 0.5
                PUT HR1b(b,kk1) += tbx(b,kk1)
             ENDDO kk1
       ENDPARDO b, b1, j, b2
@@ -1136,7 +1208,7 @@
                REQUEST            Wbjaa(b,b1,i,a) b
                GET                R2b_aa(b1,kk1,a,i)
                tbx(b,kk1)       = Wbjaa(b,b1,i,a)*R2b_aa(b1,kk1,a,i)
-               PUT HR1b(b,kk1) += tbx(b,kk1)
+              PUT HR1b(b,kk1) += tbx(b,kk1)
             ENDDO kk1
       ENDPARDO b, b1, i, a
 #
@@ -2804,7 +2876,8 @@
      DO MINDEX50
         DO NINDEX50
            TS(MINDEX50,NINDEX50) = 0.0
-           A_MATRIX(MINDEX50,NINDEX50)   = 0.0
+           A_MATRIX(MINDEX50,NINDEX50) = 0.0
+           DVECTORS(MINDEX50,NINDEX50) = 0.0
            PUT ORTHO_COEF(MINDEX50,NINDEX50) =  TS(MINDEX50,NINDEX50)
         ENDDO NINDEX50
      ENDDO MINDEX50
@@ -2882,81 +2955,49 @@
          IF NCOUNT == ITER_COUNT
 
             DO kk1
-               DO a
-                  GET R1A(a,kk1)
-                  Tax(a,kk1) = R1A(a,kk1)
-                  PUT R1A_HIST(a,Kk1,NINDEX50) = Tax(a,kk1)
-               ENDDO a
+            DO a
+               GET R1A(a,kk1)
+               Tax(a,kk1) = R1A(a,kk1)
+               PUT R1A_HIST(a,Kk1,NINDEX50) = Tax(a,kk1)
+            ENDDO a
             ENDDO kk1
 
             DO kk1
-               DO b
-                  GET R1B(b,kk1)
-                  Tbx(b,kk1) = R1B(b,kk1)
-                  PUT R1B_HIST(b,Kk1,NINDEX50) = Tbx(b,kk1)
-               ENDDO b
+            DO b
+               GET R1B(b,kk1)
+               Tbx(b,kk1) = R1B(b,kk1)
+               PUT R1B_HIST(b,Kk1,NINDEX50) = Tbx(b,kk1)
+            ENDDO b
             ENDDO kk1
-        ENDIF
 
+            PARDO a, a1, kk1, i
+                GET R2a_aa(a,kk1,a1,i)
+                Taxaa(a,kk1,a1,i) =  R2a_aa(a,kk1,a1,i)
+                PREPARE R2a_aa_HIST(a,kk1,a1,i,NINDEX50) = Taxaa(a,kk1,a1,i) 
+            ENDPARDO a, a1, kk1, i
+
+            PARDO b, b1, kk1, j
+                GET R2b_bb(b,kk1,b1,j)
+                Tbxbb(b,kk1,b1,j) = R2b_bb(b,kk1,b1,j)
+                PREPARE R2b_bb_HIST(b,kk1,b1,j,NINDEX50) = Tbxbb(b,kk1,b1,j)
+            ENDPARDO b, b1, kk1, j
+
+            PARDO a, b, kk1, j
+                GET R2a_bb(a,kk1,b,j)
+                Taxbb(a,kk1,b,j) = R2a_bb(a,kk1,b,j)
+                PREPARE R2a_bb_HIST(a,kk1,b,j,NINDEX50) = Taxbb(a,kk1,b,j)
+            ENDPARDO a, b, kk1, j
+
+            PARDO b, a, kk1, i
+                GET R2b_aa(b,kk1,a,i)
+                Tbxaa(b,kk1,a,i) = R2b_aa(b,kk1,a,i)
+               PREPARE R2b_aa_HIST(b,kk1,a,i,NINDEX50) = Tbxaa(b,kk1,a,i) 
+            ENDPARDO   b, a, kk1, i
+
+         ENDIF
       ENDDO NINDEX50
-
-      PARDO a, a1, kk1, i
-            GET R2a_aa(a,kk1,a1,i)
-            Taxaa(a,kk1,a1,i) =  R2a_aa(a,kk1,a1,i)
-
-            NCOUNT = 0.0
-            DO NINDEX50
-               NCOUNT += 1.0
-               IF NCOUNT == ITER_COUNT
-                  PREPARE R2a_aa_HIST(a,kk1,a1,i,NINDEX50) = Taxaa(a,kk1,a1,i) 
-               ENDIF
-            ENDDO NINDEX50
-
-      ENDPARDO a, a1, kk1, i
-
-     PARDO b, b1, kk1, j
-            GET R2b_bb(b,kk1,b1,j)
-            Tbxbb(b,kk1,b1,j) = R2b_bb(b,kk1,b1,j)
-
-            NCOUNT = 0.0
-            DO NINDEX50
-               NCOUNT += 1.0
-               IF NCOUNT == ITER_COUNT
-                  PREPARE R2b_bb_HIST(b,kk1,b1,j,NINDEX50) = Tbxbb(b,kk1,b1,j)
-               ENDIF
-            ENDDO NINDEX50
-
-      ENDPARDO b, b1, kk1, j
-
-      PARDO a, b, kk1, j
-            GET R2a_bb(a,kk1,b,j)
-            Taxbb(a,kk1,b,j) = R2a_bb(a,kk1,b,j)
-
-            NCOUNT = 0.0
-            DO NINDEX50
-               NCOUNT += 1.0
-               IF NCOUNT == ITER_COUNT
-                  PREPARE R2a_bb_HIST(a,kk1,b,j,NINDEX50) = Taxbb(a,kk1,b,j)
-               ENDIF
-            ENDDO NINDEX50
-
-      ENDPARDO a, b, kk1, j
-
-      PARDO b, a, kk1, i
-            GET R2b_aa(b,kk1,a,i)
-            Tbxaa(b,kk1,a,i) = R2b_aa(b,kk1,a,i)
-
-            NCOUNT = 0.0
-            DO NINDEX50
-               NCOUNT += 1.0
-               IF NCOUNT == ITER_COUNT
-                  PREPARE R2b_aa_HIST(b,kk1,a,i,NINDEX50) = Tbxaa(b,kk1,a,i) 
-               ENDIF
-            ENDDO NINDEX50
-
-      ENDPARDO   b, a, kk1, i
-
       EXECUTE SERVER_BARRIER
+
 #bgn_debug
 #      suma=0.0
 #      tmpa=0.0
@@ -2992,80 +3033,46 @@
          IF NCOUNT == ITER_COUNT
 
             DO kk1
-               DO a
-                  GET HR1A(a,kk1)
-                  Tax(a,kk1) = HR1A(a,kk1)
-                  PUT HR1A_HIST(a,Kk1,NINDEX50) = Tax(a,kk1)
-               ENDDO a
+            DO a
+               GET HR1A(a,kk1)
+               Tax(a,kk1) = HR1A(a,kk1)
+               PUT HR1A_HIST(a,Kk1,NINDEX50) = Tax(a,kk1)
+            ENDDO a
             ENDDO kk1
 
             DO kk1
-               DO b
-                  GET HR1B(b,kk1)
-                  Tbx(b,kk1) = HR1B(b,kk1)
-                  PUT HR1B_HIST(b,Kk1,NINDEX50) = Tbx(b,kk1)
-               ENDDO b
+            DO b
+               GET HR1B(b,kk1)
+               Tbx(b,kk1) = HR1B(b,kk1)
+               PUT HR1B_HIST(b,Kk1,NINDEX50) = Tbx(b,kk1)
+            ENDDO b
             ENDDO kk1
-        ENDIF
 
+            PARDO a, a1, kk1, i
+                GET HR2a_aa(a,kk1,a1,i)
+                Taxaa(a,kk1,a1,i) =  HR2a_aa(a,kk1,a1,i)
+                PREPARE HR2a_aa_HIST(a,kk1,a1,i,NINDEX50) = Taxaa(a,kk1,a1,i) 
+            ENDPARDO a, a1, kk1, i
+
+            PARDO b, b1, kk1, j
+                GET HR2b_bb(b,kk1,b1,j)
+                Tbxbb(b,kk1,b1,j) = HR2b_bb(b,kk1,b1,j)
+                PREPARE HR2b_bb_HIST(b,kk1,b1,j,NINDEX50) = Tbxbb(b,kk1,b1,j)
+            ENDPARDO b, b1, kk1, j
+
+            PARDO a, b, kk1, j
+                GET HR2a_bb(a,kk1,b,j)
+                Taxbb(a,kk1,b,j) = HR2a_bb(a,kk1,b,j)
+                PREPARE HR2a_bb_HIST(a,kk1,b,j,NINDEX50) = Taxbb(a,kk1,b,j)
+            ENDPARDO a, b, kk1, j
+
+            PARDO b, a, kk1, i
+                GET HR2b_aa(b,kk1,a,i)
+                Tbxaa(b,kk1,a,i) = HR2b_aa(b,kk1,a,i)
+                PREPARE HR2b_aa_HIST(b,kk1,a,i,NINDEX50) = Tbxaa(b,kk1,a,i) 
+            ENDPARDO   b, a, kk1, i
+         ENDIF
       ENDDO NINDEX50
-
-      PARDO a, a1, kk1, i
-            GET HR2a_aa(a,kk1,a1,i)
-            Taxaa(a,kk1,a1,i) =  HR2a_aa(a,kk1,a1,i)
-
-            NCOUNT = 0.0
-            DO NINDEX50
-               NCOUNT += 1.0
-               IF NCOUNT == ITER_COUNT
-                  PREPARE HR2a_aa_HIST(a,kk1,a1,i,NINDEX50) = Taxaa(a,kk1,a1,i) 
-               ENDIF
-            ENDDO NINDEX50
-
-      ENDPARDO a, a1, kk1, i
-
-     PARDO b, b1, kk1, j
-            GET HR2b_bb(b,kk1,b1,j)
-            Tbxbb(b,kk1,b1,j) = HR2b_bb(b,kk1,b1,j)
-
-            NCOUNT = 0.0
-            DO NINDEX50
-               NCOUNT += 1.0
-               IF NCOUNT == ITER_COUNT
-                  PREPARE HR2b_bb_HIST(b,kk1,b1,j,NINDEX50) = Tbxbb(b,kk1,b1,j)
-               ENDIF
-            ENDDO NINDEX50
-
-      ENDPARDO b, b1, kk1, j
-
-      PARDO a, b, kk1, j
-            GET HR2a_bb(a,kk1,b,j)
-            Taxbb(a,kk1,b,j) = HR2a_bb(a,kk1,b,j)
-
-            NCOUNT = 0.0
-            DO NINDEX50
-               NCOUNT += 1.0
-               IF NCOUNT == ITER_COUNT
-                  PREPARE HR2a_bb_HIST(a,kk1,b,j,NINDEX50) = Taxbb(a,kk1,b,j)
-               ENDIF
-            ENDDO NINDEX50
-
-      ENDPARDO a, b, kk1, j
-
-      PARDO b, a, kk1, i
-            GET HR2b_aa(b,kk1,a,i)
-            Tbxaa(b,kk1,a,i) = HR2b_aa(b,kk1,a,i)
-
-            NCOUNT = 0.0
-            DO NINDEX50
-               NCOUNT += 1.0
-               IF NCOUNT == ITER_COUNT
-                  PREPARE HR2b_aa_HIST(b,kk1,a,i,NINDEX50) = Tbxaa(b,kk1,a,i) 
-               ENDIF
-            ENDDO NINDEX50
-
-      ENDPARDO   b, a, kk1, i
-
       EXECUTE SERVER_BARRIER
 #bgn_debug
 #      suma=0.0
@@ -3725,8 +3732,9 @@
      OMEGA0   = A_VALUE
      OMEGA0M  = A_VALUE
      OMEGA0M *= -1.0
+     E_OLD    = OMEGA0 
 #bgn_debug
-     execute print_scalar OMEGA0M
+#     execute print_scalar OMEGA0M
 #end_debug
 
 # First the residual vector for iteration 1
@@ -4210,13 +4218,13 @@
      SUM_R += SUMAA_B
      SUM_R += SUMBB_A
 #bgn_debug
-     execute print_scalar SUM_R
+#     execute print_scalar SUM_R
 #end_denug
      EXPONENT = 0.5
      EXECUTE NORM_FAC SUM_R EXPONENT
      INV_SQRT_NORM_R = SUM_R
 #bgn_debug
-     execute print_scalar SUM_R
+#     execute print_scalar SUM_R
 #end_debug
 
      PARDO a, kk1
@@ -4788,23 +4796,34 @@
      ENDPROC FORM_NEW_HBAR_Y_VECS
 #    ---------------------
 
-     PROC SELECT_VECS
-#    ----------------
+     PROC SELECT_VECS_MAX_OVLP
+#    -------------------------
 
      NCOUNT = 0.0
+     IF FIRST_VEC == ONE
+        FOLLOW = ONE
+     ENDIF
+     IF PREVS_VEC == ONE
+        FOLLOW = ITER_COUNT
+        FOLLOW -= ONE
+     ENDIF
+#bgn_debug
+#     execute print_scalar follow 
+#end_debug 
 
      DO NINDEX50
         NCOUNT += 1.0
-        IF NCOUNT  > 1.0
+
+        IF NCOUNT != FOLLOW
            EXIT
         ENDIF
 
-           MCOUNT = 0.0
-           DO MINDEX50
-              MCOUNT += 1.0
-              IF MCOUNT >  ITER_COUNT
-                 EXIT
-              ENDIF
+         MCOUNT = 0.0
+         DO MINDEX50
+            MCOUNT += 1.0
+            IF MCOUNT >  ITER_COUNT
+               EXIT
+            ENDIF
 
                  SUMA   = 0.0
                  SUMB   = 0.0
@@ -4861,14 +4880,61 @@
      ENDDO NINDEX50
 
      EXECUTE SIP_BARRIER
+     IF LOCK != ONE
+        EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
+        IMAX_KEEP = IMAX
+     ELSE
+        EXECUTE SET_ACES3_VARS OMEGA THRTEN
+        EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+        EXECUTE SET_ACES3_VARS IMAX MONE
+        IMAX_KEEP = IMAX
+     ENDIF
 
-     EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
 #bgn_debug
 #     execute print_scalar imax
 #end_debug
 
-     ENDPROC SELECT_VECS
-#    -------------------
+     ENDPROC SELECT_VECS_MAX_OVLP
+#    ---------------------------
+
+     PROC SELECT_VECS_MIN_ENEG
+#    -------------------------
+
+     IF ROOT_COUNT == ONE
+
+# Always pick the closest eigenvalue to the starting eigenvalue 
+
+        EXECUTE SET_ACES3_VARS OMEGA THRTEN
+        EXECUTE FIND_NEAR A_DIAGS A_DIAGS 
+        EXECUTE SET_ACES3_VARS IMAX MONE
+        IMAX_KEEP = IMAX 
+        IF IMAX_KEEP ==  ZERO
+           IMAX = ONE
+        ENDIF 
+
+      ELSE
+
+# Find the root from the subspace that is not too close to the
+# roots that have already been found.
+
+        IF LOCK != ONE
+           EXECUTE FIND_MIN_ENEG A_DIAGS PSEUDO_ROOTS
+           EXECUTE SET_ACES3_VARS IMAX MONE
+           IMAX_KEEP = IMAX
+        ELSE
+           EXECUTE SET_ACES3_VARS OMEGA THRTEN
+           EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+           EXECUTE SET_ACES3_VARS IMAX MONE
+           IMAX_KEEP = IMAX 
+        ENDIF 
+      ENDIF
+
+#bgn_debug
+#     execute print_scalar imax
+#end_debug
+
+     ENDPROC SELECT_VECS_MIN_ENEG
+#    ----------------------------
 
      PROC FORM_SELECTED_Y
 #    --------------------
@@ -5341,7 +5407,7 @@
       OMEGAM  = OMEGA
       OMEGAM *= -1.0
 #bgn_debug
-     execute print_scalar OMEGAM
+#     execute print_scalar OMEGAM
 #end_debug
 
      DO kk1
@@ -5586,6 +5652,9 @@
      A_VALUE += HC_BBA
 
      EXECUTE SIP_BARRIER
+#bgn_debug
+#     execute print_scalar A_value 
+#end_debug
 
      HALF = 0.5
      EXECUTE SQUARE_ROOT A_VALUE HALF
@@ -6547,31 +6616,783 @@
 
      ENDPROC C_CHECK
 #    ---------------
-#
+
+   PROC INIT_TO_ZERO
+#    -----------------
+
+     NCOUNT = ZERO
+     DO NINDEX50
+
+     NCOUNT +=1.0
+
+     IF NCOUNT <= NREDUCE
+
+     PARDO a
+        DO kk1
+           tax(a,kk1)      = 0.0
+           PUT Y1a_TRUNCT(a,kk1,NINDEX50)  = tax(a,kk1)
+        ENDDO kk1
+     ENDPARDO a
+
+     PARDO b
+        DO kk1
+           tbx(b,kk1)      = 0.0
+           PUT Y1b_TRUNCT(b,kk1,NINDEX50)  = tbx(b,kk1)
+       ENDDO kk1
+     ENDPARDO b
+
+     PARDO i, a, a1
+           DO kk1
+              taxaa(a,kk1,a1,i)       = 0.0
+              PREPARE Y2a_aa_TRUNCT(a,kk1,a1,i,NINDEX50)  = taxaa(a,kk1,a1,i)
+           ENDDO kk1
+     ENDPARDO i, a, a1
+
+     PARDO b, b1, j
+           DO kk1
+              tbxbb(b,kk1,b1,j)       = 0.0
+              PREPARE Y2b_bb_TRUNCT(b,kk1,b1,j,NINDEX50)  = tbxbb(b,kk1,b1,j)
+           ENDDO kk1
+     ENDPARDO b, b1, j
+
+     PARDO  a, b, j
+           DO kk1
+              taxbb(a,kk1,b,j)       = 0.0
+              PREPARE Y2a_bb_TRUNCT(a,kk1,b,j,NINDEX50)  = taxbb(a,kk1,b,j)
+           ENDDO kk1
+     ENDPARDO a, b, j
+
+     PARDO b, a, i
+           DO kk1
+              tbxaa(b,kk1,a,i)       = 0.0
+              PREPARE Y2b_aa_TRUNCT(b,kk1,a,i,NINDEX50)  = tbxaa(b,kk1,a,i)
+           ENDDO kk1
+     ENDPARDO b, a, i
+     ENDIF 
+
+     ENDDO NINDEX50
+
+     EXECUTE  SERVER_BARRIER
+
+     ENDPROC INIT_TO_ZERO
+#    -------------------
+
+     PROC TRANSFORM_C
+#    ----------------
+   PARDO a, kk1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE 
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET R1A_HIST(a,kk1,MINDEX50)
+                       Taxs(a,kk1,MINDEX50)  = R1A_HIST(a,kk1,MINDEX50)
+                       T1axs(a,kk1,NINDEX50) = Taxs(a,kk1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1A_TRUNCT(a,kk1,NINDEX50) += T1axs(a,kk1,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, kk1
+     PARDO b, kk1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE 
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       GET R1B_HIST(b,kk1,MINDEX50)
+                       Tbxs(b,kk1,MINDEX50)  = R1B_HIST(b,kk1,MINDEX50)
+                       T1bxs(b,kk1,NINDEX50) = Tbxs(b,kk1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1B_TRUNCT(b,kk1,NINDEX50) += T1bxs(b,kk1,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO  b, kk1
+
+     PARDO a, a1, kk1, i
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST R2a_aa_HIST(a,kk1,a1,i,MINDEX50)  i
+
+                       Taxaas(a,kk1,a1,i,MINDEX50) = R2a_aa_HIST(a,kk1,a1,i,MINDEX50)
+                       T1axaas(a,kk1,a1,i,NINDEX50) = Taxaas(a,kk1,a1,i,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE Y2a_aa_TRUNCT(a,kk1,a1,i,NINDEX50) += T1axaas(a,kk1,a1,i,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, a1, kk1, i
+
+     PARDO b, b1, kk1, j
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                   MCOUNT = 0.0
+                   DO MINDEX50
+                      MCOUNT += 1.0
+
+                      IF MCOUNT > ITER_COUNT
+                         EXIT
+                      ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST R2b_bb_HIST(b,kk1,b1,j,MINDEX50)  j
+
+                       Tbxbbs(b,kk1,b1,j,MINDEX50) = R2b_bb_HIST(b,kk1,b1,j,MINDEX50)
+                       T1bxbbs(b,kk1,b1,j,NINDEX50) = Tbxbbs(b,kk1,b1,j,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE Y2b_bb_TRUNCT(b,kk1,b1,j,NINDEX50) += T1bxbbs(b,kk1,b1,j,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO b, b1, kk1, j
+
+     PARDO a, b, kk1, j
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST R2a_bb_HIST(a,kk1,b,j,MINDEX50) j
+
+                       Taxbbs(a,kk1,b,j,MINDEX50) = R2a_bb_HIST(a,kk1,b,j,MINDEX50)
+                       T1axbbs(a,kk1,b,j,NINDEX50) = Taxbbs(a,kk1,b,j,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE Y2a_bb_TRUNCT(a,kk1,b,j,NINDEX50) += T1axbbs(a,kk1,b,j,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b, kk1, j
+     PARDO b, a, kk1, i
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE 
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST R2b_aa_HIST(b,kk1,a,i,MINDEX50) i
+
+                       Tbxaas(b,kk1,a,i,MINDEX50) = R2b_aa_HIST(b,kk1,a,i,MINDEX50)
+                       T1bxaas(b,kk1,a,i,NINDEX50) = Tbxaas(b,kk1,a,i,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE Y2b_aa_TRUNCT(b,kk1,a,i,NINDEX50) += T1bxaas(b,kk1,a,i,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO b, a, kk1, i
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC TRANSFORM_C
+#    -------------------
+
+     PROC TRANSFORM_HC
+#    -----------------
+
+     PARDO a, kk1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET HR1A_HIST(a,kk1,MINDEX50)
+                       Taxs(a,kk1,MINDEX50)  = HR1A_HIST(a,kk1,MINDEX50)
+                       T1axs(a,kk1,NINDEX50) = Taxs(a,kk1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1A_TRUNCT(a,kk1,NINDEX50) += T1axs(a,kk1,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, kk1
+
+     PARDO b, kk1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       GET HR1B_HIST(b,kk1,MINDEX50)
+                       Tbxs(b,kk1,MINDEX50)  = HR1B_HIST(b,kk1,MINDEX50)
+                       T1bxs(b,kk1,NINDEX50) = Tbxs(b,kk1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1B_TRUNCT(b,kk1,NINDEX50) += T1bxs(b,kk1,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO  b, kk1
+
+     PARDO a, a1, kk1, i
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST HR2a_aa_HIST(a,kk1,a1,i,MINDEX50)  i
+
+                       Taxaas(a,kk1,a1,i,MINDEX50) = HR2a_aa_HIST(a,kk1,a1,i,MINDEX50)
+                       T1axaas(a,kk1,a1,i,NINDEX50) = Taxaas(a,kk1,a1,i,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE Y2a_aa_TRUNCT(a,kk1,a1,i,NINDEX50) += T1axaas(a,kk1,a1,i,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, a1, kk1, i
+
+     PARDO b, b1, kk1, j
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                   MCOUNT = 0.0
+                   DO MINDEX50
+                      MCOUNT += 1.0
+
+                      IF MCOUNT > ITER_COUNT
+                         EXIT
+                      ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST HR2b_bb_HIST(b,kk1,b1,j,MINDEX50)  j
+
+                       Tbxbbs(b,kk1,b1,j,MINDEX50) = HR2b_bb_HIST(b,kk1,b1,j,MINDEX50)
+                       T1bxbbs(b,kk1,b1,j,NINDEX50) = Tbxbbs(b,kk1,b1,j,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE Y2b_bb_TRUNCT(b,kk1,b1,j,NINDEX50) += T1bxbbs(b,kk1,b1,j,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO b, b1, kk1, j
+
+     PARDO a, b, kk1, j
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE 
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST HR2a_bb_HIST(a,kk1,b,j,MINDEX50) j
+
+                       Taxbbs(a,kk1,b,j,MINDEX50) = HR2a_bb_HIST(a,kk1,b,j,MINDEX50)
+                       T1axbbs(a,kk1,b,j,NINDEX50) = Taxbbs(a,kk1,b,j,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE Y2a_bb_TRUNCT(a,kk1,b,j,NINDEX50) += T1axbbs(a,kk1,b,j,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b, kk1, j
+
+     PARDO b, a, kk1, i
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE 
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST HR2b_aa_HIST(b,kk1,a,i,MINDEX50) i
+
+                       Tbxaas(b,kk1,a,i,MINDEX50) = HR2b_aa_HIST(b,kk1,a,i,MINDEX50)
+                       T1bxaas(b,kk1,a,i,NINDEX50) = Tbxaas(b,kk1,a,i,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE Y2b_aa_TRUNCT(b,kk1,a,i,NINDEX50) += T1bxaas(b,kk1,a,i,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO b, a, kk1, i
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC TRANSFORM_HC
+#    --------------------
+
+     PROC COPY_NORM_C
+#    ----------------
+
+     NCOUNT = 0.0
+     DO NINDEX50
+     NCOUNT += 1.0
+
+     IF NCOUNT <= NREDUCE 
+     SUMA    = 0.0
+     SUMB    = 0.0
+     SUMAA_A = 0.0
+     SUMBB_B = 0.0
+     SUMAA_B = 0.0
+     SUMBB_A = 0.0
+     HC_A    = 0.0
+     HC_B    = 0.0
+     HC_AAA  = 0.0
+     HC_BBB  = 0.0
+     HC_AAB  = 0.0
+     HC_BBA  = 0.0
+
+     PARDO a, kk1
+            GET  Y1a_TRUNCT(a,kk1,NINDEX50)
+            Takk(a,kk1) = Y1a_TRUNCT(a,kk1,NINDEX50)
+            TMP   = Takk(a,kk1) * Takk(a,kk1)
+            HC_A += TMP
+      ENDPARDO a, kk1
+
+      PARDO b, kk1
+            GET  Y1b_TRUNCT(b,kk1,NINDEX50)
+            Tbkk(b,kk1) =  Y1b_TRUNCT(b,kk1,NINDEX50)
+            TMP   = Tbkk(b,kk1) * Tbkk(b,kk1)
+            HC_B += TMP
+      ENDPARDO b, kk1
+
+      PARDO a, a1, kk1, i
+              REQUEST Y2a_aa_TRUNCT(a,kk1,a1,i,NINDEX50) i
+              Taxaa(a,kk1,a1,i) = Y2a_aa_TRUNCT(a,kk1,a1,i,NINDEX50)
+              TMP   = Taxaa(a,kk1,a1,i) * Taxaa(a,kk1,a1,i)
+              HC_AAA += TMP
+      ENDPARDO a, a1, kk1, i
+
+      PARDO b, b1, kk1, j
+              REQUEST Y2b_bb_TRUNCT(b,kk1,b1,j,NINDEX50) j
+              Tbxbb(b,kk1,b1,j) = Y2b_bb_TRUNCT(b,kk1,b1,j,NINDEX50)
+              TMP   = Tbxbb(b,kk1,b1,j) * Tbxbb(b,kk1,b1,j)
+              HC_BBB +=  TMP
+     ENDPARDO b, b1, kk1, j
+
+     PARDO a, b, kk1, j
+              REQUEST Y2a_bb_TRUNCT(a,kk1,b,j,NINDEX50) j
+              Taxbb(a,kk1,b,j) = Y2a_bb_TRUNCT(a,kk1,b,j,NINDEX50)
+              TMP   = Taxbb(a,kk1,b,j) * Taxbb(a,kk1,b,j)
+              HC_AAB +=  TMP
+     ENDPARDO a, b, kk1, j
+
+     PARDO b, kk1, a, i
+
+              REQUEST Y2b_aa_TRUNCT(b,kk1,a,i,NINDEX50) i
+              Tbxaa(b,kk1,a,i) = Y2b_aa_TRUNCT(b,kk1,a,i,NINDEX50)
+              TMP = Tbxaa(b,kk1,a,i) * Tbxaa(b,kk1,a,i)
+              HC_BBA +=  TMP
+     ENDPARDO b, kk1, a, i
+
+     EXECUTE SIP_BARRIER
+     COLLECTIVE  SUMA    += HC_A
+     COLLECTIVE  SUMB    += HC_B
+     COLLECTIVE  SUMAA_A += HC_AAA
+     COLLECTIVE  SUMBB_B += HC_BBB
+     COLLECTIVE  SUMAA_B += HC_AAB
+     COLLECTIVE  SUMBB_A += HC_BBA
+
+     SUM_R  = SUMA
+     SUM_R += SUMB
+     SUM_R += SUMAA_A
+     SUM_R += SUMBB_B
+     SUM_R += SUMAA_B
+     SUM_R += SUMBB_A
+
+     EXPONENT = 0.5
+     EXECUTE NORM_FAC SUM_R EXPONENT
+     INV_SQRT_NORM_ORTGC  = SUM_R
+     SQRT_OVERLAP         = EXPONENT
+
+     EXECUTE SIP_BARRIER
+
+     DO kk1
+        DO a
+           GET Y1a_TRUNCT(a,kk1,NINDEX50)
+           Takk(a,kk1)  = Y1a_TRUNCT(a,kk1,NINDEX50)
+           Takk(a,kk1) *= INV_SQRT_NORM_ORTGC
+           PUT R1a_HIST(a,kk1,NINDEX50) =  Takk(a,kk1)
+         ENDDO a
+     ENDDO kk1
+
+     DO kk1
+         DO b
+            GET Y1b_TRUNCT(b,kk1,NINDEX50)
+            Tbkk(b,kk1)  = Y1b_TRUNCT(b,kk1,NINDEX50)
+            Tbkk(b,kk1) *= INV_SQRT_NORM_ORTGC
+            PUT R1b_HIST(b,kk1,NINDEX50) =  Tbkk(b,kk1)
+         ENDDO b
+     ENDDO kk1
+
+    PARDO a, a1, kk1, i
+         REQUEST Y2a_aa_TRUNCT(a,kk1,a1,i,NINDEX50) i
+         Taxaa(a,kk1,a1,i)  = Y2a_aa_TRUNCT(a,kk1,a1,i,NINDEX50)
+         Taxaa(a,kk1,a1,i) *= INV_SQRT_NORM_ORTGC
+         PREPARE R2a_aa_HIST(a,kk1,a1,i,NINDEX50) = Taxaa(a,kk1,a1,i)
+     ENDPARDO a, a1, kk1, i
+
+     PARDO b, b1, kk1, j
+         REQUEST Y2b_bb_TRUNCT(b,kk1,b1,j,NINDEX50) j
+         Tbxbb(b,kk1,b1,j)  = Y2b_bb_TRUNCT(b,kk1,b1,j,NINDEX50)
+         Tbxbb(b,kk1,b1,j) *= INV_SQRT_NORM_ORTGC
+         PREPARE R2b_bb_HIST(b,kk1,b1,j,NINDEX50) = Tbxbb(b,kk1,b1,j)
+     ENDPARDO b, b1, kk1, j
+
+     PARDO a, b, kk1, j
+        REQUEST Y2a_bb_TRUNCT(a,kk1,b,j,NINDEX50) j
+        Taxbb(a,kk1,b,j)  =  Y2a_bb_TRUNCT(a,kk1,b,j,NINDEX50)
+        Taxbb(a,kk1,b,j) *= INV_SQRT_NORM_ORTGC
+        PREPARE R2a_bb_HIST(a,kk1,b,j,NINDEX50) = Taxbb(a,kk1,b,j)
+     ENDPARDO a, b, kk1, j
+
+     PARDO b, kk1, a, i
+        REQUEST Y2b_aa_TRUNCT(b,kk1,a,i,NINDEX50) i
+        Tbxaa(b,kk1,a,i)  = Y2b_aa_TRUNCT(b,kk1,a,i,NINDEX50)
+        Tbxaa(b,kk1,a,i) *= INV_SQRT_NORM_ORTGC
+        PREPARE R2b_aa_HIST(b,kk1,a,i,NINDEX50) = Tbxaa(b,kk1,a,i)
+     ENDPARDO b, kk1, a, i
+
+     ENDIF 
+     ENDDO NINDEX50
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC COPY_NORM_C
+#    -------------------
+
+     PROC COPY_HC
+#    ------------
+
+     NCOUNT = 0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT <= NREDUCE 
+
+        DO kk1
+           DO a
+              GET Y1a_TRUNCT(a,kk1,NINDEX50)
+              Takk(a,kk1)  = Y1a_TRUNCT(a,kk1,NINDEX50)
+              PUT HR1a_HIST(a,kk1,NINDEX50) =  Takk(a,kk1)
+            ENDDO a
+        ENDDO kk1
+
+        DO kk1
+            DO b
+               GET Y1b_TRUNCT(b,kk1,NINDEX50)
+               Tbkk(b,kk1)  = Y1b_TRUNCT(b,kk1,NINDEX50)
+               PUT HR1b_HIST(b,kk1,NINDEX50) =  Tbkk(b,kk1)
+            ENDDO b
+        ENDDO kk1
+
+        PARDO a, a1, kk1, i
+            REQUEST Y2a_aa_TRUNCT(a,kk1,a1,i,NINDEX50) i
+            Taxaa(a,kk1,a1,i)  = Y2a_aa_TRUNCT(a,kk1,a1,i,NINDEX50)
+            PREPARE HR2a_aa_HIST(a,kk1,a1,i,NINDEX50) = Taxaa(a,kk1,a1,i)
+        ENDPARDO a, a1, kk1, i
+
+        PARDO b, b1, kk1, j
+             REQUEST Y2b_bb_TRUNCT(b,kk1,b1,j,NINDEX50) j
+             Tbxbb(b,kk1,b1,j)  = Y2b_bb_TRUNCT(b,kk1,b1,j,NINDEX50)
+             PREPARE HR2b_bb_HIST(b,kk1,b1,j,NINDEX50) = Tbxbb(b,kk1,b1,j)
+         ENDPARDO b, b1, kk1, j
+
+         PARDO a, b, kk1, j
+            REQUEST Y2a_bb_TRUNCT(a,kk1,b,j,NINDEX50) j
+            Taxbb(a,kk1,b,j)  =  Y2a_bb_TRUNCT(a,kk1,b,j,NINDEX50)
+            PREPARE HR2a_bb_HIST(a,kk1,b,j,NINDEX50) = Taxbb(a,kk1,b,j)
+         ENDPARDO a, b, kk1, j
+
+         PARDO b, kk1, a, i
+             REQUEST Y2b_aa_TRUNCT(b,kk1,a,i,NINDEX50) i
+             Tbxaa(b,kk1,a,i)  = Y2b_aa_TRUNCT(b,kk1,a,i,NINDEX50)
+             PREPARE HR2b_aa_HIST(b,kk1,a,i,NINDEX50) = Tbxaa(b,kk1,a,i)
+         ENDPARDO b, kk1, a, i
+
+       ENDIF 
+     ENDDO NINDEX50
+
+     EXECUTE SERVER_BARRIER 
+
+     ENDPROC COPY_HC
+#    ---------------
+
+     PROC INIT_DESTN_ARRAYS
+#    ----------------------
+
+     DO MROOTS 
+     PARDO i, a, a1, kk1
+         taxaa(a,kk1,a1,i) = 0.0
+         PREPARE R2a_aa_VECS(a,kk1,a1,i,MROOTS) = taxaa(a,kk1,a1,i)
+     ENDPARDO i, a, a1, kk1
+
+     PARDO b, b1, j, kk1
+         tbxbb(b,kk1,b1,j) = 0.0
+         PREPARE R2b_bb_VECS(b,kk1,b1,j,MROOTS) = tbxbb(b,kk1,b1,j)
+     ENDPARDO b, b1, j, kk1
+
+     PARDO  a, b, j, kk1
+         taxbb(a,kk1,b,j) = 0.0
+         PREPARE R2a_bb_VECS(a,kk1,b,j,MROOTS) = taxbb(a,kk1,b,j)
+     ENDPARDO a, b, j, kk1
+
+     PARDO b, a, i, kk1
+         tbxaa(b,kk1,a,i) = 0.0
+         PREPARE R2b_aa_VECS(b,kk1,a,i,MROOTS) = tbxaa(b,kk1,a,i)
+     ENDPARDO b, a, i, kk1
+     ENDDO MROOTS 
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC INIT_DESTN_ARRAYS
+#    ----------------------
+
+     PROC INIT_AUX_STATIC_ARRAYS
+#    -----------------------
+
+      DO MINDEX50
+      DO NINDEX50 
+         ETEMP(NINDEX50,MINDEX50)    = ZERO
+      ENDDO NINDEX50
+      ENDDO MINDEX50
+
+      DO NINDEX50 
+        A_DIAGS(NINDEX50)          = ZERO
+        OVERLAP_R(NINDEX50)        = ZERO
+      ENDDO NINDEX50 
+
+      DO KK1
+      DO MROOTS 
+         PSEUDO_ROOTS(MROOTS,KK1) = ZERO
+         EOM_EAS(MROOTS,KK1)      = ZERO
+         DUMMY(KK1,KK1)           = ZERO
+      ENDDO MROOTS 
+      ENDDO KK1
+
+      DO a
+      DO NROOTS
+          RVEC_AA_INTMD(a,NROOTS) = ZERO
+      ENDDO NROOTS
+      ENDDO a
+
+      dO b
+      DO NROOTS
+         RVEC_BB_INTMD(b,NROOTS) = ZERO
+      ENDDO NROOTS
+      ENDDO b 
+ 
+      EXECUTE SIP_BARRIER 
+
+     ENDPROC INIT_AUX_STATIC_ARRAYS
+#    --------------------------
+
+     PROC SET_EOM_INCLUDE
+#    --------------------
+
+     EXECUTE SET_ACES3_VARS ITER_COUNT FORT
+     EXECUTE SET_ACES3_VARS ROOT_COUNT FIFT
+
+     ENDPROC SET_EOM_INCLUDE
+#    -----------------------
+
+     PROC TRUNCATE
+#    -------------
+# Reduce the subspace dimension.
+
+     IF EOM_MAXCYC < TWELVE
+        NREDUCE  = EOM_MAXCYC
+        NREDUCE -= THREE
+     ELSE
+        NREDUCE = TWELVE
+     ENDIF
+     NFULL  = ITER_COUNT
+
+     EXECUTE SET_ACES3_VARS NREDUCE TEN
+     EXECUTE SET_ACES3_VARS NFULL   ELV
+     EXECUTE SET_ACES3_VARS OMEGA   TWL
+
+     EXECUTE TRUNCATE_EOM_SUBSPACE A_DIAGS DVECTORS
+#bgn_debug
+#     execute print_static A_DIAGS NREDUCE
+#     execute print_static DVECTORS NFULL
+#end_debug
+
+     IF TRNC_COUNT > ONE
+        CALL INIT_TO_ZERO
+     ENDIF
+     CALL TRANSFORM_C
+     CALL COPY_NORM_C
+     CALL INIT_TO_ZERO
+     CALL TRANSFORM_HC
+     CALL COPY_HC
+
+     ENDPROC TRUNCATE
+#    ----------------
+
 #     MAIN PROGRAM
 #     ------------------
 # Read data from BLOCK_DATA -> to be partially replaced
 # -----------------------------------------------------
 #
-     ZERO = 0.0
-     ONE  = 1.0
+     ZERO     = 0.0
+     ONE      = 1.0
+     TEN      = 10.0
+     ELV      = 11.0
+     TWELVE   = 12.0
+     THRTEN   = 13.0
+     TWL      = TWELVE
+     NINETEEN = 19.0
+     MONE     = -1.0
+     THREE    = 3.0
+     FORT     = 14.0
+     FIFT     = 15.0
+
      TARGET_ROOTS = EOM_ROOTS
      EOM_THRES    = EOM_TOL
      EOM_DENOM    = EE_DENOM
      EOM_MAXCYC   = EE_MAXCYC
      EXACT_HY     = ZERO
+     MAX_OVLP     = ONE
+     MIN_ENEG     = ZERO
+     LOCK_THRES   = 0.001
+     FIRST_VEC    = ONE
+     PREVS_VEC    = ZERO
+     LEFT         = ZERO
+     RIGHT        = ZERO
 
 # Read data from BLOCK_DATA -> to be partially replaced
 # -----------------------------------------------------
 #
       CALL READ_DATA
       CALL CREATE_ARRAYS
+      CALL INIT_DESTN_ARRAYS
+      CALL INIT_AUX_STATIC_ARRAYS
+
+      EXECUTE SET_ACES3_VARS RIGHT LEFT 
 
 # The default denominator is 1P-Hbar and can be switched to Hbar
 
-      CALL FORM_1PPH_DIAG
       IF EOM_DENOM == ONE 
          CALL FORM_12PPH_DIAG
+      ELSE 
+         CALL FORM_1PPH_DIAG
       ENDIF 
 
       CALL FORM_INITIAL_GUESS
@@ -6580,10 +7401,10 @@
 
      MAX_SUBSP_DIM  = EOM_MAXCYC
 
-      ROOT_COUNT = 0.0
+      ROOT_COUNT = ZERO
       DO NROOTS
 
-         ROOT_COUNT += 1.0
+         ROOT_COUNT += ONE
          IF ROOT_COUNT > TARGET_ROOTS
             EXIT
          ENDIF
@@ -6595,17 +7416,23 @@
          MYROOT = ROOT_COUNT
          CALL PREP_EA_GUESS
 
-         ITER_COUNT = 0.0
+         ITER_COUNT = ZERO
+         SBSP_COUNT = ZERO
+         LOCK       = ZERO 
 
-         DO SUBSP_DIM
+         DO EOM_CYCLE
 
             CALL SET_TO_ZERO
 
-            ITER_COUNT += 1.0
+            ITER_COUNT += ONE
+            SBSP_COUNT += ONE
+
+            CALL SET_EOM_INCLUDE 
 #bgn_debug
         execute print_scalar ITER_COUNT
+        execute print_scalar SBSP_COUNT
 #end_debug
-            IF ITER_COUNT > MAX_SUBSP_DIM
+            IF SBSP_COUNT > MAX_SUBSP_DIM
                EXIT
             ENDIF
 
@@ -6644,12 +7471,23 @@
 
               IF EXACT_HY == ONE
                  CALL FORM_NEWVECS
-                 CALL SELECT_VECS
+
+                 IF MAX_OVLP == ONE
+                    CALL SELECT_VECS_MAX_OVLP
+                 ENDIF
+                 IF MIN_ENEG == ONE
+                    CALL SELECT_VECS_MIN_ENEG
+                 ENDIF
                  CALL FORM_SELECTED_Y
                  CALL FORM_HBAR_Y_VECS
               ELSE
                  CALL FORM_NEWVECS
-                 CALL SELECT_VECS
+                 IF MAX_OVLP == ONE
+                    CALL SELECT_VECS_MAX_OVLP
+                 ENDIF
+                 IF MIN_ENEG == ONE
+                    CALL SELECT_VECS_MIN_ENEG
+                 ENDIF
                  CALL FORM_SELECTED_Y
                  CALL FORM_NEW_HBAR_Y_VECS
                  CALL SELECT_HBAR_Y_VEC_TOGO
@@ -6658,44 +7496,71 @@
               CALL FORM_RESIDUAL_VEC
               CALL CHECK_CONVERGENCE
 
-             IF ITER_COUNT > ONE
-                   EDIFF = E_OLD - OMEGA
-                ENDIF
-                E_OLD = OMEGA
-                EDIFF *=EDIFF
-                EXECUTE SQUARE_ROOT EDIFF HALF
+              IF ITER_COUNT > ONE 
+                 EDIFF = E_OLD - OMEGA
+              ENDIF
+              E_OLD = OMEGA
+              EDIFF *=EDIFF
+              EXECUTE SQUARE_ROOT EDIFF HALF
 #bgn_debug
       execute print_scalar RESIDUAL_NORM
       execute print_scalar OMEGA
       execute print_scalar EDIFF
 #end_debug
+              IF LOCK == ZERO 
+                 IF EDIFF < LOCK_THRES
+                    LOCK = ZERO 
+                ENDIF
+              ENDIF 
+
               IF RESIDUAL_NORM  < EOM_THRES
                 EXIT
               ELSE
-
-                 CALL FORM_CORRECTION_VEC
-
-                 CALL DRIVE_ORTHO
-
-                 CALL RESCALE_NEW_C
+                CALL FORM_CORRECTION_VEC
+                CALL DRIVE_ORTHO
+                CALL RESCALE_NEW_C
               ENDIF 
+
+# The subspace truncation. When the iteration count goes above
+# 19 and still have not converged, then select 12 vectors closest
+# to the eigenvalue of interest and start Davidson procedure
+# from iteration 13 again.
+
+#              IF ITER_COUNT > NINETEEN
 #
+#                 TRNC_COUNT += ONE
+#                 CALL TRUNCATE
+#                 ITER_COUNT  = TWL
+#
+#              ENDIF
            ENDIF
 
          EXECUTE SERVER_BARRIER 
 
-         ENDDO SUBSP_DIM
+         ENDDO EOM_CYCLE 
 
-         ITER_COUNT += -1.0
-         IF ITER_COUNT == MAX_SUBSP_DIM
+         SBSP_COUNT += MONE 
+         IF SBSP_COUNT == MAX_SUBSP_DIM
             IF RESIDUAL_NORM  > EOM_THRES
 #
 # The root under consideration could not be locates in specified number 
 # of cycles.
 # Lets set energy to zero and inform the user whart that means
 
-                OMEGA = 0.0
-             ENDIF
+            DO KK1
+            MCOUNT = ZERO
+            DO MROOTS
+               MCOUNT += ONE
+               IF MCOUNT == ROOT_COUNT
+                  PSEUDO_ROOTS(MROOTS,KK1) = OMEGA
+               ENDIF
+            ENDDO MROOTS
+            ENDDO KK1
+
+            OMEGA = 0.0
+
+            ENDIF
+
           ENDIF
 
 #bgn_debug
@@ -6708,13 +7573,59 @@
                MCOUNT += 1.0
                IF MCOUNT == ROOT_COUNT
                   EOM_EAS(MROOTS,KK1) = OMEGA
+                  IF OMEGA != ZERO
+                     PSEUDO_ROOTS(MROOTS,KK1) = OMEGA
+                  ENDIF
                ENDIF
             ENDDO MROOTS
          ENDDO kk1
 
+         MCOUNT = ZERO
+         DO MROOTS
+            MCOUNT += ONE
+            IF MCOUNT == ROOT_COUNT
+            PARDO kk1, a
+                  GET R1a(a,kk1)
+                  Takk(a,kk1) = R1a(a,kk1)
+                  PUT R1a_VECS(a,kk1,MROOTS) =  Takk(a,kk1)
+            ENDPARDO kk1,a
+
+            PARDO kk1, b
+                  GET HR1b(b,kk1)
+                  Tbkk(b,kk1) = HR1b(b,kk1)
+                  PUT R1b_VECS(b,kk1,MROOTS) =  Tbkk(b,kk1)
+            ENDPARDO kk1, b
+
+            PARDO a, a1, kk1, i
+               GET R2a_aa(a,kk1,a1,i)
+               Taxaa(a,kk1,a1,i) = R2a_aa(a,kk1,a1,i)
+               PREPARE R2a_aa_VECS(a,kk1,a1,i,MROOTS) = Taxaa(a,kk1,a1,i)
+            ENDPARDO a, a1, kk1, i
+
+            PARDO b, b1, kk1, j
+               GET R2b_bb(b,kk1,b1,j)
+               Tbxbb(b,kk1,b1,j) =  R2b_bb(b,kk1,b1,j)
+               PREPARE R2b_bb_VECS(b,kk1,b1,j,MROOTS) = Tbxbb(b,kk1,b1,j)
+            ENDPARDO b, b1, kk1, j
+
+            PARDO a,b,kk1,j
+               GET R2a_bb(a,kk1,b,j)
+               Taxbb(a,kk1,b,j) = R2a_bb(a,kk1,b,j)
+               PREPARE R2a_bb_VECS(a,kk1,b,j,MROOTS) = Taxbb(a,kk1,b,j)
+            ENDPARDO a, b, kk1, j
+
+            PARDO b, a, kk1, i
+               GET R2b_aa(b,kk1,a,i)
+               Tbxaa(b,kk1,a,i) =  R2b_aa(b,kk1,a,i)
+               PREPARE R2b_aa_VECS(b,kk1,a,i,MROOTS) = Tbxaa(b,kk1,a,i)
+            ENDPARDO b, a, kk1, i
+            ENDIF 
+
+            ENDDO MROOTS
+      ENDDO NROOTS
+
       EXECUTE SERVER_BARRIER
 
-      ENDDO NROOTS
       SIXONE = 61.0
       EXECUTE PRINT_REL_INFO SIXONE EOM_EAS
       WARNING    = 911.0
@@ -6724,5 +7635,82 @@
       execute print_static EOM_EAS ROOT_COUNT
 #end_debug
 
-                           ENDSIAL EA_EOMCCSD
-#                          -------------------
+      execute server_barrier
+      execute blocks_to_list                VSpipi(p,i,p1,i1)
+      execute blocks_to_list                Vaaii
+      execute blocks_to_list                Viaai
+      execute blocks_to_list                VSaaai
+      execute blocks_to_list                VSqjqj(q,j,q1,j1)
+      execute blocks_to_list                Vbbjj
+      execute blocks_to_list                Vjbbj
+      execute blocks_to_list                VSbbbj
+      execute blocks_to_list                Vjbii
+      execute blocks_to_list                Vbbai
+      execute blocks_to_list                Vpiqj(p,i,q,j)
+      execute blocks_to_list                Viabj
+      execute blocks_to_list                Vaabj
+      execute blocks_to_list                Vaajj
+      execute blocks_to_list                Vbbii
+
+      execute blocks_to_list                t1a
+      execute blocks_to_list                t1b
+      execute blocks_to_list                T2aa
+      execute blocks_to_list                T2ab
+      execute blocks_to_list                T2bb
+
+      execute blocks_to_list                l1a
+      execute blocks_to_list                l1b
+      execute blocks_to_list                L2aa
+      execute blocks_to_list                L2ab
+      execute blocks_to_list                L2bb
+
+      execute blocks_to_list                R1a_vecs
+      execute blocks_to_list                R1b_vecs
+      execute blocks_to_list                R2a_aa_vecs
+      execute blocks_to_list                R2b_bb_vecs
+      execute blocks_to_list                R2a_bb_vecs
+      execute blocks_to_list                R2b_aa_vecs
+
+      execute blocks_to_list                Uaa
+      execute blocks_to_list                Ubb
+      execute blocks_to_list                Uii
+      execute blocks_to_list                Ujj
+      execute blocks_to_list                Uia
+      execute blocks_to_list                Ujb
+
+      execute blocks_to_list                Wiiii
+      execute blocks_to_list                Wjjjj
+      execute blocks_to_list                Wiijj
+
+      execute blocks_to_list                Waiaa # HBAR_AIBC_aaaa
+      execute blocks_to_list                Wbjbb # HBAR_AIBC_bbbb
+      execute blocks_to_list                Waibb # HBAR_AIBC_aabb
+      execute blocks_to_list                Wbjaa # HBAR_AIBC_bbaa
+
+      execute blocks_to_list                Wiiia # HBAR_JKIA_aaaa
+      execute blocks_to_list                Wjjjb # HBAR_JKIA_bbbb
+      execute blocks_to_list                Wiijb # HBAR_JKIA_aabb
+      execute blocks_to_list                Wjjia # HBAR_JKIA_bbaa
+
+      execute blocks_to_list                Wiiai # HBAR_IAJK_aaaa
+      execute blocks_to_list                Wiibj # HBAR_IAJK_aabb
+      execute blocks_to_list                Wjjai # HBAR_IAJK_bbaa
+      execute blocks_to_list                Wjjbj # HBAR_IAJK_bbbb
+
+      execute blocks_to_list                Wiaai # HBAR_AJIB_aaaa
+      execute blocks_to_list                Wjbbj # HBAR_AJIB_bbbb
+      execute blocks_to_list                Wiabj # HBAR_AJIB_aabb
+      execute blocks_to_list                Wjbai # HBAR_AJIB_BBAA
+      execute blocks_to_list                Wiibb # HBAR_AJIB_iibb
+      execute blocks_to_list                Wjjaa # HBAR_AJIB_jjaa
+
+      execute blocks_to_list                Waaai # HBAR_ABCI_aaaa
+      execute blocks_to_list                Wbbbj # HBAR_ABCI_bbbb
+      execute blocks_to_list                Waabj # HBAR_ABCI_aabb
+      execute blocks_to_list                Wbbai # HBAR_ABCI_bbaa
+
+      execute write_blocks_to_list
+      execute server_barrier
+
+                           ENDSIAL REA_UHF_EOMCCSD
+#                          -----------------------

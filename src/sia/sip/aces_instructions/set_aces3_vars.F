@@ -78,29 +78,31 @@ c-------------------------------------------------------------------
       array_type = array_table(c_array_type, array)
       sind1 =  array_table(c_scalar_index, array)
 
-      qq=scalar_table(sind1)
-      If (Int(qq) .EQ. 0) Then
-         RHS = 0
-         LHS = 0
-      Elseif (Int(qq) .EQ. 1) Then
-         RHS = qq
-         LHS = 0
-      Elseif (Int(qq) .EQ. 2) Then
-         RHS = 0
-         LHS = (Int(qq)-1)
-      Endif
-#ifdef _DEBUG_LVL0
-      If (me .eq.0) Write(6,"(a,2i2)") "The right and left sides: ",
-     +              RHS, LHS
-#endif 
-
-c------------Information about scalar--------------------------------------
 
       array = op(c_op1_array)
       array_type = array_table(c_array_type, array)
       sind2 =  array_table(c_scalar_index, array)
 
+      qq=scalar_table(sind1)
       g=scalar_table(sind2)
+
+      If (Int(qq) .EQ. 0 .AND. Int(g) .EQ. 0) Then
+         RHS = 0
+         LHS = 0
+      Elseif (Int(qq) .EQ. 1 .AND. Int(g) .EQ. 0) Then
+         RHS = qq
+         LHS = 0
+      Elseif (Int(qq) .EQ. 2 .AND. Int(g) .EQ. 0) Then
+         RHS = 0
+         LHS = (Int(qq)-1)
+      Endif
+
+#ifdef _DEBUG_LVL0
+      If (me .eq.0) Write(6,"(a,2i2)") "The right and left sides: ",
+     +              RHS, LHS
+#endif
+
+c------------Information about scalar--------------------------------------
 
       If (Int(g) .EQ. 1) Then 
          AAAA = 1
@@ -122,15 +124,22 @@ c------------Information about scalar--------------------------------------
 C--------------updating eom_truncate variables header file----
 
       If (Int(g) .EQ. 10) Then
-         Ndim_new = qq
+         Ndim_new = Int(qq)
       Elseif (Int(g) .EQ. 11) Then
-         Ndim_old = qq
+         Ndim_old = Int(qq)
       Elseif (Int(g) .EQ. 12) Then
          Omega = Dble(qq)
+      Elseif (Int(g) .EQ. 13) Then
+         Root = Dble(qq)
+      Elseif (Int(g) .EQ. 14) Then
+         Sbsp_dim = Int(qq)
+      Elseif (Int(g) .EQ. 15) Then
+         Root_dim = Int(qq) 
       Endif 
 C--------------Returning vars in eomdata header file----
 
       If (Int(g) .EQ. -1) Then
+         if (me .eq. 0) Write(6,"(a,I4)") "Selecting Imax: ", Iselect 
          scalar_table(sind1) = Iselect 
       Endif 
 

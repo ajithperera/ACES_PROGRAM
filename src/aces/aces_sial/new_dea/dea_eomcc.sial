@@ -21,14 +21,15 @@
       index Ione     = 1, 1
       index Spn_mult = 1, 2
 
-      Index Ndim     = 1, 100
+      Index Ndim     = 1, 20
       Index Nroots   = 1, 12
       Index Mroots   = 1, 12
-      Index Subsp_dim= 1, 50
-      Index Nindex50 = 1, 50
-      Index Mindex50 = 1, 50
-      Index Kindex50 = 1, 50
-      Index Lindex50 = 1, 50
+      Index Subsp_dim= 1, 20
+      Index Nindex50 = 1, 20
+      Index Mindex50 = 1, 20
+      Index Kindex50 = 1, 20
+      Index Lindex50 = 1, 20
+      Index Eom_cycle= 1,150
 #
       aoindex mu     = 1, norb
       aoindex nu     = 1, norb
@@ -159,24 +160,17 @@
       Distributed R1_AB_guess(a,b1)
       Distributed R1_AB_INTMD(a,b1)
       Distributed R1_AB_HIST(a,b,subsp_dim)
-
       Distributed Y1_AB(a,b,subsp_dim)
+      Distributed Y1_AB_TRUNCT(a,b,subsp_dim)
       Distributed HY1_AB(a,b,subsp_dim)
-
       Distributed Y1_AB_picked(a,b1)
-
       Distributed HY1_AB_picked(a,b1)
-
       Distributed RES1_AB(a,b1)
-
       Distributed HR1_AB(a,b1)
       Distributed AOHR1_AB(a,b1)
       Distributed HR1_AB_ASYM(a,b1)
-
       Distributed CORR_VEC_AB(a,b1)
-
       Distributed HR1_AB_HIST(a,b,subsp_dim)
-
       Distributed Xbi(b,i)
       Distributed Xaj(a,j)
       
@@ -184,38 +178,30 @@
       SERVED HR2_ABBB(a,b,j1,b1)
       SERVED R2_ABAA(a,b,i1,a1)
       SERVED R2_ABBB(a,b,j1,b1)
-
       SERVED R2_ABAA_HIST(a,b,i1,a,subsp_dim)
       SERVED R2_ABBB_HIST(a,b,j1,b,subsp_dim)
-
       SERVED HR2_ABAA_HIST(a,b,i1,a,subsp_dim)
       SERVED HR2_ABBB_HIST(a,b,j1,b,subsp_dim)
-
       SERVED Y2_ABAA(a,b,i1,a,subsp_dim)
       SERVED Y2_ABBB(a,b,j1,a,subsp_dim)
-
+      SERVED Y2_ABAA_TRUNCT(a,b,i1,a,subsp_dim)
+      SERVED Y2_ABBB_TRUNCT(a,b,j1,a,subsp_dim)
       SERVED HY2_ABAA(a,b,i1,a,subsp_dim)
       SERVED HY2_ABBB(a,b,j1,a,subsp_dim)
- 
       SERVED Y2_ABAA_picked(a,b,i1,a1)
       SERVED Y2_ABBB_picked(a,b,i1,a1)
-
       SERVED HY2_ABAA_picked(a,b,i1,a1)
       SERVED HY2_ABBB_picked(a,b,j1,b1)
-
       SERVED RES2_ABAA(a,b,i1,a1)
       SERVED RES2_ABBB(a,b,j1,b1)
-
       SERVED CORR_VEC_ABAA(a,b,i1,a1)
       SERVED CORR_VEC_ABBB(a,b,j1,b1)
-
       SERVED R2_ABAA_INTMD(a,b,i1,a1)
       SERVED R2_ABBB_INTMD(a,b,j1,b1)
 
       Distributed ORTHO_COEF(NINDEX50,MINDEX50)
       Distributed DEA_ENER_S(MROOTS,IONE)
       Distributed DEA_ENER_T(MROOTS,IONE)
-
       Distributed TAO_AB(mu,lambda)
       Distributed T1AO_AB(lambda,b)
       Distributed T2AO_AB(lambda,Sigma)
@@ -467,6 +453,7 @@
       Static RVEC_BB_INTMD(j,Nroots)
       Static A_MATRIX(mindex50,nindex50)
       Static A_DIAGS(MINDEX50)
+      Static PSEUDO_ROOTS(NROOTS,IONE)
       Static DVECTORS(mindex50,nindex50)
       Static OVERLAP_R(Nindex50)
       Static Sii(i,i1)
@@ -561,6 +548,31 @@
       Scalar EXACT_HY
       Scalar E_OLD
       Scalar EDIFF
+      Scalar NINETEEN
+      Scalar TWELVE
+      Scalar THREE
+      Scalar TEN
+      Scalar ELV
+      Scalar TWL
+      Scalar NREDUCE
+      Scalar NFULL
+      Scalar THRTEN
+      Scalar TRNC_COUNT
+      Scalar MAX_OVLP
+      Scalar MIN_ENEG
+      Scalar CURRENT
+      Scalar MONE
+      Scalar LOCK
+      Scalar LOCK_THRES
+      Scalar IMAX_KEEP
+      Scalar SBSP_COUNT
+      Scalar FIRST_VEC
+      Scalar PREVS_VEC
+      Scalar LEFT 
+      Scalar RIGHT 
+      Scalar FORT
+      Scalar FIFT 
+      Scalar FOLLOW 
 
 # -----------------------------------------------------------
 
@@ -2955,6 +2967,7 @@
      OMEGA0   = A_VALUE 
      OMEGA0M  = A_VALUE 
      OMEGA0M *= -1.0
+     E_OLD    = OMEGA0 
 #bgn_debug
 #     execute print_scalar OMEGA0M
 #end_debug
@@ -3499,23 +3512,35 @@
      ENDPROC FORM_NEW_HBAR_Y_VECS
 #    -------------------------
 
-     PROC SELECT_VECS
-#    ----------------
+     PROC SELECT_VECS_MAX_OVLP
+#    -------------------------
+
+     IF FIRST_VEC == ONE
+        FOLLOW = ONE
+     ENDIF
+     IF PREVS_VEC == ONE
+        FOLLOW = ITER_COUNT
+        FOLLOW -= ONE
+     ENDIF
+
+#bgn_debug
+     execute print_scalar follow
+#end_debug
 
      NCOUNT = 0.0
-
      DO NINDEX50
         NCOUNT += 1.0
-        IF NCOUNT  > 1.0
-           EXIT
-        ENDIF 
 
-           MCOUNT = 0.0
-           DO MINDEX50
-              MCOUNT += 1.0
-              IF MCOUNT >  ITER_COUNT
-                 EXIT
-              ENDIF
+        IF NCOUNT != FOLLOW
+           EXIT
+        ENDIF
+
+        MCOUNT = 0.0
+        DO MINDEX50
+           MCOUNT += 1.0
+           IF MCOUNT >  ITER_COUNT
+              EXIT
+           ENDIF
 
      	         SUMA   = 0.0
                  CY_A   = 0.0
@@ -3556,13 +3581,59 @@
 
      EXECUTE SIP_BARRIER 
 
-     EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
+     IF LOCK != ONE
+        EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
+        IMAX_KEEP = IMAX
+      ELSE
+        EXECUTE SET_ACES3_VARS OMEGA THRTEN
+        EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+        EXECUTE SET_ACES3_VARS IMAX MONE
+        IMAX = IMAX_KEEP
+      ENDIF
+
 #bgn_debug
 #     execute print_scalar imax 
 #end_debug
 
-     ENDPROC SELECT_VECS
-#    -------------------
+     ENDPROC SELECT_VECS_MAX_OVLP
+#    ----------------------------
+
+     PROC SELECT_VECS_MIN_ENEG
+#    -------------------------
+
+     IF ROOT_COUNT == ONE
+
+# Always pick the closest eigenvalue to the starting eigenvalue
+
+        EXECUTE FIND_NEAR A_DIAGS A_DIAGS
+        EXECUTE SET_ACES3_VARS IMAX MONE
+        IMAX_KEEP = IMAX
+        IF IMAX_KEEP ==  ZERO
+           IMAX = ONE
+        ENDIF
+
+      ELSE
+
+# Find the root from the subspace that is not too close to the
+# roots that have already been found.
+
+        IF LOCK != ONE
+           EXECUTE FIND_MIN_ENEG A_DIAGS PSEUDO_ROOTS
+           EXECUTE SET_ACES3_VARS IMAX MONE
+           IMAX_KEEP = IMAX
+        ELSE
+           EXECUTE SET_ACES3_VARS OMEGA THRTEN
+           EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+           EXECUTE SET_ACES3_VARS IMAX MONE
+        ENDIF 
+      ENDIF
+
+#bgn_debug
+     execute print_scalar imax
+#end_debug
+
+     ENDPROC SELECT_VECS_MIN_ENEG
+#    ----------------------------
 
      PROC FORM_SELECTED_Y
 #    --------------------
@@ -4712,29 +4783,429 @@
      ENDPROC FORM_TAU
 #    ----------------
 
+     PROC INIT_TO_ZERO
+#    -----------------
+
+     NCOUNT = ZERO
+     DO NINDEX50
+
+     NCOUNT +=1.0
+
+     IF NCOUNT <= NREDUCE
+     PARDO a, b1
+           tab(a,b1)      = 0.0
+           PUT Y1_AB_TRUNCT(a,b1,NINDEX50)  = tab(a,b1)
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+         tabia(a,b,i1,a1) = 0.0
+         PREPARE Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50)  = tabia(a,b,i1,a1)
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+         tabjb(a,b,j1,b1)       = 0.0
+         PREPARE Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50)  = tabjb(a,b,j1,b1)
+     ENDPARDO a, b, j1, b1
+     ENDIF 
+
+     ENDDO NINDEX50
+     EXECUTE  SERVER_BARRIER
+
+     ENDPROC INIT_TO_ZERO
+#    --------------------
+
+     PROC TRANSFORM_C
+#    ----------------
+
+     PARDO a, b1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET R1_AB_HIST(a,b1,MINDEX50)
+                       Tabs(a,b1,MINDEX50)  = R1_AB_HIST(a,b1,MINDEX50)
+                       T1abs(a,b1,NINDEX50) = Tabs(a,b1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1_AB_TRUNCT(a,b1,NINDEX50) += T1abs(a,b1,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST R2_ABAA_HIST(a,b,i1,a1,MINDEX50)  a
+
+                       Tabias(a,b,i1,a1,MINDEX50) = R2_ABAA_HIST(a,b,i1,a1,MINDEX50)
+                       T1abias(a,b,i1,a1,NINDEX50) = Tabias(a,b,i1,a1,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50) += T1abias(a,b,i1,a1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                   MCOUNT = 0.0
+                   DO MINDEX50
+                      MCOUNT += 1.0
+
+                      IF MCOUNT > ITER_COUNT
+                         EXIT
+                      ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST R2_ABBB_HIST(a,b,j1,b1,MINDEX50)  j1
+
+                       Tabjbs(a,b,j1,b1,MINDEX50) = R2_ABBB_HIST(a,b,j1,b1,MINDEX50)
+                       T1abjbs(a,b,j1,b1,NINDEX50) = Tabjbs(a,b,j1,b1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50) += T1abjbs(a,b,j1,b1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC TRANSFORM_C
+#    -------------------
+
+     PROC TRANSFORM_HC
+#    -----------------
+
+     PARDO a, b1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE 
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET HR1_AB_HIST(a,b1,MINDEX50)
+                       Tabs(a,b1,MINDEX50)  = HR1_AB_HIST(a,b1,MINDEX50)
+                       T1abs(a,b1,NINDEX50) = Tabs(a,b1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1_AB_TRUNCT(a,b1,NINDEX50) += T1abs(a,b1,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST HR2_ABAA_HIST(a,b,i1,a1,MINDEX50)  a
+
+                       Tabias(a,b,i1,a1,MINDEX50) = HR2_ABAA_HIST(a,b,i1,a1,MINDEX50)
+                       T1abias(a,b,i1,a1,NINDEX50) = Tabias(a,b,i1,a1,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50) += T1abias(a,b,i1,a1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                   MCOUNT = 0.0
+                   DO MINDEX50
+                      MCOUNT += 1.0
+
+                      IF MCOUNT > ITER_COUNT
+                         EXIT
+                      ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST HR2_ABBB_HIST(a,b,j1,b1,MINDEX50)  j1
+
+                       Tabjbs(a,b,j1,b1,MINDEX50) = HR2_ABBB_HIST(a,b,j1,b1,MINDEX50)
+                       T1abjbs(a,b,j1,b1,NINDEX50) = Tabjbs(a,b,j1,b1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50) += T1abjbs(a,b,j1,b1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC TRANSFORM_HC
+#    --------------------
+
+     PROC COPY_NORM_C
+#    ----------------
+
+     NCOUNT = 0.0
+     DO NINDEX50
+
+     NCOUNT += 1.0
+     IF NCOUNT <= NREDUCE
+
+     SUMA    = 0.0
+     SUMAA_A = 0.0
+     SUMBB_B = 0.0
+     HC_A    = 0.0
+     HC_AAA  = 0.0
+     HC_BBB  = 0.0
+
+     PARDO a, b1
+         GET  Y1_AB_TRUNCT(a,b1,NINDEX50)
+         Tab(a,b1) = Y1_AB_TRUNCT(a,b1,NINDEX50)
+         TMP   = Tab(a,b1) * Tab(a,b1)
+         HC_A += TMP
+      ENDPARDO a, b1
+
+      PARDO a, b, i1, a1
+          REQUEST Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50) a1
+          Tabia(a,b,i1,a1) = Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50)
+          TMP   = Tabia(a,b,i1,a1) * Tabia(a,b,i1,a1)
+           HC_AAA += TMP
+      ENDPARDO a, b, i1, a1
+
+      PARDO a, b, j1, b1
+          REQUEST Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50) b1
+          Tabjb(a,b,j1,b1) = Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50)
+          TMP   = Tabjb(a,b,j1,b1) * Tabjb(a,b,j1,b1)
+          HC_BBB +=  TMP
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SIP_BARRIER
+     COLLECTIVE  SUMA    += HC_A
+     COLLECTIVE  SUMAA_A += HC_AAA
+     COLLECTIVE  SUMBB_B += HC_BBB
+
+     SUM_R  = SUMA
+     SUM_R += SUMAA_A
+     SUM_R += SUMBB_B
+
+     EXPONENT = 0.5
+     EXECUTE NORM_FAC SUM_R EXPONENT
+     INV_SQRT_NORM_ORTGC  = SUM_R
+     SQRT_OVERLAP         = EXPONENT
+
+     EXECUTE SIP_BARRIER
+
+     PARDO a, b1
+         GET Y1_AB_TRUNCT(a,b1,NINDEX50)
+         Tab(a,b1)  = Y1_AB_TRUNCT(a,b1,NINDEX50)
+         Tab(a,b1) *= INV_SQRT_NORM_ORTGC
+         PUT R1_AB_HIST(a,b1,NINDEX50) =  Tab(a,b1)
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+         REQUEST Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50) a1
+         Tabia(a,b,i1,a1)  = Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50)
+         Tabia(a,b,i1,a1) *= INV_SQRT_NORM_ORTGC
+         PREPARE R2_ABAA_HIST(a,b,i1,a1,NINDEX50) = Tabia(a,b,i1,a1)
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+         REQUEST Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50) b1
+         Tabjb(a,b,j1,b1)  = Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50)
+         Tabjb(a,b,j1,b1) *= INV_SQRT_NORM_ORTGC
+         PREPARE R2_ABBB_HIST(a,b,j1,b1,NINDEX50) = Tabjb(a,b,j1,b1)
+     ENDPARDO a, b, j1, b1
+     ENDIF 
+
+     ENDDO NINDEX50 
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC COPY_NORM_C
+#    -------------------
+
+     PROC COPY_HC
+#    ------------
+
+     NCOUNT = 0.0
+     DO NINDEX50
+
+     NCOUNT += 1.0
+     IF NCOUNT <= NREDUCE
+     PARDO a, b1
+         GET Y1_AB_TRUNCT(a,b1,NINDEX50)
+         Tab(a,b1)  = Y1_AB_TRUNCT(a,b1,NINDEX50)
+         PUT HR1_AB_HIST(a,b1,NINDEX50) =  Tab(a,b1)
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+         REQUEST Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50) a1
+         Tabia(a,b,i1,a1)  = Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50)
+         PREPARE HR2_ABAA_HIST(a,b,i1,a1,NINDEX50) = Tabia(a,b,i1,a1)
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+         REQUEST Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50) b1
+         Tabjb(a,b,j1,b1)  = Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50)
+         PREPARE HR2_ABBB_HIST(a,b,j1,b1,NINDEX50) = Tabjb(a,b,j1,b1)
+     ENDPARDO a, b, j1, b1
+     ENDIF
+
+     ENDDO NINDEX50
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC COPY_HC
+#    ---------------
+
+     PROC SET_EOM_INCLUDE
+#    --------------------
+
+     EXECUTE SET_ACES3_VARS ITER_COUNT FORT
+     EXECUTE SET_ACES3_VARS ROOT_COUNT FIFT
+
+     ENDPROC SET_EOM_INCLUDE
+#    -----------------------
+
+     PROC TRUNCATE
+#    -------------
+# Reduce the subspace dimension.
+
+     IF EOM_MAXCYC < TWELVE
+        NREDUCE  = EOM_MAXCYC
+        NREDUCE -= THREE
+     ELSE
+        NREDUCE = TWELVE
+     ENDIF
+     NFULL  = ITER_COUNT
+
+     EXECUTE SET_ACES3_VARS NREDUCE TEN
+     EXECUTE SET_ACES3_VARS NFULL   ELV
+     EXECUTE SET_ACES3_VARS OMEGA   TWL
+
+     EXECUTE TRUNCATE_EOM_SUBSPACE A_DIAGS DVECTORS
+#bgn_debug
+#     execute print_static A_DIAGS NREDUCE
+#     execute print_static DVECTORS NFULL
+#end_debug
+
+     IF TRNC_COUNT > ONE
+        CALL INIT_TO_ZERO
+     ENDIF
+     CALL TRANSFORM_C
+     CALL COPY_NORM_C
+     CALL INIT_TO_ZERO
+     CALL TRANSFORM_HC
+     CALL COPY_HC
+
+     ENDPROC TRUNCATE
+#    ----------------
+
 #     BEGIN MAIN PROGRAM
 #     ------------------
 # Read data from BLOCK_DATA -> to be partially replaced
 # -----------------------------------------------------
 #
-     ZERO = 0.0
-     ONE  = 1.0
-     HALF = 0.5
+     ZERO     = 0.0
+     ONE      = 1.0
+     HALF     = 0.5
+     TEN      = 10.0
+     ELV      = 11.0
+     TWELVE   = 12.0
+     THRTEN   = 13.0
+     TWL      = TWELVE
+     NINETEEN = 19.0
+     MONE     = -1.0
+     THREE    = 3.0
+     FORT     = 14.0
+     FIFT     = 15.0
+
      TARGET_ROOTS = EOM_ROOTS
      EOM_THRES    = EOM_TOL
      EOM_DENOM    = EE_DENOM
      EOM_MAXCYC   = EE_MAXCYC
      EXACT_HY     = ZERO 
      NO_AO_LADDER = ZERO
+     MAX_OVLP     = ONE
+     MIN_ENEG     = ZERO
+     LOCK_THRES   = 0.001
+     FIRST_VEC    = ZERO
+     PREVS_VEC    = ONE
+     LEFT         = ZERO
+     RIGHT        = ZERO
 #
-      CALL READ_DATA
-      CALL CREATE_ARRAYS 
+     CALL READ_DATA
+     CALL CREATE_ARRAYS 
 
-      IF NO_AO_LADDER == ONE
-         CALL HBAR_ABCD 
-      ELSE 
-         CALL FORM_TAU
-      ENDIF 
+     EXECUTE SET_ACES3_VARS RIGHT LEFT 
+
+     IF NO_AO_LADDER == ONE
+        CALL HBAR_ABCD 
+     ELSE 
+        CALL FORM_TAU
+     ENDIF 
 
 # The default denominator is 1-particle part and can be switched to Hbar
 
@@ -4756,7 +5227,7 @@
       MULT = ZERO 
       DO SPN_MULT
 
-        MULT  += 1.0
+        MULT  += ONE
 
         IF MULT == ONE
            SINGLET = ONE
@@ -4770,7 +5241,7 @@
 
         DO NROOTS
 
-           ROOT_COUNT += 1.0
+           ROOT_COUNT += ONE
            IF ROOT_COUNT > TARGET_ROOTS
               EXIT
            ENDIF
@@ -4783,17 +5254,23 @@
            MYROOT = ROOT_COUNT 
            CALL PREP_DEA_GUESS 
       
-           ITER_COUNT = 0.0
+           ITER_COUNT = ZERO
+           SBSP_COUNT = ZERO
+           LOCK       = ZERO
 
-           DO SUBSP_DIM
+           DO EOM_CYCLE
 
               CALL SET_TO_ZERO
 
-              ITER_COUNT += 1.0
+              ITER_COUNT += ONE
+              SBSP_COUNT += ONE
+
+              CALL SET_EOM_INCLUDE
 #bgn_debug
         execute print_scalar ITER_COUNT
+        execute print_scalar SBSP_COUNT
 #end_debug
-              IF ITER_COUNT > MAX_SUBSP_DIM 
+              IF SBSP_COUNT > MAX_SUBSP_DIM 
                  EXIT
               ENDIF 
 
@@ -4833,12 +5310,26 @@
 
                 IF EXACT_HY == ONE
                    CALL FORM_NEWVECS 
-                   CALL SELECT_VECS
+
+                   IF MAX_OVLP == ONE
+                      CALL SELECT_VECS_MAX_OVLP
+                   ENDIF
+                   IF MIN_ENEG == ONE
+                      CALL SELECT_VECS_MIN_ENEG
+                   ENDIF
+
                    CALL FORM_SELECTED_Y
                    CALL FORM_HBAR_Y_VECS
                 ELSE
-                    CALL FORM_NEWVECS
-                    CALL SELECT_VECS
+                   CALL FORM_NEWVECS
+
+                   IF MAX_OVLP == ONE
+                      CALL SELECT_VECS_MAX_OVLP
+                   ENDIF
+                   IF MIN_ENEG == ONE
+                      CALL SELECT_VECS_MIN_ENEG
+                   ENDIF
+
                     CALL FORM_SELECTED_Y
                     CALL FORM_NEW_HBAR_Y_VECS
                     CALL SELECT_HBAR_Y_VEC_TOGO
@@ -4858,65 +5349,95 @@
       execute print_scalar OMEGA
       execute print_scalar EDIFF 
 #end_debug
-                IF RESIDUAL_NORM  < EOM_THRES
+               IF LOCK == ZERO
+               IF EDIFF < LOCK_THRES
+                  LOCK = ONE
+               ENDIF
+               ENDIF 
+
+               IF RESIDUAL_NORM  < EOM_THRES
                   EXIT
-                ELSE
+               ELSE
+                  CALL FORM_CORRECTION_VEC
+                  CALL DRIVE_ORTHO
+                  CALL RESCALE_NEW_C
+               ENDIF 
 
-                   CALL FORM_CORRECTION_VEC
+# The subspace truncation. When the iteration count goes above
+# 19 and still have not converged, then select 12 vectors closest
+# to the eigenvalue of interest and start Davidson procedure
+# from iteration 13 again.
 
-                   CALL DRIVE_ORTHO
-                
-                   CALL RESCALE_NEW_C
+              IF ITER_COUNT > NINETEEN
 
-                ENDIF 
+                 TRNC_COUNT += ONE
+                 CALL TRUNCATE
+                 ITER_COUNT  = TWL
+
+              ENDIF
 
              ENDIF 
 
-           ENDDO SUBSP_DIM
+           ENDDO EOM_CYCLE
 
            EXECUTE SERVER_BARRIER 
 #bgn_debug
 #      execute print_scalar OMEGA 
 #end_debug
-
-           ITER_COUNT += -1.0
-           IF ITER_COUNT == MAX_SUBSP_DIM
+           SBSP_COUNT += MONE 
+           IF SBSP_COUNT == MAX_SUBSP_DIM
               IF RESIDUAL_NORM  > EOM_THRES
 #
 # The root under consideration could not be locates in 50 cycles.
 # Lets set energy to zero and inform the user whart that means
 #
-                OMEGA = 0.0
-              ENDIF 
-           ENDIF 
+           DO IONE
+            DO MROOTS
+               MCOUNT += ONE
+               IF MCOUNT == ROOT_COUNT
+                  PSEUDO_ROOTS(MROOTS,IONE) = OMEGA
+               ENDIF
+            ENDDO MROOTS
+            ENDDO IONE
 
-           IF SINGLET == ONE
-              DO IONE
-              MCOUNT = 0.0
-              DO MROOTS
-                 MCOUNT += 1.0
-                 IF MCOUNT == ROOT_COUNT
-                    DEA_S(MROOTS,IONE) = OMEGA
-                    TEE(MROOTS,IONE)   = DEA_S(MROOTS,IONE)
-                    PUT DEA_ENER_S(MROOTS,IONE) = TEE(MROOTS,IONE)
-                 ENDIF
-              ENDDO MROOTS
-              ENDDO IONE
-           ENDIF 
-           
-           IF TRIPLET == ONE
-              DO IONE
-              MCOUNT = 0.0
-              DO MROOTS
-                 MCOUNT += 1.0
-                 IF MCOUNT == ROOT_COUNT
-                    DEA_T(MROOTS,IONE) = OMEGA
-                    TEE(MROOTS,IONE)   = DEA_T(MROOTS,IONE)
-                    PUT DEA_ENER_T(MROOTS,IONE) = TEE(MROOTS,IONE)
-                 ENDIF 
-              ENDDO MROOTS
-              ENDDO IONE
+            OMEGA = 0.0
+
             ENDIF 
+          ENDIF 
+
+          IF SINGLET == ONE
+             DO IONE
+             MCOUNT = 0.0
+             DO MROOTS
+                MCOUNT += 1.0
+                IF MCOUNT == ROOT_COUNT
+                   DEA_S(MROOTS,IONE) = OMEGA
+                   TEE(MROOTS,IONE)   = DEA_S(MROOTS,IONE)
+                   IF OMEGA != ZERO
+                     PSEUDO_ROOTS(MROOTS,IONE) = OMEGA
+                   ENDIF
+                   PUT DEA_ENER_S(MROOTS,IONE) = TEE(MROOTS,IONE)
+                ENDIF
+             ENDDO MROOTS
+             ENDDO IONE
+          ENDIF 
+           
+          IF TRIPLET == ONE
+             DO IONE
+             MCOUNT = 0.0
+             DO MROOTS
+                MCOUNT += 1.0
+                IF MCOUNT == ROOT_COUNT
+                   DEA_T(MROOTS,IONE) = OMEGA
+                   TEE(MROOTS,IONE)   = DEA_T(MROOTS,IONE)
+                   IF OMEGA != ZERO
+                     PSEUDO_ROOTS(MROOTS,IONE) = OMEGA
+                   ENDIF
+                   PUT DEA_ENER_T(MROOTS,IONE) = TEE(MROOTS,IONE)
+                ENDIF 
+             ENDDO MROOTS
+             ENDDO IONE
+          ENDIF 
 
          ENDDO NROOTS 
          EXECUTE SERVER_BARRIER 

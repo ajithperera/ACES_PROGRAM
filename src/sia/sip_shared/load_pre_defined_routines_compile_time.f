@@ -414,7 +414,8 @@ C Ajith Perera, miscellaneous developments.
       dummy = load_user_sub('place_constanta'//char(0),0)
       dummy = load_user_sub('place_constantb'//char(0),0)
 C
-      dummy = load_user_sub('form_guess'//char(0),0)
+      dummy = load_user_sub('form_guess_r'//char(0),0)
+      dummy = load_user_sub('form_guess_l'//char(0),0)
       dummy = load_user_sub('xgeev'//char(0),0)
       dummy = load_user_sub('process_eigs'//char(0),0)
       dummy = load_user_sub('addrootindex'//char(0),0)
@@ -441,6 +442,7 @@ C
       dummy = load_user_sub('truncate_eom_subspace'//char(0),0)
       dummy = load_user_sub('reorder_array'//char(0),0)
       dummy = load_user_sub('find_min_eneg'//char(0),0)
+      dummy = load_user_sub('find_near'//char(0),0)
 c -----------------------------------------------------------------
 c Prakash instructions need for delta integrals
 c ------------------------------------------------------------------

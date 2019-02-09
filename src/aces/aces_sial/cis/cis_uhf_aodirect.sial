@@ -279,6 +279,8 @@
       Scalar E_OLD
       Scalar EDIFF 
       Scalar IMAP 
+      Scalar LEFT
+      Scalar RIGHT 
 #
       temp  Tx(MROOTS)
       temp TS(MINDEX50,NINDEX50)
@@ -4376,12 +4378,16 @@
       RHF_UHF     += ONE
       AO_DIRECT    = ONE
       EXACT_HY     = ZERO
-
+      LEFT         = ZERO
+      RIGHT        = ZERO
+  
 #bgn_debug
       EXECUTE  PRINT_SCALAR  eom_maxcyc
       EXECUTE  PRINT_SCALAR  RHF_UHF 
       EXECUTE  PRINT_SCALAR  CIS_THRES
 #end_debug
+
+      EXECUTE SET_ACES3_VARS RIGHT LEFT 
 
       CALL CREATE_ARRAYS
       IF AO_DIRECT != ONE

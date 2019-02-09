@@ -267,6 +267,8 @@
       Scalar RHF_UHF 
       Scalar NINE_NINE 
       Scalar IMAP
+      Scalar LEFT 
+      Scalar RIGHT 
 #
       temp  Tx(MROOTS)
       temp TS(MINDEX50,NINDEX50)
@@ -3794,6 +3796,10 @@
       ONE   = 1.0
       TWO   = 2.0
       THREE = 3.0
+      LEFT  = ZERO
+      RIGHT = ZERO
+   
+      EXECUTE SET_ACES3_VARS RIGHT LEFT
 
       SINGLET = ZERO
       TRIPLET = ZERO 
@@ -3935,6 +3941,7 @@
                    PARDO a, i
                       GET R1A(a,i) 
 #bgn_debug
+#                      execute dump_amp R1A(a,i)
 #end_debug
                       PUT CISA_S_VECS(a,i,MROOTS) = R1A(a,i)
                    ENDPARDO a, i

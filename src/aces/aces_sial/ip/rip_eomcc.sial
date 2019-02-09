@@ -21,14 +21,15 @@
       index jj1      = 1, 1
       index kk1      = 1, 1
 
-      Index Ndim     = 1, 50
+      Index Ndim     = 1, 20
       Index Nroots   = 1, 12
       Index Mroots   = 1, 12
-      Index Subsp_dim= 1, 50
-      Index Nindex50 = 1, 50
-      Index Mindex50 = 1, 50
-      Index Kindex50 = 1, 50
-      Index Lindex50 = 1, 50
+      Index Subsp_dim= 1, 20
+      Index Nindex50 = 1, 20
+      Index Mindex50 = 1, 20
+      Index Kindex50 = 1, 20
+      Index Lindex50 = 1, 20
+      Index Eom_cycle= 1,150
 #
       aoindex mu     = 1, norb
       aoindex nu     = 1, norb
@@ -488,6 +489,14 @@
       SCALAR LOCK_THRES
       SCALAR IMAX_KEEP
       SCALAR SBSP_COUNT 
+      SCALAR FIRST_VEC
+      SCALAR PREVS_VEC
+      SCALAR FOLLOW 
+      SCALAR LEFT 
+      SCALAR RIGHT 
+      SCALAR FORT 
+      SCALAR FIFT
+
 # -----------------------------------------------------------
 
       PROC READ_DATA
@@ -718,8 +727,8 @@
       ENDDO j
       EXECUTE SIP_BARRIER
     
-      EXECUTE FORM_GUESS IP_INIT_HAA  VEC_AA
-      EXECUTE FORM_GUESS IP_INIT_HBB  VEC_BB
+      EXECUTE FORM_GUESS_R IP_INIT_HAA  VEC_AA
+      EXECUTE FORM_GUESS_R IP_INIT_HBB  VEC_BB
 
       EXECUTE SIP_BARRIER
 #
@@ -910,26 +919,26 @@
       EXECUTE SIP_BARRIER 
 
 #bgn_debug
-#      tmpb=0.0
-#      tmpa=0.0
-#      suma=0.0
-#      sumb=0.0
-#      pardo i,kk1
-#         get r1a(i,kk1) 
-#         Tmp = r1a(i,kk1) * r1a(i,kk1) 
-#         tmpa += tmp
-#      endpardo i,kk1
-#      pardo j,kk1
-#         get r1b(j,kk1) 
-#         tmp = r1b(j,kk1) * r1b(j,kk1) 
-#         tmpb += tmp
-#      endpardo j,kk1
-#      execute server_barrier 
-#      collective suma +=tmpa
-#      collective sumb +=tmpb
-#      execute sip_barrier 
-#      execute print_scalar suma
-#      execute print_scalar sumb
+      tmpb=0.0
+      tmpa=0.0
+      suma=0.0
+      sumb=0.0
+      pardo i,kk1
+         get r1a(i,kk1) 
+         Tmp = r1a(i,kk1) * r1a(i,kk1) 
+         tmpa += tmp
+      endpardo i,kk1
+      pardo j,kk1
+         get r1b(j,kk1) 
+         tmp = r1b(j,kk1) * r1b(j,kk1) 
+         tmpb += tmp
+      endpardo j,kk1
+      execute server_barrier 
+      collective suma +=tmpa
+      collective sumb +=tmpb
+      execute sip_barrier 
+      execute print_scalar suma
+      execute print_scalar sumb
 #end_debug
 
       ENDPROC PREP_IP_GUESS
@@ -2757,45 +2766,45 @@
 #      EXECUTE SERVER_BARRIER 
 #
 #bgn_debug
-      tmpa=0.0
-      tmpb=0.0
-      suma=0.0
-      sumb=0.0
-      pardo i,kk1
-         get hr1a(i,kk1)
-         tmp = hr1a(i,kk1) * hr1a(i,kk1)
-         tmpa += tmp
-      endpardo i,kk1
-      pardo j,kk1
-         get hr1b(j,kk1)
-         tmp = hr1b(j,kk1) * hr1b(j,kk1)
-         tmpb += tmp
-      endpardo j,kk1
-      execute sip_barrier
-      collective suma +=tmpa
-      collective sumb +=tmpb
-      execute print_scalar suma
-      execute print_scalar sumb
-      tmpa =0.0
-      suma =0.0
-      pardo a,i1,kk1,i
-            get  HR2aa_a(a,i1,kk1,i)
-            tmp = HR2aa_a(a,i1,kk1,i) * HR2aa_a(a,i1,kk1,i)
-            tmpa += tmp
-      endpardo a,i1,kk1,i
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo b,j,j1, kk1
-            get  HR2bb_b(b,j1,kk1,j)
-            tmp = HR2bb_b(b,j1,kk1,j) * HR2bb_b(b,j1,kk1,j)
-            tmpa+= tmp
-      endpardo b,j,j1, kk1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
+#      tmpa=0.0
+#      tmpb=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,kk1
+#         get hr1a(i,kk1)
+#         tmp = hr1a(i,kk1) * hr1a(i,kk1)
+#         tmpa += tmp
+#      endpardo i,kk1
+#      pardo j,kk1
+#         get hr1b(j,kk1)
+#         tmp = hr1b(j,kk1) * hr1b(j,kk1)
+#         tmpb += tmp
+#      endpardo j,kk1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute print_scalar suma
+#      execute print_scalar sumb
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,i1,kk1,i
+#            get  HR2aa_a(a,i1,kk1,i)
+#            tmp = HR2aa_a(a,i1,kk1,i) * HR2aa_a(a,i1,kk1,i)
+#            tmpa += tmp
+#      endpardo a,i1,kk1,i
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo b,j,j1, kk1
+#            get  HR2bb_b(b,j1,kk1,j)
+#            tmp = HR2bb_b(b,j1,kk1,j) * HR2bb_b(b,j1,kk1,j)
+#            tmpa+= tmp
+#      endpardo b,j,j1, kk1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
 #      tmpa =0.0
 #      suma =0.0
 #      pardo j,i1,a,kk1
@@ -3620,6 +3629,7 @@
      OMEGA0   = A_VALUE 
      OMEGA0M  = A_VALUE 
      OMEGA0M *= -1.0
+     E_OLD    = OMEGA0
 #bgn_debug
      execute print_scalar OMEGA0M
 #end_debug
@@ -4689,13 +4699,21 @@
      PROC SELECT_VECS_MAX_OVLP
 #    -------------------------
 
-     NCOUNT = 0.0
+     IF FIRST_VEC == ONE
+        FOLLOW = ONE
+     ENDIF 
+     IF PREVS_VEC == ONE
+        FOLLOW = ITER_COUNT
+        FOLLOW -= ONE
+     ENDIF 
 
+     NCOUNT = 0.0
      DO NINDEX50
         NCOUNT += 1.0
-        IF NCOUNT  > 1.0
-           EXIT
-        ENDIF 
+
+         IF NCOUNT != FOLLOW 
+            EXIT 
+         ENDIF
 
            MCOUNT = 0.0
            DO MINDEX50
@@ -4764,7 +4782,10 @@
         EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
         IMAX_KEEP = IMAX
       ELSE
-        IMAX = IMAX_KEEP
+        EXECUTE SET_ACES3_VARS OMEGA THRTEN
+        EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+        EXECUTE SET_ACES3_VARS IMAX MONE
+        IMAX_KEEP = IMAX
       ENDIF
 
 #bgn_debug
@@ -4779,13 +4800,18 @@
 
      IF ROOT_COUNT == ONE
 
-# If we are working on the first root then always use the lowest
-# eigenvalue and the corresponding vector. Since we have ordered
-# eigenvalue and vectors in ascending order, the vector to be followed
-# is always one.
+# Always pick the closest eigenvalue to the starting eigenvalue 
 
-        IMAX = ONE
+        EXECUTE SET_ACES3_VARS OMEGA THRTEN
+        EXECUTE FIND_NEAR A_DIAGS A_DIAGS
+        EXECUTE SET_ACES3_VARS IMAX MONE
+        IMAX_KEEP = IMAX
+        IF IMAX_KEEP ==  ZERO
+           IMAX = ONE
+        ENDIF
+
       ELSE
+
 # Find the root from the subspace that is not too close to the
 # roots that have already been found.
 
@@ -4793,8 +4819,12 @@
            EXECUTE FIND_MIN_ENEG A_DIAGS PSEUDO_ROOTS
            EXECUTE SET_ACES3_VARS IMAX MONE
            IMAX_KEEP = IMAX
+        ELSE
+           EXECUTE SET_ACES3_VARS OMEGA THRTEN
+           EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+           EXECUTE SET_ACES3_VARS IMAX MONE
+           IMAX_KEEP = IMAX
         ENDIF
-        IMAX = IMAX_KEEP
       ENDIF
 
 #bgn_debug
@@ -6252,73 +6282,73 @@
      EXECUTE SIP_BARRIER
 
 #bgn_debug
-#      sumab=0.0
-#      tmpa=0.0
-#      tmpb=0.0
-#      suma=0.0
-#      sumb=0.0
-#      pardo i,kk1
-#         get r1a(i,kk1)
-#         tmp = r1a(i,kk1) * r1a(i,kk1)
-#         tmpa += tmp
-#      endpardo i,kk1
-#      pardo j,kk1
-#         get r1b(j,kk1)
-#         tmp = r1b(j,kk1) * r1b(j,kk1)
-#         tmpb += tmp
-#      endpardo j,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      collective sumb +=tmpb
-#      execute print_scalar suma
-#      execute print_scalar sumb
-#      sumab  = suma
-#      sumab += sumb
-#      tmpa =0.0
-#      suma =0.0
-#      pardo a,i1,kk1,i
-#            get  R2aa_a(a,i1,kk1,i)
-#            tmp = R2aa_a(a,i1,kk1,i) * R2aa_a(a,i1,kk1,i)
-#            tmpa += tmp
-#      endpardo a,i1,kk1,i
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo b,j,j1, kk1
-#            get  R2bb_b(b,j1,kk1,j)
-#            tmp = R2bb_b(b,j1,kk1,j) * R2bb_b(b,j1,kk1,j)
-#            tmpa+= tmp
-#      endpardo b,j,j1, kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo j,i1,a,kk1
-#            get R2aa_b(a,i1,kk1,j)
-#            tmp = R2aa_b(a,i1,kk1,j) * R2aa_b(a,i1,kk1,j)
-#            tmpa+= tmp
-#      endpardo j,i1,a,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      tmpa=0.0
-#      suma=0.0
-#      pardo i,j1,b,kk1
-#            get R2bb_a(b,j1,kk1,i)
-#            tmp = R2bb_a(b,j1,kk1,i) * R2bb_a(b,j1,kk1,i)
-#            tmpa+= tmp
-#      endpardo i,j1,b,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      execute print_scalar sumab
+      sumab=0.0
+      tmpa=0.0
+      tmpb=0.0
+      suma=0.0
+      sumb=0.0
+      pardo i,kk1
+         get r1a(i,kk1)
+         tmp = r1a(i,kk1) * r1a(i,kk1)
+         tmpa += tmp
+      endpardo i,kk1
+      pardo j,kk1
+         get r1b(j,kk1)
+         tmp = r1b(j,kk1) * r1b(j,kk1)
+         tmpb += tmp
+      endpardo j,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      collective sumb +=tmpb
+      execute print_scalar suma
+      execute print_scalar sumb
+      sumab  = suma
+      sumab += sumb
+      tmpa =0.0
+      suma =0.0
+      pardo a,i1,kk1,i
+            get  R2aa_a(a,i1,kk1,i)
+            tmp = R2aa_a(a,i1,kk1,i) * R2aa_a(a,i1,kk1,i)
+            tmpa += tmp
+      endpardo a,i1,kk1,i
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      tmpa =0.0
+      suma =0.0
+      pardo b,j,j1, kk1
+            get  R2bb_b(b,j1,kk1,j)
+            tmp = R2bb_b(b,j1,kk1,j) * R2bb_b(b,j1,kk1,j)
+            tmpa+= tmp
+      endpardo b,j,j1, kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      tmpa =0.0
+      suma =0.0
+      pardo j,i1,a,kk1
+            get R2aa_b(a,i1,kk1,j)
+            tmp = R2aa_b(a,i1,kk1,j) * R2aa_b(a,i1,kk1,j)
+            tmpa+= tmp
+      endpardo j,i1,a,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      tmpa=0.0
+      suma=0.0
+      pardo i,j1,b,kk1
+            get R2bb_a(b,j1,kk1,i)
+            tmp = R2bb_a(b,j1,kk1,i) * R2bb_a(b,j1,kk1,i)
+            tmpa+= tmp
+      endpardo i,j1,b,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      execute print_scalar sumab
 #end_debug
      ENDPROC RESCALE_NEW_C
 #    ---------------------
@@ -6330,7 +6360,8 @@
         OVERLAP_R(MINDEX50)  = 0.0
         DO NINDEX50
            TS(MINDEX50,NINDEX50) = 0.0
-           A_MATRIX(MINDEX50,NINDEX50)   = 0.0
+           A_MATRIX(MINDEX50,NINDEX50)  = 0.0
+           DVECTORS(MINDEX50,NINDEX50)  = 0.0
            PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
         ENDDO NINDEX50
      ENDDO MINDEX50
@@ -6569,6 +6600,7 @@
 
      ENDPROC C_CHECK
 #    ---------------
+
      PROC INIT_TO_ZERO
 #    -----------------
 
@@ -7261,6 +7293,54 @@
      ENDPROC INIT_DESTN_ARRAYS
 #    -------------------------
 
+     PROC SET_EOM_INCLUDE
+#    --------------------
+
+     EXECUTE SET_ACES3_VARS ITER_COUNT FORT
+     EXECUTE SET_ACES3_VARS ROOT_COUNT FIFT
+
+     ENDPROC SET_EOM_INCLUDE
+#    -----------------------
+     
+     PROC INIT_AUX_STATIC_ARRAYS
+#    ---------------------------
+
+      DO MINDEX50
+      DO NINDEX50
+         ETEMP(NINDEX50,MINDEX50)    = ZERO
+      ENDDO NINDEX50
+      ENDDO MINDEX50
+
+      DO NINDEX50
+        A_DIAGS(NINDEX50)          = ZERO
+        OVERLAP_R(NINDEX50)        = ZERO
+      ENDDO NINDEX50
+
+      DO KK1
+      DO MROOTS
+         PSEUDO_ROOTS(MROOTS,KK1) = ZERO
+         EOM_IPS(MROOTS)          = ZERO
+         DUMMY(KK1,KK1)           = ZERO
+      ENDDO MROOTS
+      ENDDO KK1
+
+      DO i 
+      DO NROOTS
+          RVEC_AA_INTMD(i,NROOTS) = ZERO
+      ENDDO NROOTS
+      ENDDO i
+
+      dO j
+      DO NROOTS
+         RVEC_BB_INTMD(j,NROOTS) = ZERO
+      ENDDO NROOTS
+      ENDDO j 
+
+      EXECUTE SIP_BARRIER
+
+     ENDPROC INIT_AUX_STATIC_ARRAYS
+#    ------------------------------
+
 #     BEGIN MAIN PROGRAM
 #     ------------------
 # Read data from BLOCK_DATA -> to be partially replaced
@@ -7276,6 +7356,8 @@
      NINETEEN = 19.0
      MONE     = -1.0
      THREE    = 3.0
+     FORT     = 14.0
+     FIFT     = 15.0
 
      TARGET_ROOTS = EOM_ROOTS
      EOM_THRES    = EOM_TOL
@@ -7285,26 +7367,33 @@
      MAX_OVLP     = ONE
      MIN_ENEG     = ZERO
      LOCK_THRES   = 0.001
+     FIRST_VEC    = ONE
+     PREVS_VEC    = ZERO
+     LEFT         = ZERO
+     RIGHT        = ZERO
 #
-      CALL READ_DATA
-      CALL CREATE_ARRAYS 
-      CALL INIT_DESTN_ARRAYS 
+     CALL READ_DATA
+     CALL CREATE_ARRAYS 
+     CALL INIT_DESTN_ARRAYS 
+     CALL INIT_AUX_STATIC_ARRAYS
+
+     EXECUTE SET_ACES3_VARS RIGHT LEFT
 
 # The default denominator is 1P-Hbar and can be switched to Hbar
      
-      CALL FORM_1HHP_DIAG
-      IF EOM_DENOM == ONE
-         CALL FORM_12HHP_DIAG
-      ENDIF
+     CALL FORM_1HHP_DIAG
+     IF EOM_DENOM == ONE
+        CALL FORM_12HHP_DIAG
+     ENDIF
 
-      CALL FORM_INITIAL_GUESS 
+     CALL FORM_INITIAL_GUESS 
 
 # The default iteration number is 30. Increase if desired.
 
      MAX_SUBSP_DIM  = EOM_MAXCYC
 
-      ROOT_COUNT = ZERO
-      DO NROOTS
+     ROOT_COUNT = ZERO
+     DO NROOTS
 
          ROOT_COUNT += ONE 
          IF ROOT_COUNT > TARGET_ROOTS
@@ -7320,12 +7409,14 @@
          SBSP_COUNT = ZERO
          LOCK       = ZERO
 
-         DO SUBSP_DIM
+         DO EOM_CYCLE
 
             CALL SET_TO_ZERO
 
             ITER_COUNT += ONE 
             SBSP_COUNT += ONE 
+
+            CALL SET_EOM_INCLUDE
 #bgn_debug
         execute print_scalar ITER_COUNT
         execute print_scalar SBSP_COUNT
@@ -7407,9 +7498,11 @@
       execute print_scalar OMEGA
       execute print_scalar EDIFF
 #end_debug
-              IF RESIDUAL_NORM < LOCK_THRES
+              IF LOCK == ZERO
+              IF EDIFF < LOCK_THRES
                  LOCK = ONE
               ENDIF
+              ENDIF 
 
               IF RESIDUAL_NORM  < EOM_THRES
                 EXIT
@@ -7434,14 +7527,13 @@
 
            ENDIF 
 
-         ENDDO SUBSP_DIM
+         ENDDO EOM_CYCLE 
 
          EXECUTE SERVER_BARRIER 
 #bgn_debug
       execute print_scalar OMEGA 
 #end_debug
 
-         SBSP_COUNT += MONE
          IF SBSP_COUNT == MAX_SUBSP_DIM
             IF RESIDUAL_NORM  > EOM_THRES
 #
@@ -7613,5 +7705,4 @@
 
                            ENDSIAL RIP_EOMCCSD
 #                          -------------------
-
 

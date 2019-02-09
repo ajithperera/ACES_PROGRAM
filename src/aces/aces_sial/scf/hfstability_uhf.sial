@@ -227,6 +227,8 @@
       Scalar Singlet 
       Scalar Triplet 
       Scalar MUlt 
+      Scalar LEFT
+      Scalar RIGHT 
 #
       temp TS(MINDEX50,NINDEX50)
       temp daoint(mu,nu,lambda,sigma) 
@@ -3351,6 +3353,10 @@
       MULT = 0.0
       ONE  = 1.0
       ZERO = 0.0
+      LEFT = ZERO
+      RIGHT= ZERO 
+
+      EXECUTE SET_ACES3_VARS RIGHT LEFT
 
       SINGLET = ZERO
       TRIPLET = ZERO 

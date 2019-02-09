@@ -18,7 +18,7 @@
 #
       index kiter    = 1, cc_iter
       index nroots   = 1, 12
-      index eomcycle = 1, 150
+      index eom_cycle= 1, 150
       Index Kroot    = 1, 12
       Index Subsp_dim= 1, 50
       Index Nindex50 = 1, 50
@@ -546,6 +546,13 @@
       SCALAR  LOCK
       SCALAR  LOCK_THRES
       SCALAR  IMAX_KEEP
+      SCALAR  FIRST_VEC 
+      SCALAR  PREVS_VEC
+      SCALAR  LEFT
+      SCALAR  RIGHT 
+      SCALAR  FORT
+      SCALAR  FIFT
+      SCALAR  FOLLOW
 #
 # ENDARRAYS USED IN XPROC 
 #
@@ -9182,6 +9189,7 @@
      OMEGA0   = A_VALUE
      OMEGA0M  = A_VALUE
      OMEGA0M *= -1.0
+     E_OLD    = OMEGA0
 
 # First the residual vector for iteration 1
    
@@ -10066,20 +10074,31 @@
 
      PROC SELECT_VECS_MAX_OVLP
 #    -------------------------
+     IF FIRST_VEC == ONE
+        FOLLOW = ONE
+     ENDIF
+     IF PREVS_VEC == ONE
+        FOLLOW = ITER_COUNT
+        FOLLOW -= ONE
+     ENDIF
+#bgn_debug
+     execute print_scalar follow
+#end_debug
 
      NCOUNT = 0.0
      DO NINDEX50
         NCOUNT += 1.0
-        IF NCOUNT  > 1.0
+
+        IF NCOUNT != FOLLOW
            EXIT
         ENDIF
 
-           MCOUNT = 0.0
-           DO MINDEX50
-              MCOUNT += 1.0
-              IF MCOUNT >  ITER_COUNT
-                 EXIT
-              ENDIF
+        MCOUNT = 0.0
+        DO MINDEX50
+           MCOUNT += 1.0
+           IF MCOUNT >  ITER_COUNT
+              EXIT
+           ENDIF
 
                  SUMA   = 0.0
                  SUMB   = 0.0
@@ -10140,6 +10159,9 @@
         EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
         IMAX_KEEP = IMAX
       ELSE
+        EXECUTE SET_ACES3_VARS OMEGA THRTEN
+        EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+        EXECUTE SET_ACES3_VARS IMAX MONE
         IMAX = IMAX_KEEP
       ENDIF
 #bgn_debug
@@ -10154,12 +10176,16 @@
 
      IF ROOT_COUNT == ONE
 
-# If we are working on the first root then always use the lowest
-# eigenvalue and the corresponding vector. Since we have ordered
-# eigenvalue and vectors in ascending order, the vector to be followed
-# is always one.
+# Always pick the closest eigenvalue to the starting eigenvalue
 
-        IMAX = ONE
+        EXECUTE SET_ACES3_VARS OMEGA THRTEN
+        EXECUTE FIND_NEAR A_DIAGS A_DIAGS
+        EXECUTE SET_ACES3_VARS IMAX MONE
+        IMAX_KEEP = IMAX
+        IF IMAX_KEEP ==  ZERO
+           IMAX = ONE
+        ENDIF
+
       ELSE
 # Find the root from the subspace that is not too close to the
 # roots that have already been found.
@@ -10168,8 +10194,12 @@
            EXECUTE FIND_MIN_ENEG A_DIAGS PSEUDO_ROOTS
            EXECUTE SET_ACES3_VARS IMAX MONE
            IMAX_KEEP = IMAX
+        ELSE
+           EXECUTE SET_ACES3_VARS OMEGA THRTEN
+           EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+           EXECUTE SET_ACES3_VARS IMAX MONE
+           IMAX_KEEP = IMAX
         ENDIF
-        IMAX = IMAX_KEEP
       ENDIF
 
 #bgn_debug
@@ -11809,6 +11839,7 @@
 
      ENDPROC COPY_HC
 #    ---------------
+
      PROC COPY_NORM_C
 #    ----------------
 
@@ -11926,6 +11957,15 @@
      ENDPROC COPY_NORM_C
 #    -------------------
 
+     PROC SET_EOM_INCLUDE
+#    --------------------
+
+     EXECUTE SET_ACES3_VARS ITER_COUNT FORT
+     EXECUTE SET_ACES3_VARS ROOT_COUNT FIFT
+
+     ENDPROC SET_EOM_INCLUDE
+#    -----------------------
+
      PROC TRUNCATE
 #    -------------
 # Reduce the subspace dimension.
@@ -11979,7 +12019,6 @@
 # Create arrays used and zero out some scalars 
 # -------------------------------------------- 
 #
-     MULT     = 0.0
      ONE      = 1.0
      ZERO     = 0.0
      TEN      = 10.0
@@ -11990,6 +12029,8 @@
      NINETEEN = 19.0
      MONE     = -1.0
      THREE    = 3.0
+     FORT     = 14.0
+     FIFT     = 15.0
 
      TARGET_ROOTS    = EOM_ROOTS
      EOM_THRES       = EOM_TOL
@@ -11997,13 +12038,20 @@
      EOM_DENOM       = EE_DENOM
      EOM_MAXCYC      = EE_MAXCYC
      EXACT_HY        = ZERO
+     MULT            = ZERO
      IDENS           = ONE
      MAX_OVLP        = ZERO
      MIN_ENEG        = ONE
      LOCK_THRES      = 0.001
+     FIRST_VEC       = ZERO
+     PREVS_VEC       = ONE
+     LEFT            = ZERO
+     RIGHT           = ZERO
 
      SINGLET = ZERO
      TRIPLET = ZERO
+
+     EXECUTE SET_ACES3_VARS RIGHT LEFT
 
 # The default Guess is CIS, can be switched by proper key-values.
 
@@ -12069,16 +12117,18 @@
               CALL PREP_MAX_DIAG_GUESS
            ENDIF
 
-           ITER_COUNT = 0.0
+           ITER_COUNT = ZERO
            SBSP_COUNT = ZERO
            LOCK       = ZERO
 
-           DO SUBSP_DIM
+           DO EOM_CYCLE
 
               CALL SET_TO_ZERO
 
-              ITER_COUNT += 1.0
+              ITER_COUNT += ONE
               SBSP_COUNT += ONE
+
+              CALL SET_EOM_INCLUDE
 
 # There is a misnomer here. The name iter_count and sbsp_count
 # should have been interchaned. This happened because subspace
@@ -12161,18 +12211,21 @@
 
               IF ITER_COUNT > ONE
                    EDIFF = E_OLD - OMEGA
-                ENDIF
-                E_OLD = OMEGA
-                EDIFF *=EDIFF
-                EXECUTE SQUARE_ROOT EDIFF HALF
+              ENDIF
+              E_OLD = OMEGA
+              EDIFF *=EDIFF
+              EXECUTE SQUARE_ROOT EDIFF HALF
 #bgn_debug
       execute print_scalar RESIDUAL_NORM
       execute print_scalar OMEGA
       execute print_scalar EDIFF
 #end_debug
-              IF RESIDUAL_NORM < LOCK_THRES
+              IF LOCK == ZERO
+              IF EDIFF < LOCK_THRES
                  LOCK = ONE
               ENDIF
+              ENDIF
+  
               IF RESIDUAL_NORM  < EOM_THRES
                 EXIT
               ELSE
@@ -12196,15 +12249,15 @@
 
           ENDIF
 
-         ENDDO SUBSP_DIM
+         ENDDO EOM_CYCLE 
 
          EXECUTE SERVER_BARRIER
 #bgn_debug
 #      execute print_scalar OMEGA
 #end_debug
 
-         ITER_COUNT += -1.0
-         IF ITER_COUNT == MAX_SUBSP_DIM
+         SBSP_COUNT += -1.0
+         IF SBSP_COUNT == MAX_SUBSP_DIM
             IF RESIDUAL_NORM  > EOM_THRES
 #
 # The root under consideration could not be located in in specified 

@@ -19,13 +19,13 @@
       index kiter    = 1, cc_iter
       index Nroots   = 1, 12
       index Mroots   = 1, 12
-      index eomcycle = 1, 150
+      index eom_cycle= 1, 150
       Index Kroot    = 1, 12
-      Index Subsp_dim= 1, 50
-      Index Nindex50 = 1, 50
-      Index Mindex50 = 1, 50
-      Index Kindex50 = 1, 50
-      Index Lindex50 = 1, 50
+      Index Subsp_dim= 1, 20
+      Index Nindex50 = 1, 20
+      Index Mindex50 = 1, 20
+      Index Kindex50 = 1, 20
+      Index Lindex50 = 1, 20
       index indone   = 1, 1 
       Index jatom    = 1, natoms
       Index nindex12 = 1, 12
@@ -319,6 +319,13 @@
       SCALAR  LOCK
       SCALAR  LOCK_THRES 
       SCALAR  IMAX_KEEP
+      SCALAR  FIRST_VEC
+      SCALAR  PREVS_VEC
+      SCALAR  LEFT 
+      SCALAR  RIGHT 
+      SCALAR  FORT 
+      SCALAR  FIFT 
+      SCALAR  FOLLOW 
 #
 # Declare two-electron integral arrays
 # ------------------------------------
@@ -6597,6 +6604,7 @@
      OMEGA0   = A_VALUE
      OMEGA0M  = A_VALUE
      OMEGA0M *= -1.0
+     E_OLD    = OMEGA0
 
 # First the residual vector for iteration 1
 
@@ -7165,19 +7173,31 @@
      PROC SELECT_VECS_MAX_OVLP
 #    -------------------------
 
+     IF FIRST_VEC == ONE
+        FOLLOW = ONE
+     ENDIF
+     IF PREVS_VEC == ONE
+        FOLLOW = ITER_COUNT
+        FOLLOW -= ONE
+     ENDIF
+#bgn_debug
+     execute print_scalar follow
+#end_debug
+
      NCOUNT = 0.0
      DO NINDEX50
         NCOUNT += 1.0
-        IF NCOUNT  > 1.0
+
+        IF NCOUNT != FOLLOW
            EXIT
         ENDIF
 
-           MCOUNT = 0.0
-           DO MINDEX50
-              MCOUNT += 1.0
-              IF MCOUNT >  ITER_COUNT
-                 EXIT
-              ENDIF
+        MCOUNT = 0.0
+        DO MINDEX50
+           MCOUNT += 1.0
+           IF MCOUNT >  ITER_COUNT
+              EXIT
+           ENDIF
 
                  SUMA   = 0.0
                  SUMB   = 0.0
@@ -7222,6 +7242,9 @@
         EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
         IMAX_KEEP = IMAX
       ELSE 
+        EXECUTE SET_ACES3_VARS OMEGA THRTEN
+        EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+        EXECUTE SET_ACES3_VARS IMAX MONE
         IMAX = IMAX_KEEP 
       ENDIF 
 
@@ -7237,13 +7260,18 @@
 
      IF ROOT_COUNT == ONE
 
-# If we are working on the first root then always use the lowest 
-# eigenvalue and the corresponding vector. Since we have ordered 
-# eigenvalue and vectors in ascending order, the vector to be followed
-# is always one.
+# Always pick the closest eigenvalue to the starting eigenvalue
 
-        IMAX = ONE
+        EXECUTE SET_ACES3_VARS OMEGA THRTEN
+        EXECUTE FIND_NEAR A_DIAGS A_DIAGS
+        EXECUTE SET_ACES3_VARS IMAX MONE
+        IMAX_KEEP = IMAX
+        IF IMAX_KEEP ==  ZERO
+           IMAX = ONE
+        ENDIF
+
       ELSE
+
 # Find the root from the subspace that is not too close to the
 # roots that have already been found.
 
@@ -7251,8 +7279,12 @@
            EXECUTE FIND_MIN_ENEG A_DIAGS PSEUDO_ROOTS 
            EXECUTE SET_ACES3_VARS IMAX MONE
            IMAX_KEEP = IMAX
-        ENDIF 
-        IMAX = IMAX_KEEP 
+        ELSE
+          EXECUTE SET_ACES3_VARS OMEGA THRTEN
+          EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+          EXECUTE SET_ACES3_VARS IMAX MONE
+          IMAX_KEEP = IMAX
+        ENDIF
       ENDIF 
 
 #bgn_debug
@@ -8357,7 +8389,7 @@
             SUM_R += HC_AA
             SUM_R += HC_AB
 #bgn_debug
-     execute print_scalar SUM_R
+#     execute print_scalar SUM_R
 #end_debug
             EXPONENT = 0.5
             EXECUTE NORM_FAC SUM_R EXPONENT
@@ -8567,6 +8599,15 @@
      ENDPROC COPY_HC
 #    ---------------
 
+     PROC SET_EOM_INCLUDE
+#    --------------------
+
+     EXECUTE SET_ACES3_VARS ITER_COUNT FORT
+     EXECUTE SET_ACES3_VARS ROOT_COUNT FIFT
+
+     ENDPROC SET_EOM_INCLUDE
+#    -----------------------
+
      PROC TRUNCATE 
 #    -------------
 # Reduce the subspace dimension. 
@@ -8620,6 +8661,9 @@
       TWL      = TWELVE 
       NINETEEN = 19.0
       MONE     = -1.0
+      THREE    = 3.0
+      FORT     = 14.0
+      FIFT     = 15.0
 
       CALL CREATE_ARRAYS
       CALL READ_AMP
@@ -8644,8 +8688,14 @@
      MAX_OVLP         = ZERO
      MIN_ENEG         = ONE 
      LOCK_THRES       = 0.001
+     FIRST_VEC        = ONE
+     PREVS_VEC        = ZERO 
+     LEFT             = ZERO
+     RIGHT            = ZERO
 
 # The default Guess is CIS, can be switched by proper key-values.
+
+     EXECUTE SET_ACES3_VARS LEFT RIGHT 
 
      CIS_GUESS       = ONE 
      MAX_DIAGS_GUESS = ZERO 
@@ -8673,8 +8723,6 @@
      ROOT_COUNT = ZERO
      TRNC_COUNT = ZERO
  
-     TARGET_ROOTS = 5.0
-
      DO NROOTS
 
          ROOT_COUNT += ONE 
@@ -8698,12 +8746,14 @@
          SBSP_COUNT = ZERO
          LOCK       = ZERO 
 
-         DO SUBSP_DIM
+         DO EOM_CYCLE 
 
             CALL SET_TO_ZERO
 
             ITER_COUNT += ONE
             SBSP_COUNT += ONE
+
+            CALL SET_EOM_INCLUDE 
 
 # There is a misnomer here. The name iter_count and sbsp_count 
 # should have been interchaned. This happened because subspace 
@@ -8784,19 +8834,21 @@
 
               IF ITER_COUNT > ONE
                    EDIFF = E_OLD - OMEGA
-                ENDIF
-                E_OLD = OMEGA
-                EDIFF *=EDIFF
-                EXECUTE SQUARE_ROOT EDIFF HALF
+              ENDIF
+              E_OLD = OMEGA
+              EDIFF *=EDIFF
+              EXECUTE SQUARE_ROOT EDIFF HALF
 #bgn_debug
       execute print_scalar RESIDUAL_NORM
       execute print_scalar OMEGA
       execute print_scalar EDIFF
 #end_debug
-              IF RESIDUAL_NORM < LOCK_THRES
+              IF LOCK  == ZERO
+              IF EDIFF < LOCK_THRES
                  LOCK = ONE
               ENDIF 
-
+              ENDIF 
+     
               IF RESIDUAL_NORM  < EOM_THRES
                 EXIT
               ELSE
@@ -8817,10 +8869,9 @@
                  ITER_COUNT  = TWL
 
               ENDIF
-
           ENDIF
 
-         ENDDO SUBSP_DIM
+         ENDDO EOM_CYCLE 
 
          EXECUTE SERVER_BARRIER
 #bgn_debug

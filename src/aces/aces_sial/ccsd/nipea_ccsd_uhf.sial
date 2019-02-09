@@ -9063,13 +9063,7 @@
 # Write amplitudes to file
 # ------------------------
 #
-      execute sip_barrier
-      execute blocks_to_list   t1a_old
-      execute blocks_to_list   t1b_old
-      execute blocks_to_list   T2old_aa
-      execute blocks_to_list   T2old_ab
-      execute blocks_to_list   T2old_bb
-
+      execute server_barrier
       EXECUTE BLOCKS_TO_LIST  VSpipi(p,i,p1,i1)
       EXECUTE BLOCKS_TO_LIST  Vaaii
       EXECUTE BLOCKS_TO_LIST  Viaai
@@ -9086,8 +9080,14 @@
       EXECUTE BLOCKS_TO_LIST  Viabj
       EXECUTE BLOCKS_TO_LIST  Vaabj
 
+      execute blocks_to_list   t1a_old
+      execute blocks_to_list   t1b_old
+      execute blocks_to_list   T2old_aa
+      execute blocks_to_list   T2old_ab
+      execute blocks_to_list   T2old_bb
+
       execute write_blocks_to_list
-      execute sip_barrier
+      execute server_barrier
 #
                            ENDSIAL ECCSD_UHF
 #

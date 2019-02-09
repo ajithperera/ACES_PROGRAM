@@ -123,7 +123,7 @@ C
 
       If (Ndim .Gt. Maxdim) Then
          Write(6,"(a,a)") "@-PROCESS_EIGS: Exceeded the max",
-     +                    " dimension allowed in PROCESS_EIGS"
+     +                    " dimension allowed in XGEEV"
          Call abort_job()
       Endif 
 C

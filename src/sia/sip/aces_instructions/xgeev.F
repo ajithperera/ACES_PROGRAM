@@ -117,7 +117,7 @@ C
 C Hbar is non-symmetric matrix, and we obtain both left/right eigenvectors.
 
       Ndim = (i2 -i1) + 1
-#ifdef _DEBUG_LVL0
+C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a,i4)") "@-Entry to XGEEV order of the matrix", 
      +                Ndim 
@@ -127,7 +127,7 @@ C Hbar is non-symmetric matrix, and we obtain both left/right eigenvectors.
       enddo 
       call output(Hbar,1,k,1,k,Ndim,Ndim,1)
       Endif 
-#endif 
+C#endif 
 
       If (Ndim .Gt. Maxdim) Then
          Write(6,"(a,a)") "@-XGEEV: Exceeded the max",
@@ -143,9 +143,9 @@ C Hbar is non-symmetric matrix, and we obtain both left/right eigenvectors.
       Write(6,"(a)") "The eigenvectors of the incoming matrix"
       Write(6,"(a)") "The right-hand side"
       call output(EvecR,1,k,1,k,Ndim,Ndim,1)
-      Write(6,"(a)") "The left-hand side"
-      call output(EvecL,1,k,1,k,Ndim,Ndim,1)
-      write(6,*) Lhs,rhs
+C      Write(6,"(a)") "The left-hand side"
+C      call output(EvecL,1,k,1,k,Ndim,Ndim,1)
+      write(6,"(a,2i3)") "Lhs,rhs: ",lhs,rhs 
       endif
 #endif 
 C Copy the eigenvectors to returned array (Guess_Vec) and replace
@@ -153,12 +153,12 @@ C the digonal of incoming matrix (Hbar) with eigenvalues.
 C (by defalut copy the right eigenvector). If RHS or LHS is set
 C then we choose. 
 
-      Call Dcopy(Ndim*Ndim, EvecR, 1, Guess_vec,1)
-
       If (RHS .EQ. 1 .AND. LHS .EQ. 0) Then
          Call Dcopy(Ndim*Ndim, EvecR, 1, Guess_vec,1)
       Elseif (RHS .EQ. 0 .AND. LHS .EQ. 1) Then
          Call Dcopy(Ndim*Ndim, EvecL, 1, Guess_vec,1)
+      ELse if (RHS .EQ. 0 .AND. LHS .EQ. 0) Then
+         Call Dcopy(Ndim*Ndim, EvecR, 1, Guess_vec,1)
       Endif 
 
       Call Zero(Hbar,Ndim*Ndim)
@@ -166,7 +166,7 @@ C then we choose.
          Hbar(i,i) = Eigr(i)
       Enddo 
 
-#ifdef _DEBUG_LVL0
+C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a)") "Eigenvalues/vectors of the incoming matrix"
       Write(6,"(a)") "The right-hand side"
@@ -177,7 +177,7 @@ C then we choose.
 C      Write(6,"(a)") "The left-hand side"
 C      call output(EvecL,1,k,1,k,Ndim,Ndim,1)
       endif 
-#endif 
+C#endif 
 
       Return
       End
