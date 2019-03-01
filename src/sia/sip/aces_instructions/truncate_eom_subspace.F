@@ -111,7 +111,7 @@ C
 
       Double Precision Eigs(i1:i2),Eigvecs(a1:a2,b1:b2)
       Double Precision Residual,Xclose 
-      Double Precision Scr(Maxdim)
+      Double Precision Scr(Maxdim),Ddot 
 
       Data Ione /1/
 
@@ -176,7 +176,7 @@ C dimensions,
          Eigs(Iclose) = 1.0D+30
       Enddo 
 
-C Makesure the all the selecteD eigenvalues make sense.
+C Make sure the all the selected eigenvalues make sense.
 
       Ndim_test = Ndim_new
       Do I = Ndim_test, 1, -1
@@ -198,7 +198,7 @@ C Makesure the all the selecteD eigenvalues make sense.
       Write(6,"(a)") " The subspace eigenvalues and vectors",
      +               " before orthog."
       Write(6,"(6(1X,F15.7))") (Eval_selct(i),i=1,Ndim_new)
-      call output(Evec_selct,1,Ndim_old,1,Ndim_new,Ndim_old,Ndim_new,1)
+      call output(Evec_selct,1,Ndim_old,1,Ndim_new,Maxdim,Maxdim,1)
       endif 
 #endif 
 
@@ -206,7 +206,7 @@ C Schmidt Orthogonalize the subspace.
 
       Do I = 2, Ndim_new
          Call GSchmidt_v2(Evec_selct(1,I),Evec_selct,Ndim_old,
-     +                    I-1,Scr,Residual)
+     +                    I-1,Maxdim,Scr,Residual)
       Enddo 
 
       Call Dcopy(Ndim_new,Eval_selct,1,Eigs,1)
@@ -214,17 +214,21 @@ C Schmidt Orthogonalize the subspace.
          Call Dcopy(Ndim_old,Evec_selct(1,I),1,Eigvecs(1,I),1)
       Enddo 
 
-#ifdef _DEBUG_LVL0
+C#ifdef _DEBUG_LVL0
       if (Me.eq.0) Then 
       Write(6,*) " The subspace wigenvalues and vectors after orthog."
       Write(6,"(6(1X,F15.7))") (Eigs(i),i=1,Ndim_New)
       call output(Eigvecs,1,Ndim_old,1,Ndim_new,Ndim2,Ndim3,1)
       Call Dzero(Scr,Ndim_new*Ndim_new)
-      call xgemm("T","N",Ndim_new,Ndim_new,Ndim_old,1.0D0,Evec_selct,
-     +            Ndim_old,Evec_selct,Ndim_old,0.0D0,Scr,Ndim_new)
+      do j=1,Ndim_new 
+      do i=1,i
+         scr((j-1)*Ndim_new+i) = ddot(Ndim_old,Evec_selct(1,i),1,
+     &                                Evec_selct(1,j),1)
+      enddo
+      enddo 
       call output(scr,1,Ndim_new,1,Ndim_new,Ndim_new,Ndim_new,1)
       endif 
-#endif `
+C#endif `
 
       Return
       End
@@ -251,14 +255,15 @@ C Schmidt Orthogonalize the subspace.
       Return
       End
 
-      Subroutine GSchmidt_v2(Vec,Vorth,Nsize,Ndim,Tmp,Residual)
+      Subroutine GSchmidt_v2(Vec,Vorth,Nsize,Ndim,Maxdim,Tmp,
+     +                       Residual)
 
       Implicit None
-      Double Precision Vec(Nsize),Vorth(Nsize,Ndim)
+      Double Precision Vec(Nsize),Vorth(Maxdim,Maxdim)
       Double Precision Tmp(Nsize)
       Double Precision Residual,One,Fact,Empty,X
       Double Precision Ddot,Dsqrt
-      Integer Nsize,Ndim,I
+      Integer Nsize,Ndim,Maxdim,I
 
       include 'parallel_info.h'
 
@@ -278,6 +283,19 @@ C Schmidt Orthogonalize the subspace.
           Endif 
           Return
       Endif 
+#ifdef _DEBUG_LVL0
+      if (me.eq.0) then
+      write(6,"(a)") " The old vector in gschmidt_v2"
+      call output(vec,1,nsize,1,1,nsize,1,1)
+      write(6,"(a)") " orthogonal vectors in gschmidt_v2"
+      call output(vorth,1,nsize,1,ndim,maxdim,maxdim,1)
+      do i=1,Ndim
+      tmp(i)=ddot(nsize,vorth(1,i),1,vec,1)
+      enddo 
+      write(6,"(a)") " The old overlap in gschmidt_v2"
+      call output(tmp,1,1,1,ndim,1,ndim,1)
+      endif 
+#endif 
 
       Call Dcopy(Nsize,Vec,1,Tmp,1)
       Do I = Ndim, 1, -1
@@ -287,8 +305,29 @@ C Schmidt Orthogonalize the subspace.
       Call Dcopy(Nsize,Tmp,1,Vec,1)
       
       Residual = Dsqrt(Ddot(Nsize,Vec,1,Vec,1))
-      X = One/Residual
-      Call Dscal(Nsize,X,Vec,1)
+
+      If (Residual .NE. Empty) Then
+          X = One/Residual
+          Call Dscal(Nsize,X,Vec,1)
+      Else
+         If (Me.eq.0) Then
+             Write(6,"(a)") "Divsion by zero error occurs. The",
+     +                      "eigenvectors are not proper"
+         Endif 
+      Endif 
+#ifdef _DEBUG_LVL0
+      if (me.eq.0) then
+      write(6,"(a)") " The new vector in gschmidt_v2"
+      call output(vec,1,nsize,1,1,nsize,1,1)
+      write(6,"(a)") " orthogonal vectors in gschmidt_v2"
+      call output(vorth,1,nsize,1,ndim,maxdim,maxdim,1)
+      do i=1,Ndim
+      tmp(i)=ddot(nsize,vorth(1,i),1,vec,1)
+      enddo 
+      write(6,"(a)") " The current overlap in gschmidt_v2"
+      call output(tmp,1,1,1,ndim,1,ndim,1)
+      endif 
+#endif 
 
       Return
       End

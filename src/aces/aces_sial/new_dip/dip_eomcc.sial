@@ -2647,7 +2647,7 @@
         EXECUTE SET_ACES3_VARS OMEGA THRTEN
         EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
         EXECUTE SET_ACES3_VARS IMAX MONE
-        IMAX = IMAX_KEEP
+        IMAX_KEEP = IMAX
       ENDIF
 #bgn_debug
 #     execute print_scalar imax 
@@ -4050,6 +4050,7 @@
 #    -------------
 # Reduce the subspace dimension.
 
+     EXECUTE SERVER_BARRIER 
      IF EOM_MAXCYC < TWELVE
         NREDUCE  = EOM_MAXCYC
         NREDUCE -= THREE

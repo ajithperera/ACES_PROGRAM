@@ -7343,6 +7343,7 @@
 #    -------------
 # Reduce the subspace dimension.
 
+     EXECUTE SERVER_BARRIER 
      IF EOM_MAXCYC < TWELVE
         NREDUCE  = EOM_MAXCYC
         NREDUCE -= THREE

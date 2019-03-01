@@ -351,6 +351,12 @@
       SCALAR  SECONDMOM
       SCALAR  LRNORM  
       SCALAR  esum  
+      scalar jcount
+      scalar kcount   
+      scalar tmpa
+      scalar suma
+      scalar sumcv
+      scalar tmp
 #
 #
 #  convergence correction
@@ -741,7 +747,6 @@
       temp tbjai(b,j,a1,i1) 
       temp eroot(kindex12,kindex12) 
 
-      scalar kcount 
       scalar fact 
       scalar lfact 
       scalar esum1
@@ -11664,6 +11669,39 @@
 #
      execute sip_barrier
      execute server_barrier
+#bgn_debug
+      tmpa=0.0
+      suma=0.0
+      pardo i,a
+         get vconv1a(a,i)
+         tmp = vconv1a(a,i) * vconv1a(a,i)
+         tmpa += tmp
+      endpardo i,a
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa =0.0
+      suma =0.0
+      pardo a,i1,a1,i
+            request  vconv2aa(a,i1,a1,i) i
+            tmp =  vconv2aa(a,i1,a1,i) *  vconv2aa(a,i1,a1,i)
+            tmpa += tmp
+      endpardo a,i1,a1,i
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa =0.0
+      suma =0.0
+      pardo j,i,a,b
+            request vconv2ab(a,i,b,j) j
+            tmp = vconv2ab(a,i,b,j) * vconv2ab(a,i,b,j)
+            tmpa+= tmp
+      endpardo j,i,a, b
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+#end_debug
+
 #
 # -------------------------------------------------------------------------------------
 # Start of correction ??? 
@@ -28423,6 +28461,64 @@
                endif # k20 <= 12
             ENDDO k20
       ENDPARDO a, i, b1, j1 
+#--------------
+      jcount=0.0
+      do j21 
+      jcount+=1.0
+      if jcount > 12.0 
+      exit
+      endif
+      kcount=0.0
+      do k21
+      kcount += 1.0
+      if kcount > 12.0
+        exit
+      endif
+      tmpa=0.0
+      suma=0.0
+      pardo i,a
+         get VC1A(a,i,j21)
+         get VC1A(a,i,k21)
+         t1ai(a,i) = VC1A(a,i,j21)
+         tai(a,i)  = VC1A(a,i,k21) 
+         tmp =   tai(a,i) *  t1ai(a,i)
+         tmpa += tmp
+      endpardo i,a
+      execute sip_barrier
+      collective suma +=tmpa
+      sumcv=suma
+      sumcv+=suma
+      tmpa =0.0
+      suma =0.0
+      pardo a,i1,a1,i
+            request  VC2AA(a,i,a1,i1,j21) i
+            request  VC2AA(a,i,a1,i1,k21) i
+            Taiai(a,i,a1,i1)  = VC2AA(a,i,a1,i1,j21) 
+            T1aiai(a,i,a1,i1) = VC2AA(a,i,a1,i1,k21) 
+            tmp = Taiai(a,i,a1,i1) * T1aiai(a,i,a1,i1)
+            tmpa += tmp
+      endpardo a,i1,a1,i
+      execute sip_barrier
+      collective suma +=tmpa
+      sumcv+=suma
+      sumcv+=suma
+      tmpa  =0.0
+      suma  =0.0
+      pardo j,i,a,b
+            request  VC2AB(a,i,a1,i1,j21) i
+            request  VC2AB(a,i,a1,i1,k21) i
+            Taibj(a,i,b,j)  = VC2AB(a,i,a1,i1,j21)
+            T1aibj(a,i,b,j) = VC2AB(a,i,a1,i1,k21)
+            tmp =   Taibj(a,i,b,j) * T1aibj(a,i,b,j)
+            tmpa+= tmp
+      endpardo j,i,a, b
+      execute sip_barrier
+      collective suma +=tmpa
+      sumcv+=suma
+      execute print_scalar sumcv
+      enddo k21
+      enddo j21
+#--------------------------------------
 #
       ENDPROC TRANSFORM
 #     ----------------- 

@@ -21,14 +21,14 @@
       index jj1      = 1, 1
       index kk1      = 1, 1
 
-      Index Ndim     = 1, 50
+      Index Ndim     = 1, 20
       Index Nroots   = 1, 12
       Index Mroots   = 1, 12
-      Index Subsp_dim= 1, 50
-      Index Nindex50 = 1, 50
-      Index Mindex50 = 1, 50
-      Index Kindex50 = 1, 50
-      Index Lindex50 = 1, 50
+      Index Subsp_dim= 1, 20
+      Index Nindex50 = 1, 20
+      Index Mindex50 = 1, 20
+      Index Kindex50 = 1, 20
+      Index Lindex50 = 1, 20
       Index Eom_cycle= 1, 150
 #
       aoindex mu     = 1, norb
@@ -5037,7 +5037,7 @@
         EXECUTE SET_ACES3_VARS OMEGA THRTEN
         EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
         EXECUTE SET_ACES3_VARS IMAX MONE
-        IMAX = IMAX_KEEP
+        IMAX_KEEP = IMAX
       ENDIF
 
 #bgn_debug
@@ -7522,6 +7522,7 @@
 #    -------------
 # Reduce the subspace dimension.
 
+     EXECUTE SERVER_BARRIER 
      IF EOM_MAXCYC < TWELVE
         NREDUCE  = EOM_MAXCYC
         NREDUCE -= THREE
@@ -7716,7 +7717,7 @@
 #end_debug
               IF LOCK == ZERO 
                  IF EDIFF < LOCK_THRES
-                    LOCK = ONE
+                    LOCK = ONE 
                  ENDIF
                ENDIF 
 
@@ -7733,13 +7734,13 @@
 # to the eigenvalue of interest and start Davidson procedure
 # from iteration 13 again.
 
-#              IF ITER_COUNT > NINETEEN
-#
-#                 TRNC_COUNT += ONE
-#                 CALL TRUNCATE
-#                 ITER_COUNT  = TWL
-#
-#              ENDIF
+              IF ITER_COUNT > NINETEEN
+
+                 TRNC_COUNT += ONE
+                 CALL TRUNCATE
+                 ITER_COUNT  = TWL
+
+              ENDIF
            ENDIF
 
          EXECUTE SERVER_BARRIER 

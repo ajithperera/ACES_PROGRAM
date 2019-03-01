@@ -326,6 +326,7 @@
       SCALAR  FORT 
       SCALAR  FIFT 
       SCALAR  FOLLOW 
+      SCALAR  LIMIT
 #
 # Declare two-electron integral arrays
 # ------------------------------------
@@ -368,8 +369,14 @@
       Distributed RES1a(a,i)
       Distributed RES1b(b,j)
       Distributed CORR_VECA(a,i)
+      Distributed CORR_VECA_N(a,i)
       Distributed CORR_VECB(b,j)
+      Distributed CORR_VECB_N(b,j)
       distributed VC1A_HIST(a,i,NINDEX50)
+      distributed VC1A_TRUNCT(a,i,NINDEX50)
+      distributed VC1A_TRUNCT_PICK_S(a,i)
+      distributed VC1A_TRUNCT_PICK_E(a,i)
+
       distributed VCH1A_HIST(a,i,NINDEX50)
       distributed VC1B_HIST(b,j,NINDEX50)
       distributed VCH1B_HIST(b,j,NINDEX50)
@@ -401,9 +408,21 @@
       Served CORR_VECaa(a,i,a1,i1)
       Served CORR_VECbb(b,j,b1,j1)
       Served CORR_VECab(a,i,b,j)
+      Served CORR_VECaa_N(a,i,a1,i1)
+      Served CORR_VECbb_N(b,j,b1,j1)
+      Served CORR_VECab_N(a,i,b,j)
       served VCACT2AA_HIST(a,i,a1,i1,NINDEX50)
       served VCACT2BB_HIST(b,j,b1,j1,NINDEX50)
       served VCACT2AB_HIST(a,i,b,j,NINDEX50)
+      served VCACT2AA_TRUNCT(a,i,a1,i1,NINDEX50)
+      served VCACT2BB_TRUNCT(b,j,b1,j1,NINDEX50)
+      served VCACT2AB_TRUNCT(a,i,b,j,NINDEX50)
+      served VCACT2AA_TRUNCT_PICK_S(a,i,a1,i1)
+      served VCACT2BB_TRUNCT_PICK_S(b,j,b1,j1)
+      served VCACT2AB_TRUNCT_PICK_S(a,i,b,j)
+      served VCACT2AA_TRUNCT_PICK_E(a,i,a1,i1)
+      served VCACT2BB_TRUNCT_PICK_E(b,j,b1,j1)
+      served VCACT2AB_TRUNCT_PICK_E(a,i,b,j)
       served VCHACT2AA_HIST(a,i,a1,i1,NINDEX50)
       served VCHACT2BB_HIST(b,j,b1,j1,NINDEX50)
       served VCHACT2AB_HIST(a,i,b,j,NINDEX50)
@@ -5366,36 +5385,36 @@
       deallocate LFmi_b(*,*) 
       execute server_barrier 
 #bgn_debug
-      tmpa=0.0
-      suma=0.0
-      pardo i,a
-         get vchact1a(a,i)
-         tmp = vchact1a(a,i) * vchact1a(a,i)
-         tmpa += tmp
-      endpardo i,a
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo a,i1,a1,i
-            request  VCHACT2aa(a,i1,a1,i) i
-            tmp = VCHACT2aa(a,i1,a1,i) * VCHACT2aa(a,i1,a1,i)
-            tmpa += tmp
-      endpardo a,i1,a1,i
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo j,i1,a,b
-            request VCHACT2ab(a,i1,b,j) j
-            tmp = VCHACT2ab(a,i1,b,j) * VCHACT2ab(a,i1,b,j)
-            tmpa+= tmp
-      endpardo j,i1,a, b
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo i,a
+#         get vchact1a(a,i)
+#         tmp = vchact1a(a,i) * vchact1a(a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,i1,a1,i
+#            request  VCHACT2aa(a,i1,a1,i) i
+#            tmp = VCHACT2aa(a,i1,a1,i) * VCHACT2aa(a,i1,a1,i)
+#            tmpa += tmp
+#      endpardo a,i1,a1,i
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo j,i1,a,b
+#            request VCHACT2ab(a,i1,b,j) j
+#            tmp = VCHACT2ab(a,i1,b,j) * VCHACT2ab(a,i1,b,j)
+#            tmpa+= tmp
+#      endpardo j,i1,a, b
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
 #end_debug
 #
      ENDPROC HR_MULT
@@ -5767,38 +5786,6 @@
 
       delete Faa
       delete Fab
-#bgn_debug
-      tmpa=0.0
-      suma=0.0
-      pardo i,a
-         get vconv1a(a,i)
-         tmp = vconv1a(a,i) * vconv1a(a,i)
-         tmpa += tmp
-      endpardo i,a
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo a,i1,a1,i
-            request  vconv2aa(a,i1,a1,i) i
-            tmp =  vconv2aa(a,i1,a1,i) *  vconv2aa(a,i1,a1,i)
-            tmpa += tmp
-      endpardo a,i1,a1,i
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo j,i,a,b
-            request vconv2ab(a,i,b,j) j
-            tmp = vconv2ab(a,i,b,j) * vconv2ab(a,i,b,j)
-            tmpa+= tmp
-      endpardo j,i,a, b
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-#end_debug
 #
      ENDPROC FORM_12HHPP_DIAG
 #    ------------------------
@@ -5973,6 +5960,9 @@
       create R1A_VECS
       create R1B_VECS
       create VC1A_HIST
+      create VC1A_TRUNCT
+      create VC1A_TRUNCT_PICK_S
+      create VC1A_TRUNCT_PICK_E
       create VCH1A_HIST
       create Y1a
       create Y1a_TRUNCT
@@ -5981,6 +5971,7 @@
       create HY1a_PICKED
       create Res1a
       create Corr_veca
+      create Corr_veca_n
       create R1a_intmd
       create Ortho_coef
       create VCACT1A
@@ -6035,7 +6026,7 @@
 #      execute print_scalar sumab 
 #end_debug
 
-      EXPONENT = HALF 
+      EXPONENT = 0.5
       EXECUTE NORM_FAC SUMAB EXPONENT
       INV_SQRT_NORM_R = SUMAB
       NORM_R = SUMAB
@@ -6113,11 +6104,11 @@
 
       DO MINDEX50
          OVERLAP_R(MINDEX50)  = 0.0
-         DO NINDEX50
-            TS(MINDEX50,NINDEX50) = 0.0
-            A_MATRIX(MINDEX50,NINDEX50)   = 0.0
-            PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
-         ENDDO NINDEX50
+#         DO NINDEX50
+#            TS(MINDEX50,NINDEX50) = 0.0
+#            A_MATRIX(MINDEX50,NINDEX50)   = 0.0
+#            PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
+#         ENDDO NINDEX50
       ENDDO MINDEX50
 
       DO NINDEX50
@@ -6369,11 +6360,10 @@
                      COLLECTIVE HC_AA += SUMAA
                      COLLECTIVE HC_AB += SUMAB
 
-                     HC_AA   *= HALF 
                      A_VALUE  = HC_A
                      A_VALUE += HC_A
                      A_VALUE += HC_AA
-#                     A_VALUE += HC_AA
+                     A_VALUE += HC_AA
                      A_VALUE += HC_AB
                      EXECUTE SIP_BARRIER
 
@@ -6480,11 +6470,10 @@
                      COLLECTIVE HC_AA += SUMAA
                      COLLECTIVE HC_AB += SUMAB
 
-                     HC_AA   *= HALF 
                      A_VALUE  = HC_A
                      A_VALUE += HC_A
                      A_VALUE += HC_AA
-#                     A_VALUE += HC_AA
+                     A_VALUE += HC_AA
                      A_VALUE += HC_AB
                      EXECUTE SIP_BARRIER
 
@@ -6581,11 +6570,10 @@
                      COLLECTIVE HC_AA += SUMAA
                      COLLECTIVE HC_AB += SUMAB
 
-                     HC_AA   *= HALF
                      A_VALUE  = HC_A
                      A_VALUE += HC_A
                      A_VALUE += HC_AA
-#                     A_VALUE += HC_AA
+                     A_VALUE += HC_AA
                      A_VALUE += HC_AB
                      EXECUTE SIP_BARRIER
 
@@ -6706,37 +6694,17 @@
      EXECUTE SERVER_BARRIER
 
 #bgn_debug
-      tmpa=0.0
-      suma=0.0
-      pardo i,a
-         get res1a(a,i)
-         tmp = res1a(a,i) * res1a(a,i)
-         tmpa += tmp
-      endpardo i,a
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo a,i1,a1,i
-            request  res2aa(a,i1,a1,i) i
-            tmp = res2aa(a,i1,a1,i) * res2aa(a,i1,a1,i)
-            tmpa += tmp
-      endpardo a,i1,a1,i
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo a,i,b,j
-            request  res2ab(a,i,b,j) i
-            tmp = res2ab(a,i,b,j) *  res2ab(a,i,b,j)
-            tmpa += tmp
-      endpardo a,i,b,j
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-#enddebug
+#      tmpa=0.0
+#      suma=0.0
+#      pardo i,a
+#         get res1a(a,i)
+#         tmp = res1a(a,i) * res1a(a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#end_debug
 
 # Now the correction vector for iteration 1
 
@@ -6767,7 +6735,7 @@
          T2aiai(a,i,a1,i1) = OMEGA0
          Taiai(a,i,a1,i1)  += T2aiai(a,i,a1,i1)
 
-         EXECUTE APPLY_DEN4_NODIAG T1aiai Taiai
+         EXECUTE APPLY_DEN4 T1aiai Taiai
 
          PREPARE CORR_VECaa(a,i,a1,i1) = T1aiai(a,i,a1,i1)
 
@@ -6791,161 +6759,44 @@
      ENDPARDO a, i, b, j
 
      EXECUTE SERVER_BARRIER
-
 #bgn_debug
-      tmpa=0.0
-      suma=0.0
-      pardo i,a
-         get corr_veca(a,i)
-         tmp = corr_veca(a,i) * corr_veca(a,i)
-         tmpa += tmp
-      endpardo i,a
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo a,i1,a1,i
-            request  corr_vecaa(a,i1,a1,i) i
-            tmp = corr_vecaa(a,i1,a1,i) * corr_vecaa(a,i1,a1,i)
-            tmpa += tmp
-      endpardo a,i1,a1,i
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo a,i,b,j
-            request  corr_vecab(a,i,b,j) i
-            tmp = corr_vecab(a,i,b,j) * corr_vecab(a,i,b,j)
-            tmpa += tmp
-      endpardo a,i,b,j
-      execute sip_barrier
-      collective suma +=tmpa
+#      tmpa=0.0
+#      suma=0.0
+#      pardo i,a
+#         get corr_veca(a,i)
+#         tmp = corr_veca(a,i) * corr_veca(a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
 #end_debug
 
-# Normalization of the correction vector 
-
-    SUMA  = 0.0
-    SUMAA = 0.0
-    SUMAB = 0.0
-    HC_A  = 0.0
-    HC_AA = 0.0
-    HC_AB = 0.0
-
-    PARDO i, a
-        GET  CORR_VECa(a,i)
-        Tai(a,i) = CORR_VECa(a,i)
-        TMP   = Tai(a,i) * Tai(a,i)
-        SUMA += TMP
-    ENDPARDO i, a
-
-    PARDO i, i1, a1, a
-        REQUEST CORR_VECaa(a,i,a1,i1) i1
-        Taiai(a,i,a1,i1) = CORR_VECaa(a,i,a1,i1)
-        TMP   = Taiai(a,i,a1,i1) * Taiai(a,i,a1,i1)
-        SUMAA += TMP
-    ENDPARDO i, i1, a1, a
-
-    PARDO i, j, b, a
-        REQUEST CORR_VECab(a,i,b,j) j
-        Taibj(a,i,b,j) =  CORR_VECab(a,i,b,j)
-        TMP    = Taibj(a,i,b,j) * Taibj(a,i,b,j)
-        SUMAB +=  TMP
-    ENDPARDO i, j, b, a
-
-    EXECUTE SIP_BARRIER
-    COLLECTIVE  HC_A  += SUMA
-    COLLECTIVE  HC_AA += SUMAA
-    COLLECTIVE  HC_AB += SUMAB
-
-    HC_AA *= HALF 
-    SUM_R  = HC_A
-    SUM_R += HC_A
-    SUM_R += HC_AA
-#    SUM_R += HC_AA
-    SUM_R += HC_AB
-
-    EXPONENT = HALF 
-    EXECUTE NORM_FAC SUM_R EXPONENT
-    INV_SQRT_NORM_R = SUM_R
-    EXECUTE SIP_BARRIER
-
-#bgn_debug
-    execute print_scalar exponent 
-#end_debug
-
-    PARDO i, a
-        GET  CORR_VECa(a,i)
-        Tai(a,i)  = CORR_VECa(a,i)
-        Tai(a,i) *= INV_SQRT_NORM_R
-        PUT VCACT1A(a,i) = Tai(a,i)
-    ENDPARDO i, a
-
-    PARDO i, i1, a1, a
-        REQUEST CORR_VECaa(a,i,a1,i1) i1
-        Taiai(a,i,a1,i1)  = CORR_VECaa(a,i,a1,i1)
-        Taiai(a,i,a1,i1) *= INV_SQRT_NORM_R
-        PREPARE VCACT2AA(a,i,a1,i1) = Taiai(a,i,a1,i1)
-    ENDPARDO i, i1, a1, a
-
-    PARDO i, j, b, a
-        REQUEST CORR_VECab(a,i,b,j) j
-        Taibj(a,i,b,j)  = CORR_VECab(a,i,b,j)
-        Taibj(a,i,b,j) *= INV_SQRT_NORM_R
-        PREPARE VCACT2AB(a,i,b,j) =  Taibj(a,i,b,j)
-    ENDPARDO i, j, b, a
-
-    EXECUTE SERVER_BARRIER
-
-    PARDO i, a
-        GET  VCACT1A(a,i)
-        Tai(a,i)  = VCACT1A(a,i)
-        Tai(a,i) *= INV_SQRT_NORM_R
-        PUT CORR_VECa(a,i) = Tai(a,i)
-    ENDPARDO i, a
-
-    PARDO i, i1, a1, a
-        REQUEST VCACT2AA(a,i,a1,i1) i1
-        Taiai(a,i,a1,i1) = VCACT2AA(a,i,a1,i1)
-        Taiai(a,i,a1,i1) *= INV_SQRT_NORM_R
-        PREPARE CORR_VECaa(a,i,a1,i1) = Taiai(a,i,a1,i1)
-    ENDPARDO i, i1, a1, a
-
-    PARDO i, j, b, a
-       REQUEST VCACT2AB(a,i,b,j) j
-       Taibj(a,i,b,j)  = VCACT2AB(a,i,b,j)
-       Taibj(a,i,b,j) *= INV_SQRT_NORM_R
-       PREPARE CORR_VECab(a,i,b,j) =  Taibj(a,i,b,j)
-    ENDPARDO i, j, b, a
-
-    EXECUTE SERVER_BARRIER
 
 # Orthognalize to the Guess vector; first get the norm.
 
-    SUMA   = 0.0
-    HC_A   = 0.0
+     SUMA   = 0.0
+     HC_A   = 0.0
 
-    PARDO i, a
-        GET CORR_VECa(a,i)
+     PARDO i, a
+           GET CORR_VECa(a,i)
 
-        NCOUNT = 0.0
-        DO NINDEX50
-           NCOUNT += 1.0
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
 
-           IF NCOUNT > 1.0
-              EXIT
-           ENDIF
+              IF NCOUNT > 1.0
+                 EXIT
+              ENDIF
 
-           GET VC1A_HIST(a,i,NINDEX50)
+              GET VC1A_HIST(a,i,NINDEX50)
 
-           Tai(a,i)   = CORR_VECa(a,i)
-           T1ai(a,i)  = VC1A_HIST(a,i,NINDEX50)
-           TMP   = Tai(a,i) * T1ai(a,i)
-           TMP  *= 2.0
-           SUMA += TMP
+              Tai(a,i)   = CORR_VECa(a,i)
+              T1ai(a,i)  = VC1A_HIST(a,i,NINDEX50)
+              TMP   = Tai(a,i) * T1ai(a,i)
+              SUMA += TMP
 
-        ENDDO NINDEX50
+           ENDDO NINDEX50
      ENDPARDO i, a
 
      EXECUTE SIP_BARRIER
@@ -6955,6 +6806,7 @@
 # are zero.
 
      NORM_GHG  = HC_A
+     NORM_GHG *= 2.0
 #bgn_debug
 #     execute print_scalar NORM_GHG
 #end_debug
@@ -7065,20 +6917,18 @@
       COLLECTIVE  HC_AA += SUMAA
       COLLECTIVE  HC_AB += SUMAB
 
-      HC_AA *= HALF
       SUM_R  = HC_A
       SUM_R += HC_A
       SUM_R += HC_AA
-#      SUM_R += HC_AA
+      SUM_R += HC_AA
       SUM_R += HC_AB
 
 #bgn_debug
 #      execute print_scalar SUM_R
 #end_debug
-      EXPONENT = HALF
+      EXPONENT = 0.5
       EXECUTE NORM_FAC SUM_R EXPONENT
       INV_SQRT_NORM_R = SUM_R
-      RESIDUAL_NORM = EXPONENT 
 #bgn_debug
 #      execute print_scalar SUM_R
 #end_debug
@@ -7419,7 +7269,7 @@
         EXECUTE SET_ACES3_VARS OMEGA THRTEN
         EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
         EXECUTE SET_ACES3_VARS IMAX MONE
-        IMAX = IMAX_KEEP 
+        IMAX_KEEP = IMAX
       ENDIF 
 
 #bgn_debug
@@ -7520,40 +7370,6 @@
 
      EXECUTE SERVER_BARRIER
 
-#bgn_debug
-      tmpa=0.0
-      suma=0.0
-      pardo i,a
-         get y1a_picked(a,i)
-         tmp = y1a_picked(a,i) * y1a_picked(a,i)
-         tmpa += tmp
-      endpardo i,a
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo a,i1,a1,i
-            request  y2aa_picked(a,i1,a1,i) i
-            tmp =  y2aa_picked(a,i1,a1,i) * y2aa_picked(a,i1,a1,i)
-            tmpa += tmp
-      endpardo a,i1,a1,i
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo j,i,a,b
-            request  y2ab_picked(a,i,b,j) j
-            tmp =  y2ab_picked(a,i,b,j) * y2ab_picked(a,i,b,j)
-            tmpa+= tmp
-      endpardo j,i,a, b
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-#end_debug
-#
-
      ENDPROC FORM_SELECTED_Y
 #    -----------------------
 
@@ -7626,39 +7442,6 @@
      ENDDO NINDEX50
 
      EXECUTE SERVER_BARRIER
-
-#bgn_debug
-      tmpa=0.0
-      suma=0.0
-      pardo i,a
-         get hy1a_picked(a,i)
-         tmp = hy1a_picked(a,i) * hy1a_picked(a,i)
-         tmpa += tmp
-      endpardo i,a
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo a,i1,a1,i
-            request  hy2aa_picked(a,i1,a1,i) i
-            tmp =  hy2aa_picked(a,i1,a1,i) * hy2aa_picked(a,i1,a1,i)
-            tmpa += tmp
-      endpardo a,i1,a1,i
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      tmpa =0.0
-      suma =0.0
-      pardo j,i,a,b
-            request hy2ab_picked(a,i,b,j) j
-            tmp =  hy2ab_picked(a,i,b,j) * hy2ab_picked(a,i,b,j)
-            tmpa+= tmp
-      endpardo j,i,a, b
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-#end_debug
 
      ENDPROC SELECT_HBAR_Y_VEC_TOGO
 #    ------------------------------
@@ -7813,85 +7596,20 @@
      COLLECTIVE HC_AA += SUMAA
      COLLECTIVE HC_AB += SUMAB
 
-     HC_AA   *= HALF 
      A_VALUE  = HC_A
      A_VALUE += HC_A
      A_VALUE += HC_AA
-#     A_VALUE += HC_AA
+     A_VALUE += HC_AA
      A_VALUE += HC_AB
 
      EXECUTE SIP_BARRIER
-#bgn_debug
-     execute print_scalar A_VALUE 
-#end_debug
+
+     HALF = 0.5
      EXECUTE SQUARE_ROOT A_VALUE HALF
      RESIDUAL_NORM = A_VALUE
 
      ENDPROC CHECK_CONVERGENCE
 #    -------------------------
-
-     PROC CHECK_CONVERGENCE_CORR
-#    ---------------------------
-     SUMA  = 0.0
-     SUMAA = 0.0
-     SUMAB = 0.0
-     HC_A  = 0.0
-     HC_AA = 0.0
-     HC_AB = 0.0
-
-     PARDO i, a
-
-           GET CORR_VECa(a,i)
-
-           Tai(a,i)   = CORR_VECa(a,i)
-           TMP   = Tai(a,i) * Tai(a,i)
-           SUMA += TMP
-
-     ENDPARDO i, a
-
-     PARDO i, i1, a1, a
-
-           REQUEST CORR_VECaa(a,i,a1,i1) i1
-
-           Taiai(a,i,a1,i1)  = CORR_VECaa(a,i,a1,i1)
-           TMP     = Taiai(a,i,a1,i1) * Taiai(a,i,a1,i1)
-           SUMAA += TMP
-
-     ENDPARDO i, i1, a1, a
-
-     PARDO a, i, b, j
-
-           REQUEST CORR_VECab(a,i,b,j) j
-
-           Taibj(a,i,b,j)  = CORR_VECab(a,i,b,j)
-           TMP     = Taibj(a,i,b,j) * Taibj(a,i,b,j)
-           SUMAB += TMP
-
-     ENDPARDO a, i, b, j
-
-     EXECUTE SERVER_BARRIER
-     COLLECTIVE HC_A  += SUMA
-     COLLECTIVE HC_AA += SUMAA
-     COLLECTIVE HC_AB += SUMAB
-
-     HC_AA   *= HALF
-     A_VALUE  = HC_A
-     A_VALUE += HC_A
-     A_VALUE += HC_AA
-#     A_VALUE += HC_AA
-     A_VALUE += HC_AB
-
-     EXECUTE SIP_BARRIER
-
-#bgn_debug
-     execute print_scalar a_value 
-#end_debug
-
-     EXECUTE SQUARE_ROOT A_VALUE HALF
-     RESIDUAL_NORM = A_VALUE
-
-     ENDPROC CHECK_CONVERGENCE_CORR
-#    ------------------------------
 
      PROC FORM_CORRECTION_VEC
 #    ------------------------
@@ -7927,7 +7645,7 @@
          T2aiai(a,i,a1,i1) = OMEGA
          Taiai(a,i,a1,i1)  += T2aiai(a,i,a1,i1)
 
-         EXECUTE APPLY_DEN4_NODIAG T1aiai Taiai
+         EXECUTE APPLY_DEN4 T1aiai Taiai
 
          PREPARE CORR_VECaa(a,i,a1,i1) = T1aiai(a,i,a1,i1)
 
@@ -7952,113 +7670,132 @@
 
      EXECUTE SERVER_BARRIER
 
-     ENDPROC FORM_CORRECTION_VEC
-#    --------------------------
-
-     PROC NORM_CORRECTION_VEC
-#    ------------------------
-# Normalization of the correction vector
-
-    SUMA  = 0.0
-    SUMAA = 0.0
-    SUMAB = 0.0
-    HC_A  = 0.0
-    HC_AA = 0.0
-    HC_AB = 0.0
-
-    PARDO i, a
-        GET  CORR_VECa(a,i)
-        Tai(a,i) = CORR_VECa(a,i)
-        TMP   = Tai(a,i) * Tai(a,i)
-        SUMA += TMP
-    ENDPARDO i, a
-
-    PARDO i, i1, a1, a
-        REQUEST CORR_VECaa(a,i,a1,i1) i1
-        Taiai(a,i,a1,i1) = CORR_VECaa(a,i,a1,i1)
-        TMP   = Taiai(a,i,a1,i1) * Taiai(a,i,a1,i1)
-        SUMAA += TMP
-    ENDPARDO i, i1, a1, a
-
-    PARDO i, j, b, a
-        REQUEST CORR_VECab(a,i,b,j) j
-        Taibj(a,i,b,j) =  CORR_VECab(a,i,b,j)
-        TMP    = Taibj(a,i,b,j) * Taibj(a,i,b,j)
-        SUMAB +=  TMP
-    ENDPARDO i, j, b, a
-
-    EXECUTE SIP_BARRIER
-    COLLECTIVE  HC_A  += SUMA
-    COLLECTIVE  HC_AA += SUMAA
-    COLLECTIVE  HC_AB += SUMAB
-
-    HC_AA *= HALF 
-    SUM_R  = HC_A
-    SUM_R += HC_A
-    SUM_R += HC_AA
-#    SUM_R += HC_AA
-    SUM_R += HC_AB
-
-    EXPONENT = HALF
-    EXECUTE NORM_FAC SUM_R EXPONENT
-    INV_SQRT_NORM_R = SUM_R
-    EXECUTE SIP_BARRIER
-
 #bgn_debug
-    execute print_scalar exponent
+      tmpa=0.0
+      suma=0.0
+      pardo i,a
+         get CORR_VECa(a,i)
+         tmp = CORR_VECa(a,i) * CORR_VECa(a,i)
+         tmpa += tmp
+      endpardo i,a
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumcv= suma
+      tmpa =0.0
+      suma =0.0
+      pardo a,i1,a1,i
+            request   CORR_VECaa(a,i,a1,i1) i
+            tmp =  CORR_VECaa(a,i,a1,i1) *  CORR_VECaa(a,i,a1,i1)
+            tmpa += tmp
+      endpardo a,i1,a1,i
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumcv+=suma
+      tmpa  =0.0
+      suma  =0.0
+      pardo j,i,a,b
+            request  CORR_VECab(a,i,b,j) j
+            tmp =   CORR_VECab(a,i,b,j) *  CORR_VECab(a,i,b,j) 
+            tmpa+= tmp
+      endpardo j,i,a, b
+      execute sip_barrier
+      collective suma +=tmpa
+      sumcv+=suma
+      execute print_scalar suma
+      execute print_scalar sumcv
 #end_debug
 
-    PARDO i, a
-        GET  CORR_VECa(a,i)
-        Tai(a,i)  = CORR_VECa(a,i)
-        Tai(a,i) *= INV_SQRT_NORM_R
-        PUT VCACT1A(a,i) = Tai(a,i)
-    ENDPARDO i, a
+#bgn_IMPROVE
+#     SUMA  = 0.0
+#     SUMAA = 0.0
+#     SUMAB = 0.0
+#     HC_A  = 0.0
+#     HC_AA = 0.0
+#     HC_AB = 0.0
+#
+#     PARDO i, a
+#
+#            GET  CORR_VECa(a,i)
+#            Tai(a,i) = CORR_VECa(a,i)
+#            TMP   = Tai(a,i) * Tai(a,i)
+#            SUMA += TMP
+#
+#      ENDPARDO i, a
+#
+#      PARDO i, i1, a1, a
+#
+#              REQUEST CORR_VECaa(a,i,a1,i1) i1
+#              Taiai(a,i,a1,i1) = CORR_VECaa(a,i,a1,i1)
+#
+#              TMP    = Taiai(a,i,a1,i1) * Taiai(a,i,a1,i1)
+#              SUMAA += TMP
+#
+#      ENDPARDO i, i1, a1, a
+#
+#     PARDO i, j, b, a
+#
+#              REQUEST CORR_VECab(a,i,b,j) j
+#              Taibj(a,i,b,j) = CORR_VECaa(a,i,b,j)
+#
+#              TMP    = Taibj(a,i,b,j) * Taibj(a,i,b,j)
+#              SUMAB +=  TMP
+#
+#     ENDPARDO i, j, b, a
+#
+#     EXECUTE SIP_BARRIER
+#     COLLECTIVE HC_A  += SUMA
+#     COLLECTIVE HC_AA += SUMAA
+#     COLLECTIVE HC_AB += SUMAB
+#
+#     SUM_R  = HC_A
+#     SUM_R += HC_A
+#     SUM_R += HC_AA
+#     SUM_R += HC_AA
+#     SUM_R += HC_AB
+#
+#     EXPONENT = 0.5
+#     EXECUTE NORM_FAC SUM_R EXPONENT
+#     INV_SQRT_NORM_R = SUM_R
+#     EXECUTE SIP_BARRIER
+#
+#     PARDO i, a
+#            GET  CORR_VECa(a,i)
+#            Tai(a,i)  = CORR_VECa(a,i)
+#            Tai(a,i) *= INV_SQRT_NORM_R
+#            PUT CORR_VECa_N(a,i) = Tai(a,i)
+#      ENDPARDO i, a
+#
+#      PARDO i, i1, a1, a
+#              REQUEST CORR_VECaa(a,i,a1,i1) i1
+#              Taiai(a,i,a1,i1) = CORR_VECaa(a,i,a1,i1)
+#              Taiai(a,i,a1,i1) *= INV_SQRT_NORM_R
+#              PREPARE CORR_VECaa_N(a,i,a1,i1) = Taiai(a,i,a1,i1)
+#      ENDPARDO i, i1, a1, a
+#      PARDO i, j, b, a
+#              REQUEST CORR_VECab(a,i,b,j) j
+#              Taibj(a,i,b,j)  = CORR_VECab(a,i,b,j)
+#              Taibj(a,i,b,j) *= INV_SQRT_NORM_R
+#              PREPARE CORR_VECab_N(a,i,b,j) =  Taibj(a,i,b,j)
+#      ENDPARDO i, j, b, a
+#      EXECUTE SERVER_BARRIER
+#end_IMPROVE
 
-    PARDO i, i1, a1, a
-        REQUEST CORR_VECaa(a,i,a1,i1) i1
-        Taiai(a,i,a1,i1)  = CORR_VECaa(a,i,a1,i1)
-        Taiai(a,i,a1,i1) *= INV_SQRT_NORM_R
-        PREPARE VCACT2AA(a,i,a1,i1) = Taiai(a,i,a1,i1)
-    ENDPARDO i, i1, a1, a
-
-    PARDO i, j, b, a
-        REQUEST CORR_VECab(a,i,b,j) j
-        Taibj(a,i,b,j)  = CORR_VECab(a,i,b,j)
-        Taibj(a,i,b,j) *= INV_SQRT_NORM_R
-        PREPARE VCACT2AB(a,i,b,j) =  Taibj(a,i,b,j)
-    ENDPARDO i, j, b, a
-
-    EXECUTE SERVER_BARRIER
-
-    PARDO i, a
-        GET  VCACT1A(a,i)
-        Tai(a,i)  = VCACT1A(a,i)
-        Tai(a,i) *= INV_SQRT_NORM_R
-        PUT CORR_VECa(a,i) = Tai(a,i)
-    ENDPARDO i, a
-
-    PARDO i, i1, a1, a
-        REQUEST VCACT2AA(a,i,a1,i1) i1
-        Taiai(a,i,a1,i1) = VCACT2AA(a,i,a1,i1)
-        Taiai(a,i,a1,i1) *= INV_SQRT_NORM_R
-        PREPARE CORR_VECaa(a,i,a1,i1) = Taiai(a,i,a1,i1)
-    ENDPARDO i, i1, a1, a
-
-    PARDO i, j, b, a
-       REQUEST VCACT2AB(a,i,b,j) j
-       Taibj(a,i,b,j)  = VCACT2AB(a,i,b,j)
-       Taibj(a,i,b,j) *= INV_SQRT_NORM_R
-       PREPARE CORR_VECab(a,i,b,j) =  Taibj(a,i,b,j)
-    ENDPARDO i, j, b, a
-
-    EXECUTE SERVER_BARRIER
-
-     ENDPROC NORM_CORRECTION_VEC
+     ENDPROC FORM_CORRECTION_VEC
 #    --------------------------
 
      PROC MAKE_ORTHO_COEFS
 #    ---------------------
+
+     DO MINDEX50
+     DO NINDEX50
+        TS(MINDEX50,NINDEX50) = 0.0
+        A_MATRIX(MINDEX50,NINDEX50)   = 0.0
+        PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
+     ENDDO NINDEX50
+     ENDDO MINDEX50
+     EXECUTE SIP_BARRIER 
 
      NCOUNT = 0.0
      DO NINDEX50
@@ -8071,6 +7808,9 @@
            PARDO i, a
 
                  GET VC1A_HIST(a,i,NINDEX50)
+#bgn_IMPROVE
+#                 GET CORR_VECa_N(a,i)
+#end_IMPROVE 
                  GET CORR_VECa(a,i)
 
                  Tai(a,i)  = VC1A_HIST(a,i,NINDEX50)
@@ -8086,6 +7826,10 @@
           PARDO i, i1, a1, a
 
                  REQUEST VCACT2aa_HIST(a,i,a1,i1,NINDEX50) i1
+
+#bgn_IMPROVE
+#                 REQUEST CORR_VECaa_N(a,i,a1,i1) i1
+#end_IMPROVE 
                  REQUEST CORR_VECaa(a,i,a1,i1) i1
 
                  Taiai(a,i,a1,i1)  = VCACT2aa_HIST(a,i,a1,i1,NINDEX50)
@@ -8094,8 +7838,7 @@
                  TMP     = Taiai(a,i,a1,i1) *  T1aiai(a,i,a1,i1)
 
                  T1xx(NINDEX50,NINDEX50)         = TMP
-#                 T1xx(NINDEX50,NINDEX50)        *= 2.0
-                 T1xx(NINDEX50,NINDEX50)        *= 0.5 
+                 T1xx(NINDEX50,NINDEX50)        *= 2.0
                  PUT ORTHO_COEF(NINDEX50,NINDEX50) += T1xx(NINDEX50,NINDEX50)
 
            ENDPARDO i, i1, a1, a
@@ -8103,6 +7846,9 @@
            PARDO i, a, b, j
 
                  REQUEST VCACT2AB_HIST(a,i,b,j,NINDEX50) j
+#end_IMPROVE 
+#                 REQUEST CORR_VECab_N(a,i,b,j) j
+#end_IMPROVE 
                  REQUEST CORR_VECab(a,i,b,j) j
 
                  Taibj(a,i,b,j)  = VCACT2AB_HIST(a,i,b,j,NINDEX50)
@@ -8134,6 +7880,10 @@
 
      PARDO i, a
 
+#bgn_IMPROVE
+#           GET CORR_VECa_N(a,i)
+#           Tai(a,i)   = CORR_VECa_N(a,i)
+#end_IMPROVE
            GET CORR_VECa(a,i)
            Tai(a,i)   = CORR_VECa(a,i)
 
@@ -8171,6 +7921,11 @@
 
      PARDO i, i1, a1, a
 
+#bgn_IMPROVE
+#          REQUEST CORR_VECaa_N(a,i,a1,i1) i1
+#          Taiai(a,i,a1,i1)  = CORR_VECaa_N(a,i,a1,i1)
+#end_IMPROVE
+
           REQUEST CORR_VECaa(a,i,a1,i1) i1
           Taiai(a,i,a1,i1)  = CORR_VECaa(a,i,a1,i1)
 
@@ -8206,6 +7961,11 @@
      COLLECTIVE   C_AA += SUMAA
 
      PARDO i, a, b, j
+
+#bgn_IMPROVE
+#           REQUEST CORR_VECab_N(a,i,b,j) j
+#           Taibj(a,i,b,j)  = CORR_VECab_N(a,i,b,j)
+#end_IMPROVE
 
            REQUEST CORR_VECab(a,i,b,j) j
            Taibj(a,i,b,j)  = CORR_VECab(a,i,b,j)
@@ -8246,7 +8006,7 @@
      NORM_NEW_ORTGC += C_AA
      NORM_NEW_ORTGC += C_AB
 
-     EXPONENT = HALF 
+     EXPONENT = 0.5
      EXECUTE NORM_FAC NORM_NEW_ORTGC EXPONENT
      INV_SQRT_NORM_ORTGC  = NORM_NEW_ORTGC
      SQRT_OVERLAP         = EXPONENT
@@ -8343,14 +8103,13 @@
      COLLECTIVE HC_AA += SUMAA
      COLLECTIVE HC_AB += SUMAB
 
-     HC_AA *= HALF 
      SUM_R  = HC_A
      SUM_R += HC_A
      SUM_R += HC_AA
-#     SUM_R += HC_AA
+     SUM_R += HC_AA
      SUM_R += HC_AB
 
-     EXPONENT = HALF
+     EXPONENT = 0.5
      EXECUTE NORM_FAC SUM_R EXPONENT
      INV_SQRT_NORM_R = SUM_R
 #bgn_debug
@@ -8470,7 +8229,7 @@
                       T1aiai(a,i,a1,i1) = VCACT2AA_HIST(a,i,a1,i1,MINDEX50)
 
                       TMP     = Taiai(a,i,a1,i1) * T1aiai(a,i,a1,i1)
-                      SUMAA += TMP
+                     SUMAA += TMP
 
                 ENDPARDO i, i1, a1, a
 
@@ -8492,11 +8251,10 @@
                 EXECUTE SERVER_BARRIER
                 COLLECTIVE HC_AB += SUMAB
 
-                HC_AA   *= HALF 
                 A_VALUE  = HC_A
                 A_VALUE += HC_A
                 A_VALUE += HC_AA
-#                A_VALUE += HC_AA
+                A_VALUE += HC_AA
                 A_VALUE += HC_AB
 
                  KCOUNT = 0.0
@@ -8598,7 +8356,7 @@
 #      execute print_scalar sumab
 #end_debug
 
-      EXPONENT = HALF 
+      EXPONENT = 0.5
       EXECUTE NORM_FAC SUMAB EXPONENT
       INV_SQRT_NORM_R = SUMAB
       NORM_R = SUMAB
@@ -8751,71 +8509,10 @@
 
      EXECUTE SERVER_BARRIER
 
-#bgn_debug
-      ncount=zero
-      do nindex50
-      ncount+=one
-      if ncount > twl
-         exit
-      endif 
-      mcount=zero
-      do mindex50
-      mcount+=one
-      if mcount > twl
-         exit
-      endif 
-      tmpa=0.0
-      suma=0.0
-      pardo i,a
-         get y1a_trunct(a,i,nindex50)
-         get y1a_trunct(a,i,mindex50)
-         tai(a,i)  = y1a_trunct(a,i,nindex50)
-         t1ai(a,i) = y1a_trunct(a,i,mindex50)
-         tmp = tai(a,i) * t1ai(a,i)
-         tmpa += tmp
-      endpardo i,a
-      execute sip_barrier
-      collective suma +=tmpa
-#      execute print_scalar suma
-      sumcv=suma
-      sumcv+=suma
-      tmpa =0.0
-      suma =0.0
-      pardo a,i1,a1,i
-         request  y2aa_trunct(a,i1,a1,i,nindex50) i
-         request  y2aa_trunct(a,i1,a1,i,mindex50) i
-         taiai(a,i1,a1,i)   = y2aa_trunct(a,i1,a1,i,nindex50)
-         t1aiai(a,i1,a1,i)  = y2aa_trunct(a,i1,a1,i,mindex50)
-         tmp = taiai(a,i1,a1,i) * t1aiai(a,i1,a1,i)
-         tmpa += tmp
-      endpardo a,i1,a1,i
-      execute sip_barrier
-      collective suma +=tmpa
-#      execute print_scalar suma
-      suma*=0.5
-      sumcv+=suma
-      tmpa =0.0
-      suma =0.0
-      pardo j,i,a,b
-          request  y2ab_trunct(a,i,b,j,nindex50) j
-          request  y2ab_trunct(a,i,b,j,mindex50) j
-          taibj(a,i,b,j)  = y2ab_trunct(a,i,b,j,nindex50)
-          t1aibj(a,i,b,j) = y2ab_trunct(a,i,b,j,nindex50)
-          tmp =  taibj(a,i,b,j) * t1aibj(a,i,b,j)
-          tmpa+= tmp
-      endpardo j,i,a, b
-      execute sip_barrier
-      collective suma +=tmpa
-      sumcv+=suma
-      execute print_scalar sumcv
-      enddo mindex50
-      enddo nindex50
-#end_debug
-
      ENDPROC TRANSFORM_C
 #    -------------------
 
-     PROC COPY_NORM_C
+     PROC FORM_NORM_C
 #    ----------------
       NCOUNT = 0.0
       DO NINDEX50
@@ -8855,16 +8552,15 @@
             COLLECTIVE HC_AA += SUMAA
             COLLECTIVE HC_AB += SUMAB
 
-            HC_AA *= HALF
             SUM_R  = HC_A
             SUM_R += HC_A
             SUM_R += HC_AA
-#            SUM_R += HC_AA
+            SUM_R += HC_AA
             SUM_R += HC_AB
 #bgn_debug
 #     execute print_scalar SUM_R
 #end_debug
-            EXPONENT = HALF 
+            EXPONENT = 0.5
             EXECUTE NORM_FAC SUM_R EXPONENT
             INV_SQRT_NORM_R = SUM_R
 
@@ -8874,35 +8570,82 @@
                   GET Y1A_TRUNCT(a,i,NINDEX50)
                   Tain(a,i,NINDEX50) = Y1A_TRUNCT(a,i,NINDEX50)
                   Tain(a,i,NINDEX50)*= INV_SQRT_NORM_R
-                  PUT VC1A_HIST(a,i,NINDEX50) = Tain(a,i,NINDEX50)
+                  PUT VC1A_TRUNCT(a,i,NINDEX50) = Tain(a,i,NINDEX50)
             ENDPARDO a, i
 
             PARDO a, a1, i, i1
                   REQUEST  Y2aa_TRUNCT(a,i,a1,i1,NINDEX50) i1
                   Taiain(a,i,a1,i1,NINDEX50) = Y2aa_TRUNCT(a,i,a1,i1,NINDEX50)
                   Taiain(a,i,a1,i1,NINDEX50)*= INV_SQRT_NORM_R
-                  PREPARE VCACT2AA_HIST(a,i,a1,i1,NINDEX50) =  Taiain(a,i,a1,i1,NINDEX50)
+                  PREPARE VCACT2AA_TRUNCT(a,i,a1,i1,NINDEX50) =  Taiain(a,i,a1,i1,NINDEX50)
             ENDPARDO a, a1, i, i1
 
             PARDO a, b, i, j
                   REQUEST Y2ab_TRUNCT(a,i,b,j,NINDEX50) j
                   Taibjn(a,i,b,j,NINDEX50) = Y2ab_TRUNCT(a,i,b,j,NINDEX50)
                   Taibjn(a,i,b,j,NINDEX50)*= INV_SQRT_NORM_R 
-                  PREPARE VCACT2AB_HIST(a,i,b,j,NINDEX50) = Taibjn(a,i,b,j,NINDEX50)
+                  PREPARE VCACT2AB_TRUNCT(a,i,b,j,NINDEX50) = Taibjn(a,i,b,j,NINDEX50)
             ENDPARDO a, b, i, j
-
-            EXECUTE SERVER_BARRIER
-
         ENDIF
 
      ENDDO NINDEX50
 
-     ENDPROC COPY_NORM_C
+     EXECUTE SERVER_BARRIER
+
+#bgn_debug
+#      ncount=0.0
+#      do nindex50
+#      ncount+=1.0
+#      if ncount > twl
+#      exit
+#      endif 
+#      tmpa=0.0
+#      suma=0.0
+#      sumcv=0.0
+#      pardo i,a
+#         get VC1A_TRUNCT(a,i,nindex50)
+#         tmp = VC1A_TRUNCT(a,i,nindex50) * VC1A_TRUNCT(a,i,nindex50)
+#         tmpa += tmp
+#      endpardo i,a
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumcv=suma
+#      sumcv+=suma 
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,i1,a1,i
+#            request VCACT2AA_TRUNCT(a,i,a1,i1,NINDEX50) i
+#            tmp = VCACT2AA_TRUNCT(a,i,a1,i1,NINDEX50) * VCACT2AA_TRUNCT(a,i,a1,i1,NINDEX50)
+#            tmpa += tmp
+#      endpardo a,i1,a1,i
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumcv+=suma
+#      sumcv+=suma 
+#      tmpa  =0.0
+#      suma  =0.0
+#      pardo j,i,a,b
+#            request VCACT2AB_TRUNCT(a,i,b,j,NINDEX50)  j
+#            tmp =   VCACT2AB_TRUNCT(a,i,b,j,NINDEX50) *  VCACT2AB_TRUNCT(a,i,b,j,NINDEX50) 
+#            tmpa+= tmp
+#      endpardo j,i,a, b
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      sumcv+=suma
+#      execute print_scalar suma
+#      execute print_scalar sumcv
+#      enddo nindex50
+#end_debug
+
+     ENDPROC FORM_NORM_C
 #    -------------------
 
      PROC INIT_TO_ZERO
 #    -----------------
 
+     IF TRNC_COUNT > ONE
      NCOUNT = 0
      DO NINDEX50
          NCOUNT += 1.0
@@ -8925,14 +8668,7 @@
        ENDIF 
      
      ENDDO NINDEX50
-
-     DO MINDEX50
-         OVERLAP_R(MINDEX50)  = 0.0
-         DO NINDEX50
-            TS(MINDEX50,NINDEX50) = 0.0
-            PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
-         ENDDO NINDEX50
-      ENDDO MINDEX50
+     ENDIF 
 
      EXECUTE SERVER_BARRIER
 
@@ -9039,38 +8775,522 @@
      PROC COPY_HC
 #    ------------
 
-     NCOUNT = 0.0
-     DO NINDEX50
-        NCOUNT += 1.0
+      NCOUNT = 0
+      DO NINDEX50
+         NCOUNT += 1.0
 
-        IF NCOUNT <= NREDUCE
+         IF NCOUNT <= NREDUCE
 
-           PARDO a, i
-               GET Y1A_TRUNCT(a,i,NINDEX50)
-               Tai(a,i) = Y1A_TRUNCT(a,i,NINDEX50)
-               PUT VCH1A_HIST(a,i,NINDEX50) = Tai(a,i)
-           ENDPARDO a, i
+            PARDO a, i
+                  GET Y1A_TRUNCT(a,i,NINDEX50)
+                  Tai(a,i) = Y1A_TRUNCT(a,i,NINDEX50)
+                  PUT VCH1A_HIST(a,i,NINDEX50) = Tai(a,i)
+            ENDPARDO a, i
 
-           PARDO a, a1, i, i1
-               REQUEST  Y2aa_TRUNCT(a,i,a1,i1,NINDEX50) i1
-               Taiai(a,i,a1,i1) = Y2aa_TRUNCT(a,i,a1,i1,NINDEX50)
-               PREPARE VCHACT2AA_HIST(a,i,a1,i1,NINDEX50) = Taiai(a,i,a1,i1)
-           ENDPARDO a, a1, i, i1
+            PARDO a, a1, i, i1
+                  REQUEST  Y2aa_TRUNCT(a,i,a1,i1,NINDEX50) i1
+                  Taiai(a,i,a1,i1) = Y2aa_TRUNCT(a,i,a1,i1,NINDEX50)
+                  PREPARE VCHACT2AA_HIST(a,i,a1,i1,NINDEX50) = Taiai(a,i,a1,i1)
+            ENDPARDO a, a1, i, i1
 
-           PARDO a, b, i, j
-               REQUEST Y2ab_TRUNCT(a,i,b,j,NINDEX50) j
-               Taibj(a,i,b,j) = Y2ab_TRUNCT(a,i,b,j,NINDEX50)
-               PREPARE VCHACT2AB_HIST(a,i,b,j,NINDEX50) = Taibj(a,i,b,j)
-           ENDPARDO a, b, i, j
+            PARDO a, b, i, j
+                  REQUEST Y2ab_TRUNCT(a,i,b,j,NINDEX50) j
+                  Taibj(a,i,b,j) = Y2ab_TRUNCT(a,i,b,j,NINDEX50)
+                  PREPARE VCHACT2AB_HIST(a,i,b,j,NINDEX50) = Taibj(a,i,b,j)
+            ENDPARDO a, b, i, j
 
-         ENDIF
+        ENDIF
 
-     ENDDO NINDEX50
+      ENDDO NINDEX50
 
      EXECUTE SERVER_BARRIER
 
      ENDPROC COPY_HC
 #    ---------------
+
+     PROC PICK_TRUNCATED_VEC
+#    -----------------------
+
+     NCOUNT = ZERO 
+     DO NINDEX50
+        NCOUNT += ONE
+        IF NCOUNT > TWL
+           EXIT
+        ENDIF 
+
+        IF NCOUNT == KCOUNT 
+
+           PARDO a, i
+               GET VC1A_TRUNCT(a,i,NINDEX50)
+               Tai(a,i) = VC1A_TRUNCT(a,i,NINDEX50)
+               PUT VC1A_TRUNCT_PICK_S(a,i) = Tai(a,i)
+           ENDPARDO a, i
+
+           PARDO a, a1, i, i1
+               REQUEST  VCACT2aa_TRUNCT(a,i,a1,i1,NINDEX50) i1
+               Taiai(a,i,a1,i1) = VCACT2aa_TRUNCT(a,i,a1,i1,NINDEX50)
+               PREPARE VCACT2AA_TRUNCT_PICK_S(a,i,a1,i1) = Taiai(a,i,a1,i1)
+           ENDPARDO a, a1, i, i1
+
+           PARDO a, b, i, j
+               REQUEST VCACT2ab_TRUNCT(a,i,b,j,NINDEX50) j
+               Taibj(a,i,b,j) = VCACT2ab_TRUNCT(a,i,b,j,NINDEX50)
+               PREPARE VCACT2AB_TRUNCT_PICK_S(a,i,b,j) = Taibj(a,i,b,j)
+           ENDPARDO a, b, i, j
+        ENDIF
+
+      ENDDO NINDEX50
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC PICK_TRUNCATED_VEC
+#    -------------------------
+
+    PROC MAKE_ORTHO_COEFS_TRUNCT
+#   ----------------------------
+
+    DO MINDEX50
+    DO NINDEX50
+       TS(MINDEX50,NINDEX50) = 0.0
+       PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
+    ENDDO NINDEX50
+    ENDDO MINDEX50
+    EXECUTE SIP_BARRIER 
+
+    LIMIT  = KCOUNT
+    LIMIT += MONE 
+
+    NCOUNT = ZERO
+    DO NINDEX50 
+       NCOUNT += ONE 
+
+       IF NCOUNT > LIMIT 
+          EXIT
+       ENDIF
+         
+       PARDO i, a
+           GET VC1A_TRUNCT(a,i,NINDEX50)
+           GET VC1A_TRUNCT_PICK_S(a,i)
+
+           Tai(a,i)  = VC1A_TRUNCT(a,i,NINDEX50)
+           T1ai(a,i) = VC1A_TRUNCT_PICK_S(a,i)
+           TMP       =  Tai(a,i)  * T1ai(a,i)
+
+           T1xx(NINDEX50,NINDEX50)         = TMP
+           T1xx(NINDEX50,NINDEX50)        *= 2.0
+           PUT ORTHO_COEF(NINDEX50,NINDEX50) += T1xx(NINDEX50,NINDEX50)
+       ENDPARDO i, a
+
+       PARDO i, i1, a1, a
+           REQUEST VCACT2aa_TRUNCT(a,i,a1,i1,NINDEX50) i1
+           REQUEST VCACT2aa_TRUNCT_PICK_S(a,i,a1,i1) i1
+
+           Taiai(a,i,a1,i1)  = VCACT2aa_TRUNCT(a,i,a1,i1,NINDEX50)
+           T1aiai(a,i,a1,i1) = VCACT2aa_TRUNCT_PICK_S(a,i,a1,i1)
+           TMP     = Taiai(a,i,a1,i1) *  T1aiai(a,i,a1,i1)
+
+           T1xx(NINDEX50,NINDEX50)         = TMP
+           T1xx(NINDEX50,NINDEX50)        *= 2.0
+           PUT ORTHO_COEF(NINDEX50,NINDEX50) += T1xx(NINDEX50,NINDEX50)
+       ENDPARDO i, i1, a1, a
+
+       PARDO i, a, b, j
+           REQUEST VCACT2ab_TRUNCT(a,i,b,j,NINDEX50) j
+           REQUEST VCACT2ab_TRUNCT_PICK_S(a,i,b,j) j
+
+           Taibj(a,i,b,j)  = VCACT2ab_TRUNCT(a,i,b,j,NINDEX50)
+           T1aibj(a,i,b,j) = VCACT2ab_TRUNCT_PICK_S(a,i,b,j)
+           TMP     = Taibj(a,i,b,j)  * T1aibj(a,i,b,j)
+
+           T1xx(NINDEX50,NINDEX50)         = TMP
+           PUT ORTHO_COEF(NINDEX50,NINDEX50) += T1xx(NINDEX50,NINDEX50)
+       ENDPARDO i, a, b, j
+
+    ENDDO NINDEX50
+
+    EXECUTE SIP_BARRIER 
+
+#bgn_debug
+#     do mindex50
+#     do nindex50
+#        get ORTHO_COEF(NINDEX50,MINDEX50)
+#        T1xx(NINDEX50,MINDEX50) = ORTHO_COEF(NINDEX50,MINDEX50)
+#        OVLP_CHECK(NINDEX50,MINDEX50)  = T1xx(NINDEX50,MINDEX50)
+#     enddo nindex50
+#     enddo mindex50
+#     execute sip_barrier 
+#     execute print_static OVLP_CHECK twl 
+#end_debug
+
+    ENDPROC MAKE_ORTHO_COEFS_TRUNCT
+#   -------------------------------
+
+    PROC GRAM_SCHMIDT_TRUNCT
+#   ------------------------
+
+    PARDO i, a
+
+        GET VC1A_TRUNCT_PICK_S(a,i)
+        Tai(a,i) = VC1A_TRUNCT_PICK_S(a,i)
+
+        NCOUNT = ZERO 
+        DO NINDEX50
+           NCOUNT += ONE
+
+           IF NCOUNT > LIMIT
+              EXIT
+           ENDIF
+
+           GET VC1A_TRUNCT(a,i,NINDEX50)
+           GET ORTHO_COEF(NINDEX50,NINDEX50)
+
+           T1ai(a,i)  = VC1A_TRUNCT(a,i,NINDEX50)
+           T1xx(NINDEX50,NINDEX50) = ORTHO_COEF(NINDEX50,NINDEX50)
+
+           EXECUTE RETURN_SVAL T1xx FACT
+
+           T1ai(a,i) *= FACT
+           T1ai(a,i) *= -1.0
+           Tai(a,i)  += T1ai(a,i)
+
+        ENDDO NINDEX50
+
+        PUT VC1A_TRUNCT_PICK_E(a,i) = Tai(a,i)
+    ENDPARDO i, a
+
+    PARDO i, i1, a1, a
+
+        REQUEST VCACT2AA_TRUNCT_PICK_S(a,i,a1,i1) i1
+        Taiai(a,i,a1,i1)  = VCACT2AA_TRUNCT_PICK_S(a,i,a1,i1)
+       
+        NCOUNT = ZERO
+        DO NINDEX50
+           NCOUNT += ONE
+           IF NCOUNT > LIMIT
+              EXIT
+           ENDIF
+           REQUEST VCACT2AA_TRUNCT(a,i,a1,i1,NINDEX50) i1
+           GET ORTHO_COEF(NINDEX50,NINDEX50)
+
+           T1aiai(a,i,a1,i1) = VCACT2AA_TRUNCT(a,i,a1,i1,NINDEX50)
+           T1xx(NINDEX50,NINDEX50) = ORTHO_COEF(NINDEX50,NINDEX50)
+
+           EXECUTE RETURN_SVAL T1xx FACT
+
+           T1aiai(a,i,a1,i1)  *= FACT
+           T1aiai(a,i,a1,i1)  *= -1.0
+           Taiai(a,i,a1,i1)   += T1aiai(a,i,a1,i1)
+         ENDDO NINDEX50
+
+         PREPARE VCACT2AA_TRUNCT_PICK_E(a,i,a1,i1) = Taiai(a,i,a1,i1)
+    ENDPARDO i, i1, a1, a
+
+    PARDO i, a, b, j
+
+        REQUEST VCACT2AB_TRUNCT_PICK_S(a,i,b,j) j
+        Taibj(a,i,b,j)  = VCACT2AB_TRUNCT_PICK_S(a,i,b,j)
+
+        NCOUNT = ZERO 
+        DO NINDEX50
+           NCOUNT += ONE
+           IF NCOUNT > LIMIT
+              EXIT
+           ENDIF
+
+           REQUEST VCACT2AB_TRUNCT(a,i,b,j,NINDEX50) j
+           GET ORTHO_COEF(NINDEX50,NINDEX50)
+           T1aibj(a,i,b,j) = VCACT2AB_TRUNCT(a,i,b,j,NINDEX50)
+           T1xx(NINDEX50,NINDEX50) = ORTHO_COEF(NINDEX50,NINDEX50)
+
+           EXECUTE RETURN_SVAL T1xx FACT
+
+           T1aibj(a,i,b,j) *= FACT
+           T1aibj(a,i,b,j) *= -1.0
+           Taibj(a,i,b,j)  += T1aibj(a,i,b,j)
+        ENDDO NINDEX50
+
+        PREPARE VCACT2AB_TRUNCT_PICK_E(a,i,b,j) = Taibj(a,i,b,j)
+    ENDPARDO i, a, b, j
+
+    EXECUTE SERVER_BARRIER
+
+#bgn_debug
+#      ncount=0.0
+#      do nindex50
+#      ncount+=1.0
+#      if ncount > limit 
+#      exit
+#      endif
+#      tmpa=0.0
+#      suma=0.0
+#      sumcv=0.0
+#      pardo i,a
+#         get VC1A_TRUNCT(a,i,nindex50)
+#         get VC1A_TRUNCT_PICK_E(a,i)
+#         t1ai(a,i) =  VC1A_TRUNCT(a,i,nindex50)
+#         tai(a,i)  =  VC1A_TRUNCT_PICK_E(a,i)
+#         tmp =   tai(a,i) *  t1ai(a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      sumcv=suma
+#      sumcv+=suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,i1,a1,i
+#            request VCACT2AA_TRUNCT_PICK_E(a,i,a1,i1)   i
+#            request VCACT2AA_TRUNCT(a,i,a1,i1,NINDEX50) i
+#            Taiai(a,i,a1,i1)  = VCACT2AA_TRUNCT_PICK_E(a,i,a1,i1)
+#            T1aiai(a,i,a1,i1) = VCACT2AA_TRUNCT(a,i,a1,i1,NINDEX50)
+#            tmp = Taiai(a,i,a1,i1) * T1aiai(a,i,a1,i1) 
+#            tmpa += tmp
+#      endpardo a,i1,a1,i
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      sumcv+=suma
+#      sumcv+=suma
+#      tmpa  =0.0
+#      suma  =0.0
+#      pardo j,i,a,b
+#            request VCACT2AB_TRUNCT(a,i,b,j,NINDEX50) j
+#            request VCACT2AB_TRUNCT_PICK_E(a,i,b,j)   j
+#            Taibj(a,i,b,j)  = VCACT2AB_TRUNCT_PICK_E(a,i,b,j)
+#            T1aibj(a,i,b,j) = VCACT2AB_TRUNCT(a,i,b,j,NINDEX50)
+#            tmp =   Taibj(a,i,b,j) * T1aibj(a,i,b,j)  
+#            tmpa+= tmp
+#      endpardo j,i,a, b
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      sumcv+=suma
+#      execute print_scalar sumcv
+#      enddo nindex50
+#end_debug
+
+    ENDPROC GRAM_SCHMIDT_TRUNCT
+#   ---------------------------
+
+    PROC NORM_TRUNCT_PICKS
+#   ----------------------
+
+    SUMA  = 0.0
+    SUMAA = 0.0
+    SUMAB = 0.0
+    HC_A  = 0.0
+    HC_AA = 0.0
+    HC_AB = 0.0
+
+    PARDO a, i
+        GET VC1A_TRUNCT_PICK_E(a,i)
+        Tai(a,i) = VC1A_TRUNCT_PICK_E(a,i)
+        TMP   = Tai(a,i) * Tai(a,i)
+        SUMA += TMP
+   ENDPARDO a, i
+
+   PARDO a, a1, i, i1
+       REQUEST VCACT2AA_TRUNCT_PICK_E(a,i,a1,i1) i1
+       Taiai(a,i,a1,i1) = VCACT2AA_TRUNCT_PICK_E(a,i,a1,i1)
+       TMP    = Taiai(a,i,a1,i1) * Taiai(a,i,a1,i1)
+       SUMAA += TMP
+   ENDPARDO a, a1, i, i1
+
+   PARDO a, b, i, j
+       REQUEST VCACT2AB_TRUNCT_PICK_E(a,i,b,j) j
+       Taibj(a,i,b,j) = VCACT2AB_TRUNCT_PICK_E(a,i,b,j)
+       TMP    = Taibj(a,i,b,j) * Taibj(a,i,b,j)
+       SUMAB +=  TMP
+    ENDPARDO a, b, i, j
+
+    EXECUTE SIP_BARRIER
+    COLLECTIVE HC_A  += SUMA
+    COLLECTIVE HC_AA += SUMAA
+    COLLECTIVE HC_AB += SUMAB
+
+    SUM_R  = HC_A
+    SUM_R += HC_A
+    SUM_R += HC_AA
+    SUM_R += HC_AA
+    SUM_R += HC_AB
+
+    EXPONENT = 0.5
+    EXECUTE NORM_FAC SUM_R EXPONENT
+    INV_SQRT_NORM_R = SUM_R
+
+    EXECUTE SIP_BARRIER
+
+    PARDO a, i
+        GET VC1A_TRUNCT_PICK_E(a,i)
+        Tai(a,i) = VC1A_TRUNCT_PICK_E(a,i)
+        Tai(a,i)*= INV_SQRT_NORM_R
+        PUT VC1A_TRUNCT_PICK_S(a,i) = Tai(a,i)
+    ENDPARDO a, i
+
+    PARDO a, a1, i, i1
+        REQUEST VCACT2AA_TRUNCT_PICK_E(a,i,a1,i1) i1
+        Taiai(a,i,a1,i1) = VCACT2AA_TRUNCT_PICK_E(a,i,a1,i1)
+        Taiai(a,i,a1,i1)*= INV_SQRT_NORM_R
+        PREPARE VCACT2AA_TRUNCT_PICK_S(a,i,a1,i1) =  Taiai(a,i,a1,i1)
+    ENDPARDO a, a1, i, i1
+
+    PARDO a, b, i, j
+        REQUEST VCACT2AB_TRUNCT_PICK_E(a,i,b,j) j
+        Taibj(a,i,b,j) = VCACT2AB_TRUNCT_PICK_E(a,i,b,j)
+        Taibj(a,i,b,j)*= INV_SQRT_NORM_R
+        PREPARE VCACT2AB_TRUNCT_PICK_S(a,i,b,j) = Taibj(a,i,b,j)
+    ENDPARDO a, b, i, j
+
+    EXECUTE SERVER_BARRIER
+
+    ENDPROC NORM_TRUNCT_PICKS
+#   ----------------------
+
+    PROC COPY_TRUNCT_PICKS
+#   ----------------------
+  
+     NCOUNT = ZERO 
+     DO NINDEX50
+        NCOUNT += ONE
+        IF NCOUNT > TWL
+           EXIT
+        ENDIF
+
+        IF NCOUNT == KCOUNT 
+        PARDO a, i
+            GET VC1A_TRUNCT_PICK_S(a,i)
+            Tai(a,i) = VC1A_TRUNCT_PICK_S(a,i)
+            PUT VC1A_TRUNCT(a,i,NINDEX50) = Tai(a,i)
+        ENDPARDO a, i
+
+        PARDO a, a1, i, i1
+            REQUEST  VCACT2AA_TRUNCT_PICK_S(a,i,a1,i1) i1
+            Taiai(a,i,a1,i1) = VCACT2AA_TRUNCT_PICK_S(a,i,a1,i1)
+            PREPARE VCACT2AA_TRUNCT(a,i,a1,i1,NINDEX50) = Taiai(a,i,a1,i1)
+        ENDPARDO a, a1, i, i1
+
+        PARDO a, b, i, j
+            REQUEST VCACT2AB_TRUNCT_PICK_S(a,i,b,j) j
+            Taibj(a,i,b,j) = VCACT2AB_TRUNCT_PICK_S(a,i,b,j)
+            PREPARE VCACT2AB_TRUNCT(a,i,b,j,NINDEX50) = Taibj(a,i,b,j)
+        ENDPARDO a, b, i, j
+        ENDIF 
+
+     ENDDO NINDEX50
+
+     EXECUTE SERVER_BARRIER
+
+    ENDPROC COPY_TRUNCT_PICKS
+#   -------------------------
+
+    PROC COPY_ORTHO_VECS
+#   --------------------
+
+     NCOUNT = ZERO
+     DO NINDEX50
+        NCOUNT += ONE
+        IF NCOUNT > TWL
+           EXIT
+        ENDIF
+
+        PARDO a, i
+            GET VC1A_TRUNCT(a,i,NINDEX50)
+            Tai(a,i) = VC1A_TRUNCT(a,i,NINDEX50)
+            PUT VC1A_HIST(a,i,NINDEX50) = Tai(a,i)
+        ENDPARDO a, i
+
+        PARDO a, a1, i, i1
+            REQUEST  VCACT2AA_TRUNCT(a,i,a1,i1,NINDEX50) i1
+            Taiai(a,i,a1,i1) = VCACT2AA_TRUNCT(a,i,a1,i1,NINDEX50)
+            PREPARE VCACT2AA_HIST(a,i,a1,i1,NINDEX50) = Taiai(a,i,a1,i1)
+        ENDPARDO a, a1, i, i1
+
+        PARDO a, b, i, j
+            REQUEST VCACT2AB_TRUNCT(a,i,b,j,NINDEX50) j
+            Taibj(a,i,b,j) = VCACT2AB_TRUNCT(a,i,b,j,NINDEX50)
+            PREPARE VCACT2AB_HIST(a,i,b,j,NINDEX50) = Taibj(a,i,b,j)
+        ENDPARDO a, b, i, j
+
+     ENDDO NINDEX50
+
+#     NCOUNT = ZERO
+#     DO NINDEX50
+#        NCOUNT += ONE
+#        IF NCOUNT != TWL
+#           EXIT
+#        ENDIF
+#
+#        PARDO a, i
+#            GET VC1A_TRUNCT(a,i,NINDEX50)
+#            Tai(a,i) = VC1A_TRUNCT(a,i,NINDEX50)
+#            PUT VCACT1A(a,i) = Tai(a,i)
+#        ENDPARDO a, i
+#
+#        PARDO a, a1, i, i1
+#            REQUEST  VCACT2AA_TRUNCT(a,i,a1,i1,NINDEX50) i1
+#            Taiai(a,i,a1,i1) = VCACT2AA_TRUNCT(a,i,a1,i1,NINDEX50)
+#            PREPARE VCACT2AA(a,i,a1,i1) = Taiai(a,i,a1,i1)
+#        ENDPARDO a, a1, i, i1
+#
+#        PARDO a, b, i, j
+#            REQUEST VCACT2AB_TRUNCT(a,i,b,j,NINDEX50) j
+#            Taibj(a,i,b,j) = VCACT2AB_TRUNCT(a,i,b,j,NINDEX50)
+#            PREPARE VCACT2AB(a,i,b,j) = Taibj(a,i,b,j)
+#        ENDPARDO a, b, i, j
+#
+#     ENDDO NINDEX50
+
+     EXECUTE SERVER_BARRIER
+
+    ENDPROC COPY_ORTHO_VECS
+#   -----------------------
+
+    PROC RESTORE_COREC_VECS
+#   -----------------------
+    PARDO a, i
+        GET VCACT1A(a,i)
+        Tai(a,i) = VCACT1A(a,i)
+        PUT CORR_VECa(a,i) = Tai(a,i)
+    ENDPARDO a, i
+
+    PARDO a, a1, i, i1
+        REQUEST  VCACT2AA(a,i,a1,i1) i1
+        Taiai(a,i,a1,i1) = VCACT2AA(a,i,a1,i1)
+        PREPARE CORR_VECaa(a,i,a1,i1) = Taiai(a,i,a1,i1)
+    ENDPARDO a, a1, i, i1
+
+    PARDO a, b, i, j
+        REQUEST VCACT2AB(a,i,b,j) j
+        Taibj(a,i,b,j) = VCACT2AB(a,i,b,j)
+        PREPARE CORR_VECab(a,i,b,j) = Taibj(a,i,b,j)
+    ENDPARDO a, b, i, j
+
+    EXECUTE SERVER_BARRIER
+
+    ENDPROC RESTORE_COREC_VECS
+#   --------------------------
+
+    PROC DRIVE_ORTHO_TRUNCT
+#   -----------------------
+     KCOUNT = ONE 
+     DO KINDEX12
+        KCOUNT += ONE
+        IF KCOUNT > TWL
+           EXIT
+        ENDIF 
+#bgn_debug
+#     execute print_scalar kcount 
+#end_debug
+
+        CALL PICK_TRUNCATED_VEC
+        CALL MAKE_ORTHO_COEFS_TRUNCT
+        CALL GRAM_SCHMIDT_TRUNCT 
+        CALL NORM_TRUNCT_PICKS
+        CALL COPY_TRUNCT_PICKS
+     ENDDO KINDEX12 
+
+     CALL COPY_ORTHO_VECS
+
+     ENDPROC DRIVE_ORTHO_TRUNCT
+#    -------------------------
 
      PROC SET_EOM_INCLUDE
 #    --------------------
@@ -9081,7 +9301,7 @@
      ENDPROC SET_EOM_INCLUDE
 #    -----------------------
 
-     PROC INIT_AUX_STATIC_ARRAYS
+    PROC INIT_AUX_STATIC_ARRAYS
 #    ---------------------------
 
       DO MINDEX50
@@ -9099,7 +9319,7 @@
          PSEUDO_ROOTS(MROOTS,INDONE) = ZERO
          EOM_EES(MROOTS,INDONE)      = ZERO
       ENDDO MROOTS
-      ENDDO INDONE
+      ENDDO INDONE 
 
       EXECUTE SIP_BARRIER
 
@@ -9110,6 +9330,8 @@
 #    -------------
 # Reduce the subspace dimension. 
    
+     EXECUTE SERVER_BARRIER 
+
      IF EOM_MAXCYC < TWELVE 
         NREDUCE  = EOM_MAXCYC
         NREDUCE -= THREE 
@@ -9124,15 +9346,14 @@
      
      EXECUTE TRUNCATE_EOM_SUBSPACE A_DIAGS DVECTORS
 #bgn_debug
-     execute print_static A_DIAGS NREDUCE
-     execute print_static DVECTORS NFULL 
+#     execute print_static A_DIAGS NREDUCE
+#     execute print_static DVECTORS NFULL 
 #end_debug
 
-     IF TRNC_COUNT > ONE
-        CALL INIT_TO_ZERO 
-     ENDIF 
+     CALL INIT_TO_ZERO 
      CALL TRANSFORM_C 
-     CALL COPY_NORM_C
+     CALL FORM_NORM_C
+     CALL DRIVE_ORTHO_TRUNCT
      CALL INIT_TO_ZERO 
      CALL TRANSFORM_HC 
      CALL COPY_HC 
@@ -9162,7 +9383,6 @@
       THREE    = 3.0
       FORT     = 14.0
       FIFT     = 15.0
-      HALF     = 0.50
 
       CALL CREATE_ARRAYS
       CALL READ_AMP
@@ -9184,8 +9404,8 @@
      EOM_MAXCYC       = EE_MAXCYC
      IDENS            = ONE
      EXACT_HY         = ZERO
-     MAX_OVLP         = ZERO
-     MIN_ENEG         = ONE 
+     MAX_OVLP         = ONE
+     MIN_ENEG         = ZERO
      LOCK_THRES       = 0.001
      FIRST_VEC        = ONE
      PREVS_VEC        = ZERO 
@@ -9204,7 +9424,7 @@
 
 # The default denominator is Fock and can be switched to Hbar
 
-     EOM_DENOM = ONE
+     EOM_DENOM = ZERO
      IF EOM_DENOM == ONE 
         CALL FORM_12HHPP_DIAG  
      ELSE
@@ -9331,7 +9551,7 @@
               ENDIF
 
               CALL FORM_RESIDUAL_VEC
-#              CALL CHECK_CONVERGENCE
+              CALL CHECK_CONVERGENCE
 
               IF ITER_COUNT > ONE
                    EDIFF = E_OLD - OMEGA
@@ -9354,8 +9574,6 @@
                 EXIT
               ELSE
                 CALL FORM_CORRECTION_VEC
-                CALL CHECK_CONVERGENCE_CORR
-                CALL NORM_CORRECTION_VEC
                 CALL DRIVE_ORTHO
                 CALL RESCALE_NEW_C
               ENDIF 
@@ -9371,6 +9589,12 @@
                  CALL TRUNCATE
                  ITER_COUNT  = TWL
 
+                 CALL RESTORE_COREC_VECS
+                 CALL DRIVE_ORTHO
+                 CALL RESCALE_NEW_C
+#bgn_debug
+#     call c_check 
+#end_debug
               ENDIF
           ENDIF
 

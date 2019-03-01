@@ -180,10 +180,11 @@ c-------------------------------------------------------------------------
       do i = i1, i2 
       do j = j1, j2 
          div = y(i,j) 
-c        if (dabs(div) .gt. 1.0d-5) then 
-            val = x(i,j)/div   
-            x(i,j) = val 
-c        endif 
+C         if (dabs(div) .lt. 1.0d-4) then 
+C            div = Sign(1.0d-4,div) 
+C          endif 
+          val = x(i,j)/div   
+          x(i,j) = val 
       enddo 
       enddo 
 
