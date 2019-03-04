@@ -117,7 +117,7 @@ C
 C Hbar is non-symmetric matrix, and we obtain both left/right eigenvectors.
 
       Ndim = (i2 -i1) + 1
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a,i4)") "@-Entry to XGEEV order of the matrix", 
      +                Ndim 
@@ -127,7 +127,7 @@ C#ifdef _DEBUG_LVL0
       enddo 
       call output(Hbar,1,k,1,k,Ndim,Ndim,1)
       Endif 
-C#endif 
+#endif 
 
       If (Ndim .Gt. Maxdim) Then
          Write(6,"(a,a)") "@-XGEEV: Exceeded the max",
@@ -166,7 +166,7 @@ C then we choose.
          Hbar(i,i) = Eigr(i)
       Enddo 
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a)") "Eigenvalues/vectors of the incoming matrix"
       Write(6,"(a)") "The right-hand side"
@@ -177,7 +177,7 @@ C#ifdef _DEBUG_LVL0
 C      Write(6,"(a)") "The left-hand side"
 C      call output(EvecL,1,k,1,k,Ndim,Ndim,1)
       endif 
-C#endif 
+#endif 
 
       Return
       End

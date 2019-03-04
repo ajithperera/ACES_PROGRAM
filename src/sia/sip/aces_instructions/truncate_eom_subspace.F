@@ -214,7 +214,7 @@ C Schmidt Orthogonalize the subspace.
          Call Dcopy(Ndim_old,Evec_selct(1,I),1,Eigvecs(1,I),1)
       Enddo 
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       if (Me.eq.0) Then 
       Write(6,*) " The subspace wigenvalues and vectors after orthog."
       Write(6,"(6(1X,F15.7))") (Eigs(i),i=1,Ndim_New)
@@ -228,7 +228,7 @@ C#ifdef _DEBUG_LVL0
       enddo 
       call output(scr,1,Ndim_new,1,Ndim_new,Ndim_new,Ndim_new,1)
       endif 
-C#endif `
+#endif `
 
       Return
       End

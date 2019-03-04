@@ -216,11 +216,14 @@ CSSS  &            U,Ndim,Work,4*Ndim,Ierror)
 
       if (me .eq.0) then
       Write(6,*)
-      Write(6,"(a,a,a)")" The eigenvalues of the D matrix. The",
-     &               " negative or zero means"
-      Write(6,"(a)") " density is singular."
-      Write(6,"(6(1x,F12.6))") (EigR(i),i=1,Ndim)
-      Write(6,*)
+      Write(6,"(a,a)")" The eigenvalues of the response density"
+     &                " matrix. Negative or zero means"
+      Write(6,"(a)") " the density is singular (not ordered)."
+      Write(6,"(a,a)") "--------------------------------------------",
+     &                 "------------------------------------" 
+      Write(6,"(5(1x,F15.9))") (EigR(i),i=1,Ndim)
+      Write(6,"(a,a)") "--------------------------------------------",
+     &                 "------------------------------------" 
       Endif 
 
       Useqz = .False.
@@ -230,15 +233,15 @@ CSSS  &            U,Ndim,Work,4*Ndim,Ierror)
       Enddo 
       If (Neg .Ne. 0) Then
          If (me.eq.0) Write(6,"(a,a)") " The Density matrix is not",
-     &                                 " positive definite"
+     &                                 " positive definite!"
          Useqz = .True.
       Endif 
 
       Useqz = .False.
 C
       if (.NOT. Useqz) Then
-         If (Me .eq. 0) Write(6,"(a,a)") "The Density matrix is ",  
-     &      "not singular: Follow the traditional path."
+CSSS         If (Me .eq. 0) Write(6,"(a,a)") " The Density matrix is ",  
+CSSS     &      "not singular: Follow the traditional path.
 
 C Form D^(-1/2)
 
@@ -254,7 +257,7 @@ C Form D^(-1/2)
          Enddo 
          Ndim_modf = Ndim - Izero
 
-         If (me .eq.0) Write(6,"(a,a,i4)") "The number of", 
+         If (me .eq.0) Write(6,"(a,a,i4)") " The number of", 
      &                             " singular eig values: ",
      &                      Izero 
 #ifdef _DEBUG_LVL0
@@ -319,13 +322,20 @@ C Form (DC)^t(DC)
 C#ifdef _DEBUG_LVL0
          if (me .eq. 0) then
          Write(6,*)
-C         Write(6,"(a)") " Eigenvalues and vectors before reordering"
-         Write(6,"(a)") " Eigenvalues and vectors (before reordering"
-         Write(6,"(6(1x,F12.6))") (EigR(i),i=1,Ndim)
+         Write(6,"(a)") " Eigenvalues of F^(ekt) (not ordered)."
+         Write(6,"(a,a)")"--------------------------------------------",
+     &                   "------------------------------------" 
+         Write(6,"(5(1x,F15.9))") (EigR(i),i=1,Ndim)
+         Write(6,"(a,a)")"--------------------------------------------",
+     &                   "------------------------------------" 
 C         call output(EvecR,1,Ndim,1,Ndim,Ndim,Ndim,1)
          Write(6,*)
-         Write(6,"(a)") " (DC)^tDC: Pole strength"
-         Write(6,"(6(1x,F12.6))") (EigI(i),i=1,Ndim)
+         Write(6,"(a)") " (DC)^tDC: Pole strength."
+         Write(6,"(a,a)")"--------------------------------------------",
+     &                   "------------------------------------" 
+         Write(6,"(5(1x,F15.9))") (EigI(i),i=1,Ndim)
+         Write(6,"(a,a)")"--------------------------------------------",
+     &                   "------------------------------------" 
          endif 
 C#endif
 
@@ -401,7 +411,7 @@ C          Enddo
 C          Enddo
 C      Endif 
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
          if (me .eq. 0) then
          Write(6,*)
          Write(6,"(a)") " Eigenvalues and Pol. str. after reordering"
@@ -409,7 +419,7 @@ C#ifdef _DEBUG_LVL0
          Write(6,*)
          Write(6,"(6(1x,F12.6))") (EigI(i),i=1,Ndim)
          endif 
-C#endif
+#endif
 C Zero out all the orbital energies except for the occupied orbitals 
 
       Do i =1, Noccupied 

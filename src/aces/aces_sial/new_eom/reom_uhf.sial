@@ -12041,8 +12041,8 @@
      EXACT_HY        = ZERO
      MULT            = ZERO
      IDENS           = ONE
-     MAX_OVLP        = ZERO
-     MIN_ENEG        = ONE
+     MAX_OVLP        = ONE
+     MIN_ENEG        = ZERO
      LOCK_THRES      = 0.001
      FIRST_VEC       = ZERO
      PREVS_VEC       = ONE
