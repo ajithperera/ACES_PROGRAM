@@ -327,6 +327,7 @@
       SCALAR  FIFT 
       SCALAR  FOLLOW 
       SCALAR  OMEGA_KEEP
+      SCALAR  FRESH_SBSP 
 #
 # Declare two-electron integral arrays
 # ------------------------------------
@@ -7353,7 +7354,7 @@
         FOLLOW -= ONE
      ENDIF
 #bgn_debug
-     execute print_scalar follow
+#     execute print_scalar follow
 #end_debug
 
      NCOUNT = 0.0
@@ -7421,7 +7422,7 @@
       ENDIF 
 
 #bgn_debug
-     execute print_scalar imax
+#     execute print_scalar imax
 #end_debug
 
      ENDPROC SELECT_VECS_MAX_OVLP
@@ -7820,7 +7821,7 @@
 
      EXECUTE SIP_BARRIER
 #bgn_debug
-     execute print_scalar A_VALUE 
+#     execute print_scalar A_VALUE 
 #end_debug
      EXECUTE SQUARE_ROOT A_VALUE HALF
      RESIDUAL_NORM = A_VALUE
@@ -9183,6 +9184,7 @@
      PREVS_VEC        = ZERO 
      LEFT             = ZERO
      RIGHT            = ZERO
+     FRESH_SBSP       = ZERO 
 
 # The default Guess is CIS, can be switched by proper key-values.
 
@@ -9238,11 +9240,16 @@
 
          LOCK       = ZERO 
          IF ROOT_COUNT != ONE
-            CALL ORTHO_NEW_ROOT 
-            LOCK       = ONE 
+#            IF FRESH_SBSP != ONE
+               CALL ORTHO_NEW_ROOT 
+#               E_OLD = ZERO
+               LOCK  = ONE 
+#             ENDIF 
          ENDIF 
 
-#         ITER_COUNT = ZERO 
+#         IF FRESH_SBSP == ONE 
+#            ITER_COUNT = ZERO 
+#         ENDIF 
          SBSP_COUNT = ZERO
 
          DO EOM_CYCLE 
@@ -9265,17 +9272,12 @@
         execute print_scalar SBSP_COUNT
 ##end_debug
             IF SBSP_COUNT > MAX_SUBSP_DIM
-#               IF TARGET_ROOTS < ROOT_COUNT 
-#                  CALL SAVE_C_VECTORS
-#               ELSE
-#                 EXIT
-#               ENDIF 
                EXIT 
             ENDIF
 
             CALL SAVE_C_VECTORS
 #bgn_debug
-            call c_check
+#            call c_check
 #end_debug
             CALL HR_MULT
 
@@ -9406,8 +9408,10 @@
                ENDIF
             ENDDO KROOT 
             ENDDO INDONE 
-
-            CALL SAVE_C_VECTORS 
+            
+#            IF FRESH_SBSP != ONE 
+               CALL SAVE_C_VECTORS 
+#            ENDIF 
             OMEGA_KEEP= OMEGA 
             OMEGA     = ZERO
             CALL FORCE_TO_ZERO
