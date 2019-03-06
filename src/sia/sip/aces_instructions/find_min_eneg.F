@@ -107,9 +107,9 @@ C
       Integer Ndim1,Ndim2,Ndim3,Iloc,Ilocmin
       Integer Istart,Ierror 
       Double precision Eigs_curnt(i1:i2),Roots(a1:a2,b1:b2)
-      Double Precision X,X2,Vlocmin,Tol
+      Double Precision X,X2,Vlocmin,Tol,Nill
 
-      Parameter(Tol = 1.0D-03)
+      Parameter(Tol = 1.0D-03,Nill=0.0D0)
 
       Double Precision Tmp(Maxdim), Diffs(Maxdim)
 
@@ -151,12 +151,27 @@ C      Ndim3 = b1 - b2 + 1
             If (X2 .LT. Tol) Tmp(Iloc) = 1.0D+30
          Enddo
       Enddo
-      Enddo 
+      Enddo
+
+C What if there is an eigenvalue which is small and less than the roots
+C that have already been located. Lets eleminate them by setting those
+C also to 1.0D+30
+
+      Do K = 1, Ndim3
+      Do I = 1, Ndim2
+         Do J = 1, Ndim1
+            If (Roots(I,K) .Gt. Nill) Then
+               X2 =Tmp(J)-Roots(I,K)
+               If (X2 .LT. Nill) Tmp(J) = 1.0D+30
+            Endif 
+         Enddo
+      Enddo
+      Enddo
+ 
 C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a,a,I2,1X,F10.5)") "The screened eigenvalues"
       Write(6,"(6(1x,F10.5))") (Tmp(i),i=1,Ndim1)
-      Write(6,"(6(1x,F10.5))") (Diffs(i),i=1,Ndim1)
       endif 
 C#endif 
 

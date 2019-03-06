@@ -327,7 +327,7 @@
       SCALAR  FIFT 
       SCALAR  FOLLOW 
       SCALAR  OMEGA_KEEP
-      SCALAR  FRESH_SBSP 
+      SCALAR  FRESH_SBSP
 #
 # Declare two-electron integral arrays
 # ------------------------------------
@@ -375,6 +375,7 @@
       distributed VCH1A_HIST(a,i,NINDEX50)
       distributed VC1B_HIST(b,j,NINDEX50)
       distributed VCH1B_HIST(b,j,NINDEX50)
+      distributed INITIAL_VEC(a,i)
       distributed CISA_s_evecs(a,i,Mroots)
       distributed CISB_s_evecs(b,j,Mroots)
       distributed CISA_t_evecs(a,i,Mroots)
@@ -5987,6 +5988,7 @@
       create VCONV1A
       create REE
       create CISA_s_EVECS 
+      create INITIAL_VEC
       execute sip_barrier 
  
      ENDPROC CREATE_ARRAYS
@@ -7343,18 +7345,92 @@
      ENDPROC FORM_NEW_HBAR_Y_VECS
 #    ----------------------------
 
-     PROC SELECT_VECS_MAX_OVLP
-#    -------------------------
+     PROC KEEP_GUESS_VECS
+#    --------------------
 
-     IF FIRST_VEC == ONE
-        FOLLOW = ONE
-     ENDIF
+     PARDO a, i
+         GET VCACT1A(a,i)
+         Tai(a,i) = VCACT1A(a,i)
+         PUT INITIAL_VEC(a,i) = Tai(a,i) 
+     ENDPARDO a, i
+
+     EXECUTE SIP_BARRIER 
+
+     ENDPROC KEEP_GUESS_VECS
+#    -----------------------
+
+     PROC SELECT_VECS_MAX_OVLP1
+#    --------------------------
+
+     MCOUNT = 0.0
+     DO MINDEX50
+        MCOUNT += 1.0
+        IF MCOUNT >  ITER_COUNT
+           EXIT
+        ENDIF
+
+        SUMA   = 0.0
+        SUMB   = 0.0
+        CY_A   = 0.0
+        CY_B   = 0.0
+
+        PARDO a, i
+              GET INITIAL_VEC(a,i)
+              GET Y1a(a,i,MINDEX50)
+
+              Tai(a,i)  = INITIAL_VEC(a,i)
+              T1ai(a,i) = Y1a(a,i,MINDEX50)
+
+              TMP   =  Tai(a,i) * T1ai(a,i)
+              SUMA +=  TMP
+
+        ENDPARDO a, i
+
+        EXECUTE SERVER_BARRIER
+        COLLECTIVE CY_A += SUMA
+
+        CY_AB  = CY_A
+
+        KCOUNT = 0.0
+        DO KINDEX50
+           KCOUNT += 1.0
+
+           IF KCOUNT == MCOUNT
+              OVERLAP_R(MINDEX50) = CY_AB
+           ENDIF
+
+        ENDDO KINDEX50
+
+     ENDDO  MINDEX50
+
+     EXECUTE SIP_BARRIER
+
+     IF LOCK != ONE
+        EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
+        IMAX_KEEP = IMAX
+      ELSE
+        EXECUTE SET_ACES3_VARS OMEGA THRTEN
+        EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+        EXECUTE SET_ACES3_VARS IMAX MONE
+        IMAX_KEEP = IMAX
+      ENDIF
+
+#bgn_debug
+     execute print_scalar imax
+#end_debug
+
+     ENDPROC SELECT_VECS_MAX_OVLP1
+#    -----------------------------
+
+     PROC SELECT_VECS_MAX_OVLP2
+#    --------------------------
+
      IF PREVS_VEC == ONE
         FOLLOW = ITER_COUNT
         FOLLOW -= ONE
      ENDIF
 #bgn_debug
-#     execute print_scalar follow
+     execute print_scalar follow
 #end_debug
 
      NCOUNT = 0.0
@@ -7422,11 +7498,11 @@
       ENDIF 
 
 #bgn_debug
-#     execute print_scalar imax
+     execute print_scalar imax
 #end_debug
 
-     ENDPROC SELECT_VECS_MAX_OVLP
-#    ----------------------------
+     ENDPROC SELECT_VECS_MAX_OVLP2
+#    -----------------------------
 
      PROC SELECT_VECS_MIN_ENEG
 #    -------------------------
@@ -7821,7 +7897,7 @@
 
      EXECUTE SIP_BARRIER
 #bgn_debug
-#     execute print_scalar A_VALUE 
+     execute print_scalar A_VALUE 
 #end_debug
      EXECUTE SQUARE_ROOT A_VALUE HALF
      RESIDUAL_NORM = A_VALUE
@@ -9184,7 +9260,7 @@
      PREVS_VEC        = ZERO 
      LEFT             = ZERO
      RIGHT            = ZERO
-     FRESH_SBSP       = ZERO 
+     FRESH_SBSP       = ZERO
 
 # The default Guess is CIS, can be switched by proper key-values.
 
@@ -9218,6 +9294,7 @@
 
      ROOT_COUNT = ZERO
      TRNC_COUNT = ZERO
+     ITER_COUNT = ZERO 
  
      DO NROOTS
 
@@ -9238,18 +9315,19 @@
             CALL PREP_MAX_DIAG_GUESS
          ENDIF 
 
-         LOCK       = ZERO 
-         IF ROOT_COUNT != ONE
-#            IF FRESH_SBSP != ONE
-               CALL ORTHO_NEW_ROOT 
-#               E_OLD = ZERO
-               LOCK  = ONE 
-#             ENDIF 
-         ENDIF 
+         CALL KEEP_GUESS_VECS 
 
-#         IF FRESH_SBSP == ONE 
-#            ITER_COUNT = ZERO 
-#         ENDIF 
+         LOCK = ZERO 
+         IF FRESH_SBSP != ONE
+            IF ROOT_COUNT != ONE
+               CALL ORTHO_NEW_ROOT 
+               E_OLD      = OMEGA 
+            ENDIF 
+         ENDIF 
+         
+         IF FRESH_SBSP == ONE
+            ITER_COUNT = ZERO 
+         ENDIF 
          SBSP_COUNT = ZERO
 
          DO EOM_CYCLE 
@@ -9277,7 +9355,7 @@
 
             CALL SAVE_C_VECTORS
 #bgn_debug
-#            call c_check
+            call c_check
 #end_debug
             CALL HR_MULT
 
@@ -9312,7 +9390,12 @@
                  CALL FORM_NEWVECS
 
                  IF MAX_OVLP == ONE 
-                    CALL SELECT_VECS_MAX_OVLP
+                    IF FIRST_VEC == ONE 
+                       CALL SELECT_VECS_MAX_OVLP1
+                    ENDIF 
+                    IF PREVS_VEC == ONE
+                       CALL SELECT_VECS_MAX_OVLP2
+                    ENDIF
                  ENDIF 
                  IF MIN_ENEG == ONE
                     CALL SELECT_VECS_MIN_ENEG
@@ -9324,7 +9407,12 @@
                  CALL FORM_NEWVECS
 
                  IF MAX_OVLP == ONE 
-                    CALL SELECT_VECS_MAX_OVLP
+                    IF FIRST_VEC == ONE 
+                       CALL SELECT_VECS_MAX_OVLP1
+                    ENDIF 
+                    IF PREVS_VEC == ONE
+                       CALL SELECT_VECS_MAX_OVLP2
+                    ENDIF
                  ENDIF 
                  IF MIN_ENEG == ONE
                     CALL SELECT_VECS_MIN_ENEG
@@ -9408,11 +9496,11 @@
                ENDIF
             ENDDO KROOT 
             ENDDO INDONE 
-            
-#            IF FRESH_SBSP != ONE 
-               CALL SAVE_C_VECTORS 
-#            ENDIF 
-            OMEGA_KEEP= OMEGA 
+
+            IF FRESH_SBSP != ONE 
+              CALL SAVE_C_VECTORS 
+              OMEGA_KEEP= OMEGA 
+            ENDIF 
             OMEGA     = ZERO
             CALL FORCE_TO_ZERO
 
@@ -9453,7 +9541,9 @@
           ENDDO INDONE
 
           EXECUTE SERVER_BARRIER
-          OMEGA = OMEGA_KEEP 
+          IF FRESH_SBSP != ONE 
+             OMEGA = OMEGA_KEEP 
+          ENDIF 
       ENDDO NROOTS
 #
       EXECUTE SERVER_BARRIER
