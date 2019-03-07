@@ -33,9 +33,6 @@
 # Declare served arrays 
 # ---------------------
 #
-      distributed Fpq_a(mu,nu) 
-      distributed Fpq_b(mu,nu) 
-#
       served Vxxxp(mu,nu,lambda,p)
       served Vxpxp(mu,p1,lambda,p)
       served Vxxpp(mu,nu,p1,p)
@@ -139,7 +136,7 @@
 #
 #    ------------------------------------------------------------------------
 #
-#    DEFINE PROCEDURES  
+#    DEINE PROCEDURES  
 #
 #    ------------------------------------------------------------------------
 #

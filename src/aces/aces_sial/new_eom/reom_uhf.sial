@@ -117,6 +117,8 @@
       Distributed RES1b(b,j)
       Distributed CORR_VECA(a,i)
       Distributed CORR_VECB(b,j)
+      Distributed INITIAL_VECA(a,i)
+      Distributed INITIAL_VECB(b,j)
       Distributed CISA_S_EVECS(a,i,KROOT)
       Distributed CISA_T_EVECS(a,i,KROOT)
       Distributed CISB_S_EVECS(b,j,KROOT)
@@ -553,6 +555,10 @@
       SCALAR  FORT
       SCALAR  FIFT
       SCALAR  FOLLOW
+      SCALAR  OMEGA_KEEP
+      SCALAR  FRESH_SBSP
+#
+# 
 #
 # ENDARRAYS USED IN XPROC 
 #
@@ -5105,6 +5111,8 @@
       create cisb_s_evecs
       create cisa_t_evecs
       create cisb_t_evecs
+      create INITIAL_VECA
+      create INITIAL_VECB
 
       execute sip_barrier 
 
@@ -10072,11 +10080,107 @@
      ENDPROC FORM_NEW_HBAR_Y_VECS
 #    ----------------------------
 
-     PROC SELECT_VECS_MAX_OVLP
+     PROC KEEP_GUESS_VECS
+#    --------------------
+
+     PARDO a, i
+         GET VCACT1A(a,i)
+         Tai(a,i) = VCACT1A(a,i)
+         PUT INITIAL_VECA(a,i) = Tai(a,i)
+     ENDPARDO a, i
+
+     PARDO b, j
+         GET VCACT1B(b,j)
+         Tbj(b,j) = VCACT1B(b,j)
+         PUT INITIAL_VECB(b,j) = Tbj(b,j)
+     ENDPARDO b, j
+
+     EXECUTE SIP_BARRIER
+
+     ENDPROC KEEP_GUESS_VECS
+#    -----------------------
+
+     PROC SELECT_VECS_MAX_OVLP1
+#    --------------------------
+
+     MCOUNT = 0.0
+     DO MINDEX50
+        MCOUNT += 1.0
+        IF MCOUNT >  ITER_COUNT
+           EXIT
+        ENDIF
+
+        SUMA   = 0.0
+        SUMB   = 0.0
+        CY_A   = 0.0
+        CY_B   = 0.0
+
+        PARDO a, i
+            GET INITIAL_VECA(a,i)
+            GET Y1a(a,i,MINDEX50)
+
+            Tai(a,i)  = INITIAL_VECA(a,i)
+            T1ai(a,i) = Y1a(a,i,MINDEX50)
+
+            TMP   =  Tai(a,i) * T1ai(a,i)
+            SUMA +=  TMP
+
+       ENDPARDO a, i
+
+       EXECUTE SERVER_BARRIER
+       COLLECTIVE CY_A += SUMA
+
+       PARDO j, b
+
+           GET INITIAL_VECB(b,j)
+           GET Y1b(b,j,MINDEX50)
+
+           Tbj(b,j)  = INITIAL_VECB(b,j)
+           T1bj(b,j) = Y1b(b,j,MINDEX50)
+
+           TMP    =  Tbj(b,j) * T1bj(b,j)
+           SUMB   +=  TMP
+
+       ENDPARDO j, b
+       EXECUTE SERVER_BARRIER
+       COLLECTIVE CY_B += SUMB
+
+       CY_AB  = CY_A
+       CY_AB += CY_B
+
+       KCOUNT = 0.0
+       DO KINDEX50
+          KCOUNT += 1.0
+
+          IF KCOUNT == MCOUNT
+             OVERLAP_R(MINDEX50) = CY_AB
+          ENDIF
+
+       ENDDO KINDEX50
+
+     ENDDO  MINDEX50
+
+     EXECUTE SIP_BARRIER
+
+     IF LOCK != ONE
+        EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
+        IMAX_KEEP = IMAX
+      ELSE
+        EXECUTE SET_ACES3_VARS OMEGA THRTEN
+        EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+        EXECUTE SET_ACES3_VARS IMAX MONE
+        IMAX_KEEP = IMAX
+      ENDIF
+
+#bgn_debug
+     execute print_scalar imax
+#end_debug
+
+     ENDPROC SELECT_VECS_MAX_OVLP1
+#    -----------------------------
+
+     PROC SELECT_VECS_MAX_OVLP2
 #    -------------------------
-     IF FIRST_VEC == ONE
-        FOLLOW = ONE
-     ENDIF
      IF PREVS_VEC == ONE
         FOLLOW = ITER_COUNT
         FOLLOW -= ONE
@@ -10168,8 +10272,8 @@
 #     execute print_scalar imax
 #end_debug
 
-     ENDPROC SELECT_VECS_MAX_OVLP
-#    ---------------------------
+     ENDPROC SELECT_VECS_MAX_OVLP2
+#    -----------------------------
 
     PROC SELECT_VECS_MIN_ENEG
 #   -------------------------
@@ -12000,6 +12104,47 @@
 
      ENDPROC TRUNCATE
 #    ----------------
+
+    PROC ORTHO_NEW_ROOT
+#   -------------------
+# If we wants to use the exsisting sub-space for the next root, we
+# need to orthogonalize the new guess vector to the exsisting subspace.
+# Lets use the exsisting arrays and the Schmidt routines.
+
+    PARDO a, i
+        GET VCACT1A(a,i)
+        Tai(a,i) = VCACT1A(a,i)
+        PUT CORR_VECa(a,i) = Tai(a,i)
+    ENDPARDO a, i
+
+    PARDO j, b
+        GET VCACT1B(b,j)
+        Tbj(b,j)  = VCACT1B(b,j)
+        PUT  CORR_VECb(b,j) = Tbj(b,j)
+    ENDPARDO j, b
+
+    PARDO a, a1, i, i1
+        Taiai(a,i,a1,i1) = 0.0
+        PREPARE CORR_VECaa(a,i,a1,i1) = Taiai(a,i,a1,i1)
+    ENDPARDO a, a1, i, i1
+
+    PARDO b, b1, j, j1
+        Tbjbj(b,j,b1,j1) = 0.0
+        PREPARE CORR_VECbb(b,j,b1,j1) = Tbjbj(b,j,b1,j1)
+    ENDPARDO b, b1, j, j1
+
+    PARDO a, b, i, j
+        Taibj(a,i,b,j) = 0.0
+        PREPARE CORR_VECab(a,i,b,j) = Taibj(a,i,b,j)
+    ENDPARDO a, b, i, j
+    EXECUTE SERVER_BARRIER
+
+    CALL DRIVE_ORTHO
+
+    CALL RESCALE_NEW_C
+
+    ENDPROC ORTHO_NEW_ROOT
+#   ----------------------
      
 #-------------------------------------------------------------------------
 #                                                                        #
@@ -12048,6 +12193,7 @@
      PREVS_VEC       = ONE
      LEFT            = ZERO
      RIGHT           = ZERO
+     FRESH_SBSP      = ZERO
 
      SINGLET = ZERO
      TRIPLET = ZERO
@@ -12099,6 +12245,7 @@
 
         ROOT_COUNT = ZERO
         TRNC_COUNT = ZERO
+        ITER_COUNT = ZERO
 
         DO NROOTS
 
@@ -12118,9 +12265,20 @@
               CALL PREP_MAX_DIAG_GUESS
            ENDIF
 
-           ITER_COUNT = ZERO
+           CALL KEEP_GUESS_VECS
+
+           LOCK = ZERO
+           IF FRESH_SBSP != ONE
+              IF ROOT_COUNT != ONE
+                 CALL ORTHO_NEW_ROOT
+                 E_OLD      = OMEGA
+              ENDIF
+           ENDIF
+
+           IF FRESH_SBSP == ONE
+              ITER_COUNT = ZERO
+           ENDIF 
            SBSP_COUNT = ZERO
-           LOCK       = ZERO
 
            DO EOM_CYCLE
 
@@ -12184,7 +12342,12 @@
                  CALL FORM_NEWVECS
 
                  IF MAX_OVLP == ONE
-                    CALL SELECT_VECS_MAX_OVLP
+                    IF FIRST_VEC == ONE
+                       CALL SELECT_VECS_MAX_OVLP1
+                    ENDIF
+                    IF PREVS_VEC == ONE
+                       CALL SELECT_VECS_MAX_OVLP2
+                    ENDIF
                  ENDIF
                  IF MIN_ENEG == ONE
                     CALL SELECT_VECS_MIN_ENEG
@@ -12196,7 +12359,12 @@
                  CALL FORM_NEWVECS
 
                  IF MAX_OVLP == ONE
-                    CALL SELECT_VECS_MAX_OVLP
+                    IF FIRST_VEC == ONE
+                       CALL SELECT_VECS_MAX_OVLP1
+                    ENDIF
+                    IF PREVS_VEC == ONE
+                       CALL SELECT_VECS_MAX_OVLP2
+                    ENDIF
                  ENDIF
                  IF MIN_ENEG == ONE
                     CALL SELECT_VECS_MIN_ENEG
@@ -12275,10 +12443,14 @@
             ENDDO KROOT
             ENDDO INDONE
 
+            IF FRESH_SBSP != ONE
+              CALL SAVE_C_VECTORS
+              OMEGA_KEEP= OMEGA
+            ENDIF
             OMEGA = 0.0
             CALL FORCE_EVECS_TO_ZERO 
 
-             ENDIF
+            ENDIF
          ENDIF
 #bgn_debug
 #      execute print_scalar OMEGA
@@ -12377,6 +12549,9 @@
          ENDIF 
 
          EXECUTE SERVER_BARRIER
+         IF FRESH_SBSP != ONE
+            OMEGA = OMEGA_KEEP
+         ENDIF
       ENDDO NROOTS
 #
       EXECUTE SERVER_BARRIER
