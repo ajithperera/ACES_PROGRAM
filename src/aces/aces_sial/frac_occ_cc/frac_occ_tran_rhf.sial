@@ -41,100 +41,24 @@
       served Vxxpp(mu,nu,p1,p)
       served Vpxxp(p1,nu,lambda,p)
       served Vxppp(mu,p,p1,p2)
-      served Vxppp1(mu,p,p1,p2)
       served VSpppp(p,p1,p2,p3)
-#
-      served Vxxxq(mu,nu,lambda,q)
-      served Vxqxq(mu,q1,lambda,q)
-      served Vxxqq(mu,nu,q,q1)
-      served Vqxxq(q,nu,lambda,q1)
-      served Vxqqq(mu,q,q1,q2)
-      served Vxqqq1(mu,q,q1,q2)
-      served VSqqqq(q,q1,q2,q3)
-
-      served vxxpq(mu,nu,p,q)
-      served Vxpxq(mu,p,nu,q)
-      served Vxpqq(mu,p,q,q1)
-      served Vppqq(p,p1,q,q1)
-      served Vpxxq(p,mu,nu,q)
-
-      temp Txqxq(mu,q1,lambda,q)
-      temp T1xqxq(mu,q1,lambda,q)
-      temp Txxqq(mu,nu,q,q1)
-      temp T1xxqq(mu,nu,q1,q)
-      temp Tqqxx(q1,nu,lambda,q)
-      temp Tqxxq(q1,nu,lambda,q)
-      temp T1qxxq(q1,nu,lambda,q)
-
-      temp Txqqq(mu,q,q1,q2)
-      temp T1xqqq(mu,q,q1,q2)
-      temp Tqqqq(q,q1,q2,q3)
-      temp T1qqqq(q,q1,q2,q3)
-
-      temp Txpxq(mu,p,nu,q)
-      temp T1xpxq(mu,p,nu,q)
-      temp Txpqq(mu,p,q,q1)
-      temp T1xpqq(mu,p,q,q1)
-      temp Tppqq(p,p1,q,q1)
-      temp T1ppqq(p,p1,q,q1)
-      temp Tppxx(p,p1,mu,nu)
-      temp T1qqq(q3,q,q2,q1)
+      Served Vpppp(p3,p2,p,p1)
 
       temp Txppp(mu,p,p1,p2)
       temp T1xppp(mu,p,p1,p2)
       temp Tpppp(p,p1,p2,p3)
       temp T1pppp(p,p1,p2,p3)
-#
-      temp Txxpq(mu,nu,p,q)
-      temp T1xxpq(mu,nu,p,q)
-      temp T1pxxq(p,mu,nu,q)
       temp T1xxxp(mu,nu,lambda,p)
-      temp T1xxxq(mu,nu,lambda,q)
-      temp Txpxp(mu,p,nu,p1)
-      temp T1xpxp(mu,p,nu,p1)
       temp Txxpp(mu,nu,p1,p)
-      temp T1xxpp(mu,nu,p1,p)
+      temp Txpxp(mu,p,nu,p1)
       temp Tpxxp(p1,mu,nu,p)
-      temp T1pxxp(p1,mu,nu,p)
-      temp Tpxxq(p,mu,nu,q)
 
       local Txxxp(mu,nu,lambda,p)
-      local Txxxq(mu,nu,lambda,q)
-      local L1xxxp(mu,nu,lambda,p)
-      local L2xxxp(mu,lambda,nu,p)
-      local L3xxxp(lambda,mu,nu,p)
-      local L1xxxq(mu,nu,lambda,q)
-      local L2xxxq(mu,lambda,nu,q)
-      local L3xxxq(lambda,mu,nu,q)
-      local Lxpxp(mu,p,nu,p1)
-      local Lxxpp(mu,nu,p,p1)
-      local Lpxxp(p,mu,nu,p1)
-      local Lxqxq(mu,q,nu,q1)
-      local Lxxqq(mu,nu,q,q1)
-      local Lqxxq(q,mu,nu,q1)
-      local Lxpxq(mu,p,nu,q)
-      local Lpxxq(p,mu,nu,q)
-      local Lxppp(mu,p,p,p1)
-      local Lxqqq(mu,q,q,q1)
-      local Lxpqq(mu,p,q,q1)
 #
 # Declare integral arrays 
 # ------------------------  
 #
       temp AOINT(mu,nu,lambda,sigma) 
-#     served SAOINT(mu,nu,lambda,sigma) 
-      local TAOINT(mu,nu,lambda,sigma) 
-# Declare distributed arrays 
-# --------------------------- 
-#
-#
-# Define scalars 
-# -------------- 
-#
-      scalar e1 
-      scalar e2 
-      scalar e3 
-      scalar esum  
 #
 #    ------------------------------------------------------------------------
 #
@@ -195,8 +119,10 @@
 #
               Txxpp(mu,nu,p1,p)          = Txxxp(mu,nu,lambda,p)*ca(lambda,p1)
               PREPARE Vxxpp(mu,nu,p1,p) += Txxpp(mu,nu,p1,p)
+
               Txpxp(mu,p1,lambda,p)      = Txxxp(mu,nu,lambda,p)*ca(nu,p1)
               PREPARE Vxpxp(mu,p1,lambda,p) += Txpxp(mu,p1,lambda,p)
+
               Tpxxp(p1,nu,lambda,p)      = Txxxp(mu,nu,lambda,p)*ca(mu,p1)
               PREPARE Vpxxp(p1,nu,lambda,p) += Tpxxp(p1,nu,lambda,p)
 #
@@ -223,9 +149,7 @@
      PARDO mu, nu, p, p1
 #
            REQUEST Vxpxp(mu,p,nu,p1) p1 
-           REQUEST Vxxpp(mu,nu,p,p1) p1 
-           REQUEST Vxxpp(mu,nu,p,p1) p1 
-#
+
            DO p2
 #
               Txppp(mu,p,p2,p1)          = Vxpxp(mu,p,nu,p1)*ca(nu,p2)
@@ -247,6 +171,7 @@
 
            REQUEST             Vxppp(mu,p2,p,p1) p1 
            REQUEST             Vxppp(mu,p1,p,p2) p2
+
            Txppp(mu,p2,p,p1)  = Vxppp(mu,p2,p,p1) 
            T1xppp(mu,p2,p,p1) = Vxppp(mu,p1,p,p2) 
            Txppp(mu,p2,p,p1) -= T1xppp(mu,p2,p,p1) 
@@ -254,13 +179,20 @@
            DO p3 
 #
               Tpppp(p3,p2,p,p1)          = Vxppp(mu,p2,p,p1)*ca(mu,p3)
-              PREPARE VSpppp(p3,p,p,p1) += Tpppp(p3,p2,p,p1) 
+              PREPARE Vpppp(p3,p2,p,p1) += Tpppp(p3,p2,p,p1) 
 #
            ENDDO p3
+
+           DO p3
+#
+              Tpppp(p3,p2,p,p1)           = Txppp(mu,p2,p,p1)*ca(mu,p3)
+              PREPARE VSpppp(p3,p2,p,p1) += Tpppp(p3,p2,p,p1) 
+#
+           ENDDO p3
+
 #
      ENDPARDO mu, p, p1, p2
 #
-# 
 #    ------------------------------------------------------------------------
 #
      ENDPROC TRAN_TRAN4 
@@ -297,7 +229,8 @@
 # ------------------------------------------------ 
 # 
       execute server_barrier 
-      execute blocks_to_list VSpppp(p,p1,p2,p3)
+      execute blocks_to_list VSpppp
+      execute blocks_to_list Vpppp
       execute write_blocks_to_list
       execute server_barrier
 # 

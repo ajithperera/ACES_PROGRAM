@@ -12427,17 +12427,20 @@
     ENDPARDO j, b
 
     PARDO a, a1, i, i1
-        Taiai(a,i,a1,i1) = 0.0
+        REQUEST VCACT2AA(a,i,a1,i1) i1
+        Taiai(a,i,a1,i1) = VCACT2AA(a,i,a1,i1)
         PREPARE CORR_VECaa(a,i,a1,i1) = Taiai(a,i,a1,i1)
     ENDPARDO a, a1, i, i1
 
     PARDO b, b1, j, j1
-        Tbjbj(b,j,b1,j1) = 0.0
+        REQUEST VCACT2BB(b,j,b1,j1) j1 
+        Tbjbj(b,j,b1,j1) = VCACT2BB(b,j,b1,j1)
         PREPARE CORR_VECbb(b,j,b1,j1) = Tbjbj(b,j,b1,j1)
     ENDPARDO b, b1, j, j1
 
     PARDO a, b, i, j
-        Taibj(a,i,b,j) = 0.0
+        REQUEST  VCACT2AB(a,i,b,j) j
+        Taibj(a,i,b,j) =  VCACT2AB(a,i,b,j) 
         PREPARE CORR_VECab(a,i,b,j) = Taibj(a,i,b,j)
     ENDPARDO a, b, i, j
     EXECUTE SERVER_BARRIER
@@ -12589,12 +12592,18 @@
 
          CALL KEEP_GUESS_VECS
 
-         LOCK       = ZERO
-         IF FRESH_SBSP != ONE
-            IF ROOT_COUNT != ONE
-               CALL ORTHO_NEW_ROOT
-               E_OLD      = OMEGA
+         LOCK = ZERO
+         IF R_CONVERGED != ZERO
+            IF FRESH_SBSP != ONE
+               IF ROOT_COUNT != ONE
+                  CALL ORTHO_NEW_ROOT
+                  E_OLD      = OMEGA
+               ENDIF
             ENDIF
+         ELSE
+            CALL FORCE_EVECS_TO_ZERO
+            OMEGA = 0.0
+            EXIT
          ENDIF
 
          IF FRESH_SBSP == ONE

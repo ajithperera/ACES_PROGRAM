@@ -79,9 +79,9 @@ c--------------------------------------------------------------------------
       do k = k1, k2 
       do l = l1, l2 
          div = y(i,j,k,l) 
-C         if (Dabs(div) .lt. 1.0D-4) then
-C            div = Sign(1.0D-4,div)
-C         endif 
+         if (Dabs(div) .lt. 1.0D-4) then
+            div = Sign(1.0D-4,div)
+         endif 
          val = x(i,j,k,l)/div   
          x(i,j,k,l) = val 
       enddo 

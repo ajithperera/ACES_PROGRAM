@@ -180,9 +180,9 @@ c-------------------------------------------------------------------------
       do i = i1, i2 
       do j = j1, j2 
          div = y(i,j) 
-C         if (dabs(div) .lt. 1.0d-4) then 
-C            div = Sign(1.0d-4,div) 
-C          endif 
+         if (dabs(div) .lt. 1.0d-4) then 
+            div = Sign(1.0d-4,div) 
+          endif 
           val = x(i,j)/div   
           x(i,j) = val 
       enddo 

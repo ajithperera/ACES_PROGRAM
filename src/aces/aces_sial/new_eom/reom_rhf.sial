@@ -9354,7 +9354,7 @@
 
             CALL SAVE_C_VECTORS
 #bgn_debug
-            call c_check
+#            call c_check
 #end_debug
             CALL HR_MULT
 
@@ -9372,7 +9372,7 @@
 #end_debug
           EXECUTE XGEEV A_MATRIX DVECTORS
 #bgn_debug
-            execute print_static A_MATRIX ITER_COUNT
+#            execute print_static A_MATRIX ITER_COUNT
 #end_debug
            IF ITER_COUNT != ONE
               CALL REORDER_A_EIGS

@@ -8986,12 +8986,14 @@
     ENDPARDO a, i
 
     PARDO a, a1, i, i1
-        Taiai(a,i,a1,i1) = 0.0
+        REQUEST VCACT2AA(a,i,a1,i1) i1
+        Taiai(a,i,a1,i1) = VCACT2AA(a,i,a1,i1)
         PREPARE CORR_VECaa(a,i,a1,i1) = Taiai(a,i,a1,i1)
     ENDPARDO a, a1, i, i1
 
     PARDO a, b, i, j
-        Taibj(a,i,b,j) = 0.0
+        REQUEST VCACT2AB(a,i,b,j) j
+        Taibj(a,i,b,j) =  VCACT2AB(a,i,b,j)
         PREPARE CORR_VECab(a,i,b,j) = Taibj(a,i,b,j)
     ENDPARDO a, b, i, j
     EXECUTE SERVER_BARRIER
@@ -9056,14 +9058,14 @@
      EOM_DENOM       = EE_DENOM
      EOM_MAXCYC      = EE_MAXCYC
      EXACT_HY        = ZERO
-     MAX_OVLP        = ZERO
-     MIN_ENEG        = ONE
+     MAX_OVLP        = ONE
+     MIN_ENEG        = ZERO
      LOCK_THRES      = 0.001
-     FIRST_VEC       = ZERO
-     PREVS_VEC       = ONE
+     FIRST_VEC       = ONE 
+     PREVS_VEC       = ZERO
      LEFT            = ZERO
      RIGHT           = ZERO
-     FRESH_SBSP       = ZERO
+     FRESH_SBSP      = ZERO
 #bgn_debug
          execute print_scalar eom_guess
          execute print_scalar eom_denom
@@ -9101,13 +9103,21 @@
 #end_debug
          MYROOT = ROOT_COUNT
          CALL PREP_EE_GUESS
+      
+         CALL KEEP_GUESS_VECS
 
-         LOCK       = ZERO
-         IF FRESH_SBSP != ONE
-            IF ROOT_COUNT != ONE
-               CALL ORTHO_NEW_ROOT
-               E_OLD      = OMEGA
+         LOCK = ZERO
+         IF R_CONVERGED != ZERO
+            IF FRESH_SBSP != ONE
+               IF ROOT_COUNT != ONE
+                  CALL ORTHO_NEW_ROOT
+                  E_OLD      = OMEGA
+               ENDIF
             ENDIF
+         ELSE
+            CALL FORCE_EVECS_TO_ZERO
+            OMEGA = 0.0
+            EXIT
          ENDIF
 
          IF FRESH_SBSP == ONE
@@ -9133,7 +9143,7 @@
 
             CALL SAVE_C_VECTORS
 #bgn_debug
-#            call c_check
+            call c_check
 #end_debug
             CALL HR_MULT
 
@@ -9280,7 +9290,7 @@
 
                IF FRESH_SBSP != ONE
                   CALL SAVE_C_VECTORS
-                 OMEGA_KEEP= OMEGA
+                  OMEGA_KEEP= OMEGA
                ENDIF
                CALL FORCE_EVECS_TO_ZERO
                OMEGA = ZERO

@@ -153,6 +153,8 @@ C
       external return_1st_mom, return_2nd_mom 
       external energy_ty_denominator, reorder_energy,reorder_array
       external find_min_eneg,find_near 
+
+      external apply_frac_occs,energy_denominator_frac_occs 
 c 
 c VFL SCF instructions 
 
@@ -867,6 +869,10 @@ C New IP-EOM related SIPs.
       dummy = load_user_sub('reorder_array'//char(0),reorder_array)
       dummy = load_user_sub('find_min_eneg'//char(0),find_min_eneg)
       dummy = load_user_sub('find_near'//char(0),find_near)
+
+      dummy = load_user_sub('apply_frac_occs'//char(0),apply_frac_occs)
+      dummy = load_user_sub('energy_denominator_frac_occs'//char(0),
+     &                       energy_denominator_frac_occs)
 c-----------------------------------------------------------------------
 c Prakash instructions for delta integrals
 c----------------------------------------------------------------------

@@ -82,9 +82,9 @@ c--------------------------------------------------------------------------
       do l = l1, l2 
       if(i .ne. k .and. j .ne. l)then
          div = y(i,j,k,l) 
-C         if (Dabs(div) .lt. 1.0D-4) then
-C            div = Sign(1.0D-4,div)
-C         endif
+         if (Dabs(div) .lt. 1.0D-4) then
+            div = Sign(1.0D-4,div)
+         endif
          val = x(i,j,k,l)/div   
          x(i,j,k,l) = val 
       else

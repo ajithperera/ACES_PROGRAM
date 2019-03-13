@@ -18,6 +18,7 @@ c--------------------------------------------------------------------------
       include 'pst_functions.h'
       include 'aces3_vars.h'
       include 'eom_truncate.h'
+      include 'frac_occ_vars.h'
 #ifdef ALTIX
       include 'sheap.h'
 #endif
@@ -78,13 +79,19 @@ c-------------------------------------------------------------------
       array_type = array_table(c_array_type, array)
       sind1 =  array_table(c_scalar_index, array)
 
-
       array = op(c_op1_array)
       array_type = array_table(c_array_type, array)
       sind2 =  array_table(c_scalar_index, array)
 
       qq=scalar_table(sind1)
       g=scalar_table(sind2)
+
+      If (Int(qq) .EQ. 100) Then
+          Exc_block = "FRAC_OCC"
+          Return
+       Endif 
+  
+      If (Exc_block .EQ. "FRAC_OCC") Goto 999
 
       If (Int(qq) .EQ. 0 .AND. Int(g) .EQ. 0) Then
          RHS = 0
@@ -95,7 +102,7 @@ c-------------------------------------------------------------------
       Elseif (Int(qq) .EQ. 2 .AND. Int(g) .EQ. 0) Then
          RHS = 0
          LHS = (Int(qq)-1)
-      Endif
+      Endif 
 
 #ifdef _DEBUG_LVL0
       If (me .eq.0) Write(6,"(a,2i2)") "The right and left sides: ",
@@ -142,7 +149,110 @@ C--------------Returning vars in eomdata header file----
          if (me .eq. 0) Write(6,"(a,I4)") "Selecting Imax: ", Iselect 
          scalar_table(sind1) = Iselect 
       Endif 
+C--------------Fractional occupations relatead variables------
 
+  999 Continue 
+
+      If (Int(g) .EQ. 1) Then
+         Contract = 1
+         If (qq .Eq. 0.0) then
+             O = 0
+             V = 1
+         Elseif (qq .Eq. 1) then
+             O = 1
+             V = 0
+         Endif
+      Elseif (Int(g) .EQ. 2) Then
+         Contract = 2
+         If (qq .EQ. 0.0) then
+             OO(1) = 0
+             OO(2) = 0
+             VV(1) = 1
+             VV(2) = 1
+         Elseif (qq .EQ. 1.0) then
+             OO(1) = 1
+             OO(2) = 1
+             VV(1) = 0
+             VV(2) = 0
+         Elseif (qq .EQ. 10.0) then
+             OO(1) = 1 
+             OO(2) = 0
+             VV(1) = 0
+             VV(2) = 1
+         Elseif (qq .EQ. 0.01) then
+             OO(1) = 0
+             OO(2) = 1
+             VV(1) = 1 
+             VV(2) = 0
+         Endif 
+      Elseif (Int(g) .EQ. 3) Then
+         Contract = 3
+         If (qq .EQ. 0.0) then
+             OOO(1) = 0
+             OOO(2) = 0
+             OOO(3) = 0
+             VVV(1) = 1
+             VVV(2) = 1
+             VVV(3) = 1
+         Elseif (qq .EQ. 1.0) then
+             OOO(1) = 1
+             OOO(2) = 1
+             OOO(3) = 1
+             VVV(1) = 0
+             VVV(2) = 0
+             VVV(3) = 0
+         Elseif (qq .EQ. 100.0) then
+             OOO(1) = 1
+             OOO(2) = 0
+             OOO(3) = 0
+             VVV(1) = 1
+             VVV(2) = 1
+             VVV(3) = 0
+         Elseif (qq .EQ. 0.001) then
+             OOO(1) = 0
+             OOO(2) = 0
+             OOO(3) = 1
+             VVV(1) = 1
+             VVV(2) = 1
+             VVV(3) = 0
+         Elseif (qq .EQ. 101.0) then
+             OOO(1) = 1
+             OOO(2) = 0
+             OOO(3) = 1
+             VVV(1) = 0
+             VVV(2) = 1
+             VVV(3) = 0
+         Elseif (qq .EQ. 0.011) then
+             OOO(1) = 1
+             OOO(2) = 0
+             OOO(3) = 0
+             VVV(1) = 0
+             VVV(2) = 1
+             VVV(3) = 1
+         Endif 
+      Elseif (Int(g) .EQ. 4) Then
+         Contract = 4
+         If (qq .EQ. 1010.0) then
+             OOO(1) = 1
+             OOO(2) = 0
+             OOO(3) = 1
+             OOO(4) = 0
+             VVV(1) = 0
+             VVV(2) = 1
+             VVV(3) = 0
+             VVV(4) = 1
+         Elseif (qq .EQ. 0.0101) then 
+             OOO(1) = 0
+             OOO(2) = 0
+             OOO(3) = 1
+             OOO(4) = 1
+             VVV(1) = 1
+             VVV(2) = 0
+             VVV(3) = 1
+             VVV(4) = 0
+         Endif 
+      Endif 
+ 
       return
       end
 
