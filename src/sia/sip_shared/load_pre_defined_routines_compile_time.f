@@ -445,6 +445,7 @@ C
       dummy = load_user_sub('find_near'//char(0),0)
       dummy = load_user_sub('apply_frac_occs'//char(0),0)
       dummy = load_user_sub('energy_denominator_frac_occs'//char(0),0)
+      dummy = load_user_sub('set_frac_occs'//char(0),0)
 c -----------------------------------------------------------------
 c Prakash instructions need for delta integrals
 c ------------------------------------------------------------------

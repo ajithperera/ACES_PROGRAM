@@ -51,6 +51,8 @@ c---------------Variables--------------------------------------------
       integer*8 integral_scr
       integer flag
       integer stack,g
+      logical test1,test2,test3,test4,test5,test6
+      character*8 BLANK
 
       double precision x(1)
       double precision dbuf(1), temp
@@ -85,11 +87,21 @@ c-------------------------------------------------------------------
 
       qq=scalar_table(sind1)
       g=scalar_table(sind2)
-
+      BLANK="        "
+C#ifdef _DEBUG_LVL0
+      If(me .eq.0) then
+       Write(6,"(a,F10.5,I4)") "@-Entry, input arguments", qq,Int(g)
+      Endif 
+C#endif 
       If (Int(qq) .EQ. 100) Then
           Exc_block = "FRAC_OCC"
           Return
-       Endif 
+      Endif 
+
+C#ifdef _DEBUG_LVL0
+      If(me .eq.0) 
+     + Write(6,"(a,8a)") "The stored value of Exc_block: ",Exc_block
+C#endif 
   
       If (Exc_block .EQ. "FRAC_OCC") Goto 999
 
@@ -151,35 +163,68 @@ C--------------Returning vars in eomdata header file----
       Endif 
 C--------------Fractional occupations relatead variables------
 
+      Return
+
   999 Continue 
 
+C At every entry initilize all the type generating arrays to zero.
+
+      O       = 0
+      V       = 0
+      OO(1)   = 0
+      OO(2)   = 0
+      VV(1)   = 0
+      VV(2)   = 0
+      OOO(1)  = 0
+      OOO(2)  = 0
+      OOO(3)  = 0
+      VVV(1)  = 0
+      VVV(2)  = 0
+      VVV(3)  = 0
+      OOOO(1) = 0
+      OOOO(2) = 0
+      OOOO(3) = 0
+      OOOO(4) = 0
+      VVVV(1) = 0
+      VVVV(2) = 0
+      VVVV(3) = 0
+      VVVV(4) = 0
+      
       If (Int(g) .EQ. 1) Then
          Contract = 1
-         If (qq .Eq. 0.0) then
+         test1 = (qq-0.0D0) .EQ. 0.0D0
+         test2 = (qq-1.0D0) .EQ. 0.0D0
+
+         If (test1) then
              O = 0
              V = 1
-         Elseif (qq .Eq. 1) then
+         Elseif (test2) then
              O = 1
              V = 0
          Endif
       Elseif (Int(g) .EQ. 2) Then
          Contract = 2
-         If (qq .EQ. 0.0) then
+         test1 = (qq-0.0D0)  .EQ. 0.0D0
+         test2 = (qq-1.0D0)  .EQ. 0.0D0
+         test3 = (qq-10.0D0) .EQ. 0.0D0
+         test4 = (qq-0.01D0) .EQ. 0.0D0
+
+         If (test1) then
              OO(1) = 0
              OO(2) = 0
              VV(1) = 1
              VV(2) = 1
-         Elseif (qq .EQ. 1.0) then
+         Elseif (test2) then
              OO(1) = 1
              OO(2) = 1
              VV(1) = 0
              VV(2) = 0
-         Elseif (qq .EQ. 10.0) then
+         Elseif (test3) then
              OO(1) = 1 
              OO(2) = 0
              VV(1) = 0
              VV(2) = 1
-         Elseif (qq .EQ. 0.01) then
+         Elseif (test4) then
              OO(1) = 0
              OO(2) = 1
              VV(1) = 1 
@@ -187,42 +232,49 @@ C--------------Fractional occupations relatead variables------
          Endif 
       Elseif (Int(g) .EQ. 3) Then
          Contract = 3
-         If (qq .EQ. 0.0) then
+         test1 = (qq-0.0D0)   .EQ. 0.0D0
+         test2 = (qq-1.0D0)   .EQ. 0.0D0
+         test3 = (qq-100.0D0) .EQ. 0.0D0
+         test4 = (qq-0.001D0) .EQ. 0.0D0
+         test5 = (qq-101.0D0) .EQ. 0.0D0
+         test6 = (qq-0.011D0) .EQ. 0.0D0
+
+         If (test1) then
              OOO(1) = 0
              OOO(2) = 0
              OOO(3) = 0
              VVV(1) = 1
              VVV(2) = 1
              VVV(3) = 1
-         Elseif (qq .EQ. 1.0) then
+         Elseif (test2) then
              OOO(1) = 1
              OOO(2) = 1
              OOO(3) = 1
              VVV(1) = 0
              VVV(2) = 0
              VVV(3) = 0
-         Elseif (qq .EQ. 100.0) then
+         Elseif (test3) then
              OOO(1) = 1
              OOO(2) = 0
              OOO(3) = 0
              VVV(1) = 1
              VVV(2) = 1
              VVV(3) = 0
-         Elseif (qq .EQ. 0.001) then
+         Elseif (test4) then
              OOO(1) = 0
              OOO(2) = 0
              OOO(3) = 1
              VVV(1) = 1
              VVV(2) = 1
              VVV(3) = 0
-         Elseif (qq .EQ. 101.0) then
+         Elseif (test5) then
              OOO(1) = 1
              OOO(2) = 0
              OOO(3) = 1
              VVV(1) = 0
              VVV(2) = 1
              VVV(3) = 0
-         Elseif (qq .EQ. 0.011) then
+         Elseif (test6) then
              OOO(1) = 1
              OOO(2) = 0
              OOO(3) = 0
@@ -232,26 +284,41 @@ C--------------Fractional occupations relatead variables------
          Endif 
       Elseif (Int(g) .EQ. 4) Then
          Contract = 4
-         If (qq .EQ. 1010.0) then
-             OOO(1) = 1
-             OOO(2) = 0
-             OOO(3) = 1
-             OOO(4) = 0
-             VVV(1) = 0
-             VVV(2) = 1
-             VVV(3) = 0
-             VVV(4) = 1
-         Elseif (qq .EQ. 0.0101) then 
-             OOO(1) = 0
-             OOO(2) = 0
-             OOO(3) = 1
-             OOO(4) = 1
-             VVV(1) = 1
-             VVV(2) = 0
-             VVV(3) = 1
-             VVV(4) = 0
+         If (me .eq. 0) Write(6,"(a,F10.5)") "qq ",qq-0.0101
+
+         test1 = (qq-1010D0)   .EQ. 0.0D0
+         test2 = (qq-0.0101D0) .EQ. 0.0D0
+
+         If (test1) then
+             OOOO(1) = 1
+             OOOO(2) = 0
+             OOOO(3) = 1
+             OOOO(4) = 0
+             VVVV(1) = 0
+             VVVV(2) = 1
+             VVVV(3) = 0
+             VVVV(4) = 1
+         Elseif (test2) then 
+             OOOO(1) = 0
+             OOOO(2) = 1
+             OOOO(3) = 0
+             OOOO(4) = 1
+             VVVV(1) = 1
+             VVVV(2) = 0
+             VVVV(3) = 1
+             VVVV(4) = 0
          Endif 
       Endif 
+C#ifdef _DEBUG_LVL0
+      If(me .eq.0) then
+       Write(6,"(a,2I4)") "@-Exit,Contract and OV array values"
+       write(6,"(10I2)") O,V,OO(1),OO(2),VV(1),VV(2),OOO(1),OOO(2),
+     +                  OOO(3),VVV(1)
+       Write(6,"(10I2)") VVV(2),VVV(3),OOOO(1),OOOO(2),OOOO(3),
+     +                  OOOO(4),VVVV(1),VVVV(2),VVVV(3),VVVV(4) 
+       Write(6,"(a,I2)") "No of Contracted indices: ",contract 
+      Endif 
+C#endif
  
       return
       end

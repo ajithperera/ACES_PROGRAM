@@ -1076,7 +1076,7 @@
             PUT Fme_a(i,a) = Tme_a(i,a) 
 #
       ENDPARDO i, a 
-# 
+
       ENDPROC FMEA
 #     -------------
 #
@@ -1403,7 +1403,7 @@
 #
       ENDPARDO i1, j1, a, b
       execute sip_barrier
-#
+
       PARDO i1, j1, a, b
 #
             REQUEST Tau_ab(a,i1,b,j1) j1
@@ -2233,19 +2233,14 @@
            Taibj(a,i,b,j)            = Vpiqj(a,i,b,j)
            tmp = Taibj(a,i,b,j) * Taibj(a,i,b,j)
            suma += tmp
-           Taibj(a,i,b,j)            = Vpiqj(a,j,b,i)
-           tmp = Taibj(a,i,b,j) * Taibj(a,i,b,j)
-           sumb += tmp
            tmp = T2old_ab(a,i,b,j) * T2old_ab(a,i,b,j)
            sumc += tmp
      ENDPARDO a, b, i, j
      execute sip_barrier
      collective esuma += suma
-     collective esumb += sumb
      collective esumc += sumc
 
      execute print_scalar esuma
-     execute print_scalar esumb
      execute print_scalar esumc
      suma = 0.0
      DO a
@@ -2284,11 +2279,11 @@
      execute sip_barrier 
 #
      collective ecorrab += esumab
-    #execute print_scalar ecorrab 
+#     execute print_scalar ecorrab 
 #
-    #ecorrT  = ecorraa + ecorrbb
+#    ecorrT  = ecorraa + ecorrbb
      ecorrT = ecorrab 
-    #execute print_scalar ecorrT  
+     execute print_scalar ecorrT  
 
      if kiter > 0
             ncount1 = 0.0

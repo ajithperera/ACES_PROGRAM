@@ -204,7 +204,7 @@ C Reorder the eigenvalues and vectors descending order
           Enddo       
       Enddo       
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       if (me.eq.0) then
       Write(6,"(a)") "The reordered eigenvalues and vectors (right)"
       Write(6,"(6(1x,F10.5))") (EigR(i),i=1,Ndim)
@@ -213,7 +213,7 @@ C#ifdef _DEBUG_LVL0
 C      Write(6,"(a)") "The left-hand side"
 C      call output(EvecL,1,NDIM,1,NDim,Ndim,Ndim,1)
       Endif 
-C#endif 
+#endif 
 C 
 C Normalized the Eigenvectors so that they are bi-orthonormal.
 C

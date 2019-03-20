@@ -1,0 +1,246 @@
+#  Copyright (c) 2003-2010 University of Florida
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  The GNU General Public License is included in this distribution
+#  in the file COPYRIGHT.
+                           SIAL RHF_TRAN_PQRS
+#                          ------------------
+#
+# Declare indices 
+# --------------- 
+#
+      aoindex mu     = 1, norb
+      aoindex nu     = 1, norb
+      aoindex lambda = 1, norb
+      aoindex sigma  = 1, norb
+#
+      moaindex p = baocc, eavirt
+      moaindex p1= baocc, eavirt
+      moaindex p2= baocc, eavirt
+      moaindex p3= baocc, eavirt
+#
+      moaindex q = baocc, eavirt
+      moaindex q1= baocc, eavirt
+      moaindex q2= baocc, eavirt
+      moaindex q3= baocc, eavirt
+# 
+# Declare served arrays 
+# ---------------------
+#
+      served Vxxxp(mu,nu,lambda,p)
+      served Vxpxp(mu,p1,lambda,p)
+      served Vxxpp(mu,nu,p1,p)
+      served Vpxxp(p1,nu,lambda,p)
+      served Vxppp(mu,p,p1,p2)
+      served VSpppp(p,p1,p2,p3)
+      Served Vpppp(p3,p2,p,p1)
+
+      temp Txppp(mu,p,p1,p2)
+      temp T1xppp(mu,p,p1,p2)
+      temp Tpppp(p,p1,p2,p3)
+      temp T1pppp(p,p1,p2,p3)
+      temp T1xxxp(mu,nu,lambda,p)
+      temp Txxpp(mu,nu,p1,p)
+      temp Txpxp(mu,p,nu,p1)
+      temp Tpxxp(p1,mu,nu,p)
+
+      local Txxxp(mu,nu,lambda,p)
+#
+# Declare integral arrays 
+# ------------------------  
+#
+      temp AOINT(mu,nu,lambda,sigma) 
+#
+#    ------------------------------------------------------------------------
+#
+#    DEFINE PROCEDURES  
+#
+#    ------------------------------------------------------------------------
+#
+#    Compute the integrals and store in the served array saoint. 
+#
+     PROC COMP_INTEGRALS 
+#
+#    ------------------------------------------------------------------------
+#
+     PARDO mu, nu, lambda, sigma
+#
+              compute_integrals                    AOINT(mu,nu,lambda,sigma)
+#             prepare saoint(mu,nu,lambda,sigma) = AOINT(mu,nu,lambda,sigma) 
+#
+     ENDPARDO mu, nu, lambda, sigma
+     execute server_barrier 
+#
+#    ------------------------------------------------------------------------
+#
+     ENDPROC COMP_INTEGRALS 
+#
+#    ------------------------------------------------------------------------
+#
+#    ------------------------------------------------------------------------
+#
+#    Perform the first two stages of the transformation in two N5 steps. 
+#
+     PROC TRAN_TRAN2 
+#
+#    ------------------------------------------------------------------------
+#
+     PARDO mu, nu, lambda
+#
+          allocate Txxxp(mu,nu,lambda,*)
+#
+          DO sigma
+#
+             compute_integrals            aoint(mu,nu,lambda,sigma)
+#
+             DO  p  
+#
+                 T1xxxp(mu,nu,lambda,p)  = aoint(mu,nu,lambda,sigma)*ca(sigma,p)
+                 Txxxp(mu,nu,lambda,p)  += T1xxxp(mu,nu,lambda,p)  
+#
+             ENDDO p   
+#
+          ENDDO sigma
+
+          DO p
+             T1xxxp(mu,nu,lambda,p)         = Txxxp(mu,nu,lambda,p) 
+             PREPARE Vxxxp(mu,nu,lambda,p)  = T1xxxp(mu,nu,lambda,p)
+
+           DO p1
+#
+              Txxpp(mu,nu,p1,p)          = Txxxp(mu,nu,lambda,p)*ca(lambda,p1)
+              PREPARE Vxxpp(mu,nu,p1,p) += Txxpp(mu,nu,p1,p)
+
+              Txpxp(mu,p1,lambda,p)      = Txxxp(mu,nu,lambda,p)*ca(nu,p1)
+              PREPARE Vxpxp(mu,p1,lambda,p) += Txpxp(mu,p1,lambda,p)
+
+              Tpxxp(p1,nu,lambda,p)      = Txxxp(mu,nu,lambda,p)*ca(mu,p1)
+              PREPARE Vpxxp(p1,nu,lambda,p) += Tpxxp(p1,nu,lambda,p)
+#
+           ENDDO p1
+           ENDDO p
+#
+          deallocate Txxxp(mu,nu,lambda,*)
+#
+     ENDPARDO mu, nu, lambda 
+     execute server_barrier
+#
+#    ------------------------------------------------------------------------
+#
+     ENDPROC TRAN_TRAN2 
+#
+#    ------------------------------------------------------------------------
+#
+#    Perform the third N5 stage of the transformation.  
+#
+     PROC TRAN_TRAN3 
+#
+#    ------------------------------------------------------------------------
+#
+     PARDO mu, nu, p, p1
+#
+           REQUEST Vxpxp(mu,p,nu,p1) p1 
+
+           DO p2
+#
+              Txppp(mu,p,p2,p1)          = Vxpxp(mu,p,nu,p1)*ca(nu,p2)
+              PREPARE Vxppp(mu,p,p2,p1) += Txppp(mu,p,p2,p1)
+#
+           ENDDO p2
+#
+     ENDPARDO mu, nu, p, p1
+#
+     ENDPROC TRAN_TRAN3 
+#
+#    ------------------------------------------------------------------------
+#
+     PROC TRAN_TRAN4 
+#
+#    ------------------------------------------------------------------------
+#
+     PARDO mu, p, p1, p2
+
+           REQUEST             Vxppp(mu,p2,p,p1) p1 
+           REQUEST             Vxppp(mu,p1,p,p2) p2
+
+           Txppp(mu,p2,p,p1)  = Vxppp(mu,p2,p,p1) 
+           T1xppp(mu,p2,p,p1) = Vxppp(mu,p1,p,p2) 
+           Txppp(mu,p2,p,p1) -= T1xppp(mu,p2,p,p1) 
+#
+           DO p3 
+#
+              Tpppp(p3,p2,p,p1)          = Vxppp(mu,p2,p,p1)*ca(mu,p3)
+              PREPARE Vpppp(p3,p2,p,p1) += Tpppp(p3,p2,p,p1) 
+#
+           ENDDO p3
+
+           DO p3
+#
+              Tpppp(p3,p2,p,p1)           = Txppp(mu,p2,p,p1)*ca(mu,p3)
+              PREPARE VSpppp(p3,p2,p,p1) += Tpppp(p3,p2,p,p1) 
+#
+           ENDDO p3
+
+#
+     ENDPARDO mu, p, p1, p2
+#
+#    ------------------------------------------------------------------------
+#
+     ENDPROC TRAN_TRAN4 
+#
+#    ------------------------------------------------------------------------
+#
+#    ------------------------------------------------------------------------ 
+#
+     PROC TRAN_UHF 
+# 
+#        CALL COMP_INTEGRALS # --> compute integrals and put into served array 
+         CALL TRAN_TRAN2     # --> performs the first two stages of the 
+                             #     two-electron integral transformation.  
+         CALL TRAN_TRAN3     # --> performs the third stage   
+                             #     two-electron integral transformation.  
+         CALL TRAN_TRAN4     # --> performs the fourth stage of the  
+                             #     two-electron integral transformation.  
+#
+     ENDPROC TRAN_UHF 
+#
+#    ------------------------------------------------------------------------ 
+#
+#    Main Program 
+#
+#    ------------------------------------------------------------------------ 
+#
+#    Read T and lambda expanded from truncated basis.
+#    ------------------------------------------------
+#
+     CALL TRAN_UHF 
+     execute server_barrier 
+#
+# Write transformed two-electron integrals to list 
+# ------------------------------------------------ 
+# 
+      execute server_barrier 
+      execute blocks_to_list VSpppp
+      execute blocks_to_list Vpppp
+      execute write_blocks_to_list
+      execute server_barrier
+# 
+# Done Write transformed two-electron integrals to list 
+# ----------------------------------------------------- 
+# 
+#    ------------------------------------------------------------------------ 
+# 
+#
+                           ENDSIAL RHF_TRAN_PQRS
+#
+#    ------------------------------------------------------------------------ 
+#

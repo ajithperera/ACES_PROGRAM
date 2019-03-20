@@ -26,6 +26,8 @@ c--------------------------------------------------------------------------
       include 'mpif.h'
       include 'epsilon.h'
       include 'frac_occ_vars.h'
+      include 'parallel_info.h'
+      include 'int_gen_parms.h'
 #ifdef ALTIX
       include 'sheap.h'
 #endif
@@ -42,7 +44,7 @@ c--------------------------------------------------------------------------
       integer*8 address_table(narray_table)
 
       integer i, j, k
-      integer array, index, nindex, ierr, sind
+      integer array, index, nindex, ierr, sind, arg
       integer block, blkndx, seg, array_type 
       integer find_current_block
       integer*8 indblk, get_block_index
@@ -115,32 +117,36 @@ C The second argument indicate which side get scalled.
          call abort_job()
       endif
 
-      sind =  array_table(c_scalar_index, array)
+      sind = array_table(c_scalar_index, array)
+      Arg  = Scalar_table(sind)
+
+CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
 
       if (nindex .eq. 4 .and. contract .eq. 1) then
          call frac_occ41(x(indblk), val1(1),val2(1),type(1),
      *                 val1(2),val2(2),type(2),
      *                 val1(3),val2(3),type(3),
      *                 val1(4),val2(4),type(4), 
-     *                 epsilon,epsilonb,Sind)
+     *                 epsilon,epsilonb,Arg)
       elseif (nindex .eq. 4 .and. contract .eq. 2) then
         call frac_occ42(x(indblk), val1(1),val2(1),type(1),
      *                 val1(2),val2(2),type(2),
      *                 val1(3),val2(3),type(3),
      *                 val1(4),val2(4),type(4),
-     *                 epsilon,epsilonb,Sind)
+     *                 epsilon,epsilonb,Arg)
       elseif (nindex .eq. 4 .and. contract .eq. 3) then
         call frac_occ43(x(indblk), val1(1),val2(1),type(1),
      *                 val1(2),val2(2),type(2),
      *                 val1(3),val2(3),type(3),
      *                 val1(4),val2(4),type(4),
-     *                 epsilon,epsilonb,Sind)
+     *                 epsilon,epsilonb,Arg)
       elseif (nindex .eq. 4 .and. contract .eq. 4) then
+        if (me .eq. 0) write(6,"(a)") "@-Entry to frac_occ44"
         call frac_occ44(x(indblk), val1(1),val2(1),type(1),
      *                 val1(2),val2(2),type(2),
      *                 val1(3),val2(3),type(3),
      *                 val1(4),val2(4),type(4),
-     *                 epsilon,epsilonb,Sind)
+     *                 epsilon,epsilonb,Arg)
       else if (nindex .eq. 2) then
          if (array_table(c_array_type,array) .eq. static_array) then
             na1 = array_table(c_index_range1, array)
@@ -158,12 +164,12 @@ C The second argument indicate which side get scalled.
          call frac_occ21(x(indblk), val1(1),val2(1),type(1),
      *                 na1, na2,
      *                 val1(2),val2(2),type(2),ni1,ni2,
-     *                 epsilon,epsilonb,sind)    
+     *                 epsilon,epsilonb,Arg)    
          Elseif (Contract .Eq. 2) then
          call frac_occ22(x(indblk), val1(1),val2(1),type(1),
      *                 na1, na2,
      *                 val1(2),val2(2),type(2),ni1,ni2,
-     *                 epsilon,epsilonb,sind)    
+     *                 epsilon,epsilonb,Arg)    
          Endif 
       
       else
@@ -195,6 +201,7 @@ C The second argument indicate which side get scalled.
       double precision val,Done 
       Logical Lft_one,Rit_one
       Logical O_type,V_type
+      Logical AL,BL,AR,BR
 
       Data Done /1.0D0/
   
@@ -210,21 +217,30 @@ C The second argument indicate which side get scalled.
          V_type = .True.
       Endif
 
+      AL = Atype .eq. Moaindex 
+      BL = Atype .eq. Mobindex 
+      AR = Jtype .eq. Moaindex 
+      BR = Jtype .eq. mobindex 
+
       do j = j1,j2
       do b = b1,b2
       do i = i1,i2
       do a = a1,a2
          If (Lft_one) Then
             If (O_type) Then
-               val =  x(a,i,b,j)*Occ_nums(a)
+               If (AL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(a)
+               If (BL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(a)
             Elseif (V_type) Then 
-               val =  x(a,i,b,j)*(Done-Occ_nums(a))
+               If (AL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(a))
+               If (BL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(a))
             Endif 
          Elseif (Rit_one) Then 
             If (O_type) Then
-               val =  x(a,i,b,j)**Occ_nums(j)
+               If (AR) x(a,i,b,j) =  x(a,i,b,j)**Occ_numsa(j)
+               If (BL) x(a,i,b,j) =  x(a,i,b,j)**Occ_numsb(j)
             Elseif (V_type) Then 
-               val =  x(a,i,b,j)*(Done-Occ_nums(j))
+               If (AR) val =  x(a,i,b,j)*(Done-Occ_numsa(j))
+               If (BL) val =  x(a,i,b,j)*(Done-Occ_numsb(j))
             Endif 
          Endif 
       enddo
@@ -241,6 +257,7 @@ C The second argument indicate which side get scalled.
       implicit none
       include 'interpreter.h'
       include 'frac_occ_vars.h'
+      include 'parallel_info.h'
 
       integer a1,a2,b1,b2,i1,i2,j1,j2
       integer atype, itype, btype, jtype
@@ -251,18 +268,19 @@ C The second argument indicate which side get scalled.
       integer a,b,i,j,sind
       double precision eps, epsa, epsb, epsi, epsj
       double precision val,Done 
-      Logical Lft_one,Rit_one
+      Logical Lft_two,Rit_two
       Logical OO_type,OV_type,VO_type,VV_type
+      Logical AAL,BBL,ABL,BAL,AAR,BBR,ABR,BAR
 
       Data Done /1.0D0/
   
-      Lft_one = .False.
-      Rit_one = .False.
+      Lft_two = .False.
+      Rit_two = .False.
 
       If (sind .eq. 1) Then
-         Lft_one = .True.
+         Lft_two = .True.
       Elseif (sind .eq. 2) then
-         Lft_one = .True.
+         Rit_two = .True.
       Endif 
 
       OO_type = .False.
@@ -280,29 +298,108 @@ C The second argument indicate which side get scalled.
          VO_type = .True.
       Endif
 
+      AAL = Atype .eq. Moaindex .and. Itype .eq. Moaindex
+      BBL = Atype .eq. Mobindex .and. Itype .eq. Mobindex
+      ABL = Atype .eq. Moaindex .and. Itype .eq. Mobindex
+      BAL = Atype .eq. Mobindex .and. Itype .eq. Moaindex
+
+      AAR = Btype .eq. Moaindex .and. Jtype .eq. Moaindex
+      BBR = Btype .eq. Mobindex .and. Jtype .eq. Mobindex
+      ABR = Btype .eq. Moaindex .and. Jtype .eq. Mobindex
+      BAR = Btype .eq. Mobindex .and. Jtype .eq. Moaindex
+     
+#ifdef _DEBUG_LVL0
+      if (me .eq. 0) then
+      write(6,"(a,14l)")"Lft_two,Rit_two,OO_type,VV_type,OV_type,
+     +                VO_type,AAL-BBR",Lft_two,Rit_two,OO_type,
+     +                VV_type,OV_type,VO_type,AAL,BBL,ABL,BAL,
+     +                AAR,BBR,ABR,BAR
+      write(6,"(a,4l)") "type:",aal,bbl,abl,bal
+      write(6,"(a,F10.5,2F5.2)") "x,occ_nums", 
+     +         x(a,i,b,j),Occ_numsa(a),
+     +         Done-Occ_numsb(i)
+      endif
+#endif 
+    
       do j = j1,j2
       do b = b1,b2
       do i = i1,i2
       do a = a1,a2
-         If (Lft_one) Then
+         If (Lft_two) Then
             If (OO_type) Then
-               val =  x(a,i,b,j)*Occ_nums(a)*Occ_nums(i)
+               If(AAL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(a)*
+     +                                          Occ_numsa(i)
+               If(BBL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(a)*
+     +                                          Occ_numsb(i)
+               If(ABL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(a)*
+     +                                          Occ_numsb(i)
+               If(BAL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(a)*
+     +                                          Occ_numsa(i)
             Elseif (OV_type) Then 
-               val =  x(a,i,b,j)*Occ_nums(a)*(Done-Occ_nums(i))
+               If (AAL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(a)*
+     +                                          (Done-Occ_numsb(i))
+               If (BBL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(a)*
+     +                                          (Done-Occ_numsb(i))
+               If (ABL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(a)*
+     +                                          (Done-Occ_numsb(i))
+               If (BAL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(a)*
+     +                                          (Done-Occ_numsa(i))
             Elseif (VO_type) Then 
-               val =  x(a,i,b,j)*(Done-Occ_nums(a))*Occ_nums(i)
+               If (AAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                            Occ_numsa(i)
+               If (BBL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                                            Occ_numsb(i)
+               If (ABL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                            Occ_numsb(i)
+               If (BAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                                            Occ_numsa(i)
             Elseif (VV_type) Then 
-               val =  x(a,i,b,j)*(Done-Occ_nums(a))*(Done-Occ_nums(i))
+               If (AAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                           (Done-Occ_numsa(i))
+               If (BBL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                                           (Done-Occ_numsb(i))
+               If (ABL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                           (Done-Occ_numsb(i))
+               If (BAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                                            Occ_numsa(i)
             Endif 
-         Elseif (Rit_one) Then 
+         Elseif (Rit_two) Then 
             If (OO_type) Then
-               val =  x(a,i,b,j)*Occ_nums(b)*Occ_nums(j)
+               If(AAL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*
+     +                                          Occ_numsa(j)
+               If(BBL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(b)*
+     +                                          Occ_numsb(j)
+               If(ABL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*
+     +                                          Occ_numsb(j)
+               If(BAL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(b)*
+     +                                          Occ_numsa(j)
             Elseif (OV_type) Then 
-               val =  x(a,i,b,j)*Occ_nums(b)*(Done-Occ_nums(j))
+               If (AAL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*
+     +                                          (Done-Occ_numsb(j))
+               If (BBL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(b)*
+     +                                          (Done-Occ_numsb(j))
+               If (ABL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*
+     +                                          (Done-Occ_numsb(j))
+               If (BAL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(b)*
+     +                                          (Done-Occ_numsa(j))
             Elseif (VO_type) Then 
-               val =  x(a,i,b,j)*(Done-Occ_nums(b))*Occ_nums(j)
+               If (AAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(b))*
+     +                                            Occ_numsa(j)
+               If (BBL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
+     +                                            Occ_numsb(j)
+               If (ABL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(b))*
+     +                                            Occ_numsb(j)
+               If (BAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
+     +                                            Occ_numsa(j)
             Elseif (VV_type) Then 
-               val =  x(a,i,b,j)*(Done-Occ_nums(b))*(Done-Occ_nums(j))
+               If (AAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(b))*
+     +                                           (Done-Occ_numsa(j))
+               If (BBL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
+     +                                           (Done-Occ_numsb(j))
+               If (ABL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(b))*
+     +                                           (Done-Occ_numsb(j))
+               If (BAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
+     +                                            Occ_numsa(j)
             Endif 
          Endif 
       enddo
@@ -319,6 +416,7 @@ C The second argument indicate which side get scalled.
       implicit none
       include 'interpreter.h'
       include 'frac_occ_vars.h'
+      include 'parallel_info.h'
 
       integer a1,a2,b1,b2,i1,i2,j1,j2
       integer atype, itype, btype, jtype
@@ -332,6 +430,7 @@ C The second argument indicate which side get scalled.
       Logical OOO_type,OVV_type,VVO_type,OOV_type,VOV_type,
      +        OVO_type,VVV_type,VOO_type
       Logical Lft_three,Rit_three 
+      Logical AAAL,BBBL,ABAL,BABL,AAAR,BBBR,ABAR,BABR,ABBL,ABBR
 
       Data Done /1.0D0/
   
@@ -343,6 +442,7 @@ C The second argument indicate which side get scalled.
       Elseif (sind .eq. 2) then
          Rit_three = .True.
       Endif 
+
       OOO_type = .False.
       VVV_type = .False.
       OVO_type = .False.
@@ -354,21 +454,61 @@ C The second argument indicate which side get scalled.
 
       If (OOO(1) .eq. 1 .and. OOO(2) .eq. 1 .and. OOO(3) .eq. 1) Then
          OOO_type = .True.
-      ElseIf (VV(1) .eq. 1 .and. VV(2) .eq. 1 .and. VV(3) .eq. 1) Then
+      ElseIf (VVV(1) .eq. 1 .and. VVV(2) .eq. 1 .and. VVV(3) 
+     +        .eq. 1) Then
          VVV_type = .True.
-      ElseIf (OO(1) .eq. 1 .and. OO(2) .eq. 1 .and. VV(3) .Eq. 1) Then 
+      ElseIf (OOO(1) .eq. 1 .and. OOO(2) .eq. 1 .and. VVV(3)
+     +        .Eq. 1) Then 
          OOV_type = .True.
-      ElseIf (OO(1) .eq. 1 .and. OO(2) .eq. 1 .and. VV(3) .Eq. 1) Then 
+      ElseIf (OOO(1) .eq. 1 .and. OOO(2) .eq. 1 .and. VVV(3)
+     +        .Eq. 1) Then 
          VOO_type = .True.
-      ElseIf (VV(1) .eq. 1 .and. VV(2) .eq. 1 .and. OO(3) .Eq. 1) Then 
+      ElseIf (VVV(1) .eq. 1 .and. VVV(2) .eq. 1 .and. OOO(3) 
+     +        .Eq. 1) Then 
          VVO_type = .True.
-      ElseIf (OO(1) .eq. 1 .and. VV(2) .eq. 1 .and. OO(3) .Eq. 1) Then 
+      ElseIf (OOO(1) .eq. 1 .and. VVV(2) .eq. 1 .and. OOO(3)
+     +        .Eq. 1) Then 
          OVO_type = .True.
-      ElseIf (OO(1) .eq. 1 .and. VV(1) .eq. 1 .and. VV(3) .Eq. 1) Then 
+      ElseIf (OOO(1) .eq. 1 .and. VVV(1) .eq. 1 .and. VVV(3)
+     +        .Eq. 1) Then 
          VOV_type = .True.
-      ElseIf (OO(1) .eq. 1 .and. VV(2) .eq. 1 .and. VV(3) .Eq. 1) Then 
+      ElseIf (OOO(1) .eq. 1 .and. VVV(2) .eq. 1 .and. VVV(3)
+     +        .Eq. 1) Then 
          OVV_type = .True.
       Endif 
+
+      If (Lft_three) Then
+      AAAL = Atype .eq. Moaindex .and. Itype .eq. Moaindex .and. 
+     +       Btype .eq. Moaindex 
+      BBBL = Atype .eq. Mobindex .and. Itype .eq. Mobindex .and. 
+     +       Btype .eq. Mobindex 
+      ABAL = Atype .eq. Moaindex .and. Itype .eq. Mobindex .and. 
+     +       Btype .eq. Moaindex 
+      BABL = Atype .eq. Mobindex .and. Itype .eq. Moaindex .and. 
+     +       Btype .eq. Mobindex 
+      ABBL = Atype .eq. Moaindex .and. Itype .eq. Mobindex .and. 
+     +       Btype .eq. Mobindex 
+      Endif 
+
+      If (Rit_three) Then
+      AAAR = Itype .eq. Moaindex .and. Btype .eq. Moaindex .and.
+     +       Jtype .eq. Moaindex
+      BBBR = Itype .eq. Mobindex .and. Btype .eq. Mobindex .and.
+     +       Jtype .eq. Mobindex
+      ABAR = Itype .eq. Moaindex .and. Btype .eq. Mobindex .and.
+     +       Jtype .eq. Moaindex
+      BABR = Itype .eq. Mobindex .and. Btype .eq. Moaindex .and.
+     +       Jtype .eq. Mobindex
+      ABBR = Jtype .eq. Moaindex .and. Itype .eq. Mobindex .and. 
+     +       Btype .eq. Mobindex 
+      Endif 
+
+      if (me .eq. 0) then
+          write(6,"(10l)")AAAL,BBBL,ABAL,BABL,ABBL,AAAR,BBBR,ABAR,
+     +                   BABR,ABBR 
+          write(6,"(8l)")ooo_type,vvv_type,oov_type,voo_type,
+     +                   vvo_type,ovo_type,vov_type,ovv_type
+      endif 
 
       do j = j1,j2
       do b = b1,b2
@@ -376,53 +516,220 @@ C The second argument indicate which side get scalled.
       do a = a1,a2
          If (Lft_three) Then
             If (OOO_type) Then
-               val =  x(a,i,b,j)*Occ_nums(a)*Occ_nums(i)*Occ_nums(b)
+               If (AAAL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                           Occ_numsa(i)*
+     +                                           Occ_numsa(b)
+               If (BBBL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
+     +                                           Occ_numsb(i)*
+     +                                           Occ_numsb(b)
+               If (ABAL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                           Occ_numsb(i)*
+     +                                           Occ_numsa(b)
+               If (BABL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
+     +                                           Occ_numsa(i)*
+     +                                           Occ_numsb(b)
             Elseif (OVO_type) Then 
-               val =  x(a,i,b,j)*Occ_nums(a)*(Done-Occ_nums(i))*
-     +                           Occ_nums(b)
+               If (AAAL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                           (Done-Occ_numsa(i))*
+     +                                           Occ_numsa(b)
+               If (BBBL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
+     +                                          (Done-Occ_numsb(i))*
+     +                                          Occ_numsb(b)
+               If (ABAL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                          (Done-Occ_numsb(i))*
+     +                                          Occ_numsa(b)
+               If (BABL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
+     +                                          (Done-Occ_numsa(i))*
+     +                                          Occ_numsb(b)
+               If (ABBL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                          (Done-Occ_numsb(i))*
+     +                                          Occ_numsb(b)
             Elseif (VOV_type) Then 
-               val =  x(a,i,b,j)*(Done-Occ_nums(a))*Occ_nums(i)*
-     +                           (Done-Occ_nums(b))
+               If (AAAL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                Occ_numsa(i)*(Done-Occ_numsa(b))
+               If (BBBL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                                Occ_numsb(i)*(Done-Occ_numsb(b))
+               If (ABAL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                Occ_numsb(i)*(Done-Occ_numsa(b))
+               If (BABL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                                Occ_numsa(i)*(Done-Occ_numsb(b))
+               If (ABBL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                Occ_numsb(i)*(Done-Occ_numsb(b))
             Elseif (OOV_type) Then 
-               val =  x(a,i,b,j)*Occ_nums(a)*Occ_nums(i)*
-     +                           (Done-Occ_nums(b))
+               If (AAAL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                Occ_numsa(i)*(Done-Occ_numsa(b))
+               If (AAAL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
+     +                                Occ_numsb(i)*(Done-Occ_numsb(b))
+               If (ABAL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                Occ_numsb(i)*(Done-Occ_numsa(b))
+               If (BABL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
+     +                                Occ_numsa(i)*(Done-Occ_numsb(b))
+               If (ABBL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                Occ_numsb(i)*(Done-Occ_numsb(b))
             Elseif (VOO_type) Then 
-               val =  x(a,i,b,j)*(Done-Occ_nums(a))*Occ_nums(i)*
-     +                            Occ_nums(b)
+               If (AAAL) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                Occ_numsa(i)*Occ_numsa(b)
+               If (BBBL) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                                Occ_numsb(i)*Occ_numsb(b)
+               If (ABAL) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                Occ_numsb(i)*Occ_numsa(b)
+               If (BABL) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                                Occ_numsa(i)*Occ_numsb(b)
+               If (BABL) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                Occ_numsb(i)*Occ_numsb(b)
             Elseif (VVO_type) Then 
-               val =  x(a,i,b,j)*(Done-Occ_nums(a))*(Done-Occ_nums(i))*
-     +                           Occ_nums(b)
+               If (AAAL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                (Done-Occ_numsa(i))*Occ_numsa(b)
+               If (BBBL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                                (Done-Occ_numsb(i))*Occ_numsb(b)
+               If (ABAL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                (Done-Occ_numsb(i))*Occ_numsa(b)
+               If (BABL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                                (Done-Occ_numsa(i))*Occ_numsb(b)
+               If (BABL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                (Done-Occ_numsb(i))*Occ_numsb(b)
             Elseif (OVV_type) Then 
-               val =  x(a,i,b,j)*Occ_nums(a)*(Done-Occ_nums(i))*
-     +                           (Done-Occ_nums(b))
+               If (AAAL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                (Done-Occ_numsa(i))*
+     +                                (Done-Occ_numsa(b))
+               If (BBBL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
+     +                                (Done-Occ_numsb(i))*
+     +                                (Done-Occ_numsb(b))
+               If (ABAL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                (Done-Occ_numsb(i))*
+     +                                (Done-Occ_numsa(b))
+               If (BABL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
+     +                                (Done-Occ_numsa(i))*
+     +                                (Done-Occ_numsb(b))
+               If (ABBL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                (Done-Occ_numsb(i))*
+     +                                (Done-Occ_numsb(b))
             Elseif (VVV_type) Then 
-               val =  x(a,i,b,j)*(Done-Occ_nums(a))*(Done-Occ_nums(i))*
-     +                           (Done-Occ_nums(b))
+               If (AAAL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                (Done-Occ_numsa(i))*
+     +                                (Done-Occ_numsa(b))
+               If (BBBL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                                (Done-Occ_numsb(i))*
+     +                                (Done-Occ_numsb(b))
+               If (ABAL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                (Done-Occ_numsb(i))*
+     +                                (Done-Occ_numsa(b))
+               If (BABL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                                (Done-Occ_numsa(i))*
+     +                                (Done-Occ_numsb(b))
+               If (ABBL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                (Done-Occ_numsb(i))*
+     +                                (Done-Occ_numsb(b))
             Endif 
          Elseif (Rit_three) Then 
            If (OOO_type) Then
-               val =  x(a,i,b,j)*Occ_nums(i)*Occ_nums(b)*Occ_nums(j)
+              If (AAAR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                          Occ_numsa(b)*
+     +                                          Occ_numsa(j)
+              If (BBBR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(i)*
+     +                                          Occ_numsb(b)*
+     +                                          Occ_numsb(j)
+              If (ABAR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                          Occ_numsb(b)*
+     +                                          Occ_numsa(j)
+              If (BABR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(i)*
+     +                                          Occ_numsa(b)*
+     +                                          Occ_numsb(j)
+              If (ABBR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                          Occ_numsa(b)*
+     +                                          Occ_numsb(j)
             Elseif (OVO_type) Then
-               val =  x(a,i,b,j)*Occ_nums(i)*(Done-Occ_nums(b))*
-     +                           Occ_nums(j)
+              If (AAAR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                          (Done-Occ_numsa(b))*
+     +                                          Occ_numsa(j)
+              If (BBBR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(i)*
+     +                                          (Done-Occ_numsb(b))*
+     +                                          Occ_numsb(b)
+              If (ABAR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                          (Done-Occ_numsb(b))*
+     +                                          Occ_numsa(j)
+              If (BABR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(i)*
+     +                                          (Done-Occ_numsa(b))*
+     +                                          Occ_numsb(j)
+              If (ABBR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                          (Done-Occ_numsb(b))*
+     +                                          Occ_numsb(j)
             Elseif (VOV_type) Then
-               val =  x(a,i,b,j)*(Done-Occ_nums(i))*Occ_nums(b)*
-     +                           (Done-Occ_nums(j))
+               If (AAAR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                Occ_numsa(b)*(Done-Occ_numsa(j))
+               If (BBBR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(i))*
+     +                                Occ_numsb(b)*(Done-Occ_numsb(j))
+               If (ABAR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                Occ_numsb(b)*(Done-Occ_numsa(j))
+               If (BABR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(i))*
+     +                                Occ_numsa(b)*(Done-Occ_numsb(j))
+               If (ABBR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                Occ_numsb(b)*(Done-Occ_numsb(j))
             Elseif (OOV_type) Then
-               val =  x(a,i,b,j)*Occ_nums(i)*Occ_nums(b)* 
-     +                           (Done-Occ_nums(j))
+               If (AAAR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                Occ_numsa(b)*(Done-Occ_numsa(j))
+               If (AAAR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(i)*
+     +                                Occ_numsb(b)*(Done-Occ_numsb(j))
+               If (ABAR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                Occ_numsb(b)*(Done-Occ_numsa(j))
+               If (BABR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(i)*
+     +                                Occ_numsa(b)*(Done-Occ_numsb(j))
+               If (ABBR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                Occ_numsb(b)*(Done-Occ_numsb(j))
             Elseif (VOO_type) Then
-               val =  x(a,i,b,j)*(Done-Occ_nums(i))*Occ_nums(b)* 
-     +                           Occ_nums(j)
+               If (AAAR) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                Occ_numsa(b)*Occ_numsa(j)
+               If (BBBR) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsb(i))*
+     +                                Occ_numsb(b)*Occ_numsb(j)
+               If (ABAR) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                Occ_numsb(b)*Occ_numsa(j)
+               If (BABR) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsb(i))*
+     +                                Occ_numsa(b)*Occ_numsb(j)
+               If (ABBR) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                Occ_numsb(b)*Occ_numsb(j)
             Elseif (VVO_type) Then
-               val =  x(a,i,b,j)*(Done-Occ_nums(i))*(Done-Occ_nums(b))*
-     +                           Occ_nums(j)
+               If (AAAR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                (Done-Occ_numsa(b))*Occ_numsa(j)
+               If (BBBR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(i))*
+     +                                (Done-Occ_numsb(b))*Occ_numsb(j)
+               If (ABAR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                (Done-Occ_numsb(b))*Occ_numsa(j)
+               If (BABR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(i))*
+     +                                (Done-Occ_numsa(b))*Occ_numsb(j)
+               If (ABBR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                (Done-Occ_numsb(b))*Occ_numsb(j)
             Elseif (OVV_type) Then
-               val =  x(a,i,b,j)*Occ_nums(i)*(Done-Occ_nums(b))*
-     +                           (Done-Occ_nums(j))
+               If (AAAR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                (Done-Occ_numsa(b))*
+     +                                (Done-Occ_numsa(j))
+               If (BBBR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(i)*
+     +                                (Done-Occ_numsb(b))*
+     +                                (Done-Occ_numsb(j))
+               If (ABAR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                (Done-Occ_numsb(b))*
+     +                                (Done-Occ_numsa(j))
+               If (BABR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(i)*
+     +                                (Done-Occ_numsa(b))*
+     +                                (Done-Occ_numsb(j))
+               If (ABBR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                (Done-Occ_numsb(b))*
+     +                                (Done-Occ_numsb(j))
             Elseif (VVV_type) Then
-               val =  x(a,i,b,j)*(Done-Occ_nums(i))*(Done-Occ_nums(b))*
-     +                           (Done-Occ_nums(j))
+               If (AAAR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                (Done-Occ_numsa(b))*
+     +                                (Done-Occ_numsa(j))
+               If (BBBR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(i))*
+     +                                (Done-Occ_numsb(b))*
+     +                                (Done-Occ_numsb(j))
+               If (ABAR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                (Done-Occ_numsb(b))*
+     +                                (Done-Occ_numsa(j))
+               If (BABR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(i))*
+     +                                (Done-Occ_numsa(b))*
+     +                                (Done-Occ_numsb(j))
+               If (ABBR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                (Done-Occ_numsb(b))*
+     +                                (Done-Occ_numsb(j))
             Endif
          Endif 
       enddo
@@ -439,6 +746,8 @@ C The second argument indicate which side get scalled.
       implicit none
       include 'interpreter.h'
       include 'frac_occ_vars.h'
+      include 'parallel_info.h'
+      include 'int_gen_parms.h'
 
       integer a1,a2,b1,b2,i1,i2,j1,j2
       integer atype, itype, btype, jtype
@@ -449,7 +758,8 @@ C The second argument indicate which side get scalled.
       integer a,b,i,j,sind
       double precision eps, epsa, epsb, epsi, epsj
       double precision val,Done
-      Logical  OVOV_type,VOVO_type
+      Logical OVOV_type,VOVO_type
+      Logical AAAA,BBBB,ABAB,BABA
 
       Data Done /1.0D0/
 
@@ -464,17 +774,58 @@ C The second argument indicate which side get scalled.
          VOVO_type = .True.
       Endif
 
+      If (me .eq. 0) Then 
+         write(6,"(a,2l)") "The type:",OVOV_type,VOVO_type
+         Write(6,"(a)") "The Occ_num arrays"
+         Write(6,"(6F4.1)") (Occ_numsa(i),i=1, Nbasis)
+         Write(6,"(6F4.1)") (Occ_numsb(i),i=1, Nbasis)
+      Endif 
+
+      AAAA = Atype .eq. Moaindex .and. Itype .eq. Moaindex .and.
+     +       Btype .eq. Moaindex .and. Jtype .eq. Moaindex 
+
+      BBBB = Atype .eq. Mobindex .and. Itype .eq. Mobindex .and.
+     +       Btype .eq. Mobindex .and. Jtype .eq. Mobindex 
+
+      ABAB = Atype .eq. Moaindex .and. Itype .eq. Mobindex .and.
+     +       Btype .eq. Moaindex .and. Jtype .eq. Mobindex 
+
+      BABA = Atype .eq. Mobindex .and. Itype .eq. Moaindex .and.
+     +       Btype .eq. Mobindex .and. Jtype .eq. Moaindex 
+
       do j = j1,j2
       do b = b1,b2
       do i = i1,i2
       do a = a1,a2
          If (OVOV_type) Then
-            val =  x(a,i,b,j)*Occ_nums(a)*(Done-Occ_nums(i))*
-     +                        Occ_nums(b)*(Done-Occ_nums(j))
+            If (AAAA) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                             (Done-Occ_numsa(i))*
+     +                             Occ_numsa(b)*(Done-Occ_numsa(j))
+            If (BBBB) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
+     +                             (Done-Occ_numsb(i))*
+     +                             Occ_numsb(b)*(Done-Occ_numsb(j))
+            If (ABAB) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                             (Done-Occ_numsb(i))*
+     +                             Occ_numsa(b)*(Done-Occ_numsb(j))
+            If (BABA) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
+     +                             (Done-Occ_numsa(i))*
+     +                             Occ_numsb(b)*(Done-Occ_numsa(j))
          Elseif (VOVO_type) Then 
-            val =  x(a,i,b,j)*(Done-Occ_nums(a))*Occ_nums(i)*
-     +                        (Done-Occ_nums(b))*Occ_nums(j)
+            If (AAAA) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                             Occ_numsa(i)*(Done-Occ_numsa(b))*
+     +                             Occ_numsa(j)
+            If (BBBB) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                             Occ_numsb(i)*(Done-Occ_numsb(b))*
+     +                             Occ_numsb(j)
+            If (ABAB) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                             Occ_numsb(i)*(Done-Occ_numsa(b))*
+     +                             Occ_numsb(j)
+            If (BABA) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                             Occ_numsa(i)*(Done-Occ_numsb(b))*
+     +                             Occ_numsa(j)
+
          Endif
+
       enddo
       enddo
       enddo
@@ -499,6 +850,7 @@ C The second argument indicate which side get scalled.
       double precision eps, epsa, epsi
       double precision val
       Logical Lft_one,Rit_one
+      Logical AL,BL,AR,BR
  
       Data Done /1.0D0/
 
@@ -508,19 +860,28 @@ C The second argument indicate which side get scalled.
       If (sind .eq. 1) Lft_one = .True.
       If (sind .eq. 2) Rit_one = .True.
 
+      AL = Atype .eq. Moaindex 
+      BL = Atype .eq. Mobindex
+      AR = Itype .eq. Moaindex 
+      BR = Itype .eq. Mobindex 
+
       do i = i1, i2
       do a = a1,a2
          If (Lft_one) Then
             If (O .eq. 1) Then
-               val =  x(a,i)*Occ_nums(a)
+               If (AL) x(a,i) = x(a,i)*Occ_numsa(a)
+               If (BL) x(a,i) = x(a,i)*Occ_numsb(a)
             ElseIf (V .eq. 1) then
-               val =  x(a,i)*(Done-Occ_nums(a))
+               If (AL) x(a,i) =  x(a,i)*(Done-Occ_numsa(a))
+               If (BL) x(a,i) =  x(a,i)*(Done-Occ_numsb(a))
             Endif 
          Elseif (Rit_one) Then
             If (O .eq. 1) Then
-               val =  x(a,i)*Occ_nums(i)
+               If (AL) x(a,i) = x(a,i)*Occ_numsa(i)
+               If (BL) x(a,i) = x(a,i)*Occ_numsb(i)
             ElseIf (V .eq. 1) then
-               val =  x(a,i)*(Done-Occ_nums(i))
+               If (AL) x(a,i) =  x(a,i)*(Done-Occ_numsa(i))
+               If (BL) x(a,i) =  x(a,i)*(Done-Occ_numsb(i))
             Endif 
          Endif 
       enddo
@@ -545,6 +906,7 @@ C The second argument indicate which side get scalled.
       double precision eps, epsa, epsi
       double precision val
       Logical OO_type,VV_type,OV_type,VO_type
+      Logical AA,BB,AB,BA
 
       Data Done /1.0D0/
 
@@ -563,16 +925,37 @@ C The second argument indicate which side get scalled.
          VO_type = .True.
       Endif
 
+      AA = Itype .eq. Moaindex .and. Atype .eq. Moaindex 
+      BB = Itype .eq. Mobindex .and. Atype .eq. Mobindex 
+      AB = Itype .eq. Moaindex .and. Atype .eq. Mobindex 
+      BA = Itype .eq. Mobindex .and. Atype .eq. Moaindex 
+
       do i = i1, i2
       do a = a1,a2
          If (OO_type) Then
-            val =  x(a,i)*Occ_nums(a)*Occ_nums(i)
+            If (AA) x(a,i) =  x(a,i)*Occ_numsa(a)*Occ_numsa(i)
+            If (BB) x(a,i) =  x(a,i)*Occ_numsb(a)*Occ_numsb(i)
+            If (AB) x(a,i) =  x(a,i)*Occ_numsa(a)*Occ_numsb(i)
+            If (BA) x(a,i) =  x(a,i)*Occ_numsb(a)*Occ_numsa(i)
          Elseif (VV_type) Then
-            val =  x(a,i)*(Done-Occ_nums(a))*(Done-Occ_nums(i))
+            If  (AA) x(a,i) =  x(a,i)*(Done-Occ_numsa(a))*
+     +                                (Done-Occ_numsa(i))
+            If  (BB) x(a,i) =  x(a,i)*(Done-Occ_numsb(a))*
+     +                                (Done-Occ_numsb(i))
+            If  (AB) x(a,i) =  x(a,i)*(Done-Occ_numsa(a))*
+     +                                (Done-Occ_numsb(i))
+            If  (BA) x(a,i) =  x(a,i)*(Done-Occ_numsb(a))*
+     +                                (Done-Occ_numsa(i))
          Elseif (VO_type) Then
-            val =  x(a,i)*(Done-Occ_nums(a))*Occ_nums(i)
+            If (AA) x(a,i) =  x(a,i)*(Done-Occ_numsa(a))*Occ_numsa(i)
+            If (BB) x(a,i) =  x(a,i)*(Done-Occ_numsb(a))*Occ_numsb(i)
+            If (AB) x(a,i) =  x(a,i)*(Done-Occ_numsa(a))*Occ_numsb(i)
+            If (BA) x(a,i) =  x(a,i)*(Done-Occ_numsb(a))*Occ_numsa(i)
          Elseif (OV_type) Then
-            val =  x(a,i)*Occ_nums(a)*(Done-Occ_nums(i))
+            If (AA) x(a,i) =  x(a,i)*Occ_numsa(a)*(Done-Occ_numsa(i))
+            If (BB) x(a,i) =  x(a,i)*Occ_numsb(a)*(Done-Occ_numsb(i))
+            If (AB) x(a,i) =  x(a,i)*Occ_numsa(a)*(Done-Occ_numsb(i))
+            If (BA) x(a,i) =  x(a,i)*Occ_numsb(a)*(Done-Occ_numsa(i))
          Endif 
       enddo
       enddo

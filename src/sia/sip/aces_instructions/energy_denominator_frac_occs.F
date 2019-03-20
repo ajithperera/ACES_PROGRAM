@@ -153,44 +153,67 @@ c---------------------------------------------------------------------------
      *                                j1,j2, jtype, epsilon, epsilonb)
       implicit none
       include 'interpreter.h'
+      include 'frac_occ_vars.h'
+      include 'parallel_info.h'
+      include 'int_gen_parms.h'
 
       integer a1,a2,b1,b2,i1,i2,j1,j2
       integer atype, itype, btype, jtype
       double precision x(a1:a2,i1:i2,b1:b2,j1:j2)
-
+      integer voff_a,voff_b,vrt_aa,vrt_ab,vrt_ba,vrt_bb
       double precision epsilon(*), epsilonb(*)
 
       integer a,b,i,j
       double precision eps, epsa, epsb, epsi, epsj
-      double precision val
+      double precision val, Done 
+
+      Data Done /1.0D0/
+
+      if (me .eq.0) Then
+          Write(6,"(a)") "@-Entry to eps_divide4_frac_occ"
+          Write(6,"(a)") "The Occ_num arrays"
+          Write(6,"(6F4.1)") (Occ_numsa(i),i=1, Nbasis)
+          Write(6,"(6F4.1)") (Occ_numsb(i),i=1, Nbasis)
+      endif
+
+      voff_a = Nalpha_occupied
+      voff_b = Nbeta_occupied
 
       do j = j1,j2
          if (jtype .eq. mobindex) then
-            epsj = epsilonb(j)
+            epsj = epsilonb(j)*OCC_numsb(j)
          else
-            epsj = epsilon(j)
+            epsj = epsilon(j)*Occ_numsa(j)
          endif
       do b = b1,b2
          if (btype .eq. mobindex) then
-            epsb = epsilonb(b)
+            vrt_bb = b
+            epsb = epsilonb(b)*(Done-Occ_numsb(vrt_bb))
          else
-            epsb = epsilon(b)
+            vrt_ba = b
+            epsb = epsilon(b)*(Done-Occ_numsa(vrt_ba))
          endif
       do i = i1, i2
          if (itype .eq. mobindex) then
-            epsi = epsilonb(i)
+            epsi = epsilonb(i)*Occ_numsb(i)
          else
-            epsi = epsilon(i)
+            epsi = epsilon(i)*Occ_numsa(i)
          endif
       do a = a1,a2
          if (atype .eq. mobindex) then
-            epsa = epsilonb(a)
+            vrt_ab = a
+            epsa = epsilonb(a)*(Done-Occ_numsb(vrt_ab))
          else
-            epsa = epsilon(a)
+            vrt_aa = a
+            epsa = epsilon(a)*(Done-Occ_numsa(vrt_aa))
          endif
          val =  x(a,i,b,j)
          eps = epsi + epsj - epsa - epsb
-         if (eps .ne. 0.0) x(a,i,b,j) = val/eps
+         if (eps .ne. 0.0) then
+             x(a,i,b,j) = val/eps
+         else 
+             x(a,i,b,j) = Done
+         endif 
       enddo
       enddo
       enddo
@@ -205,16 +228,22 @@ c---------------------------------------------------------------------------
      *                                k1, k2, ktype, epsilon, epsilonb)
       implicit none
       include 'interpreter.h'
+      include 'frac_occ_vars.h'
+      include 'int_gen_parms.h'
 
       integer a1,a2,b1,b2,c1,c2,i1,i2,j1,j2,k1,k2
       integer atype, itype, btype, jtype, ctype, ktype
+      integer voff_a,voff_b,vrt_aa,vrt_ab,vrt_ba,vrt_bb,vrt_ca
+      integer vrt_cb
       double precision x(a1:a2,i1:i2,b1:b2,j1:j2,c1:c2,k1:k2)
 
       double precision epsilon(*), epsilonb(*)
 
       integer a,b,c,i,j,k
       double precision eps, epsa, epsb, epsc, epsi, epsj, epsk
-      double precision val
+      double precision val,Done
+
+      Data Done /1.0D0/
 
 c--------------------------------------------------------------------
 c Set index types if necassary and perform simple check. 
@@ -229,45 +258,58 @@ c--------------------------------------------------------------------
       if (ctype .eq. simple_index) ctype = ktype 
       if (ktype .eq. simple_index) ktype = ctype 
 
+      voff_a = Nalpha_occupied
+      voff_b = Nbeta_occupied
+
       do k = k1,k2
          if (ktype .eq. mobindex) then
-            epsk = epsilonb(k)
+            epsk = epsilonb(k)*Occ_numsb(k)
          else
-            epsk = epsilon(k)
+            epsk = epsilon(k)*Occ_numsa(k)
          endif
       do c = c1,c2
          if (ctype .eq. mobindex) then
-            epsc = epsilonb(c)
+            vrt_cb = c
+            epsc = epsilonb(c)*(Done-Occ_numsb(vrt_cb))
          else
-            epsc = epsilon(c)
+            vrt_ca = c
+            epsc = epsilon(c)*(Done-Occ_numsa(vrt_ca))
          endif
       do j = j1,j2
          if (jtype .eq. mobindex) then
-            epsj = epsilonb(j)
+            epsj = epsilonb(j)*Occ_numsb(j)
          else
-            epsj = epsilon(j)
+            epsj = epsilon(j)*Occ_numsa(j)
          endif
       do b = b1,b2
          if (btype .eq. mobindex) then
-            epsb = epsilonb(b)
+            vrt_bb = b
+            epsb = epsilonb(b)*(Done-Occ_numsb(vrt_bb))
          else
-            epsb = epsilon(b)
+            vrt_ba = b
+            epsb = epsilon(b)*(Done-Occ_numsa(vrt_ba))
          endif
       do i = i1, i2
          if (itype .eq. mobindex) then
-            epsi = epsilonb(i)
+            epsi = epsilonb(i)*Occ_numsb(i)
          else
-            epsi = epsilon(i)
+            epsi = epsilon(i)*Occ_numsa(i)
          endif
       do a = a1,a2
          if (atype .eq. mobindex) then
-            epsa = epsilonb(a)
+            vrt_ab = a
+            epsa = epsilonb(a)*(Done-Occ_numsb(vrt_ab))
          else
-            epsa = epsilon(a)
+            vrt_aa = a
+            epsa = epsilon(a)*(Done-Occ_numsa(vrt_aa))
          endif
          val =  x(a,i,b,j,c,k)
          eps = epsi + epsj + epsk - epsa - epsb - epsc
-         if (eps .ne. 0.0) x(a,i,b,j,c,k) = val/eps
+         if (eps .ne. 0.0) then
+             x(a,i,b,j,c,k) = val/eps
+         else 
+             x(a,i,b,j,c,k) = Done
+         endif 
       enddo
       enddo
       enddo
@@ -282,38 +324,63 @@ c--------------------------------------------------------------------
      *                                itype,ni1,ni2,epsilon,epsilonb)
       implicit none
       include 'interpreter.h'
+      include 'frac_occ_vars.h'
+      include 'parallel_info.h'
+      include 'int_gen_parms.h'
 
       integer a1,a2,i1,i2
       integer atype, itype
-      integer na1, na2, ni1, ni2
+      integer na1, na2, ni1, ni2,voff_a, Voff_b
+      integer vrt_ab, vrt_aa
       double precision x(na1:na2,ni1:ni2)
 
       double precision epsilon(*), epsilonb(*)
 
       integer a,i
       double precision eps, epsa, epsi
-      double precision val
+      double precision val, Done
+      Data Done /1.0D0/
+
+      if (me .eq.0) then
+       write(6,"(a,3(1x,i4))") "itype,atype,moabindex: ",itype,
+     +                          atype, mobindex 
+      endif 
+
+      voff_a = Nalpha_occupied 
+      voff_b = Nbeta_occupied 
 
       do i = i1, i2
          if (itype .eq. mobindex) then
-            epsi = epsilonb(i)
+            epsi = epsilonb(i)*Occ_numsb(i)
          else
-            epsi = epsilon(i)
+            epsi = epsilon(i)*Occ_numsa(i)
          endif
       do a = a1,a2
          if (atype .eq. mobindex) then
-            epsa = epsilonb(a)
+            vrt_ab = a
+            epsa = epsilonb(a)*(Done-Occ_numsb(vrt_ab))
          else
-            epsa = epsilon(a)
+             vrt_aa =  a
+            epsa = epsilon(a)*(Done-Occ_numsa(vrt_aa))
          endif
          val =  x(a,i)
          eps = epsi - epsa
-         if (eps .ne. 0.0) x(a,i) = val/eps
+
+         write(6,"(a,1x,i2,1x,i2,1x,i2,1x,i2,3F10.5)") 
+     +                  "a,i,epsa,epsi,epsi-epsa",a,i,vrt_ab,
+     +                   vrt_aa, epsa,epsi,eps
+
+         if (eps .ne. 0.0) then 
+            x(a,i) = val/eps
+         else
+            x(a,i) = Done
+         endif
+
          if (dabs(eps) .lt. 1.0d-10) then
-            if (a .ne. i) write(6,*) ' Small denominator being
-     *         eliminated in energy_denominator',
-     *         'a, i', a,i, 'den' ,eps, 'value', x(a,i)
-            x(a,i) = 0.0d0
+
+C            if (a .ne. i) write(6,*) ' Small denominator being
+C     *         eliminated in energy_denominator',
+C     *         'a, i', a,i, 'den' ,eps, 'value', x(a,i)
          endif
 
       enddo
