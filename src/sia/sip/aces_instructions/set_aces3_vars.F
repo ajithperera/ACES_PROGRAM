@@ -189,6 +189,10 @@ C At every entry initilize all the type generating arrays to zero.
       VVVV(2) = 0
       VVVV(3) = 0
       VVVV(4) = 0
+
+      AO_AA   = .False.
+      AO_BB   = .False.
+      AO_AB   = .False.
       
       If (Int(g) .EQ. 1) Then
          Contract = 1
@@ -275,12 +279,12 @@ C At every entry initilize all the type generating arrays to zero.
              VVV(2) = 1
              VVV(3) = 0
          Elseif (test6) then
-             OOO(1) = 1
-             OOO(2) = 0
-             OOO(3) = 0
-             VVV(1) = 0
-             VVV(2) = 1
-             VVV(3) = 1
+             OOO(1) = 0
+             OOO(2) = 1
+             OOO(3) = 1
+             VVV(1) = 1 
+             VVV(2) = 0
+             VVV(3) = 0
          Endif 
       Elseif (Int(g) .EQ. 4) Then
          Contract = 4
@@ -308,6 +312,19 @@ C At every entry initilize all the type generating arrays to zero.
              VVVV(3) = 1
              VVVV(4) = 0
          Endif 
+      Elseif (Int(g) .EQ. 100) Then
+
+          test1 = (qq-99.0D0) .EQ. 0.0D0
+          test2 = (qq-88.0D0) .EQ. 0.0D0
+          test3 = (qq-98.0D0) .EQ. 0.0D0
+          
+          If (test1) then
+             AO_AA = .True.
+          Elseif (test2) then
+             AO_BB = .True.
+          Elseif (test3) then
+             AO_AB = .True.
+          Endif 
       Endif 
 C#ifdef _DEBUG_LVL0
       If(me .eq.0) then

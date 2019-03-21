@@ -2190,10 +2190,11 @@
 
               Txixi(lambda,i,sigma,j) = TAO_ab(lambda,i,sigma,j)
               Txxij(lambda,sigma,i,j) = Txixi(lambda,i,sigma,j)
-
+#bgn_frac
               execute set_aces3_vars  zer     two
               execute apply_frac_occs T1xxxx  two
               execute apply_frac_occs Txxij   one
+#bgn_frac 
 
               Yab(mu,i,nu,j)              = T1xxxx(mu,nu,lambda,sigma)*Txxij(lambda,sigma,i,j)
               Y1ab(nu,j,mu,i)             = Yab(mu,i,nu,j)
@@ -2302,7 +2303,6 @@
                  execute apply_frac_occs Taijx two 
                  execute apply_frac_occs T1xa  one
 #end_frac
- 
                  T1aibj(a,i,b,j)            = Taijx(a,i,j,nu)*T1xa(nu,b)
                  T1aibj(a,i,b,j)           *= -1.0
                  T2aibj(b,j,a,i)            = T1aibj(a,i,b,j)

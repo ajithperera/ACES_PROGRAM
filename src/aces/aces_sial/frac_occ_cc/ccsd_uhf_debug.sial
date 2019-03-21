@@ -4718,6 +4718,19 @@
             ENDDO i 
 #
       ENDPARDO a, i2 
+#bgn_debug
+     execute server_barrier
+     suma =0.0
+     esuma=0.0
+     PARDO a, i, a1, i1
+           request T2new_aa(a,i,a1,i1) i1
+           tmp = T2new_aa(a,i,a1,i1)*T2new_aa(a,i,a1,i1)
+           suma += tmp
+     ENDPARDO a, i, a1, i1
+     execute server_barrier
+     collective esuma += suma
+     execute print_scalar esuma
+#end_debug
 #
       ENDPROC T2AAS2 
 #     -------------- 
@@ -4978,6 +4991,20 @@
 #
       ENDPARDO j1, b, j2 
 #
+#bgn_debug
+     execute server_barrier
+     suma =0.0
+     esuma=0.0
+     PARDO b, j, b1, j1
+           request T2NEW_bb(b,j,b1,j1) j1
+           tmp = T2NEW_bb(b,j,b1,j1)*T2NEW_bb(b,j,b1,j1)
+           suma += tmp
+     ENDPARDO b, j, b1, j1
+     execute server_barrier
+     collective esuma += suma
+     execute print_scalar esuma
+#end_debug
+
       ENDPROC T2BBS2 
 #     -------------- 
 #
@@ -5053,6 +5080,19 @@
             ENDDO b 
 #
       ENDPARDO j1, i, a, j 
+#bgn_debug
+     execute server_barrier
+     suma =0.0
+     esuma=0.0
+     PARDO a, i, b, j
+           request T2NEW_AB(a,i,b,j) j
+           tmp = T2NEW_AB(a,i,b,j)*T2NEW_AB(a,i,b,j)
+           suma += tmp
+     ENDPARDO a, i, b, j
+     execute server_barrier
+     collective esuma += suma
+     execute print_scalar esuma
+#end_debug
 #
       ENDPROC T2ABS2 
 #     -------------- 
@@ -5228,6 +5268,19 @@
             ENDDO a
 #
       ENDPARDO i, b, a1, j1
+#bgn_debug
+     execute server_barrier
+     suma =0.0
+     esuma=0.0
+     PARDO a, i, b, j
+           request T2NEW_AB(a,i,b,j) j
+           tmp = T2NEW_AB(a,i,b,j)*T2NEW_AB(a,i,b,j)
+           suma += tmp
+     ENDPARDO a, i, b, j
+     execute server_barrier
+     collective esuma += suma
+     execute print_scalar esuma
+#end_debug
 #
       ENDPROC WMJBEba
 #     ---------------

@@ -211,16 +211,29 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
          Rit_one = .True.
       Endif 
 
+      O_type = .False.
+      V_type = .False.
+
+      AL     = .False.
+      BL     = .False.
+      AR     = .False.
+      BR     = .False.
+
       If (O .eq. 1) Then 
          O_type = .True.
       ElseIf (V .eq. 1) Then 
          V_type = .True.
       Endif
-
+      
+      If (Lft_one) Then
       AL = Atype .eq. Moaindex 
       BL = Atype .eq. Mobindex 
+      Endif 
+
+      If (Rit_one) Then
       AR = Jtype .eq. Moaindex 
       BR = Jtype .eq. mobindex 
+      Endif
 
       do j = j1,j2
       do b = b1,b2
@@ -287,6 +300,14 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
       VV_type = .False.
       OV_type = .False.
       VO_type = .False.
+      AAL     = .False.
+      BBL     = .False. 
+      ABL     = .False.
+      BAL     = .False.
+      AAR     = .False.
+      BBR     = .False.
+      ABR     = .False.
+      BAR     = .False.
 
       If (OO(1) .eq. 1 .and. OO(2) .eq. 1) Then 
          OO_type = .True.
@@ -298,28 +319,29 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
          VO_type = .True.
       Endif
 
+      If (Lft_two) Then
       AAL = Atype .eq. Moaindex .and. Itype .eq. Moaindex
       BBL = Atype .eq. Mobindex .and. Itype .eq. Mobindex
       ABL = Atype .eq. Moaindex .and. Itype .eq. Mobindex
       BAL = Atype .eq. Mobindex .and. Itype .eq. Moaindex
+      Endif 
 
+      If (Rit_two) Then
       AAR = Btype .eq. Moaindex .and. Jtype .eq. Moaindex
       BBR = Btype .eq. Mobindex .and. Jtype .eq. Mobindex
       ABR = Btype .eq. Moaindex .and. Jtype .eq. Mobindex
       BAR = Btype .eq. Mobindex .and. Jtype .eq. Moaindex
-     
-#ifdef _DEBUG_LVL0
+      Endif 
+
+C#ifdef _DEBUG_LVL0
       if (me .eq. 0) then
-      write(6,"(a,14l)")"Lft_two,Rit_two,OO_type,VV_type,OV_type,
-     +                VO_type,AAL-BBR",Lft_two,Rit_two,OO_type,
-     +                VV_type,OV_type,VO_type,AAL,BBL,ABL,BAL,
-     +                AAR,BBR,ABR,BAR
-      write(6,"(a,4l)") "type:",aal,bbl,abl,bal
-      write(6,"(a,F10.5,2F5.2)") "x,occ_nums", 
-     +         x(a,i,b,j),Occ_numsa(a),
-     +         Done-Occ_numsb(i)
+C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
+      write(6,"(a,a,6l)")"Lft_two,Rit_two,OO_type,VV_type,OV_type",
+     +                   "VO_type,AAL-BBR",Lft_two,Rit_two,OO_type,
+     +                    VV_type,OV_type,VO_type
+      write(6,"(a,8l)") "type:",aal,bbl,abl,bal,aar,bbr,abr,bar
       endif
-#endif 
+C#endif 
     
       do j = j1,j2
       do b = b1,b2
@@ -363,6 +385,16 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
                If (BAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(a))*
      +                                            Occ_numsa(i)
             Endif 
+            If (AO_AA) Then
+               x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                  (Done-Occ_numsa(i))
+            ElseIf (AO_BB) Then
+              x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                                 (Done-Occ_numsb(i))
+            ElseIf (AO_AB) Then
+               x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                  (Done-Occ_numsb(i))
+            Endif 
          Elseif (Rit_two) Then 
             If (OO_type) Then
                If(AAL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*
@@ -401,6 +433,13 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
                If (BAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
      +                                            Occ_numsa(j)
             Endif 
+            If (AO_AA) Then
+               x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*Occ_numsa(j)
+            ElseIf (AO_BB) Then
+               x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(b)*Occ_numsb(j)
+            ElseIf (AO_AB) Then
+               x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*Occ_numsb(j)
+            Endif 
          Endif 
       enddo
       enddo
@@ -431,6 +470,7 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +        OVO_type,VVV_type,VOO_type
       Logical Lft_three,Rit_three 
       Logical AAAL,BBBL,ABAL,BABL,AAAR,BBBR,ABAR,BABR,ABBL,ABBR
+      Logical AABR,AABL
 
       Data Done /1.0D0/
   
@@ -451,6 +491,18 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
       OVV_type = .False.
       OOV_type = .False.
       VOO_type = .False.
+      AAAL     = .False.
+      BBBL     = .False.
+      ABAL     = .False.
+      BABL     = .False.
+      ABBL     = .False.
+      AABL     = .False.
+      AAAR     = .False.
+      BBBR     = .False.
+      ABAR     = .False.
+      BABR     = .False.
+      ABBR     = .False.
+      AABR     = .False.
 
       If (OOO(1) .eq. 1 .and. OOO(2) .eq. 1 .and. OOO(3) .eq. 1) Then
          OOO_type = .True.
@@ -488,6 +540,8 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +       Btype .eq. Mobindex 
       ABBL = Atype .eq. Moaindex .and. Itype .eq. Mobindex .and. 
      +       Btype .eq. Mobindex 
+      AABL = Atype .eq. Moaindex .and. Itype .eq. Moaindex .and.
+     +       Btype .eq. Mobindex
       Endif 
 
       If (Rit_three) Then
@@ -499,13 +553,15 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +       Jtype .eq. Moaindex
       BABR = Itype .eq. Mobindex .and. Btype .eq. Moaindex .and.
      +       Jtype .eq. Mobindex
-      ABBR = Jtype .eq. Moaindex .and. Itype .eq. Mobindex .and. 
-     +       Btype .eq. Mobindex 
+      ABBR = Itype .eq. Moaindex .and. Btype .eq. Mobindex .and. 
+     +       Jtype .eq. Mobindex 
+      AABR = Itype .eq. Moaindex .and. Btype .eq. Moaindex .and.
+     +       Jtype .eq. Mobindex
       Endif 
 
       if (me .eq. 0) then
-          write(6,"(10l)")AAAL,BBBL,ABAL,BABL,ABBL,AAAR,BBBR,ABAR,
-     +                   BABR,ABBR 
+          write(6,"(12l)")AAAL,BBBL,ABAL,BABL,ABBL,AABL,AAAR,BBBR,
+     +                    ABAR,BABR,ABBR,AABR
           write(6,"(8l)")ooo_type,vvv_type,oov_type,voo_type,
      +                   vvo_type,ovo_type,vov_type,ovv_type
       endif 
@@ -528,22 +584,31 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
                If (BABL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
      +                                           Occ_numsa(i)*
      +                                           Occ_numsb(b)
+               If (ABBL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                           Occ_numsb(i)*
+     +                                           Occ_numsb(b)
+               If (AABL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                           Occ_numsa(i)*
+     +                                           Occ_numsb(b)
             Elseif (OVO_type) Then 
                If (AAAL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
      +                                           (Done-Occ_numsa(i))*
      +                                           Occ_numsa(b)
                If (BBBL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
-     +                                          (Done-Occ_numsb(i))*
-     +                                          Occ_numsb(b)
+     +                                           (Done-Occ_numsb(i))*
+     +                                           Occ_numsb(b)
                If (ABAL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
-     +                                          (Done-Occ_numsb(i))*
-     +                                          Occ_numsa(b)
+     +                                           (Done-Occ_numsb(i))*
+     +                                           Occ_numsa(b)
                If (BABL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
-     +                                          (Done-Occ_numsa(i))*
-     +                                          Occ_numsb(b)
+     +                                           (Done-Occ_numsa(i))*
+     +                                           Occ_numsb(b)
                If (ABBL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
-     +                                          (Done-Occ_numsb(i))*
-     +                                          Occ_numsb(b)
+     +                                           (Done-Occ_numsb(i))*
+     +                                           Occ_numsb(b)
+               If (AABL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                           (Done-Occ_numsa(i))*
+     +                                           Occ_numsb(b)
             Elseif (VOV_type) Then 
                If (AAAL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                Occ_numsa(i)*(Done-Occ_numsa(b))
@@ -555,6 +620,8 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +                                Occ_numsa(i)*(Done-Occ_numsb(b))
                If (ABBL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                Occ_numsb(i)*(Done-Occ_numsb(b))
+               If (AABL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                Occ_numsa(i)*(Done-Occ_numsb(b))
             Elseif (OOV_type) Then 
                If (AAAL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
      +                                Occ_numsa(i)*(Done-Occ_numsa(b))
@@ -566,6 +633,8 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +                                Occ_numsa(i)*(Done-Occ_numsb(b))
                If (ABBL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
      +                                Occ_numsb(i)*(Done-Occ_numsb(b))
+               If (AABL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                Occ_numsa(i)*(Done-Occ_numsb(b))
             Elseif (VOO_type) Then 
                If (AAAL) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                Occ_numsa(i)*Occ_numsa(b)
@@ -577,6 +646,8 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +                                Occ_numsa(i)*Occ_numsb(b)
                If (BABL) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                Occ_numsb(i)*Occ_numsb(b)
+               If (AABL) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                Occ_numsa(i)*Occ_numsb(b)
             Elseif (VVO_type) Then 
                If (AAAL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                (Done-Occ_numsa(i))*Occ_numsa(b)
@@ -588,6 +659,8 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +                                (Done-Occ_numsa(i))*Occ_numsb(b)
                If (BABL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                (Done-Occ_numsb(i))*Occ_numsb(b)
+               If (AABL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                (Done-Occ_numsa(i))*Occ_numsb(b)
             Elseif (OVV_type) Then 
                If (AAAL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
      +                                (Done-Occ_numsa(i))*
@@ -603,6 +676,9 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +                                (Done-Occ_numsb(b))
                If (ABBL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
      +                                (Done-Occ_numsb(i))*
+     +                                (Done-Occ_numsb(b))
+               If (AABL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                                (Done-Occ_numsa(i))*
      +                                (Done-Occ_numsb(b))
             Elseif (VVV_type) Then 
                If (AAAL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
@@ -620,6 +696,9 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
                If (ABBL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                (Done-Occ_numsb(i))*
      +                                (Done-Occ_numsb(b))
+               If (AABL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                                (Done-Occ_numsa(i))*
+     +                                (Done-Occ_numsb(b))
             Endif 
          Elseif (Rit_three) Then 
            If (OOO_type) Then
@@ -636,6 +715,9 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +                                          Occ_numsa(b)*
      +                                          Occ_numsb(j)
               If (ABBR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                          Occ_numsb(b)*
+     +                                          Occ_numsb(j)
+              If (ABBR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
      +                                          Occ_numsa(b)*
      +                                          Occ_numsb(j)
             Elseif (OVO_type) Then
@@ -644,7 +726,7 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +                                          Occ_numsa(j)
               If (BBBR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(i)*
      +                                          (Done-Occ_numsb(b))*
-     +                                          Occ_numsb(b)
+     +                                          Occ_numsb(j)
               If (ABAR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
      +                                          (Done-Occ_numsb(b))*
      +                                          Occ_numsa(j)
@@ -653,6 +735,9 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +                                          Occ_numsb(j)
               If (ABBR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
      +                                          (Done-Occ_numsb(b))*
+     +                                          Occ_numsb(j)
+              If (AABR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                          (Done-Occ_numsa(b))*
      +                                          Occ_numsb(j)
             Elseif (VOV_type) Then
                If (AAAR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
@@ -665,6 +750,8 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +                                Occ_numsa(b)*(Done-Occ_numsb(j))
                If (ABBR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
      +                                Occ_numsb(b)*(Done-Occ_numsb(j))
+               If (AABR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                Occ_numsa(b)*(Done-Occ_numsb(j))
             Elseif (OOV_type) Then
                If (AAAR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
      +                                Occ_numsa(b)*(Done-Occ_numsa(j))
@@ -676,6 +763,8 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +                                Occ_numsa(b)*(Done-Occ_numsb(j))
                If (ABBR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
      +                                Occ_numsb(b)*(Done-Occ_numsb(j))
+               If (AABR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                Occ_numsa(b)*(Done-Occ_numsb(j))
             Elseif (VOO_type) Then
                If (AAAR) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(i))*
      +                                Occ_numsa(b)*Occ_numsa(j)
@@ -687,6 +776,8 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +                                Occ_numsa(b)*Occ_numsb(j)
                If (ABBR) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(i))*
      +                                Occ_numsb(b)*Occ_numsb(j)
+               If (AABR) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                Occ_numsa(b)*Occ_numsb(j)
             Elseif (VVO_type) Then
                If (AAAR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
      +                                (Done-Occ_numsa(b))*Occ_numsa(j)
@@ -698,6 +789,8 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +                                (Done-Occ_numsa(b))*Occ_numsb(j)
                If (ABBR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
      +                                (Done-Occ_numsb(b))*Occ_numsb(j)
+               If (AABR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                (Done-Occ_numsa(b))*Occ_numsb(j)
             Elseif (OVV_type) Then
                If (AAAR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
      +                                (Done-Occ_numsa(b))*
@@ -714,6 +807,9 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
                If (ABBR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
      +                                (Done-Occ_numsb(b))*
      +                                (Done-Occ_numsb(j))
+               If (AABR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
+     +                                (Done-Occ_numsa(b))*
+     +                                (Done-Occ_numsb(j))
             Elseif (VVV_type) Then
                If (AAAR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
      +                                (Done-Occ_numsa(b))*
@@ -729,6 +825,9 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      +                                (Done-Occ_numsb(j))
                If (ABBR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
      +                                (Done-Occ_numsb(b))*
+     +                                (Done-Occ_numsb(j))
+               If (AABR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+     +                                (Done-Occ_numsa(b))*
      +                                (Done-Occ_numsb(j))
             Endif
          Endif 
@@ -765,6 +864,10 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
 
       OVOV_type = .False.
       VOVO_type = .False.
+      AAAA      = .FALSE.
+      BBBB      = .FALSE.
+      ABAB      = .FALSE.
+      BABA      = .FALSE.
 
       If (OOOO(1) .eq. 1 .and. VVVV(2) .eq. 1 .and. OOOO(3) .eq. 1
      +    .and. VVVV(4) .eq. 1) Then
@@ -856,14 +959,23 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
 
       Lft_one = .False.
       Rit_one = .False.
-
+      AL      = .False.
+      BL      = .False.
+      AR      = .False.
+      BR      = .False.
+    
       If (sind .eq. 1) Lft_one = .True.
       If (sind .eq. 2) Rit_one = .True.
 
+      If (Lft_one) Then
       AL = Atype .eq. Moaindex 
       BL = Atype .eq. Mobindex
+      Endif 
+
+      If (Rit_one) Then
       AR = Itype .eq. Moaindex 
       BR = Itype .eq. Mobindex 
+      Endif 
 
       do i = i1, i2
       do a = a1,a2
@@ -875,6 +987,11 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
                If (AL) x(a,i) =  x(a,i)*(Done-Occ_numsa(a))
                If (BL) x(a,i) =  x(a,i)*(Done-Occ_numsb(a))
             Endif 
+            If (AO_AA) Then 
+               x(a,i) = x(a,i)*Occ_numsa(a)
+            Elseif (AO_BB) Then
+               x(a,i) = x(a,i)*Occ_numsb(a)
+            Endif 
          Elseif (Rit_one) Then
             If (O .eq. 1) Then
                If (AL) x(a,i) = x(a,i)*Occ_numsa(i)
@@ -882,6 +999,11 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
             ElseIf (V .eq. 1) then
                If (AL) x(a,i) =  x(a,i)*(Done-Occ_numsa(i))
                If (BL) x(a,i) =  x(a,i)*(Done-Occ_numsb(i))
+            Endif 
+            If (AO_AA) Then 
+               x(a,i) = x(a,i)*Occ_numsa(a)
+            Elseif (AO_BB) Then
+               x(a,i) = x(a,i)*Occ_numsb(a)
             Endif 
          Endif 
       enddo
@@ -914,6 +1036,10 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
       VV_type = .False.
       VO_type = .False.
       OV_type = .False.
+      AA      = .False.
+      BB      = .False.
+      AB      = .False.
+      BA      = .False.
 
       If (OO(1) .eq. 1 .and. OO(2) .eq. 1) Then
          OO_type = .True.

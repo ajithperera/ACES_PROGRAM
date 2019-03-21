@@ -5,10 +5,12 @@ C
       Integer O,V,OO(2),VV(2),OOO(3),VVV(3),OOOO(4),VVVV(4)
       Integer Contract,Maxbfns 
       Double Precision Occ_numsa,Occ_numsb
+      Logical AO_AA,AO_BB,AO_AB
       Parameter (Maxbfns = 2000)
       common /Permutations/ O,V,OO,VV,OOO,VVV,OOOO,VVVV
       common /Frac_occ_dims/ Contract 
       Common /Frac_occs/ Occ_numsa(Maxbfns),Occ_numsb(Maxbfns)
+      Common /AO_ladder_spin/AO_AA,AO_BB,AO_AB
 
 C----------------------------------------------------------------
 
