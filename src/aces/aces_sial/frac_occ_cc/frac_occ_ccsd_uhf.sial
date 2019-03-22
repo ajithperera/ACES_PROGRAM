@@ -34,63 +34,31 @@
       index   kptr1  = 1, 2
       index   kptr2  = 1, 2
       index   kone   = 1, 1
-#
+
       aoindex mu     = 1, norb 
       aoindex nu     = 1, norb
       aoindex lambda = 1, norb
       aoindex sigma  = 1, norb
 
-      moaindex i = baocc, eaocc
-      moaindex i1= baocc, eaocc
-      moaindex i2= baocc, eaocc
-      moaindex i3= baocc, eaocc
+#      moaindex i = baocc, eaocc
+#      moaindex i1= baocc, eaocc
+#      moaindex i2= baocc, eaocc
+#      moaindex i3= baocc, eaocc
 #
-      moaindex a = bavirt, eavirt
-      moaindex a1= bavirt, eavirt
-      moaindex a2= bavirt, eavirt
-      moaindex a3= bavirt, eavirt
+#      moaindex a = bavirt, eavirt
+#      moaindex a1= bavirt, eavirt
+#      moaindex a2= bavirt, eavirt
+#      moaindex a3= bavirt, eavirt
 #
-      mobindex j = bbocc, ebocc
-      mobindex j1= bbocc, ebocc
-      mobindex j2= bbocc, ebocc
-      mobindex j3= bbocc, ebocc
+#      mobindex j = bbocc, ebocc
+#      mobindex j1= bbocc, ebocc
+#      mobindex j2= bbocc, ebocc
+#      mobindex j3= bbocc, ebocc
 #
-      mobindex b = bbvirt, ebvirt
-      mobindex b1= bbvirt, ebvirt
-      mobindex b2= bbvirt, ebvirt
-      mobindex b3= bbvirt, ebvirt
-#
-      moaindex p = baocc, eavirt
-      moaindex p1= baocc, eavirt
-      moaindex p2= baocc, eavirt
-      moaindex p3= baocc, eavirt
-#
-      mobindex q = bbocc, ebvirt
-      mobindex q1= bbocc, ebvirt
-      mobindex q2= bbocc, ebvirt
-      mobindex q3= bbocc, ebvirt
-
-#bgn_frac
-#
-#      moaindex i = baocc, eavirt 
-#      moaindex i1= baocc, eavirt
-#      moaindex i2= baocc, eavirt 
-#      moaindex i3= baocc, eavirt 
-#
-#      moaindex a = baocc, eavirt
-#      moaindex a1= baocc, eavirt
-#      moaindex a2= baocc, eavirt
-#      moaindex a3= baocc, eavirt
-#
-#      mobindex j = bbocc, ebvirt
-#      mobindex j1= bbocc, ebvirt 
-#      mobindex j2= bbocc, ebvirt 
-#      mobindex j3= bbocc, ebvirt 
-#
-#      mobindex b = bbocc, ebvirt
-#      mobindex b1= bbocc, ebvirt
-#      mobindex b2= bbocc, ebvirt
-#      mobindex b3= bbocc, ebvirt
+#      mobindex b = bbvirt, ebvirt
+#      mobindex b1= bbvirt, ebvirt
+#      mobindex b2= bbvirt, ebvirt
+#      mobindex b3= bbvirt, ebvirt
 #
 #      moaindex p = baocc, eavirt
 #      moaindex p1= baocc, eavirt
@@ -101,6 +69,37 @@
 #      mobindex q1= bbocc, ebvirt
 #      mobindex q2= bbocc, ebvirt
 #      mobindex q3= bbocc, ebvirt
+#
+#bgn_frac
+      moaindex i = baocc, eavirt 
+      moaindex i1= baocc, eavirt
+      moaindex i2= baocc, eavirt 
+      moaindex i3= baocc, eavirt 
+
+      moaindex a = baocc, eavirt
+      moaindex a1= baocc, eavirt
+      moaindex a2= baocc, eavirt
+      moaindex a3= baocc, eavirt
+
+      mobindex j = bbocc, ebvirt
+      mobindex j1= bbocc, ebvirt 
+      mobindex j2= bbocc, ebvirt 
+      mobindex j3= bbocc, ebvirt 
+
+      mobindex b = bbocc, ebvirt
+      mobindex b1= bbocc, ebvirt
+      mobindex b2= bbocc, ebvirt
+      mobindex b3= bbocc, ebvirt
+
+      moaindex p = baocc, eavirt
+      moaindex p1= baocc, eavirt
+      moaindex p2= baocc, eavirt
+      moaindex p3= baocc, eavirt
+
+      mobindex q = bbocc, ebvirt
+      mobindex q1= bbocc, ebvirt
+      mobindex q2= bbocc, ebvirt
+      mobindex q3= bbocc, ebvirt
 #end_frac
 # 
 # Declare static arrays 
@@ -293,31 +292,31 @@
       temp Taiii(a,i,i1,i2) 
       temp T1aiii(a,i,i1,i2) 
 #
-      temp  Tiiii(i,i1,i2,i3) 
+      temp Tiiii(i,i1,i2,i3) 
       temp T1iiii(i,i1,i2,i3) 
 #
-      temp  Tjjjj(j,j1,j2,j3) 
+      temp Tjjjj(j,j1,j2,j3) 
       temp T1jjjj(j,j1,j2,j3) 
-      temp  Tbjjj(b,j,j1,j2) 
+      temp Tbjjj(b,j,j1,j2) 
       temp T1bjjj(b,j,j1,j2) 
 #
-      temp  Tiijj(i,i1,j2,j3) 
+      temp Tiijj(i,i1,j2,j3) 
       temp T1iijj(i,i1,j2,j3) 
 #
-      temp  tmp_aa(a,a1) 
+      temp tmp_aa(a,a1) 
       temp tmp1_aa(a,a1) 
-      temp  tmp_ii(i,i1) 
+      temp tmp_ii(i,i1) 
       temp tmp1_ii(i,i1) 
 #
-      temp  Tiiai(i,i1,a,i2) 
+      temp Tiiai(i,i1,a,i2) 
       temp T1iiai(i,i1,a,i2) 
 #
-      temp  tmp_bb(b,b1) 
+      temp tmp_bb(b,b1) 
       temp tmp1_bb(b,b1) 
-      temp  tmp_jj(j,j1) 
+      temp tmp_jj(j,j1) 
       temp tmp1_jj(j,j1) 
 #
-      temp  Tjjbj(j,j1,b,j2) 
+      temp Tjjbj(j,j1,b,j2) 
       temp T1jjbj(j,j1,b,j2) 
 # 
       temp T1aaai(a,a1,a2,i)  
@@ -351,7 +350,6 @@
       temp T1jbbj(j,b,b1,j1) 
       temp T2jbbj(j,b,b1,j1) 
       temp T1iabj(i,a,b,j) 
-      temp T2iabj(i,a,b,j) 
       temp Tjjpp(j,j1,p,p1) 
       temp T1jjpp(j,j1,p,p1) 
       temp T2jjpp(j,j1,p,p1) 
@@ -387,6 +385,8 @@
       temp t1xi(mu,i) 
       temp txj(mu,j) 
       temp t1xj(mu,j) 
+      temp Txa(mu,a)
+      temp Txb(mu,b)
 #
 # Declare distributed arrays 
 # -------------------------- 
@@ -413,6 +413,10 @@
 #
       temp AOINT(mu,nu,lambda,sigma) 
       static pinf(kiter,kptr1)
+      static Capa(mu,a)
+      static Cbpb(mu,b)
+      static Capi(mu,i)
+      static Cbpj(mu,j)
       temp tpinf(kiter,kptr1)
       scalar ncount1
       scalar ncount2
@@ -498,6 +502,10 @@
      Temp Taijx(a,i,j,nu)
      Temp Taiix(a,i,i1,nu)
      Temp Tbjjx(b,j,j1,nu)
+     Temp Txiia(lambda,i,i1,a1)
+     Temp Txjjb(lambda,j,j1,b1)
+     Temp Txijb(lambda,i,j,b)
+
      Temp T4ai(a,i)
      Temp T3bj(b,j1)
      Temp Tax(a,mu)
@@ -904,7 +912,12 @@
            REQUEST VSpipi(a,i,a1,i1) i1  
 #
            Taiai(a,i,a1,i1)            = VSpipi(a,i,a1,i1)
-           execute energy_denominator    Taiai 
+#           execute energy_denominator    Taiai 
+#bgn_frac
+           execute set_aces3_vars  pzozo four
+           execute apply_frac_occs Taiai four
+           execute energy_denominator_frac_occs Taiai
+#end_frac 
            PREPARE T2old_aa(a,i,a1,i1) = Taiai(a,i,a1,i1)  
            PREPARE D0aiai(a,i,a1,i1) = Taiai(a,i,a1,i1)  
 #
@@ -915,7 +928,12 @@
            REQUEST VSqjqj(b,j,b1,j1) j1  
 #
            Tbjbj(b,j,b1,j1)            = VSqjqj(b,j,b1,j1)  
-           execute energy_denominator    Tbjbj 
+#           execute energy_denominator    Tbjbj 
+#bgn_frac
+           execute set_aces3_vars  pzozo four
+           execute apply_frac_occs Tbjbj four
+           execute energy_denominator_frac_occs Tbjbj
+#end_frac 
            PREPARE T2old_bb(b,j,b1,j1) = Tbjbj(b,j,b1,j1)  
            PREPARE D0bjbj(b,j,b1,j1) = Tbjbj(b,j,b1,j1)  
 #
@@ -926,7 +944,12 @@
            REQUEST Vpiqj(a,i,b,j) j  
 #
            Taibj(a,i,b,j)            = Vpiqj(a,i,b,j)
-           execute energy_denominator  Taibj 
+#           execute energy_denominator  Taibj 
+#bgn_frac
+           execute set_aces3_vars  pzozo four
+           execute apply_frac_occs Taibj four
+           execute energy_denominator_frac_occs Taibj
+#end_frac 
            PREPARE T2old_ab(a,i,b,j) = Taibj(a,i,b,j)  
            PREPARE D0aibj(a,i,b,j) = Taibj(a,i,b,j)  
 #
@@ -1305,7 +1328,12 @@
      esuma=0.0
      PARDO a,a1
            get fae_a(a,a1)
-           tmp = fae_a(a,a1)*fae_a(a,a1)
+           taa(a,a1) = fae_a(a,a1)
+#bgn_frac
+           execute set_aces3_vars  zer two
+           execute apply_frac_occs taa two
+#end_frac
+           tmp = taa(a,a1)*taa(a,a1)
            suma += tmp
      ENDPARDO a, a1
      execute sip_barrier
@@ -1473,9 +1501,14 @@
      sumb =0.0
      esumb=0.0
      PARDO b,b1
-           get fae_b(b,b1)
-           tmp = fae_b(b,b1) * fae_b(b,b1)
-           sumb += tmp
+         get fae_b(b,b1)
+         tbb(b,b1) = fae_b(b,b1)
+#bgn_frac 
+         execute set_aces3_vars  zer two
+         execute apply_frac_occs tbb two
+#end_frac
+         tmp = tbb(b,b1)*tbb(b,b1) 
+         sumb += tmp
      ENDPARDO b, b1
      execute sip_barrier
      collective esumb += sumb
@@ -1555,9 +1588,14 @@
      suma =0.0
      esuma=0.0
      PARDO i,a
-           get fme_a(i,a)
-           tmp = fme_a(i,a) * fme_a(i,a)
-           suma += tmp
+         get fme_a(i,a)
+         tme_a(i,a)=Fme_a(i,a) 
+#bgn_frac
+           execute set_aces3_vars  oz    two
+           execute apply_frac_occs tme_a two
+#end_frac
+         tmp = tme_a(i,a) * tme_a(i,a)
+         suma += tmp
      ENDPARDO i,a
      execute sip_barrier
      collective esuma += suma
@@ -1626,9 +1664,14 @@
      sumb =0.0
      esumb=0.0
      PARDO j, b
-           get fme_b(j,b)
-           tmp = fme_b(j,b)*fme_b(j,b)
-           sumb += tmp
+         get fme_b(j,b)
+         tme_b(j,b)=fme_b(j,b)
+#bgn_frac 
+        execute set_aces3_vars oz      two 
+        execute apply_frac_occs tme_b two
+#end_frac
+         tmp = tme_b(j,b)*tme_b(j,b)
+         sumb += tmp
      ENDPARDO j, b
      execute sip_barrier
      collective esumb += sumb
@@ -1754,9 +1797,14 @@
      suma =0.0
      esuma=0.0
      PARDO i,i1
-           get fmi_a(i,i1)
-           tmp = fmi_a(i,i1) * fmi_a(i,i1)
-           suma += tmp
+         get fmi_a(i,i1)
+         tii(i,i1) = fmi_a(i,i1)
+#bgn_frac
+         execute set_aces3_vars  one two
+         execute apply_frac_occs tii two
+#end_frac
+         tmp = tii(i,i1)*tii(i,i1)
+         suma += tmp
      ENDPARDO i,i1
      execute sip_barrier
      collective esuma += suma
@@ -1867,8 +1915,13 @@
      sumb =0.0
      esumb=0.0
      PARDO j,j1
-           get fmi_b(j,j1)
-           tmp = fmi_b(j,j1)*fmi_b(j,j1)
+         get fmi_b(j,j1)
+         tjj(j,j1) = fmi_b(j,j1)
+#bgn_frac
+         execute set_aces3_vars  one two
+         execute apply_frac_occs tjj two
+#end_frac
+           tmp = tjj(j,j1)*tjj(j,j1)
            sumb += tmp
      ENDPARDO j,j1
      execute sip_barrier
@@ -2162,9 +2215,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i
-           get t1a_new(a,i)
-           tmp =  t1a_new(a,i) * t1a_new(a,i)
-           suma += tmp
+         get t1a_new(a,i)
+         tai(a,i) = t1a_new(a,i)
+#bgn_frac
+           execute set_aces3_vars  pzo two
+           execute apply_frac_occs tai two
+#end_frac
+         tmp =  tai(a,i)*tai(a,i)
+         suma += tmp
      ENDPARDO a, i
      execute sip_barrier
      collective esuma += suma
@@ -2448,9 +2506,14 @@
      sumb =0.0
      esumb=0.0
      PARDO b,j
-           get t1b_new(b,j)
-           tmp =  t1b_new(b,j) * t1b_new(b,j)
-           sumb += tmp
+         get t1b_new(b,j)
+         tbj(b,j) = t1b_new(b,j)
+#bgn_frac
+         execute set_aces3_vars  pzo two
+         execute apply_frac_occs tbj two
+#end_frac
+         tmp = tbj(b,j)*tbj(b,j)
+         sumb += tmp
      ENDPARDO b,j
      execute sip_barrier
      collective esumb += sumb
@@ -2570,9 +2633,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, a1, i1
-           request T2new_aa(a,i,a1,i1) i1
-           tmp = T2new_aa(a,i,a1,i1)*T2new_aa(a,i,a1,i1)
-           suma += tmp
+         request T2new_aa(a,i,a1,i1) i1
+         Taiai(a,i,a1,i1) = T2new_aa(a,i,a1,i1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taiai  four
+#end_frac
+         tmp = Taiai(a,i,a1,i1)*Taiai(a,i,a1,i1)
+         suma += tmp
      ENDPARDO a, i, a1, i1
      execute server_barrier
      collective esuma += suma
@@ -2695,9 +2763,14 @@
      suma =0.0
      esuma=0.0
      PARDO b, j, b1, j1
-           request T2NEW_bb(b,j,b1,j1) j1
-           tmp = T2NEW_bb(b,j,b1,j1)*T2NEW_bb(b,j,b1,j1)
-           suma += tmp
+         request T2NEW_bb(b,j,b1,j1) j1
+         tbjbj(b,j,b1,j1) = T2NEW_bb(b,j,b1,j1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Tbjbj  four
+#end_frac
+         tmp = tbjbj(b,j,b1,j1)*tbjbj(b,j,b1,j1)
+         suma += tmp
      ENDPARDO b, j, b1, j1
      execute server_barrier
      collective esuma += suma
@@ -2824,9 +2897,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, b, j
-           request T2NEW_AB(a,i,b,j) j
-           tmp = T2NEW_AB(a,i,b,j)*T2NEW_AB(a,i,b,j)
-           suma += tmp
+         request T2NEW_AB(a,i,b,j) j
+         Taibj(a,i,b,j) = T2NEW_AB(a,i,b,j)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taibj  four
+#end_frac
+         tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+         suma += tmp
      ENDPARDO a, i, b, j
      execute server_barrier
      collective esuma += suma
@@ -3066,9 +3144,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, a1, i1
-           request T2new_aa(a,i,a1,i1) i1
-           tmp = T2new_aa(a,i,a1,i1)*T2new_aa(a,i,a1,i1)
-           suma += tmp
+         request T2new_aa(a,i,a1,i1) i1
+         Taiai(a,i,a1,i1) = T2new_aa(a,i,a1,i1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taiai  four
+#end_frac
+         tmp = Taiai(a,i,a1,i1)*Taiai(a,i,a1,i1)
+         suma += tmp
      ENDPARDO a, i, a1, i1
      execute server_barrier
      collective esuma += suma
@@ -3294,9 +3377,14 @@
      suma =0.0
      esuma=0.0
      PARDO b, j, b1, j1
-           request T2NEW_bb(b,j,b1,j1) j1
-           tmp = T2NEW_bb(b,j,b1,j1)*T2NEW_bb(b,j,b1,j1)
-           suma += tmp
+         request T2NEW_bb(b,j,b1,j1) j1
+         tbjbj(b,j,b1,j1) = T2NEW_bb(b,j,b1,j1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Tbjbj  four
+#end_frac
+         tmp = tbjbj(b,j,b1,j1)*tbjbj(b,j,b1,j1)
+         suma += tmp
      ENDPARDO b, j, b1, j1
      execute server_barrier
      collective esuma += suma
@@ -3575,7 +3663,7 @@
       ENDPARDO a, i, b  
 #
       PARDO a, b, j 
-#
+
             allocate L3aibj(a,*,b,j)
             allocate Laabj(a,*,b,j)
 
@@ -3595,13 +3683,13 @@
 #
             DO i 
 #
-               Taibj(a,i,b,j) = 0.0  
+               Taibj(a,i,b,j)  = 0.0  
 #
                DO i1 
 #
                   GET Fmi_a(i1,i) 
                   tmp_ii(i1,i) = Fmi_a(i1,i) 
-                  T1ii(i1,i)   = Fmi_a(i1,i)
+                  Tii(i1,i)  = 0.0
 #
                   DO a1 
 #
@@ -3614,21 +3702,19 @@
                      execute apply_frac_occs Tia two
                      execute apply_frac_occs Tai one
 #end_frac
-#
                      tmp1_ii(i1,i)  = Tia(i1,a1)*Tai(a1,i)
                      tmp1_ii(i1,i) *= 0.5 
                      tmp_ii(i1,i)  += tmp1_ii(i1,i) 
                      Tii(i1,i)  = tmp_ii(i1,i)
-                     T1ii(i,i1) = Tii(i1,i) 
 #
                   ENDDO a1  
                   T1iabj(i1,a,b,j) = L3aibj(a,i1,b,j)
 #bgn_frac
                   execute set_aces3_vars  one    one
-                  execute apply_frac_occs T1ii   two
+                  execute apply_frac_occs Tii    one
                   execute apply_frac_occs T1iabj one
 #end_frac
-                  T1aibj(a,i,b,j) = T1ii(i,i1)*T1iabj(i1,a,b,j)
+                  T1aibj(a,i,b,j) = Tii(i1,i)*T1iabj(i1,a,b,j)
                   Taibj(a,i,b,j) -= T1aibj(a,i,b,j) 
 #
                ENDDO i1 
@@ -3644,7 +3730,6 @@
                   execute apply_frac_occs Tia    two
                   execute apply_frac_occs T1aabj one
 #end_frac
-#
                   T1aibj(a,i,b,j) = Tia(i,a1)*T1aabj(a1,a,b,j)
                   Taibj(a,i,b,j) += T1aibj(a,i,b,j) 
 #
@@ -3663,9 +3748,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, b, j
-           request T2NEW_AB(a,i,b,j) j
-           tmp = T2NEW_AB(a,i,b,j)*T2NEW_AB(a,i,b,j)
-           suma += tmp
+         request T2NEW_AB(a,i,b,j) j
+         Taibj(a,i,b,j) = T2NEW_AB(a,i,b,j)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taibj  four
+#end_frac
+         tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+         suma += tmp
      ENDPARDO a, i, b, j
      execute server_barrier
      collective esuma += suma
@@ -3706,7 +3796,14 @@
 #
               DO a  
 #
-                 Txiai(lambda,i,a1,i1) = LLaiai(a,i,a1,i1)*ca(lambda,a)
+                 Taiai(a,i,a1,i1) = LLaiai(a,i,a1,i1)
+                 Txa(lambda,a)    = Ca(lambda,a)
+#bgn_frac
+                 execute set_aces3_vars  zer    one
+                 execute apply_frac_occs Txa    two
+                 execute apply_frac_occs Taiai  one 
+#bgn_frac
+                 Txiai(lambda,i,a1,i1) = Taiai(a,i,a1,i1)*Txa(lambda,a)
                  Zaa(lambda,i,a1,i1)  += Txiai(lambda,i,a1,i1) 
 #
               ENDDO a 
@@ -3738,8 +3835,15 @@
               Zbb(lambda,j,b1,j1) = 0.0 
 #
               DO b  
-#
-                 Txjbj(lambda,j,b1,j1) = LLbjbj(b,j,b1,j1)*cb(lambda,b)
+              
+                Tbjbj(b,j,b1,j1) = LLbjbj(b,j,b1,j1)
+                Txb(lambda,b)    = Cb(lambda,b)
+#bgn_frac
+                 execute set_aces3_vars  zer    one
+                 execute apply_frac_occs Txb    two
+                 execute apply_frac_occs Tbjbj  one
+#bgn_frac
+                 Txjbj(lambda,j,b1,j1) = Tbjbj(b,j,b1,j1)*Txb(lambda,b)
                  Zbb(lambda,j,b1,j1)  += Txjbj(lambda,j,b1,j1) 
 #
               ENDDO b 
@@ -3768,8 +3872,15 @@
               Zab(lambda,i,b,j) = 0.0 
 #
               DO a  
-#
-                 Txibj(lambda,i,b,j) = LLaibj(a,i,b,j)*ca(lambda,a)
+
+                 Taibj(a,i,b,j) = LLaibj(a,i,b,j)
+                 Txa(lambda,a)  = Ca(lambda,a)
+#bgn_frac
+                 execute set_aces3_vars  zer    one
+                 execute apply_frac_occs Txa    two
+                 execute apply_frac_occs Taibj  one
+#end_frac
+                 Txibj(lambda,i,b,j) = Taibj(a,i,b,j)*Txa(lambda,a)
                  Zab(lambda,i,b,j)  += Txibj(lambda,i,b,j) 
 #
               ENDDO a 
@@ -3799,8 +3910,16 @@
               ZZaa(lambda,i,sigma,i1)  = 0.0 
 #
               DO a1 
-#
-                 Txixi(lambda,i,sigma,i1) = Lxiai(lambda,i,a1,i1)*ca(sigma,a1)
+
+                 Txiai(lambda,i,a1,i1) = Lxiai(lambda,i,a1,i1)
+                 Txiia(lambda,i,i1,a1) = Txiai(lambda,i,a1,i1)
+                 Txa(sigma,a1)    = Ca(sigma,a1)
+#bgn_frac
+                 execute set_aces3_vars  zer   one
+                 execute apply_frac_occs Txa   two
+                 execute apply_frac_occs Txiia two
+#bgn_frac
+                 Txixi(lambda,i,sigma,i1) = Txiia(lambda,i,i1,a1)*Txa(sigma,a1)
                  ZZaa(lambda,i,sigma,i1) += Txixi(lambda,i,sigma,i1)  
 #
               ENDDO a1 
@@ -3829,8 +3948,15 @@
               ZZbb(lambda,j,sigma,j1)  = 0.0 
 #
               DO b1 
-#
-                 Txjxj(lambda,j,sigma,j1) = Lxjbj(lambda,j,b1,j1)*cb(sigma,b1)
+                 Txjbj(lambda,j,b1,j1) = Lxjbj(lambda,j,b1,j1)
+                 Txjjb(lambda,j,j1,b1) = Txjbj(lambda,j,b1,j1)
+                 Txb(sigma,b1)         = Cb(sigma,b1)
+#bgn_frac
+                 execute set_aces3_vars  zer   one
+                 execute apply_frac_occs Txb   two
+                 execute apply_frac_occs Txjjb two
+#bgn_frac
+                 Txjxj(lambda,j,sigma,j1) = Txjjb(lambda,j,j1,b1)*Txb(sigma,b1)
                  ZZbb(lambda,j,sigma,j1) += Txjxj(lambda,j,sigma,j1)  
 #
               ENDDO b1 
@@ -3859,8 +3985,15 @@
               ZZab(lambda,i,sigma,j)  = 0.0 
 #
               DO b 
-#
-                 Txixj(lambda,i,sigma,j) = Lxibj(lambda,i,b,j)*cb(sigma,b)
+                 Txibj(lambda,i,b,j) = Lxibj(lambda,i,b,j)
+                 Txijb(lambda,i,j,b) = Txibj(lambda,i,b,j)
+                 Txb(sigma,b)        = Cb(sigma,b)
+#bgn_frac
+                 execute set_aces3_vars  zer   one
+                 execute apply_frac_occs Txb   two
+                 execute apply_frac_occs Txijb two
+#bgn_frac
+                 Txixj(lambda,i,sigma,j) = Txijb(lambda,i,j,b)*Txb(sigma,b) 
                  ZZab(lambda,i,sigma,j) += Txixj(lambda,i,sigma,j)  
 #
               ENDDO b 
@@ -3912,8 +4045,6 @@
               ENDDO i1 
               ENDDO i
 
-              T1xxxx(mu,nu,lambda,sigma) = Txxxx(mu,lambda,nu,sigma)
-#
               DO j
 	      DO j1 
 #
@@ -3932,8 +4063,6 @@
               ENDDO j1  
               ENDDO j
 
-              T1xxxx(mu,nu,lambda,sigma) = Txxxx(mu,lambda,nu,sigma)
-#
               DO i 
               DO j
 #
@@ -3998,7 +4127,14 @@
            DO i  
 #
               GET          t1a_old(a,i) 
-              t1px(a,mu) = t1a_old(a,i)*ca(mu,i) 
+              Tai(a,i)  = t1a_old(a,i)
+              Txi(mu,i) = Ca(mu,i)
+#bgn_frac
+              execute set_aces3_vars  one  one
+              execute apply_frac_occs Tai  two
+              execute apply_frac_occs Txi  two
+#end_frac
+              t1px(a,mu) = Tai(a,i)*Txi(mu,i)
               tpx(a,mu) += t1px(a,mu) 
 #
            ENDDO i  
@@ -4014,7 +4150,14 @@
            DO j  
 #
               GET          t1b_old(b,j) 
-              t1qx(b,mu) = t1b_old(b,j)*cb(mu,j) 
+              Tbj(b,j)  = t1b_old(b,j)
+              Txj(mu,j) = Cb(mu,j) 
+#bgn_frac
+              execute set_aces3_vars  one  one
+              execute apply_frac_occs Tbj  two
+              execute apply_frac_occs Txj  two
+#end_frac
+              t1qx(b,mu) = Tbj(b,j)*Txj(mu,j)
               tqx(b,mu) += t1qx(b,mu) 
 #
            ENDDO j  
@@ -4042,12 +4185,12 @@
               DO mu   
 #
                  REQUEST              T2AO_aa(mu,i,nu,i1) i1 
-                 Taixi(a,i,nu,i1)   = T2AO_aa(mu,i,nu,i1)*ca(mu,a)
+                 Taixi(a,i,nu,i1)   = T2AO_aa(mu,i,nu,i1)*Ca(mu,a)
                  TXaiai(a,i,nu,i1) += Taixi(a,i,nu,i1)   
 #
               ENDDO mu   
 #
-              TYaiai(a,i,a1,i1)  = TXaiai(a,i,nu,i1)*ca(nu,a1)
+              TYaiai(a,i,a1,i1)  = TXaiai(a,i,nu,i1)*Ca(nu,a1)
               TYaiai(a,i,a1,i1) *= 0.5  
               T1aiai(a,i,a1,i1) += TYaiai(a,i,a1,i1)
               
@@ -4079,9 +4222,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, a1, i1
-           request T2new_aa(a,i,a1,i1) i1
-           tmp = T2new_aa(a,i,a1,i1)*T2new_aa(a,i,a1,i1)
-           suma += tmp
+         request T2new_aa(a,i,a1,i1) i1
+         Taiai(a,i,a1,i1)=T2new_aa(a,i,a1,i1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taiai  four
+#end_frac
+         tmp = Taiai(a,i,a1,i1)*Taiai(a,i,a1,i1)
+         suma += tmp
      ENDPARDO a, i, a1, i1
      execute server_barrier
      collective esuma += suma
@@ -4101,12 +4249,12 @@
               DO mu   
 #
                  REQUEST              T2AO_bb(mu,j,nu,j1) j1 
-                 Tbjxj(b,j,nu,j1)   = T2AO_bb(mu,j,nu,j1)*cb(mu,b)
+                 Tbjxj(b,j,nu,j1)   = T2AO_bb(mu,j,nu,j1)*Cb(mu,b)
                  TXbjbj(b,j,nu,j1) += Tbjxj(b,j,nu,j1)   
 #
               ENDDO mu   
 #
-              TYbjbj(b,j,b1,j1)  = TXbjbj(b,j,nu,j1)*cb(nu,b1)
+              TYbjbj(b,j,b1,j1)  = TXbjbj(b,j,nu,j1)*Cb(nu,b1)
               TYbjbj(b,j,b1,j1) *= 0.5  
               T1bjbj(b,j,b1,j1) += TYbjbj(b,j,b1,j1)
 
@@ -4137,9 +4285,14 @@
      suma =0.0
      esuma=0.0
      PARDO b, j, b1, j1
-           request T2NEW_bb(b,j,b1,j1) j1
-           tmp = T2NEW_bb(b,j,b1,j1)*T2NEW_bb(b,j,b1,j1)
-           suma += tmp
+         request T2NEW_bb(b,j,b1,j1) j1
+         tbjbj(b,j,b1,j1)=T2NEW_bb(b,j,b1,j1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Tbjbj  four
+#end_frac
+         tmp = tbjbj(b,j,b1,j1)*tbjbj(b,j,b1,j1)
+         suma += tmp
      ENDPARDO b, j, b1, j1
      execute server_barrier
      collective esuma += suma
@@ -4162,7 +4315,7 @@
 #
                  REQUEST             T2AO_ab(mu,i,nu,j) j 
                  GET                 t1a_ax(a,mu) 
-                 Taixj(a,i,nu,j)   = T2AO_ab(mu,i,nu,j)*ca(mu,a)
+                 Taixj(a,i,nu,j)   = T2AO_ab(mu,i,nu,j)*Ca(mu,a)
                  TXaibj(a,i,nu,j) += Taixj(a,i,nu,j)   
                  Txixj(mu,i,nu,j) = T2AO_ab(mu,i,nu,j)
                  Tax(a,mu) = t1a_ax(a,mu)
@@ -4177,7 +4330,7 @@
 #
               ENDDO mu   
 #
-              TYaibj(a,i,b,j)  = TXaibj(a,i,nu,j)*cb(nu,b)
+              TYaibj(a,i,b,j)  = TXaibj(a,i,nu,j)*Cb(nu,b)
               T1aibj(a,i,b,j) += TYaibj(a,i,b,j)
 
               Taixj(a,i,nu,j) = Txaibj(a,i,nu,j) 
@@ -4204,9 +4357,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, b, j
-           request T2NEW_AB(a,i,b,j) j
-           tmp = T2NEW_AB(a,i,b,j)*T2NEW_AB(a,i,b,j)
-           suma += tmp
+         request T2NEW_AB(a,i,b,j) j
+         Taibj(a,i,b,j)=T2NEW_AB(a,i,b,j)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taibj  four
+#end_frac
+         tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+         suma += tmp
      ENDPARDO a, i, b, j
      execute server_barrier
      collective esuma += suma
@@ -4258,8 +4416,9 @@
                     REQUEST VSpipi(a,i1,a1,i2) i2 
                     Taiai(a,i,a1,i3)   = Tau_aa(a,i,a1,i3)
                     T1aiai(a,i1,a1,i2) = VSpipi(a,i1,a1,i2)
+
                     Taaii(a,a1,i,i3)   = Taiai(a,i,a1,i3)
-                    Tiiaa(i1,i2,a,a1)  = Taaii(a,a1,i,i3)    
+                    Tiiaa(i1,i2,a,a1)  = T1aiai(a,i1,a1,i2)    
 #bgn_frac
                     execute set_aces3_vars  zer   two
                     execute apply_frac_occs Tiiaa two
@@ -4311,6 +4470,7 @@
 #
      ENDPARDO i, i1, i2  
      execute sip_barrier 
+     execute print_scalar one
 #
      PARDO a, i, i3 
 #
@@ -4325,17 +4485,17 @@
 #
                     REQUEST Tau_aa(a,i1,a1,i2) i2 
                     GET Wminj_aa(i1,i,i2,i3) 
-                    Taiai(a,i1,a1,i2) = Tau_aa(a,i1,a1,i2)
-                    Tiiii(i1,i,i2,i3) = Wminj_aa(i1,i,i2,i3)
-                    Taaii(a,a1,i1,i2) = Taiai(a,i1,a1,i2)
-                    T1iii(i1,i2,i,i3) = Tiiii(i1,i,i2,i3)
+                    Taiai(a,i1,a1,i2)  = Tau_aa(a,i1,a1,i2)
+                    Tiiii(i1,i,i2,i3)  = Wminj_aa(i1,i,i2,i3)
+                    Taaii(a,a1,i1,i2)  = Taiai(a,i1,a1,i2)
+                    T1iiii(i1,i2,i,i3) = Tiiii(i1,i,i2,i3)
 #bgn_frac
                     execute set_aces3_vars  one    two
                     execute apply_frac_occs Taaii  two
                     execute apply_frac_occs T1iiii one
 #end_frac
 #
-                    Taiai(a,i,a1,i3)   = Taaii(a,a1,i1,i2)*T1iii(i1,i2,i,i3)
+                    Taiai(a,i,a1,i3)   = Taaii(a,a1,i1,i2)*T1iiii(i1,i2,i,i3)
                     R1aiai(a,i,a1,i3) += Taiai(a,i,a1,i3)  
 #
                  ENDDO i2   
@@ -4388,9 +4548,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, a1, i1
-           request T2new_aa(a,i,a1,i1) i1
-           tmp = T2new_aa(a,i,a1,i1)*T2new_aa(a,i,a1,i1)
-           suma += tmp
+         request T2new_aa(a,i,a1,i1) i1
+         Taiai(a,i,a1,i1)=T2new_aa(a,i,a1,i1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taiai  four
+#end_frac
+         tmp = Taiai(a,i,a1,i1)*Taiai(a,i,a1,i1)
+         suma += tmp
      ENDPARDO a, i, a1, i1
      execute server_barrier
      collective esuma += suma
@@ -4559,9 +4724,14 @@
      suma =0.0
      esuma=0.0
      PARDO b, j, b1, j1
-           request T2NEW_bb(b,j,b1,j1) j1
-           tmp = T2NEW_bb(b,j,b1,j1)*T2NEW_bb(b,j,b1,j1)
-           suma += tmp
+         request T2NEW_bb(b,j,b1,j1) j1
+         tbjbj(b,j,b1,j1)=T2NEW_bb(b,j,b1,j1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Tbjbj  four
+#end_frac
+         tmp = tbjbj(b,j,b1,j1)*tbjbj(b,j,b1,j1)
+         suma += tmp
      ENDPARDO b, j, b1, j1
      execute server_barrier
      collective esuma += suma
@@ -4651,9 +4821,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, b, j
-           request T2NEW_AB(a,i,b,j) j
-           tmp = T2NEW_AB(a,i,b,j)*T2NEW_AB(a,i,b,j)
-           suma += tmp
+         request T2NEW_AB(a,i,b,j) j
+         Taibj(a,i,b,j)=T2NEW_AB(a,i,b,j)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taibj  four
+#end_frac
+         tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+         suma += tmp
      ENDPARDO a, i, b, j
      execute server_barrier
      collective esuma += suma
@@ -4816,9 +4991,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, a1, i1
-           request T2new_aa(a,i,a1,i1) i1
-           tmp = T2new_aa(a,i,a1,i1)*T2new_aa(a,i,a1,i1)
-           suma += tmp
+         request T2new_aa(a,i,a1,i1) i1
+         Taiai(a,i,a1,i1)=T2new_aa(a,i,a1,i1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taiai  four
+#end_frac
+         tmp = Taiai(a,i,a1,i1)*Taiai(a,i,a1,i1)
+         suma += tmp
      ENDPARDO a, i, a1, i1
      execute server_barrier
      collective esuma += suma
@@ -4855,9 +5035,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, b, j
-           request T2NEW_AB(a,i,b,j) j
-           tmp = T2NEW_AB(a,i,b,j)*T2NEW_AB(a,i,b,j)
-           suma += tmp
+         request T2NEW_AB(a,i,b,j) j
+         Taibj(a,i,b,j)=T2NEW_AB(a,i,b,j)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taibj  four
+#end_frac
+         tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+         suma += tmp
      ENDPARDO a, i, b, j
      execute server_barrier
      collective esuma += suma
@@ -5009,9 +5194,14 @@
      suma =0.0
      esuma=0.0
      PARDO b, j, b1, j1
-           request T2NEW_bb(b,j,b1,j1) j1
-           tmp = T2NEW_bb(b,j,b1,j1)*T2NEW_bb(b,j,b1,j1)
-           suma += tmp
+         request T2NEW_bb(b,j,b1,j1) j1
+         tbjbj(b,j,b1,j1)=T2NEW_bb(b,j,b1,j1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Tbjbj  four
+#end_frac
+         tmp = tbjbj(b,j,b1,j1)*tbjbj(b,j,b1,j1)
+         suma += tmp
      ENDPARDO b, j, b1, j1
      execute server_barrier
      collective esuma += suma
@@ -5048,9 +5238,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, b, j
-           request T2NEW_AB(a,i,b,j) j
-           tmp = T2NEW_AB(a,i,b,j)*T2NEW_AB(a,i,b,j)
-           suma += tmp
+         request T2NEW_AB(a,i,b,j) j
+         Taibj(a,i,b,j)=T2NEW_AB(a,i,b,j) 
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taibj  four
+#end_frac
+         tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+         suma += tmp
      ENDPARDO a, i, b, j
      execute server_barrier
      collective esuma += suma
@@ -5197,9 +5392,14 @@
      suma =0.0
      esuma=0.0
      PARDO b, j, b1, j1
-           request T2NEW_bb(b,j,b1,j1) j1
-           tmp = T2NEW_bb(b,j,b1,j1)*T2NEW_bb(b,j,b1,j1)
-           suma += tmp
+         request T2NEW_bb(b,j,b1,j1) j1
+         tbjbj(b,j,b1,j1)=T2NEW_bb(b,j,b1,j1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Tbjbj  four
+#end_frac
+         tmp = tbjbj(b,j,b1,j1)*tbjbj(b,j,b1,j1)
+         suma += tmp
      ENDPARDO b, j, b1, j1
      execute server_barrier
      collective esuma += suma
@@ -5237,9 +5437,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, b, j
-           request T2NEW_AB(a,i,b,j) j
-           tmp = T2NEW_AB(a,i,b,j)*T2NEW_AB(a,i,b,j)
-           suma += tmp
+         request T2NEW_AB(a,i,b,j) j
+         Taibj(a,i,b,j)= T2NEW_AB(a,i,b,j)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taibj  four
+#end_frac
+         tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+         suma += tmp
      ENDPARDO a, i, b, j
      execute server_barrier
      collective esuma += suma
@@ -5389,9 +5594,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, a1, i1
-           request T2new_aa(a,i,a1,i1) i1
-           tmp = T2new_aa(a,i,a1,i1)*T2new_aa(a,i,a1,i1)
-           suma += tmp
+         request T2new_aa(a,i,a1,i1) i1
+         Taiai(a,i,a1,i1)=T2new_aa(a,i,a1,i1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taiai  four
+#end_frac
+         tmp = Taiai(a,i,a1,i1)*Taiai(a,i,a1,i1)
+         suma += tmp
      ENDPARDO a, i, a1, i1
      execute server_barrier
      collective esuma += suma
@@ -5428,9 +5638,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, b, j
-           request T2NEW_AB(a,i,b,j) j
-           tmp = T2NEW_AB(a,i,b,j)*T2NEW_AB(a,i,b,j)
-           suma += tmp
+         request T2NEW_AB(a,i,b,j) j
+         Taibj(a,i,b,j)=T2NEW_AB(a,i,b,j)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taibj  four
+#end_frac
+         tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+         suma += tmp
      ENDPARDO a, i, b, j
      execute server_barrier
      collective esuma += suma
@@ -5702,7 +5917,7 @@
 #bgn_frac
                         execute set_aces3_vars  one    one
                         execute apply_frac_occs T2iiai two
-                        execute apply_frac_occs T1ai   two
+                        execute apply_frac_occs Tai    two
 #end_frac
 # Check this
                         T1aiai(a,i,a2,i2) = T2iiai(i,i2,a,i1)*Tai(a2,i1) 
@@ -5839,9 +6054,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, a1, i1
-           request T2new_aa(a,i,a1,i1) i1
-           tmp = T2new_aa(a,i,a1,i1)*T2new_aa(a,i,a1,i1)
-           suma += tmp
+         request T2new_aa(a,i,a1,i1) i1
+         Taiai(a,i,a1,i1)=T2new_aa(a,i,a1,i1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taiai  four
+#end_frac
+         tmp = Taiai(a,i,a1,i1)*Taiai(a,i,a1,i1)
+         suma += tmp
      ENDPARDO a, i, a1, i1
      execute server_barrier
      collective esuma += suma
@@ -6078,11 +6298,11 @@
                      GET t1b_old(b2,j1) 
                      T1bj(b2,j1) = t1b_old(b2,j1)
 #bgn_frac
-                    execute set_aces3_vars   one    one
-                     execute apply_frac_occs T1jjbj two
+                     execute set_aces3_vars   one   one
+                     execute apply_frac_occs T2jjbj two
                      execute apply_frac_occs T1bj   two
 #end_frac
-                     Tbjbj(b,j,b2,j2)  = T1jjbj(j,j2,b,j1)*T1bj(b2,j1) 
+                     Tbjbj(b,j,b2,j2)  = T2jjbj(j,j2,b,j1)*T1bj(b2,j1) 
                      T1bjbj(b2,j2,b,j) = Tbjbj(b,j,b2,j2)  
 
                      PREPARE T2new_bb(b,j,b2,j2) += Tbjbj(b,j,b2,j2) 
@@ -6110,7 +6330,7 @@
 #bgn_frac
                      execute set_aces3_vars  zer   one
                      execute apply_frac_occs Tqqqq one
-                     execute apply_frac_occs T1bj  one
+                     execute apply_frac_occs Tbj   one
 #end_frac
 #
                      T1jjbj(j,j1,b,j2) = Tqqqq(b1,b,j1,j2)*Tbj(b1,j)   
@@ -6235,9 +6455,14 @@
      suma =0.0
      esuma=0.0
      PARDO b, j, b1, j1
-           request T2NEW_bb(b,j,b1,j1) j1
-           tmp = T2NEW_bb(b,j,b1,j1)*T2NEW_bb(b,j,b1,j1)
-           suma += tmp
+         request T2NEW_bb(b,j,b1,j1) j1
+         tbjbj(b,j,b1,j1)=T2NEW_bb(b,j,b1,j1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Tbjbj  four
+#end_frac
+         tmp = tbjbj(b,j,b1,j1)*tbjbj(b,j,b1,j1)
+         suma += tmp
      ENDPARDO b, j, b1, j1
      execute server_barrier
      collective esuma += suma
@@ -6369,9 +6594,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, b, j
-           request T2NEW_AB(a,i,b,j) j
-           tmp = T2NEW_AB(a,i,b,j)*T2NEW_AB(a,i,b,j)
-           suma += tmp
+         request T2NEW_AB(a,i,b,j) j
+         Taibj(a,i,b,j)=T2NEW_AB(a,i,b,j)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taibj  four
+#end_frac
+         tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+         suma += tmp
      ENDPARDO a, i, b, j
      execute server_barrier
      collective esuma += suma
@@ -6508,9 +6738,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, b, j
-           request T2NEW_AB(a,i,b,j) j
-           tmp = T2NEW_AB(a,i,b,j)*T2NEW_AB(a,i,b,j)
-           suma += tmp
+         request T2NEW_AB(a,i,b,j) j
+         Taibj(a,i,b,j)=T2NEW_AB(a,i,b,j)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taibj  four
+#end_frac
+         tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+         suma += tmp
      ENDPARDO a, i, b, j
      execute server_barrier
      collective esuma += suma
@@ -6645,9 +6880,14 @@
      suma =0.0
      esuma=0.0
      PARDO a, i, b, j
-           request T2NEW_AB(a,i,b,j) j
-           tmp = T2NEW_AB(a,i,b,j)*T2NEW_AB(a,i,b,j)
-           suma += tmp
+         request T2NEW_AB(a,i,b,j) j
+         Taibj(a,i,b,j)=T2NEW_AB(a,i,b,j)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taibj  four
+#end_frac
+         tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+         suma += tmp
      ENDPARDO a, i, b, j
      execute server_barrier
      collective esuma += suma
@@ -6757,9 +6997,9 @@
            T2aiai(a,i,a1,i1) -= T3aiai(a,i,a1,i1)
            T2aiai(a,i,a1,i1) += T2old_aa(a,i,a1,i1)
 #bgn_frac
-#           execute set_aces3_vars  pzozo  four
-#           execute apply_frac_occs T1aiai four
-#           execute apply_frac_occs T2aiai four
+           execute set_aces3_vars  pzozo  four
+           execute apply_frac_occs T1aiai four
+           execute apply_frac_occs T2aiai four
 #end_frac
 #
            etemp = T1aiai(a,i,a1,i1)*T2aiai(a,i,a1,i1) 
@@ -6788,11 +7028,10 @@
            T2bjbj(b,j,b1,j1) -= T3bjbj(b,j,b1,j1)
            T2bjbj(b,j,b1,j1) += T2old_bb(b,j,b1,j1)
 #bgn_frac
-#           execute set_aces3_vars  pzozo  four
-#           execute apply_frac_occs T1bjbj four
-#           execute apply_frac_occs T2bjbj four
-##end_frac
-#
+           execute set_aces3_vars  pzozo  four
+           execute apply_frac_occs T1bjbj four
+           execute apply_frac_occs T2bjbj four
+#end_frac
            etemp = T1bjbj(b,j,b1,j1)*T2bjbj(b,j,b1,j1) 
            etemp = 0.25*etemp 
 #          execute print_scalar etemp 
@@ -6814,11 +7053,10 @@
            Taibj(a,i,b,j)  = t1a_old(a,i)^t1b_old(b,j) 
            Taibj(a,i,b,j) += T2old_ab(a,i,b,j)  
 #bgn_frac
-#           execute set_aces3_vars  pzozo  four
-#           execute apply_frac_occs T1aibj four
-#           execute apply_frac_occs Taibj  four
+           execute set_aces3_vars  pzozo  four
+           execute apply_frac_occs T1aibj four
+           execute apply_frac_occs Taibj  four
 #end_frac
-#
            etemp = Taibj(a,i,b,j)*T1aibj(a,i,b,j) 
            esumab += etemp 
 #
@@ -6920,9 +7158,12 @@
             Taiai(a,i,a1,i1)         = T2new_aa(a,i,a1,i1)
             T1aiai(a,i,a1,i1)        = T2old_aa(a,i,a1,i1)
 #bgn_frac
-#            execute energy_denominator_frac_occs Taiai
+            execute energy_denominator_frac_occs Taiai
+            execute set_aces3_vars  pzozo  four
+            execute apply_frac_occs Taiai  four
+            execute apply_frac_occs T1aiai four
 #end_frac
-            execute energy_denominator Taiai
+#            execute energy_denominator Taiai
 
             t1aiai(a,i,a1,i1) -= taiai(a,i,a1,i1)
             t1aiai(a,i,a1,i1) *= -1.0
@@ -6957,9 +7198,12 @@
             Tbjbj(b,j,b1,j1)         = T2new_bb(b,j,b1,j1)
             T1bjbj(b,j,b1,j1)        = T2old_bb(b,j,b1,j1)
 #bgn_frac
-#            execute energy_denominator_frac_occs Tbjbj
+            execute energy_denominator_frac_occs Tbjbj
+            execute set_aces3_vars  pzozo  four
+            execute apply_frac_occs Tbjbj  four
+            execute apply_frac_occs T1bjbj four
 #end_frac
-            execute energy_denominator Tbjbj
+#            execute energy_denominator Tbjbj
 
             T1bjbj(b,j,b1,j1) -= tbjbj(b,j,b1,j1)
             T1bjbj(b,j,b1,j1) *= -1.0
@@ -6993,9 +7237,12 @@
             Taibj(a,i,b,j)           = T2new_ab(a,i,b,j)
             T1aibj(a,i,b,j)          = T2old_ab(a,i,b,j)
 #bgn_frac
-#            execute energy_denominator_frac_occs Taibj
+            execute energy_denominator_frac_occs Taibj
+            execute set_aces3_vars  pzozo  four
+            execute apply_frac_occs Taibj  four
+            execute apply_frac_occs T1aibj four
 #end_frac
-            execute energy_denominator Taibj
+#            execute energy_denominator Taibj
 
             T1aibj(a,i,b,j) -= Taibj(a,i,b,j)
             T1aibj(a,i,b,j) *= -1.0
@@ -7028,9 +7275,11 @@
             REQUEST                    T2new_aa(a,i,a1,i1) a 
             Taiai(a,i,a1,i1)         = T2new_aa(a,i,a1,i1)
 #bgn_frac
-#            execute energy_denominator_frac_occs Taiai
+            execute energy_denominator_frac_occs Taiai
+            execute set_aces3_vars  pzozo  four
+            execute apply_frac_occs Taiai  four
 #end_frac
-            execute energy_denominator Taiai
+#            execute energy_denominator Taiai
             PREPARE T2old_aa(a,i,a1,i1)  = Taiai(a,i,a1,i1)
       ENDPARDO a, a1, i, i1
 #
@@ -7039,9 +7288,11 @@
             REQUEST                    T2new_bb(b,j,b1,j1) b 
             Tbjbj(b,j,b1,j1)         = T2new_bb(b,j,b1,j1)
 #bgn_frac
-#            execute energy_denominator_frac_occs Tbjbj
+            execute energy_denominator_frac_occs Tbjbj
+            execute set_aces3_vars  pzozo  four
+            execute apply_frac_occs Tbjbj  four
 #end_frac
-            execute energy_denominator Tbjbj
+#            execute energy_denominator Tbjbj
 
             PREPARE T2old_bb(b,j,b1,j1)  = Tbjbj(b,j,b1,j1)
 #
@@ -7052,9 +7303,11 @@
             REQUEST                    T2new_ab(a,i,b,j) a
             Taibj(a,i,b,j)           = T2new_ab(a,i,b,j)
 #bgn_frac
-#            execute energy_denominator_frac_occs Taibj
+            execute energy_denominator_frac_occs Taibj
+            execute set_aces3_vars  pzozo  four
+            execute apply_frac_occs Taibj  four
 #end_frac
-            execute energy_denominator Taibj
+#            execute energy_denominator Taibj
             PREPARE T2old_ab(a,i,b,j)    = Taibj(a,i,b,j)
 #
       ENDPARDO b, a, j, i
@@ -7076,9 +7329,12 @@
             tai(a,i)         = t1a_new(a,i) 
             t1ai(a,i)        = t1a_old(a,i) 
 #bgn_frac
-#            execute energy_denominator_frac_occs tai 
+            execute energy_denominator_frac_occs tai 
+            execute set_aces3_vars  pzo  two
+            execute apply_frac_occs t1ai two
+            execute apply_frac_occs tai  two
 #end_frac
-            execute energy_denominator tai 
+#            execute energy_denominator tai 
             PUT t1a_old(a,i) = tai(a,i) 
             tai(a,i)        -= t1ai(a,i) 
 #
@@ -7111,9 +7367,12 @@
             tbj(b,j)         = t1b_new(b,j) 
             t1bj(b,j)        = t1b_old(b,j) 
 #bgn_frac
-#            execute energy_denominator_frac_occs tbj
+            execute energy_denominator_frac_occs tbj
+            execute set_aces3_vars  pzo  two
+            execute apply_frac_occs t1bj two
+            execute apply_frac_occs tbj  two
 #end_frac
-            execute energy_denominator tbj
+#            execute energy_denominator tbj
 
             PUT t1b_old(b,j) = tbj(b,j) 
             tbj(b,j)        -= t1bj(b,j) 

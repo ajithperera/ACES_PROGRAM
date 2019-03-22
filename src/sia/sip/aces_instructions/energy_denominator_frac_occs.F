@@ -169,12 +169,14 @@ c---------------------------------------------------------------------------
 
       Data Done /1.0D0/
 
+#ifdef _DEBUG_LVL0
       if (me .eq.0) Then
           Write(6,"(a)") "@-Entry to eps_divide4_frac_occ"
           Write(6,"(a)") "The Occ_num arrays"
           Write(6,"(6F4.1)") (Occ_numsa(i),i=1, Nbasis)
           Write(6,"(6F4.1)") (Occ_numsb(i),i=1, Nbasis)
       endif
+#endif 
 
       voff_a = Nalpha_occupied
       voff_b = Nbeta_occupied
@@ -305,7 +307,8 @@ c--------------------------------------------------------------------
          endif
          val =  x(a,i,b,j,c,k)
          eps = epsi + epsj + epsk - epsa - epsb - epsc
-         if (eps .ne. 0.0) then
+
+         if (eps .NE. 0.0D0) then
              x(a,i,b,j,c,k) = val/eps
          else 
              x(a,i,b,j,c,k) = Done
@@ -341,10 +344,12 @@ c--------------------------------------------------------------------
       double precision val, Done
       Data Done /1.0D0/
 
+#ifdef _DEBUG_LVL0
       if (me .eq.0) then
        write(6,"(a,3(1x,i4))") "itype,atype,moabindex: ",itype,
      +                          atype, mobindex 
       endif 
+#endif 
 
       voff_a = Nalpha_occupied 
       voff_b = Nbeta_occupied 
@@ -366,22 +371,23 @@ c--------------------------------------------------------------------
          val =  x(a,i)
          eps = epsi - epsa
 
+#ifdef _DEBUG_LVL0
          write(6,"(a,1x,i2,1x,i2,1x,i2,1x,i2,3F10.5)") 
      +                  "a,i,epsa,epsi,epsi-epsa",a,i,vrt_ab,
      +                   vrt_aa, epsa,epsi,eps
-
-         if (eps .ne. 0.0) then 
+#endif 
+         if (eps .NE. 0.0D0) then 
             x(a,i) = val/eps
          else
             x(a,i) = Done
          endif
 
-         if (dabs(eps) .lt. 1.0d-10) then
-
+C         if (dabs(eps) .lt. 1.0d-10) then
+C
 C            if (a .ne. i) write(6,*) ' Small denominator being
 C     *         eliminated in energy_denominator',
 C     *         'a, i', a,i, 'den' ,eps, 'value', x(a,i)
-         endif
+C         endif
 
       enddo
       enddo

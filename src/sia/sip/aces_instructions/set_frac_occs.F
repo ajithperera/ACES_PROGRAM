@@ -61,7 +61,7 @@ c---------------------------------------------------------------|
       array_in_type   = array_table(c_array_type, array_in)
 C
       if (array_in_type .ne. static_array) then
-         Write(6,"(a)") "@-SET-FRAC_OCC: Array must be static."
+         Write(6,"(a)") "@-SET-FRACS_OCCS: Array must be static."
          call abort_job()
       endif
 
@@ -83,7 +83,7 @@ c   Look up each array's address.
       nindex      = array_table(c_nindex, array)
 
       if (array_type .ne. scalar_value) then
-         Write(6,"(a)") "@-PRINT_STATIC: Must be an scalar."
+         Write(6,"(a)") "@-SET_FRACS_OCCS Must be an scalar."
          call abort_job()
       endif
 
@@ -117,12 +117,12 @@ C
          call abort_job()
       Endif
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If (me .eq.0) Then
       Write(6,"(a,2I4)") "Variables, Nbasis, Nalpha_occupied:",
      +                    Nbasis,Nalpha_Occupied
       Endif
-C#endif 
+#endif 
 
 C#ifdef _DEBUG_LVL0
 C As a debugging example test, lets consider H2O Dzp basis. The
@@ -149,13 +149,13 @@ C system has
 
 C#endif 
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If (me .eq.0) then
       Write(6,"(a)") "The Occ_num arrays"
       Write(6,"(6F4.1)") (Occ_numsa(i),i=1, Nbasis)
       Write(6,"(6F4.1)") (Occ_numsb(i),i=1, Nbasis)
       endif 
-C#endif 
+#endif 
 
 C Use this call to load the fractional occupation numbers to the 
 C Occ_nums varible. At the moment this is in a common block (and

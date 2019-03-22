@@ -120,7 +120,9 @@ C The second argument indicate which side get scalled.
       sind = array_table(c_scalar_index, array)
       Arg  = Scalar_table(sind)
 
-CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
+#ifdef _DEBUG_LVL0
+      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
+#endif 
 
       if (nindex .eq. 4 .and. contract .eq. 1) then
          call frac_occ41(x(indblk), val1(1),val2(1),type(1),
@@ -141,7 +143,6 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
      *                 val1(4),val2(4),type(4),
      *                 epsilon,epsilonb,Arg)
       elseif (nindex .eq. 4 .and. contract .eq. 4) then
-        if (me .eq. 0) write(6,"(a)") "@-Entry to frac_occ44"
         call frac_occ44(x(indblk), val1(1),val2(1),type(1),
      *                 val1(2),val2(2),type(2),
      *                 val1(3),val2(3),type(3),
@@ -333,15 +334,15 @@ CSSS      If (me.eq.0) write(6,"(a,i2)") "Arg: ", Arg
       BAR = Btype .eq. Mobindex .and. Jtype .eq. Moaindex
       Endif 
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       if (me .eq. 0) then
 C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
-      write(6,"(a,a,6l)")"Lft_two,Rit_two,OO_type,VV_type,OV_type",
+      write(6,"(a,a,6l)")"Lft_two,Rit_two,OO_type,VV_type,OV_type,",
      +                   "VO_type,AAL-BBR",Lft_two,Rit_two,OO_type,
      +                    VV_type,OV_type,VO_type
       write(6,"(a,8l)") "type:",aal,bbl,abl,bal,aar,bbr,abr,bar
       endif
-C#endif 
+#endif 
     
       do j = j1,j2
       do b = b1,b2
@@ -385,16 +386,6 @@ C#endif
                If (BAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(a))*
      +                                            Occ_numsa(i)
             Endif 
-            If (AO_AA) Then
-               x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(a))*
-     +                                  (Done-Occ_numsa(i))
-            ElseIf (AO_BB) Then
-              x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(a))*
-     +                                 (Done-Occ_numsb(i))
-            ElseIf (AO_AB) Then
-               x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(a))*
-     +                                  (Done-Occ_numsb(i))
-            Endif 
          Elseif (Rit_two) Then 
             If (OO_type) Then
                If(AAL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*
@@ -432,13 +423,6 @@ C#endif
      +                                           (Done-Occ_numsb(j))
                If (BAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
      +                                            Occ_numsa(j)
-            Endif 
-            If (AO_AA) Then
-               x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*Occ_numsa(j)
-            ElseIf (AO_BB) Then
-               x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(b)*Occ_numsb(j)
-            ElseIf (AO_AB) Then
-               x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*Occ_numsb(j)
             Endif 
          Endif 
       enddo
@@ -559,13 +543,14 @@ C#endif
      +       Jtype .eq. Mobindex
       Endif 
 
+#ifdef _DEBUG_LVL0
       if (me .eq. 0) then
           write(6,"(12l)")AAAL,BBBL,ABAL,BABL,ABBL,AABL,AAAR,BBBR,
      +                    ABAR,BABR,ABBR,AABR
           write(6,"(8l)")ooo_type,vvv_type,oov_type,voo_type,
      +                   vvo_type,ovo_type,vov_type,ovv_type
       endif 
-
+#endif
       do j = j1,j2
       do b = b1,b2
       do i = i1,i2
@@ -858,7 +843,7 @@ C#endif
       double precision eps, epsa, epsb, epsi, epsj
       double precision val,Done
       Logical OVOV_type,VOVO_type
-      Logical AAAA,BBBB,ABAB,BABA
+      Logical AAAA,BBBB,AABB,BBAA,ABAB,BABA
 
       Data Done /1.0D0/
 
@@ -866,6 +851,8 @@ C#endif
       VOVO_type = .False.
       AAAA      = .FALSE.
       BBBB      = .FALSE.
+      AABB      = .FALSE.
+      BBAA      = .FALSE.
       ABAB      = .FALSE.
       BABA      = .FALSE.
 
@@ -877,24 +864,34 @@ C#endif
          VOVO_type = .True.
       Endif
 
-      If (me .eq. 0) Then 
-         write(6,"(a,2l)") "The type:",OVOV_type,VOVO_type
-         Write(6,"(a)") "The Occ_num arrays"
-         Write(6,"(6F4.1)") (Occ_numsa(i),i=1, Nbasis)
-         Write(6,"(6F4.1)") (Occ_numsb(i),i=1, Nbasis)
-      Endif 
-
       AAAA = Atype .eq. Moaindex .and. Itype .eq. Moaindex .and.
      +       Btype .eq. Moaindex .and. Jtype .eq. Moaindex 
 
       BBBB = Atype .eq. Mobindex .and. Itype .eq. Mobindex .and.
      +       Btype .eq. Mobindex .and. Jtype .eq. Mobindex 
 
+      AABB = Atype .eq. Moaindex .and. Itype .eq. Moaindex .and.
+     +       Btype .eq. Mobindex .and. Jtype .eq. Mobindex 
+
+      BBAA = Atype .eq. Mobindex .and. Itype .eq. Mobindex .and.
+     +       Btype .eq. Moaindex .and. Jtype .eq. Moaindex 
+
       ABAB = Atype .eq. Moaindex .and. Itype .eq. Mobindex .and.
      +       Btype .eq. Moaindex .and. Jtype .eq. Mobindex 
 
       BABA = Atype .eq. Mobindex .and. Itype .eq. Moaindex .and.
      +       Btype .eq. Mobindex .and. Jtype .eq. Moaindex 
+
+#ifdef _DEBUG_LVL0
+      If (me .eq. 0) Then 
+         write(6,"(a,2l)") "The type:",OVOV_type,VOVO_type
+         write(6,"(a,6l)") "AAAA,BBBB,ABAB,BABA,ABAB,BABA:",
+     +                      AAAA,BBBB,AABB,BBAA,ABAB,BABA
+         Write(6,"(a)") "The Occ_num arrays"
+         Write(6,"(6F4.1)") (Occ_numsa(i),i=1, Nbasis)
+         Write(6,"(6F4.1)") (Occ_numsb(i),i=1, Nbasis)
+      Endif 
+#endif 
 
       do j = j1,j2
       do b = b1,b2
@@ -907,6 +904,12 @@ C#endif
             If (BBBB) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
      +                             (Done-Occ_numsb(i))*
      +                             Occ_numsb(b)*(Done-Occ_numsb(j))
+            If (AABB) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                             (Done-Occ_numsa(i))*
+     +                             Occ_numsb(b)*(Done-Occ_numsb(j))
+            If (BBAA) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
+     +                             (Done-Occ_numsb(i))*
+     +                             Occ_numsa(b)*(Done-Occ_numsa(j))
             If (ABAB) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
      +                             (Done-Occ_numsb(i))*
      +                             Occ_numsa(b)*(Done-Occ_numsb(j))
@@ -920,13 +923,18 @@ C#endif
             If (BBBB) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
      +                             Occ_numsb(i)*(Done-Occ_numsb(b))*
      +                             Occ_numsb(j)
+            If (AABB) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                             Occ_numsa(i)*(Done-Occ_numsb(b))*
+     +                             Occ_numsb(j)
+            If (BBAA) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                             Occ_numsb(i)*(Done-Occ_numsa(b))*
+     +                             Occ_numsa(j)
             If (ABAB) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                             Occ_numsb(i)*(Done-Occ_numsa(b))*
      +                             Occ_numsb(j)
             If (BABA) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
      +                             Occ_numsa(i)*(Done-Occ_numsb(b))*
      +                             Occ_numsa(j)
-
          Endif
 
       enddo
@@ -987,11 +995,6 @@ C#endif
                If (AL) x(a,i) =  x(a,i)*(Done-Occ_numsa(a))
                If (BL) x(a,i) =  x(a,i)*(Done-Occ_numsb(a))
             Endif 
-            If (AO_AA) Then 
-               x(a,i) = x(a,i)*Occ_numsa(a)
-            Elseif (AO_BB) Then
-               x(a,i) = x(a,i)*Occ_numsb(a)
-            Endif 
          Elseif (Rit_one) Then
             If (O .eq. 1) Then
                If (AL) x(a,i) = x(a,i)*Occ_numsa(i)
@@ -999,11 +1002,6 @@ C#endif
             ElseIf (V .eq. 1) then
                If (AL) x(a,i) =  x(a,i)*(Done-Occ_numsa(i))
                If (BL) x(a,i) =  x(a,i)*(Done-Occ_numsb(i))
-            Endif 
-            If (AO_AA) Then 
-               x(a,i) = x(a,i)*Occ_numsa(a)
-            Elseif (AO_BB) Then
-               x(a,i) = x(a,i)*Occ_numsb(a)
             Endif 
          Endif 
       enddo

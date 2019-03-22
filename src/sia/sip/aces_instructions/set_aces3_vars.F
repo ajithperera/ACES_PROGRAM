@@ -88,20 +88,20 @@ c-------------------------------------------------------------------
       qq=scalar_table(sind1)
       g=scalar_table(sind2)
       BLANK="        "
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If(me .eq.0) then
        Write(6,"(a,F10.5,I4)") "@-Entry, input arguments", qq,Int(g)
       Endif 
-C#endif 
+#endif 
       If (Int(qq) .EQ. 100) Then
           Exc_block = "FRAC_OCC"
           Return
       Endif 
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If(me .eq.0) 
      + Write(6,"(a,8a)") "The stored value of Exc_block: ",Exc_block
-C#endif 
+#endif 
   
       If (Exc_block .EQ. "FRAC_OCC") Goto 999
 
@@ -190,10 +190,6 @@ C At every entry initilize all the type generating arrays to zero.
       VVVV(3) = 0
       VVVV(4) = 0
 
-      AO_AA   = .False.
-      AO_BB   = .False.
-      AO_AB   = .False.
-      
       If (Int(g) .EQ. 1) Then
          Contract = 1
          test1 = (qq-0.0D0) .EQ. 0.0D0
@@ -288,7 +284,6 @@ C At every entry initilize all the type generating arrays to zero.
          Endif 
       Elseif (Int(g) .EQ. 4) Then
          Contract = 4
-         If (me .eq. 0) Write(6,"(a,F10.5)") "qq ",qq-0.0101
 
          test1 = (qq-1010D0)   .EQ. 0.0D0
          test2 = (qq-0.0101D0) .EQ. 0.0D0
@@ -312,21 +307,8 @@ C At every entry initilize all the type generating arrays to zero.
              VVVV(3) = 1
              VVVV(4) = 0
          Endif 
-      Elseif (Int(g) .EQ. 100) Then
-
-          test1 = (qq-99.0D0) .EQ. 0.0D0
-          test2 = (qq-88.0D0) .EQ. 0.0D0
-          test3 = (qq-98.0D0) .EQ. 0.0D0
-          
-          If (test1) then
-             AO_AA = .True.
-          Elseif (test2) then
-             AO_BB = .True.
-          Elseif (test3) then
-             AO_AB = .True.
-          Endif 
       Endif 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If(me .eq.0) then
        Write(6,"(a,2I4)") "@-Exit,Contract and OV array values"
        write(6,"(10I2)") O,V,OO(1),OO(2),VV(1),VV(2),OOO(1),OOO(2),
@@ -335,7 +317,7 @@ C#ifdef _DEBUG_LVL0
      +                  OOOO(4),VVVV(1),VVVV(2),VVVV(3),VVVV(4) 
        Write(6,"(a,I2)") "No of Contracted indices: ",contract 
       Endif 
-C#endif
+#endif
  
       return
       end

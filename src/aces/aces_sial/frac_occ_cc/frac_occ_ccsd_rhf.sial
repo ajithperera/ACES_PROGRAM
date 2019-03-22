@@ -21,8 +21,6 @@
 #
       index kiter    = 1, cc_iter   
       index jiter    = 1, cc_iter
-#      index kiter    = 1, 1
-#      index jiter    = 1, 1
       index   kptr1  = 1, 2
       index   kptr2  = 1, 2
       index   kone   = 1, 1
@@ -374,7 +372,8 @@
       temp T1biaj(b1,i1,a1,j1)
       temp Tajib(a,j,i1,b1)
       temp Tibbi(i1,b1,b,i)
-      temp  Tiaii(i1,a1,i2,i)
+      temp Tiaii(i1,a1,i2,i)
+      temp T1aijb(a,i,j,b)
 #
       temp tpx(p,mu) 
       temp t1px(p,mu) 
@@ -384,6 +383,8 @@
       temp t1xi(mu,i) 
       temp txj(mu,j) 
       temp t1xj(mu,j) 
+      temp Txa(mu,a)
+      temp txb(mu,b)
 #
 # Declare distributed arrays 
 # -------------------------- 
@@ -1240,7 +1241,6 @@
      esuma=0.0
      PARDO i,a
            get fme_a(i,a)
-
            tme_a(i,a) =  fme_a(i,a)
 #bgn_frac 
            execute set_aces3_vars  oz    two
@@ -2154,14 +2154,26 @@
      PARDO b, a, j, i
 #
            REQUEST Tau_ab(a,i,b,j) a
-#
+           Taibj(a,i,b,j)  = Tau_ab(a,i,b,j)
+           T1aijb(a,i,j,b) = Taibj(a,i,b,j)
+
            DO mu
-#
-              Taixj(a,i,mu,j) = Tau_ab(a,i,b,j)*ca(mu,b)
+              Txb(mu,b) = ca(mu,b)
+#bgn_frac
+              execute set_aces3_vars  zer    one
+              execute apply_frac_occs Txb    two
+              execute apply_frac_occs T1aijb two
+#bgn_frac 
+              Taixj(a,i,mu,j) = T1aijb(a,i,j,b)*Txb(mu,b)
 #
               DO nu
-#
-                 Txixj(nu,i,mu,j)           = Taixj(a,i,mu,j)*ca(nu,a)
+                 Txa(nu,a) = ca(nu,a)
+#bgn_frac
+                 execute set_aces3_vars  zer   one
+                 execute apply_frac_occs Txa   two
+                 execute apply_frac_occs Taixj one
+#bgn_frac 
+                 Txixj(nu,i,mu,j)           = Taixj(a,i,mu,j)*Txa(nu,a)
                  PREPARE TAO_ab(nu,i,mu,j) += Txixj(nu,i,mu,j)
 #
               ENDDO nu
@@ -2191,9 +2203,9 @@
               Txixi(lambda,i,sigma,j) = TAO_ab(lambda,i,sigma,j)
               Txxij(lambda,sigma,i,j) = Txixi(lambda,i,sigma,j)
 #bgn_frac
-              execute set_aces3_vars  zer     two
-              execute apply_frac_occs T1xxxx  two
-              execute apply_frac_occs Txxij   one
+#              execute set_aces3_vars  zer     two
+#              execute apply_frac_occs T1xxxx  two
+#              execute apply_frac_occs Txxij   one
 #bgn_frac 
 
               Yab(mu,i,nu,j)              = T1xxxx(mu,nu,lambda,sigma)*Txxij(lambda,sigma,i,j)
@@ -2222,9 +2234,9 @@
               Txixi(lambda,i,sigma,j) = TAO_ab(lambda,i,sigma,j)
               Txxij(lambda,sigma,i,j) = Txixi(lambda,i,sigma,j)
 #bgn_frac
-              execute set_aces3_vars  zer     two
-              execute apply_frac_occs T1xxxx  two
-              execute apply_frac_occs Txxij   one
+#              execute set_aces3_vars  zer     two
+#              execute apply_frac_occs T1xxxx  two
+#              execute apply_frac_occs Txxij   one
 #end_frac
 
               Yab(mu,i,nu,j)              = T1xxxx(mu,nu,lambda,sigma)*Txxij(lambda,sigma,i,j)
@@ -2243,9 +2255,16 @@
            tpx(a,mu) = 0.0 
 #
            DO i  
-#
+
               GET          t1a_old(a,i) 
-              t1px(a,mu) = t1a_old(a,i)*ca(mu,i) 
+              Tai(a,i)  = t1a_old(a,i)
+              Txi(mu,i) = ca(mu,i)
+#bgn_frac
+              execute set_aces3_vars  one  one
+              execute apply_frac_occs Tai  two
+              execute apply_frac_occs Txi  two
+#end_frac
+              t1px(a,mu) = Tai(a,i)*Txi(mu,i) 
               tpx(a,mu) += t1px(a,mu) 
 #
            ENDDO i  
@@ -2295,13 +2314,11 @@
                  GET                          t1a_ax(b,nu)
                  Tax(b,nu)  = t1a_ax(b,nu)
                  T1xa(nu,b) = Tax(b,nu)
-            
-#
                  Taibj(a,i,b,j)             = TDaixj(a,i,nu,j)*ca(nu,b)
 #bgn_frac
-                 execute set_aces3_vars  one   one
-                 execute apply_frac_occs Taijx two 
-                 execute apply_frac_occs T1xa  one
+#                 execute set_aces3_vars  one   one
+#                 execute apply_frac_occs Taijx two 
+#                 execute apply_frac_occs T1xa  one
 #end_frac
                  T1aibj(a,i,b,j)            = Taijx(a,i,j,nu)*T1xa(nu,b)
                  T1aibj(a,i,b,j)           *= -1.0
