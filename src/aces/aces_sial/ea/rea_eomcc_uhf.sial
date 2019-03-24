@@ -7520,7 +7520,7 @@
      PREVS_VEC    = ZERO
      LEFT         = ZERO
      RIGHT        = ZERO
-     FRESH_SBSP   = ZERO
+     FRESH_SBSP   = ONE
 
 # Read data from BLOCK_DATA -> to be partially replaced
 # -----------------------------------------------------

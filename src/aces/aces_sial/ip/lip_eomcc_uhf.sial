@@ -47,25 +47,25 @@
       moaindex a2= bavirt, eavirt
       moaindex a3= bavirt, eavirt
 #
-      moaindex j = baocc, eaocc
-      moaindex j1= baocc, eaocc
-      moaindex j2= baocc, eaocc
-      moaindex j3= baocc, eaocc
+      mobindex j = bbocc, ebocc
+      mobindex j1= bbocc, ebocc
+      mobindex j2= bbocc, ebocc
+      mobindex j3= bbocc, ebocc
 #
-      moaindex b = bavirt, eavirt
-      moaindex b1= bavirt, eavirt
-      moaindex b2= bavirt, eavirt
-      moaindex b3= bavirt, eavirt
+      mobindex b = bbvirt, ebvirt
+      mobindex b1= bbvirt, ebvirt
+      mobindex b2= bbvirt, ebvirt
+      mobindex b3= bbvirt, ebvirt
 #
       moaindex p = baocc, eavirt
       moaindex p1= baocc, eavirt
       moaindex p2= baocc, eavirt
       moaindex p3= baocc, eavirt
 #
-      moaindex q = baocc, eavirt
-      moaindex q1= baocc, eavirt
-      moaindex q2= baocc, eavirt
-      moaindex q3= baocc, eavirt
+      mobindex q = bbocc, ebvirt
+      mobindex q1= bbocc, ebvirt
+      mobindex q2= bbocc, ebvirt
+      mobindex q3= bbocc, ebvirt
 
 #     CCSD amplitudes
 #     ---------------
@@ -672,6 +672,8 @@
       CREATE L2bb_a_INTMD
       CREATE INITIAL_L1A
       CREATE INITIAL_L1B
+      CREATE Y1a_TRUNCT
+      CREATE Y1b_TRUNCT
 
 
       EXECUTE SIP_BARRIER 
@@ -2307,12 +2309,12 @@
 #L(em,I)*Hbar(em,JA)->L(AJ,I)
 
       PARDO i1, a, b1, j2
-            REQUEST Wjbai(i1,a,b1,j2) b1
+            REQUEST Wiabj(i1,a,b1,j2) b1
 
             DO i
             DO kk1
                GET                        L2bb_a(b1,j2,kk1,i)
-               taixi(a,i1,kk1,i)        = L2bb_a(b1,j2,kk1,i)*Wjbai(i1,a,b1,j2)
+               taixi(a,i1,kk1,i)        = L2bb_a(b1,j2,kk1,i)*Wiabj(i1,a,b1,j2)
 #bgn_dbg
 #        taixi(a,i1,kk1,i) *=1.0
 #end_dbg
@@ -2434,11 +2436,11 @@
 #L(EM,i)*Hbar(EM,ja)->L(aj,I)
 
       PARDO j1, b, a1, i2
-            REQUEST Wiabj(j1,b,a1,i2)  a1
+            REQUEST Wjbai(j1,b,a1,i2)  a1
             DO j
             DO kk1
                GET                        L2aa_b(a1,i2,kk1,j)
-               tbjxj(b,j1,kk1,j)        = L2aa_b(a1,i2,kk1,j)* Wiabj(j1,b,a1,i2)
+               tbjxj(b,j1,kk1,j)        = L2aa_b(a1,i2,kk1,j)* Wjbai(j1,b,a1,i2)
 #bgn_dbg
 #        tbjxj(b,j1,kk1,j) *=1.0
 #end_dbg
@@ -2540,11 +2542,11 @@
 #L(em,i)*Hbar(em,JA)->L(AJ,i)
 
       PARDO i, a, j1, b
-            REQUEST Wjbai(i,a,b,j1) b
+            REQUEST Wiabj(i,a,b,j1) b
             DO j
             DO kk1
                GET                       L2bb_b(b,j1,kk1,j)
-               taixj(a,i,kk1,j)        = Wjbai(i,a,b,j1)*L2bb_b(b,j1,kk1,j)
+               taixj(a,i,kk1,j)        = Wiabj(i,a,b,j1)*L2bb_b(b,j1,kk1,j)
 #bgn_dbg
 #        taixj(a,i,kk1,j) *=1.0
 #end_dbg
@@ -2671,11 +2673,11 @@
 #L(EM,I)*Hbar(EM,ja)->L(aj,I)
 
       PARDO j, b, i1, a
-            REQUEST  Wiabj(j,b,a,i1) a
+            REQUEST  Wjbai(j,b,a,i1) a
             DO i
             DO kk1
                GET                       L2aa_a(a,i1,kk1,i)
-               tbjxi(b,j,kk1,i)        = Wiabj(j,b,a,i1)*L2aa_a(a,i1,kk1,i)
+               tbjxi(b,j,kk1,i)        = Wjbai(j,b,a,i1)*L2aa_a(a,i1,kk1,i)
 #bgn_dbg
 #        tbjxi(b,j,kk1,i) *=1.0
 #end_dbg
@@ -7617,6 +7619,8 @@
      NINETEEN = 19.0
      MONE     = -1.0
      THREE    = 3.0
+     FORT     = 14.0
+     FIFT     = 15.0
 
      TARGET_ROOTS = EOM_ROOTS
      EOM_THRES    = EOM_TOL
@@ -7630,6 +7634,7 @@
      PREVS_VEC    = ONE
      LEFT         = ZERO
      RIGHT        = ZERO
+     FRESH_SBSP   = ZERO
 #
      CALL READ_DATA
      CALL CREATE_ARRAYS 

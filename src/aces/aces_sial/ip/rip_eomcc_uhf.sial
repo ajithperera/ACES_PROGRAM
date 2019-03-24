@@ -14,8 +14,8 @@
 #  The GNU General Public License is included in this distribution
 #  in the file COPYRIGHT.
 #
-                        SIAL RIP_EOMCCSD
-#                       ----------------
+                        SIAL RIP_UHF_EOMCCSD
+#                       --------------------
 
       index kiter    = 1, cc_iter
       index jj1      = 1, 1
@@ -46,25 +46,25 @@
       moaindex a2= bavirt, eavirt
       moaindex a3= bavirt, eavirt
 #
-      moaindex j = baocc, eaocc
-      moaindex j1= baocc, eaocc
-      moaindex j2= baocc, eaocc
-      moaindex j3= baocc, eaocc
+      mobindex j = bbocc, ebocc
+      mobindex j1= bbocc, ebocc
+      mobindex j2= bbocc, ebocc
+      mobindex j3= bbocc, ebocc
 #
-      moaindex b = bavirt, eavirt
-      moaindex b1= bavirt, eavirt
-      moaindex b2= bavirt, eavirt
-      moaindex b3= bavirt, eavirt
+      mobindex b = bbvirt, ebvirt
+      mobindex b1= bbvirt, ebvirt
+      mobindex b2= bbvirt, ebvirt
+      mobindex b3= bbvirt, ebvirt
 #
       moaindex p = baocc, eavirt
       moaindex p1= baocc, eavirt
       moaindex p2= baocc, eavirt
       moaindex p3= baocc, eavirt
 #
-      moaindex q = baocc, eavirt
-      moaindex q1= baocc, eavirt
-      moaindex q2= baocc, eavirt
-      moaindex q3= baocc, eavirt
+      mobindex q = bbocc, ebvirt
+      mobindex q1= bbocc, ebvirt
+      mobindex q2= bbocc, ebvirt
+      mobindex q3= bbocc, ebvirt
 
 #     CCSD amplitudes
 #     ---------------
@@ -99,7 +99,7 @@
       served Vaaii(a,a1,i,i1)
       served Vjbbj(j,b1,b,j1)
       served Vbbjj(b,b1,j,j1)
-#
+
 #     HBAR
 #     ----
 #
@@ -517,7 +517,8 @@
       create Uia
       create Ujb
 
-      execute sip_barrier
+      execute server_barrier
+      execute server_barrier
       execute list_to_blocks                VSpipi(p,i,p1,i1)
       execute list_to_blocks                Vaaii
       execute list_to_blocks                Viaai
@@ -526,13 +527,13 @@
       execute list_to_blocks                Vbbjj
       execute list_to_blocks                Vjbbj
       execute list_to_blocks                VSbbbj
-      execute list_to_blocks                Vbbii
       execute list_to_blocks                Vjbii
       execute list_to_blocks                Vbbai
       execute list_to_blocks                Vpiqj(p,i,q,j)
-      execute list_to_blocks                Vaajj
       execute list_to_blocks                Viabj
       execute list_to_blocks                Vaabj
+      execute list_to_blocks                Vaajj
+      execute list_to_blocks                Vbbii
 #
       execute list_to_blocks                t1a
       execute list_to_blocks                t1b
@@ -7521,6 +7522,7 @@
      PREVS_VEC    = ZERO
      LEFT         = ZERO
      RIGHT        = ZERO
+     FRESH_SBSP   = ZERO
 #
      CALL READ_DATA
      CALL CREATE_ARRAYS 
@@ -7888,6 +7890,6 @@
       execute server_barrier
 #
 
-                           ENDSIAL RIP_EOMCCSD
-#                          -------------------
+                           ENDSIAL RIP_UHF_EOMCCSD
+#                          ------------------------
 

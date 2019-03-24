@@ -896,17 +896,17 @@
       ENDPARDO a, kk1
 
 #bgn_debug
-      execute sip_barrier
-      tmpa = 0.0
-      do kk1
-      do a
-         get L1a_intmd(a,kk1)
-         Tax(a,kk1) = L1a_intmd(a,kk1)
-         tmp  = Tax(a,kk1) * Tax(a,kk1)
-         tmpa += tmp
-      enddo a
-      enddo kk1
-      execute print_scalar tmpa
+#      execute sip_barrier
+#      tmpa = 0.0
+#      do kk1
+#      do a
+#         get L1a_intmd(a,kk1)
+#         Tax(a,kk1) = L1a_intmd(a,kk1)
+#         tmp  = Tax(a,kk1) * Tax(a,kk1)
+#         tmpa += tmp
+#      enddo a
+#      enddo kk1
+#      execute print_scalar tmpa
 #end_debug
 
       PARDO b, kk1
@@ -6675,7 +6675,7 @@
 #      suma =0.0
 #      pardo b,b,j, kk1
 #            get  L2b_bb(b,kk1,b,j)
-#            tmp = L2b_bb(b,kk1,b,j) * 2b_bb(b,kk1,b,j)
+#            tmp = L2b_bb(b,kk1,b,j) * L2b_bb(b,kk1,b,j)
 #            tmpa+= tmp
 #      endpardo b,b,j, kk1
 #      execute sip_barrier
