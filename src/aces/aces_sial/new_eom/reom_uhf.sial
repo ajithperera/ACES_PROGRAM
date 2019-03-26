@@ -20,11 +20,11 @@
       index nroots   = 1, 12
       index eom_cycle= 1, 150
       Index Kroot    = 1, 12
-      Index Subsp_dim= 1, 50
-      Index Nindex50 = 1, 50
-      Index Mindex50 = 1, 50
-      Index Kindex50 = 1, 50
-      Index Lindex50 = 1, 50
+      Index Subsp_dim= 1, 20
+      Index Nindex50 = 1, 20
+      Index Mindex50 = 1, 20
+      Index Kindex50 = 1, 20
+      Index Lindex50 = 1, 20
       Index jatom    = 1, natoms
       Index Indone   = 1, 1
       Index moment   = 1, 3
@@ -8519,9 +8519,7 @@
       DO MINDEX50
          OVERLAP_R(MINDEX50)  = 0.0
          DO NINDEX50
-            TS(MINDEX50,NINDEX50) = 0.0
             A_MATRIX(MINDEX50,NINDEX50)   = 0.0
-            PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
          ENDDO NINDEX50
       ENDDO MINDEX50
 
@@ -10866,6 +10864,15 @@
     PROC MAKE_ORTHO_COEFS
 #   ---------------------
 
+     DO MINDEX50
+         DO NINDEX50
+            TS(MINDEX50,NINDEX50) = 0.0
+            PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
+         ENDDO NINDEX50
+     ENDDO MINDEX50
+
+     EXECUTE SIP_BARRIER 
+
      NCOUNT = 0.0
      DO NINDEX50
         NCOUNT += 1.0
@@ -11971,7 +11978,7 @@
 
             PARDO b, j
                   GET Y1B_TRUNCT(b,j,NINDEX50)
-                  Tai(a,i) = Y1B_TRUNCT(b,j,NINDEX50)
+                  Tbj(b,j) = Y1B_TRUNCT(b,j,NINDEX50)
                   TMP   = Tbj(b,j) * Tbj(b,j)
                   SUMB += TMP
             ENDPARDO b, j
@@ -11980,6 +11987,7 @@
                   REQUEST  Y2aa_TRUNCT(a,i,a1,i1,NINDEX50) i1
                   Taiai(a,i,a1,i1) = Y2aa_TRUNCT(a,i,a1,i1,NINDEX50)
                   TMP    = Taiai(a,i,a1,i1) * Taiai(a,i,a1,i1)
+                  TMP   *= 0.25
                   SUMAA += TMP
             ENDPARDO a, a1, i, i1
 
@@ -11987,6 +11995,7 @@
                   REQUEST  Y2bb_TRUNCT(b,j,b1,j1,NINDEX50) j1
                   Tbjbj(b,j,b1,j1) = Y2bb_TRUNCT(b,j,b1,j1,NINDEX50)
                   TMP    =  Tbjbj(b,j,b1,j1) * Tbjbj(b,j,b1,j1) 
+                  TMP   *= 0.25
                   SUMBB += TMP
             ENDPARDO b, b1, j, j1
 
@@ -12010,7 +12019,7 @@
             SUM_R += HC_BB
             SUM_R += HC_AB
 #bgn_debug
-     execute print_scalar SUM_R
+#     execute print_scalar SUM_R
 #end_debug
             EXPONENT = 0.5
             EXECUTE NORM_FAC SUM_R EXPONENT
@@ -12029,7 +12038,7 @@
                   GET Y1B_TRUNCT(b,j,NINDEX50)
                   Tbjn(b,j,NINDEX50) = Y1B_TRUNCT(b,j,NINDEX50)
                   Tbjn(b,j,NINDEX50)*= INV_SQRT_NORM_R
-                  PUT VC1A_HIST(a,i,NINDEX50) = Tain(a,i,NINDEX50)
+                  PUT VC1B_HIST(b,j,NINDEX50) = Tbjn(b,j,NINDEX50)
             ENDPARDO b, j
 
             PARDO a, a1, i, i1
@@ -12070,6 +12079,32 @@
      ENDPROC SET_EOM_INCLUDE
 #    -----------------------
 
+   PROC INIT_AUX_STATIC_ARRAYS
+#    ---------------------------
+
+      DO MINDEX50
+      DO NINDEX50
+         DVECTORS(NINDEX50,MINDEX50) = ZERO
+      ENDDO NINDEX50
+      ENDDO MINDEX50
+
+      DO NINDEX50
+        OVERLAP_R(NINDEX50) = ZERO
+      ENDDO NINDEX50
+
+      DO INDONE
+      DO NROOTS
+         PSEUDO_ROOTS(NROOTS,INDONE) = ZERO
+         EOM_S_EES(NROOTS,INDONE)    = ZERO
+         EOM_T_EES(NROOTS,INDONE)    = ZERO
+      ENDDO NROOTS
+      ENDDO INDONE
+
+      EXECUTE SIP_BARRIER
+
+     ENDPROC INIT_AUX_STATIC_ARRAYS
+#    ------------------------------
+
      PROC TRUNCATE
 #    -------------
 # Reduce the subspace dimension.
@@ -12093,8 +12128,12 @@
 #     execute print_static DVECTORS NFULL
 #end_debug
 
-     IF TRNC_COUNT > ONE
+     IF TRIPLET == ONE 
         CALL INIT_TO_ZERO
+     ELSE 
+        IF TRNC_COUNT > ONE
+           CALL INIT_TO_ZERO
+        ENDIF 
      ENDIF
      CALL TRANSFORM_C
      CALL COPY_NORM_C
@@ -12189,15 +12228,16 @@
      MAX_OVLP        = ONE
      MIN_ENEG        = ZERO
      LOCK_THRES      = 0.001
-     FIRST_VEC       = ZERO
-     PREVS_VEC       = ONE
+     FIRST_VEC       = ONE
+     PREVS_VEC       = ZERO
      LEFT            = ZERO
      RIGHT           = ZERO
-     FRESH_SBSP      = ZERO
+     FRESH_SBSP      = ONE 
 
      SINGLET = ZERO
      TRIPLET = ZERO
 
+     CALL INIT_AUX_STATIC_ARRAYS
      EXECUTE SET_ACES3_VARS RIGHT LEFT
 
 # The default Guess is CIS, can be switched by proper key-values.
@@ -12221,9 +12261,9 @@
      MAX_SUBSP_DIM  = EOM_MAXCYC
 
 #bgn_debug
-         execute print_scalar eom_guess
-         execute print_scalar eom_denom
-         execute print_scalar eom_maxcyc 
+#         execute print_scalar eom_guess
+#         execute print_scalar eom_denom
+#         execute print_scalar eom_maxcyc 
 #end_debug
 
      DO SPN_MULT
@@ -12410,7 +12450,7 @@
 
               IF ITER_COUNT > NINETEEN
 
-                 TRNC_COUNT += ONE
+                 TRNC_COUNT += ONE 
                  CALL TRUNCATE
                  ITER_COUNT  = TWL
 
@@ -12511,6 +12551,9 @@
                   MCOUNT += 1.0
                   IF MCOUNT == ROOT_COUNT
                      EOM_T_EES(KROOT,INDONE) = OMEGA
+                     IF OMEGA != ZERO
+                        PSEUDO_ROOTS(KROOT,INDONE) = OMEGA
+                     ENDIF
                      TEE(KROOT,INDONE)       = EOM_T_EES(KROOT,INDONE)
                      PUT REE_T(KROOT,INDONE) = TEE(KROOT,INDONE)
                      PARDO a, i

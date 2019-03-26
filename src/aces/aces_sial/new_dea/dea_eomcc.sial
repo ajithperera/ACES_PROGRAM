@@ -692,6 +692,7 @@
       CREATE NAI_AB
       CREATE NAI_BA
       CREATE NIJ
+      CREATE Y1_AB_TRUNCT
       CREATE INITIAL_R1_AB
 
       EXECUTE SIP_BARRIER 
@@ -3518,7 +3519,6 @@
 
      PROC KEEP_GUESS_VECS
 #    --------------------
-
       PARDO a, b 
           GET R1_AB(a,b)
           Tab(a,b) = R1_AB(a,b)
@@ -4209,6 +4209,15 @@
      PROC MAKE_ORTHO_COEFS
 #    ---------------------
 
+     DO MINDEX50
+        DO NINDEX50
+           TS(MINDEX50,NINDEX50) = 0.0
+           PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
+        ENDDO NINDEX50
+     ENDDO MINDEX50
+
+     EXECUTE SIP_BARRIER 
+
      NCOUNT = 0.0
      DO NINDEX50
         NCOUNT += 1.0
@@ -4560,9 +4569,7 @@
      DO MINDEX50
         OVERLAP_R(MINDEX50)  = 0.0
         DO NINDEX50
-           TS(MINDEX50,NINDEX50) = 0.0
            A_MATRIX(MINDEX50,NINDEX50)   = 0.0
-           PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
         ENDDO NINDEX50
      ENDDO MINDEX50
 #
@@ -4719,7 +4726,7 @@
      ENDDO NINDEX50
 
 #bgn_debug
-#     execute print_static etemp  iter_count 
+     execute print_static etemp  iter_count 
 #end_debug
 
      ENDPROC C_CHECK
@@ -4884,6 +4891,7 @@
      ENDIF 
 
      ENDDO NINDEX50
+
      EXECUTE  SERVER_BARRIER
 
      ENDPROC INIT_TO_ZERO
@@ -5204,6 +5212,34 @@
      ENDPROC SET_EOM_INCLUDE
 #    -----------------------
 
+    PROC INIT_AUX_STATIC_ARRAYS
+#    ---------------------------
+
+      DO MINDEX50
+      DO NINDEX50
+         DVECTORS(NINDEX50,MINDEX50) = ZERO
+      ENDDO NINDEX50
+      ENDDO MINDEX50
+
+      DO NINDEX50
+        OVERLAP_R(NINDEX50) = ZERO
+        A_DIAGS(NINDEX50)   = ZERO
+      ENDDO NINDEX50
+
+      DO IONE
+      DO MROOTS
+         PSEUDO_ROOTS(MROOTS,IONE) = ZERO
+         DUMMY(IONE,IONE)            = ZERO
+         DEA_ENER_T(MROOTS,IONE)     = ZERO
+         DEA_ENER_S(MROOTS,IONE)     = ZERO
+      ENDDO MROOTS
+      ENDDO IONE
+
+      EXECUTE SIP_BARRIER
+
+     ENDPROC INIT_AUX_STATIC_ARRAYS
+#    ------------------------------
+
      PROC TRUNCATE
 #    -------------
 # Reduce the subspace dimension.
@@ -5227,8 +5263,12 @@
 #     execute print_static DVECTORS NFULL
 #end_debug
 
-     IF TRNC_COUNT > ONE
+     IF TRIPLET == ONE 
         CALL INIT_TO_ZERO
+     ELSE 
+        IF TRNC_COUNT > ONE
+           CALL INIT_TO_ZERO
+        ENDIF 
      ENDIF
      CALL TRANSFORM_C
      CALL COPY_NORM_C
@@ -5299,13 +5339,15 @@
      MAX_OVLP     = ONE
      MIN_ENEG     = ZERO
      LOCK_THRES   = 0.001
-     FIRST_VEC    = ZERO
-     PREVS_VEC    = ONE
+     FIRST_VEC    = ONE
+     PREVS_VEC    = ZERO 
      LEFT         = ZERO
      RIGHT        = ZERO
+     FRESH_SBSP   = ONE
 #
      CALL READ_DATA
      CALL CREATE_ARRAYS 
+     CALL INIT_AUX_STATIC_ARRAYS
 
      EXECUTE SET_ACES3_VARS RIGHT LEFT 
 
@@ -5327,9 +5369,9 @@
      MAX_SUBSP_DIM  = EOM_MAXCYC
 
 #bgn_debug
-         execute print_scalar eom_thres 
-         execute print_scalar eom_denom
-         execute print_scalar eom_maxcyc
+#         execute print_scalar eom_thres 
+#         execute print_scalar eom_denom
+#         execute print_scalar eom_maxcyc
 #end_debug
 
       MULT = ZERO 
@@ -5356,9 +5398,9 @@
               EXIT
            ENDIF
 #bgn_debug
-#        execute print_scalar SINGLET 
-#        execute print_scalar TRIPLET 
-#        execute print_scalar ROOT_COUNT
+        execute print_scalar SINGLET 
+        execute print_scalar TRIPLET 
+        execute print_scalar ROOT_COUNT
 #end_debug
 
            MYROOT = ROOT_COUNT 
@@ -5372,6 +5414,10 @@
                  CALL ORTHO_NEW_ROOT
                  E_OLD      = OMEGA
               ENDIF
+           ENDIF
+
+           IF FRESH_SBSP == ONE
+              ITER_COUNT = ZERO
            ENDIF
            SBSP_COUNT = ZERO
 
@@ -5393,7 +5439,7 @@
 
               CALL SAVE_C_VECTORS 
 #bgn_debug
-#            call c_check 
+            call c_check 
 #end_debug
               CALL HR_MULT
               CALL FORM_ABBB

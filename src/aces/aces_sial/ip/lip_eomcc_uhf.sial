@@ -5960,6 +5960,15 @@
      PROC MAKE_ORTHO_COEFS
 #    ---------------------
 
+     DO MINDEX50
+        DO NINDEX50
+           TS(MINDEX50,NINDEX50) = 0.0
+           PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
+        ENDDO NINDEX50
+     ENDDO MINDEX50
+
+     EXECUTE SIP_BARRIER
+
      NCOUNT = 0.0
      DO NINDEX50
         NCOUNT += 1.0
@@ -6575,10 +6584,8 @@
      DO MINDEX50
         OVERLAP_R(MINDEX50)  = 0.0
         DO NINDEX50
-           TS(MINDEX50,NINDEX50) = 0.0
            A_MATRIX(MINDEX50,NINDEX50)   = 0.0
            DVECTORS(MINDEX50,NINDEX50)   = 0.0
-           PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
         ENDDO NINDEX50
      ENDDO MINDEX50
 #
@@ -7630,7 +7637,7 @@
      MAX_OVLP     = ONE
      MIN_ENEG     = ZERO
      LOCK_THRES   = 0.001
-     FIRST_VEC    = ZERO
+     FIRST_VEC    = ONE
      PREVS_VEC    = ONE
      LEFT         = ZERO
      RIGHT        = ZERO
@@ -7671,6 +7678,8 @@
 #end_debug
          MYROOT = ROOT_COUNT 
          CALL PREP_IP_GUESS 
+
+         CALL KEEP_GUESS_VECS
 
          LOCK       = ZERO
          IF FRESH_SBSP != ONE

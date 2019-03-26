@@ -711,17 +711,17 @@
       ENDDO i
 #bgn_debug
 #      execute get_my_rank rank
-      suma=0.0
-      tmpa=0.0
-      counter=0.0
-      pardo i, i1
-         GET  Uii(i,i1)
-        tmp  = Uii(i,i1) * Uii(i,i1)
-         tmpa += tmp
-      endpardo i, i1
-      execute sip_barrier 
-      collective suma +=tmpa
-      execute print_scalar suma 
+#      suma=0.0
+#      tmpa=0.0
+#      counter=0.0
+#      pardo i, i1
+#         GET  Uii(i,i1)
+#        tmp  = Uii(i,i1) * Uii(i,i1)
+#         tmpa += tmp
+#      endpardo i, i1
+#      execute sip_barrier 
+#      collective suma +=tmpa
+#      execute print_scalar suma 
 #end_debug
 
       DO j
@@ -814,14 +814,14 @@
 
       EXECUTE SIP_BARRIER 
 #bgn_debug
-      tmpa = 0.0
-      do i
-         get R1a_guess(i)
-         Ti(i) = R1a_guess(i)
-         tmp  = Ti(i) * Ti(i)
-         tmpa += tmp
-      enddo i
-      execute print_scalar tmpa
+#      tmpa = 0.0
+#      do i
+#         get R1a_guess(i)
+#         Ti(i) = R1a_guess(i)
+#         tmp  = Ti(i) * Ti(i)
+#         tmpa += tmp
+#      enddo i
+#      execute print_scalar tmpa
 #end_debug
 #
       PARDO i, kk1
@@ -926,26 +926,26 @@
       EXECUTE SIP_BARRIER 
 
 #bgn_debug
-      tmpb=0.0
-      tmpa=0.0
-      suma=0.0
-      sumb=0.0
-      pardo i,kk1
-         get r1a(i,kk1) 
-         Tmp = r1a(i,kk1) * r1a(i,kk1) 
-         tmpa += tmp
-      endpardo i,kk1
-      pardo j,kk1
-         get r1b(j,kk1) 
-         tmp = r1b(j,kk1) * r1b(j,kk1) 
-         tmpb += tmp
-      endpardo j,kk1
-      execute server_barrier 
-      collective suma +=tmpa
-      collective sumb +=tmpb
-      execute sip_barrier 
-      execute print_scalar suma
-      execute print_scalar sumb
+#      tmpb=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,kk1
+#         get r1a(i,kk1) 
+#         Tmp = r1a(i,kk1) * r1a(i,kk1) 
+#         tmpa += tmp
+#      endpardo i,kk1
+#      pardo j,kk1
+#         get r1b(j,kk1) 
+#         tmp = r1b(j,kk1) * r1b(j,kk1) 
+#         tmpb += tmp
+#      endpardo j,kk1
+#      execute server_barrier 
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute sip_barrier 
+#      execute print_scalar suma
+#      execute print_scalar sumb
 #end_debug
 
       ENDPROC PREP_IP_GUESS
@@ -5847,6 +5847,15 @@
      PROC MAKE_ORTHO_COEFS
 #    ---------------------
 
+     DO MINDEX50
+        DO NINDEX50
+           TS(MINDEX50,NINDEX50) = 0.0
+           PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
+        ENDDO NINDEX50
+     ENDDO MINDEX50
+
+     EXECUTE SIP_BARRIER
+
      NCOUNT = 0.0
      DO NINDEX50
         NCOUNT += 1.0
@@ -6385,73 +6394,73 @@
      EXECUTE SIP_BARRIER
 
 #bgn_debug
-      sumab=0.0
-      tmpa=0.0
-      tmpb=0.0
-      suma=0.0
-      sumb=0.0
-      pardo i,kk1
-         get r1a(i,kk1)
-         tmp = r1a(i,kk1) * r1a(i,kk1)
-         tmpa += tmp
-      endpardo i,kk1
-      pardo j,kk1
-         get r1b(j,kk1)
-         tmp = r1b(j,kk1) * r1b(j,kk1)
-         tmpb += tmp
-      endpardo j,kk1
-      execute sip_barrier
-      collective suma +=tmpa
-      collective sumb +=tmpb
-      execute print_scalar suma
-      execute print_scalar sumb
-      sumab  = suma
-      sumab += sumb
-      tmpa =0.0
-      suma =0.0
-      pardo a,i1,kk1,i
-            get  R2aa_a(a,i1,kk1,i)
-            tmp = R2aa_a(a,i1,kk1,i) * R2aa_a(a,i1,kk1,i)
-            tmpa += tmp
-      endpardo a,i1,kk1,i
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      sumab += suma
-      tmpa =0.0
-      suma =0.0
-      pardo b,j,j1, kk1
-            get  R2bb_b(b,j1,kk1,j)
-            tmp = R2bb_b(b,j1,kk1,j) * R2bb_b(b,j1,kk1,j)
-            tmpa+= tmp
-      endpardo b,j,j1, kk1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      sumab += suma
-      tmpa =0.0
-      suma =0.0
-      pardo j,i1,a,kk1
-            get R2aa_b(a,i1,kk1,j)
-            tmp = R2aa_b(a,i1,kk1,j) * R2aa_b(a,i1,kk1,j)
-            tmpa+= tmp
-      endpardo j,i1,a,kk1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      sumab += suma
-      tmpa=0.0
-      suma=0.0
-      pardo i,j1,b,kk1
-            get R2bb_a(b,j1,kk1,i)
-            tmp = R2bb_a(b,j1,kk1,i) * R2bb_a(b,j1,kk1,i)
-            tmpa+= tmp
-      endpardo i,j1,b,kk1
-      execute sip_barrier
-      collective suma +=tmpa
-      execute print_scalar suma
-      sumab += suma
-      execute print_scalar sumab
+#      sumab=0.0
+#      tmpa=0.0
+#      tmpb=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,kk1
+#         get r1a(i,kk1)
+#         tmp = r1a(i,kk1) * r1a(i,kk1)
+#         tmpa += tmp
+#      endpardo i,kk1
+#      pardo j,kk1
+#         get r1b(j,kk1)
+#         tmp = r1b(j,kk1) * r1b(j,kk1)
+#         tmpb += tmp
+#      endpardo j,kk1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute print_scalar suma
+#      execute print_scalar sumb
+#      sumab  = suma
+#      sumab += sumb
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,i1,kk1,i
+#            get  R2aa_a(a,i1,kk1,i)
+#            tmp = R2aa_a(a,i1,kk1,i) * R2aa_a(a,i1,kk1,i)
+#            tmpa += tmp
+#      endpardo a,i1,kk1,i
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab += suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo b,j,j1, kk1
+#            get  R2bb_b(b,j1,kk1,j)
+#            tmp = R2bb_b(b,j1,kk1,j) * R2bb_b(b,j1,kk1,j)
+#            tmpa+= tmp
+#      endpardo b,j,j1, kk1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab += suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo j,i1,a,kk1
+#            get R2aa_b(a,i1,kk1,j)
+#            tmp = R2aa_b(a,i1,kk1,j) * R2aa_b(a,i1,kk1,j)
+#            tmpa+= tmp
+#      endpardo j,i1,a,kk1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab += suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo i,j1,b,kk1
+#            get R2bb_a(b,j1,kk1,i)
+#            tmp = R2bb_a(b,j1,kk1,i) * R2bb_a(b,j1,kk1,i)
+#            tmpa+= tmp
+#      endpardo i,j1,b,kk1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab += suma
+#      execute print_scalar sumab
 #end_debug
      ENDPROC RESCALE_NEW_C
 #    ---------------------
@@ -6462,10 +6471,8 @@
      DO MINDEX50
         OVERLAP_R(MINDEX50)  = 0.0
         DO NINDEX50
-           TS(MINDEX50,NINDEX50) = 0.0
            A_MATRIX(MINDEX50,NINDEX50)  = 0.0
            DVECTORS(MINDEX50,NINDEX50)  = 0.0
-           PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
         ENDDO NINDEX50
      ENDDO MINDEX50
 #
