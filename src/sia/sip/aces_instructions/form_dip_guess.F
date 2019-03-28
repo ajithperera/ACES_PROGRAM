@@ -261,16 +261,16 @@ CSSS
 CSSS      Call Process_vecs(Eigr,EvecR,EvecL,Guess_intmd,Ndim,
 CSSS     +                  1,Ndim,1,Ndim)
 
-#ifdef _DEBUG_LVL0
+C#ifdef _DEBUG_LVL0
       if (me.eq.0) then
       Write(6,*)
       Write(6,"(a,a)") "@-FORM_DIP_GUESS: The reordered eigenvalues",
      +               " and vectors"
       Write(6,"(6(1x,F10.5))") (EigR(i),i=1,Ndim)
-      Write(6,"(a)") "The right-hand side"
-      call output(EvecR,1,Ndim,1,Ndim,Ndim,Ndim,1)
+C      Write(6,"(a)") "The right-hand side"
+C      call output(EvecR,1,Ndim,1,Ndim,Ndim,Ndim,1)
       Endif
-#endif
+C#endif
 C
       Nill = 0
       Do i = 1, Ndim
@@ -279,8 +279,10 @@ C
          Endif
       Enddo
 
+C Save 50 total vectors corresponding to the non zero eigenvalues.
+
       Nbgn = Nill+1 
-      Nend = Nbgn+Nroots 
+      Nend = Nbgn+50 
 
 CSSS      if (me.eq.0) write(6,*) Nbgn,Nend,Nill,Ndim-Nill,nroots 
 
@@ -313,7 +315,7 @@ CSSS      if (me.eq.0) write(6,*) Nbgn,Nend,Nill,Ndim-Nill,nroots
 
 #ifdef _DEBUG_LVL0
       if (me.eq.0) then
-      do p=1,Nroots
+      do p=1,50 
       Write(6,"(a)") "Initial Right guess vectors for EOM-DIP/EA"
          DO I=1, Jdim 
          DO J=1, Idim 

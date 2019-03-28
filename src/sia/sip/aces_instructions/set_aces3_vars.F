@@ -141,7 +141,10 @@ c------------Information about scalar--------------------------------------
      +              AAAA,BBBB,ABAB
 #endif 
 C--------------updating eom_truncate variables header file----
-
+C#ifdef _DEBUG_LVL0
+      If (me .eq.0) Write(6,"(a,a,2i2,F10.5)") "Setting",
+     +              " eom_truncate_vars: ",Int(g),Int(qq),qq
+C#endif 
       If (Int(g) .EQ. 10) Then
          Ndim_new = Int(qq)
       Elseif (Int(g) .EQ. 11) Then

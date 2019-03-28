@@ -5293,15 +5293,15 @@
 
     PARDO a, b, i1, a1
         Tabia(a,b,i1,a1) = 0.0
-        PUT CORR_VEC_ABAA(a,b,i1,a1) = Tabia(a,b,i1,a1)
+        PREPARE CORR_VEC_ABAA(a,b,i1,a1) = Tabia(a,b,i1,a1)
     ENDPARDO a, b, i1, a1
 
     PARDO a, b, j1, b1
         Tabjb(a,b,j1,b1) = 0.0
-        PUT CORR_VEC_ABBB(a,b,j1,b1) = Tabjb(a,b,j1,b1)
+        PREPARE CORR_VEC_ABBB(a,b,j1,b1) = Tabjb(a,b,j1,b1)
     ENDPARDO a, b, j1, b1
 
-    EXECUTE SIP_BARRIER
+    EXECUTE SERVER_BARRIER 
 
     CALL DRIVE_ORTHO
 
@@ -5412,6 +5412,9 @@
            IF FRESH_SBSP != ONE
               IF ROOT_COUNT != ONE
                  CALL ORTHO_NEW_ROOT
+#bgn_debug
+#            call c_check 
+#end_debug
                  E_OLD      = OMEGA
               ENDIF
            ENDIF
@@ -5439,7 +5442,7 @@
 
               CALL SAVE_C_VECTORS 
 #bgn_debug
-            call c_check 
+#            call c_check 
 #end_debug
               CALL HR_MULT
               CALL FORM_ABBB

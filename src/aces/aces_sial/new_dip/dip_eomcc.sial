@@ -21,7 +21,7 @@
       index Ione     = 1, 1
       index Spn_mult = 1, 2
 
-      Index Kroots   = 1, 12
+      Index Kroots   = 1, 50
       Index Nroots   = 1, 12
       Index Mroots   = 1, 12
       Index Subsp_dim= 1, 20
@@ -581,6 +581,13 @@
        MYROOT *= -1.0
        EXECUTE GUESS_4CURRENT_DIP_ROOT VEC_AB MYROOT
      ELSE 
+       DO KROOTS 
+          DO I
+          DO J 
+             VEC_AB(I,J,KROOTS) = VEC_AB_T(I,J,KROOTS)
+          ENDDO J
+          ENDDO I
+       ENDDO KROOTS 
        EXECUTE GUESS_4CURRENT_DIP_ROOT VEC_AB MYROOT
      ENDIF 
 
@@ -606,19 +613,18 @@
       EXECUTE SIP_BARRIER
 
 #bgn_debug
-      suma = 0.0
-      tmpa = 0.0
-      pardo i, j
-         get R1_ab_intmd(i,j)
-         Tij(i,j) = R1_ab_intmd(i,j)
-        tmp  =  Tij(i,j) * Tij(i,j)
-        tmpa += tmp
-      endpardo i, j
-      execute sip_barrier
-      collective suma+=tmpa
-      execute print_scalar suma
+#      suma = 0.0
+#      tmpa = 0.0
+#      pardo i, j
+#         get R1_ab_intmd(i,j)
+#         Tij(i,j) = R1_ab_intmd(i,j)
+#        tmp  =  Tij(i,j) * Tij(i,j)
+#        tmpa += tmp
+#      endpardo i, j
+#      execute sip_barrier
+#      collective suma+=tmpa
+#      execute print_scalar suma
 #end_debug
-#
       
       PARDO i, j, i1, a
          Tijia(i,j,i1,a) = 0.0
@@ -2643,7 +2649,7 @@
         IMAX_KEEP = IMAX
       ENDIF
 #bgn_debug
-     execute print_scalar imax
+#     execute print_scalar imax
 #end_debug
 
      ENDPROC SELECT_VECS_MAX_OVLP1
@@ -4256,7 +4262,7 @@
      PREVS_VEC    = ZERO 
      LEFT         = ZERO
      RIGHT        = ZERO
-     FRESH_SBSP   = ZERO
+     FRESH_SBSP   = ONE 
 #
      CALL READ_DATA
      CALL CREATE_ARRAYS 
@@ -4324,6 +4330,9 @@
               IF ROOT_COUNT != ONE
                  CALL ORTHO_NEW_ROOT
                  E_OLD = OMEGA
+#bgn_debug
+#            call c_check 
+#end_debug
               ENDIF
            ENDIF
 
@@ -4350,7 +4359,7 @@
 
               CALL SAVE_C_VECTORS 
 #bgn_debug
-            call c_check 
+#            call c_check 
 #end_debug
               CALL HR_MULT
               CALL FORM_ABBB

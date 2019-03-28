@@ -106,52 +106,98 @@ c---------------------------------------------------------------------------
 
       Integer n1,n2,m1,m2,l1,l2,n,m
       Integer Ndim
-      Integer Kdim, k
-      INteger Root 
+      Integer Kdim, k, Itrack, Ising, Itrip
+      INteger Root, Nroots 
       Logical Triplet 
 
       Double Precision Vecs_in(n1:n2,m1:m2,l1:l2)
+      Double Precision Sum 
 
       Ndim  = (n2-n1+1)*(m2-m1+1) 
       Kdim  = (l2-l1+1)
+      Nroots= Eom_roots 
 
-#ifdef _DEBUG_LVL0
+C#ifdef _DEBUG_LVL0
       If (me .eq.0) then
          Write(6,"(a,2I)") "Root index:", Root
          Write(6,"(a)") "@-GET_GUESS_4CURRENT; Input vectors"
          Do k =1, Kdim
-           If (k .eq. abs(Root)) 
-     +        call output(Vecs_in(1,1,k),n1,n2,m1,m2,n2,1,1)
+          call output(Vecs_in(1,1,k),n1,n2,m1,m2,n2,1,1)
          Enddo 
       Endif 
-#endif 
+C#endif 
       If (Root.le. 0.0D0) Then
           Triplet = .True.
           Root    = -Root 
       Endif 
 
-      Call Dcopy(Ndim, Vecs_in(1,1,Root), 1, Vecs_in(1,1,1), 1)
-        
       If (Triplet)  Then
-         Do n=m1,m2
-         Do m=n1,n-1 
-            Vecs_in(m,n,1) = -(Vecs_in(n,m,1))
-         Enddo 
-         Enddo
-      Else
-         Do n=m1,m2
-         Do m=n1,n2
-            Vecs_in(n,m,1) = Dabs(Vecs_in(n,m,1))
-         Enddo
-         Enddo
-      Endif 
-
+         Itrip  = 0
+         Itrack = 0
+         Do k = 1, kdim
+            Sum = 0.0D0
+            Do n=m1,m2
+            Do m=n1,n-1 
+               Sum = Sum + Vecs_in(m,n,k) + (Vecs_in(n,m,k))
+            Enddo 
+            Enddo
+            Itrack = Itrack + 1
+            If (Dabs(sum) .LT. 1.0D-10) Then
+               Itrip = Itrip  + 1
 #ifdef _DEBUG_LVL0
+               if (me .eq.0) write(6,"(a,3i2)") "Itrack,Root,Itrip =",
+     +                                           Itrack,Root,Itrip
+#endif 
+               If (Itrip .Eq. Root) Then
+                   Call Dcopy(Ndim, Vecs_in(1,1,Itrack), 1, 
+     +                        Vecs_in(1,1,1), 1)
+               Endif 
+            Endif 
+         Enddo 
+         If (Nroots .Gt. Itrip) Then
+            If (me .eq. 0) then
+            Write(6,"(a,I3,3a)") " There were no", NRoots, " triplet",
+     +                          " starting guess vectors in 50 total",
+     +                          " vector sample."
+            Endif 
+         Endif 
+      Else
+        Itrack = 0
+        Ising  = 0
+        Do k = 1, kdim
+            Sum = 0.0D0
+            Do n=m1,m2
+            Do m=n1,n-1
+               Sum = Sum + Vecs_in(m,n,k) - (Vecs_in(n,m,k))
+            Enddo
+            Enddo
+            Itrack = Itrack  + 1
+            If (Dabs(sum) .LT. 1.0D-10) Then
+               Ising = Ising  + 1
+#ifdef _DEBUG_LVL0
+               if (me .eq.0) write(6,"(a,3i2)") "Itrack,Root,Ising =",
+     +                                           Itrack,Root,Ising 
+#endif 
+               If (Ising .Eq. Root) Then
+                   Call Dcopy(Ndim, Vecs_in(1,1,Itrack), 1,
+     +                        Vecs_in(1,1,1), 1)
+               Endif
+            Endif
+         Enddo
+         If (Nroots .Gt. Ising) Then
+            If (me .eq. 0) then
+            Write(6,"(a,I3,3a)") " There were no", Nroots, " singlet", 
+     +                          " starting guess vectors in 50 total"
+     +                          " vectors sample."
+            Endif 
+         Endif 
+      Endif 
+C#ifdef _DEBUG_LVL0
       If (me .eq.0) then
          Write(6,"(a)") "@-GET_GUESS_4CURRENT; Outgoing vector"
          call output(Vecs_in(1,1,1),n1,n2,m1,m2,n2,1,1)
       Endif 
-#endif 
+C#endif 
 
       Return
       End

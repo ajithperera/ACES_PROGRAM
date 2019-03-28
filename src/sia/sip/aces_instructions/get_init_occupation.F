@@ -161,9 +161,9 @@ C
 
 C#ifdef _DEBUG_LVL0
       if (me .eq. master) then
-      write(*,*)
-      write(*,"(a)") "The occupation number file is present"
-      write(*,"(a)") "The occupations are read from OCCNUMS file"
+      write(*,*)j
+      write(*,"(a,a)")" The occupation number file is present, The",
+     +                " occupations are read from the OCCNUMS file."
       write(*,*)
       endif
 C#endif 

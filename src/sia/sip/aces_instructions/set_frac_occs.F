@@ -104,6 +104,7 @@ C
 
       Integer i,j,k,l,i1,i2,j1,j2
       Integer Lda,Ldb,Ndim,Nocc
+      Logical Found 
 
       Double Precision Data(i1:i2,j1:j2)
 
@@ -124,7 +125,7 @@ C
       Endif
 #endif 
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
 C As a debugging example test, lets consider H2O Dzp basis. The
 C system has 
       Nocc = 0
@@ -146,24 +147,55 @@ C system has
       Do j=Nocc+1, Nbasis 
          Occ_numsb(j) = 0.0D0
       Enddo 
-
-C#endif 
-
-#ifdef _DEBUG_LVL0
-      If (me .eq.0) then
-      Write(6,"(a)") "The Occ_num arrays"
-      Write(6,"(6F4.1)") (Occ_numsa(i),i=1, Nbasis)
-      Write(6,"(6F4.1)") (Occ_numsb(i),i=1, Nbasis)
-      endif 
 #endif 
-
+C
 C Use this call to load the fractional occupation numbers to the 
 C Occ_nums varible. At the moment this is in a common block (and
 C need to put on to heap.
 
-CSSS#ifdef _DEBUG_LVL0 
-  
-CSSS#endif 
+      Call Get_external_occnums(Occ_numsa,Occ_numsb,Nbasis,Found,
+     +                          Me)
+   
+      If (.Not. Found) Then
+         If (me .eq. 0) Then
+         Write(6,"(2a)")  "               ************Warning*********",
+     +                                   "*******"
+         Write(6,"(3a)") " The fractional occupation number file",
+     +                   " FRAC_OCCNUMS is not found. The canonical"
+         Write(6,"(a)")  " integer occupations are ussed!"
+         Write(6,"(2a)")  "               ************Warning*********",
+     +                                   "*******"
+         Endif 
+
+         Nocc = 0
+         do i=1, Nalpha_occupied
+            Occ_numsa(i) = 1.0D0
+            Nocc = Nocc + 1
+         Enddo
+
+         Do j=Nocc+1, Nbasis
+            Occ_numsa(j) = 0.0D0
+         Enddo
+
+         Nocc = 0
+         do i=1, Nbeta_occupied
+            Occ_numsb(i) = 1.0D0
+            Nocc = Nocc + 1
+         Enddo
+
+         Do j=Nocc+1, Nbasis
+            Occ_numsb(j) = 0.0D0
+         Enddo
+      Endif 
+
+C#ifdef _DEBUG_LVL0
+      If (me .eq.0) then
+      Write(6,"(a)") "The Occ_number arrays"
+      
+      Write(6,"(6F4.1)") (Occ_numsa(i),i=1, Nbasis)
+      Write(6,"(6F4.1)") (Occ_numsb(i),i=1, Nbasis)
+      endif 
+C#endif 
 
       Return
       End
