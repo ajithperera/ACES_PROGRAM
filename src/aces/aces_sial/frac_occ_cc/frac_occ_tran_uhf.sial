@@ -294,6 +294,13 @@
       local Lixbj(i,mu,b,j) 
       local Lxabj(mu,a,b,j) 
       local L1xbbj(mu,b,b1,j) 
+
+      Distributed Fpqa_mi(i,i1)
+      Distributed Fpqb_mi(j,j1)
+      Distributed Fpqa_me(i,a)
+      Distributed Fpqb_me(j,b)
+      Distributed Fpqa_ae(a,a1)
+      Distributed Fpqb_ae(b,b1)
 #
 # Define scalars 
 # -------------- 
@@ -1377,10 +1384,31 @@
      ENDPROC TRAN_UHF 
 #
 #    ------------------------------------------------------------------------ 
+     PROC READ_MO_FOCK
+#    ------------------
+     CREATE Fpqa_mi
+     CREATE Fpqb_mi
+     CREATE Fpqa_ae
+     CREATE Fpqb_ae
+     CREATE Fpqa_me
+     CREATE Fpqb_me
+
+     EXECUTE SERVER_BARRIER
+     EXECUTE LIST_TO_BLOCKS Fpqa_mi
+     EXECUTE LIST_TO_BLOCKS Fpqb_mi
+     EXECUTE LIST_TO_BLOCKS Fpqa_me
+     EXECUTE LIST_TO_BLOCKS Fpqb_me
+     EXECUTE LIST_TO_BLOCKS Fpqa_ae
+     EXECUTE LIST_TO_BLOCKS Fpqb_ae
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC READ_MO_FOCK
+#    --------------------
 #
 #    Main Program 
 #
      execute server_barrier 
+     CALL READ_MO_FOCK
      CALL TRAN_UHF 
      #execute server_barrier 
 #
@@ -1573,6 +1601,12 @@
       execute blocks_to_list                Vaajj  
       execute blocks_to_list                Viabj  
       execute blocks_to_list                Vaabj  
+      execute blocks_to_list                Fpqa_mi
+      execute blocks_to_list                Fpqb_mi
+      execute blocks_to_list                Fpqa_me
+      execute blocks_to_list                Fpqb_me
+      execute blocks_to_list                Fpqa_ae
+      execute blocks_to_list                Fpqb_ae
       execute write_blocks_to_list
       execute server_barrier
 # 

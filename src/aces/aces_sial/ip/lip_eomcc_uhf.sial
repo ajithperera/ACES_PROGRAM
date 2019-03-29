@@ -500,8 +500,12 @@
       SCALAR FOLLOW 
       SCALAR FORT
       SCALAR FIFT 
-      SCALAR  OMEGA_KEEP
-      SCALAR  FRESH_SBSP
+      SCALAR OMEGA_KEEP
+      SCALAR FRESH_SBSP
+      SCALAR IDEGEN
+      SCALAR DIFF
+      SCALAR OMEGA_00
+      SCALAR VERY_SMALL
 # -----------------------------------------------------------
 
       PROC READ_DATA
@@ -3751,8 +3755,21 @@
      OMEGA0M  = A_VALUE 
      OMEGA0M *= -1.0
      E_OLD    = OMEGA0
+
+     IF ROOT_COUNT > ONE
+        DIFF  = OMEGA0
+        DIFF -= OMEGA_00
+        IF DIFF < VERY_SMALL
+           IDEGEN = ONE
+        ENDIF
+        OMEGA_00 = OMEGA0
+     ELSE
+        OMEGA_00 = OMEGA0
+     ENDIF
+
 #bgn_debug
 #     execute print_scalar OMEGA0M
+#     execute print_scalar IDEGEN
 #end_debug
 
 # First the residual vector for iteration 1
@@ -7642,6 +7659,7 @@
      LEFT         = ZERO
      RIGHT        = ZERO
      FRESH_SBSP   = ZERO
+     VERY_SMALL   = EOM_THRES
 #
      CALL READ_DATA
      CALL CREATE_ARRAYS 
@@ -7682,6 +7700,7 @@
          CALL KEEP_GUESS_VECS
 
          LOCK       = ZERO
+         IDEGEN     = ZERO 
          IF FRESH_SBSP != ONE
             IF ROOT_COUNT != ONE
                CALL ORTHO_NEW_ROOT
@@ -7796,7 +7815,11 @@
 #end_debug
               IF LOCK == ZERO
               IF EDIFF < LOCK_THRES
-                 LOCK = ONE
+                 IF IDEGEN == ONE
+                     LOCK = ZERO
+                  ELSE
+                     LOCK = ONE
+                  ENDIF
               ENDIF
               ENDIF 
 

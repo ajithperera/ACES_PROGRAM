@@ -54,6 +54,9 @@
       temp Tpxxp(p1,mu,nu,p)
 
       local Txxxp(mu,nu,lambda,p)
+      distributed Fpqa_mi(i,i1)
+      distributed Fpqa_ae(a,a1)
+      distributed Fpqa_me(a,i)
 #
 # Declare integral arrays 
 # ------------------------  
@@ -231,6 +234,9 @@
       execute server_barrier 
       execute blocks_to_list VSpppp
       execute blocks_to_list Vpppp
+      execute blocks_to_list Fpqa_mi
+      execute blocks_to_list Fpqa_me
+      execute blocks_to_list Fpqa_ae
       execute write_blocks_to_list
       execute server_barrier
 # 

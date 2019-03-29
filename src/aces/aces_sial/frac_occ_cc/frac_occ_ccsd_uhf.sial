@@ -116,7 +116,15 @@
       distributed Fme_b(j,b) 
       distributed Fmi_a(i,i1) 
       distributed Fmi_b(j,j1) 
-#
+
+      static FSpqa_ae(a,a1)
+      static FSpqb_ae(b,b1)
+      static FSpqa_mi(i,i1)
+      static FSpqb_mi(j,j1)
+      static Fpqa_noD_ae(a,a1)
+      static Fpqa_noD_mi(i,i1)
+      static Fpqb_noD_ae(b,b1)
+      static Fpqb_noD_mi(j,j1)
 #
 # Arrays used in transformation for AO2 algorithm
 # -----------------------------------------------
@@ -375,7 +383,6 @@
       Temp Taajb(a1,a,j,b)
       Temp Tjaba(j,a,b,a1)
       Temp Tiaia(i1,a2,i,a) 
-
 #
       temp tpx(p,mu) 
       temp t1px(p,mu) 
@@ -524,6 +531,13 @@
      distributed t1b_bx(b,mu) 
      distributed t1a_xi(mu,i) 
      distributed t1b_xj(mu,j) 
+     distributed Fpqa_mi(i,i1)
+     distributed Fpqb_mi(j,j1)
+     distributed Fpqa_me(i,a)
+     distributed Fpqb_me(b,j)
+     distributed Fpqa_ae(a,a1)
+     distributed Fpqb_ae(b,b1)
+
 #
 # local arrays used for data storage
 # ---------------------------------- 
@@ -847,6 +861,14 @@
 # 
 #    ------------------------------------------------------------------------ 
 #
+      create Fpqa_mi
+      create Fpqb_mi
+      create Fpqa_me
+      create Fpqb_me
+      create Fpqa_ae
+      create Fpqb_ae
+      execute sip_barrier
+
       execute server_barrier
       execute list_to_blocks                VSpipi
       execute list_to_blocks                Vaaii
@@ -863,6 +885,12 @@
       execute list_to_blocks                Vaajj
       execute list_to_blocks                Viabj
       execute list_to_blocks                Vaabj
+      execute list_to_blocks                Fpqa_mi
+      execute list_to_blocks                Fpqb_mi
+      execute list_to_blocks                Fpqa_me
+      execute list_to_blocks                Fpqb_me
+      execute list_to_blocks                Fpqa_ae
+      execute list_to_blocks                Fpqb_ae
       execute read_list_to_blocks
       execute server_barrier
 #
@@ -1172,6 +1200,33 @@
 #
       PROC FAEA
 #     ----------
+
+      PARDO a,a1
+           Taa(a,a1)         = Fpqa_noD_ae(a,a1)
+           PUT Fae_a(a,a1)   = Taa(a,a1)
+      ENDPARDO a, a1
+
+      PARDO a,a1
+            Taa(a,a1) = 0.0
+
+            DO i
+               GET T1a_old(a,i)
+               GET Fpqa_me(i,a1)
+
+               Tai(a,i)    = T1a_old(a,i)
+               Tia(i,a1)   = Fpqa_me(i,a1)
+#bgn_frac
+               execute set_aces3_vars  one one
+               execute apply_frac_occs tai two
+               execute apply_frac_occs tia one
+#end_frac
+               T1aa(a,a1)  = Tai(a,i) * Tia(i,a1)
+               Taa(a,a1)  += T1aa(a,a1)
+               Taa(a,a1)  *= -0.5
+            ENDDO i
+
+           PUT Fae_a(a,a1)  += Taa(a,a1)
+      ENDPARDO a,a1
 #
       PARDO a, a2, i
 #
@@ -1351,6 +1406,33 @@
 #
       PROC FAEB
 #     ----------
+
+      PARDO b,b1
+           tbb(b,b1)        = Fpqb_noD_ae(b,b1)
+           PUT Fae_b(b,b1)  = tbb(b,b1)
+      ENDPARDO b, b1
+
+      PARDO b,b1
+            Tbb(b,b1) = 0.0
+            DO j
+               GET T1b_old(b,j)
+               GET Fpqb_me(j,b1)
+
+               Tbj(b,j)    = T1b_old(b,j)
+               Tjb(j,b1)   = Fpqb_me(j,b1)
+#bgn_frac
+               execute set_aces3_vars  one one
+               execute apply_frac_occs tjb one
+               execute apply_frac_occs tbj two
+#end_frac
+               T1bb(b,b1)  = Tbj(b,j) * Tjb(j,b1)
+
+               Tbb(b,b1)  += T1bb(b,b1)
+               Tbb(b,b1)  *= -0.5
+            ENDDO j
+
+           PUT Fae_b(b,b1)  += Tbb(b,b1)
+      ENDPARDO b,b1
 #
       PARDO b, b2, j
 #
@@ -1373,7 +1455,6 @@
                      execute apply_frac_occs tjb   two
                      execute apply_frac_occs tbbbj one
 #end_frac
-
                      tbjbj(b2,j,b,j1)   = Tjb(j1,b1)*Tbbbj(b1,b,b2,j)
                      LWbjbj(b2,j,b,j1) += tbjbj(b2,j,b,j1) 
 #
@@ -1535,6 +1616,12 @@
 #
       PROC FMEA
 #     ----------
+
+      PARDO i,a
+          GET  Fpqa_me(i,a)
+          Tia(i,a)        = Fpqa_me(i,a)
+          PUT Fme_a(i,a)  = Tia(i,a)
+      ENDPARDO i,a
 #
       PARDO i, a 
 #
@@ -1580,7 +1667,7 @@
             ENDDO b 
             ENDDO j 
 #
-            PUT Fme_a(i,a) = Tme_a(i,a) 
+            PUT Fme_a(i,a) += Tme_a(i,a) 
 #
       ENDPARDO i, a 
 #bgn_debug
@@ -1611,6 +1698,12 @@
 #
       PROC FMEB
 #     ----------
+
+      PARDO j,b
+          GET Fpqb_me(j,b)
+          Tjb(j,b)        = Fpqb_me(j,b)
+          PUT Fme_b(j,b)  = Tjb(j,b)
+      ENDPARDO j,b
 #
       PARDO j, b 
 #
@@ -1656,7 +1749,7 @@
             ENDDO a 
             ENDDO i 
 #
-            PUT Fme_b(j,b) = Tme_b(j,b) 
+            PUT Fme_b(j,b) += Tme_b(j,b) 
 #
       ENDPARDO j, b 
 #bgn_debug
@@ -1698,6 +1791,32 @@
 #
       PROC FMIA
 #     ----------
+     PARDO i1,i
+            Tii(i1,i)        = Fpqa_noD_mi(i1,i)
+            PUT Fmi_a(i1,i)  = Tii(i1,i)
+      ENDPARDO i1,i
+
+      PARDO i1,i
+            Tii(i1,i) = 0.0
+            DO a
+               GET T1a_old(a,i)
+               GET Fpqa_me(i1,a)
+
+               Tai(a,i)  = T1a_old(a,i)
+               Tia(i1,a) = Fpqa_me(i1,a)
+#bgn_frac
+               execute set_aces3_vars  zer one
+               execute apply_frac_occs Tai one 
+               execute apply_frac_occs Tia two 
+#end_frac
+               T1ii(i1,i) =  Tai(a,i) * Tia(i1,a)
+               Tii(i1,i) += T1ii(i1,i)
+            ENDDO a
+
+            Tii(i1,i)*= 0.5
+            PUT Fmi_a(i1,i)  += Tii(i1,i)
+
+      ENDPARDO i1,i
 #
       PARDO i1, i, a, i2
 #
@@ -1711,7 +1830,6 @@
             execute apply_frac_occs Tai   two
             execute apply_frac_occs Taiii one
 #end_frac
-#
             Tii(i1,i)        = Tai(a,i2)*Taiii(a,i2,i,i1)
             PUT Fmi_a(i1,i) += Tii(i1,i) 
 #
@@ -1820,6 +1938,33 @@
 #
       PROC FMIB
 #     ----------
+
+      PARDO j1,j
+            tjj(j1,j)        = Fpqb_noD_mi(j1,j)
+            PUT Fmi_b(j1,j)  = Tjj(j1,j)
+      ENDPARDO j1,j
+
+      PARDO j1,j
+            Tjj(j1,j) = 0.0
+            DO b
+               GET T1b_old(b,j)
+               GET Fpqb_me(j1,b)
+
+               Tbj(b,j)  = T1b_old(b,j)
+               Tjb(j1,b) = Fpqb_me(j1,b)
+#bgn_frac
+               execute set_aces3_vars  zer two
+               execute apply_frac_occs Tjb two
+               execute apply_frac_occs Tbj one
+#end_frac
+               T1jj(j1,j) = Tbj(b,j) * Tjb(j1,b)
+               Tjj(j1,j) += T1jj(j1,j)
+            ENDDO b
+
+            Tjj(j1,j) *= 0.5
+            PUT Fmi_b(j1,j)  += Tjj(j1,j)
+
+      ENDPARDO j1,j
 #
       PARDO j1, j, b, j2
 #
@@ -2210,6 +2355,13 @@
 #
       ENDPARDO b, j, i1
 
+      PARDO a, i
+           GET Fpqa_me(i,a)
+           tai(a,i)          = Fpqa_me(i,a)
+           tia(i,a)          = tai(a,i)
+           PUT t1a_new(a,i) += tai(a,i)
+      ENDPARDO a, i
+
 #bgn_debug
      execute sip_barrier
      suma =0.0
@@ -2501,6 +2653,13 @@
             deallocate Ljjai(a,i,*,j1)  
 #
       ENDPARDO a, i, j1  
+
+      PARDO b, j
+           GET Fpqb_me(j,b)
+           tbj(b,j)          = Fpqb_me(j,b)
+           PUT t1b_new(b,j) += tbj(b,j)
+      ENDPARDO b, j
+
 #bgn_debug
      execute sip_barrier
      sumb =0.0
@@ -10129,7 +10288,72 @@
 #
      ENDPROC MOVE4
 #    -------------
-#
+
+    PROC STRIP_DIAGS
+#   ----------------
+# Remove diagonals from the OO and VV block of the Fock matrices.
+
+       PARDO i, i1
+          GET Fpqa_mi(i,i1)
+          Tii(i,i1) = Fpqa_mi(i,i1)
+          FSpqa_mi(i,i1) = Tii(i,i1)
+       ENDPARDO i, i1
+
+       PARDO j, j1
+          GET Fpqb_mi(j,j1)
+          Tjj(j,j1) = Fpqb_mi(j,j1)
+          FSpqb_mi(j,j1) = Tjj(j,j1)
+       ENDPARDO j, j1
+
+       PARDO a, a1
+          GET Fpqa_ae(a,a1)
+          Taa(a,a1) = Fpqa_ae(a,a1)
+          FSpqa_ae(a,a1) = Taa(a,a1)
+       ENDPARDO a, a1
+       PARDO b, b1
+          GET Fpqb_ae(b,b1)
+          Tbb(b,b1) = Fpqb_ae(b,b1)
+          FSpqb_ae(b,b1) = Tbb(b,b1)
+       ENDPARDO b, b1
+
+       DO i
+       DO i1
+          Tii(i,i1) = 0.0
+          Fpqa_noD_mi(i,i1) = Tii(i,i1)
+       ENDDO i1
+       ENDDO i
+
+       DO j
+       DO j1
+          Tjj(j,j1) = 0.0
+          Fpqb_noD_mi(j,j1) = Tjj(j,j1)
+       ENDDO j1
+       ENDDO j
+
+       DO a
+       DO a1
+          Taa(a,a1) = 0.0
+          Fpqa_noD_ae(a,a1) = Taa(a,a1)
+       ENDDO a1
+       ENDDO a
+
+       DO b
+       DO b1
+          Tbb(b,b1) = 0.0
+          Fpqb_noD_ae(b,b1) = Tbb(b,b1)
+       ENDDO b1
+       ENDDO b
+
+       execute sip_barrier
+
+       EXECUTE REMOVE_DIAGONAL FSpqa_mi Fpqa_noD_mi
+       EXECUTE REMOVE_DIAGONAL FSpqb_mi Fpqb_noD_mi
+       EXECUTE REMOVE_DIAGONAL FSpqa_ae Fpqa_noD_ae
+       EXECUTE REMOVE_DIAGONAL FSpqb_ae Fpqb_noD_ae
+
+    ENDPROC STRIP_DIAGS
+#   -------------------
+
 # ---------------------------------------------------------------------------------
 #
 # ---------------------------------------------------------------------------------
@@ -10177,6 +10401,7 @@
       EXECUTE SET_FRAC_OCCS  PINF ZER 
 
       CALL READ_2EL 
+      CALL STRIP_DIAGS
 #
       CREATE t1a_old 
       CREATE t1a_new 

@@ -1238,7 +1238,7 @@
             ENDDO b 
             ENDDO j 
 #
-            PUT Fme_a(i,a) = Tme_a(i,a) 
+            PUT Fme_a(i,a) += Tme_a(i,a) 
 #
       ENDPARDO i, a 
 # 
@@ -5064,6 +5064,7 @@
       DO mu
       DO nu
          GET              DHF_aa(mu,nu)
+         GET              DHF_bb(mu,nu)
          oed_ovl(mu,nu) = DHF_aa(mu,nu)
          oed_kin(mu,nu) = DHF_bb(mu,nu)
       ENDDO nu

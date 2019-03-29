@@ -122,6 +122,13 @@
       local Lxppp(mu,p,p,p1) 
       local Lxqqq(mu,q,q,q1)  
       local Lxpqq(mu,p,q,q1) 
+
+      Distributed Fpqa_mi(i,i1)
+      Distributed Fpqb_mi(j,j1)
+      Distributed Fpqa_me(i,a)
+      Distributed Fpqb_me(j,b)
+      Distributed Fpqa_ae(a,a1)
+      Distributed Fpqb_ae(b,b1)
 #
       temp txp(mu,p) 
       temp txq(mu,q) 
@@ -668,6 +675,12 @@
       execute blocks_to_list VSpppp(p,p2,p1,p3)   
       execute blocks_to_list VSqqqq(q,q2,q1,q3)   
       execute blocks_to_list Vppqq(p,p1,q,q1)   
+      execute blocks_to_list                Fpqa_mi
+      execute blocks_to_list                Fpqb_mi
+      execute blocks_to_list                Fpqa_me
+      execute blocks_to_list                Fpqb_me
+      execute blocks_to_list                Fpqa_ae
+      execute blocks_to_list                Fpqb_ae
       execute write_blocks_to_list
       execute server_barrier
 # 

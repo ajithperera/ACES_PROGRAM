@@ -159,7 +159,6 @@ C ieps{a,b} read C from the int_gen_parms.h and should be the number
 C of occ plus vrt orbitals and offsets respectively(??). The epsilon.h
 C common block has epsilon and epsilonb arrays.
 C
-      Write(*,*) pa1, pa2, pb1, pb2
       master = pst_get_master()
 
       if (me .eq. master) then

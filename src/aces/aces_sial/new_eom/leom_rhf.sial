@@ -214,6 +214,10 @@
       Scalar WARNING
       Scalar OMEGA_KEEP
       Scalar FRESH_SBSP
+      SCALAR VERY_SMALL
+      SCALAR IDEGEN
+      SCALAR DIFF
+      SCALAR OMEGA_00
 #
 # XPROP indices 
 #
@@ -6932,6 +6936,22 @@
      OMEGA0M *= -1.0
      E_OLD    = OMEGA0
 
+     IF ROOT_COUNT > ONE
+        DIFF  = OMEGA0
+        DIFF -= OMEGA_00
+        IF DIFF < VERY_SMALL
+           IDEGEN = ONE
+        ENDIF
+        OMEGA_00 = OMEGA0
+     ELSE
+        OMEGA_00 = OMEGA0
+     ENDIF
+
+#bgn_debug
+#     execute print_scalar OMEGA0M
+#     execute print_scalar IDEGEN
+#end_debug
+
 # First the residual vector for iteration 1
   
      PARDO i, a
@@ -9073,6 +9093,8 @@
      LEFT            = ZERO
      RIGHT           = ZERO
      FRESH_SBSP      = ZERO
+     VERY_SMALL      = EOM_THRES
+
 #bgn_debug
          execute print_scalar eom_guess
          execute print_scalar eom_denom
@@ -9113,7 +9135,8 @@
       
          CALL KEEP_GUESS_VECS
 
-         LOCK = ZERO
+         LOCK   = ZERO
+         IDEGEN = ZERO 
          IF R_CONVERGED != ZERO
             IF FRESH_SBSP != ONE
                IF ROOT_COUNT != ONE
@@ -9244,7 +9267,11 @@
 #end_debug
               IF LOCK == ZERO
               IF EDIFF < LOCK_THRES
-                 LOCK = ONE
+                IF IDEGEN == ONE
+                   LOCK = ZERO
+                ELSE
+                   LOCK = ONE
+                ENDIF
               ENDIF
               ENDIF 
 

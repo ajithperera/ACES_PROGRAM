@@ -304,6 +304,10 @@
 #
       distributed Vxxpi(mu,nu,p,i)
       distributed VDxxxi(mu,nu,lambda,i)
+      distributed Fpqa_mi(i,i1)
+      distributed Fpqa_ae(a,a1)
+      distributed Fpqa_me(a,i)
+
 #
 # Define scalars 
 # -------------- 
@@ -582,6 +586,22 @@
                              #     two-electron integral transformation.  
 #
      ENDPROC TRAN_UHF 
+#    ------------------------------------------------------------------------
+
+     PROC READ_MO_FOCK
+#    ------------------
+     CREATE Fpqa_mi
+     CREATE Fpqa_ae 
+     CREATE Fpqa_me
+
+     EXECUTE SERVER_BARRIER
+     EXECUTE LIST_TO_BLOCKS Fpqa_mi
+     EXECUTE LIST_TO_BLOCKS Fpqa_me
+     EXECUTE LIST_TO_BLOCKS Fpqa_ae
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC READ_MO_FOCK
+#    --------------------
 #
 #    ------------------------------------------------------------------------ 
 #
@@ -589,9 +609,9 @@
 #
 #    ------------------------------------------------------------------------ 
 #
-     execute server_barrier 
      CALL TRAN_UHF 
      execute server_barrier 
+     CALL READ_MO_FOCK
      destroy Vxaai
 #
 # Write transformed two-electron integrals to list 
@@ -603,6 +623,9 @@
       execute blocks_to_list                Viaai   
       execute blocks_to_list                VSaaai 
       execute blocks_to_list                Vpiqj(p,i,q,j)   
+      execute blocks_to_list                Fpqa_mi
+      execute blocks_to_list                Fpqa_me 
+      execute blocks_to_list                Fpqa_ae
       execute write_blocks_to_list
       execute server_barrier
 # 

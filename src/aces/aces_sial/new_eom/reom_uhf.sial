@@ -557,8 +557,10 @@
       SCALAR  FOLLOW
       SCALAR  OMEGA_KEEP
       SCALAR  FRESH_SBSP
-#
-# 
+      SCALAR VERY_SMALL
+      SCALAR IDEGEN
+      SCALAR DIFF
+      SCALAR OMEGA_00
 #
 # ENDARRAYS USED IN XPROC 
 #
@@ -9197,6 +9199,22 @@
      OMEGA0M *= -1.0
      E_OLD    = OMEGA0
 
+     IF ROOT_COUNT > ONE
+        DIFF  = OMEGA0
+        DIFF -= OMEGA_00
+        IF DIFF < VERY_SMALL
+           IDEGEN = ONE
+        ENDIF
+        OMEGA_00 = OMEGA0
+     ELSE
+        OMEGA_00 = OMEGA0
+     ENDIF
+
+#bgn_debug
+#     execute print_scalar OMEGA0M
+#     execute print_scalar IDEGEN
+#end_debug
+
 # First the residual vector for iteration 1
    
      PARDO i, a
@@ -12233,6 +12251,7 @@
      LEFT            = ZERO
      RIGHT           = ZERO
      FRESH_SBSP      = ONE 
+     VERY_SMALL      = EOM_THRES
 
      SINGLET = ZERO
      TRIPLET = ZERO
@@ -12307,7 +12326,8 @@
 
            CALL KEEP_GUESS_VECS
 
-           LOCK = ZERO
+           LOCK   = ZERO
+           IDEGEN = ZERO 
            IF FRESH_SBSP != ONE
               IF ROOT_COUNT != ONE
                  CALL ORTHO_NEW_ROOT
@@ -12431,7 +12451,11 @@
 #end_debug
               IF LOCK == ZERO
               IF EDIFF < LOCK_THRES
-                 LOCK = ONE
+                 IF IDEGEN == ONE
+                     LOCK = ZERO
+                  ELSE
+                     LOCK = ONE
+                  ENDIF
               ENDIF
               ENDIF
   

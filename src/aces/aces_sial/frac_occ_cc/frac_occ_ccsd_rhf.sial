@@ -101,6 +101,12 @@
       distributed Fae_a(a,a1) 
       distributed Fme_a(i,a) 
       distributed Fmi_a(i,i1) 
+
+      static FSpqa_ae(a,a1)
+      static FSpqa_mi(i,i1)
+
+      static Fpqa_noD_ae(a,a1)
+      static Fpqa_noD_mi(i,i1)
 #
 # Arrays used in transformation for AO2 algorithm
 # -----------------------------------------------
@@ -449,6 +455,9 @@
      distributed t1b_xj(mu,j) 
      served TDaixj(a,i,nu,j)
      local LDaixj(a,i,nu,j) 
+     distributed Fpqa_mi(i,i1)
+     distributed Fpqa_ae(a,a1)
+     distributed Fpqa_me(i,a)
 #
 # local arrays used for data storage
 # ---------------------------------- 
@@ -720,12 +729,21 @@
 #
 #    ------------------------------------------------------------------------
 #
+      create Fpqa_mi
+      create Fpqa_me
+      create Fpqa_ae 
+      execute sip_barrier 
+
       execute server_barrier
       execute list_to_blocks                VSpipi
       execute list_to_blocks                Vaaii
       execute list_to_blocks                Viaai
       execute list_to_blocks                Vaaai
       execute list_to_blocks                Vpiqj
+      execute list_to_blocks                Fpqa_mi
+      execute list_to_blocks                Fpqa_me
+      execute list_to_blocks                Fpqa_ae 
+
       execute read_list_to_blocks
       execute server_barrier
 #
@@ -946,6 +964,32 @@
 #
       PROC FAEA
 #     ----------
+      PARDO a,a1
+           Taa(a,a1)         = Fpqa_noD_ae(a,a1)
+           PUT Fae_a(a,a1)   = Taa(a,a1)
+      ENDPARDO a, a1
+
+      PARDO a,a1
+            Taa(a,a1) = 0.0
+
+            DO i
+               GET T1a_old(a,i)
+               GET Fpqa_me(i,a1)
+
+               Tai(a,i)    = T1a_old(a,i)
+               Tia(i,a1)   = Fpqa_me(i,a1)
+#bgn_frac
+               execute set_aces3_vars  one one 
+               execute apply_frac_occs tai two 
+               execute apply_frac_occs tia one
+#end_frac 
+               T1aa(a,a1)  = Tai(a,i) * Tia(i,a1)
+               Taa(a,a1)  += T1aa(a,a1)
+               Taa(a,a1)  *= -0.5
+            ENDDO i
+
+           PUT Fae_a(a,a1)  += Taa(a,a1)
+      ENDPARDO a,a1
 #
       PARDO a, a2, i
 #     
@@ -1189,6 +1233,12 @@
 #
       PROC FMEA
 #     ----------
+
+      PARDO i,a
+          GET  Fpqa_me(i,a)
+          Tia(i,a)        = Fpqa_me(i,a)
+          PUT Fme_a(i,a)  = Tia(i,a)
+      ENDPARDO i,a
 #
       PARDO i, a 
 #
@@ -1232,7 +1282,7 @@
             ENDDO b 
             ENDDO j 
 #
-            PUT Fme_a(i,a) = Tme_a(i,a) 
+            PUT Fme_a(i,a) += Tme_a(i,a) 
 #
       ENDPARDO i, a 
 #bgn_debug
@@ -1264,6 +1314,34 @@
 #
       PROC FMIA
 #     ----------
+
+      PARDO i1,i
+            Tii(i1,i)        = Fpqa_noD_mi(i1,i)
+            PUT Fmi_a(i1,i)  = Tii(i1,i)
+      ENDPARDO i1,i
+
+      PARDO i1,i
+            Tii(i1,i) = 0.0
+            DO a
+               GET T1a_old(a,i)
+               GET Fpqa_me(i1,a)
+
+               Tai(a,i)  = T1a_old(a,i)
+               Tia(i1,a) = Fpqa_me(i1,a)
+#bgn_frac 
+            execute set_aces3_vars  zer one
+            execute apply_frac_occs Tai one
+            execute apply_frac_occs Tia two
+#end_frac
+               T1ii(i1,i) = Tai(a,i) * Tia(i1,a)
+               Tii(i1,i) += T1ii(i1,i)
+            ENDDO a
+
+            Tii(i1,i)*= 0.5
+            PUT Fmi_a(i1,i)  += Tii(i1,i)
+
+      ENDPARDO i1,i
+
 #
       PARDO i1, i, a, i2
 #
@@ -1499,6 +1577,14 @@
             PUT t1a_new(a,i) += tai(a,i)
 #
       ENDPARDO a, i
+
+      PARDO a, i
+           GET Fpqa_me(i,a)
+           tai(a,i)          = Fpqa_me(i,a)
+           tia(i,a)          = tai(a,i)
+           PUT t1a_new(a,i) += tai(a,i)
+      ENDPARDO a, i
+
 #bgn_debug
      execute sip_barrier
      suma =0.0
@@ -5073,6 +5159,43 @@
 
 #    endproc do_checkpoint
 
+     PROC STRIP_DIAGS
+#    ----------------
+
+      PARDO i, i1
+          GET Fpqa_mi(i,i1)
+          Tii(i,i1) = Fpqa_mi(i,i1)
+          FSpqa_mi(i,i1) = Tii(i,i1)
+       ENDPARDO i, i1
+
+       PARDO a, a1
+          GET Fpqa_ae(a,a1)
+          Taa(a,a1) = Fpqa_ae(a,a1)
+          FSpqa_ae(a,a1) = Taa(a,a1)
+       ENDPARDO a, a1
+
+       DO i
+       DO i1
+          Tii(i,i1) = 0.0
+          Fpqa_noD_mi(i,i1) = Tii(i,i1)
+       ENDDO i1
+       ENDDO i
+
+       DO a
+       DO a1
+          Taa(a,a1) = 0.0
+          Fpqa_noD_ae(a,a1) = Taa(a,a1)
+       ENDDO a1
+       ENDDO a
+
+       execute sip_barrier
+
+       EXECUTE REMOVE_DIAGONAL FSpqa_mi Fpqa_noD_mi
+       EXECUTE REMOVE_DIAGONAL FSpqa_ae Fpqa_noD_ae
+
+     ENDPROC STRIP_DIAGS 
+#    -------------------
+
 # ---------------------------------------------------------------------------------
 #
 # ---------------------------------------------------------------------------------
@@ -5114,6 +5237,7 @@
 # ------------------------------------- 
 #
       CALL READ_2EL 
+      CALL STRIP_DIAGS
 
       CREATE t1a_old 
       CREATE t1a_new 
