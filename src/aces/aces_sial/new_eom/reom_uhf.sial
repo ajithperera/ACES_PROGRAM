@@ -561,6 +561,7 @@
       SCALAR IDEGEN
       SCALAR DIFF
       SCALAR OMEGA_00
+      SCALAR TWEN 
 #
 # ENDARRAYS USED IN XPROC 
 #
@@ -12234,6 +12235,7 @@
      THREE    = 3.0
      FORT     = 14.0
      FIFT     = 15.0
+     TWEN     = 20.0
 
      TARGET_ROOTS    = EOM_ROOTS
      EOM_THRES       = EOM_TOL
@@ -12337,10 +12339,18 @@
 
            IF FRESH_SBSP == ONE
               ITER_COUNT = ZERO
-           ENDIF 
-           SBSP_COUNT = ZERO
+           ELSE
+# The following logic handles a very rare occurence when the
+# previous subspace of the order 20 (maximum) is used for the
+# next root.
 
-           DO EOM_CYCLE
+            IF ITER_COUNT == TWEN
+               ITER_COUNT = ZERO
+           ENDIF
+         ENDIF
+         SBSP_COUNT = ZERO
+
+         DO EOM_CYCLE
 
               CALL SET_TO_ZERO
 

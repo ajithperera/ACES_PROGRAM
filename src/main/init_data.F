@@ -48,6 +48,8 @@ C  in the file COPYRIGHT.
       integer          iintgrl_tol, ilock_orbocc, idamp_end, idkh_order
       integer          ireference 
       integer          iee_guess,iee_denom,iee_maxcyc,icis_tol
+      integer          iip_roots,iea_roots,iroot_search 
+      integer          iwhat_tofollow,isub_space 
       character*4      atmnam(max_centers)
       logical          cartesian
       logical          uhf
@@ -289,7 +291,18 @@ C
         Iee_denom      = iflags(163)
         Iee_maxcyc     = iflags(105)
         Icis_tol       = iflags(164)
-  
+        call igetrec(-1, 'JOBARC', 'IPSYM_A ', 1, iip_roots)
+        call igetrec(-1, 'JOBARC', 'EASYM_A ', 1, iea_roots)
+        Iroot_search   = iflags(165)
+        Iwhat_tofollow = iflags(166)
+        Isub_space     = iflags(167)
+
+C Use the ip,ea_roots variables to handel dip and dea roots.
+
+        If (iflags(129) .Gt. 0) call igetrec(-1, 'JOBARC', 
+     +                               'DIPSYMA ', 1, iip_roots)
+        If (iflags(131) .Gt. 0) call igetrec(-1, 'JOBARC', 
+     +                               'DEASYMA ', 1, iea_roots)
         Damp_type     = DBLE(Idamp_type)
         Damp_tol      = DBLE(Idamp_tol)
         Lindep_tol    = DBLE(Ilindep_tol)
@@ -297,11 +310,16 @@ C
         Lock_orbocc   = DBLE(Ilock_orbocc)
         Damp_end      = DBLE(Idamp_end)
         Dkh_order     = DBLE(Idkh_order)
-        Reference      = DBLE(Ireference)
-        ee_guess       = DBLE(iee_guess)
-        ee_denom       = DBLE(iee_denom)
-        ee_maxcyc      = DBLE(iee_maxcyc)
-        cis_tol        = 10.0d0**(-icis_tol) 
+        Reference     = DBLE(Ireference)
+        ee_guess      = DBLE(iee_guess)
+        ee_denom      = DBLE(iee_denom)
+        ee_maxcyc     = DBLE(iee_maxcyc)
+        cis_tol       = 10.0d0**(-icis_tol) 
+        ip_roots      = DBLE(iip_roots)
+        ea_roots      = DBLE(iea_roots)
+        root_search   = DBLE(Iroot_search)
+        what_tofollow = DBLE(Iwhat_tofollow)
+        sub_space     = DBLE(Isub_space)
 
 c-------------------------------------------------------------------------
 c   Read IFLAGS2 off JOBARC.

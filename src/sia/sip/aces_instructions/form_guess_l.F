@@ -220,7 +220,7 @@ C
       Do i = 1, Ndim
          Norm(i) = Ddot(Ndim, EvecR(1,i), 1, EvecL(1,i),1)
          If (Dsqrt(Norm(i)) .lt. 1.0D-9) Then 
-             Write(6,"(a)") "@-Process_vecs: Division by a small",
+             Write(6,"(a,a)") "@-Process_vecs: Division by a small",
      +                      " number. Discontinuing."
              Call abort_job()
          Else
@@ -252,16 +252,21 @@ C
       endif 
 #endif 
       If (Nroots .EQ. 0) Then
+         If (me .eq. 0) then
          Write(6,"(a,a)") "@-PROCESS_VECS_L: The requested number of"
      +                    " roots can not be zero"
          Call abort_job()
+         Endif 
       Endif 
 
       If (Nroots .Gt. 50 .or. Nroots .Gt. Ndim) Then
-         Write(6,"(a,a,a)") "@-PROCESS_VECS_L: The requested number of",
-     +                  "roots are greater than allowed maximum",
-     +                  " or allowed."
+         If (me .eq. 0) Then
+         Write(6,"(2a,1x,i2,1x,a)") "@-PROCESS_VECS: The requested",
+     +                  " number of roots l", nroots, "are greater than"
+         Write(6,"(a,1x,i2,a,1x,i2)") " allowed maximum",Ndim,
+     +                                " or allowed", 50
          Call abort_job()
+         Endif 
       Endif 
 
       Do j = 1, Nroots 

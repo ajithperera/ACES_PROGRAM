@@ -129,11 +129,13 @@ c nContAOs : total number of contracted functions
       double precision lindep_tol, lock_orbitals, intgrl_tol, damp_end
       double precision lock_orbocc
 
-      double precision excite, eom_tol, eom_roots ! Watson Added
+      double precision  excite, eom_tol, eom_roots ! Watson Added
       double precision  polarizability, a_tensor, g_tensor, d_tensor
       double precision  dkh_order,reference 
       double precision  ee_maxcyc,ee_guess,ee_denom,cis_tol
-      double precision  spn_orbt
+      double precision  spn_orbt,ip_roots,ea_roots,root_search
+      double precision  what_tofollow,sub_space 
+
       double precision reg,stabvalue
       double precision EE_ccsd,E4_aaa,E5_aaa,E4_bbb,E5_bbb,E4_aab
       double precision E5_aab,E4_bba,E5_bba,E4_abb,E5_abb
@@ -201,7 +203,9 @@ c nContAOs : total number of contracted functions
      &                     lshft_b1, damp_type, damp_tol, lindep_tol,
      &                     lock_orbitals, lock_orbocc, intgrl_tol, 
      &                     damp_end,dkh_order,spn_orbt,reference,
-     &                     ee_maxcyc, ee_guess, ee_denom, cis_tol, last
+     &                     ee_maxcyc, ee_guess, ee_denom, cis_tol,
+     &                     ip_roots, ea_roots, root_search, 
+     &                     what_tofollow, sub_space, last
 
       logical managers_are_workers, master_is_worker
  

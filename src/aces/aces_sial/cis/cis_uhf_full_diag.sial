@@ -27,8 +27,8 @@
       Index Spn_mult   = 1, 2
       Index Ione       = 1, 1
       Index Twelve     = 1, 12
-      Index occ_vrt0   = 1, 1000
-      Index occ_vrt1   = 1, 1000
+      Index occ_vrt0   = 1, 5400
+      Index occ_vrt1   = 1, 5400
 #
       aoindex mu     = 1, norb
       aoindex nu     = 1, norb
@@ -1881,11 +1881,15 @@
 
 # Initialize static arrays
 
+      IF  RANK == ZERO
       DO OCC_VRT0
          DO OCC_VRT1
             UHF_CIS_AMAT(OCC_VRT0,OCC_VRT1) = 0.0
          ENDDO OCC_VRT1
       ENDDO OCC_VRT0
+      ENDIF 
+      EXECUTE BROADCAST_ARRAY  UHF_CIS_AMAT
+      EXECUTE SIP_BARRIER 
 
       DO a
       DO i

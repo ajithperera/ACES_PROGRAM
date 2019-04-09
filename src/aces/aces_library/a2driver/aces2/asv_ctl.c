@@ -378,9 +378,12 @@ const ASV_nl_t ASV_nl[] =
 {/*262*/ "EE_GUESS",    "EE_GUESS"     ,h_ICHAR_handle, 0,      ""},
 {/*263*/ "EE_DENOM",    "EE_DENOM"     ,h_ICHAR_handle, 0,      ""},
 {/*264*/ "ICIS_TOL",    "CIS_TOL#"     ,h_ICHAR_f_int,  5,     "tol"},
-{/*265*/ "",   ""     ,h_ICHAR_handle,0,""},
+{/*265*/ "ROOT_SEARCH", "ROOT_SE#"     ,h_ICHAR_handle, 0,      ""},
+{/*266*/ "SELECT_VECS", "SEL_VEC#"     ,h_ICHAR_handle, 0,      ""},
+{/*267*/ "SUB_SPACE",   "SUB_SPACE"    ,h_ICHAR_handle, 0,      ""},
+{/*268*/ "",   ""     ,0,0,""},
 }; /* end ASV_nl[] definition */
-#define MAX_ASVs 265
+#define MAX_ASVs 268
 
 /******************************************************************************/
 
@@ -751,6 +754,27 @@ void asv_handle_proc(const f_int * index, const char * value)
         {
             const char *handles[] = { "INTERNAL", "CARTESIAN", "XYZ2INT",
                                       "AUTO", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_select_vecs:
+        {
+            const char *handles[] = { "FIRST", "PREVIOUS", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_root_search:
+        {
+            const char *handles[] = { "MAX_OVERLAP", "MIN_ENERGY",  "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_sub_space:
+        {
+            const char *handles[] = { "KEEP", "NEW",  "" };
             asv_update_handle(index,value,handles);
             break;
         }

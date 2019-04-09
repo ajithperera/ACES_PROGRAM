@@ -40,7 +40,7 @@ extern InstructCls Instruct;
 
 QCArrayClass::QCArrayClass()
 {
-    nvars=43;
+    nvars=48;
 }
 
 void QCArrayClass::initializer()
@@ -269,7 +269,27 @@ void QCArrayClass::insertconstant()
     arraytype[42]=scalar;
     fvalue[42]=0;
 
-    nvars = 43;
+    vararray[43]="ip_roots";
+    arraytype[43]=scalar;
+    fvalue[45]=0;
+
+    vararray[44]="ea_roots";
+    arraytype[44]=scalar;
+    fvalue[46]=0;
+
+    vararray[45]="root_search";
+    arraytype[45]=scalar;
+    fvalue[47]=0;
+
+    vararray[46]="what_tofollow";
+    arraytype[46]=scalar;
+    fvalue[48]=0;
+
+    vararray[47]="sub_space";
+    arraytype[47]=scalar;
+    fvalue[49]=0;
+
+    nvars = 48;
 }
 
 void QCArrayClass::insert(int type, int idno, int nindex, int*indexarray)

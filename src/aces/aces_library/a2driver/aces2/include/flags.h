@@ -540,5 +540,14 @@
 #define h_IOPPAR_cis_tol        264
 #define h_IFLAGS2_cis_tol       164
 
+#define h_IOPPAR_root_search    265
+#define h_IFLAGS2_root_search   165
+
+#define h_IOPPAR_select_vecs    266
+#define h_IFLAGS2_select_vecs   166
+
+#define h_IOPPAR_sub_space      267
+#define h_IFLAGS2_sub_space     167
+
 #endif /* _FLAGS_H_ */
 

@@ -341,8 +341,10 @@ c------------------------------------------------------------------------
      *                    damp_type, damp_tol, lindep_tol, 
      *                    lock_orbitals, lock_orbocc, intgrl_tol, 
      *                    damp_end,dkh_order,reference,ee_maxcyc,
-     *                    ee_guess,ee_denom,cis_tol,
-     *
+     *                    ee_guess,ee_denom,cis_tol,ip_roots, 
+     *                    ea_roots,root_search,what_tofollow,
+     *                    sub_space,
+     * 
      *                    io_company_id, niocompany, need_predef,
      *                    npre_defined, dryrun)
  

@@ -176,13 +176,20 @@ C Lets use generalized eigenvector solver.
       nvrt_beta  = nbeta_virtual
       Threshold = eom_tol 
 
-#ifdef _DEBUG_LVL0
+      If (Ndim .GT. Ijdim) Then
+         Write(6, "(2a,I8,2a,I8)") " The actual dimension of the CIS",
+     +                    " matrix",Ndim," is greater than the lead",
+     +                    " dimension",Ijdim
+         Call abort_job()
+      Endif 
+
+C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a,a,1x,i5,1x,i5)") "@-Entry to Full_diag_phph",
      +                       " order of the matrix", IJDim, Ndim
-      call output(Amat,1,Ndim,1,Ndim,IJdim,IJdim,1)
+C      call output(Amat,1,Ndim,1,Ndim,IJdim,IJdim,1)
       Endif 
-#endif 
+C#endif 
 
       Call Dgeev("V","V",Ndim, Amat, IJdim, EigR, EigI,
      +            EvecL,Ndim,EvecR,Ndim,Work,4*Ndim,Ierror)
@@ -197,7 +204,7 @@ c eigenvectors. This is really to handle nearly zero eigenvalues.
       Write(6,"(a)") "The right-hand side"
       Write(6,"(6(1x,F10.5))") (EigR(i),i=1,Ndim)
 C      Write(6,"(6(1x,F10.5))") (EigI(i),i=1,Ndim)
-      call output(EvecR,1,Ndim,1,Ndim,Ndim,Ndim,1)
+C      call output(EvecR,1,Ndim,1,Ndim,Ndim,Ndim,1)
 C      Write(6,"(a)") "The left-hand side"
 C      call output(EvecL,1,Ndim,1,Ndim,Ndim,Ndim,1)
       endif 

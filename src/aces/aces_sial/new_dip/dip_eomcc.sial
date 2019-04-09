@@ -392,6 +392,7 @@
       Scalar IDEGEN 
       Scalar DIFF 
       Scalar OMEGA_00
+      Scalar TWEN
 
 # -----------------------------------------------------------
 
@@ -4266,6 +4267,7 @@
      THREE    = 3.0
      FORT     = 14.0
      FIFT     = 15.0
+     TWEN     = 20.0
 
      TARGET_ROOTS = EOM_ROOTS
      EOM_THRES    = EOM_TOL
@@ -4357,6 +4359,14 @@
 
            IF FRESH_SBSP == ONE
               ITER_COUNT = ZERO
+           ELSE
+# The following logic handles a very rare occurence when the
+# previous subspace of the order 20 (maximum) is used for the
+# next root.
+
+              IF ITER_COUNT == TWEN
+                 ITER_COUNT = ZERO
+              ENDIF
            ENDIF
            SBSP_COUNT    = ZERO 
 
@@ -4501,6 +4511,7 @@
 #bgn_debug
 #      execute print_scalar OMEGA 
 #end_debug
+           SBSP_COUNT += -1.0
            IF SBSP_COUNT == MAX_SUBSP_DIM
               IF RESIDUAL_NORM  > EOM_THRES
 #

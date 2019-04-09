@@ -332,6 +332,7 @@
       SCALAR  IDEGEN
       SCALAR  DIFF
       SCALAR  OMEGA_00
+      SCALAR  TWEN 
 #
 # Declare two-electron integral arrays
 # ------------------------------------
@@ -9251,6 +9252,7 @@
       FORT     = 14.0
       FIFT     = 15.0
       HALF     = 0.50
+      TWEN     = 20.0
 
       CALL CREATE_ARRAYS
       CALL READ_AMP
@@ -9347,7 +9349,16 @@
          
          IF FRESH_SBSP == ONE
             ITER_COUNT = ZERO 
-         ENDIF 
+         ELSE
+
+# The following logic handles a very rare occurence when the
+# previous subspace of the order 20 (maximum) is used for the
+# next root.
+
+            IF ITER_COUNT == TWEN
+               ITER_COUNT = ZERO
+           ENDIF
+         ENDIF
          SBSP_COUNT = ZERO
 
          DO EOM_CYCLE 

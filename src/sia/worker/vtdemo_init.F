@@ -31,6 +31,8 @@ C  in the file COPYRIGHT.
      *                       lock_orbocc, intgrl_tol, damp_end, 
      *                       dkh_order,reference,
      *                       ee_maxcyc,ee_guess,ee_denom,cis_tol,
+     *                       ip_roots,ea_roots,root_search,
+     *                       what_tofollow,sub_space,
      * 
      *                       io_company_id, niocompany, need_predef,
      *                       npre_defined, dryrun)
@@ -109,6 +111,8 @@ C  in the file COPYRIGHT.
       integer ilock_orbitals,ilindep_tol,iintgrl_tol, idamp_end
       integer ilock_orbocc, idkh_order,ireference
       integer iee_maxcyc,iee_guess,iee_denom,icis_tol
+      integer iip_roots,iea_roots,iroot_search
+      integer iwhat_tofollow,isub_space
       integer timertype
       integer index, val1, val2
       integer occ_index, index_type, ind, nindex
@@ -123,6 +127,8 @@ C  in the file COPYRIGHT.
       double precision lindep_tol,lock_orbitals,intgrl_tol, damp_end
       double precision lock_orbocc, dkh_order,reference
       double precision ee_maxcyc,ee_guess,ee_denom,cis_tol
+      double precision ip_roots,ea_roots,root_search
+      double precision what_tofollow,sub_space
 
       double precision xxx(2)
 #ifdef ALTIX
@@ -759,6 +765,21 @@ C Ajith Perera, 05/2014  added
 
       icis_tol       = array_table(c_scalar_index,43)
       scalar_table(icis_tol)   = cis_tol
+
+      iip_roots      = array_table(c_scalar_index,44)
+      scalar_table(iip_roots)    = ip_roots
+
+      iea_roots      = array_table(c_scalar_index,45)
+      scalar_table(iea_roots)    = ea_roots
+
+      iroot_search   = array_table(c_scalar_index,46)
+      scalar_table(iroot_search) = root_search
+
+      iwhat_tofollow = array_table(c_scalar_index,47)
+      scalar_table(iwhat_tofollow) = what_tofollow
+
+      isub_space     = array_table(c_scalar_index,48)
+      scalar_table(isub_space) = sub_space
 C 
       next = 0
       next_server = 0
@@ -768,7 +789,7 @@ C Tom Watson, Changed to 22.
 C Ajith Perera, changed to 27, 05/2014. 
 C Ajith Perera, changed to 28, 12/2014. 
 C
-      do i = 44, narray_table   ! 1st 19 arrays are pre-defined.
+      do i = 49, narray_table   ! 1st 19 arrays are pre-defined.
          type = array_table(c_array_type,i) 
          if (type .eq. static_array) then
 
