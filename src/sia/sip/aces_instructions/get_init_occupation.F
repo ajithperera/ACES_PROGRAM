@@ -146,16 +146,19 @@ C
       integer pa1,pa2,pb1,pb2,atype,btype,i,j,ierr,n,k,iunit
       integer itmp1(2),Itmp2(2),uhf
       integer company_comm, pst_get_company_comm,master,pst_get_master
+      integer Nbfns_ext, Nbfns_int
       logical OCCNUMS_FILE
+      
       character*80 BLANK
       double precision xxx(1:pa1)
       double precision DOCC_NUM
 C
-C Check whether OCCNUM file exist. If it is read the file as is done 
+C Check whether FRAC_OCCNUM file exist. If it is read the file as is done 
 C in the serial code (but no symmetry)
 C
-      INQUIRE(FILE="OCCNUMS", EXIST=OCCNUMS_FILE)
+      INQUIRE(FILE="FRAC_OCCNUMS", EXIST=OCCNUMS_FILE)
       IUNIT = 5
+      Nbfns_int = Nbasis 
 
       IF (OCCNUMS_FILE) THEN
 
@@ -167,21 +170,29 @@ C#ifdef _DEBUG_LVL0
       write(*,*)
       endif
 C#endif 
-         OPEN(UNIT=IUNIT, FILE="OCCNUMS", FORM="FORMATTED")
-         READ(IUNIT,10,END=19) Itmp1(1)
-         READ(IUNIT,10,END=19) Itmp1(2)
-
-         READ(IUNIT, "(80a)") Blank
-        
+         OPEN(UNIT=IUNIT, FILE="FRAC_OCCNUMS", FORM="FORMATTED")
+         READ(IUNIT,10,END=19) Nbfns_ext
          READ(IUNIT,10,END=19) Itmp2(1)
          READ(IUNIT,10,END=19) Itmp2(2)
-
          READ(IUNIT, "(80a)") Blank
+
+         If (Nbfns_ext .NE.  Nbfns_int) Then
+             If (Me .eq. 0) Then
+             Write(6,"(3a,I3,a,I3)") " Inconsistent value for the",
+     +                               " number of basis functions!",
+     +                               " External: ",Nbfns_ext,
+     +                               " and internali: ",Nbfns_ext
+             Endif
+             Call abort_job()
+          Endif
 
          IF (UHF .EQ. 0) THEN
             DO I = 1, Itmp2(1)
                READ(IUNIT, "(F4.2)",END=19) DOCC_NUM
                XXX(i) = DOCC_NUM 
+            ENDDO 
+            DO I = Itmp2(1)+1, Nbfns_ext
+               XXX(i) = DOCC_NUM
             ENDDO 
 
          ELSE
@@ -197,6 +208,10 @@ C#endif
                XXX(i) = DOCC_NUM
             ENDDO 
 
+            DO I = Itmp2(2)+1, Nbfns_ext
+               XXX(i) = DOCC_NUM
+            ENDDO 
+               
          ENDIF 
 
       ELSE

@@ -32,7 +32,7 @@
              Write(6,"(3a,I3,a,I3)") " Inconsistent value for the",
      +                               " number of basis functions!", 
      +                               " External: ",Nbfns_ext,
-     +                               " and internali: ",Nbfns_ext
+     +                               " and internali: ",Nbfns_int
              Endif 
              Call abort_job() 
           Endif 
