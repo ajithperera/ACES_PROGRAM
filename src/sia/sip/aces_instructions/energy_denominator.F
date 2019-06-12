@@ -282,13 +282,16 @@ c--------------------------------------------------------------------
      *                       ni1,ni2,epsilon, epsilonb)
       implicit none
       include 'interpreter.h'
+      include 'parallel_info.h'
 
       integer a1,a2,i1,i2
       integer atype, itype
       integer na1, na2, ni1, ni2
       double precision x(na1:na2,ni1:ni2)
+      double precision Thres 
 
       double precision epsilon(*), epsilonb(*)
+      data Thres /1.0D-10/
 
       integer a,i
       double precision eps, epsa, epsi
@@ -308,12 +311,11 @@ c--------------------------------------------------------------------
          endif
          val =  x(a,i)
          eps = epsi - epsa
-         if (eps .ne. 0.0) x(a,i) = val/eps
-         if (dabs(eps) .lt. 1.0d-10) then
-            if (a .ne. i) write(6,*) ' Small denominator being
-     *         eliminated in energy_denominator',
-     *         'a, i', a,i, 'den' ,eps, 'value', x(a,i)
-            x(a,i) = 0.0d0
+
+         if (Dabs(eps) .gt. Thres) then
+            x(a,i) = val/eps
+         else
+            x(a,i) = 0.0D0
          endif
 
       enddo

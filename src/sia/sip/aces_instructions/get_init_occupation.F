@@ -164,9 +164,10 @@ C
 
 C#ifdef _DEBUG_LVL0
       if (me .eq. master) then
-      write(*,*)j
-      write(*,"(a,a)")" The occupation number file is present, The",
-     +                " occupations are read from the OCCNUMS file."
+      write(*,*)
+      write(*,"(3a)")" The occupation number file is present, The",
+     +               " occupations are read from the"
+      Write(*,"(a)") " OCCNUMS file."
       write(*,*)
       endif
 C#endif 
@@ -174,14 +175,14 @@ C#endif
          READ(IUNIT,10,END=19) Nbfns_ext
          READ(IUNIT,10,END=19) Itmp2(1)
          READ(IUNIT,10,END=19) Itmp2(2)
-         READ(IUNIT, "(80a)") Blank
+         READ(IUNIT, "(80a)")  Blank
 
          If (Nbfns_ext .NE.  Nbfns_int) Then
              If (Me .eq. 0) Then
              Write(6,"(3a,I3,a,I3)") " Inconsistent value for the",
      +                               " number of basis functions!",
      +                               " External: ",Nbfns_ext,
-     +                               " and internali: ",Nbfns_ext
+     +                               " and internal: ",Nbfns_ext
              Endif
              Call abort_job()
           Endif
@@ -192,7 +193,7 @@ C#endif
                XXX(i) = DOCC_NUM 
             ENDDO 
             DO I = Itmp2(1)+1, Nbfns_ext
-               XXX(i) = DOCC_NUM
+               XXX(i) = 0.0D0
             ENDDO 
 
          ELSE
@@ -209,13 +210,12 @@ C#endif
             ENDDO 
 
             DO I = Itmp2(2)+1, Nbfns_ext
-               XXX(i) = DOCC_NUM
+               XXX(i) = 0.0D0
             ENDDO 
                
          ENDIF 
 
       ELSE
-           
          IF (UHF .EQ. 0) THEN
 
             DO I = 1, nalpha_occupied
@@ -239,12 +239,13 @@ C#ifdef _DEBUG_LVL0
       if (me .eq. master) then
       write(*,*)
       If (UHF .EQ. 0) THEN
-      write(*,"(a)") "The Alpha occupation vector from init_occupy.F"
+      write(*,"(a,a)") "The Alpha occupation vector from",
+     +                 " get_init_occupation.F"
       Else
-      write(*,"(a)") "The Beta occupation vector from init_occupy.F"
+      write(*,"(a,a)") "The Beta occupation vector from",
+     +                 " get_init_occupation.F"
       Endif 
-      write(*,*)
-      Write(*,"(6(1x,F3.1))") (xxx(i),i=1,pa1)
+      Write(*,"(6(1x,F7.4))") (xxx(i),i=1,pa1)
       Write(*,*)
       endif
 C#endif

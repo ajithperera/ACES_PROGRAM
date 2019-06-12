@@ -31,8 +31,10 @@ c-------------------------------------------------------------------------
       integer nallproton, noff  
       integer dummy, i, nocc_present
       logical*8 l8false
+      logical occnums_file 
       integer ECP, NATOMS, ICRCOR(MxAtms) 
       integer nallalpha_occupied, nallbeta_occupied 
+      integer Nbfns_ext,Itmp2(2),Iunit 
       double precision vnn 
       double precision nuclear_nuclear_repulsion_energy
 
@@ -156,6 +158,30 @@ C--------------------------------------------------------------------------
       nalpha_occupied = nbeta_occupied + ialpex
       if (nalpha_occupied .eq. 0) call abort_job()
 
+c Check whether there is fractonal occuation file. If so update occupation
+c numbers.
+
+      INQUIRE(FILE="FRAC_OCCNUMS", EXIST=OCCNUMS_FILE)
+      IUNIT = 5
+      IF (OCCNUMS_FILE) THEN
+C#ifdef _DEBUG_LVL0
+      write(*,*)
+      write(*,"(3a)")" The occupation number file is present, The",
+     +               " occupations are read from the"
+      Write(*,"(a)") " FRAC_OCCNUMS file."
+      write(*,*)
+C#endif
+         OPEN(UNIT=IUNIT, FILE="FRAC_OCCNUMS", FORM="FORMATTED")
+         READ(IUNIT,10,END=19) Nbfns_ext
+         READ(IUNIT,10,END=19) ITMP2(1)
+         READ(IUNIT,10,END=19) ITMP2(2)
+         NALPHA_OCCUPIED = ITMP2(1)
+         NBETA_OCCUPIED  = ITMP2(2) 
+
+ 10   FORMAT(16I5)
+ 19   CLOSE(IUNIT)
+      ENDIF 
+      
 c     IF (ECP .EQ. 1) THEN 
 
 c        NUMEL=NallPROTON-ICHARG

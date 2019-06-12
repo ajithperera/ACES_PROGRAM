@@ -201,21 +201,21 @@ c         do iflag = 1, 12
 c--------------------------------------------------------------------------
 c   Set the derivative flag arguments.
 c--------------------------------------------------------------------------
- 
                call erd__memory_eri_derv_batch(nalpha, ncoeff, 
      *                 ncfps(m), ncfps(n), ncfps(r), ncfps(s),
      *                 npfps(m), npfps(n), npfps(r), npfps(s),
      *                 shtype(m), shtype(n), shtype(r), shtype(s),
-     *                   coords(1,m),coords(2,m),coords(3,m),
-     *                   coords(1,n),coords(2,n),coords(3,n),
-     *                   coords(1,r),coords(2,r),coords(3,r),
-     *                   coords(1,s),coords(2,s),coords(3,s),
+     *                 coords(1,m),coords(2,m),coords(3,m),
+     *                 coords(1,n),coords(2,n),coords(3,n),
+     *                 coords(1,r),coords(2,r),coords(3,r),
+     *                 coords(1,s),coords(2,s),coords(3,s),
      *                 der_flags(1), der_flags(2), der_flags(3),
      *                 der_flags(4), der_flags(5), der_flags(6),
      *                 der_flags(7), der_flags(8), der_flags(9),
      *                 der_flags(10),der_flags(11), der_flags(12),    
-     *                   alpha_pack, pcoeff_pack, spherical,
-     *                   imin, iblk, zmin, zblk)   
+     *                 alpha_pack, pcoeff_pack, spherical,
+     *                 imin, iblk, zmin, zblk)   
+
             imax = max0(imax, iblk)
             zmax = max0(zmax, zblk)
 

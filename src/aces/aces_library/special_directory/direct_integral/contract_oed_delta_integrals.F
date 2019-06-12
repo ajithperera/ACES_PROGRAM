@@ -200,7 +200,7 @@ c---------------------------------------------------------------------------
          enddo   ! m shells
 
 CSSS      do ixderc = 1, ncenters
-CSSS        write(*,*) 'Intermediate A-ten=',ixderc,A_iso(ixderc)
+CSSS      write(*,*) 'Intermediate A-ten=',ixderc,A_iso(ixderc)
 CSSS      end do
       return
       end

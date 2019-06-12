@@ -84,7 +84,7 @@ fi
 SERIAL_CPP=$CXX
 #Also set COMPILER_LIBS accordingly
 if test x$SIAL_COMPILER_LIBS = x; then
-SIAL_COMPILER_LIBS="-lsial -lsip_shared -lacescore -ltools -lsip1 -lsip2"
+SIAL_COMPILER_LIBS="-lsial -lsip_shared -lacescore -ltools -lsip1 -lsip2 -lsip3"
 fi
 ACESLIBS=$CRAYLIBS
 ACESFLAGS=$CRAYFLAGS
@@ -109,6 +109,10 @@ AC_CONFIG_FILES([src/aces/aces_library/special_directory/dup/Makefile])
 AC_CONFIG_FILES([src/aces/aces_library/special_directory/ecp/Makefile])
 AC_CONFIG_FILES([src/aces/aces_library/special_directory/nlo/Makefile])
 AC_CONFIG_FILES([src/aces/aces_library/special_directory/erd/Makefile])
+AC_CONFIG_FILES([src/aces/aces_library/special_directory/erd_F12/Makefile])
+AC_CONFIG_FILES([src/aces/aces_library/special_directory/oed_F12/Makefile])
+AC_CONFIG_FILES([src/aces/aces_library/special_directory/F12_grid/Makefile])
+AC_CONFIG_FILES([src/aces/aces_library/special_directory/dkh/Makefile])
 AC_CONFIG_FILES([src/aces/aces_library/special_directory/direct_integral/Makefile])
 AC_CONFIG_FILES([src/aces/aces_library/a2driver/symcor/Makefile])
 AC_CONFIG_FILES([src/aces/aces_library/a2driver/aces2/Makefile])
@@ -116,6 +120,7 @@ AC_CONFIG_FILES([src/aces/aces_library/a2driver/geopt/Makefile])
 AC_CONFIG_FILES([src/sia/framelib/Makefile])
 AC_CONFIG_FILES([src/sia/manager/Makefile])
 AC_CONFIG_FILES([src/sia/sip/aces_instructions/Makefile])
+AC_CONFIG_FILES([src/sia/sip/aces_instructions_extnd/Makefile])
 AC_CONFIG_FILES([src/sia/sip/sip_instructions/Makefile])
 AC_CONFIG_FILES([src/sia/worker/Makefile])
 AC_CONFIG_FILES([src/sia/sip_shared/Makefile])

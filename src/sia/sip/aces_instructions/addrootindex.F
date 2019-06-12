@@ -161,6 +161,16 @@ c-----------One-index case----------------------------------
           endif 
            
       endif 
+c-------------------------------------------------------------
+      if (nindex.eq.2) then
+      if (nindex2.eq.3) then
+      call do_addrootindex2_3(x(indblk1),sindex,fop1(1), fop2(1),
+     &  fop1(2),fop2(2), 
+     &  x(indblk2),findex,sop1(1), sop2(1), sop1(2), sop2(2),
+     &  sop1(3),sop2(3),nsend)
+          endif 
+
+      endif
 c----------Three-index case----------------------------------
       if (nindex.eq.3) then
 
@@ -375,6 +385,48 @@ c------------------------
            enddo
           enddo
          enddo 
+c------------------------
+      return
+      end
+
+c$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+c$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+      subroutine do_addrootindex2_3(x, sindex, a1,a2,b1,b2,y, findex,
+     & e1, e2, f1, f2, g1, g2, nsend)
+c--------------------------------------------------------------------------
+c  Routine which performs the actual copying. 
+c--------------------------------------------------------------------------
+      implicit none
+      include 'interpreter.h'
+      include 'trace.h'
+      include 'mpif.h'
+      include 'epsilon.h'
+#ifdef ALTIX
+      include 'sheap.h'
+#endif
+
+      integer a1,a2,b1,b2,c1,c2,d1,d2
+      integer e1,e2,f1,f2,g1,g2,h1,h2
+      integer sindex(mx_array_index), findex(mx_array_index),
+     *        match(4)
+
+      integer i, j, k, a, b, c, d, g
+      integer m, n, lda, ldb, ldc
+      integer nsend, strip
+
+      double precision x(a1:a2,f1:f2)
+      double precision y(a1:a2,f1:f2,g1:g2)
+
+      nsend = (a2-a1+1)*(b2-b1+1)*(c2-c1+1)*(d2-d1+1)
+
+c------------------------
+         do g=g1,g2
+          do b=f1,f2
+           do a=a1,a2
+             y(a,b,g) = x(a,b)
+           enddo
+          enddo
+         enddo
 c------------------------
       return
       end

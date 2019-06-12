@@ -182,6 +182,7 @@ c PARAMETERS
 #include "io_units.par"
 #include "fnamelen.par"
 #include "linelen.par"
+
       integer    dim_iflags,     dim_iflags2
       parameter (dim_iflags=100, dim_iflags2=500)
       INTEGER    nParam
@@ -235,6 +236,8 @@ c     statistics for value tokens and line processing
       character*(linelen)  wrk, wrk2, szTmp
       character*(DataSize) szData
       integer iLastC, iOpenP, iCloseP, ValueSize, icycle
+      integer srt 
+      double precision f12gamma,freq,imfreq
 
 c pseudo-registers (one-time temporary integers)
       integer iTmpReg1,  iTmpReg2,  iTmpReg3,  iTmpReg4,  iTmpReg5,
@@ -761,7 +764,48 @@ c         o BASIS
                end if
                goto 101
             end if
+C DB 02/2014
+c---------Explicitly-correlated part----------------------------------
+            if (iASV.eq.h_IOPPAR_stgf12) then
+              if (ioppar(h_IOPPAR_stgf12).eq.1) then
+              call putrec(1,'JOBARC','STGF12',1,1)
+              endif 
+              goto 101
+            endif
 
+            if (iASV.eq.h_IOPPAR_f12gamma) then
+            call str2d(szData(1:ValueSize)//char(0),F12GAMMA)
+            call putrec(1,'JOBARC','F12GAMMA',1,F12GAMMA)
+            goto 101
+            endif
+
+c-------------Frequencies of dynamic polarizabilities-------------------
+
+            if (iASV.eq.h_IOPPAR_pol_freq) then
+            call str2d(szData(1:ValueSize)//char(0),FREQ)
+            call putrec(1,'JOBARC','FREQ    ',1,FREQ)
+            goto 101
+            endif
+c-----------Imaginary frequencies for C6 coefficients-------------------
+
+            if (iASV.eq.h_IOPPAR_pol_freq_im) then
+            call str2d(szData(1:ValueSize)//char(0),IMFREQ)
+            call putrec(1,'JOBARC','IMFREQ  ',1,IMFREQ)
+            goto 101
+            endif
+c--------------- spin - orbit calculations------------------------------
+
+            if (iASV.eq.h_IOPPAR_spinorb_cc) then
+              if (ioppar(h_IOPPAR_spinorb_cc).eq.1) then
+              call putrec(1,'JOBARC','SPINORB ',1,1)
+              endif 
+            endif
+
+            if (iASV.eq.h_IOPPAR_soc_roots) then
+            call putrec(1,'JOBARC','SO_ROOTS',1,srt)
+            goto 101
+            endif
+C------------------------------------------------------------------------
 c YAU - add a conditional for SUBGROUP that sets nIrrps
 
 c         o OCCUPATION
@@ -2094,9 +2138,12 @@ c  make sure that analytic gradients are available if requested
       if (ioppar(h_IOPPAR_excite   ).gt.0.and.
      &    ioppar(h_IOPPAR_deriv_lev).gt.0     ) then
          if (ioppar(h_IOPPAR_deriv_lev).gt.1) then
+         if (ioppar(h_IOPPAR_vib) .eq. 1 .or. 
+     &       ioppar(h_IOPPAR_geom_opt) .ne. 0) Then
             print *, '@GTFLGS: Analytical frequencies are not',
      &               ' available for excited states.'
             call errex
+         endif 
          end if
          if (.not.( ioppar(h_IOPPAR_excite).eq.1.or.
      &              ioppar(h_IOPPAR_excite).eq.3.or.

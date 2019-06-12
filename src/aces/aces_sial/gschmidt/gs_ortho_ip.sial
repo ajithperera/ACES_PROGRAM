@@ -1,0 +1,1681 @@
+                        SIAL GS_ORTHO_IP
+#                       ----------------
+      index jj1      = 1, 1
+      index kk1      = 1, 1
+
+      Index Ndim     = 1, 20
+      Index Nroots   = 1, 12
+      Index Mroots   = 1, 12
+      Index Kroots   = 1, 12
+      Index Jroots   = 1, 12
+
+      moaindex i = baocc, eaocc
+      moaindex i1= baocc, eaocc
+      moaindex i2= baocc, eaocc
+      moaindex i3= baocc, eaocc
+#
+      moaindex a = bavirt, eavirt
+      moaindex a1= bavirt, eavirt
+      moaindex a2= bavirt, eavirt
+      moaindex a3= bavirt, eavirt
+#
+      moaindex j = baocc, eaocc
+      moaindex j1= baocc, eaocc
+      moaindex j2= baocc, eaocc
+      moaindex j3= baocc, eaocc
+#
+      moaindex b = bavirt, eavirt
+      moaindex b1= bavirt, eavirt
+      moaindex b2= bavirt, eavirt
+      moaindex b3= bavirt, eavirt
+#
+      moaindex p = baocc, eavirt
+      moaindex p1= baocc, eavirt
+      moaindex p2= baocc, eavirt
+      moaindex p3= baocc, eavirt
+#
+      moaindex q = baocc, eavirt
+      moaindex q1= baocc, eavirt
+      moaindex q2= baocc, eavirt
+      moaindex q3= baocc, eavirt
+
+#     CCSD amplitudes
+#     ---------------
+#
+      distributed t1a(a,i)
+      distributed t1b(b,j)
+      served T2aa(a,i,a1,i1)
+      served T2bb(b,j,b1,j1)
+      served T2ab(a,i,b,j)
+
+      distributed La1a(i,a)
+      distributed La1b(j,b)
+      served L2aa(i,a,i1,a1)
+      served L2bb(j,b,j1,b1)
+      served L2ab(i,a,j,b)
+
+#
+#     Transformed integrals
+#     ---------------------
+#
+      served VSpipi(p,i,p1,i1)
+      served VSqjqj(q,j,q1,j1)
+      served Vpiqj(p,i,q,j)
+      served VSaaai(a,a1,a2,i)
+      served VSbbbj(b,b1,b2,j)
+      served Vaabj(a,a1,b,j)
+      served Vbbai(b,b1,a,i)
+      served Vjbii(j,b,i,i1)
+      served Viabj(i,a,b,j)
+      served Vaajj(a,a1,j,j1)
+      served Vbbii(b,b1,i,i1)
+      served Viaai(i,a1,a,i1)
+      served Vaaii(a,a1,i,i1)
+      served Vjbbj(j,b1,b,j1)
+      served Vbbjj(b,b1,j,j1)
+
+#
+#     HBAR
+#     ----
+#
+      distributed Uaa(a,a1)
+      distributed Ubb(b,b1)
+      distributed Uii(i1,i)
+      distributed Ujj(j1,j)
+      distributed Uia(i,a)
+      distributed Ujb(j,b)
+      served Wiiii(i,i1,i2,i3)
+      served Wjjjj(j,j1,j2,j3)
+      served Wiijj(i,i1,j,j1)
+#
+      served Waaia(a,a1,i,a2)
+      served Wbbjb(b,b1,j,b2)
+      served Waajb(a,a1,j,b2)
+      served Wbbia(b,b1,i,a2)
+#
+      served Wiiia(i1,i,i2,a)
+      served Wjjjb(j1,j,j2,b)
+      served Wiijb(i1,i,j2,b)
+      served Wjjia(j1,j,i2,a)
+#
+      served Wiiai(i,i1,a,i2)
+      served Wiibj(i,i1,b,j)
+      served Wjjai(j,j1,a,i)
+      served Wjjbj(j,j1,b,j2)
+#
+      served Wiaai(i1,a1,a,i)
+      served Wjbbj(j1,b1,b,j)
+      served Wiabj(i,a,b,j)
+      served Wjbai(j,b,a,i)
+      served Wiibb(i1,i,b,b1)
+      served Wjjaa(j1,j,a,a1)
+#
+      served Waaai(a,a1,a2,i)
+      served Wbbbj(b,b1,b2,j)
+      served Waabj(a,a1,b,j)
+      served Wbbai(b,b1,a,i)
+#
+      served Waiaa(a,a1,i,a2)
+      served Wbjbb(b,b1,j,b2)
+      served Waibb(a,a1,j,b2)
+      served Wbjaa(b,b1,i,a2)
+
+      served Waiia(a,i,i1,a1)
+      served Wbjjb(b,j,j1,b1)
+      served Waijb(a,i,j,b)
+      served Wbjia(b,j,i,a)
+
+      Distributed L1a(i,kk1)
+      Distributed L1b(j,kk1)
+      Distributed L2aa_a(a,i,kk1,i1)
+      Distributed L2bb_b(b,j,kk1,j1)
+      Distributed L2aa_b(a,i,kk1,j)
+      Distributed L2bb_a(b,j,kk1,i)
+      Distributed RIP(MROOTS,KK1)
+      Distributed ORTHO_COEF_RL(Nroots,Mroots)
+      Distributed ORTHO_COEF_R(Nroots,Mroots)
+
+      Distributed R1a_vecs(i,kk1,Nroots)
+      Distributed R1b_vecs(j,kk1,Nroots)
+      Distributed L1a_vecs(i,kk1,Nroots)
+      Distributed L1b_vecs(j,kk1,Nroots)
+   
+      Distributed L1a_intmd(i,kk1,Nroots)
+      Distributed R1a_intmd(i,kk1,Nroots)
+      Distributed R1a_nrml(i,kk1,Nroots)
+      Distributed L1a_nrml(i,kk1,Nroots)
+
+      Distributed R2aa_a_active(a,i,kk1,i1)
+      Distributed R2aa_b_active(a,i,kk1,j)
+      Distributed R1a_active(i,kk1)
+      Distributed R2aa_a_tmp0(a,i,kk1,i1)
+      Distributed R2aa_b_tmp0(a,i,kk1,j)
+      Distributed R2aa_a_tmp1(a,i,kk1,i1)
+      Distributed R2aa_b_tmp1(a,i,kk1,j)
+      Distributed R1a_tmp0(i,kk1)
+      Distributed R1a_tmp1(i,kk1)
+
+      SERVED L2aa_a_intmd(a,i,kk1,i1,Nroots)
+      SERVED L2aa_b_intmd(a,i,kk1,j,Nroots)
+      SERVED R2aa_a_intmd(a,i,kk1,i1,Nroots)
+      SERVED R2aa_b_intmd(a,i,kk1,j,Nroots)
+
+      SERVED R2aa_a_vecs(a,i,kk1,i1,Nroots)
+      SERVED R2bb_b_vecs(b,j,kk1,j1,Nroots)
+      SERVED R2aa_b_vecs(a,i,kk1,j,Nroots)
+      SERVED R2bb_a_vecs(b,j,kk1,i,Nroots)
+      SERVED L2aa_a_vecs(a,i,kk1,i1,Nroots)
+      SERVED L2bb_b_vecs(b,j,kk1,j1,Nroots)
+      SERVED L2aa_b_vecs(a,i,kk1,j,Nroots)
+      SERVED L2bb_a_vecs(b,j,kk1,i,Nroots)
+
+      SERVED R2aa_a_nrml(a,i,kk1,i1,Nroots)
+      SERVED R2bb_b_nrml(b,j,kk1,j1,Nroots)
+      SERVED R2aa_b_nrml(a,i,kk1,j,Nroots)
+
+      SERVED L2aa_a_nrml(a,i,kk1,i1,Nroots)
+      SERVED L2bb_b_nrml(b,j,kk1,j1,Nroots)
+      SERVED L2aa_b_nrml(a,i,kk1,j,Nroots)
+
+      Temp Tip(i,nroots)
+      Temp Tjp(j,nroots)
+      Temp Tikk(i,kk1)
+      Temp Tjkk(j,kk1)
+      Temp T1ikk(i,kk1)
+      Temp T1jkk(j,kk1)
+      Temp Taiki(a,i,kk1,i1)
+      Temp Tbjkj(b,j,kk1,j1)
+      Temp Taikj(a,i,kk1,j)
+      Temp Tbjki(b,j,kk1,i)
+      Temp T1aiki(a,i,kk1,i1)
+      Temp T1bjkj(b,j,kk1,j1)
+      Temp T1aikj(a,i,kk1,j)
+      Temp T1bjki(b,j,kk1,i)
+      Temp Txx_rl(NROOTS,MROOTS)
+
+      Static ETEMP_RL(MROOTS,NROOTS)
+      Static OVLP_CHECK(MROOTS,NROOTS)
+
+      Scalar Mcount
+      Scalar Ncount 
+      Scalar Jcount 
+      Scalar Kcount 
+      Scalar tmp
+      Scalar tmpa
+      Scalar tmpb
+      Scalar suma
+      Scalar sumb
+      Scalar sumab
+      Scalar Sumaaa
+      Scalar Sumbbb
+      Scalar Sumaab
+      Scalar Sumbba
+      Scalar One
+      Scalar Zero 
+      Scalar HC_A
+      Scalar HCAA_A
+      Scalar HCAA_B
+      Scalar HC_BBA
+      Scalar SUMAA_A
+      Scalar SUMAA_B
+      Scalar SUMAB_B
+      Scalar SUM_R
+      Scalar A_VALUE
+      Scalar CY_A
+      Scalar CY_B
+      Scalar CY_AB
+      Scalar Eig_value
+      Scalar NORM_PREV_C
+      Scalar EXPONENT
+      Scalar FACT
+      Scalar INV_SQRT_NORM_ORTGC
+      Scalar NORM_NEW_ORTGC
+      Scalar INV_SQRT_NORM_R
+      Scalar INV_NORM 
+      Scalar NORM_GHG
+      Scalar RANK
+      Scalar SQRT_OVERLAP
+      Scalar Target_roots 
+      Scalar Two
+      Scalar Limit 
+      Scalar Mone 
+      Scalar Half 
+
+      PROC CREATE_ARRAYS  
+#     ------------------
+      CREATE RIP
+      CREATE R1A_VECS
+      CREATE R1A_ACTIVE
+      CREATE R2AA_A_ACTIVE
+      CREATE R2AA_B_ACTIVE
+      CREATE R1A_TMP0
+      CREATE R1A_TMP1
+      CREATE R2AA_A_TMP0
+      CREATE R2AA_B_TMP0
+      CREATE R2AA_A_TMP1
+      CREATE R2AA_B_TMP1
+      CREATE L1A_VECS
+      CREATE ORTHO_COEF_RL
+      CREATE ORTHO_COEF_R
+      CREATE L1A_INTMD 
+      CREATE R1A_INTMD 
+
+      CREATE T1A
+      CREATE T1B
+      CREATE LA1A
+      CREATE LA1B
+      CREATE R1B_VECS
+      CREATE L1B_VECS
+      CREATE R1A_NRML 
+      CREATE L1A_NRML 
+      execute sip_barrier 
+
+      ENDPROC CREATE_ARRAYS  
+#     ---------------------
+
+      PROC READ_DATA
+#     --------------
+#      execute server_barrier 
+#      execute list_to_blocks                RIP 
+#
+#      execute list_to_blocks                R1a_vecs
+#      execute list_to_blocks                R2aa_a_vecs
+#      execute list_to_blocks                R2aa_b_vecs
+#
+#      execute list_to_blocks                L1a_vecs
+#      execute list_to_blocks                L2aa_a_vecs
+#      execute list_to_blocks                L2aa_b_vecs
+#
+#      execute list_to_blocks                t1a
+#      execute list_to_blocks                t1b
+#
+#      execute list_to_blocks                T2aa
+#      execute list_to_blocks                T2ab
+#      execute list_to_blocks                T2bb
+#
+#      execute read_list_to_blocks
+#      execute server_barrier
+#
+      execute list_to_blocks                t1a
+      execute list_to_blocks                t1b
+      execute list_to_blocks                T2aa
+      execute list_to_blocks                T2ab
+      execute list_to_blocks                T2bb
+
+      execute list_to_blocks                la1a
+      execute list_to_blocks                la1b
+      execute list_to_blocks                L2aa
+      execute list_to_blocks                L2ab
+      execute list_to_blocks                L2bb
+
+      execute list_to_blocks                R1a_vecs
+      execute list_to_blocks                R1b_vecs
+      execute list_to_blocks                R2aa_a_vecs
+      execute list_to_blocks                R2bb_b_vecs
+      execute list_to_blocks                R2aa_b_vecs
+      execute list_to_blocks                R2bb_a_vecs
+
+      execute list_to_blocks                L1a_vecs
+      execute list_to_blocks                L1b_vecs
+      execute list_to_blocks                L2aa_a_vecs
+      execute list_to_blocks                L2bb_b_vecs
+      execute list_to_blocks                L2aa_b_vecs
+      execute list_to_blocks                L2bb_a_vecs
+
+      execute read_list_to_blocks
+      execute server_barrier
+
+      ENDPROC READ_DATA
+#     -----------------
+
+      PROC FORM_ORTHO_COEFS_R
+#     ----------------------
+
+     DO KROOTS
+        DO JROOTS
+           TXX_RL(JROOTS,KROOTS) = 0.0
+           PUT ORTHO_COEF_R(JROOTS,KROOTS) = TXX_RL(JROOTS,KROOTS)
+        ENDDO JROOTS
+     ENDDO KROOTS
+     EXECUTE SIP_BARRIER
+
+     LIMIT  = NCOUNT 
+     LIMIT += MONE
+
+     KCOUNT = ZERO
+     DO KROOTS
+        KCOUNT += ONE
+
+        IF KCOUNT > LIMIT 
+           EXIT
+        ENDIF
+
+        execute print_scalar kcount 
+
+        PARDO i, kk1
+
+              GET R1A_VECS(i,kk1,KROOTS)
+              GET R1A_ACTIVE(i,kk1)
+              Tikk(i,kk1)  = R1A_VECS(i,kk1,KROOTS)
+              T1ikk(i,kk1) = R1A_ACTIVE(i,kk1)
+              TMP          = Tikk(i,kk1) *  T1ikk(i,kk1)
+              TMP         *= TWO
+              Txx_RL(KROOTS,KROOTS)         = TMP
+              PUT ORTHO_COEF_R(KROOTS,KROOTS) += Txx_RL(KROOTS,KROOTS)
+        ENDPARDO i, kk1
+
+        PARDO i, i1, kk1, a
+
+            REQUEST R2aa_a_VECS(a,i,kk1,i1,KROOTS) i1
+            GET R2aa_a_ACTIVE(a,i,kk1,i1) 
+
+            Taiki(a,i,kk1,i1)  = R2aa_a_VECS(a,i,kk1,i1,KROOTS)
+            T1aiki(a,i,kk1,i1) = R2aa_a_ACTIVE(a,i,kk1,i1)
+            TMP     = Taiki(a,i,kk1,i1) * T1aiki(a,i,kk1,i1)
+            TMP     *= TWO
+            Txx_RL(KROOTS,KROOTS)         = TMP
+            PUT ORTHO_COEF_R(KROOTS,KROOTS) += Txx_RL(KROOTS,KROOTS)
+
+       ENDPARDO i, i1, kk1, a
+
+       PARDO i, a, kk1, j
+
+           REQUEST R2aa_b_VECS(a,i,kk1,j,KROOTS) j
+           GET R2aa_b_ACTIVE(a,i,kk1,j) 
+
+           Taikj(a,i,kk1,j)  = R2aa_b_VECS(a,i,kk1,j,KROOTS)
+           T1aikj(a,i,kk1,j) = R2aa_b_ACTIVE(a,i,kk1,j)
+           TMP     = Taikj(a,i,kk1,j) * T1aikj(a,i,kk1,j)
+           TMP     *= TWO
+           Txx_RL(KROOTS,KROOTS)         = TMP
+           PUT ORTHO_COEF_R(KROOTS,KROOTS) += Txx_RL(KROOTS,KROOTS)
+
+       ENDPARDO i, a, kk1, j
+
+     ENDDO KROOTS
+
+     EXECUTE SERVER_BARRIER
+#bgn_debug
+     do JROOTS
+     do KROOTS
+        GET ORTHO_COEF_R(KROOTS,JROOTS)
+        ETEMP_RL(KROOTS,JROOTS) = ORTHO_COEF_R(KROOTS,JROOTS)
+     enddo KROOTS
+     enddo JROOTS
+     execute print_static ETEMP_RL TARGET_ROOTS
+##end_debug
+
+
+     ENDPROC FORM_ORTHO_COEFS_R
+#    --------------------------
+
+     PROC GRAHM_SCHMIDT
+#    ------------------
+
+     PARDO i, kk1
+
+         GET R1A_ACTIVE(i,kk1)
+         Tikk(i,kk1)   = R1A_ACTIVE(i,kk1)
+
+           KCOUNT = 0.0
+           DO KROOTS 
+              KCOUNT += 1.0
+  
+              IF KCOUNT > LIMIT 
+                 EXIT
+              ENDIF
+
+              GET R1A_VECS(i,kk1,KROOTS)
+              GET ORTHO_COEF_R(KROOTS,KROOTS)
+
+              T1ikk(i,kk1)  = R1A_VECS(i,kk1,KROOTS)
+              Txx_RL(KROOTS,KROOTS) = ORTHO_COEF_R(KROOTS,KROOTS)
+
+              EXECUTE RETURN_SVAL Txx_RL FACT
+#bgn_debug
+              execute print_scalar fact 
+#end_debug
+              T1ikk(i,kk1) *= FACT
+              T1ikk(i,kk1) *= -1.0
+              Tikk(i,kk1)  += T1ikk(i,kk1)
+
+           ENDDO KROOTS
+
+           PUT R1a_TMP0(i,kk1) = Tikk(i,kk1)
+
+     ENDPARDO i, kk1
+
+     PARDO i, i1, kk1, a
+          GET R2aa_a_ACTIVE(a,i,kk1,i1)
+          Taiki(a,i,kk1,i1)  = R2aa_a_ACTIVE(a,i,kk1,i1)
+
+          KCOUNT = 0.0
+          DO KROOTS 
+             KCOUNT += 1.0
+             IF KCOUNT > TARGET_ROOTS
+                EXIT
+             ENDIF
+
+             REQUEST R2aa_a_VECS(a,i,kk1,i1,KROOTS) i1
+             GET ORTHO_COEF_R(KROOTS,KROOTS)
+
+             T1aiki(a,i,kk1,i1) = R2aa_a_VECS(a,i,kk1,i1,KROOTS)
+             Txx_RL(KROOTS,KROOTS) = ORTHO_COEF_R(KROOTS,KROOTS)
+
+             EXECUTE RETURN_SVAL Txx_RL FACT
+
+             T1aiki(a,i,kk1,i1)  *= FACT
+             T1aiki(a,i,kk1,i1)  *= -1.0
+             Taiki(a,i,kk1,i1)   += T1aiki(a,i,kk1,i1)
+
+           ENDDO KROOTS
+
+           PUT R2aa_a_TMP0(a,i,kk1,i1) = Taiki(a,i,kk1,i1)
+
+     ENDPARDO i, i1, kk1, a
+
+     PARDO i, a, kk1, j
+           GET R2aa_b_ACTIVE(a,i,kk1,j)
+           Taikj(a,i,kk1,j)  =  R2aa_b_ACTIVE(a,i,kk1,j)
+
+           KCOUNT = 0.0
+           DO KROOTS 
+
+              KCOUNT += 1.0
+              IF NCOUNT > TARGET_ROOTS
+                 EXIT
+              ENDIF
+
+              REQUEST R2aa_b_VECS(a,i,kk1,j,KROOTS) j
+              GET ORTHO_COEF_R(KROOTS,KROOTS)
+
+              T1aikj(a,i,kk1,j) = R2aa_b_VECS(a,i,kk1,j,KROOTS)
+              Txx_RL(KROOTS,KROOTS) = ORTHO_COEF_R(KROOTS,KROOTS)
+
+              EXECUTE RETURN_SVAL Txx_RL FACT
+
+              T1aikj(a,i,kk1,j) *= FACT
+              T1aikj(a,i,kk1,j) *= -1.0
+              Taikj(a,i,kk1,j)  += T1aikj(a,i,kk1,j)
+
+          ENDDO KROOTS
+
+          PUT R2aa_b_TMP0(a,i,kk1,j) = Taikj(a,i,kk1,j)
+
+     ENDPARDO i, a, kk1, j
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC GRAHM_SCHMIDT
+#    --------------------
+
+     PROC NORM_INTMD
+#    ---------------
+     SUMA    = ZERO
+     SUMAA_A = ZERO
+     SUMAA_B = ZERO
+     HC_A    = ZERO
+     HCAA_A  = ZERO
+     HCAA_B  = ZERO
+
+     PARDO i, kk1
+          GET R1A_TMP0(i,kk1)
+          T1ikk(i,kk1) = R1A_TMP0(i,kk1)
+          TMP          = T1ikk(i,kk1) *  T1ikk(i,kk1)
+          TMP         *= TWO
+          SUMA        += TMP
+     ENDPARDO i, kk1
+
+     PARDO i, i1, kk1, a
+         GET R2aa_a_TMP0(a,i,kk1,i1)
+         T1aiki(a,i,kk1,i1) = R2aa_a_TMP0(a,i,kk1,i1)
+         TMP     = T1aiki(a,i,kk1,i1) * T1aiki(a,i,kk1,i1)
+         TMP     *= TWO
+         SUMAA_A += TMP
+     ENDPARDO i, i1, kk1, a
+
+     PARDO i, a, kk1, j
+           GET R2aa_b_TMP0(a,i,kk1,j)
+           T1aikj(a,i,kk1,j) = R2aa_b_TMP0(a,i,kk1,j)
+           TMP     = T1aikj(a,i,kk1,j) * T1aikj(a,i,kk1,j)
+           TMP     *= TWO
+           SUMAA_B += TMP
+     ENDPARDO i, a, kk1, j
+     EXECUTE SERVER_BARRIER
+
+     COLLECTIVE HC_A   += SUMA
+     COLLECTIVE HCAA_A += SUMAA_A
+     COLLECTIVE HCAA_B += SUMAA_B
+
+     A_VALUE  = HC_A
+     A_VALUE += HCAA_A
+     A_VALUE += HCAA_B
+
+#bgn_debug
+     execute print_scalar A_VALUE
+#end_debug 
+
+     EXPONENT = HALF
+     EXECUTE NORM_FAC A_VALUE EXPONENT
+     INV_NORM = A_VALUE
+
+     PARDO i, kk1
+         GET R1A_TMP0(i,kk1)
+         Tikk(i,kk1)  = R1A_TMP0(i,kk1)
+         Tikk(i,kk1) *= INV_NORM
+         PUT R1A_TMP1(i,kk1) = Tikk(i,kk1)
+     ENDPARDO i, kk1
+
+     PARDO i, i1, kk1, a
+         GET R2aa_a_TMP0(a,i,kk1,i1) 
+         Taiki(a,i,kk1,i1)  = R2aa_a_TMP0(a,i,kk1,i1)
+         Taiki(a,i,kk1,i1) *= INV_NORM
+         PUT R2aa_a_TMP1(a,i,kk1,i1) = Taiki(a,i,kk1,i1)
+     ENDPARDO i, i1, kk1, a
+
+     PARDO i, a, kk1, j
+         GET R2aa_b_TMP0(a,i,kk1,j) 
+         Taikj(a,i,kk1,j)  = R2aa_b_TMP0(a,i,kk1,j)
+         Taikj(a,i,kk1,j) *= INV_NORM
+         PUT R2aa_b_TMP1(a,i,kk1,j) = Taikj(a,i,kk1,j)
+     ENDPARDO i, a, kk1, j
+
+     EXECUTE SERVER_BARRIER 
+
+     ENDPROC NORM_INTMD
+#    ------------------
+
+     PROC COPY_ACTIVE
+#    -----------------
+
+     KCOUNT = ZERO
+     DO KROOTS
+        KCOUNT += ONE
+        IF KCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF
+
+        IF KCOUNT == NCOUNT
+
+           DO kk1
+              DO i
+                 GET R1A_TMP1(i,kk1)
+                 Tikk(i,kk1)  = R1A_TMP1(i,kk1)
+                 PUT R1A_VECS(i,kk1,KROOTS) =  Tikk(i,kk1)
+              ENDDO i
+           ENDDO kk1
+
+           PARDO i, i1, kk1, a
+               GET R2aa_a_TMP1(a,i,kk1,i1) 
+               Taiki(a,i,kk1,i1)  = R2aa_a_TMP1(a,i,kk1,i1)
+               PREPARE R2aa_a_VECS(a,i,kk1,i1,KROOTS) = Taiki(a,i,kk1,i1)
+           ENDPARDO i, i1, kk1, a
+
+           PARDO a, i, kk1, j
+               GET R2aa_b_TMP1(a,i,kk1,j) 
+               Taikj(a,i,kk1,j)  =  R2aa_b_TMP1(a,i,kk1,j)
+               PREPARE R2aa_b_VECS(a,i,kk1,j,KROOTS) = Taikj(a,i,kk1,j)
+           ENDPARDO a, i, kk1, j
+
+        ENDIF 
+     ENDDO KROOTS
+     
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC COPY_ACTIVE
+#    -------------------
+
+      PROC FORM_ORTHO_COEFS_SORCE
+#     ---------------------------
+
+     DO KROOTS
+        DO JROOTS
+           TXX_RL(JROOTS,KROOTS) = 0.0
+           PUT ORTHO_COEF_RL(JROOTS,KROOTS) = TXX_RL(JROOTS,KROOTS)
+        ENDDO JROOTS
+     ENDDO KROOTS
+
+     EXECUTE SIP_BARRIER
+
+     KCOUNT = ZERO
+     DO KROOTS
+        KCOUNT += ONE
+
+        IF KCOUNT >  TARGET_ROOTS
+           EXIT
+        ENDIF
+
+        JCOUNT = ZERO 
+        DO JROOTS 
+           JCOUNT += ONE
+           IF JCOUNT >  TARGET_ROOTS
+              EXIT
+           ENDIF
+
+#           IF JCOUNT >  KCOUNT 
+           PARDO i, kk1
+
+                 GET R1A_VECS(i,kk1,KROOTS)
+                 GET L1A_VECS(i,kk1,JROOTS)
+                 Tikk(i,kk1)  = R1A_VECS(i,kk1,KROOTS)
+                 T1ikk(i,kk1) = L1A_VECS(i,kk1,JROOTS)
+                 TMP          = Tikk(i,kk1) *  T1ikk(i,kk1)
+                 TMP         *= TWO
+                 Txx_RL(JROOTS,KROOTS)         = TMP
+                 PUT ORTHO_COEF_RL(JROOTS,KROOTS) += Txx_RL(JROOTS,KROOTS)
+           ENDPARDO i, kk1
+
+           PARDO i, i1, kk1, a
+
+                 REQUEST R2aa_a_VECS(a,i,kk1,i1,KROOTS) i1
+                 REQUEST L2aa_a_VECS(a,i,kk1,i1,JROOTS) i1
+
+                 Taiki(a,i,kk1,i1)  = R2aa_a_VECS(a,i,kk1,i1,KROOTS)
+                 T1aiki(a,i,kk1,i1) = L2aa_a_VECS(a,i,kk1,i1,JROOTS)
+                 TMP     = Taiki(a,i,kk1,i1) * T1aiki(a,i,kk1,i1)
+                 TMP     *= TWO
+                 Txx_RL(JROOTS,KROOTS)         = TMP
+                 PUT ORTHO_COEF_RL(JROOTS,KROOTS) += Txx_RL(JROOTS,KROOTS)
+
+           ENDPARDO i, i1, kk1, a
+
+           PARDO i, a, kk1, j
+
+                 REQUEST R2aa_b_VECS(a,i,kk1,j,KROOTS) j
+                 REQUEST L2aa_b_VECS(a,i,kk1,j,JROOTS) j
+
+                 Taikj(a,i,kk1,j)  = R2aa_b_VECS(a,i,kk1,j,KROOTS)
+                 T1aikj(a,i,kk1,j) = L2aa_b_VECS(a,i,kk1,j,JROOTS)
+                 TMP     = Taikj(a,i,kk1,j) * T1aikj(a,i,kk1,j)
+                 TMP     *= TWO
+                 Txx_RL(JROOTS,KROOTS)         = TMP
+                 PUT ORTHO_COEF_RL(JROOTS,KROOTS) += Txx_RL(JROOTS,KROOTS)
+
+           ENDPARDO i, a, kk1, j
+#           ENDIF 
+
+        ENDDO JROOTS 
+     ENDDO KROOTS
+
+     EXECUTE SERVER_BARRIER 
+#bgn_debug
+     do JROOTS
+     do KROOTS
+        GET ORTHO_COEF_RL(KROOTS,JROOTS)
+        ETEMP_RL(KROOTS,JROOTS) = ORTHO_COEF_RL(KROOTS,JROOTS)
+     enddo KROOTS
+     enddo JROOTS
+     execute print_static ETEMP_RL TARGET_ROOTS
+##end_debug
+
+      ENDPROC FORM_ORTHO_COEFS_SORCE
+#     ------------------------------
+
+      PROC FORM_ORTHO_COEFS_INTMD
+#     ---------------------------
+
+    DO KROOTS
+        DO JROOTS
+           TXX_RL(JROOTS,KROOTS) = 0.0
+           PUT ORTHO_COEF_RL(JROOTS,KROOTS) = TXX_RL(JROOTS,KROOTS)
+        ENDDO JROOTS
+     ENDDO KROOTS
+
+     EXECUTE SIP_BARRIER
+
+     KCOUNT = ZERO
+     DO KROOTS
+        KCOUNT += ONE
+
+        IF KCOUNT >  TARGET_ROOTS
+           EXIT
+        ENDIF
+        JCOUNT = ZERO
+
+        DO JROOTS
+           JCOUNT += ONE
+           IF JCOUNT >  TARGET_ROOTS
+              EXIT
+           ENDIF
+
+           PARDO i, kk1
+
+                 GET L1A_INTMD(i,kk1,KROOTS)
+                 GET R1A_INTMD(i,kk1,JROOTS)
+                 Tikk(i,kk1)  = L1A_INTMD(i,kk1,KROOTS)
+                 T1ikk(i,kk1) = R1A_INTMD(i,kk1,JROOTS)
+                 TMP          = Tikk(i,kk1) *  T1ikk(i,kk1)
+                 TMP         *= TWO
+                 Txx_RL(JROOTS,KROOTS)         = TMP
+                 PUT ORTHO_COEF_RL(JROOTS,KROOTS) += Txx_RL(JROOTS,KROOTS)
+           ENDPARDO i, kk1
+
+           PARDO i, i1, kk1, a
+
+                 REQUEST L2aa_a_INTMD(a,i,kk1,i1,KROOTS) i1
+                 REQUEST R2aa_a_INTMD(a,i,kk1,i1,JROOTS) i1
+
+                 Taiki(a,i,kk1,i1)  = L2aa_a_INTMD(a,i,kk1,i1,KROOTS)
+                 T1aiki(a,i,kk1,i1) = R2aa_a_INTMD(a,i,kk1,i1,JROOTS)
+                 TMP     = Taiki(a,i,kk1,i1) * T1aiki(a,i,kk1,i1)
+                 TMP     *= TWO
+                 Txx_RL(JROOTS,KROOTS)         = TMP
+                 PUT ORTHO_COEF_RL(JROOTS,KROOTS) += Txx_RL(JROOTS,KROOTS)
+
+           ENDPARDO i, i1, kk1, a
+
+           PARDO i, a, kk1, j
+
+                 REQUEST L2aa_b_INTMD(a,i,kk1,j,KROOTS) j
+                 REQUEST R2aa_b_INTMD(a,i,kk1,j,JROOTS) j
+
+                 Taikj(a,i,kk1,j)  = L2aa_b_INTMD(a,i,kk1,j,KROOTS)
+                 T1aikj(a,i,kk1,j) = R2aa_b_INTMD(a,i,kk1,j,JROOTS)
+                 TMP     = Taikj(a,i,kk1,j) * T1aikj(a,i,kk1,j)
+                 TMP     *= TWO
+                 Txx_RL(JROOTS,KROOTS)         = TMP
+                 PUT ORTHO_COEF_RL(JROOTS,KROOTS) += Txx_RL(JROOTS,KROOTS)
+
+           ENDPARDO i, a, kk1, j
+
+        ENDDO JROOTS
+     ENDDO KROOTS
+
+     EXECUTE SIP_BARRIER
+#bgn_debug
+     do JROOTS
+     do KROOTS
+        GET ORTHO_COEF_RL(KROOTS,JROOTS)
+        ETEMP_RL(KROOTS,JROOTS) = ORTHO_COEF_RL(KROOTS,JROOTS)
+     enddo KROOTS
+     enddo JROOTS
+     execute print_static ETEMP_RL TARGET_ROOTS
+##end_debug
+
+      ENDPROC FORM_ORTHO_COEFS_INTMD
+#     ------------------------------
+
+      PROC GSCHMIDT_L
+#     ---------------
+
+      KCOUNT = ZERO 
+      DO KROOTS 
+         KCOUNT += ONE
+  
+         IF KCOUNT > TARGET_ROOTS
+            EXIT
+         ENDIF 
+         
+         JCOUNT = ZERO
+         DO JROOTS 
+            JCOUNT += ONE
+
+            IF JCOUNT > TARGET_ROOTS
+               EXIT
+            ENDIF 
+
+            IF JCOUNT != KCOUNT 
+
+            PARDO i, kk1
+
+               GET L1A_VECS(i,kk1,KROOTS)
+               Tikk(i,kk1)   = L1A_VECS(i,kk1,KROOTS)
+               GET R1A_VECS(i,kk1,JROOTS)
+               T1ikk(i,kk1)  = R1A_VECS(i,kk1,JROOTS)
+               GET ORTHO_COEF_RL(KROOTS,JROOTS)
+               Txx_RL(KROOTS,JROOTS) = ORTHO_COEF_RL(KROOTS,JROOTS)
+               EXECUTE RETURN_SVAL Txx_RL FACT
+
+               T1ikk(i,kk1) *= FACT
+               T1ikk(i,kk1) *= -1.0
+               Tikk(i,kk1)  += T1ikk(i,kk1)
+
+               PUT L1a_INTMD(i,kk1,KROOTS) = Tikk(i,kk1)
+
+            ENDPARDO i, kk1
+
+            PARDO i, i1, kk1, a
+               REQUEST L2aa_a_VECS(a,i,kk1,i1,KROOTS) i1
+               Taiki(a,i,kk1,i1)  = L2aa_a_VECS(a,i,kk1,i1,KROOTS)
+               REQUEST R2aa_a_VECS(a,i,kk1,i1,JROOTS) i1
+               T1aiki(a,i,kk1,i1) = R2aa_a_VECS(a,i,kk1,i1,JROOTS)
+               GET ORTHO_COEF_RL(KROOTS,JROOTS)
+               Txx_RL(KROOTS,JROOTS) = ORTHO_COEF_RL(KROOTS,JROOTS)
+
+               EXECUTE RETURN_SVAL Txx_RL FACT
+
+               T1aiki(a,i,kk1,i1)  *= FACT
+               T1aiki(a,i,kk1,i1)  *= -1.0
+               Taiki(a,i,kk1,i1)   += T1aiki(a,i,kk1,i1)
+
+               PREPARE L2aa_a_intmd(a,i,kk1,i1,KROOTS) = Taiki(a,i,kk1,i1)
+
+            ENDPARDO i, i1, kk1, a
+
+            PARDO  i, a, kk1, j
+
+               REQUEST L2aa_b_VECS(a,i,kk1,j,KROOTS) j
+               Taiki(a,i,kk1,j)  = L2aa_b_VECS(a,i,kk1,j,KROOTS)
+               REQUEST R2aa_b_VECS(a,i,kk1,j,JROOTS) j
+               T1aiki(a,i,kk1,j) = R2aa_b_VECS(a,i,kk1,j,JROOTS)
+               GET ORTHO_COEF_RL(KROOTS,JROOTS)
+               Txx_RL(KROOTS,JROOTS) = ORTHO_COEF_RL(KROOTS,JROOTS)
+
+               EXECUTE RETURN_SVAL Txx_RL FACT
+
+               T1aikj(a,i,kk1,j)  *= FACT
+               T1aikj(a,i,kk1,j)  *= -1.0
+               Taikj(a,i,kk1,j)   += T1aikj(a,i,kk1,j)
+
+               PREPARE L2aa_b_intmd(a,i,kk1,j,KROOTS) = Taikj(a,i,kk1,j)
+
+            ENDPARDO i, a, kk1, j
+
+            ENDIF 
+
+         ENDDO JROOTS 
+      ENDDO KROOTS 
+
+      EXECUTE SERVER_BARRIER 
+
+      ENDPROC GSCHMIDT_L
+#     ------------------
+
+      PROC GSCHMIDT_R
+#     ---------------
+
+      KCOUNT = ZERO
+      DO KROOTS
+         KCOUNT += ONE
+
+         IF KCOUNT > TARGET_ROOTS
+            EXIT
+         ENDIF
+
+         JCOUNT = ZERO
+         DO JROOTS
+            JCOUNT += ONE
+
+            IF JCOUNT > TARGET_ROOTS
+               EXIT
+            ENDIF
+
+            IF JCOUNT > KCOUNT
+
+            PARDO i, kk1
+
+               GET R1A_VECS(i,kk1,KROOTS)
+               Tikk(i,kk1)   = R1A_VECS(i,kk1,KROOTS)
+               GET L1A_VECS(i,kk1,JROOTS)
+               T1ikk(i,kk1)  = L1A_VECS(i,kk1,JROOTS)
+               GET ORTHO_COEF_RL(JROOTS,KROOTS)
+               Txx_RL(JROOTS,KROOTS) = ORTHO_COEF_RL(JROOTS,KROOTS)
+               EXECUTE RETURN_SVAL Txx_RL FACT
+
+               T1ikk(i,kk1) *= FACT
+               T1ikk(i,kk1) *= -1.0
+               Tikk(i,kk1)  += T1ikk(i,kk1)
+
+               PUT R1a_INTMD(i,kk1,KROOTS) = Tikk(i,kk1)
+
+            ENDPARDO i, kk1
+
+            PARDO i, i1, kk1, a
+               REQUEST R2aa_a_VECS(a,i,kk1,i1,KROOTS) i1
+               Taiki(a,i,kk1,i1)  = R2aa_a_VECS(a,i,kk1,i1,KROOTS)
+               REQUEST L2aa_a_VECS(a,i,kk1,i1,JROOTS) i1
+               T1aiki(a,i,kk1,i1) = L2aa_a_VECS(a,i,kk1,i1,JROOTS)
+               GET ORTHO_COEF_RL(JROOTS,KROOTS)
+               Txx_RL(JROOTS,KROOTS) = ORTHO_COEF_RL(JROOTS,KROOTS)
+
+               EXECUTE RETURN_SVAL Txx_RL FACT
+
+               T1aiki(a,i,kk1,i1)  *= FACT
+               T1aiki(a,i,kk1,i1)  *= -1.0
+               Taiki(a,i,kk1,i1)   += T1aiki(a,i,kk1,i1)
+
+               PREPARE R2aa_a_intmd(a,i,kk1,i1,KROOTS) = Taiki(a,i,kk1,i1)
+
+            ENDPARDO i, i1, kk1, a
+
+            PARDO  i, a, kk1, j
+
+               REQUEST R2aa_b_VECS(a,i,kk1,j,KROOTS) j
+               Taiki(a,i,kk1,j)  = R2aa_b_VECS(a,i,kk1,j,KROOTS)
+               REQUEST L2aa_b_VECS(a,i,kk1,j,JROOTS) j
+               T1aiki(a,i,kk1,j) = L2aa_b_VECS(a,i,kk1,j,JROOTS)
+               GET ORTHO_COEF_RL(JROOTS,KROOTS)
+               Txx_RL(JROOTS,KROOTS) = ORTHO_COEF_RL(JROOTS,KROOTS)
+
+               EXECUTE RETURN_SVAL Txx_RL FACT
+
+               T1aikj(a,i,kk1,j)  *= FACT
+               T1aikj(a,i,kk1,j)  *= -1.0
+               Taikj(a,i,kk1,j)   += T1aikj(a,i,kk1,j)
+
+               PREPARE R2aa_b_intmd(a,i,kk1,j,KROOTS) = Taikj(a,i,kk1,j)
+
+            ENDPARDO i, a, kk1, j
+
+            ENDIF
+
+         ENDDO JROOTS
+      ENDDO KROOTS
+
+      EXECUTE SERVER_BARRIER
+
+      ENDPROC GSCHMIDT_R
+#     ------------------
+
+     PROC EXTRACT_R
+#    --------------
+   
+     KCOUNT = ZERO
+     DO KROOTS
+        KCOUNT += ONE
+        IF KCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF 
+
+        IF KCOUNT == NCOUNT 
+        DO kk1
+           DO i
+              GET R1A_VECS(i,kk1,KROOTS)
+              Tikk(i,kk1)  = R1A_VECS(i,kk1,KROOTS)
+              PUT R1A_ACTIVE(i,kk1) =  Tikk(i,kk1)
+           ENDDO i
+        ENDDO kk1
+
+        PARDO i, i1, kk1, a
+            REQUEST R2aa_a_VECS(a,i,kk1,i1,KROOTS) i1
+            Taiki(a,i,kk1,i1)  = R2aa_a_VECS(a,i,kk1,i1,KROOTS)
+            PUT R2aa_a_ACTIVE(a,i,kk1,i1) = Taiki(a,i,kk1,i1)
+        ENDPARDO i, i1, kk1, a
+
+        PARDO a, i, kk1, j
+            REQUEST R2aa_b_VECS(a,i,kk1,j,KROOTS) j
+            Taikj(a,i,kk1,j)  =  R2aa_b_VECS(a,i,kk1,j,KROOTS)
+            PUT R2aa_b_ACTIVE(a,i,kk1,j) = Taikj(a,i,kk1,j)
+        ENDPARDO a, i, kk1, j
+        ENDIF 
+     ENDDO KROOTS 
+
+     EXECUTE SERVER_BARRIER 
+
+     ENDPROC EXTRACT_R
+#    -----------------
+
+     PROC FORM_NORM_R
+#    -----------------
+
+     DO KROOTS
+        DO JROOTS
+           TXX_RL(JROOTS,KROOTS) = 0.0
+           PUT ORTHO_COEF_R(JROOTS,KROOTS) = TXX_RL(JROOTS,KROOTS)
+        ENDDO JROOTS
+     ENDDO KROOTS
+
+     EXECUTE SIP_BARRIER
+
+     KCOUNT = ZERO
+     DO KROOTS
+        KCOUNT += ONE
+
+        IF KCOUNT >  TARGET_ROOTS
+           EXIT
+        ENDIF
+        JCOUNT = ZERO
+
+        DO JROOTS
+           JCOUNT += ONE
+           IF JCOUNT >  TARGET_ROOTS
+              EXIT
+           ENDIF
+
+           IF KCOUNT == JCOUNT 
+
+           PARDO i, kk1
+
+                 GET R1A_VECS(i,kk1,KROOTS)
+                 GET R1A_VECS(i,kk1,JROOTS)
+                 Tikk(i,kk1)  = R1A_VECS(i,kk1,KROOTS)
+                 T1ikk(i,kk1) = R1A_VECS(i,kk1,JROOTS)
+                 TMP          = Tikk(i,kk1) *  T1ikk(i,kk1)
+                 TMP         *= TWO
+                 Txx_RL(JROOTS,KROOTS)         = TMP
+                 PUT ORTHO_COEF_R(JROOTS,KROOTS) += Txx_RL(JROOTS,KROOTS)
+           ENDPARDO i, kk1
+
+           PARDO i, i1, kk1, a
+
+                 REQUEST R2aa_a_VECS(a,i,kk1,i1,KROOTS) i1
+                 REQUEST R2aa_a_VECS(a,i,kk1,i1,JROOTS) i1
+
+                 Taiki(a,i,kk1,i1)  = R2aa_a_VECS(a,i,kk1,i1,KROOTS)
+                 T1aiki(a,i,kk1,i1) = R2aa_a_VECS(a,i,kk1,i1,JROOTS)
+                 TMP     = Taiki(a,i,kk1,i1) * T1aiki(a,i,kk1,i1)
+                 TMP     *= TWO
+                 Txx_RL(JROOTS,KROOTS)         = TMP
+                 PUT ORTHO_COEF_R(JROOTS,KROOTS) += Txx_RL(JROOTS,KROOTS)
+
+           ENDPARDO i, i1, kk1, a
+
+           PARDO i, a, kk1, j
+
+                 REQUEST R2aa_b_VECS(a,i,kk1,j,KROOTS) j
+                 REQUEST R2aa_b_VECS(a,i,kk1,j,JROOTS) j
+
+                 Taikj(a,i,kk1,j)  = R2aa_b_VECS(a,i,kk1,j,KROOTS)
+                 T1aikj(a,i,kk1,j) = R2aa_b_VECS(a,i,kk1,j,JROOTS)
+                 TMP     = Taikj(a,i,kk1,j) * T1aikj(a,i,kk1,j)
+                 TMP     *= TWO
+                 Txx_RL(JROOTS,KROOTS)         = TMP
+                 PUT ORTHO_COEF_R(JROOTS,KROOTS) += Txx_RL(JROOTS,KROOTS)
+
+           ENDPARDO i, a, kk1, j
+           ENDIF 
+
+        ENDDO JROOTS
+     ENDDO KROOTS
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC FORM_NORM_R
+#    -------------------
+
+     PROC NORMALIZE_R
+#    ----------------
+
+     KCOUNT = ZERO
+     DO KROOTS 
+        KCOUNT += ONE
+        IF KCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF 
+
+        GET  ORTHO_COEF_R(KROOTS,KROOTS)
+        Txx_RL(KROOTS,KROOTS) = ORTHO_COEF_R(KROOTS,KROOTS)
+        EXECUTE RETURN_SVAL Txx_RL FACT
+#bgn_debug
+#        execute print_scalar FACT
+#end_debug
+        EXPONENT = HALF 
+        EXECUTE NORM_FAC FACT EXPONENT 
+        INV_NORM = FACT
+
+        PARDO i, kk1
+            GET R1A_VECS(i,kk1,KROOTS)
+            Tikk(i,kk1)  = R1A_VECS(i,kk1,KROOTS)
+            Tikk(i,kk1) *= INV_NORM
+            PUT R1A_NRML(i,kk1,KROOTS) = Tikk(i,kk1)
+        ENDPARDO i, kk1 
+
+        PARDO i, i1, kk1, a
+            REQUEST R2aa_a_VECS(a,i,kk1,i1,KROOTS) i1
+            Taiki(a,i,kk1,i1)  = R2aa_a_VECS(a,i,kk1,i1,KROOTS)
+            Taiki(a,i,kk1,i1) *= INV_NORM
+            PREPARE R2aa_a_NRML(a,i,kk1,i1,KROOTS) = Taiki(a,i,kk1,i1)
+        ENDPARDO i, i1, kk1, a
+
+        PARDO i, a, kk1, j
+            REQUEST R2aa_b_VECS(a,i,kk1,j,KROOTS) j
+            Taikj(a,i,kk1,j)  = R2aa_b_VECS(a,i,kk1,j,KROOTS)
+            Taikj(a,i,kk1,j) *= INV_NORM
+            PREPARE R2aa_b_NRML(a,i,kk1,j,KROOTS) = Taikj(a,i,kk1,j)
+        ENDPARDO i, a, kk1, j
+
+     ENDDO KROOTS 
+
+     EXECUTE SERVER_BARRIER 
+
+     ENDPROC NORMALIZE_R
+#    -------------------
+
+     PROC PHASE_FIX
+#    ----------------
+
+     KCOUNT = ZERO
+     DO KROOTS
+        KCOUNT += ONE
+        IF KCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF
+
+        GET  ORTHO_COEF_R(KROOTS,KROOTS)
+        Txx_RL(KROOTS,KROOTS) = ORTHO_COEF_R(KROOTS,KROOTS)
+        EXECUTE RETURN_SVAL Txx_RL FACT
+#bgn_debug
+        execute print_scalar FACT
+#end_debug
+        IF FACT < ZERO 
+        PARDO i, kk1
+            GET L1A_VECS(i,kk1,KROOTS)
+            Tikk(i,kk1)  = L1A_VECS(i,kk1,KROOTS)
+            Tikk(i,kk1) *= MONE 
+            PUT L1A_NRML(i,kk1,KROOTS) = Tikk(i,kk1)
+        ENDPARDO i, kk1
+
+        PARDO i, i1, kk1, a
+            REQUEST L2aa_a_VECS(a,i,kk1,i1,KROOTS) i1
+            Taiki(a,i,kk1,i1)  = L2aa_a_VECS(a,i,kk1,i1,KROOTS)
+            Taiki(a,i,kk1,i1) *= MONE
+            PREPARE L2aa_a_NRML(a,i,kk1,i1,KROOTS) = Taiki(a,i,kk1,i1)
+        ENDPARDO i, i1, kk1, a
+
+        PARDO i, a, kk1, j
+            REQUEST L2aa_b_VECS(a,i,kk1,j,KROOTS) j
+            Taikj(a,i,kk1,j)  = L2aa_b_VECS(a,i,kk1,j,KROOTS)
+            Taikj(a,i,kk1,j) *= MONE
+            PREPARE L2aa_b_NRML(a,i,kk1,j,KROOTS) = Taikj(a,i,kk1,j)
+        ENDPARDO i, a, kk1, j
+
+        ELSE
+
+        PARDO i, kk1
+            GET L1A_VECS(i,kk1,KROOTS)
+            Tikk(i,kk1)  = L1A_VECS(i,kk1,KROOTS)
+            Tikk(i,kk1) *= MONE
+            PUT L1A_NRML(i,kk1,KROOTS) = Tikk(i,kk1)
+        ENDPARDO i, kk1
+
+        PARDO i, i1, kk1, a
+            REQUEST L2aa_a_VECS(a,i,kk1,i1,KROOTS) i1
+            Taiki(a,i,kk1,i1)  = L2aa_a_VECS(a,i,kk1,i1,KROOTS)
+            Taiki(a,i,kk1,i1) *= MONE
+            PREPARE L2aa_a_NRML(a,i,kk1,i1,KROOTS) = Taiki(a,i,kk1,i1)
+        ENDPARDO i, i1, kk1, a
+
+        PARDO i, a, kk1, j
+            REQUEST L2aa_b_VECS(a,i,kk1,j,KROOTS) j
+            Taikj(a,i,kk1,j)  = L2aa_b_VECS(a,i,kk1,j,KROOTS)
+            Taikj(a,i,kk1,j) *= MONE
+            PREPARE L2aa_b_NRML(a,i,kk1,j,KROOTS) = Taikj(a,i,kk1,j)
+        ENDPARDO i, a, kk1, j
+        ENDIF 
+
+     ENDDO KROOTS
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC PHASE_FIX
+#    -----------------
+     
+     PROC COPY_R
+#    -----------
+
+     KCOUNT = ZERO
+     DO KROOTS
+        KCOUNT += ONE
+        IF KCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF
+
+        PARDO i, kk1
+            GET R1A_NRML(i,kk1,KROOTS)
+            Tikk(i,kk1)  = R1A_NRML(i,kk1,KROOTS)
+            PUT R1A_VECS(i,kk1,KROOTS) = Tikk(i,kk1)
+       ENDPARDO i, kk1
+
+       PARDO i, i1, kk1, a
+           REQUEST R2aa_a_NRML(a,i,kk1,i1,KROOTS) i1
+           Taiki(a,i,kk1,i1)  = R2aa_a_NRML(a,i,kk1,i1,KROOTS)
+           PREPARE R2aa_a_VECS(a,i,kk1,i1,KROOTS) = Taiki(a,i,kk1,i1)
+       ENDPARDO i, i1, kk1, a
+
+       PARDO i, a, kk1, j
+           REQUEST R2aa_b_NRML(a,i,kk1,j,KROOTS) j
+           Taikj(a,i,kk1,j)  = R2aa_b_NRML(a,i,kk1,j,KROOTS)
+           PREPARE R2aa_b_VECS(a,i,kk1,j,KROOTS) = Taikj(a,i,kk1,j)
+       ENDPARDO i, a, kk1, j
+
+     ENDDO KROOTS
+
+     EXECUTE SERVER_BARRIER 
+
+     ENDPROC COPY_R
+#    --------------
+
+     PROC FORM_NORM_RL
+#    -----------------
+
+     DO KROOTS
+        DO JROOTS
+           TXX_RL(JROOTS,KROOTS) = 0.0
+           PUT ORTHO_COEF_R(JROOTS,KROOTS) = TXX_RL(JROOTS,KROOTS)
+        ENDDO JROOTS
+     ENDDO KROOTS
+
+     EXECUTE SIP_BARRIER
+
+     KCOUNT = ZERO
+     DO KROOTS
+        KCOUNT += ONE
+
+        IF KCOUNT >  TARGET_ROOTS
+           EXIT
+        ENDIF
+        JCOUNT = ZERO
+
+        DO JROOTS
+           JCOUNT += ONE
+           IF JCOUNT >  TARGET_ROOTS
+              EXIT
+           ENDIF
+
+           IF KCOUNT == JCOUNT
+
+           PARDO i, kk1
+
+                 GET R1A_VECS(i,kk1,KROOTS)
+                 GET L1A_VECS(i,kk1,JROOTS)
+                 Tikk(i,kk1)  = R1A_VECS(i,kk1,KROOTS)
+                 T1ikk(i,kk1) = L1A_VECS(i,kk1,JROOTS)
+                 TMP          = Tikk(i,kk1) *  T1ikk(i,kk1)
+                 TMP         *= TWO
+                 Txx_RL(JROOTS,KROOTS)         = TMP
+                 PUT ORTHO_COEF_R(JROOTS,KROOTS) += Txx_RL(JROOTS,KROOTS)
+           ENDPARDO i, kk1
+
+          PARDO i, i1, kk1, a
+
+                 REQUEST R2aa_a_VECS(a,i,kk1,i1,KROOTS) i1
+                 REQUEST L2aa_a_VECS(a,i,kk1,i1,JROOTS) i1
+
+                 Taiki(a,i,kk1,i1)  = R2aa_a_VECS(a,i,kk1,i1,KROOTS)
+                 T1aiki(a,i,kk1,i1) = L2aa_a_VECS(a,i,kk1,i1,JROOTS)
+                 TMP     = Taiki(a,i,kk1,i1) * T1aiki(a,i,kk1,i1)
+                 TMP     *= TWO
+                 Txx_RL(JROOTS,KROOTS)         = TMP
+                 PUT ORTHO_COEF_R(JROOTS,KROOTS) += Txx_RL(JROOTS,KROOTS)
+
+           ENDPARDO i, i1, kk1, a
+
+           PARDO i, a, kk1, j
+
+                 REQUEST R2aa_b_VECS(a,i,kk1,j,KROOTS) j
+                 REQUEST L2aa_b_VECS(a,i,kk1,j,JROOTS) j
+
+                 Taikj(a,i,kk1,j)  = R2aa_b_VECS(a,i,kk1,j,KROOTS)
+                 T1aikj(a,i,kk1,j) = L2aa_b_VECS(a,i,kk1,j,JROOTS)
+                 TMP     = Taikj(a,i,kk1,j) * T1aikj(a,i,kk1,j)
+                 TMP     *= TWO
+                 Txx_RL(JROOTS,KROOTS)         = TMP
+                 PUT ORTHO_COEF_R(JROOTS,KROOTS) += Txx_RL(JROOTS,KROOTS)
+
+           ENDPARDO i, a, kk1, j
+           ENDIF
+
+        ENDDO JROOTS
+     ENDDO KROOTS
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC FORM_NORM_RL
+#    --------------------
+
+     PROC NORMALIZE_RL
+#    -----------------
+
+     KCOUNT = ZERO
+     DO KROOTS
+        KCOUNT += ONE
+        IF KCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF
+
+        GET  ORTHO_COEF_R(KROOTS,KROOTS)
+        Txx_RL(KROOTS,KROOTS) = ORTHO_COEF_R(KROOTS,KROOTS)
+        EXECUTE RETURN_SVAL Txx_RL FACT
+#bgn_debug
+        execute print_scalar FACT
+#end_debug
+        EXPONENT = HALF
+#        EXECUTE NORM_FAC FACT EXPONENT
+        INV_NORM = 1.0/FACT
+
+        PARDO i, kk1
+            GET L1A_VECS(i,kk1,KROOTS)
+            Tikk(i,kk1)  = L1A_VECS(i,kk1,KROOTS)
+            Tikk(i,kk1) *= INV_NORM
+            PUT L1A_NRML(i,kk1,KROOTS) = Tikk(i,kk1)
+        ENDPARDO i, kk1
+
+        PARDO i, i1, kk1, a
+            REQUEST L2aa_a_VECS(a,i,kk1,i1,KROOTS) i1
+            Taiki(a,i,kk1,i1)  = L2aa_a_VECS(a,i,kk1,i1,KROOTS)
+            Taiki(a,i,kk1,i1) *= INV_NORM
+            PREPARE L2aa_a_NRML(a,i,kk1,i1,KROOTS) = Taiki(a,i,kk1,i1)
+        ENDPARDO i, i1, kk1, a
+
+        PARDO i, a, kk1, j
+            REQUEST L2aa_b_VECS(a,i,kk1,j,KROOTS) j
+            Taikj(a,i,kk1,j)  = L2aa_b_VECS(a,i,kk1,j,KROOTS)
+            Taikj(a,i,kk1,j) *= INV_NORM
+            PREPARE L2aa_b_NRML(a,i,kk1,j,KROOTS) = Taikj(a,i,kk1,j)
+        ENDPARDO i, a, kk1, j
+
+     ENDDO KROOTS
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC NORMALIZE_RL
+#    --------------------
+
+     PROC COPY_RL
+#    ------------
+
+     KCOUNT = ZERO
+     DO KROOTS
+        KCOUNT += ONE
+        IF KCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF
+
+        PARDO i, kk1
+            GET L1A_NRML(i,kk1,KROOTS)
+            Tikk(i,kk1)  = L1A_NRML(i,kk1,KROOTS)
+            PUT L1A_VECS(i,kk1,KROOTS) = Tikk(i,kk1)
+       ENDPARDO i, kk1
+
+       PARDO i, i1, kk1, a
+           REQUEST L2aa_a_NRML(a,i,kk1,i1,KROOTS) i1
+           Taiki(a,i,kk1,i1)  = L2aa_a_NRML(a,i,kk1,i1,KROOTS)
+           PREPARE L2aa_a_VECS(a,i,kk1,i1,KROOTS) = Taiki(a,i,kk1,i1)
+       ENDPARDO i, i1, kk1, a
+
+       PARDO i, a, kk1, j
+           REQUEST L2aa_b_NRML(a,i,kk1,j,KROOTS) j
+           Taikj(a,i,kk1,j)  = L2aa_b_NRML(a,i,kk1,j,KROOTS)
+           PREPARE L2aa_b_VECS(a,i,kk1,j,KROOTS) = Taikj(a,i,kk1,j)
+       ENDPARDO i, a, kk1, j
+
+     ENDDO KROOTS
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC COPY_RL
+#    ---------------
+
+     PROC ORTHO_R 
+#    ------------
+
+     NCOUNT = ONE 
+     DO NROOTS
+        NCOUNT += ONE
+        IF NCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF 
+        CALL EXTRACT_R 
+        CALL FORM_ORTHO_COEFS_R 
+        CALL GRAHM_SCHMIDT
+        CALL NORM_INTMD 
+        CALL COPY_ACTIVE 
+     ENDDO NROOTS
+
+     ENDPROC ORTHO_R 
+#    ---------------
+     PROC PHASE_FIX_RL
+#    ----------------
+
+     CALL FORM_NORM_RL
+     CALL PHASE_FIX 
+     CALL COPY_RL
+
+     ENDPROC PHASE_FIX_RL
+#    --------------------
+
+     PROC RENORM_R 
+#    -------------
+
+     CALL FORM_NORM_R 
+     CALL NORMALIZE_R 
+     CALL COPY_R
+
+     ENDPROC RENORM_R 
+#    ----------------
+
+     PROC RENORM_RL
+#    --------------
+
+     CALL FORM_NORM_RL
+     CALL NORMALIZE_RL
+     CALL COPY_RL
+
+     ENDPROC RENORM_RL
+#    ----------------
+
+     PROC ORTHO_CHECK
+#    ----------------
+     DO KROOTS
+        DO JROOTS
+           OVLP_CHECK(JROOTS,KROOTS) = 0.0
+        ENDDO JROOTS
+     ENDDO KROOTS
+
+     KCOUNT = ZERO 
+     DO KROOTS 
+        KCOUNT += ONE 
+        IF KCOUNT > TARGET_ROOTS
+           EXIT 
+        ENDIF
+
+        JCOUNT = ZERO
+        DO JROOTS 
+           JCOUNT += ONE 
+           IF JCOUNT > TARGET_ROOTS
+              EXIT 
+           ENDIF
+
+            SUMA    = ZERO
+            SUMAA_A = ZERO
+            SUMAA_B = ZERO
+            HC_A    = ZERO
+            HCAA_A  = ZERO
+            HCAA_B  = ZERO 
+
+            PARDO i, kk1
+
+               GET R1A_VECS(i,kk1,KROOTS)
+               GET R1A_VECS(i,kk1,JROOTS)
+               Tikk(i,kk1)   = R1A_VECS(i,kk1,KROOTS)
+               T1ikk(i,kk1)  = R1A_VECS(i,kk1,JROOTS)
+               TMP   = Tikk(i,kk1) * T1ikk(i,kk1)
+               TMP  *= TWO 
+               SUMA += TMP
+            ENDPARDO i, kk1
+
+            PARDO i, i1, kk1, a
+               REQUEST R2aa_a_VECS(a,i,kk1,i1,KROOTS) i1
+               REQUEST R2aa_a_VECS(a,i,kk1,i1,JROOTS) i1
+               Taiki(a,i,kk1,i1)  = R2aa_a_VECS(a,i,kk1,i1,KROOTS)
+               T1aiki(a,i,kk1,i1) = R2aa_a_VECS(a,i,kk1,i1,JROOTS)
+               TMP      = Taiki(a,i,kk1,i1) * T1aiki(a,i,kk1,i1)
+               TMP     *= TWO
+               SUMAA_A += TMP
+            ENDPARDO i, i1, kk1, a
+
+            PARDO  i, a, kk1, j
+
+               REQUEST R2aa_b_VECS(a,i,kk1,j,KROOTS) j
+               REQUEST R2aa_b_VECS(a,i,kk1,j,JROOTS) j
+               Taiki(a,i,kk1,j)  = R2aa_b_VECS(a,i,kk1,j,KROOTS)
+               T1aiki(a,i,kk1,j) = R2aa_b_VECS(a,i,kk1,j,JROOTS)
+               TMP      = Taiki(a,i,kk1,j) * T1aiki(a,i,kk1,j)
+               TMP     *= TWO
+               SUMAA_B += TMP
+            ENDPARDO  i, a, kk1, j
+            EXECUTE SERVER_BARRIER 
+
+            COLLECTIVE HC_A   += SUMA
+            COLLECTIVE HCAA_A += SUMAA_A
+            COLLECTIVE HCAA_B += SUMAA_B
+
+            A_VALUE  = HC_A
+            A_VALUE += HCAA_A
+            A_VALUE += HCAA_B
+
+            OVLP_CHECK(JROOTS,KROOTS) = A_VALUE
+
+         ENDDO JROOTS 
+     ENDDO  KROOTS 
+
+     execute print_static OVLP_CHECK  TARGET_ROOTS 
+
+     ENDPROC ORTHO_CHECK
+#    -------------------
+
+     PROC ORTHO_CHECK_RL
+#    -------------------
+     DO KROOTS
+        DO JROOTS
+           OVLP_CHECK(JROOTS,KROOTS) = 0.0
+        ENDDO JROOTS
+     ENDDO KROOTS
+
+     KCOUNT = ZERO
+     DO KROOTS
+        KCOUNT += ONE
+        IF KCOUNT > TARGET_ROOTS
+           EXIT
+        ENDIF
+
+        JCOUNT = ZERO
+        DO JROOTS
+           JCOUNT += ONE
+           IF JCOUNT > TARGET_ROOTS
+              EXIT
+           ENDIF
+
+            SUMA    = ZERO
+            SUMAA_A = ZERO
+            SUMAA_B = ZERO
+            HC_A    = ZERO
+            HCAA_A  = ZERO
+            HCAA_B  = ZERO
+
+            PARDO i, kk1
+
+               GET R1A_VECS(i,kk1,KROOTS)
+               GET L1A_VECS(i,kk1,JROOTS)
+               Tikk(i,kk1)   = R1A_VECS(i,kk1,KROOTS)
+               T1ikk(i,kk1)  = L1A_VECS(i,kk1,JROOTS)
+               TMP   = Tikk(i,kk1) * T1ikk(i,kk1)
+               TMP  *= TWO
+               SUMA += TMP
+            ENDPARDO i, kk1
+
+
+            PARDO i, i1, kk1, a
+               REQUEST R2aa_a_VECS(a,i,kk1,i1,KROOTS) i1
+               REQUEST L2aa_a_VECS(a,i,kk1,i1,JROOTS) i1
+               Taiki(a,i,kk1,i1)  = R2aa_a_VECS(a,i,kk1,i1,KROOTS)
+               T1aiki(a,i,kk1,i1) = L2aa_a_VECS(a,i,kk1,i1,JROOTS)
+               TMP      = Taiki(a,i,kk1,i1) * T1aiki(a,i,kk1,i1)
+               TMP     *= TWO
+               SUMAA_A += TMP
+            ENDPARDO i, i1, kk1, a
+
+            PARDO  i, a, kk1, j
+
+               REQUEST R2aa_b_VECS(a,i,kk1,j,KROOTS) j
+               REQUEST L2aa_b_VECS(a,i,kk1,j,JROOTS) j
+               Taiki(a,i,kk1,j)  = R2aa_b_VECS(a,i,kk1,j,KROOTS)
+               T1aiki(a,i,kk1,j) = L2aa_b_VECS(a,i,kk1,j,JROOTS)
+               TMP      = Taiki(a,i,kk1,j) * T1aiki(a,i,kk1,j)
+               TMP     *= TWO
+               SUMAA_B += TMP
+            ENDPARDO  i, a, kk1, j
+            EXECUTE SERVER_BARRIER
+
+            COLLECTIVE HC_A   += SUMA
+            COLLECTIVE HCAA_A += SUMAA_A
+            COLLECTIVE HCAA_B += SUMAA_B
+
+            A_VALUE  = HC_A
+            A_VALUE += HCAA_A
+            A_VALUE += HCAA_B
+
+            OVLP_CHECK(JROOTS,KROOTS) = A_VALUE
+
+         ENDDO JROOTS
+     ENDDO  KROOTS
+     EXECUTE SERVER_BARRIER 
+
+     execute print_static OVLP_CHECK  TARGET_ROOTS
+
+     ENDPROC ORTHO_CHECK_RL
+#    ----------------------
+#     
+# Main program ara
+
+      ZERO = 0.0
+      ONE  = 1.0
+      TWO  = 2.0
+      MONE = -1.0
+      HALF = 0.50 
+ 
+      DO JROOTS
+      DO KROOTS
+        ETEMP_RL(KROOTS,JROOTS) = ZERO 
+      ENDDO  KROOTS
+      ENDDO  JROOTS
+
+      TARGET_ROOTS = IP_ROOTS 
+
+      CALL CREATE_ARRAYS 
+      CALL READ_DATA
+
+#bgn_debug
+#      CALL ORTHO_CHECK
+#end_debug
+
+      CALL RENORM_R  
+#bgn_debug
+      CALL ORTHO_CHECK
+#end_debug
+
+      CALL ORTHO_R 
+
+#bgn_debug
+      CALL ORTHO_CHECK
+#end_debug
+
+#      CALL PHASE_FIX_RL 
+#      CALL RENORM_RL
+#bgn_debug
+#      CALL ORTHO_CHECK
+#end_debug
+
+#      CALL FORM_ORTHO_COEFS_SORCE 
+#      CALL GSCHMIDT_L
+#      CALL FORM_ORTHO_COEFS_INTMD
+#bgn_debug
+#      CALL ORTHO_CHECK_RL
+#end_debug
+
+      execute blocks_to_list                RIP
+
+      execute blocks_to_list                R1a_vecs
+      execute blocks_to_list                R2aa_a_vecs
+      execute blocks_to_list                R2aa_b_vecs
+
+      execute blocks_to_list                L1a_vecs
+      execute blocks_to_list                L2aa_a_vecs
+      execute blocks_to_list                L2aa_b_vecs
+
+      execute blocks_to_list                t1a
+      execute blocks_to_list                t1b
+
+      execute blocks_to_list                T2aa
+      execute blocks_to_list                T2ab
+      execute blocks_to_list                T2bb
+
+      execute write_blocks_to_list
+      execute server_barrier
+
+#      execute print_scalar suma
+#      execute print_scalar sumb
+#      CALL GSCHMIDT_R 
+#      CALL FORM_ORTHO_COEFS_INTMD
+ 
+                        ENDSIAL GS_ORTHO_IP
+#                       ------------------

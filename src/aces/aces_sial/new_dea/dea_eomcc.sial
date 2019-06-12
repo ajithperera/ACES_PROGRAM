@@ -40,6 +40,8 @@
       moaindex i1= baocc, eaocc
       moaindex i2= baocc, eaocc
       moaindex i3= baocc, eaocc
+      moaindex k = baocc, eaocc
+
 #
       moaindex a = bavirt, eavirt
       moaindex a1= bavirt, eavirt
@@ -152,7 +154,13 @@
       served HBAR_ABCI_bbbb(b,b1,b2,j)
       served HBAR_ABCI_aabb(a,a1,b,j)
       served HBAR_ABCI_bbaa(b,b1,a,i)
-
+#---------------------------------------------------------------|
+      served Hbar_ab_eomea(a,a1)
+      served Hbar_ia_eomea(a,i)
+      served Hbar_ik_aj_eomea(i,k,a,j)
+      served Hbar_ij_ab_eomea(i,j,a,b)
+      served Hbar_ai_jb_eomea(a,i,j,b)
+#---------------------------------------------------------------|
       Served Tau_ab(a,i,b,j)
       Served Tau_aa(a,i,a1,i1)
 #
@@ -442,6 +450,8 @@
       temp Tai(a,i)
       temp T1ai(a,i)
       temp Tbj(b,j)
+      temp ttax(b,b1)
+      temp tHbar_ab_eomea(b,b1)
 
 #     Static arrays
 #     -------------
@@ -581,6 +591,8 @@
       Scalar DIFF
       Scalar OMEGA_00
       Scalar TWEN 
+      scalar EAEOMF12CALC
+      scalar F12CALC
 
 # -----------------------------------------------------------
 
@@ -656,7 +668,15 @@
       execute list_to_blocks                HBAR_ABCI_bbbb
       execute list_to_blocks                HBAR_ABCI_aabb
       execute list_to_blocks                HBAR_ABCI_bbaa
-#
+#-------------------------------------------------------------
+      IF EAEOMF12CALC == 1.0
+      execute list_to_blocks                Hbar_ab_eomea
+      execute list_to_blocks                Hbar_ia_eomea
+      execute list_to_blocks                Hbar_ik_aj_eomea
+      execute list_to_blocks                Hbar_ij_ab_eomea
+      execute list_to_blocks                Hbar_ai_jb_eomea
+      ENDIF
+#-------------------------------------------------------------
       execute server_barrier
       execute read_list_to_blocks
       execute server_barrier
@@ -1985,19 +2005,39 @@
 
       PARDO a, b, b1
 
-            GET                   R1_AB(a,b1)
-            GET                   HBAR_bb(b,b1)
-            tab(a,b)            = R1_AB(a,b1)*HBAR_bb(b,b1)
-            PUT HR1_AB(a,b) += tab(a,b)
+          GET                   R1_AB(a,b1)
+          GET                   HBAR_bb(b,b1)
+
+          ttax(b,b1) =  HBAR_bb(b,b1)
+#---------------------------------------|
+          IF EAEOMF12CALC == 1.0
+             REQUEST Hbar_ab_eomea(b1,b) b
+             tHbar_ab_eomea(b,b1) = Hbar_ab_eomea(b1,b)
+             tHbar_ab_eomea(b,b1) *= -1.0
+             ttax(b,b1) += tHbar_ab_eomea(b,b1)
+         ENDIF
+#---------------------------------------|
+         tab(a,b)            = R1_AB(a,b1)*ttax(b,b1)
+         PUT HR1_AB(a,b) += tab(a,b)
 
       ENDPARDO a, b, b1
 
       PARDO a, b, a1
 
-            GET              R1_AB(a1,b)
-            GET              HBAR_aa(a,a1)
-            tab(a,b)       = R1_AB(a1,b)*HBAR_aa(a,a1)
-            PUT HR1_AB(a,b) += tab(a,b)
+         GET              R1_AB(a1,b)
+         GET              HBAR_aa(a,a1)
+         ttax(a,a1) = HBAR_aa(a,a1)
+
+#---------------------------------------|
+         IF EAEOMF12CALC == 1.0
+            REQUEST Hbar_ab_eomea(a1,a) a
+            tHbar_ab_eomea(a,a1) = Hbar_ab_eomea(a1,a)
+            tHbar_ab_eomea(a,a1) *= -1.0
+            ttax(a,a1) += tHbar_ab_eomea(a,a1)
+         ENDIF
+#---------------------------------------|
+         tab(a,b)       = R1_AB(a1,b)*ttax(a,a1)
+         PUT HR1_AB(a,b) += tab(a,b)
 
       ENDPARDO a, b, a1
 #
@@ -5333,7 +5373,16 @@
 #     ------------------
 # Read data from BLOCK_DATA -> to be partially replaced
 # -----------------------------------------------------
-#
+
+#-----------------------------------------------------|
+#       Check if F12 calculation is requested         |
+#-----------------------------------------------------|
+
+     F12CALC = 0.0
+     execute f12info F12CALC
+     execute print_scalar F12CALC
+     execute eomeaf12info EAEOMF12CALC
+#-----------------------------------------------------|
      ZERO     = 0.0
      ONE      = 1.0
      HALF     = 0.5
@@ -5348,20 +5397,30 @@
      FORT     = 14.0
      FIFT     = 15.0
 
-     TARGET_ROOTS = EOM_ROOTS
+     TARGET_ROOTS = EA_ROOTS
      EOM_THRES    = EOM_TOL
      EOM_DENOM    = EE_DENOM
      EOM_MAXCYC   = EE_MAXCYC
      EXACT_HY     = ZERO 
      NO_AO_LADDER = ZERO
-     MAX_OVLP     = ONE
-     MIN_ENEG     = ZERO
+     IF ROOT_SEARCH == ZERO
+        MAX_OVLP  = ONE
+        MIN_ENEG  = ZERO
+     ELSE
+        MAX_OVLP  = ZERO
+        MIN_ENEG  = ONE
+     ENDIF
      LOCK_THRES   = 0.001
-     FIRST_VEC    = ONE
-     PREVS_VEC    = ZERO 
+     IF WHAT_TOFOLLOW == ZERO
+        FIRST_VEC = ONE
+        PREVS_VEC = ZERO
+     ELSE
+        FIRST_VEC = ZERO
+        PREVS_VEC = ONE
+     ENDIF
      LEFT         = ZERO
      RIGHT        = ZERO
-     FRESH_SBSP   = ONE
+     FRESH_SBSP   = SUB_SPACE
      VERY_SMALL   = EOM_THRES
 #
      CALL READ_DATA

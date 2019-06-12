@@ -149,7 +149,13 @@ C Hbar is non-symmetric matrix, and we obtain both left/right eigenvectors.
 
 #ifdef _DEBUG_LVL0
       if (me.eq.0) then
-      Nroots = eom_roots
+      if (Ndim .EQ. Nalpha_occupied .OR. 
+     +    Ndim .EQ. Nbeta_occupied) Then
+          Nroots = Ip_roots 
+      Elseif (Ndim .EQ. Nalpha_virtual .OR. 
+     +         Ndim .EQ. Nbeta_virtual) Then
+          Nroots = Ea_roots 
+      ENdif 
       Write(6,"(a)") "Initial Right guess vectors for EOM-IP/EA"
       call output(Guess_vec,1,Ndim,1,Nroots,Ndim,Ndim,1)
       Write(6,"(a)") "Initial Left, guess vectors for EOM-IP/EA"
@@ -246,9 +252,18 @@ C nroot (number of roots from the int_gen_param common block). The first
 C 25 positions are reseved for R vectors and next 25 position is reserved
 C for L vectors. 
 C
-      Nroots = eom_roots 
+      if (Ndim .EQ. Nalpha_occupied .OR.
+     +    Ndim .EQ. Nbeta_occupied) Then
+          Nroots = Int(Ip_roots)
+      Elseif (Ndim .EQ. Nalpha_virtual .OR.
+     +        Ndim .EQ. Nbeta_virtual) Then
+          Nroots = Int(Ea_roots)
+      ENdif
+
 #ifdef _DEBUG_LVL0
       if (me.eq.0) then
+      write(6,"(a,4i4)") "Nalpha_occupied,Nbeta_occupied,Ip_roots:",
+     +  Nalpha_occupied,Nbeta_occupied,Int(Ip_roots),Ndim
       Write(6,"(a,i4)") "The number of roots:", nroots 
       endif 
 #endif 

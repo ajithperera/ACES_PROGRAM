@@ -7534,26 +7534,40 @@
      FIFT     = 15.0
      TWEN     = 20.0
 
-     TARGET_ROOTS = EOM_ROOTS
+     TARGET_ROOTS = IP_ROOTS
      EOM_THRES    = EOM_TOL
      EOM_DENOM    = EE_DENOM
      EOM_MAXCYC   = EE_MAXCYC
      EXACT_HY     = ZERO
-     MAX_OVLP     = ONE
-     MIN_ENEG     = ZERO
+     IF ROOT_SEARCH == ZERO
+        MAX_OVLP  = ONE
+        MIN_ENEG  = ZERO
+     ELSE 
+        MAX_OVLP  = ZERO
+        MIN_ENEG  = ONE
+     ENDIF 
      LOCK_THRES   = 0.001
-     FIRST_VEC    = ONE
-     PREVS_VEC    = ZERO
+     IF WHAT_TOFOLLOW == ZERO
+        FIRST_VEC = ONE
+        PREVS_VEC = ZERO
+     ELSE
+        FIRST_VEC = ZERO
+        PREVS_VEC = ONE
+     ENDIF 
      LEFT         = ZERO
      RIGHT        = ZERO
-     FRESH_SBSP   = ZERO
+     FRESH_SBSP   = SUB_SPACE
      VERY_SMALL   = EOM_THRES
 
-     execute print_scalar ip_roots
-     execute print_scalar ea_roots
-     execute print_scalar root_search
-     execute print_scalar what_tofollow
-     execute print_scalar sub_space
+#bgn_debug
+#     execute print_scalar max_ovlp
+#     execute print_scalar min_eneg
+#     execute print_scalar first_vec
+#     execute print_scalar prevs_vec
+#     execute print_scalar fresh_sbsp 
+#     execute print_scalar ip_roots
+#     execute print_scalar eom_thres
+#end_debug
 #
      CALL READ_DATA
      CALL CREATE_ARRAYS 

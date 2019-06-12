@@ -190,6 +190,8 @@ C The second argument indicate which side get scalled.
       implicit none
       include 'interpreter.h'
       include 'frac_occ_vars.h'
+      include 'parallel_info.h'
+      include 'int_gen_parms.h'
 
       integer a1,a2,b1,b2,i1,i2,j1,j2
       integer atype, itype, btype, jtype
@@ -233,9 +235,18 @@ C The second argument indicate which side get scalled.
 
       If (Rit_one) Then
       AR = Jtype .eq. Moaindex 
-      BR = Jtype .eq. mobindex 
+      BR = Jtype .eq. Mobindex 
       Endif
 
+#ifdef _DEBUG_LVL0
+      if (me .eq. 0) then
+         write(6,"(4l)")AL,BL,AR,BR
+         write(6,"(4l)")o_type,v_type,o,v
+         Write(6,"(a)") "The Occ_num arrays"
+         Write(6,"(6F4.1)") (Occ_numsa(i),i=1, Nbasis)
+         Write(6,"(6F4.1)") (Occ_numsb(i),i=1, Nbasis)
+      endif
+#endif
       do j = j1,j2
       do b = b1,b2
       do i = i1,i2
@@ -250,11 +261,11 @@ C The second argument indicate which side get scalled.
             Endif 
          Elseif (Rit_one) Then 
             If (O_type) Then
-               If (AR) x(a,i,b,j) =  x(a,i,b,j)**Occ_numsa(j)
-               If (BL) x(a,i,b,j) =  x(a,i,b,j)**Occ_numsb(j)
+               If (AR) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(j)
+               If (BR) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(j)
             Elseif (V_type) Then 
-               If (AR) val =  x(a,i,b,j)*(Done-Occ_numsa(j))
-               If (BL) val =  x(a,i,b,j)*(Done-Occ_numsb(j))
+               If (AR) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(j))
+               If (BR) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(j))
             Endif 
          Endif 
       enddo
@@ -272,6 +283,7 @@ C The second argument indicate which side get scalled.
       include 'interpreter.h'
       include 'frac_occ_vars.h'
       include 'parallel_info.h'
+      include 'int_gen_parms.h'
 
       integer a1,a2,b1,b2,i1,i2,j1,j2
       integer atype, itype, btype, jtype
@@ -310,6 +322,12 @@ C The second argument indicate which side get scalled.
       ABR     = .False.
       BAR     = .False.
 
+#ifdef _DEBUG_LVL0
+      If(me .eq.0) then
+       write(6,"(a,4I2)") "OO and VV :",OO(1),OO(2),VV(1),VV(2)
+      Endif
+#endif
+
       If (OO(1) .eq. 1 .and. OO(2) .eq. 1) Then 
          OO_type = .True.
       Elseif (VV(1) .eq. 1 .and. VV(2) .eq. 1) Then 
@@ -341,6 +359,9 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
      +                   "VO_type,AAL-BBR",Lft_two,Rit_two,OO_type,
      +                    VV_type,OV_type,VO_type
       write(6,"(a,8l)") "type:",aal,bbl,abl,bal,aar,bbr,abr,bar
+      Write(6,"(a)") "The Occ_num arrays"
+      Write(6,"(6F4.1)") (Occ_numsa(i),i=1, Nbasis)
+      Write(6,"(6F4.1)") (Occ_numsb(i),i=1, Nbasis)
       endif
 #endif 
     
@@ -376,7 +397,11 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
      +                                            Occ_numsb(i)
                If (BAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(a))*
      +                                            Occ_numsa(i)
-            Elseif (VV_type) Then 
+            Elseif (VV_type) Then  
+
+C               if (me .eq.0) write(6,"(a,F10.5)") "I am on left",
+C     +                       (Done-Occ_numsa(a))*(Done-Occ_numsa(i))
+
                If (AAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                           (Done-Occ_numsa(i))
                If (BBL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(a))*
@@ -384,45 +409,48 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
                If (ABL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                           (Done-Occ_numsb(i))
                If (BAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(a))*
-     +                                            Occ_numsa(i)
+     +                                           (Done-Occ_numsa(i))
             Endif 
          Elseif (Rit_two) Then 
             If (OO_type) Then
-               If(AAL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*
+               If(AAR) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*
      +                                          Occ_numsa(j)
-               If(BBL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(b)*
+               If(BBR) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(b)*
      +                                          Occ_numsb(j)
-               If(ABL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*
+               If(ABR) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*
      +                                          Occ_numsb(j)
-               If(BAL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(b)*
+               If(BAR) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(b)*
      +                                          Occ_numsa(j)
             Elseif (OV_type) Then 
-               If (AAL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*
+               If (AAR) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*
      +                                          (Done-Occ_numsb(j))
-               If (BBL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(b)*
+               If (BBR) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(b)*
      +                                          (Done-Occ_numsb(j))
-               If (ABL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*
+               If (ABR) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsa(b)*
      +                                          (Done-Occ_numsb(j))
-               If (BAL) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(b)*
+               If (BAR) x(a,i,b,j) =  x(a,i,b,j)*Occ_numsb(b)*
      +                                          (Done-Occ_numsa(j))
             Elseif (VO_type) Then 
-               If (AAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(b))*
+               If (AAR) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(b))*
      +                                            Occ_numsa(j)
-               If (BBL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
+               If (BBR) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
      +                                            Occ_numsb(j)
-               If (ABL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(b))*
+               If (ABR) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(b))*
      +                                            Occ_numsb(j)
-               If (BAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
+               If (BAR) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
      +                                            Occ_numsa(j)
             Elseif (VV_type) Then 
-               If (AAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(b))*
+C               if (me .eq.0) write(6,"(a,F10.5)") "I am on right", 
+C     +            (Done-Occ_numsa(b))*(Done-Occ_numsa(j))
+
+               If (AAR) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(b))*
      +                                           (Done-Occ_numsa(j))
-               If (BBL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
+               If (BBR) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
      +                                           (Done-Occ_numsb(j))
-               If (ABL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(b))*
+               If (ABR) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(b))*
      +                                           (Done-Occ_numsb(j))
-               If (BAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
-     +                                            Occ_numsa(j)
+               If (BAR) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
+     +                                           (Done-Occ_numsa(j))
             Endif 
          Endif 
       enddo
@@ -440,6 +468,7 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
       include 'interpreter.h'
       include 'frac_occ_vars.h'
       include 'parallel_info.h'
+      include 'int_gen_parms.h'
 
       integer a1,a2,b1,b2,i1,i2,j1,j2
       integer atype, itype, btype, jtype
@@ -496,7 +525,7 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
       ElseIf (OOO(1) .eq. 1 .and. OOO(2) .eq. 1 .and. VVV(3)
      +        .Eq. 1) Then 
          OOV_type = .True.
-      ElseIf (OOO(1) .eq. 1 .and. OOO(2) .eq. 1 .and. VVV(3)
+      ElseIf (OOO(2) .eq. 1 .and. OOO(3) .eq. 1 .and. VVV(1)
      +        .Eq. 1) Then 
          VOO_type = .True.
       ElseIf (VVV(1) .eq. 1 .and. VVV(2) .eq. 1 .and. OOO(3) 
@@ -505,7 +534,7 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
       ElseIf (OOO(1) .eq. 1 .and. VVV(2) .eq. 1 .and. OOO(3)
      +        .Eq. 1) Then 
          OVO_type = .True.
-      ElseIf (OOO(1) .eq. 1 .and. VVV(1) .eq. 1 .and. VVV(3)
+      ElseIf (OOO(2) .eq. 1 .and. VVV(1) .eq. 1 .and. VVV(3)
      +        .Eq. 1) Then 
          VOV_type = .True.
       ElseIf (OOO(1) .eq. 1 .and. VVV(2) .eq. 1 .and. VVV(3)
@@ -545,12 +574,16 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
 
 #ifdef _DEBUG_LVL0
       if (me .eq. 0) then
+          write(6,"(a,4(1x,i4))") "orbital counts", nalpha_occupied,
+     +    nbeta_occupied,nalpha_virtual,nbeta_virtual 
           write(6,"(12l)")AAAL,BBBL,ABAL,BABL,ABBL,AABL,AAAR,BBBR,
      +                    ABAR,BABR,ABBR,AABR
           write(6,"(8l)")ooo_type,vvv_type,oov_type,voo_type,
      +                   vvo_type,ovo_type,vov_type,ovv_type
+
       endif 
 #endif
+      Return 
       do j = j1,j2
       do b = b1,b2
       do i = i1,i2
@@ -621,17 +654,17 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
                If (AABL) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
      +                                Occ_numsa(i)*(Done-Occ_numsb(b))
             Elseif (VOO_type) Then 
-               If (AAAL) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+               If (AAAL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                Occ_numsa(i)*Occ_numsa(b)
-               If (BBBL) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+               If (BBBL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
      +                                Occ_numsb(i)*Occ_numsb(b)
-               If (ABAL) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+               If (ABAL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                Occ_numsb(i)*Occ_numsa(b)
-               If (BABL) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+               If (BABL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
      +                                Occ_numsa(i)*Occ_numsb(b)
-               If (BABL) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+               If (BABL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                Occ_numsb(i)*Occ_numsb(b)
-               If (AABL) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+               If (AABL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                Occ_numsa(i)*Occ_numsb(b)
             Elseif (VVO_type) Then 
                If (AAAL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
@@ -751,17 +784,17 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
                If (AABR) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(i)*
      +                                Occ_numsa(b)*(Done-Occ_numsb(j))
             Elseif (VOO_type) Then
-               If (AAAR) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+               If (AAAR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
      +                                Occ_numsa(b)*Occ_numsa(j)
-               If (BBBR) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsb(i))*
+               If (BBBR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(i))*
      +                                Occ_numsb(b)*Occ_numsb(j)
-               If (ABAR) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(i))*
-     +                                Occ_numsb(b)*Occ_numsa(j)
-               If (BABR) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsb(i))*
+               If (ABAR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(i))*
+     +                                Occ_numsa(b)*Occ_numsa(j)
+               If (BABR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(i))*
      +                                Occ_numsa(b)*Occ_numsb(j)
-               If (ABBR) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+               If (ABBR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
      +                                Occ_numsb(b)*Occ_numsb(j)
-               If (AABR) x(a,i,j,b) = x(a,i,b,j)*(Done-Occ_numsa(i))*
+               If (AABR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
      +                                Occ_numsa(b)*Occ_numsb(j)
             Elseif (VVO_type) Then
                If (AAAR) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(i))*
@@ -950,6 +983,8 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
       implicit none
       include 'interpreter.h'
       include 'frac_occ_vars.h'
+      include 'parallel_info.h'
+      include 'int_gen_parms.h'
 
       integer a1,a2,i1,i2
       integer atype, itype
@@ -984,6 +1019,15 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
       AR = Itype .eq. Moaindex 
       BR = Itype .eq. Mobindex 
       Endif 
+#ifdef _DEBUG_LVL0
+      if (me .eq. 0) then
+         write(6,"(4l)")AL,BL,AR,BR
+         write(6,"(2l)")o,v
+         Write(6,"(a)") "The Occ_num arrays"
+         Write(6,"(6F4.1)") (Occ_numsa(i),i=1, Nbasis)
+         Write(6,"(6F4.1)") (Occ_numsb(i),i=1, Nbasis)
+      endif
+#endif
 
       do i = i1, i2
       do a = a1,a2
@@ -997,11 +1041,11 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
             Endif 
          Elseif (Rit_one) Then
             If (O .eq. 1) Then
-               If (AL) x(a,i) = x(a,i)*Occ_numsa(i)
-               If (BL) x(a,i) = x(a,i)*Occ_numsb(i)
+               If (AR) x(a,i) = x(a,i)*Occ_numsa(i)
+               If (BR) x(a,i) = x(a,i)*Occ_numsb(i)
             ElseIf (V .eq. 1) then
-               If (AL) x(a,i) =  x(a,i)*(Done-Occ_numsa(i))
-               If (BL) x(a,i) =  x(a,i)*(Done-Occ_numsb(i))
+               If (AR) x(a,i) =  x(a,i)*(Done-Occ_numsa(i))
+               If (BR) x(a,i) =  x(a,i)*(Done-Occ_numsb(i))
             Endif 
          Endif 
       enddo

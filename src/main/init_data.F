@@ -50,6 +50,11 @@ C  in the file COPYRIGHT.
       integer          iee_guess,iee_denom,iee_maxcyc,icis_tol
       integer          iip_roots,iea_roots,iroot_search 
       integer          iwhat_tofollow,isub_space 
+      integer          istgf12,ispinorb_cc
+      integer          isoc_roots,iip_calc,iea_calc
+      integer          in_singlets,in_triplets 
+      integer          Length, Junk 
+      double precision gamma,real_freq,imgn_freq
       character*4      atmnam(max_centers)
       logical          cartesian
       logical          uhf
@@ -57,6 +62,7 @@ C  in the file COPYRIGHT.
       integer          ijunk(100)
       integer          iflags(500)
       logical*8        l8false
+      logical          ipea_calc
       double precision dbuf(1)
 #ifdef ALTIX
       pointer (dptr, dbuf)
@@ -227,12 +233,12 @@ C
 C Watson Added: For EOM calcs.
 C
       iexcite = 0
-      iexcite = ijunk(87)
+      iexcite = ijunk(87) 
       if (iexcite .gt. 0) then
          excite = DBLE(iexcite)
          eom_tol = 10.0d0**(-ijunk(98))
          call igetrec(-1, 'JOBARC', 'EESYMINF', 1, ieom_roots)
-         write(*,*) ' ieom_roots: ', ieom_roots
+         if(dbg) write(*,*) ' ieom_roots: ', ieom_roots
          if (ieom_roots .eq. 0) then
             print *,'WARNING: ACES has defaulted ESTATE_SYM to 0, ',
      *        ' resetting to 4.'
@@ -242,7 +248,16 @@ C
          ieom_temprt = ieom_roots
       endif
       if (iexcite .eq. 0) ieom_temprt = 0
-C
+
+C Set the tolerence for IP and EA calc if the user has forgotten
+C the EXCITE key-word
+
+      Ipea_calc = (Iflags(114) .NE. 0 .OR. Iflags(101) .NE. 0)
+      If (Ipea_calc .and. Iexcite .eq. 0) Then 
+         excite = DBLE(iexcite)
+         eom_tol = 10.0d0**(-ijunk(98))
+      Endif 
+C     
 C Watson
 C
 C Ajith Perera for second-order properties; 04/2014.
@@ -257,6 +272,7 @@ C Ajith Perera for second-order properties; 04/2014.
        If (Ijunk(18) .EQ. 15 .OR. Ijunk(18) .EQ. 1) ia_tensor = 1
        If (Ijunk(18) .EQ. 16) ig_tensor = 1
        If (ijunk(18) .EQ. 17) id_tensor = 1
+       If (ijunk(18) .EQ. 18) ispn_orbt = 1
   
        polarizability = DBLE(iPolarizability)
        a_tensor       = DBLE(ia_tensor)
@@ -296,6 +312,13 @@ C
         Iroot_search   = iflags(165)
         Iwhat_tofollow = iflags(166)
         Isub_space     = iflags(167)
+        Istgf12        = iflags(168)
+        Ispinorb_cc    = iflags(172)
+        Isoc_roots     = iflags(173)
+        Iip_calc       = iflags(114)
+        Iea_calc       = iflags(101)
+        call igetrec(-1, 'JOBARC', 'EESYM_A ', 1, in_singlets)
+        call igetrec(-1, 'JOBARC', 'EESYM_B ', 1, in_triplets)
 
 C Use the ip,ea_roots variables to handel dip and dea roots.
 
@@ -320,6 +343,26 @@ C Use the ip,ea_roots variables to handel dip and dea roots.
         root_search   = DBLE(Iroot_search)
         what_tofollow = DBLE(Iwhat_tofollow)
         sub_space     = DBLE(Isub_space)
+        stgf12        = DBLE(Istgf12)
+        spinorb_cc    = DBLE(Ispinorb_cc)
+        soc_roots     = DBLE(Isoc_roots)
+        ip_calc       = DBLE(Iip_calc)
+        ea_calc       = DBLE(Iea_calc)
+        n_singlets    = DBLE(In_singlets)
+        n_triplets    = DBLE(In_triplets)
+
+        call dgetrec(0, 'JOBARC', 'F12GAMMA',  Length, Junk)
+        If (Length .gt. 0) call dgetrec(1, 'JOBARC', 'F12GAMMA',
+     +                                  ione, gamma)
+        call dgetrec(0, 'JOBARC', 'FREQ    ',  Length, Junk)
+        If (Length .gt. 0) call dgetrec(1, 'JOBARC', 'FREQ    ',  
+     +                                  ione, real_freq)
+        call dgetrec(0, 'JOBARC', 'IMFREQ    ',  Length, Junk)
+        If (Length .gt. 0) call dgetrec(1, 'JOBARC', 'IMFREQ    ',
+     +                                  ione, imgn_freq)
+        f12gamma      = gamma 
+        freq          = real_freq
+        imfreq        = imgn_freq
 
 c-------------------------------------------------------------------------
 c   Read IFLAGS2 off JOBARC.
@@ -565,8 +608,8 @@ c-------------------------------------------------------------------------
       nalpha_virtual = nbasis - nalpha_occupied 
       nbeta_virtual  = nbasis - nbeta_occupied 
 
-      write(6,*) ' NALPHA_VIRT =' , nalpha_virtual 
-      write(6,*) ' NBETA_VIRT =' , nbeta_virtual 
+      If (dbg) write(6,*) ' NALPHA_VIRT =' , nalpha_virtual 
+      If (dbg) write(6,*) ' NBETA_VIRT =' , nbeta_virtual 
       
       if (.not. ignore_dropmo) then
 

@@ -165,9 +165,11 @@ c---------------------------------------------------------------------------
 
       integer a,b,i,j
       double precision eps, epsa, epsb, epsi, epsj
-      double precision val, Done 
+      double precision eps1,eps2
+      double precision val, Done, Thres, rfc
+      Logical Regularize 
 
-      Data Done /1.0D0/
+      Data Done,Thres,rfc /1.0D0,1.0D-10,-1.0D-05/
 
 #ifdef _DEBUG_LVL0
       if (me .eq.0) Then
@@ -180,6 +182,8 @@ c---------------------------------------------------------------------------
 
       voff_a = Nalpha_occupied
       voff_b = Nbeta_occupied
+   
+      Regularize = .False.
 
       do j = j1,j2
          if (jtype .eq. mobindex) then
@@ -210,11 +214,19 @@ c---------------------------------------------------------------------------
             epsa = epsilon(a)*(Done-Occ_numsa(vrt_aa))
          endif
          val =  x(a,i,b,j)
-         eps = epsi + epsj - epsa - epsb
-         if (eps .ne. 0.0) then
+
+         If (Regularize) Then
+            eps1 = epsi + epsj - epsa - epsb  
+            eps2 = eps1 * eps1
+            eps  = (eps2 - rfc)/eps1 
+         Else 
+            eps = epsi + epsj - epsa - epsb  
+         Endif 
+
+         if (Dabs(eps) .gt. Thres) then
              x(a,i,b,j) = val/eps
          else 
-             x(a,i,b,j) = Done
+             x(a,i,b,j) = 0.0D0
          endif 
       enddo
       enddo
@@ -243,9 +255,11 @@ c---------------------------------------------------------------------------
 
       integer a,b,c,i,j,k
       double precision eps, epsa, epsb, epsc, epsi, epsj, epsk
-      double precision val,Done
+      double precision eps1,eps2
+      double precision val,Done, Thres,rfc
+      Logical Regularize 
 
-      Data Done /1.0D0/
+      Data Done,Thres,rfc/1.0D0,1.0D-10,-1.0D-05/
 
 c--------------------------------------------------------------------
 c Set index types if necassary and perform simple check. 
@@ -262,6 +276,8 @@ c--------------------------------------------------------------------
 
       voff_a = Nalpha_occupied
       voff_b = Nbeta_occupied
+
+      Regularize = .False.
 
       do k = k1,k2
          if (ktype .eq. mobindex) then
@@ -306,12 +322,19 @@ c--------------------------------------------------------------------
             epsa = epsilon(a)*(Done-Occ_numsa(vrt_aa))
          endif
          val =  x(a,i,b,j,c,k)
-         eps = epsi + epsj + epsk - epsa - epsb - epsc
 
-         if (eps .NE. 0.0D0) then
+         If (Regularize) Then
+            eps1 = epsi + epsj + epsk - epsa - epsb 
+            eps2 = eps1 * eps1
+            eps  = (eps2 - rfc)/eps1 
+         Else 
+            eps = epsi + epsj + epsk - epsa
+         Endif 
+
+         if (Dabs(eps) .gt. Thres) then
              x(a,i,b,j,c,k) = val/eps
          else 
-             x(a,i,b,j,c,k) = Done
+             x(a,i,b,j,c,k) = 0.0D0
          endif 
       enddo
       enddo
@@ -340,9 +363,10 @@ c--------------------------------------------------------------------
       double precision epsilon(*), epsilonb(*)
 
       integer a,i
-      double precision eps, epsa, epsi
-      double precision val, Done
-      Data Done /1.0D0/
+      double precision eps,eps1,eps2, epsa, epsi
+      double precision val, Done, Thres, rfc
+      Logical Regularize 
+      Data Done,Thres,rfc /1.0D0,1.0D-10,-1.0D-05/
 
 #ifdef _DEBUG_LVL0
       if (me .eq.0) then
@@ -353,6 +377,8 @@ c--------------------------------------------------------------------
 
       voff_a = Nalpha_occupied 
       voff_b = Nbeta_occupied 
+
+      Regularize = .False.
 
       do i = i1, i2
          if (itype .eq. mobindex) then
@@ -369,25 +395,25 @@ c--------------------------------------------------------------------
             epsa = epsilon(a)*(Done-Occ_numsa(vrt_aa))
          endif
          val =  x(a,i)
-         eps = epsi - epsa
+
+         If (Regularize) Then
+            eps1 = epsi - epsa
+            eps2 = eps1 * eps1
+            eps  = (eps2 - rfc)/eps1
+          Else
+            eps = epsi - epsa
+          Endif 
 
 #ifdef _DEBUG_LVL0
          write(6,"(a,1x,i2,1x,i2,1x,i2,1x,i2,3F10.5)") 
      +                  "a,i,epsa,epsi,epsi-epsa",a,i,vrt_ab,
      +                   vrt_aa, epsa,epsi,eps
 #endif 
-         if (eps .NE. 0.0D0) then 
+         if (Dabs(eps) .gt. Thres) then 
             x(a,i) = val/eps
          else
-            x(a,i) = Done
+            x(a,i) = 0.0D0
          endif
-
-C         if (dabs(eps) .lt. 1.0d-10) then
-C
-C            if (a .ne. i) write(6,*) ' Small denominator being
-C     *         eliminated in energy_denominator',
-C     *         'a, i', a,i, 'den' ,eps, 'value', x(a,i)
-C         endif
 
       enddo
       enddo

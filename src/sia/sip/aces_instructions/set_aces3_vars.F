@@ -51,7 +51,7 @@ c---------------Variables--------------------------------------------
       integer*8 integral_scr
       integer flag
       integer stack,g
-      logical test1,test2,test3,test4,test5,test6
+      logical test1,test2,test3,test4,test5,test6,test7
       character*8 BLANK
 
       double precision x(1)
@@ -241,6 +241,7 @@ C At every entry initilize all the type generating arrays to zero.
          test4 = (qq-0.001D0) .EQ. 0.0D0
          test5 = (qq-101.0D0) .EQ. 0.0D0
          test6 = (qq-0.011D0) .EQ. 0.0D0
+         test7 = (qq-0.010D0) .EQ. 0.0D0
 
          If (test1) then
              OOO(1) = 0
@@ -284,6 +285,13 @@ C At every entry initilize all the type generating arrays to zero.
              VVV(1) = 1 
              VVV(2) = 0
              VVV(3) = 0
+         Elseif (test7) then
+             OOO(1) = 0
+             OOO(2) = 1
+             OOO(3) = 0
+             VVV(1) = 1
+             VVV(2) = 0
+             VVV(3) = 1
          Endif 
       Elseif (Int(g) .EQ. 4) Then
          Contract = 4

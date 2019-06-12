@@ -106,21 +106,44 @@ C
 
       Integer i,j,k,l,i1,i2,j1,j2,a1,a2,b1,b2,Ndim,Nroots 
       Integer Istart,Maxdim, Ierror,Out_dim,In_dim
-
+      Integer Ndim1, Ndim2
+      
       Parameter(Maxdim = 100)
 
       Double precision A_in(i1:i2,j1:j2),A_out(a1:a2,b1:b2)
 
       In_dim  = j2-j1+1
       Out_dim = b2-b1+1
+      Ndim1   = i2-i1+1
+      Ndim2   = a2-a1+1
 
       If (Out_dim .gt. In_dim) Then
+         If (me .eq. 0) Then
          Write(6,"(a,a)") "@-Extract_subset: The sub-matrix is bigger",
      &                    " than the super-matrix"
          call abort_job()
+         Endif 
       Endif 
 
-      l = eom_roots
+      If (Ndim1 .NE. Ndim1) Then
+         If (me .eq. 0) Then
+         Write(6,"(a,a)") "@-Extract_subset: A dimension mismatch",
+     &                    " of the two incomming arrays"
+         Write(6,"(a,a,2(1x,i3))") "@-Extract_subset: The number of",
+     &                    " rows must be identical but they are: ",
+     &                      Ndim1,Ndim2
+         call abort_job()
+         Endif 
+      Endif 
+
+      If (Ndim1 .EQ. Nalpha_occupied .OR.
+     +    Ndim1 .EQ. Nbeta_occupied) Then
+          l = Int(Ip_roots)
+      Elseif (Ndim1 .EQ. Nalpha_virtual .OR.
+     +        Ndim1 .EQ. Nbeta_virtual) Then
+          l = Int(Ea_roots)
+      ENdif
+
       Do j = 1, l
          Do i = a1, a2
             A_out(i,j) = A_in(i,j)

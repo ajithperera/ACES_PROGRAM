@@ -115,7 +115,7 @@ c---------------------------------------------------------------------------
 
       Ndim  = (n2-n1+1)*(m2-m1+1) 
       Kdim  = (l2-l1+1)
-      Nroots= Eom_roots 
+      Nroots= Ip_roots
 
 C#ifdef _DEBUG_LVL0
       If (me .eq.0) then

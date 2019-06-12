@@ -13,7 +13,7 @@ CPPFLAGS=@CXXFLAGS@
 
 #ACESLIBS variable will be replaced by the autoconf script with appropriate libraries
 LIBS = @ACESLIBS@
-LIBS:= -lstdc++ -lsip1 -lsip2 -lsialinst -lsip_shared -lframelib -laces2 -lgeopt -lsymcor -laces2 -lprop_ints -lerd -loed -lecp -ldup -lsip1 -lsip2 -lsialinst $(LIBS)
+LIBS:= -lstdc++ -lsip1 -lsip2 -lsialinst -lsip_shared -lframelib -laces2 -lgeopt -lsymcor -laces2 -lprop_ints -lerd -ldkh -loed -lecp -ldup -lsip1 -lsip2 -lsip3 -lsialinst -lerd_F12 -lF12grid -loed_F12 -lsip1 -lsip2 -lsip3 $(LIBS)
 
 #ACESFLAGS variable will be replaced by the autoconf script with location of libraries
 LIB_DIRS= @ACESFLAGS@
@@ -30,6 +30,7 @@ FRAMELIB=../../lib/libframelib.a
 ERD_LIB=../../lib/liberd.a
 SIP_LIB1=../../lib/libsip1.a
 SIP_LIB2=../../lib/libsip2.a
+SIP_LIB2=../../lib/libsip3.a
 LIB_SIALINST=../../lib/libsialinst.a
 SIAL_LIB=../../lib/libsial.a
 SIP_SHARED_LIB=../../lib/libsip_shared.a

@@ -32,7 +32,10 @@ C  in the file COPYRIGHT.
      *                       dkh_order,reference,
      *                       ee_maxcyc,ee_guess,ee_denom,cis_tol,
      *                       ip_roots,ea_roots,root_search,
-     *                       what_tofollow,sub_space,
+     *                       what_tofollow,sub_space,stgf12,
+     *                       f12gamma,freq,imfreq,spinorb_cc,
+     *                       soc_roots,ip_calc,ea_calc,
+     *                       n_singlets,n_triplets,
      * 
      *                       io_company_id, niocompany, need_predef,
      *                       npre_defined, dryrun)
@@ -113,6 +116,9 @@ C  in the file COPYRIGHT.
       integer iee_maxcyc,iee_guess,iee_denom,icis_tol
       integer iip_roots,iea_roots,iroot_search
       integer iwhat_tofollow,isub_space
+      integer istgf12,if12gamma,ifreq,iimfreq,ispinorb_cc,isoc_roots
+      integer iip_calc,iea_calc
+      integer in_singlets,in_triplets
       integer timertype
       integer index, val1, val2
       integer occ_index, index_type, ind, nindex
@@ -129,6 +135,9 @@ C  in the file COPYRIGHT.
       double precision ee_maxcyc,ee_guess,ee_denom,cis_tol
       double precision ip_roots,ea_roots,root_search
       double precision what_tofollow,sub_space
+      double precision stgf12,f12gamma,freq,imfreq,spinorb_cc
+      double precision soc_roots,ip_calc,ea_calc
+      double precision n_singlets,n_triplets 
 
       double precision xxx(2)
 #ifdef ALTIX
@@ -780,6 +789,36 @@ C Ajith Perera, 05/2014  added
 
       isub_space     = array_table(c_scalar_index,48)
       scalar_table(isub_space) = sub_space
+
+      istgf12    = array_table(c_scalar_index,49)
+      scalar_table(istgf12) = stgf12
+
+      if12gamma  = array_table(c_scalar_index,50)
+      scalar_table(if12gamma) = f12gamma
+
+      ifreq  = array_table(c_scalar_index,51)
+      scalar_table(ifreq) = freq
+
+      iimfreq  = array_table(c_scalar_index,52)
+      scalar_table(iimfreq) = imfreq
+
+      ispinorb_cc  = array_table(c_scalar_index,53)
+      scalar_table(ispinorb_cc) = spinorb_cc
+
+      isoc_roots  = array_table(c_scalar_index,54)
+      scalar_table(isoc_roots) = soc_roots
+
+      iip_calc  = array_table(c_scalar_index,55)
+      scalar_table(iip_calc) = ip_calc
+
+      iea_calc  = array_table(c_scalar_index,56)
+      scalar_table(iea_calc) = ea_calc
+
+      in_singlets  = array_table(c_scalar_index,57)
+      scalar_table(iea_calc) = n_singlets 
+
+      in_triplets  = array_table(c_scalar_index,58)
+      scalar_table(iea_calc) = n_triplets
 C 
       next = 0
       next_server = 0
@@ -789,7 +828,7 @@ C Tom Watson, Changed to 22.
 C Ajith Perera, changed to 27, 05/2014. 
 C Ajith Perera, changed to 28, 12/2014. 
 C
-      do i = 49, narray_table   ! 1st 19 arrays are pre-defined.
+      do i = 59, narray_table   ! 1st 19 arrays are pre-defined.
          type = array_table(c_array_type,i) 
          if (type .eq. static_array) then
 

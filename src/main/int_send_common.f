@@ -24,6 +24,7 @@ c-------------------------------------------------------------------------
       include 'int_gen_parms.h'
       include 'machine_types.h'
       include 'fmo.h'
+      include 'F12_gr.h'
 
       integer ierr, len, ndim
       integer*8 ixx, c_loc64
@@ -60,6 +61,31 @@ c---------------------------------------------------------------------------
 
       call mpi_bcast(iflags, 101, mpi_integer, 0, 
      *               mpi_comm_world, ierr) 
+
+c---------------------------------------------------------------------------
+c  Explicitly correlated stuff
+c---------------------------------------------------------------------------
+
+      call mpi_bcast(STGF12, 1, mpi_logical, 0,
+     *               mpi_comm_world, ierr)
+
+      call mpi_bcast(F12GAMMA, 1, mpi_double_precision, 0,
+     *               mpi_comm_world, ierr)
+
+      call mpi_bcast(NPT, 1, mpi_integer, 0,
+     *               mpi_comm_world, ierr)
+
+      call mpi_bcast(PTX, 1000001, mpi_double_precision, 0,
+     *               mpi_comm_world, ierr)
+
+      call mpi_bcast(PTY, 1000001, mpi_double_precision, 0,
+     *               mpi_comm_world, ierr)
+
+      call mpi_bcast(PTZ, 1000001, mpi_double_precision, 0,
+     *               mpi_comm_world, ierr)
+
+      call mpi_bcast(PTW, 1000001, mpi_double_precision, 0,
+     *               mpi_comm_world, ierr)
 
 c---------------------------------------------------------------------------
 c  Broadcast ecp labeled common block.

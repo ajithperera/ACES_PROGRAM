@@ -29,8 +29,10 @@ c--------------------------------------------------------------------------
 
       implicit none
       include 'int_gen_parms.h'
+      include 'parallel_info.h'
       include 'interpreter.h'
       include 'trace.h'
+      include 'efgn.h'
 #ifdef ALTIX
       include 'sheap.h'
 #endif
@@ -59,9 +61,10 @@ c--------------------------------------------------------------------------
 
       integer block, blkndx
       integer find_current_block
-      integer stack
+      integer stack,kindex
 
-      double precision DNUC,XCOORD,YCOORD,ZCOORD
+      double precision DNUC,XCOORD,YCOORD,ZCOORD,RSQ,SQROOT
+      double precision XK,YK,ZK,RX,RY,RZ,DEN
       double precision x(1)
 #ifdef ALTIX
       pointer (dptr, x)
@@ -124,29 +127,197 @@ C
       if ( abs (scalar_table(sind) - 1) .LT. 0.0001 ) imoment = 1
       if ( abs (scalar_table(sind) - 2) .LT. 0.0001 ) imoment = 2
       if ( abs (scalar_table(sind) - 3) .LT. 0.0001 ) imoment = 3
+      if ( abs (scalar_table(sind) - 4) .LT. 0.0001 ) imoment = 4
+      if ( abs (scalar_table(sind) - 5) .LT. 0.0001 ) imoment = 5
+      if ( abs (scalar_table(sind) - 6) .LT. 0.0001 ) imoment = 6
+      if ( abs (scalar_table(sind) - 7) .LT. 0.0001 ) imoment = 7
+      if ( abs (scalar_table(sind) - 8) .LT. 0.0001 ) imoment = 8
+      if ( abs (scalar_table(sind) - 9) .LT. 0.0001 ) imoment = 9
+      if ( abs (scalar_table(sind) - 10) .LT. 0.0001 ) imoment = 10
+      if ( abs (scalar_table(sind) - 11) .LT. 0.0001 ) imoment = 11
+      if ( abs (scalar_table(sind) - 12) .LT. 0.0001 ) imoment = 12
+      if ( abs (scalar_table(sind) - 13) .LT. 0.0001 ) imoment = 13
+      if ( abs (scalar_table(sind) - 14) .LT. 0.0001 ) imoment = 14
+      if ( abs (scalar_table(sind) - 15) .LT. 0.0001 ) imoment = 15
 
       natoms = scalar_table(xind)
       scalar_table(xind) = 0.0D0
       DNUC = 0.0D0
       IF (imoment .EQ. 1) THEN
+c        if(me.eq.0) write(6,*) 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
          DO I = 1, natoms
             XCOORD = acenter(I,1)
             DNUC = DNUC + charge(I)*XCOORD
          ENDDO ! I
       ELSE IF (imoment .EQ. 2) THEN
+c      if(me.eq.0) write(6,*) 'yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy'
+c      if(me.eq.0) write(6,*) natoms   
          DO I = 1, natoms
             YCOORD = acenter(I,2)
             DNUC = DNUC + charge(I)*YCOORD
          ENDDO ! I
       ELSE IF (imoment .EQ. 3) THEN
+c      if(me.eq.0) write(6,*) 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'
          DO I = 1, natoms
             ZCOORD = acenter(I,3)
             DNUC = DNUC + charge(I)*ZCOORD
          ENDDO ! I
+C XX
+      ELSE IF (imoment .EQ. 4) THEN
+         DO I = 1, natoms
+            XCOORD = acenter(I,1)
+            YCOORD = acenter(I,2)
+            ZCOORD = acenter(I,3)
+            DNUC = DNUC + charge(I)*XCOORD*XCOORD
+         ENDDO ! I
+C YY
+      ELSE IF (imoment .EQ. 5) THEN
+         DO I = 1, natoms
+            XCOORD = acenter(I,1)
+            YCOORD = acenter(I,2)
+            ZCOORD = acenter(I,3)
+            DNUC = DNUC + charge(I)*YCOORD*YCOORD
+         ENDDO ! I
+C ZZ
+      ELSE IF (imoment .EQ. 6) THEN
+         DO I = 1, natoms
+            XCOORD = acenter(I,1)
+            YCOORD = acenter(I,2)
+            ZCOORD = acenter(I,3)
+            DNUC = DNUC + charge(I)*ZCOORD*ZCOORD
+         ENDDO ! I
+C XY
+      ELSE IF (imoment .EQ. 7) THEN
+         DO I = 1, natoms
+            XCOORD = acenter(I,1)
+            YCOORD = acenter(I,2)
+            ZCOORD = acenter(I,3)
+            DNUC = DNUC + charge(I)*XCOORD*YCOORD
+         ENDDO ! I
+C XZ
+      ELSE IF (imoment .EQ. 8) THEN
+         DO I = 1, natoms
+            XCOORD = acenter(I,1)
+            YCOORD = acenter(I,2)
+            ZCOORD = acenter(I,3)
+            DNUC = DNUC + charge(I)*XCOORD*ZCOORD
+         ENDDO ! I
+C YZ
+      ELSE IF (imoment .EQ. 9) THEN
+         DO I = 1, natoms
+            XCOORD = acenter(I,1)
+            YCOORD = acenter(I,2)
+            ZCOORD = acenter(I,3)
+            DNUC = DNUC + charge(I)*YCOORD*ZCOORD
+         ENDDO ! I
+C------------Quadrupole moment---------------------------
+     
+C---XX-component------------------------------------------
+       ELSE IF (imoment .EQ. 10) THEN
+         DO I = 1, natoms
+            XCOORD = acenter(I,1)
+            YCOORD = acenter(I,2)
+            ZCOORD = acenter(I,3)
+            RSQ = XCOORD*XCOORD+YCOORD*YCOORD+ZCOORD*ZCOORD
+            DNUC = DNUC + charge(I)*(3.d0*XCOORD*XCOORD-RSQ)
+         ENDDO ! I
+C---YY-component------------------------------------------
+       ELSE IF (imoment .EQ. 11) THEN
+         DO I = 1, natoms
+            XCOORD = acenter(I,1)
+            YCOORD = acenter(I,2)
+            ZCOORD = acenter(I,3)
+            RSQ = XCOORD*XCOORD+YCOORD*YCOORD+ZCOORD*ZCOORD
+            DNUC = DNUC + charge(I)*(3.d0*YCOORD*YCOORD-RSQ)
+         ENDDO ! I
+C---ZZ-component------------------------------------------
+       ELSE IF (imoment .EQ. 12) THEN
+         DO I = 1, natoms
+            XCOORD = acenter(I,1)
+            YCOORD = acenter(I,2)
+            ZCOORD = acenter(I,3)
+            RSQ = XCOORD*XCOORD+YCOORD*YCOORD+ZCOORD*ZCOORD
+            DNUC = DNUC + charge(I)*(3.d0*ZCOORD*ZCOORD-RSQ)
+         ENDDO ! I
+C------------Electric field gradient----------------------
+
+C---XX-component------------------------------------------
+      ELSE IF (imoment .EQ. 13) THEN
+      kindex = atindex
+      XK = acenter(kindex,1) 
+      YK = acenter(kindex,2)
+      ZK = acenter(kindex,3)
+      DO I = 1, natoms
+      IF(I.ne.kindex) then        
+           XCOORD = acenter(I,1)
+           YCOORD = acenter(I,2)
+           ZCOORD = acenter(I,3)  
+
+           RX=XCOORD-XK
+           RY=YCOORD-YK    
+           RZ=ZCOORD-ZK
+
+           RSQ = RX*RX+RY*RY+RZ*RZ
+           SQROOT = DSQRT(RSQ) 
+           DEN = SQROOT**5.d0
+
+           DNUC = DNUC + charge(I)*(3.d0*RX*RX-RSQ)/DEN 
+      ENDIF
+      ENDDO  
+C---YY-component------------------------------------------
+      ELSE IF (imoment .EQ. 14) THEN
+      kindex = atindex
+      XK = acenter(kindex,1)
+      YK = acenter(kindex,2)
+      ZK = acenter(kindex,3)
+      DO I = 1, natoms
+      IF(I.ne.kindex) then
+           XCOORD = acenter(I,1)
+           YCOORD = acenter(I,2)
+           ZCOORD = acenter(I,3)
+
+           RX=XCOORD-XK
+           RY=YCOORD-YK
+           RZ=ZCOORD-ZK
+
+           RSQ = RX*RX+RY*RY+RZ*RZ
+           SQROOT = DSQRT(RSQ)
+           DEN = SQROOT**5.d0
+
+           DNUC = DNUC + charge(I)*(3.d0*RY*RY-RSQ)/DEN
+      ENDIF
+      ENDDO
+
+C---ZZ-component------------------------------------------
+      ELSE IF (imoment .EQ. 15) THEN
+      kindex = atindex
+      XK = acenter(kindex,1)
+      YK = acenter(kindex,2)
+      ZK = acenter(kindex,3)
+      DO I = 1, natoms
+      IF(I.ne.kindex) then
+           XCOORD = acenter(I,1)
+           YCOORD = acenter(I,2)
+           ZCOORD = acenter(I,3)
+
+           RX=XCOORD-XK
+           RY=YCOORD-YK
+           RZ=ZCOORD-ZK
+
+           RSQ = RX*RX+RY*RY+RZ*RZ
+           SQROOT = DSQRT(RSQ)
+           DEN = SQROOT**5.d0
+
+           DNUC = DNUC + charge(I)*(3.d0*RZ*RZ-RSQ)/DEN
+      ENDIF
+      ENDDO      
+
       ELSE
-         WRITE(*,*) "Wrong type of moment; should be 1, 2, or 3."
+         WRITE(*,*) "Wrong type of moment; should be 1-15,"
       ENDIF
       scalar_table(xind) = DNUC
+
+c       if(me.eq.0) write(6,*) 'DNUC=',DNUC
 
       return 
       end 

@@ -549,5 +549,23 @@
 #define h_IOPPAR_sub_space      267
 #define h_IFLAGS2_sub_space     167
 
+#define h_IOPPAR_stgf12         268
+#define h_IFLAGS2_stgf12        168
+
+#define h_IOPPAR_f12gamma       269
+#define h_IFLAGS2_f12gamma      169
+
+#define h_IOPPAR_pol_freq       270
+#define h_IFLAGS2_pol_freq      170
+
+#define h_IOPPAR_pol_freq_im    271
+#define h_IFLAGS2_pol_freq_im   171
+
+#define h_IOPPAR_spinorb_cc     272
+#define h_IFLAGS2_spinorb_cc    172
+
+#define h_IOPPAR_soc_roots      273
+#define h_IFLAGS2_soc_root      173
+
 #endif /* _FLAGS_H_ */
 

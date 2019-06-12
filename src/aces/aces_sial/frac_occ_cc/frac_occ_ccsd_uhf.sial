@@ -940,11 +940,11 @@
            REQUEST VSpipi(a,i,a1,i1) i1  
 #
            Taiai(a,i,a1,i1)            = VSpipi(a,i,a1,i1)
-#           execute energy_denominator    Taiai 
 #bgn_frac
            execute set_aces3_vars  pzozo four
            execute apply_frac_occs Taiai four
            execute energy_denominator_frac_occs Taiai
+#           execute energy_denominator Taiai
 #end_frac 
            PREPARE T2old_aa(a,i,a1,i1) = Taiai(a,i,a1,i1)  
            PREPARE D0aiai(a,i,a1,i1) = Taiai(a,i,a1,i1)  
@@ -956,11 +956,11 @@
            REQUEST VSqjqj(b,j,b1,j1) j1  
 #
            Tbjbj(b,j,b1,j1)            = VSqjqj(b,j,b1,j1)  
-#           execute energy_denominator    Tbjbj 
 #bgn_frac
            execute set_aces3_vars  pzozo four
            execute apply_frac_occs Tbjbj four
            execute energy_denominator_frac_occs Tbjbj
+#           execute energy_denominator Tbjbj
 #end_frac 
            PREPARE T2old_bb(b,j,b1,j1) = Tbjbj(b,j,b1,j1)  
            PREPARE D0bjbj(b,j,b1,j1) = Tbjbj(b,j,b1,j1)  
@@ -972,11 +972,11 @@
            REQUEST Vpiqj(a,i,b,j) j  
 #
            Taibj(a,i,b,j)            = Vpiqj(a,i,b,j)
-#           execute energy_denominator  Taibj 
 #bgn_frac
            execute set_aces3_vars  pzozo four
            execute apply_frac_occs Taibj four
            execute energy_denominator_frac_occs Taibj
+#           execute energy_denominator Taibj
 #end_frac 
            PREPARE T2old_ab(a,i,b,j) = Taibj(a,i,b,j)  
            PREPARE D0aibj(a,i,b,j) = Taibj(a,i,b,j)  
@@ -1031,6 +1031,20 @@
             PREPARE Taup_aa(a,i,a1,i1) = tmp1_aiai(a,i,a1,i1)  
 #
       ENDPARDO a, i, a1, i1 
+#bgn_debug
+#     execute server_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a, i, a1, i1
+#         request Taup_aa(a,i,a1,i1) i1
+#         Taiai(a,i,a1,i1) = Taup_aa(a,i,a1,i1)
+#         tmp = Taiai(a,i,a1,i1)*Taiai(a,i,a1,i1)
+#         suma += tmp
+#     ENDPARDO a, i, a1, i1
+#     execute server_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
+#end_debug
 #
       ENDPROC TAUAA 
 #     ------------- 
@@ -1218,7 +1232,7 @@
 #bgn_frac
                execute set_aces3_vars  one one
                execute apply_frac_occs tai two
-               execute apply_frac_occs tia one
+#               execute apply_frac_occs tia one
 #end_frac
                T1aa(a,a1)  = Tai(a,i) * Tia(i,a1)
                Taa(a,a1)  += T1aa(a,a1)
@@ -1227,7 +1241,7 @@
 
            PUT Fae_a(a,a1)  += Taa(a,a1)
       ENDPARDO a,a1
-#
+
       PARDO a, a2, i
 #
                allocate LWaiai(a2,i,a,*)
@@ -1243,7 +1257,7 @@
 #bgn_frac
                   execute set_aces3_vars  zer   one
                   execute apply_frac_occs taaai two
-                  execute apply_frac_occs tai   one
+#                  execute apply_frac_occs tai   one
 #end_frac
                   Taa(a,a1)        = taaia(a1,a,i,a2)*tai(a2,i)
                   PUT Fae_a(a,a1) += Taa(a,a1)
@@ -1256,7 +1270,7 @@
 #bgn_frac
                      execute set_aces3_vars  zer   one
                      execute apply_frac_occs Tiaaa two
-                     execute apply_frac_occs Tai   one
+#                     execute apply_frac_occs Tai   one
 #end_frac
                      taiai(a2,i,a,i1)   = Tiaaa(i,a,a2,a1)*Tai(a1,i1)
                      LWaiai(a2,i,a,i1) += taiai(a2,i,a,i1)
@@ -1297,7 +1311,7 @@
 #bgn_frac
                   execute set_aces3_vars  zer   one
                   execute apply_frac_occs tjaba two
-                  execute apply_frac_occs tai   one
+#                  execute apply_frac_occs tai   one
 #end_frac
 
                   taibj(a,i,b,j)   = Tjaba(j,a,b,a1)*Tai(a1,i)
@@ -1310,7 +1324,7 @@
 #bgn_frac
                execute set_aces3_vars  zer   one
                execute apply_frac_occs taajb two
-               execute apply_frac_occs tjb   two
+#               execute apply_frac_occs tjb   two
 #end_frac
 #
                Taa(a,a1)        = Taajb(a1,a,j,b)*Tjb(j,b)
@@ -1342,7 +1356,7 @@
 #bgn_frac
               execute set_aces3_vars  ozo    thr
               execute apply_frac_occs t1aibj two
-              execute apply_frac_occs taibj  two
+#              execute apply_frac_occs taibj  two
 #end_frac
               Taa(a,a1)        =  T1aibj(a,i,b,j)*Taibj(a1,i,b,j)
               Taa(a,a1)       *= -1.0
@@ -1352,7 +1366,7 @@
            ENDDO a
 #
       ENDPARDO a1, i, b, j
-#
+
       PARDO a1, i, a2, i1
 #
            REQUEST              VSpipi(a1,i1,a2,i) i
@@ -1366,9 +1380,8 @@
 #bgn_frac
                execute set_aces3_vars  ozo   thr
                execute apply_frac_occs taiai two
-               execute apply_frac_occs tiaia one
+#               execute apply_frac_occs tiaia one
 #end_frac
-#
                Taa(a,a1)        =  Taiai(a1,i1,a2,i)*Tiaia(i1,a2,i,a)
                Taa(a,a1)       *= 0.5
 #
@@ -1377,8 +1390,9 @@
             ENDDO a
 #
       ENDPARDO a1, i, a2, i1
+      execute sip_barrier 
+
 #bgn_debug
-     execute sip_barrier
      suma =0.0
      esuma=0.0
      PARDO a,a1
@@ -1423,7 +1437,7 @@
 #bgn_frac
                execute set_aces3_vars  one one
                execute apply_frac_occs tjb one
-               execute apply_frac_occs tbj two
+#               execute apply_frac_occs tbj two
 #end_frac
                T1bb(b,b1)  = Tbj(b,j) * Tjb(j,b1)
 
@@ -1453,7 +1467,7 @@
 #bgn_frac
                      execute set_aces3_vars  zer   one
                      execute apply_frac_occs tjb   two
-                     execute apply_frac_occs tbbbj one
+#                     execute apply_frac_occs tbbbj one
 #end_frac
                      tbjbj(b2,j,b,j1)   = Tjb(j1,b1)*Tbbbj(b1,b,b2,j)
                      LWbjbj(b2,j,b,j1) += tbjbj(b2,j,b,j1) 
@@ -1462,7 +1476,7 @@
 #bgn_frac
                   execute set_aces3_vars  pzo   two
                   execute apply_frac_occs tbbbj two
-                  execute apply_frac_occs tbj   one
+#                  execute apply_frac_occs tbj   one
 #end_frac
 
                   Tbb(b,b1)        = Tbbbj(b1,b,b2,j)*Tbj(b2,j)
@@ -1500,7 +1514,7 @@
 #bgn_frac
                   execute set_aces3_vars  zer   one
                   execute apply_frac_occs tjb   two
-                  execute apply_frac_occs tbbai one
+#                  execute apply_frac_occs tbbai one
 #end_frac
 
                   taibj(a,i,b,j)   = Tjb(j,b1)*Tbbai(b1,b,a,i) 
@@ -1510,7 +1524,7 @@
 #bgn_frac
                execute set_aces3_vars  pzo   two
                execute apply_frac_occs tbbai two
-               execute apply_frac_occs tai   two
+#               execute apply_frac_occs tai   two
 #end_frac
 
                Tbb(b,b1)        = Tbbai(b1,b,a,i)*Tai(a,i)
@@ -1543,7 +1557,7 @@
 #bgn_frac
              execute set_aces3_vars  ozo   thr
              execute apply_frac_occs Tbiaj two
-             execute apply_frac_occs Tiajb one
+#             execute apply_frac_occs Tiajb one
 #end_frac
              Tbb(b,b1)        =   Tbiaj(b1,i,a,j)*Tiajb(i,a,j,b)
              Tbb(b,b1)       *= -1.0  
@@ -1567,7 +1581,7 @@
 #bgn_frac
              execute set_aces3_vars  ozo   thr
              execute apply_frac_occs Tbjbj two
-             execute apply_frac_occs Tjbjb one
+#             execute apply_frac_occs Tjbjb one
 #end_frac
              Tbb(b,b1)        = Tbjbj(b1,j1,b2,j)*Tjbjb(j1,b2,j,b)
              Tbb(b,b1)       *= 0.5 
@@ -1638,7 +1652,7 @@
 #bgn_frac
                execute set_aces3_vars  pzo   two
                execute apply_frac_occs Taiai two
-               execute apply_frac_occs Tai   one
+#               execute apply_frac_occs Tai   one
 #end_frac
 #
                Tia(i,a)    = Taiai(a,i,a1,i1)*Tai(a1,i1) 
@@ -1658,7 +1672,7 @@
 #bgn_frac
                execute set_aces3_vars  pzo   two
                execute apply_frac_occs Taibj two
-               execute apply_frac_occs Tbj   one
+#               execute apply_frac_occs Tbj   one
 #end_frac
 
                Tia(i,a)    = Taibj(a,i,b,j)*Tbj(b,j)
@@ -1720,7 +1734,7 @@
 #bgn_frac
                execute set_aces3_vars  pzo   two
                execute apply_frac_occs Tbjbj two
-               execute apply_frac_occs Tbj   one
+#               execute apply_frac_occs Tbj   one
 #end_frac
 #
                Tjb(j,b)    = Tbjbj(b,j,b1,j1)*Tbj(b1,j1)
@@ -1740,7 +1754,7 @@
 #bgn_frac
                execute set_aces3_vars  pzo   two
                execute apply_frac_occs Tai   two
-               execute apply_frac_occs Taibj one
+#               execute apply_frac_occs Taibj one
 #end_frac
 #
                Tjb(j,b)    = Tai(a,i)*Taibj(a,i,b,j)
@@ -1807,7 +1821,7 @@
 #bgn_frac
                execute set_aces3_vars  zer one
                execute apply_frac_occs Tai one 
-               execute apply_frac_occs Tia two 
+#               execute apply_frac_occs Tia two 
 #end_frac
                T1ii(i1,i) =  Tai(a,i) * Tia(i1,a)
                Tii(i1,i) += T1ii(i1,i)
@@ -1828,7 +1842,7 @@
 #bgn_frac
             execute set_aces3_vars  pzo   two
             execute apply_frac_occs Tai   two
-            execute apply_frac_occs Taiii one
+#            execute apply_frac_occs Taiii one
 #end_frac
             Tii(i1,i)        = Tai(a,i2)*Taiii(a,i2,i,i1)
             PUT Fmi_a(i1,i) += Tii(i1,i) 
@@ -1855,9 +1869,9 @@
                DO i1    
                   Taiai(a2,i2,a,i1)  = L3aiai(a2,i1,a,i2)
 #bgn_frac
-                  execute set_aces3_vars  pozo  thr
+                  execute set_aces3_vars  pzoz  thr
                   execute apply_frac_occs Tiaia two
-                  execute apply_frac_occs Taiai one
+#                  execute apply_frac_occs Taiai one
 #end_frac
                   Tii(i1,i)        =  Tiaia(i,a2,i2,a)*Taiai(a2,i2,a,i1)
                   Tii(i1,i)       *= 0.5 
@@ -1870,7 +1884,7 @@
             deallocate L3aiai(a2,*,a,i2)
 #
       ENDPARDO a, a2, i2  
-#
+
       PARDO i1, i, b, j  
 #
             REQUEST Vpiqj(i,i1,b,j) j  
@@ -1881,13 +1895,13 @@
 #bgn_frac
             execute set_aces3_vars  pzo   two
             execute apply_frac_occs Tiibj two
-            execute apply_frac_occs Tbj   one
+#            execute apply_frac_occs Tbj   one
 #end_frac
             Tii(i1,i)        = Tiibj(i,i1,b,j)*Tbj(b,j)
             PUT Fmi_a(i1,i) += Tii(i1,i) 
 #
       ENDPARDO i1, i, b, j  
-#
+
       PARDO i1, i, b, j  
 #
             DO a 
@@ -1902,7 +1916,7 @@
 #bgn_frac
                execute set_aces3_vars  pzzo   thr
                execute apply_frac_occs tiabj  two
-               execute apply_frac_occs tabji  one
+#               execute apply_frac_occs tabji  one
 #end_frac
                Tii(i1,i)        = Tiabj(i,a,b,j)*Tabji(a,b,j,i1)
                PUT Fmi_a(i1,i) += Tii(i1,i) 
@@ -1955,7 +1969,7 @@
 #bgn_frac
                execute set_aces3_vars  zer two
                execute apply_frac_occs Tjb two
-               execute apply_frac_occs Tbj one
+#               execute apply_frac_occs Tbj one
 #end_frac
                T1jj(j1,j) = Tbj(b,j) * Tjb(j1,b)
                Tjj(j1,j) += T1jj(j1,j)
@@ -1976,7 +1990,7 @@
 #bgn_frac
             execute set_aces3_vars  pzo   two
             execute apply_frac_occs Tbj   two
-            execute apply_frac_occs Tbjjj one
+#            execute apply_frac_occs Tbjjj one
 #end_frac
             Tjj(j1,j)        = Tbj(b,j2)*Tbjjj(b,j2,j,j1)
             PUT Fmi_b(j1,j) += Tjj(j1,j) 
@@ -2006,7 +2020,7 @@
 #bgn_frac
                   execute set_aces3_vars  pzzo  thr
                   execute apply_frac_occs tjbbj two
-                  execute apply_frac_occs tbbjj one
+#                  execute apply_frac_occs tbbjj one
 #end_frac
                   Tjj(j1,j)        = Tjbbj(j,b2,b,j2)*Tbbjj(b2,b,j2,j1)
                   Tjj(j1,j)       *= 0.5 
@@ -2029,7 +2043,7 @@
 #bgn_frac
             execute set_aces3_vars  pzo   two
             execute apply_frac_occs Tai   two
-            execute apply_frac_occs Taijj one
+#            execute apply_frac_occs Taijj one
 #end_frac
             Tjj(j1,j)        = Tai(a,i)*Taijj(a,i,j,j1)
             PUT Fmi_b(j1,j) += Tjj(j1,j) 
@@ -2045,9 +2059,9 @@
                Taibj(a,i,b,j1) = Vpiqj(a,i,b,j1)
                T1aibj(a,i,b,j) = Taup_ab(a,i,b,j)
 #bgn_frac
-               execute set_aces3_vars  pozo   thr
+               execute set_aces3_vars  pzoz   thr
                execute apply_frac_occs Taibj  one
-               execute apply_frac_occs T1aibj one
+#               execute apply_frac_occs T1aibj one
 #end_frac
                Tjj(j1,j)        = Taibj(a,i,b,j1)*T1aibj(a,i,b,j)
                PUT Fmi_b(j1,j) += Tjj(j1,j) 
@@ -2111,7 +2125,7 @@
 #bgn_frac
                execute set_aces3_vars  one  one
                execute apply_frac_occs T2ai two
-               execute apply_frac_occs Tii  one
+#               execute apply_frac_occs Tii  one
 #end_frac
                t1ai(a,i) = T2ai(a,i1)*Tii(i1,i)
                tai(a,i) -= t1ai(a,i)
@@ -2132,7 +2146,7 @@
 #bgn_frac
                execute set_aces3_vars  pzo   two
                execute apply_frac_occs Taibj two
-               execute apply_frac_occs Tbj   one
+#               execute apply_frac_occs Tbj   one
 #end_frac
                t1ai(a,i) = Taibj(a,i,b,j)*Tbj(b,j)
                tai(a,i) += t1ai(a,i)
@@ -2142,7 +2156,7 @@
 #bgn_frac
                execute set_aces3_vars  pzo   two
                execute apply_frac_occs Tiabj two
-               execute apply_frac_occs T1bj  one
+#               execute apply_frac_occs T1bj  one
 #end_frac
                t2ai(a,i)  = Tiabj(i,a,b,j)*T1bj(b,j)
                tai(a,i) += t2ai(a,i)
@@ -2160,7 +2174,7 @@
 #bgn_frac
                execute set_aces3_vars  zer one
                execute apply_frac_occs Taa two
-               execute apply_frac_occs T2ai one
+#               execute apply_frac_occs T2ai one
 #end_frac
                t1ai(a,i) = Taa(a,a1)*T2ai(a1,i)
                tai(a,i) += t1ai(a,i)
@@ -2179,7 +2193,7 @@
 #bgn_frac
                   execute set_aces3_vars  pzo   two
                   execute apply_frac_occs Taiai two
-                  execute apply_frac_occs T2ai  one
+#                  execute apply_frac_occs T2ai  one
 #end_frac
 #
                   t1ai(a,i) = Taiai(a,i,a1,i1)*T2ai(a1,i1)
@@ -2193,7 +2207,7 @@
 #bgn_frac
                   execute set_aces3_vars  pzo    two
                   execute apply_frac_occs T1pppp two
-                  execute apply_frac_occs T3ai   one
+#                  execute apply_frac_occs T3ai   one
 #end_frac
                   t2ai(a,i) = T1pppp(i,a,a1,i1)*T3ai(a1,i1)
                   tai(a,i) -= t2ai(a,i)
@@ -2229,7 +2243,7 @@
 #bgn_frac
                   execute set_aces3_vars  pzzo  thr
                   execute apply_frac_occs Tiaai two
-                  execute apply_frac_occs Taaia one
+#                  execute apply_frac_occs Taaia one
 #end_frac
 #
                   tai(a,i)  = Tiaai(i,a1,a2,i1)*Taaia(a1,a2,i1,a)
@@ -2244,18 +2258,18 @@
             deallocate L4aiai(a1,*,a2,i1)
 #
       ENDPARDO a1, a2, i1
-#
-      PARDO a1, i1, i2
-#
-            allocate L1aiii(a1,i2,*,i1)
+
+     PARDO a1, i1, i2
+
+           allocate L1aiii(a1,i2,*,i1)
 
             DO i
-#
+
                REQUEST VSpipi(a1,i2,i,i1) i1
                L1aiii(a1,i2,i,i1) = VSpipi(a1,i2,i,i1)
-#
+
             ENDDO i
-#
+
             DO a
 #
                REQUEST T2old_aa(a,i1,a1,i2) i1
@@ -2263,13 +2277,14 @@
                Taaii(a,a1,i2,i1)  = T1aiai(a,i1,a1,i2)
 #
                DO i
-                  T2aiii(a1,i2,i1,i) = L1aiii(a1,i2,i,i1)
+
+                 T1aiii(a1,i2,i,i1) = L1aiii(a1,i2,i,i1)
+                 T2aiii(a1,i2,i1,i) = T1aiii(a1,i2,i,i1)
 #bgn_frac
                   execute set_aces3_vars  pzoo   thr
                   execute apply_frac_occs Taaii  two
-                  execute apply_frac_occs T2aiii one
+#                  execute apply_frac_occs T2aiii one
 #end_frac
-#
                   tai(a,i)  =  Taaii(a,a1,i2,i1)*T2aiii(a1,i2,i1,i)
                   tai(a,i) *= -0.5
 #
@@ -2305,7 +2320,7 @@
 #bgn_frac
                   execute set_aces3_vars  pzzo  thr
                   execute apply_frac_occs Tiabj two
-                  execute apply_frac_occs Tabja one
+#                  execute apply_frac_occs Tabja one
 #end_frac
                   tai(a,i)  =  Tiabj(i,a1,b,j)*Tabja(a1,b,j,a)
 #
@@ -2325,7 +2340,7 @@
 #
             DO i
 #
-               REQUEST Vpiqj(i,i1,b,j) j
+              REQUEST Vpiqj(i,i1,b,j) j
               L1iibj(i,i1,b,j) = Vpiqj(i,i1,b,j)
 
             ENDDO i
@@ -2340,7 +2355,7 @@
 #bgn_frac
                   execute set_aces3_vars  ozo    thr
                   execute apply_frac_occs T1iibj two
-                  execute apply_frac_occs Taibj  two
+#                  execute apply_frac_occs Taibj  two
 #end_frac
                   tai(a,i)  = T1iibj(i,i1,b,j)*Taibj(a,i1,b,j)
                   tai(a,i) *= -1.0
@@ -2408,7 +2423,7 @@
 #bgn_frac
                execute set_aces3_vars  one  one
                execute apply_frac_occs T2bj two
-               execute apply_frac_occs Tjj  one
+#               execute apply_frac_occs Tjj  one
 #end_frac
 
                t1bj(b,j) = T2bj(b,j1)* Tjj(j1,j)
@@ -2430,7 +2445,7 @@
 #bgn_frac
                execute set_aces3_vars  pzo   two
                execute apply_frac_occs Tai   two
-               execute apply_frac_occs Taibj one
+#               execute apply_frac_occs Taibj one
 #end_frac
 
                T1bj(b,j) = Tai(a,i)*Taibj(a,i,b,j)
@@ -2442,7 +2457,7 @@
 #bgn_frac
                execute set_aces3_vars  oz    two
                execute apply_frac_occs T1ia  two
-               execute apply_frac_occs Tiabj one
+#               execute apply_frac_occs Tiabj one
 #end_frac
 #
                t2bj(b,j)  = T1ia(i,a)*Tiabj(i,a,b,j)
@@ -2473,9 +2488,8 @@
 #bgn_frac
                   execute set_aces3_vars  pzo   two
                   execute apply_frac_occs Tbjbj two
-                  execute apply_frac_occs T3bj  one
+#                  execute apply_frac_occs T3bj  one
 #end_frac
-#
                   t1bj(b,j) = Tbjbj(b,j,b1,j1)*T3bj(b1,j1)
                   tbj(b,j) += t1bj(b,j) 
 #
@@ -2487,9 +2501,8 @@
 #bgn_frac
                   execute set_aces3_vars  oz    two
                   execute apply_frac_occs T1jb  two
-                  execute apply_frac_occs Tqqqq one
+#                  execute apply_frac_occs Tqqqq one
 #end_frac
-
                   t2bj(b,j) = T1jb(j1,b1)*Tqqqq(j1,b1,b,j)
                   tbj(b,j) -= t2bj(b,j) 
 #
@@ -2524,9 +2537,8 @@
 #bgn_frac
                   execute set_aces3_vars  pzzo  Thr
                   execute apply_frac_occs Tjbbj two
-                  execute apply_frac_occs Tjbbb one
+#                  execute apply_frac_occs Tjbbb one
 #end_frac
-#
                   tbj(b,j)  = Tjbbj(j,b1,b2,j1)*Tjbbb(b1,b2,j1,b)
                   tbj(b,j) *= -0.5 
 #
@@ -2539,9 +2551,9 @@
             deallocate L4bjbj(b1,*,b2,j1)
 #
       ENDPARDO b1, b2, j1  
-#
+
       PARDO b1, j1, j2  
-#
+
             allocate L1bjjj(b1,j2,*,j1)
 
             DO j 
@@ -2561,24 +2573,20 @@
                   Tbjjj(b1,j2,j,j1) = L1bjjj(b1,j2,j,j1)
                   Tjjbj(j,j2,b1,j1) = Tbjjj(b1,j2,j,j1)
 #bgn_frac
-                  execute set_aces3_vars  pozo  Thr
+                  execute set_aces3_vars  ozo  Thr
                   execute apply_frac_occs Tjjbj two
-                  execute apply_frac_occs Tjbjb one
+#                  execute apply_frac_occs Tjbjb one
 #end_frac
-
                   tbj(b,j)  = Tjjbj(j,j2,b1,j1)*Tjbjb(j2,b1,j1,b) 
                   tbj(b,j) *= -0.5 
-#
                   PUT t1b_new(b,j) += tbj(b,j) 
-#
                ENDDO j 
-#
             ENDDO b 
 
             deallocate L1bjjj(b1,j2,*,j1)
 #
       ENDPARDO b1, j1, j2  
-#
+
       PARDO b1, a, i  
 #
             allocate L4aibj(a,i,b1,*)
@@ -2600,9 +2608,8 @@
 #bgn_frac
                   execute set_aces3_vars  pzoz   Thr
                   execute apply_frac_occs Tbaib  two
-                  execute apply_frac_occs Taibj  one
+#                  execute apply_frac_occs Taibj  one
 #end_frac
-
                   tbj(b,j)  = Tbaib(b,a,i,b1)*Taibj(a,i,b1,j)  
 #
                   PUT t1b_new(b,j) += tbj(b,j) 
@@ -2614,7 +2621,7 @@
             deallocate L4aibj(a,i,b1,*) 
 #
       ENDPARDO b1, a, i  
-#
+
       PARDO a, i, j1  
 
             allocate Ljjai(a,i,*,j1)
@@ -2636,11 +2643,10 @@
                   Taijj(a,i,j,j1) = Ljjai(a,i,j,j1)
                   Tjiaj(j,i,a,j1) = Taijj(a,i,j,j1) 
 #bgn_frac
-                  execute set_aces3_vars  pozo  Thr
+                  execute set_aces3_vars   ozo  Thr
                   execute apply_frac_occs Tjiaj two
-                  execute apply_frac_occs Tiajb one
+#                  execute apply_frac_occs Tiajb one
 #end_frac
-#
                   tbj(b,j)  = Tjiaj(j,i,a,j1)*Tiajb(i,a,j1,b)
                   tbj(b,j) *= -1.0 
 #
@@ -2715,14 +2721,14 @@
                T1ia(i1,a) = T1ai(a,i1)
 #bgn_frac
                execute set_aces3_vars  zer   one
-               execute apply_frac_occs Tia   two
-               execute apply_frac_occs Taiii one
+               execute apply_frac_occs T1ia   two
+#               execute apply_frac_occs Taiii one
 #end_frac
                Tiiii(i2,i,i3,i1)  = T1ia(i1,a)*Taiii(a,i3,i,i2)
 #bgn_frac
                execute set_aces3_vars  zer    one
                execute apply_frac_occs Tia    two
-               execute apply_frac_occs T1aiii one
+#               execute apply_frac_occs T1aiii one
 #end_frac 
                T1iiii(i2,i,i3,i1) = Tia(i,a)*T1aiii(a,i3,i1,i2)
                Tiiii(i2,i,i3,i1) -= T1iiii(i2,i,i3,i1)
@@ -2745,7 +2751,7 @@
 #bgn_frac
                execute set_aces3_vars  zer    two
                execute apply_frac_occs Tiiaa  two
-               execute apply_frac_occs Taiai  one
+#               execute apply_frac_occs Taiai  one
 #end_frac
                Tiiii(i2,i,i3,i1) = Tiiaa(i,i1,a,a1)*Taaii(a,a1,i2,i3)
                Tiiii(i2,i,i3,i1)*= 0.25
@@ -2773,7 +2779,7 @@
 #bgn_frac
                execute set_aces3_vars  one    two
                execute apply_frac_occs Taaii  two
-               execute apply_frac_occs T1iiii one
+#               execute apply_frac_occs T1iiii one
 #end_frac
                T1aiai(a,i,a1,i1) = Taaii(a,a1,i2,i3)*T1iiii(i2,i3,i,i1)
                Taiai(a,i,a1,i1) += T1aiai(a,i,a1,i1)
@@ -2843,14 +2849,14 @@
 #bgn_frac               
                execute set_aces3_vars  zer   one
                execute apply_frac_occs T1jb  two
-               execute apply_frac_occs Tbjjj one
+#               execute apply_frac_occs Tbjjj one
 #end_frac
 #
                Tjjjj(j2,j,j3,j1) = T1jb(j1,b)*Tbjjj(b,j3,j,j2)
 #bgn_frac
                execute set_aces3_vars  zer    one
                execute apply_frac_occs Tjb    two
-               execute apply_frac_occs T1bjjj one
+#               execute apply_frac_occs T1bjjj one
 #end_frac
                T1jjjj(j2,j,j3,j1) = Tjb(j,b)*T1bjjj(b,j3,j1,j2)
                Tjjjj(j2,j,j3,j1) -= T1jjjj(j2,j,j3,j1)
@@ -2874,7 +2880,7 @@
 #bgn_frac
             execute set_aces3_vars  zer   two
             execute apply_frac_occs Tjjbb two
-            execute apply_frac_occs Tbbjj one
+#            execute apply_frac_occs Tbbjj one
 #end_frac
 
             Tjjjj(j2,j,j3,j1) = Tjjbb(j2,j3,b,b1)*Tbbjj(b,b1,j,j1)
@@ -2902,7 +2908,7 @@
 #bgn_frac
                execute set_aces3_vars  one    two
                execute apply_frac_occs Tbbjj  two
-               execute apply_frac_occs T1jjjj one
+#               execute apply_frac_occs T1jjjj one
 #end_frac
 
                T1bjbj(b,j,b1,j1) = Tbbjj(b,b1,j2,j3)*T1jjjj(j2,j3,j,j1)
@@ -2967,9 +2973,8 @@
 #bgn_frac
             execute set_aces3_vars  zer   one
             execute apply_frac_occs Tiijb two
-            execute apply_frac_occs Tbj   one
+#            execute apply_frac_occs Tbj   one
 #end_frac
-#
             Tiijj(i1,i,j1,j) = Tiijb(i,i1,j1,b)*Tbj(b,j)
             PUT Wminj_ab(i1,i,j1,j) += Tiijj(i1,i,j1,j)
 
@@ -2987,9 +2992,8 @@
 #bgn_frac
             execute set_aces3_vars  zer   one
             execute apply_frac_occs Tia   two
-            execute apply_frac_occs Taijj one
+#            execute apply_frac_occs Taijj one
 #end_frac
-            
             Tiijj(i1,i,j1,j) = Tia(i,a)*Taijj(a,i1,j,j1)
             PUT Wminj_ab(i1,i,j1,j) += Tiijj(i1,i,j1,j)
          ENDDO i
@@ -3009,9 +3013,8 @@
 #bgn_frac
             execute set_aces3_vars  zer   two
             execute apply_frac_occs Tijab two
-            execute apply_frac_occs Tabij one
+#            execute apply_frac_occs Tabij one
 #end_frac
-
             Tiijj(i1,i,j1,j) = Tijab(i,j,a,b)*Tabij(a,b,i1,j1)
             Tiijj(i1,i,j1,j)*= 0.5
 #
@@ -3037,9 +3040,8 @@
 #bgn_frac
                execute set_aces3_vars  one   two
                execute apply_frac_occs Tabij two
-               execute apply_frac_occs Tijij one
+#               execute apply_frac_occs Tijij one
 #end_frac
-#
                T1aibj(a,i,b,j) = Tabij(a,b,i1,j1)*Tijij(i1,j1,i,j)
                Taibj(a,i,b,j) += T1aibj(a,i,b,j)
 #
@@ -3139,9 +3141,8 @@
 #bgn_frac
                   execute set_aces3_vars  one   one
                   execute apply_frac_occs Tai   two
-                  execute apply_frac_occs Tiiai one
+#                  execute apply_frac_occs Tiiai one
 #end_frac
-#
                   T1aiai(a1,i,a,i1) = Tai(a1,i2)*Tiiai(i2,i,a,i1)
                   T2aiai(a,i,a1,i1) = T1aiai(a1,i,a,i1)
 #
@@ -3164,9 +3165,8 @@
 #bgn_frac
                       execute set_aces3_vars  one one
                       execute apply_frac_occs Tai two
-                      execute apply_frac_occs Tia one
+#                      execute apply_frac_occs Tia one
 #end_frac
-
                       tmp1_aa(a1,a2)  = Tai(a1,i2)*Tia(i2,a2)
                       tmp1_aa(a1,a2) *= -0.5
                       tmp_aa(a1,a2)  += tmp1_aa(a1,a2)
@@ -3177,7 +3177,7 @@
 #bgn_frac
                    execute set_aces3_vars  zer    one
                    execute apply_frac_occs Tmp_aa two
-                   execute apply_frac_occs T3aiai one
+#                   execute apply_frac_occs T3aiai one
 #end_frac
                    T1aiai(a,i,a1,i1) = Tmp_aa(a1,a2)*T3aiai(a2,i,a,i1)
 
@@ -3243,9 +3243,8 @@
 #bgn_frac
                      execute set_aces3_vars  zer one
                      execute apply_frac_occs Tia two
-                     execute apply_frac_occs Tai one
+#                     execute apply_frac_occs Tai one
 #end_frac
-
                      tmp1_ii(i2,i1) = Tia(i2,a2)*Tai(a2,i1)
                      tmp1_ii(i2,i1) *= 0.5
                      tmp_ii(i2,i1)  += tmp1_ii(i2,i1)
@@ -3256,9 +3255,8 @@
 #bgn_frac
                   execute set_aces3_vars  one    one
                   execute apply_frac_occs T3aiai two
-                  execute apply_frac_occs Tmp_ii one
+#                  execute apply_frac_occs Tmp_ii one
 #end_frac
-#
                   T1aiai(a,i,a1,i1)  = T3aiai(a,i,a1,i2)*tmp_ii(i2,i1)
 
                   T2aiai(a,i1,a1,i)  = T1aiai(a,i,a1,i1)
@@ -3276,12 +3274,11 @@
 #bgn_frac
                   execute set_aces3_vars  zer    one
                   execute apply_frac_occs Tia    two
-                  execute apply_frac_occs T1aaai one
+#                  execute apply_frac_occs T1aaai one
 #end_frac
-#
                   T1aiai(a,i1,a1,i) = Tia(i1,a2)*T1aaai(a2,a,a1,i)
                   T2aiai(a,i,a1,i1) = T1aiai(a,i1,a1,i)
-#
+
                   Taiai(a,i,a1,i1)  -= T2aiai(a,i,a1,i1)
                   TY1aiai(a,i1,a1,i)+= T1aiai(a,i1,a1,i)
 #
@@ -3378,9 +3375,8 @@
 #bgn_frac 
                   execute set_aces3_vars  one   one
                   execute apply_frac_occs Tbj   two
-                  execute apply_frac_occs Tjjbj one
+#                  execute apply_frac_occs Tjjbj one
 #end_frac
-#
                   T1bjbj(b1,j,b,j1) = Tbj(b1,j2)*Tjjbj(j2,j,b,j1)
                   T2bjbj(b,j,b1,j1) = T1bjbj(b1,j,b,j1)
 #
@@ -3403,9 +3399,8 @@
 #bgn_frac
                       execute set_aces3_vars  one one
                       execute apply_frac_occs Tbj two
-                      execute apply_frac_occs Tjb one
+#                      execute apply_frac_occs Tjb one
 #end_frac
-
                       tmp1_bb(b1,b2)  = Tbj(b1,j2)*Tjb(j2,b2)
                       tmp1_bb(b1,b2) *= -0.5
                       tmp_bb(b1,b2)  += tmp1_bb(b1,b2)
@@ -3415,7 +3410,7 @@
 #bgn_frac
                    execute set_aces3_vars  zer    one
                    execute apply_frac_occs tmp_bb two
-                   execute apply_frac_occs T3bjbj one
+#                   execute apply_frac_occs T3bjbj one
 #end_frac
                    T1bjbj(b,j,b1,j1) = tmp_bb(b1,b2)*T3bjbj(b2,j,b,j1)
 
@@ -3478,9 +3473,8 @@
 #bgn_frac
                      execute set_aces3_vars  zer one
                      execute apply_frac_occs Tjb two
-                     execute apply_frac_occs Tbj one
+#                     execute apply_frac_occs Tbj one
 #end_frac
-
                      tmp1_jj(j2,j1) = Tjb(j2,b2)*Tbj(b2,j1)
                      tmp1_jj(j2,j1) *= 0.5
                      tmp_jj(j2,j1)  += tmp1_jj(j2,j1)
@@ -3491,7 +3485,7 @@
 #bgn_frac
                   execute set_aces3_vars  one    one
                   execute apply_frac_occs T3bjbj two
-                  execute apply_frac_occs Tjj    one
+#                  execute apply_frac_occs Tjj    one
 #end_frac
                   T1bjbj(b,j,b1,j1)  = T3bjbj(b,j,b1,j2)*Tjj(j2,j1)
 
@@ -3510,9 +3504,8 @@
 #bgn_frac
                   execute set_aces3_vars  zer    one
                   execute apply_frac_occs Tjb    two
-                  execute apply_frac_occs T1bbbj one
+#                  execute apply_frac_occs T1bbbj one
 #end_frac
-
                   T1bjbj(b,j1,b1,j) = Tjb(j1,b2)*T1bbbj(b2,b,b1,j)
                   T2bjbj(b,j,b1,j1) = T1bjbj(b,j1,b1,j)
 #
@@ -3602,9 +3595,8 @@
 #bgn_frac
                   execute set_aces3_vars  one    one
                   execute apply_frac_occs T1aijj two
-                  execute apply_frac_occs Tjb    one
+#                  execute apply_frac_occs Tjb    one
 #end_frac
-#
                   T1aibj(a,i,b,j) = T1aijj(a,i,j,j1)*Tjb(j1,b)
                   Taibj(a,i,b,j) -= T1aibj(a,i,b,j) 
 #
@@ -3625,9 +3617,8 @@
 #bgn_frac
                      execute set_aces3_vars  one one
                      execute apply_frac_occs Tbj two
-                     execute apply_frac_occs Tjb one
+#                     execute apply_frac_occs Tjb one
 #end_frac
-#
                      tmp1_bb(b,b1)  = Tbj(b,j1)*Tjb(j1,b1)
                      tmp1_bb(b,b1) *= 0.5 
                      tmp_bb(b,b1)  -= tmp1_bb(b,b1)  
@@ -3639,9 +3630,8 @@
 #bgn_frac
                   execute set_aces3_vars  zer   one
                   execute apply_frac_occs Taijb two
-                  execute apply_frac_occs T1bb  one
+#                  execute apply_frac_occs T1bb  one
 #end_frac
-
                   T1aibj(a,i,b,j) = Taijb(a,i,j,b1)*T1bb(b1,b)
                   Taibj(a,i,b,j) += T1aibj(a,i,b,j) 
 #
@@ -3686,9 +3676,8 @@
 #bgn_frac                  
                   execute set_aces3_vars  one   one
                   execute apply_frac_occs Tai   two
-                  execute apply_frac_occs Tiibj one
+#                  execute apply_frac_occs Tiibj one
 #end_frac
-
                   T1aibj(a,i,b,j) = Tai(a,i1)*Tiibj(i1,i,b,j)
                   Taibj(a,i,b,j) -= T1aibj(a,i,b,j) 
 #
@@ -3709,9 +3698,8 @@
 #bgn_frac
                      execute set_aces3_vars  one one
                      execute apply_frac_occs Tai two
-                     execute apply_frac_occs Tia one
+#                     execute apply_frac_occs Tia one
 #end_frac
-
                      tmp1_aa(a,a1)  = Tai(a,i1)*Tia(i1,a1)
                      tmp1_aa(a,a1) *= 0.5 
                      tmp_aa(a,a1)  -= tmp1_aa(a,a1)  
@@ -3722,9 +3710,8 @@
 #bgn_frac
                   execute set_aces3_vars  zer    one
                   execute apply_frac_occs Taa    two
-                  execute apply_frac_occs T2aibj one
+#                  execute apply_frac_occs T2aibj one
 #bgn_frac
-
                   T1aibj(a,i,b,j) = Taa(a,a1)*T2aibj(a1,i,b,j)
                   Taibj(a,i,b,j) += T1aibj(a,i,b,j) 
 #
@@ -3770,9 +3757,8 @@
 #bgn_frac
                   execute set_aces3_vars  zer    one
                   execute apply_frac_occs Tjb    two
-                  execute apply_frac_occs T1bbai one
+#                  execute apply_frac_occs T1bbai one
 #end_frac
-#
                   T1aibj(a,i,b,j) = Tjb(j,b1)*T1bbai(b1,b,a,i)
                   Taibj(a,i,b,j) += T1aibj(a,i,b,j) 
 #
@@ -3793,9 +3779,8 @@
 #bgn_frac
                      execute set_aces3_vars  zer one
                      execute apply_frac_occs Tjb two
-                     execute apply_frac_occs Tbj one
+#                     execute apply_frac_occs Tbj one
 #end_frac
-
                      tmp1_jj(j2,j)  = Tjb(j2,b2)*Tbj(b2,j)
                      tmp1_jj(j2,j) *= 0.5 
                      tmp_jj(j2,j)  += tmp1_jj(j2,j) 
@@ -3806,7 +3791,7 @@
 #bgn_frac
                   execute set_aces3_vars  one    one
                   execute apply_frac_occs T2aibj two
-                  execute apply_frac_occs Tjj    one
+#                  execute apply_frac_occs Tjj    one
 #end_frc
                   T1aibj(a,i,b,j) = T2aibj(a,i,b,j2)*Tjj(j2,j)
                   Taibj(a,i,b,j) -= T1aibj(a,i,b,j) 
@@ -3859,7 +3844,7 @@
 #bgn_frac
                      execute set_aces3_vars  zer one
                      execute apply_frac_occs Tia two
-                     execute apply_frac_occs Tai one
+#                     execute apply_frac_occs Tai one
 #end_frac
                      tmp1_ii(i1,i)  = Tia(i1,a1)*Tai(a1,i)
                      tmp1_ii(i1,i) *= 0.5 
@@ -3871,7 +3856,7 @@
 #bgn_frac
                   execute set_aces3_vars  one    one
                   execute apply_frac_occs Tii    one
-                  execute apply_frac_occs T1iabj one
+#                  execute apply_frac_occs T1iabj one
 #end_frac
                   T1aibj(a,i,b,j) = Tii(i1,i)*T1iabj(i1,a,b,j)
                   Taibj(a,i,b,j) -= T1aibj(a,i,b,j) 
@@ -3887,7 +3872,7 @@
 #bgn_frac
                   execute set_aces3_vars  zer    one
                   execute apply_frac_occs Tia    two
-                  execute apply_frac_occs T1aabj one
+#                  execute apply_frac_occs T1aabj one
 #end_frac
                   T1aibj(a,i,b,j) = Tia(i,a1)*T1aabj(a1,a,b,j)
                   Taibj(a,i,b,j) += T1aibj(a,i,b,j) 
@@ -3960,7 +3945,7 @@
 #bgn_frac
                  execute set_aces3_vars  zer    one
                  execute apply_frac_occs Txa    two
-                 execute apply_frac_occs Taiai  one 
+#                 execute apply_frac_occs Taiai  one 
 #bgn_frac
                  Txiai(lambda,i,a1,i1) = Taiai(a,i,a1,i1)*Txa(lambda,a)
                  Zaa(lambda,i,a1,i1)  += Txiai(lambda,i,a1,i1) 
@@ -4000,7 +3985,7 @@
 #bgn_frac
                  execute set_aces3_vars  zer    one
                  execute apply_frac_occs Txb    two
-                 execute apply_frac_occs Tbjbj  one
+#                 execute apply_frac_occs Tbjbj  one
 #bgn_frac
                  Txjbj(lambda,j,b1,j1) = Tbjbj(b,j,b1,j1)*Txb(lambda,b)
                  Zbb(lambda,j,b1,j1)  += Txjbj(lambda,j,b1,j1) 
@@ -4037,7 +4022,7 @@
 #bgn_frac
                  execute set_aces3_vars  zer    one
                  execute apply_frac_occs Txa    two
-                 execute apply_frac_occs Taibj  one
+#                 execute apply_frac_occs Taibj  one
 #end_frac
                  Txibj(lambda,i,b,j) = Taibj(a,i,b,j)*Txa(lambda,a)
                  Zab(lambda,i,b,j)  += Txibj(lambda,i,b,j) 
@@ -4076,7 +4061,7 @@
 #bgn_frac
                  execute set_aces3_vars  zer   one
                  execute apply_frac_occs Txa   two
-                 execute apply_frac_occs Txiia two
+#                 execute apply_frac_occs Txiia two
 #bgn_frac
                  Txixi(lambda,i,sigma,i1) = Txiia(lambda,i,i1,a1)*Txa(sigma,a1)
                  ZZaa(lambda,i,sigma,i1) += Txixi(lambda,i,sigma,i1)  
@@ -4113,7 +4098,7 @@
 #bgn_frac
                  execute set_aces3_vars  zer   one
                  execute apply_frac_occs Txb   two
-                 execute apply_frac_occs Txjjb two
+#                 execute apply_frac_occs Txjjb two
 #bgn_frac
                  Txjxj(lambda,j,sigma,j1) = Txjjb(lambda,j,j1,b1)*Txb(sigma,b1)
                  ZZbb(lambda,j,sigma,j1) += Txjxj(lambda,j,sigma,j1)  
@@ -4150,7 +4135,7 @@
 #bgn_frac
                  execute set_aces3_vars  zer   one
                  execute apply_frac_occs Txb   two
-                 execute apply_frac_occs Txijb two
+#                 execute apply_frac_occs Txijb two
 #bgn_frac
                  Txixj(lambda,i,sigma,j) = Txijb(lambda,i,j,b)*Txb(sigma,b) 
                  ZZab(lambda,i,sigma,j) += Txixj(lambda,i,sigma,j)  
@@ -4264,7 +4249,7 @@
 #bgn_frac
               execute set_aces3_vars  one  one
               execute apply_frac_occs Tai  two
-              execute apply_frac_occs Txi  two
+#              execute apply_frac_occs Txi  two
 #end_frac
               t1px(a,mu) = Tai(a,i)*Txi(mu,i)
               tpx(a,mu) += t1px(a,mu) 
@@ -4287,7 +4272,7 @@
 #bgn_frac
               execute set_aces3_vars  one  one
               execute apply_frac_occs Tbj  two
-              execute apply_frac_occs Txj  two
+#              execute apply_frac_occs Txj  two
 #end_frac
               t1qx(b,mu) = Tbj(b,j)*Txj(mu,j)
               tqx(b,mu) += t1qx(b,mu) 
@@ -4521,9 +4506,8 @@
 #bgn_frac
                     execute set_aces3_vars  zer   two
                     execute apply_frac_occs Tiiaa two
-                    execute apply_frac_occs Taaii one
+#                    execute apply_frac_occs Taaii one
 #end_frac
-#
                     T1iiii(i1,i,i2,i3) = Tiiaa(i1,i2,a,a1)*Taaii(a,a1,i,i3)
                     Tiiii(i1,i,i2,i3) += T1iiii(i1,i,i2,i3)
 #
@@ -4552,9 +4536,8 @@
 #bgn_frac
                     execute set_aces3_vars  zer   two
                     execute apply_frac_occs Tiiaa two
-                    execute apply_frac_occs Taaii one
+#                    execute apply_frac_occs Taaii one
 #end_frac
-#
                     T1iiii(i1,i,i2,i3) = Tiiaa(i1,i2,a,a1)*Taaii(a,a1,i,i3)
                     Tiiii(i1,i,i2,i3) += T1iiii(i1,i,i2,i3)
 #
@@ -4569,7 +4552,6 @@
 #
      ENDPARDO i, i1, i2  
      execute sip_barrier 
-     execute print_scalar one
 #
      PARDO a, i, i3 
 #
@@ -4591,9 +4573,8 @@
 #bgn_frac
                     execute set_aces3_vars  one    two
                     execute apply_frac_occs Taaii  two
-                    execute apply_frac_occs T1iiii one
+#                    execute apply_frac_occs T1iiii one
 #end_frac
-#
                     Taiai(a,i,a1,i3)   = Taaii(a,a1,i1,i2)*T1iiii(i1,i2,i,i3)
                     R1aiai(a,i,a1,i3) += Taiai(a,i,a1,i3)  
 #
@@ -4623,9 +4604,8 @@
 #bgn_frac
                     execute set_aces3_vars  one    two
                     execute apply_frac_occs Taaii  two
-                    execute apply_frac_occs T1iiii one
+#                    execute apply_frac_occs T1iiii one
 #end_frac
-#
                     Taiai(a,i,a1,i3)  = Taaii(a,a1,i1,i2)*T1iiii(i1,i2,i,i3)
                     R1aiai(a,i,a1,i3) += Taiai(a,i,a1,i3)  
 #
@@ -4698,9 +4678,8 @@
 #bgn_frac
                     execute set_aces3_vars  zer   two
                     execute apply_frac_occs Tjjbb two
-                    execute apply_frac_occs Tbbjj one
+#                    execute apply_frac_occs Tbbjj one
 #end_frac
-#                    
                     T1jjjj(j1,j,j2,j3) = Tjjbb(j1,j2,b,b1)*Tbbjj(b,b1,j,j3)
                     Tjjjj(j1,j,j2,j3) += T1jjjj(j1,j,j2,j3)
 #
@@ -4729,9 +4708,8 @@
 #bgn_frac
                     execute set_aces3_vars  zer   two
                     execute apply_frac_occs Tjjbb two
-                    execute apply_frac_occs Tbbjj one
+#                    execute apply_frac_occs Tbbjj one
 #end_frac
-#
                     T1jjjj(j1,j,j2,j3) = Tjjbb(j1,j2,b,b1)*Tbbjj(b,b1,j,j3)
                     Tjjjj(j1,j,j2,j3) += T1jjjj(j1,j,j2,j3)
 #
@@ -4767,9 +4745,8 @@
 #bgn_frac
                     execute set_aces3_vars  one    two
                     execute apply_frac_occs Tbbjj  two
-                    execute apply_frac_occs T1jjjj one
+#                    execute apply_frac_occs T1jjjj one
 #end_frac
-#
                     Tbjbj(b,j,b1,j3)   = Tbbjj(b,b1,j1,j2)*T1jjjj(j1,j2,j,j3)
                     R1bjbj(b,j,b1,j3) += Tbjbj(b,j,b1,j3)  
 #
@@ -4799,9 +4776,8 @@
 #bgn_frac
                     execute set_aces3_vars  one    two
                     execute apply_frac_occs Tbbjj  two
-                    execute apply_frac_occs T1jjjj one
+#                    execute apply_frac_occs T1jjjj one
 #end_frac
-#
                     Tbjbj(b,j,b1,j3)  =  Tbbjj(b,b1,j1,j2)*T1jjjj(j1,j2,j,j3)
                     R1bjbj(b,j,b1,j3) += Tbjbj(b,j,b1,j3)  
 #
@@ -4870,9 +4846,8 @@
 #bgn_frac               
                execute set_aces3_vars  zer   two
                execute apply_frac_occs Tijab two
-               execute apply_frac_occs Tabij one
+#               execute apply_frac_occs Tabij one
 #end_frac
-#
                T1iijj(i1,i,j1,j) = Tijab(i1,j1,a,b)*Tabij(a,b,i,j)
                Tiijj(i1,i,j1,j) += T1iijj(i1,i,j1,j)  
 #
@@ -4900,9 +4875,8 @@
 #bgn_frac 
                execute set_aces3_vars  one    two
                execute apply_frac_occs Tabij  two
-               execute apply_frac_occs T1ijij one
+#               execute apply_frac_occs T1ijij one
 #end_frac
-#
                Taibj(a,i,b,j)   = Tabij(a,b,i1,j1)*T1ijij(i1,j1,i,j) 
                R1aibj(a,i,b,j) += Taibj(a,i,b,j)  
 #
@@ -4960,7 +4934,7 @@
 #
       PROC WMEBJAA 
 #     ------------
-#
+
       PARDO a, a1, i, i1  
 #
                REQUEST              Viaai(i1,a1,a,i) i  
@@ -4979,7 +4953,7 @@
 #bgn_frac
                   execute set_aces3_vars  one   one
                   execute apply_frac_occs Taiii two
-                  execute apply_frac_occs Tia   one
+#                  execute apply_frac_occs Tia   one
 #end_frac
                   T1aiai(a1,i1,a,i)  = Taiii(a1,i1,i,i2)*Tia(i2,a)
                   TYaiai(a1,i1,a,i) -= T1aiai(a1,i1,a,i)
@@ -4995,6 +4969,25 @@
 #
       ENDPARDO a, a1, i, i1  
       execute server_barrier 
+
+#bgn_debug
+#     execute server_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a, i, a1, i1
+#         request taup_aa(a,i,a1,i1) i1
+#         Taiai(a,i,a1,i1)=taup_aa(a,i,a1,i1)
+##bgn_frac
+#         execute set_aces3_vars  pzozo  four
+#         execute apply_frac_occs Taiai  four
+#end_frac
+#         tmp = Taiai(a,i,a1,i1)*Taiai(a,i,a1,i1)
+#         suma += tmp
+#     ENDPARDO a, i, a1, i1
+#     execute server_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
+#end_debug
 
       PARDO a,i,a2,i2
          REQUEST              T2old_aa(a2,i,a,i2) i2  
@@ -5017,7 +5010,7 @@
 #bgn_frac
             execute set_aces3_vars  pzo    two
             execute apply_frac_occs Taiai  two
-            execute apply_frac_occs T2aiai one
+#            execute apply_frac_occs T2aiai one
 #end_frac
 #
             T3aiai(a1,i1,a,i)  = Taiai(a1,i1,a2,i2)*T2aiai(a2,i2,a,i) 
@@ -5041,7 +5034,7 @@
 #bgn_frac
             execute set_aces3_vars  pzo   two
             execute apply_frac_occs Taibj two
-            execute apply_frac_occs Tbjai one
+#            execute apply_frac_occs Tbjai one
 #end_frac
 #
             T1aiai(a1,i1,a,i)  = Taibj(a,i,b,j)*Tbjai(b,j,a1,i1)
@@ -5053,6 +5046,24 @@
 #
       ENDPARDO a,i,b,j
       execute server_barrier
+#bgn_debug
+#     execute server_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a, i, a1, i1
+#         request taup_aa(a,i,a1,i1) i1
+#         Taiai(a,i,a1,i1)=taup_aa(a,i,a1,i1)
+##bgn_frac
+#         execute set_aces3_vars  pzozo  four
+#         execute apply_frac_occs Taiai  four
+##end_frac
+#         tmp = Taiai(a,i,a1,i1)*Taiai(a,i,a1,i1)
+#         suma += tmp
+#     ENDPARDO a, i, a1, i1
+#     execute server_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
+#end_debug
 #
 # Contributions to T2new_aa 
 # ------------------------- 
@@ -5068,9 +5079,8 @@
 #bgn_frac
                execute set_aces3_vars  pzo    two
                execute apply_frac_occs T1aiai two
-               execute apply_frac_occs Taiai  one
+#               execute apply_frac_occs Taiai  one
 #end_frac
-#
                R1aiai(a2,i2,a,i)  = T1aiai(a2,i2,a1,i1)*Taiai(a1,i1,a,i)
                R2aiai(a2,i,a,i2)            = R1aiai(a2,i2,a,i)
                R2aiai(a2,i,a,i2)           *= -1.0
@@ -5120,9 +5130,8 @@
 #bgn_frac
                execute set_aces3_vars  pzo   two 
                execute apply_frac_occs Taiai one
-               execute apply_frac_occs Taibj one
+#               execute apply_frac_occs Taibj one
 #end_frac
-#
                R1aibj(a,i,b,j)  =  Taiai(a1,i1,a,i)*Taibj(a1,i1,b,j)
                PREPARE T2new_ab(a,i,b,j) += R1aibj(a,i,b,j)
             ENDDO b  
@@ -5176,7 +5185,7 @@
 #bgn_frac
                   execute set_aces3_vars  one   one
                   execute apply_frac_occs Tbjjj two
-                  execute apply_frac_occs Tjb   one
+#                  execute apply_frac_occs Tjb   one
 #end_frac
                   T1bjbj(b1,j1,b,j)  = Tbjjj(b1,j1,j,j2)*Tjb(j2,b)
                   TYbjbj(b1,j1,b,j) -= T1bjbj(b1,j1,b,j)  
@@ -5215,9 +5224,8 @@
 #bgn_frac
             execute set_aces3_vars  pzo    one
             execute apply_frac_occs Tbjbj  two
-            execute apply_frac_occs T2bjbj one
+#            execute apply_frac_occs T2bjbj one
 #end_frac
-#
             T3bjbj(b1,j1,b,j)  = Tbjbj(b1,j1,b2,j2)*T2bjbj(b2,j2,b,j) 
             TYbjbj(b1,j1,b,j) -= T3bjbj(b1,j1,b,j)  
 #
@@ -5241,9 +5249,8 @@
 #bgn_frac
                   execute set_aces3_vars  pzo    two 
                   execute apply_frac_occs Taibj  one
-                  execute apply_frac_occs T1aibj one
+#                  execute apply_frac_occs T1aibj one
 #end_frac
-#
                   T1bjbj(b1,j1,b,j)  = Taibj(a,i,b,j)*T1aibj(a,i,b1,j1)
                   T1bjbj(b1,j1,b,j) *= 0.5
 #
@@ -5271,7 +5278,7 @@
 #bgn_frac
                execute set_aces3_vars  pzo    two 
                execute apply_frac_occs T1bjbj two 
-               execute apply_frac_occs Tbjbj  one
+#               execute apply_frac_occs Tbjbj  one
 #end_frac
                R1bjbj(b2,j2,b,j)            = T1bjbj(b2,j2,b1,j1)*Tbjbj(b1,j1,b,j)
                R2bjbj(b2,j,b,j2)            = R1bjbj(b2,j2,b,j) 
@@ -5323,9 +5330,8 @@
 #bgn_frac
                execute set_aces3_vars  pzo   two 
                execute apply_frac_occs Taibj two
-               execute apply_frac_occs Tbjbj one
+#               execute apply_frac_occs Tbjbj one
 #end_frac
-#
                R1aibj(a,i,b,j)  =  Taibj(a,i,b1,j1)*Tbjbj(b1,j1,b,j)
                PREPARE T2new_ab(a,i,b,j) += R1aibj(a,i,b,j)
             ENDDO j  
@@ -5375,9 +5381,8 @@
 #bgn_frac
                   execute set_aces3_vars  one   one
                   execute apply_frac_occs Taijj two
-                  execute apply_frac_occs Tjb   one
+#                  execute apply_frac_occs Tjb   one
 #end_frac
-#
                   T1aibj(a,i,b,j) = Taijj(a,i,j,j1)*Tjb(j1,b)
                   Taibj(a,i,b,j) -= T1aibj(a,i,b,j) 
                ENDDO j1
@@ -5411,9 +5416,8 @@
 #bgn_frac
                   execute set_aces3_vars  pzo    two
                   execute apply_frac_occs T3bjbj two
-                  execute apply_frac_occs T4aibj two
+#                  execute apply_frac_occs T4aibj two
 #end_frac
-
                   T1aibj(a,i,b,j) = T3bjbj(b,j,b1,j1)*T4aibj(a,i,b1,j1)
                   Taibj(a,i,b,j)  -= T1aibj(a,i,b,j) 
 #   
@@ -5436,7 +5440,7 @@
 #bgn_frac
             execute set_aces3_vars  pzo   two
             execute apply_frac_occs Taiai one
-            execute apply_frac_occs Taibj one
+#            execute apply_frac_occs Taibj one
 #end_frac
 #
             T1aibj(a,i,b,j)  = Taiai(a1,i1,a,i)*Taibj(a1,i1,b,j)
@@ -5466,7 +5470,7 @@
 #bgn_frac
                execute set_aces3_vars  pzo    two
                execute apply_frac_occs Taibj  one
-               execute apply_frac_occs T1aibj one
+#               execute apply_frac_occs T1aibj one
 #end_frac
 #
                R1bjbj(b1,j1,b,j)  = Taibj(a,i,b,j)*T1aibj(a,i,b1,j1)
@@ -5521,7 +5525,7 @@
 #bgn_frac
                execute set_aces3_vars  pzo   two
                execute apply_frac_occs Taiai two
-               execute apply_frac_occs Taibj one
+#               execute apply_frac_occs Taibj one
 #end_frac
 #      
                R1aibj(a1,i1,b,j)  = Taiai(a1,i1,a,i)*Taibj(a,i,b,j)
@@ -5576,7 +5580,7 @@
 #bgn_frac 
                   execute set_aces3_vars  one    one
                   execute apply_frac_occs Tai    two
-                  execute apply_frac_occs T1jbii two 
+#                  execute apply_frac_occs T1jbii two 
 #end_frac
 #
                   T1aibj(a,i,b,j) = Tai(a,i1)*T1jbii(j,b,i,i1)
@@ -5614,7 +5618,7 @@
 #bgn_frac
                   execute set_aces3_vars  pzo    two
                   execute apply_frac_occs T1aiai two
-                  execute apply_frac_occs T4aibj  one
+#                  execute apply_frac_occs T4aibj  one
 #end_frac
 
                   T1aibj(a,i,b,j)    = T1aiai(a,i,a1,i1)*T4aibj(a1,i1,b,j) 
@@ -5638,7 +5642,7 @@
 #bgn_frac
             execute set_aces3_vars  pzo   two
             execute apply_frac_occs Taibj two
-            execute apply_frac_occs Tbjbj one
+#            execute apply_frac_occs Tbjbj one
 #end_frac
 #
             T1aibj(a,i,b,j)  = Taibj(a,i,b1,j1)*Tbjbj(b1,j1,b,j)
@@ -5669,7 +5673,7 @@
 #bgn_frac
                execute set_aces3_vars  pzo    two
                execute apply_frac_occs Taibj  two
-               execute apply_frac_occs T1aibj two
+#               execute apply_frac_occs T1aibj two
 #end_frac
 #
                R1aiai(a1,i1,a,i)  = Taibj(a,i,b,j)*T1aibj(a1,i1,b,j) 
@@ -5723,7 +5727,7 @@
 #bgn_frac
                execute set_aces3_vars  pzo    two
                execute apply_frac_occs Taibj  two
-               execute apply_frac_occs T1bjbj two
+#               execute apply_frac_occs T1bjbj two
 #end_frac
 #
                R1aibj(a,i,b1,j1)  = Taibj(a,i,b,j)*T1bjbj(b1,j1,b,j)
@@ -5799,7 +5803,7 @@
 #bgn_frac
                         execute set_aces3_vars  zer   one
                         execute apply_frac_occs Tpppp one
-                        execute apply_frac_occs T1ai  one
+#                        execute apply_frac_occs T1ai  one
 #end_frac
                         T1iiai(i,i1,a2,i2)  = Tpppp(a1,i1,a2,i2)*T1ai(a1,i)   
                         L1iiai(i,i1,a2,i2) -= T1iiai(i,i1,a2,i2)
@@ -5810,7 +5814,7 @@
 #bgn_frac
                         execute set_aces3_vars  zer   one
                         execute apply_frac_occs Tpppp one
-                        execute apply_frac_occs Tai   one
+#                        execute apply_frac_occs Tai   one
 #end_frac
                         T1iiai(i2,i1,a2,i)  = Tpppp(a1,i1,a2,i)*Tai(a1,i2)   
                         L2iiai(i2,i1,a2,i) += T1iiai(i2,i1,a2,i)
@@ -5836,9 +5840,8 @@
 #bgn_frac
                         execute set_aces3_vars  one    one
                         execute apply_frac_occs T1iiai two
-                        execute apply_frac_occs Tai    two
+#                        execute apply_frac_occs Tai    two
 #end_frac
-
                         T1aiai(a,i,a2,i2)  = T1iiai(i,i2,a2,i1)*Tai(a,i1) 
                         Taiai(a,i,a2,i2)  += T1aiai(a,i,a2,i2)  
 #
@@ -5878,7 +5881,7 @@
 #bgn_frac
                         execute set_aces3_vars  zer   one
                         execute apply_frac_occs Tpppp one
-                        execute apply_frac_occs T1ai  one
+#                        execute apply_frac_occs T1ai  one
 #end_frac
 #
                         T1iiai(i,i1,a2,i2)  = Tpppp(a1,i1,a2,i2)*T1ai(a1,i)   
@@ -5890,9 +5893,8 @@
 #bgn_frac
                         execute set_aces3_vars  zer   one
                         execute apply_frac_occs Tpppp one
-                        execute apply_frac_occs Tai   one
+#                        execute apply_frac_occs Tai   one
 #end_frac
-#
                         T1iiai(i2,i1,a2,i)  = Tpppp(a1,i1,a2,i)*Tai(a1,i2)   
                         L2iiai(i2,i1,a2,i) += T1iiai(i2,i1,a2,i)
 #
@@ -5917,9 +5919,8 @@
 #bgn_frac
                         execute set_aces3_vars  one    one
                         execute apply_frac_occs T1iiai two
-                        execute apply_frac_occs Tai    two 
+#                        execute apply_frac_occs Tai    two 
 #end_frac
-
                         T1aiai(a,i,a2,i2)  = T1iiai(i,i2,a2,i1)*Tai(a,i1) 
                         Taiai(a,i,a2,i2)  += T1aiai(a,i,a2,i2)  
 #
@@ -5969,9 +5970,8 @@
 #bgn_frac
                         execute set_aces3_vars  zer   one
                         execute apply_frac_occs Tpppp one
-                        execute apply_frac_occs Tai   one
+#                        execute apply_frac_occs Tai   one
 #end_frac
-
                         T1iiai(i,i1,a,i2) = Tpppp(a1,i1,a,i2)*Tai(a1,i)   
                         L3iiai(i,i1,a,i2) += T1iiai(i,i1,a,i2)
 #
@@ -5986,9 +5986,8 @@
 #bgn_frac
                         execute set_aces3_vars  zer   one
                         execute apply_frac_occs Tpppp one
-                        execute apply_frac_occs T1ai  one
+#                        execute apply_frac_occs T1ai  one
 #end_frac
-
                         T1iiai(i2,i1,a,i)  = Tpppp(a1,i1,a,i)*T1ai(a1,i2)   
                         L4iiai(i2,i1,a,i) -= T1iiai(i2,i1,a,i)
 #
@@ -6016,7 +6015,7 @@
 #bgn_frac
                         execute set_aces3_vars  one    one
                         execute apply_frac_occs T2iiai two
-                        execute apply_frac_occs Tai    two
+#                        execute apply_frac_occs Tai    two
 #end_frac
 # Check this
                         T1aiai(a,i,a2,i2) = T2iiai(i,i2,a,i1)*Tai(a2,i1) 
@@ -6051,9 +6050,8 @@
 #bgn_frac
                         execute set_aces3_vars  zer   one
                         execute apply_frac_occs Tpppp one
-                        execute apply_frac_occs Tai   one
+#                        execute apply_frac_occs Tai   one
 #end_frac
-
                         T1iiai(i,i1,a,i2) = Tpppp(a1,i1,a,i2)*Tai(a1,i)
                         L3iiai(i,i1,a,i2) += T1iiai(i,i1,a,i2)
 #
@@ -6073,9 +6071,8 @@
 #bgn_frac
                         execute set_aces3_vars  one    one
                         execute apply_frac_occs T1iiai two
-                        execute apply_frac_occs T1ai   two
+#                        execute apply_frac_occs T1ai   two
 #end_frac
-
                         T1aiai(a,i,a2,i2) = T1iiai(i,i2,a,i1)*T1ai(a2,i1) 
                         Taiai(a,i,a2,i2) += T1aiai(a,i,a2,i2)  
 #
@@ -6106,7 +6103,7 @@
 #bgn_frac
                         execute set_aces3_vars  zer   one
                         execute apply_frac_occs Tpppp one
-                        execute apply_frac_occs T3ai  one
+#                        execute apply_frac_occs T3ai  one
 #end_frac
 
                         T1iiai(i2,i1,a,i) = Tpppp(a1,i1,a,i)*T3ai(a1,i2)   
@@ -6128,7 +6125,7 @@
 #bgn_frac
                         execute set_aces3_vars  one    one
                         execute apply_frac_occs T2iiai two
-                        execute apply_frac_occs T4ai   two
+#                        execute apply_frac_occs T4ai   two
 #end_frac
 
                         T1aiai(a,i,a2,i2) = T2iiai(i2,i,a,i1)*T4ai(a2,i1) 
@@ -6194,7 +6191,7 @@
 #bgn_frac
                      execute set_aces3_vars  zer   one
                      execute apply_frac_occs Tqqqq one
-                     execute apply_frac_occs Tbj   one
+#                     execute apply_frac_occs Tbj   one
 #end_frac
                      T1jjbj(j,j1,b2,j2) = Tqqqq(b1,j1,b2,j2)*Tbj(b1,j)   
                      Tjjbj(j,j1,b2,j2) -= T1jjbj(j,j1,b2,j2)
@@ -6209,9 +6206,8 @@
 #bgn_frac
                      execute set_aces3_vars  one    one
                      execute apply_frac_occs T1jjbj two
-                     execute apply_frac_occs T1bj   two 
+#                     execute apply_frac_occs T1bj   two 
 #end_frac
-
                      Tbjbj(b,j,b2,j2)  = T1jjbj(j,j2,b2,j1)*T1bj(b,j1) 
                      T1bjbj(b2,j2,b,j) = Tbjbj(b,j,b2,j2)  
                      PREPARE T2new_bb(b,j,b2,j2) += Tbjbj(b,j,b2,j2) 
@@ -6239,9 +6235,8 @@
 #bgn_frac
                      execute set_aces3_vars  zer   one
                      execute apply_frac_occs Tqqqq one
-                     execute apply_frac_occs T2bj  one
+#                     execute apply_frac_occs T2bj  one
 #end_frac
-#
                      T1jjbj(j,j1,b2,j2) = Tqqqq(b1,j1,b2,j2)*T2bj(b1,j)   
                      Tjjbj(j,j1,b2,j2) -= T1jjbj(j,j1,b2,j2)
                      T1jjbj(j,j2,b2,j1) = Tjjbj(j,j1,b2,j2)
@@ -6255,9 +6250,8 @@
 #bgn_frac
                      execute set_aces3_vars  one    one
                      execute apply_frac_occs T1jjbj two
-                     execute apply_frac_occs T3bj   two
+#                     execute apply_frac_occs T3bj   two
 #end_frac
-
                      Tbjbj(b,j,b2,j2)  = T1jjbj(j,j2,b2,j1)*T3bj(b,j1) 
                      PREPARE T2new_bb(b,j,b2,j2) += Tbjbj(b,j,b2,j2) 
 #
@@ -6284,9 +6278,8 @@
 #bgn_frac
                      execute set_aces3_vars  zer    one
                      execute apply_frac_occs T2qqqq one
-                     execute apply_frac_occs Tbj    one
+#                     execute apply_frac_occs Tbj    one
 #end_frac
-#
                      T1jjbj(j2,j1,b2,j) = T2qqqq(b1,j1,b2,j)*Tbj(b1,j2)   
                      Tjjbj(j2,j1,b2,j) += T1jjbj(j2,j1,b2,j)
                      T2jjbj(j2,j,b2,j1) = Tjjbj(j2,j1,b2,j)
@@ -6300,9 +6293,8 @@
 #bgn_frac
                      execute set_aces3_vars  one    one
                      execute apply_frac_occs T2jjbj two
-                     execute apply_frac_occs T1bj   two
+#                     execute apply_frac_occs T1bj   two
 #end_frac
-
                      Tbjbj(b,j,b2,j2)  = T2jjbj(j2,j,b2,j1)*T1bj(b,j1) 
                      T1bjbj(b2,j2,b,j) = Tbjbj(b,j,b2,j2)  
                      PREPARE T2new_bb(b,j,b2,j2) += Tbjbj(b,j,b2,j2) 
@@ -6331,9 +6323,8 @@
 #bgn_frac
                      execute set_aces3_vars  zer    one
                      execute apply_frac_occs T2qqqq one
-                     execute apply_frac_occs T2bj   one
+#                     execute apply_frac_occs T2bj   one
 #end_frac
-#
                      T1jjbj(j2,j1,b2,j) = T2qqqq(b1,j1,b2,j)*Tbj(b1,j2)   
                      Tjjbj(j2,j1,b2,j) += T1jjbj(j2,j1,b2,j)
                      T2jjbj(j2,j,b2,j1) = Tjjbj(j2,j1,b2,j)
@@ -6347,9 +6338,8 @@
 #bgn_frac
                      execute set_aces3_vars  one    one
                      execute apply_frac_occs T2jjbj two
-                     execute apply_frac_occs T1bj   two
+#                     execute apply_frac_occs T1bj   two
 #end_frac
-
                      Tbjbj(b,j,b2,j2) = T2jjbj(j2,j,b2,j1)*T1bj(b,j1) 
                      PREPARE T2new_bb(b,j,b2,j2) += Tbjbj(b,j,b2,j2) 
 #
@@ -6383,9 +6373,8 @@
 #bgn_frac
                       execute set_aces3_vars  zer   one
                       execute apply_frac_occs Tqqqq one
-                      execute apply_frac_occs Tbj   one
+#                      execute apply_frac_occs Tbj   one
 #end_frac
-#
                      T1jjbj(j,j1,b,j2) = Tqqqq(b1,b,j1,j2)*Tbj(b1,j)
                      Tjjbj(j,j1,b,j2) += T1jjbj(j,j1,b,j2)
                      T2jjbj(j,j2,b,j1) = Tjjbj(j,j1,b,j2)
@@ -6399,7 +6388,7 @@
 #bgn_frac
                      execute set_aces3_vars   one   one
                      execute apply_frac_occs T2jjbj two
-                     execute apply_frac_occs T1bj   two
+#                     execute apply_frac_occs T1bj   two
 #end_frac
                      Tbjbj(b,j,b2,j2)  = T2jjbj(j,j2,b,j1)*T1bj(b2,j1) 
                      T1bjbj(b2,j2,b,j) = Tbjbj(b,j,b2,j2)  
@@ -6429,9 +6418,8 @@
 #bgn_frac
                      execute set_aces3_vars  zer   one
                      execute apply_frac_occs Tqqqq one
-                     execute apply_frac_occs Tbj   one
+#                     execute apply_frac_occs Tbj   one
 #end_frac
-#
                      T1jjbj(j,j1,b,j2) = Tqqqq(b1,b,j1,j2)*Tbj(b1,j)   
                      Tjjbj(j,j1,b,j2) += T1jjbj(j,j1,b,j2)
                      T2jjbj(j,j2,b,j1) = Tjjbj(j,j1,b,j2)
@@ -6445,7 +6433,7 @@
 #bgn_frac
                      execute set_aces3_vars  one    one
                      execute apply_frac_occs T2jjbj two
-                     execute apply_frac_occs T1bj   two
+#                     execute apply_frac_occs T1bj   two
 #end_frac
 
                      Tbjbj(b,j,b2,j2)  = T2jjbj(j,j2,b,j1)*T1bj(b2,j1) 
@@ -6473,9 +6461,8 @@
 #bgn_frac
                      execute set_aces3_vars  zer   one
                      execute apply_frac_occs Tqqqq one
-                     execute apply_frac_occs Tbj   one
+#                     execute apply_frac_occs Tbj   one
 #end_frac
-#
                      T1jjbj(j2,j1,b,j) = Tqqqq(b1,j1,b,j)*Tbj(b1,j2)   
                      Tjjbj(j2,j1,b,j) += T1jjbj(j2,j1,b,j)
                      T2jjbj(j2,j,b,j1) = Tjjbj(j2,j1,b,j)
@@ -6489,9 +6476,8 @@
 #bgn_frac
                      execute set_aces3_vars  one    one
                      execute apply_frac_occs T2jjbj two
-                     execute apply_frac_occs T1bj   two
+#                     execute apply_frac_occs T1bj   two
 #end_frac
-
                      Tbjbj(b,j,b2,j2) = T2jjbj(j2,j,b,j1)*T1bj(b2,j1) 
                      Tbjbj(b,j,b2,j2) *= -1.0 
                      T1bjbj(b2,j2,b,j) = Tbjbj(b,j,b2,j2)  
@@ -6520,7 +6506,7 @@
 #bgn_frac
                      execute set_aces3_vars  zer   one
                      execute apply_frac_occs Tqqqq one
-                     execute apply_frac_occs Tbj   one
+#                     execute apply_frac_occs Tbj   one
 #end_frac
                      T1jjbj(j2,j1,b,j) = Tqqqq(b1,j1,b,j)*Tbj(b1,j2)   
                      Tjjbj(j2,j1,b,j) += T1jjbj(j2,j1,b,j)
@@ -6535,7 +6521,7 @@
 #bgn_frac
                      execute set_aces3_vars  one    one
                      execute apply_frac_occs T2jjbj two
-                     execute apply_frac_occs T1bj   two
+#                     execute apply_frac_occs T1bj   two
 #end_frac
 
                      Tbjbj(b,j,b2,j2) = T2jjbj(j2,j,b,j1)*T1bj(b2,j1) 
@@ -6588,7 +6574,7 @@
 #bgn_frac
               execute set_aces3_vars  zer   one
               execute apply_frac_occs Taibj one
-              execute apply_frac_occs Tai   one
+#              execute apply_frac_occs Tai   one
 #end_frac
               T1iibj(i1,i,b,j) = Taibj(a1,i1,b,j)*Tai(a1,i)
               Tiibj(i1,i,b,j) += T1iibj(i1,i,b,j) 
@@ -6605,9 +6591,8 @@
 #bgn_frac
               execute set_aces3_vars  zer   one
               execute apply_frac_occs Tbibi one
-              execute apply_frac_occs Tbj   one
+#              execute apply_frac_occs Tbj   one
 #end_frac
-#
               T1iibj(i1,i,b,j) = Tbibi(b1,b,i1,i)*Tbj(b1,j)  
               Tiibj(i1,i,b,j) += T1iibj(i1,i,b,j) 
 #
@@ -6620,7 +6605,7 @@
 #bgn_frac
              execute set_aces3_vars  one   one
              execute apply_frac_occs Tiibj one
-             execute apply_frac_occs T1ai  two
+#             execute apply_frac_occs T1ai  two
 #end_frac
 
              Taibj(a,i,b,j)  = Tiibj(i1,i,b,j)*T1ai(a,i1) 
@@ -6645,9 +6630,8 @@
 #bgn_frac
                execute set_aces3_vars  zer    one
                execute apply_frac_occs T1aajj one
-               execute apply_frac_occs Tai    one
+#               execute apply_frac_occs Tai    one
 #end_frac
-#
                T1jjai(j1,j,a,i) = T1aajj(a1,a,j1,j)*Tai(a1,i) 
                Tjjai(j1,j,a,i) += T1jjai(j1,j,a,i)
 #
@@ -6663,9 +6647,8 @@
 #bgn_frac
                execute set_aces3_vars  zer   one
                execute apply_frac_occs Tiajb two
-               execute apply_frac_occs T1bj  one
+#               execute apply_frac_occs T1bj  one
 #end_frac
-
                T1jjai(j1,j,a,i) = Tiajb(i,a,j1,b1)*T1bj(b1,j) 
                Tjjai(j1,j,a,i) += T1jjai(j1,j,a,i) 
 #
@@ -6678,9 +6661,8 @@
 #bgn_frac
                execute set_aces3_vars  one   one
                execute apply_frac_occs Tjjai one
-               execute apply_frac_occs T2bj  two 
+#               execute apply_frac_occs T2bj  two 
 #end_frac
-
                Taibj(a,i,b,j)  = Tjjai(j1,j,a,i)* T2bj(b,j1) 
                Taibj(a,i,b,j) *= -1.0 
                PREPARE T2new_ab(a,i,b,j) += Taibj(a,i,b,j) 
@@ -6733,7 +6715,7 @@
 #bgn_frac
                execute set_aces3_vars  one   one
                execute apply_frac_occs Tiibj two
-               execute apply_frac_occs Tbj   two 
+#               execute apply_frac_occs Tbj   two 
 #end_frac
 
                T1iiqq(i1,i,b,b1) = Tiibj(i,i1,b1,j1)*Tbj(b,j1)
@@ -6759,7 +6741,7 @@
 #bgn_frac
             execute set_aces3_vars  zer   one
             execute apply_frac_occs Tbbia two
-            execute apply_frac_occs Tai   one
+#            execute apply_frac_occs Tai   one
 #end_frac
 
             T1iiqq(i1,i,b,b1) = Tbbia(b1,b,i1,a1)*Tai(a1,i)
@@ -6789,7 +6771,7 @@
 #bgn_frac
             execute set_aces3_vars  pzo    two
             execute apply_frac_occs T1biaj two
-            execute apply_frac_occs T2biaj two
+#            execute apply_frac_occs T2biaj two
 #end_frac
             T1iiqq(i1,i,b,b1) = T1biaj(b1,i1,a1,j1)*T2biaj(b,i,a1,j1)
             Tiiqq(i1,i,b,b1) -= T1iiqq(i1,i,b,b1)
@@ -6821,7 +6803,7 @@
 #bgn_frac
                execute set_aces3_vars  oz    two
                execute apply_frac_occs Tajib two
-               execute apply_frac_occs Tbiib two
+#               execute apply_frac_occs Tbiib two
 #end_frac
 
                T1aibj(a,i,b,j)  = Tajib(a,j,i1,b1)*Tbiib(b,i,i1,b1)
@@ -6872,9 +6854,8 @@
 #bgn_frac
                execute set_aces3_vars  one   one
                execute apply_frac_occs Tiajj one
-               execute apply_frac_occs Tai   two
+#               execute apply_frac_occs Tai   two
 #end_frac
-
                T1jjpp(j1,j,a,a1) = Tiajj(i1,a1,j,j1)*Tai(a,i1)
                Tjjpp(j1,j,a,a1) -= T1jjpp(j1,j,a,a1)
             ENDDO i1
@@ -6897,9 +6878,8 @@
 #bgn_frac
             execute set_aces3_vars  zer   one
             execute apply_frac_occs Taajb two 
-            execute apply_frac_occs Tbj   one
+#            execute apply_frac_occs Tbj   one
 #end_frac
-
             T1jjpp(j1,j,a,a1) = Taajb(a1,a,j1,b1)*Tbj(b1,j)
             PREPARE Wjjaa(j1,j,a,a1) += T1jjpp(j1,j,a,a1)
          ENDDO j
@@ -6927,9 +6907,8 @@
 #bgn_frac
                execute set_aces3_vars  pzo    two
                execute apply_frac_occs T1ajbi two 
-               execute apply_frac_occs Tajbi  two
+#               execute apply_frac_occs Tajbi  two
 #end_frac
-
                T1jjpp(j1,j,a,a1) = T1ajbi(a,j,b1,i1)*Tajbi(a1,j1,b1,i1) 
                Tjjpp(j1,j,a,a1) -= T1jjpp(j1,j,a,a1)
 #
@@ -6962,9 +6941,8 @@
 #gn_frac
                execute set_aces3_vars  Pzo   two
                execute apply_frac_occs Tbiaj two 
-               execute apply_frac_occs Tajaj two
+#               execute apply_frac_occs Tajaj two
 #end_frac
-
                T1aibj(a,i,b,j) = Tbiaj(b,i,a1,j1)*Tajaj(a1,j1,a,j)
                Taibj(a,i,b,j) -= T1aibj(a,i,b,j)
 #
@@ -7096,9 +7074,9 @@
            T2aiai(a,i,a1,i1) -= T3aiai(a,i,a1,i1)
            T2aiai(a,i,a1,i1) += T2old_aa(a,i,a1,i1)
 #bgn_frac
-           execute set_aces3_vars  pzozo  four
-           execute apply_frac_occs T1aiai four
-           execute apply_frac_occs T2aiai four
+#           execute set_aces3_vars  pzozo  four
+#           execute apply_frac_occs T1aiai four
+#           execute apply_frac_occs T2aiai four
 #end_frac
 #
            etemp = T1aiai(a,i,a1,i1)*T2aiai(a,i,a1,i1) 
@@ -7127,9 +7105,9 @@
            T2bjbj(b,j,b1,j1) -= T3bjbj(b,j,b1,j1)
            T2bjbj(b,j,b1,j1) += T2old_bb(b,j,b1,j1)
 #bgn_frac
-           execute set_aces3_vars  pzozo  four
-           execute apply_frac_occs T1bjbj four
-           execute apply_frac_occs T2bjbj four
+#           execute set_aces3_vars  pzozo  four
+#           execute apply_frac_occs T1bjbj four
+#           execute apply_frac_occs T2bjbj four
 #end_frac
            etemp = T1bjbj(b,j,b1,j1)*T2bjbj(b,j,b1,j1) 
            etemp = 0.25*etemp 
@@ -7152,9 +7130,9 @@
            Taibj(a,i,b,j)  = t1a_old(a,i)^t1b_old(b,j) 
            Taibj(a,i,b,j) += T2old_ab(a,i,b,j)  
 #bgn_frac
-           execute set_aces3_vars  pzozo  four
-           execute apply_frac_occs T1aibj four
-           execute apply_frac_occs Taibj  four
+#           execute set_aces3_vars  pzozo  four
+#           execute apply_frac_occs T1aibj four
+#           execute apply_frac_occs Taibj  four
 #end_frac
            etemp = Taibj(a,i,b,j)*T1aibj(a,i,b,j) 
            esumab += etemp 
@@ -7257,10 +7235,10 @@
             Taiai(a,i,a1,i1)         = T2new_aa(a,i,a1,i1)
             T1aiai(a,i,a1,i1)        = T2old_aa(a,i,a1,i1)
 #bgn_frac
-            execute energy_denominator_frac_occs Taiai
             execute set_aces3_vars  pzozo  four
             execute apply_frac_occs Taiai  four
-            execute apply_frac_occs T1aiai four
+#            execute apply_frac_occs T1aiai four
+            execute energy_denominator_frac_occs Taiai
 #end_frac
 #            execute energy_denominator Taiai
 
@@ -7297,10 +7275,10 @@
             Tbjbj(b,j,b1,j1)         = T2new_bb(b,j,b1,j1)
             T1bjbj(b,j,b1,j1)        = T2old_bb(b,j,b1,j1)
 #bgn_frac
-            execute energy_denominator_frac_occs Tbjbj
             execute set_aces3_vars  pzozo  four
             execute apply_frac_occs Tbjbj  four
-            execute apply_frac_occs T1bjbj four
+#            execute apply_frac_occs T1bjbj four
+            execute energy_denominator_frac_occs Tbjbj
 #end_frac
 #            execute energy_denominator Tbjbj
 
@@ -7336,10 +7314,10 @@
             Taibj(a,i,b,j)           = T2new_ab(a,i,b,j)
             T1aibj(a,i,b,j)          = T2old_ab(a,i,b,j)
 #bgn_frac
-            execute energy_denominator_frac_occs Taibj
             execute set_aces3_vars  pzozo  four
             execute apply_frac_occs Taibj  four
-            execute apply_frac_occs T1aibj four
+#            execute apply_frac_occs T1aibj four
+            execute energy_denominator_frac_occs Taibj
 #end_frac
 #            execute energy_denominator Taibj
 
@@ -7374,11 +7352,12 @@
             REQUEST                    T2new_aa(a,i,a1,i1) a 
             Taiai(a,i,a1,i1)         = T2new_aa(a,i,a1,i1)
 #bgn_frac
-            execute energy_denominator_frac_occs Taiai
             execute set_aces3_vars  pzozo  four
             execute apply_frac_occs Taiai  four
+            execute energy_denominator_frac_occs Taiai
 #end_frac
 #            execute energy_denominator Taiai
+
             PREPARE T2old_aa(a,i,a1,i1)  = Taiai(a,i,a1,i1)
       ENDPARDO a, a1, i, i1
 #
@@ -7387,9 +7366,9 @@
             REQUEST                    T2new_bb(b,j,b1,j1) b 
             Tbjbj(b,j,b1,j1)         = T2new_bb(b,j,b1,j1)
 #bgn_frac
-            execute energy_denominator_frac_occs Tbjbj
             execute set_aces3_vars  pzozo  four
             execute apply_frac_occs Tbjbj  four
+            execute energy_denominator_frac_occs Tbjbj
 #end_frac
 #            execute energy_denominator Tbjbj
 
@@ -7402,11 +7381,12 @@
             REQUEST                    T2new_ab(a,i,b,j) a
             Taibj(a,i,b,j)           = T2new_ab(a,i,b,j)
 #bgn_frac
-            execute energy_denominator_frac_occs Taibj
             execute set_aces3_vars  pzozo  four
             execute apply_frac_occs Taibj  four
+            execute energy_denominator_frac_occs Taibj
 #end_frac
 #            execute energy_denominator Taibj
+
             PREPARE T2old_ab(a,i,b,j)    = Taibj(a,i,b,j)
 #
       ENDPARDO b, a, j, i
@@ -7420,7 +7400,7 @@
 #
       PROC UPDATET1 
 #     ------------- 
-#
+
       PARDO a, i 
 #
             GET                t1a_new(a,i) 
@@ -7428,10 +7408,10 @@
             tai(a,i)         = t1a_new(a,i) 
             t1ai(a,i)        = t1a_old(a,i) 
 #bgn_frac
-            execute energy_denominator_frac_occs tai 
             execute set_aces3_vars  pzo  two
-            execute apply_frac_occs t1ai two
+#            execute apply_frac_occs t1ai two
             execute apply_frac_occs tai  two
+            execute energy_denominator_frac_occs tai 
 #end_frac
 #            execute energy_denominator tai 
             PUT t1a_old(a,i) = tai(a,i) 
@@ -7466,10 +7446,10 @@
             tbj(b,j)         = t1b_new(b,j) 
             t1bj(b,j)        = t1b_old(b,j) 
 #bgn_frac
-            execute energy_denominator_frac_occs tbj
             execute set_aces3_vars  pzo  two
-            execute apply_frac_occs t1bj two
+#            execute apply_frac_occs t1bj two
             execute apply_frac_occs tbj  two
+            execute energy_denominator_frac_occs tbj
 #end_frac
 #            execute energy_denominator tbj
 
@@ -10378,7 +10358,7 @@
       ozoz  = 1010.0
       ooz   = 110.0
       oo    = 11.0
-      pzoz  = 0.01
+      pzoz  = 0.010
       pzoo  = 0.011
       pozo  = 0.101
       ozz   = 100.0

@@ -380,10 +380,16 @@ const ASV_nl_t ASV_nl[] =
 {/*264*/ "ICIS_TOL",    "CIS_TOL#"     ,h_ICHAR_f_int,  5,     "tol"},
 {/*265*/ "ROOT_SEARCH", "ROOT_SE#"     ,h_ICHAR_handle, 0,      ""},
 {/*266*/ "SELECT_VECS", "SEL_VEC#"     ,h_ICHAR_handle, 0,      ""},
-{/*267*/ "SUB_SPACE",   "SUB_SPACE"    ,h_ICHAR_handle, 0,      ""},
-{/*268*/ "",   ""     ,0,0,""},
+{/*267*/ "SUB_SPACE",   "SUB_SPACE"    ,h_ICHAR_handle, 1,      ""},
+{/*268*/ "IF12STG",     "STGF12"       ,h_ICHAR_handle, 0,      ""},
+{/*269*/ "IF12GAMMA",   "F12GAMMA"     ,h_ICHAR_string, 1.5,    ""},
+{/*270*/ "IFREQ",       "FREQ"         ,h_ICHAR_string, 0.0,    ""},
+{/*271*/ "IIMFREQ",     "IMFREQ"       ,h_ICHAR_string, 0.0,    ""},
+{/*272*/ "ISPINORB",    "SPINORB_CC"   ,h_ICHAR_handle, 0,      ""},
+{/*273*/ "ISOC_ROOTS",  "SOC_ROOTS"    ,h_ICHAR_f_int,  0,      ""},
+{/*274*/ "",   ""     ,0,0,""},
 }; /* end ASV_nl[] definition */
-#define MAX_ASVs 268
+#define MAX_ASVs 274
 
 /******************************************************************************/
 
@@ -1138,6 +1144,20 @@ void asv_handle_proc(const f_int * index, const char * value)
             break;
         }
 
+        case h_IOPPAR_stgf12:
+        {
+            const char *handles[] = { "OFF", "ON", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_spinorb_cc:
+        {
+            const char *handles[] = { "OFF", "ON", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
         case h_IOPPAR_prp_ints:
         {
             const char *handles[] = { "PARTIAL", "FULL", "" };
@@ -1753,5 +1773,13 @@ int cli_prog(int argc, char *argv[])
     F77_NAME(asv_dump,ASV_DUMP)();
 
     return 0;
+}
+
+/*-------------Transformation of the string to double precision----------------*/
+void
+F77_NAME(str2d,STR2D) (const char* sgamma, double *dgamma)
+{
+*dgamma = atof(sgamma);
+return 0;
 }
 

@@ -80,7 +80,7 @@ c      subroutine beta()
       logical company_defined
       logical is_file_open
       logical*8 l8false
-      integer jodadone
+      integer jodadone,natm,natmx
       logical first
       logical instab
       logical really_ignore_dropmo
@@ -96,7 +96,8 @@ c      subroutine beta()
       double precision vnn, diff
       double precision dbuf(1)
 
-      integer i1, i2
+      integer i1, i2, srt
+C      integer istg,n_ipeomcc_roots(1),n_eaeomcc_roots(1),ispinorb
       integer*8 mpierr8, nprocs8
 
       integer iflags(100),iflags2(500)
@@ -1039,10 +1040,80 @@ c--------------------------------------------------------------------------
         if (write_hess)
      *   call handle_hessian(dbuf(ix_hess), dbuf(ix_nnhess),
      *                       ncenters, write_hess)
+c----------------------------------------------------------------
+C
+C Explicitly correlated contribution
+c
+            if(int(stgf12) .eq.1) then
+            write(6,"(a,a)")'Explicitly-correlated calculation',
+     &           'with slater-type  geminals will be performed'
+            write(6,"(a,F10.5)") 'Exponential parameter is',F12GAMMA
+            if(.not.dryrun) then
+            write(6,"(a,a,a)") 'Construction of the grid for',
+     &                         ' calculation of 3 and 4-electron',
+     &                         ' integrals'
+c-----------------------------------------
+      call getrec (20, 'JOBARC', 'NATOMS  ', 1, natmx)
+      call getrec (20, 'JOBARC', 'NREALATM', 1, natm)
+      write(6,"(a,i4,a,a,i4)") 'natmx=',natmx,'---->','natm=',natm
+c-----------------------------------------
+              call F12_grid()
+              endif
+            endif
 
+            if(Int(stgf12) .eq.0) then
+            write(6,"(2a)")  'Lame calculation - slater-type',
+     &                      ' geminals are not included'
+            if(.not.dryrun.and.iflags(18).ne.0) then
+            write(6,"(2a)") 'Construction of the grid for',
+     &                      ' of properties integrals'
+            call F12_grid()
+            endif
+            endif
 c---------------------------------------------------------------------------
+c---------------------------------------------------------------------------
+c           call igetrec(1,'JOBARC','IFLAGS2',500,iflags2)
+c--------------IP-EOM-CCSD------------------------------------------
+            if(iflags2(114).eq.5) then
+            write(6,"(a,1x,i4,a)") ' IP-EOMCC calculation:',
+     &                           int(ip_roots),' roots requested'
+            endif
+c--------------EA-EOM-CCSD------------------------------------------
+           if(iflags2(101).eq.5) then
+           write(6,"(a,1x,i4,a)") 'EA-EOMCC calculation:',
+     &                           int(ea_roots),' roots requested'
+           endif
+C--------------EE-EOM-CCSD------------------------------------------
+           if(iflags(87).eq.3) then
+           write(6,"(a,1x,i4,a)") 'EE-EOMCC calculation:',
+     &                           int(eom_roots),' roots requested'
+           endif
+
+C-----------check for EA-EOM(F12)-CCSD(F12) calculation-------------
+           if(iflags2(101).eq.5.and.stgf12.eq.1) then
+               Write(6,"(a)") "EA-EOM(F12)-CCSD(F12) calculations"
+     &                        " are performed"
+           endif 
+c--------------STEOM-EE---------------------------------------------
+           if(iflags(87).eq.9) then
+           write(6,"(a)") 'STEOM calculation:'
+           write(6,"(I4,a)") int(n_singlets),'singlet roots requested'
+           write(6,"(I4,a)") int(n_triplets),'triplet roots requested'
+           endif
+c---------------dynamic polarizabilities----------------------------
+           IF(FREQ.ne.0.d0) write(6,"(a,F15.7,1x,a)")
+     &     'Dynamic polarizability frequency', FREQ, 'a.u.'
+           IF(IMFREQ.ne.0.d0) write(6,"(a,F15.7,1x,a)")
+     &     'Dynamic polarizability imaginary frequency', IMFREQ, 'a.u.'
+c---------------------Spin-orbit calculations-------------------------------
+           If(Int(spinorb_cc) .gt. 0) then
+           write(6,"(a,a)")
+     &    ' Pauli-Briet Hamiltonian used for treatment of',
+     &    ' relativistic effects'
+           Endif 
+cc---------------------------------------------------------------------------
 c   Write SCFENEG, TOTENERG, GRADIENT, and HESSIAN data to JOBARC.
-c   Clear the dirty flag on JOBARC, and close the JOBARC files.
+cc   Clear the dirty flag on JOBARC, and close the JOBARC files.
 c---------------------------------------------------------------------------
 
             call dputrec(1,'JOBARC', 'SCFENEG', 1, scf_energy)

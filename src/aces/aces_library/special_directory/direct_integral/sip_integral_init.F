@@ -59,7 +59,7 @@ c---------------------------------------------------------------------
 
       logical configure
       logical spherical
-      logical soi, dsh_2p
+      logical soi, dsh_2p, do_f12 
       
       double precision dbuf(1)
       integer ibuf(1)
@@ -225,6 +225,7 @@ C become available.
 
         soi    = .FALSE.
         dsh_2p = .FALSE.
+        do_f12 = .FALSE.
 
         if (g_tensor .eq. 1.0) then
             
@@ -239,6 +240,10 @@ C become available.
         if (spn_orbt .eq. 1.0) then
             soi    = .TRUE.
         Endif
+
+        If (stgf12 .eq. 1.0) then
+            do_f12 = .TRUE.
+        Endif 
 
          if (do_erd_scratch_calc) then
             do_erd_scratch_calc = .false.   ! only 1 time EVER!
@@ -300,8 +305,8 @@ C
      *                          .TRUE.,
      *                          intmax, zmax, me, company_size)  
              
-             else
-                   call erd_scratch_mem_calc(nshells, ivangmom, 
+             else if (do_f12) then
+                   call erd_f12_scratch_mem_calc(nshells, ivangmom, 
      *                          ncfps, npfps,
      *                          atom, dbuf(icoord), dbuf(ialpha),
      *                          dbuf(ipcoeff), ixalpha, ixpcoef,
@@ -309,10 +314,23 @@ C
      *                          spherical, ncenters, 
      *                          calc_2der_integrals,
      *                          intmax, zmax, me, company_size)
-             endif
+             else 
+                   call erd_scratch_mem_calc(nshells, ivangmom,
+     *                          ncfps, npfps,
+     *                          atom, dbuf(icoord), dbuf(ialpha),
+     *                          dbuf(ipcoeff), ixalpha, ixpcoef,
+     *                          ibuf(iccbeg), ibuf(iccend), indx_cc,
+     *                          spherical, ncenters,
+     *                          calc_2der_integrals,
+     *                          intmax, zmax, me, company_size)
+             endif 
       
           endif 
 
+         if(do_f12) then
+             zmax   = zmax*5
+             intmax = intmax*5
+         endif
 c-------------------------------------------------------------------------
 c   Add correction for memory needed in the HRR transformation.
 c-------------------------------------------------------------------------

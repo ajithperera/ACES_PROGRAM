@@ -121,7 +121,7 @@ c---------------------------------------------------------------------------
          Root    = -Root
       Endif 
 
-      Nroots = Eom_roots 
+      Nroots = Ea_roots 
       Ndim   = (n2-n1+1)
       Mdim   = (m2-m1+1)
       Rootp1 = Root 

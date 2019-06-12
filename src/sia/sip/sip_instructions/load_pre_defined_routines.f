@@ -265,6 +265,22 @@ c
       external add_scal2diag,calc_trace,v_nuc_nuc,vccs_change_x
       external write_coefficients,read_coefficients
       external scf_atom_coeff
+C-------------------------------------------------------------------
+      external f12_integrals,f12_c_coef,sip_test,mkexch,get_grid_size,
+     & grid_point_range,f12_2center_moobj,grid_point_weight,int1_setup,
+     & f12_2center_mxobj,f12_2center_myobj,f12_2center_mzobj,
+     & f12_1el_gen,energy_numerator,lindep_remove,frag_index_range,
+     & f12info,so_info,f12_c_ijab_coef,eomeaf12info,eomiproots,
+     & eomearoots,eomchunk,steom_u_inv,steom_gbar,steomroots,
+     & steom_cis_matrix,steom_diag,steom_f12_vact,
+     & steom_f12_vact_select,mksomfex,mksqcvec,steom_so_diag,
+     & steom_matr_nr,steom_matr_so,dipole_scalar,
+     & overdipx,overdipy,overdipz,overquadx,overquady,overquadz,
+     & efgnintx,efgninty,efgnintz,copy24,efgn_setup,freqinfo,
+     & prsolrover,lrootcorr,eom_so_diag_ip,print_eomso_roots,
+     & set_tr_sin,eom_so_diag
+
+
 c--------------------------------------------------------------------
 c Ajith Perera, miscellaneous developments.
 c-------------------------------------------------------------------
@@ -885,18 +901,7 @@ c----------------------------------------------------------------------
       call set_upgrade_flag(dummy)
 c---------------------------------------------------------------------
 c Instructions needed in the CCSD(T) gradient and ecpgradient   
-c-----------------------------------------------------------------------
-c Prakash instructions for delta integrals
-c----------------------------------------------------------------------
-      dummy=load_user_sub('compute_delta_int'//char(0),
-     *                     compute_delta_int)
-      dummy=load_user_sub('print_esr_tensors'//char(0),
-     *                     print_esr_tensors)
-      call set_upgrade_flag(dummy)
-c---------------------------------------------------------------------
-c Instructions needed in the CCSD(T) gradient and ecpgradient   
 c --------------------------------------------------------------------
-c
       dummy = load_user_sub('index_match'//char(0), index_match)
       dummy = load_user_sub('ecp_dercont'//char(0), ecp_dercont)
 c--------------------------------------------------------------------
@@ -910,8 +915,117 @@ c Jason Byrd misc. development additions
 c--------------------------------------------------------------------
       dummy = load_user_sub('sort_fno'//char(0),sort_fno)
       dummy = load_user_sub('dropcore_fno'//char(0),dropcore_fno)
-c--------------------------------------------------------------------
-c
+c-------Explicitly-correlated part-----------------------------------
+      dummy = load_user_sub('sip_test'//char(0),sip_test)
+      dummy = load_user_sub('f12info'//char(0),f12info)
+      dummy = load_user_sub('f12_integrals'//char(0),
+     *                       f12_integrals)
+      dummy = load_user_sub('f12_c_coef'//char(0),
+     *                       f12_c_coef)
+      dummy = load_user_sub('mkexch'//char(0),
+     *                       mkexch)
+      dummy = load_user_sub('get_grid_size'//char(0),
+     *                       get_grid_size)
+      dummy = load_user_sub('grid_point_range'//char(0),
+     *                       grid_point_range)
+      dummy = load_user_sub('f12_2center_moobj'//char(0),
+     *                       f12_2center_moobj)
+      dummy = load_user_sub('f12_2center_mxobj'//char(0),
+     *                       f12_2center_mxobj)
+      dummy = load_user_sub('f12_2center_myobj'//char(0),
+     *                       f12_2center_myobj)
+      dummy = load_user_sub('f12_2center_mzobj'//char(0),
+     *                       f12_2center_mzobj)
+      dummy = load_user_sub('grid_point_weight'//char(0),
+     *                       grid_point_weight)
+      dummy = load_user_sub('int1_setup'//char(0),
+     *                       int1_setup)
+      dummy = load_user_sub('f12_1el_gen'//char(0),
+     *                       f12_1el_gen)
+      dummy = load_user_sub('energy_numerator'//char(0),
+     *                       energy_numerator)
+      dummy = load_user_sub('lindep_remove'//char(0),
+     *                       lindep_remove)
+      dummy = load_user_sub('frag_index_range'//char(0),
+     &                       frag_index_range)
+c---------------F12 properties----------------------------------------
+      dummy = load_user_sub('dipole_scalar'//char(0), 0)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('overdipx'//char(0), 0)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('overdipy'//char(0), 0)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('overdipz'//char(0), 0)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('overquadx'//char(0), 0)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('overquady'//char(0), 0)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('overquadz'//char(0), 0)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('efgnintx'//char(0), 0)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('efgninty'//char(0), 0)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('efgnintz'//char(0), 0)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('copy24'//char(0), 0)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('efgn_setup'//char(0), 0)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('freqinfo'//char(0), 0)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('energy_denominator_freq' // char(0),0)
+      dummy = load_user_sub('diis_setup_im'//char(0), 0)
+      dummy = load_user_sub('compute_diis_im'//char(0), 0)
+      dummy = load_user_sub('energy_denominator_imfreq' // char(0),0)
+c---------------------EOM/STEOM------------------------------------------------
+      dummy = load_user_sub('eomeaf12info'//char(0),eomeaf12info)
+      dummy = load_user_sub('f12_c_ijab_coef'//char(0),f12_c_ijab_coef)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('eomiproots'//char(0),eomiproots)
+      dummy = load_user_sub('eomearoots'//char(0),eomearoots)
+      dummy = load_user_sub('eomchunk'//char(0),eomchunk)
+      dummy = load_user_sub('steom_u_inv'//char(0),steom_u_inv)
+      dummy = load_user_sub('steom_gbar'//char(0),steom_gbar)
+      dummy = load_user_sub('steomroots'//char(0),steomroots)
+      dummy = load_user_sub('steom_cis_matrix'//char(0),
+     &                       steom_cis_matrix)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('steom_diag'//char(0),steom_diag)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('steom_f12_vact'//char(0),steom_f12_vact)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('steom_f12_vact_select'//char(0),
+     &                       steom_f12_vact)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('mksqcvec'//char(0),mksqcvec)
+      dummy = load_user_sub('mksomfex'//char(0),mksomfex)
+      dummy = load_user_sub('steom_so_diag'//char(0),steom_so_diag)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('steom_matr_nr'//char(0),steom_matr_nr)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('steom_matr_so'//char(0),steom_matr_so)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('prsolrover'//char(0),prsolrover)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('lrootcorr'//char(0),lrootcorr)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('eom_so_diag_ip'//char(0),eom_so_diag_ip)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('print_eomso_roots'//char(0),
+     &                       print_eomso_roots)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('eom_so_diag'//char(0),eom_so_diag)
+      call set_upgrade_flag(dummy)
+      dummy = load_user_sub('set_tr_sin'//char(0),set_tr_sin)
+      call set_upgrade_flag(dummy)
+
+c-------------------Angular momentum integrals-----------------------------
+
+      dummy = load_user_sub('so_info'//char(0),so_info)
+
+C----------------------------------------------------------------------
 
       return
       end

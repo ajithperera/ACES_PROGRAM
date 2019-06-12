@@ -424,6 +424,17 @@ C g-tensor: 2-el gauge correction
      *             1,n1,1,n2)
         endif
 
+       if (scalar_table(sind) .eq. 719) then
+          call print_quadrupole_info(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+        endif
+
+       if (scalar_table(sind) .eq. 720) then
+          call print_sec_der(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+        endif
+
+
       endif
 c................... END_prakash......................................       
 
@@ -523,12 +534,16 @@ c---------------------------------------------------------------------------
      *             1,n1,1,n2)
       endif
 c----------------------------------------------------------------------------
-c   EOM-CCSD excitation energy(RHF,UHF) Print Flag = 70,71 (Right)
-c                                                    80,81 (Left)
+c   EOM-CCSD excitation energy(RHF,UHF) Print Flag = 70,71 (Right,triplet)
+c                                                       72 (Right from SOC)
+c                                                    80,81 (Left,triplet)
+C                                                       82 (Left,from SOC) 
 c---------------------------------------------------------------------------
       st_flag = scalar_table(sind)
       if (st_flag .eq. 70.0 .or. st_flag .eq. 71.0 .or. 
-     *    st_flag .eq. 80.0 .or. st_flag .eq. 81.0) then
+     *    st_flag .eq. 79.0 .or. 
+     *    st_flag .eq. 80.0 .or. st_flag .eq. 81.0 .or.
+     *    st_flag .eq. 89) then
           call print_eomccsd_cinfo(x(iarray),scalar_table(sind),
      *             1,n1,1,n2)
       endif
@@ -593,6 +608,17 @@ c---------------------------------------------------------------------------
           call print_ip_ea_einfo(x(iarray),scalar_table(sind),
      *             1,n1,1,n2)
       endif 
+
+c---------------------------------------------------------------------------|
+c     Print out STEOM-CCSD excitation energies                              |
+c---------------------------------------------------------------------------|
+
+      if (scalar_table(sind) .eq. 75.0) then
+          call print_steomcc(x(iarray),scalar_table(sind),
+     *             1,n1,1,n2)
+      endif
+
+
 c----------------------------------------------------------------------------
 c   Warning flags (911:EOM)
 c---------------------------------------------------------------------------
@@ -1540,9 +1566,12 @@ c
       Left_hand  = .False.
       singlet = (Sval .eq. 70 .or. Sval .eq. 80)
       triplet = (Sval .eq. 71 .or. Sval .eq. 81)
+      triplet = (Sval .eq. 79 .or. Sval .eq. 89)
 
-      Right_hand = (Sval .eq. 70 .or. Sval .eq. 71)
-      Left_hand  = (Sval .eq. 80 .or. Sval .eq. 81)
+      Right_hand = (Sval .eq. 70 .or. Sval .eq. 71 .or.
+     +              Sval .eq. 79)
+      Left_hand  = (Sval .eq. 80 .or. Sval .eq. 81 .or.
+     +              Sval .eq. 89)
 
       if (me .eq. 0)then
 
@@ -1572,9 +1601,17 @@ c
             write(66,100) 
             write(66,30) 
             write(66,100) 
+
+            If (Sval .eq. 71 .or. Sval .eq. 81) Then 
+            do i = 1, ieom_roots
+               write(66,20) i, array1(i+12,1), array1(i+12,1)*conv
+            enddo 
+            Elseif (Sval .eq. 79 .or. Sval .eq. 89) Then 
             do i = 1, ieom_roots
                write(66,20) i, array1(i,1), array1(i,1)*conv
             enddo 
+            Endif 
+
             Call Dputrec(20,"JOBARC","EOM_EXET",ieom_roots,Array1(1,1))
             write(66,100) 
 
@@ -1712,7 +1749,10 @@ c
 
       ival = sval
       conv = 27.21138505
-      ieom_roots = eom_roots
+      If (Sval .eq. 41) ieom_roots = ea_roots
+      If (Sval .eq. 42) ieom_roots = ea_roots
+
+
 
       if (me .eq. 0)then
 
@@ -1754,7 +1794,8 @@ c
 
       ival = sval
       conv = 27.21138505
-      ieom_roots = eom_roots
+      If (Sval .eq. 50) ieom_roots = ip_roots
+      If (Sval .eq. 51) ieom_roots = ip_roots
 
       if (me .eq. 0)then
 
@@ -1797,7 +1838,8 @@ c
 
       ival = sval
       conv = 27.21138505
-      ieom_roots = eom_roots
+      If (Sval .eq. 60) ieom_roots = ip_roots
+      If (Sval .eq. 61) ieom_roots = ea_roots
 
       if (me .eq. 0)then
          If (Sval .eq. 60) write(66,10)
@@ -2564,6 +2606,43 @@ C Write the DIPOLE file; Ajith Perera, 12/2014.
 
        Return
        end
+C-------------------------------------------------------------------------
+      subroutine print_quadrupole_info(array1,sval,a1,a2,b1,b2)
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+      integer i, ival, amax, a, a1, a2, b, b1, b2
+      double precision array1(a1:a2,b1:b2),sval
+      open(66,file='summary.out')
+      ival = sval
+
+       if (me .eq. 0)then
+
+
+C Write the DIPOLE file; Ajith Perera, 12/2014.
+         Write(66,*)
+         Write(66,*)
+         write(66,101)
+         write(66,98)
+         write(66,101)
+         write(66,97)
+         write(66,102) array1(1,1), array1(2,2), array1(3,3)
+         Write(66,*)
+         Write(66,*)
+         write(66,101)
+         endif
+
+97    format(17x," X                        Y                      Z")
+98    format(17x, 
+     &       "Correlated (CCSD or MBPT(2) Quadrupole Moments (a.u.)")
+101   format(2x,75('-'))
+102   format(2x,F20.7,4x,F20.7,4x,F20.7)
+
+       Return
+       end
+
+
 C----------------------------------------------------------
 
       subroutine print_lccd_cinfo(array1,sval,a1,a2,b1,b2) 
@@ -2901,5 +2980,105 @@ c
 
       return
       end
+
+      subroutine print_steomcc(array1,sval,a1,a2,b1,b2)
+
+c---------------------------------------------------------------------------
+c
+c 
+c---------------------------------------------------------------------------
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+      include 'daveom.h'
+
+      integer i, j, ival, amax, a, a1, a2, b, b1, b2
+      integer ieom_roots
+      double precision array1(a1:a2,b1:b2), sval, stemp
+      double precision efinal, conv
+      integer n_s_roots,n_t_roots
+              
+ 
+      n_s_roots = n_singlets
+      n_t_roots = n_triplets
+c--------------Singlet Roots-----------------------------------------------
+      IF (RL.eq.1) then
+      if (me .eq. 0)then
+
+      write(66,*) '===================================================='
+      write(66,*) '|           EE-STEOM-CCSD calculation              |'
+      write(66,*) '===================================================='
+      write(66,*) '---------------------------------------------------'
+      write(66,*) '    Number of requested singlet roots',n_s_roots
+      write(66,*) '---------------------------------------------------'
+      do i=1,n_s_roots
+      do j=1,1
+      write(66,*) i,'                      ',array1(i,j),'e.V.'
+      enddo
+      enddo
+      write(66,*) '---------------------------------------------------'
+      endif
+
+
+
+      ENDIF
+
+c--------------Triplet Roots----------------------------------------------- 
+      IF (RL.eq.2) then
+      if (me .eq. 0)then
+      write(66,*) '---------------------------------------------------'
+      write(66,*) '    Number of requested triplet roots',n_t_roots
+      write(66,*) '---------------------------------------------------'
+      do i=1,n_t_roots
+      do j=1,1
+      write(66,*) i,'                      ',array1(i,j),'e.V.'
+      enddo
+      enddo
+      write(66,*) '---------------------------------------------------'
+      endif
+
+
+
+      ENDIF
+
+
+
+      return
+      end
+
+      subroutine print_sec_der(array1,sval,a1,a2,b1,b2)
+c---------------------------------------------------------------------------
+c
+c 
+c---------------------------------------------------------------------------
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
+
+      integer i, j, ival, amax, a, a1, a2, b, b1, b2
+      integer ieom_roots
+      double precision array1(a1:a2,b1:b2), sval, stemp
+      double precision efinal, conv
+
+      if (me .eq. 0)then
+      write(66,*) '===================================================='
+      write(66,*) '|  CCSD energy second derivatives with respect to  |'
+      write(66,*) '|                 external field  (in a.u.)        |'
+      write(66,*) '===================================================='
+
+      write(66,*) 'xx =',array1(1,1)
+      write(66,*) 'xy =',array1(2,1)
+      write(66,*) 'xz =',array1(3,1)
+      write(66,*) 'yy =',array1(4,1)
+      write(66,*) 'yz =',array1(5,1)
+      write(66,*) 'zz =',array1(6,1)
+      write(66,*) '----------------------------------------------------'
+      endif
+
+      return
+      end
+c------------------------------------------------------------------------------
 
 

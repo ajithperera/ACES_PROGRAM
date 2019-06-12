@@ -100,6 +100,7 @@ C  in the file COPYRIGHT.
       logical need_predef(npre_defined)
 
       double precision x(2)
+      double precision not_empty,ddot
       integer double_ratio
       integer nblock_map_table
       integer nw
@@ -343,8 +344,10 @@ c------------------------------------------------------------------------
      *                    damp_end,dkh_order,reference,ee_maxcyc,
      *                    ee_guess,ee_denom,cis_tol,ip_roots, 
      *                    ea_roots,root_search,what_tofollow,
-     *                    sub_space,
-     * 
+     *                    sub_space,stgf12,f12gamma,freq,imfreq,
+     *                    spinorb_cc,soc_roots,ip_calc,ea_calc,
+     *                    n_singlets,n_triplets,
+     *                   
      *                    io_company_id, niocompany, need_predef,
      *                    npre_defined, dryrun)
  
@@ -706,7 +709,6 @@ cPrakash for A-tensor
      *                company_comm, ierr)
 
       endif
-
 cPV 
       if (my_company_rank .eq. 0) then
          print *,'Gradient data:'
@@ -723,6 +725,9 @@ C this should handle all the first order properties.
 C Ajith Perera, 03/2007.
 c 
        If (iflags(18) .gt. 0) then
+       Not_empty=Ddot(Ncenters,A_iso,1,A_iso,1)
+       If (Not_empty .Gt. 0.0D0) Then 
+       call Dputrec(20,"JOBARC","ISO_HPC ",Ncenters,A_iso)
        print  *
        print  *,'-----------------------------------------------------'
         print *,'Final Aiso in a.u. : Prakash'
@@ -773,6 +778,7 @@ cPV.............................................................................
       Write(*,'(A,1x,F10.4)') 'Aiso in MHz       = ',const_Aiso*A_iso(i)
       write(*,*)
       end do
+      Endif 
       Endif
  
 cPrakash end printing

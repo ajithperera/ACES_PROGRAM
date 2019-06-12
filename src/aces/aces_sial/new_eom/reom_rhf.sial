@@ -9274,14 +9274,25 @@
      EOM_MAXCYC       = EE_MAXCYC
      IDENS            = ONE
      EXACT_HY         = ZERO
-     MAX_OVLP         = ONE
-     MIN_ENEG         = ZERO
+     IF ROOT_SEARCH == ZERO
+        MAX_OVLP  = ONE
+        MIN_ENEG  = ZERO
+     ELSE
+        MAX_OVLP  = ZERO
+        MIN_ENEG  = ONE
+     ENDIF
      LOCK_THRES       = 0.001
-     FIRST_VEC        = ONE
-     PREVS_VEC        = ZERO 
+     IF WHAT_TOFOLLOW == ZERO
+        FIRST_VEC = ONE
+        PREVS_VEC = ZERO
+     ELSE
+        FIRST_VEC = ZERO
+        PREVS_VEC = ONE
+     ENDIF
+     LEFT             = ZERO
      LEFT             = ZERO
      RIGHT            = ZERO
-     FRESH_SBSP       = ZERO
+     FRESH_SBSP       = SUB_SPACE
      VERY_SMALL       = EOM_THRES
 
 # The default Guess is CIS, can be switched by proper key-values.

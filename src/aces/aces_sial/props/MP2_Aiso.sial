@@ -1683,9 +1683,10 @@
          ENDDO mu 
       endif 
 #
-      PRINT_TMP = 100.0
-      EXECUTE print_esr_tensors PRINT_TMP
-
+# This printing is wrong. It has been moved to small sial code 
+# call print_2summary.sial.
+#      PRINT_TMP = 100.0
+#      EXECUTE print_esr_tensors PRINT_TMP
 #
 # -----------------------------------------------------------------------------
 #

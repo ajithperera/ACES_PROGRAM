@@ -1,0 +1,24 @@
+                  SIAL PRINT_ESR_2SUMMARY
+#                 ----------------------
+
+     Index Ione = 1, 1
+
+     Scalar Print_flag 
+     Static Dummy(Ione,Ione)
+
+     Print_flag = 100.0
+
+# Main Program
+# ------------
+
+      DO Ione
+         Dummy(Ione,Ione) = 0.0
+      ENDDO Ione
+      execute sip_barrier
+
+      execute print_esr_tensors Print_flag
+
+                  ENDSIAL PRINT_ESR_2SUMMARY
+#                 --------------------------
+
+

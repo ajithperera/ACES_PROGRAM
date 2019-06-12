@@ -136,6 +136,10 @@ c nContAOs : total number of contracted functions
       double precision  spn_orbt,ip_roots,ea_roots,root_search
       double precision  what_tofollow,sub_space 
 
+      double precision  stgf12,f12gamma,freq,imfreq,spinorb_cc
+      double precision  soc_roots,ip_calc,ea_calc
+      double precision  n_singlets,n_triplets 
+
       double precision reg,stabvalue
       double precision EE_ccsd,E4_aaa,E5_aaa,E4_bbb,E5_bbb,E4_aab
       double precision E5_aab,E4_bba,E5_bba,E4_abb,E5_abb
@@ -205,7 +209,10 @@ c nContAOs : total number of contracted functions
      &                     damp_end,dkh_order,spn_orbt,reference,
      &                     ee_maxcyc, ee_guess, ee_denom, cis_tol,
      &                     ip_roots, ea_roots, root_search, 
-     &                     what_tofollow, sub_space, last
+     &                     what_tofollow, sub_space, stgf12,
+     &                     f12gamma, freq, imfreq, spinorb_cc,
+     &                     soc_roots, ip_calc, ea_calc, 
+     &                     n_singlets, n_triplets, last
 
       logical managers_are_workers, master_is_worker
  

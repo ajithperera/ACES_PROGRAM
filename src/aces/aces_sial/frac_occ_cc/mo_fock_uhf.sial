@@ -6,6 +6,8 @@
      aoindex lambda = 1, norb
      aoindex sigma  = 1, norb
      index   atoms  = 1, natoms
+     index   NbfnsA = 1, eavirtorb
+     index   NbfnsB = 1, ebvirtorb 
 
      moaindex i = baocc, eaocc
      moaindex i1= baocc, eaocc
@@ -103,7 +105,11 @@
      Temp Tpxt(p,mu)
      temp Tqqt(q,q1)
      temp tqq1(q,q1)
-
+     temp ToccA(nbfnsA)
+     temp ToccB(nbfnsB)
+     temp T1xp(mu,p)
+     temp T1xq(mu,q)
+     temp T1pq(mu,nu)
 
      temp AOINT(mu,nu,lambda,sigma)
 
@@ -119,6 +125,10 @@
      static FSpqb_mi(j,j1)
      static Cpq_a(p,p1)
      static Cpq_b(q,q1)
+     static Ca_temp(mu,p)
+     static Cb_temp(mu,q)
+     static A_occ_nums(NbfnsA)
+     static B_occ_nums(NbfnsB)
 
      distributed Ca_int(mu,p)
      distributed Cb_int(mu,q)
@@ -131,6 +141,10 @@
      distributed Fpq_a(mu,nu)
      distributed Fpq_b(mu,nu)
      distributed Ovlp(mu,nu)
+     distributed Oca(mu,p)
+     distributed Ocb(mu,q)
+     distributed Bca(mu,p)
+     distributed Bcb(mu,q)
 
      distributed Fpqa_ae(a,a1)
      distributed Fpqa_me(i,a)
@@ -170,6 +184,7 @@
      scalar etemp
      scalar v_nuc_nuc
      scalar one
+     scalar zero 
      scalar esuma
      scalar esumb
      scalar suma
@@ -180,27 +195,85 @@
 #     --------------
 
       PARDO mu, nu
-            Tpq(mu,nu)  = 0.0
-            PUT DHF_aa(mu,nu) = Tpq(mu,nu)
-            PUT DHF_bb(mu,nu) = Tpq(mu,nu)
+          Tpq(mu,nu)  = 0.0
+          PUT DHF_aa(mu,nu) = Tpq(mu,nu)
+          PUT DHF_bb(mu,nu) = Tpq(mu,nu)
       ENDPARDO mu, nu
       execute sip_barrier
 
-      PARDO mu, nu, i
+      DO p
+      DO nu
+         Txp(nu,p)     = CA(nu,p)
+         CA_TEMP(nu,p) = Txp(nu,p)
+      ENDDO nu
+      ENDDO p
+
+      DO q
+      DO nu
+         Txq(nu,q)     = CB(nu,q)
+         CB_TEMP(nu,q) = Txq(nu,q)
+      ENDDO nu
+      ENDDO q
+
+      EXECUTE MULT_ARRAY_BYC CA_TEMP A_OCC_NUMS
+      EXECUTE MULT_ARRAY_BYC CB_TEMP B_OCC_NUMS
+      execute sip_barrier
+
+# This is a temporary measure to avoid multplication of two
+# static arrays.
+
+      DO p
+      DO nu
+         Txp(nu,p)     = CA_TEMP(nu,p)
+         T1xp(nu,p)    = CA(nu,p)
+         PUT OCA(nu,p) = Txp(nu,p)
+         PUT BCA(nu,p) = T1xp(nu,p)
+      ENDDO nu
+      ENDDO p
+
+      DO q
+      DO nu
+         Txq(nu,q)     = CB_TEMP(nu,q)
+         T1xq(nu,q)    = CB(nu,q)
+         PUT OCB(nu,q) = Txq(nu,q)
+         PUT BCB(nu,q) = T1xq(nu,q)
+      ENDDO nu
+      ENDDO q
+      execute sip_barrier
+
+      PARDO mu, nu
+
+            Tpq(mu,nu) = 0.0
 #
-            Txi(nu,i)       = ca_new(nu,i)
-            Tpq(mu,nu)      = ca_new(mu,i)*Txi(nu,i)
-            PUT DHF_aa(mu,nu) +=Tpq(mu,nu)
+# alpha component first
+# ---------------------
+
+            DO p
+               GET OCA(nu,p)
+               GET BCA(mu,p)
+               Txp(nu,p)   = OCA(nu,p)
+               T1xp(mu,p)  = BCA(mu,p)
+               T1pq(mu,nu) = Txp(nu,p) * T1xp(mu,p)
+               Tpq(mu,nu) += T1pq(mu,nu)
+            ENDDO p
+            PUT Dhf_aa(mu,nu) = Tpq(mu,nu)
 #
-      ENDPARDO mu, nu, i
-#
-      PARDO mu, nu, j
-#
-            Txj(nu,j)       = cb_new(nu,j)
-            Tpq(mu,nu)      = cb_new(mu,j)*Txj(nu,j)
-            PUT DHF_bb(mu,nu) +=Tpq(mu,nu)
-#
-      ENDPARDO mu, nu, j
+# beta component next
+# -------------------
+
+           Tpq(mu,nu) = 0.0
+
+            DO q
+               GET OCB(nu,q)
+               GET BCB(mu,q)
+               Txq(nu,q)   = OCB(nu,q)
+               T1xq(mu,q)  = BCB(mu,q)
+               T1pq(mu,nu) = Txq(nu,q) * T1xq(mu,q)
+               Tpq(mu,nu) += T1pq(mu,nu)
+            ENDDO q
+
+            PUT Dhf_bb(mu,nu) = Tpq(mu,nu)
+      ENDPARDO mu, nu
 
       execute sip_barrier
 
@@ -981,7 +1054,8 @@
 
 #----------------Main program-------------------
 
-     One = 1.0
+     One  = 1.0
+     Zero = 0.0
      EXECUTE SERVER_BARRIER 
 
      CREATE Fpq_a
@@ -998,7 +1072,10 @@
      CREATE Denai
      CREATE Denbj
      CREATE OVLP
-
+     CREATE OCA
+     CREATE OCB
+     CREATE BCA
+     CREATE BCB
      execute sip_barrier 
 #
 # Copy Ca/Cb to Ca_new and Cb_new
@@ -1038,8 +1115,20 @@
            PUT OVLP(mu,nu) = Txx(mu,nu)
       ENDPARDO mu, nu
 
+      DO nbfnsA
+          ToccA(nbfnsA) = 0.0
+          A_OCC_NUMS (nbfnsA) = ToccA(nbfnsA)
+      ENDDO nbfnsA
+
+      DO nbfnsB
+          ToccB(nbfnsB) = 0.0
+          B_OCC_NUMS (nbfnsB) = ToccB(nbfnsB)
+      ENDDO nbfnsB
+
       execute sip_barrier
 
+      EXECUTE GET_INIT_OCCUPATION A_OCC_NUMS ZERO
+      EXECUTE GET_INIT_OCCUPATION B_OCC_NUMS ONE
       CALL FORM_DENS
       CALL BUILT_NEW_AO_FOCK
       CALL HF_ENERGY

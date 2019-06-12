@@ -73,10 +73,12 @@
                Dxx(mu,nu) -= DHFb(mu,nu)
                execute compute_delta_int Dxx(mu,nu) 
          ENDPARDO mu, nu
-#
-    PRINT_TMP = 100.0
-    EXECUTE print_esr_tensors PRINT_TMP
-#
+
+# This printing is wrong. It has been moved to small sial code 
+# call print_2summary.sial.
+#    PRINT_TMP = 100.0
+#    EXECUTE print_esr_tensors PRINT_TMP
+
     ENDPROC CALC_Atens
    
 
@@ -92,7 +94,6 @@
          execute sip_barrier
          delete dHFa
          delete dHFb
-
 #-----------------------------------------
      ENDSIAL HF_Aiso          
 

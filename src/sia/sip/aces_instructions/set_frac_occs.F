@@ -101,9 +101,12 @@ C
       include 'parallel_info.h'
       include 'int_gen_parms.h'
       include 'frac_occ_vars.h'
+      include 'proto_events.h'
+      include 'mpif.h'
 
       Integer i,j,k,l,i1,i2,j1,j2
-      Integer Lda,Ldb,Ndim,Nocc
+      Integer Lda,Ldb,Ndim,Nocc,Ierr 
+      integer company_comm, pst_get_company_comm,master,pst_get_master
       Logical Found 
 
       Double Precision Data(i1:i2,j1:j2)
@@ -152,12 +155,15 @@ C
 C Use this call to load the fractional occupation numbers to the 
 C Occ_nums varible. At the moment this is in a common block (and
 C need to put on to heap.
+     
+      Master = Pst_get_master()
 
+      If (Me .Eq. Master) Then
       Call Get_external_occnums(Occ_numsa,Occ_numsb,Nbasis,Found,
      +                          Me)
    
       If (.Not. Found) Then
-         If (me .eq. 0) Then
+CSSS         If (me .eq. 0) Then
          Write(6,"(2a)")  "               ************Warning*********",
      +                                   "*******"
          Write(6,"(3a)") " The fractional occupation number file",
@@ -165,7 +171,7 @@ C need to put on to heap.
          Write(6,"(a)")  " integer occupations are ussed!"
          Write(6,"(2a)")  "               ************Warning*********",
      +                                   "*******"
-         Endif 
+CSS         Endif 
 
          Nocc = 0
          do i=1, Nalpha_occupied
@@ -187,13 +193,20 @@ C need to put on to heap.
             Occ_numsb(j) = 0.0D0
          Enddo
       Endif 
+      Endif 
+ 
+      Company_comm = Pst_get_company_comm(me)
+      Call Mpi_bcast(Occ_numsa,Nalpha_occupied,Mpi_double_precision,
+     +               Master,Company_comm,Ierr)
+      Call Mpi_bcast(Occ_numsb,Nbeta_occupied,Mpi_double_precision,
+     +               Master,Company_comm,Ierr)
 
 C#ifdef _DEBUG_LVL0
       If (me .eq.0) then
       Write(6,"(a)") "The Occ_number arrays"
       
-      Write(6,"(6F4.1)") (Occ_numsa(i),i=1, Nbasis)
-      Write(6,"(6F4.1)") (Occ_numsb(i),i=1, Nbasis)
+      Write(6,"(6F7.4)") (Occ_numsa(i),i=1, Nbasis)
+      Write(6,"(6F7.4)") (Occ_numsb(i),i=1, Nbasis)
       endif 
 C#endif 
 

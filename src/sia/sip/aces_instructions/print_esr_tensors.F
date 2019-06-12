@@ -56,6 +56,7 @@ cPV......................................................
        double precision Eight_pi_by_3,C_light,M_pe,const_Aiso
 cPv.......................................................
 
+       call Dgetrec(20,"JOBARC","ISO_HPC ",Ncenters,A_iso)
        Open(Unit=66,File="summary.out")
 
        write(66,*)
