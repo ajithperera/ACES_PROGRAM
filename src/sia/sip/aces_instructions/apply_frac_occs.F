@@ -398,10 +398,6 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
                If (BAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(a))*
      +                                            Occ_numsa(i)
             Elseif (VV_type) Then  
-
-C               if (me .eq.0) write(6,"(a,F10.5)") "I am on left",
-C     +                       (Done-Occ_numsa(a))*(Done-Occ_numsa(i))
-
                If (AAL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                           (Done-Occ_numsa(i))
                If (BBL) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(a))*
@@ -440,9 +436,6 @@ C     +                       (Done-Occ_numsa(a))*(Done-Occ_numsa(i))
                If (BAR) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*
      +                                            Occ_numsa(j)
             Elseif (VV_type) Then 
-C               if (me .eq.0) write(6,"(a,F10.5)") "I am on right", 
-C     +            (Done-Occ_numsa(b))*(Done-Occ_numsa(j))
-
                If (AAR) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsa(b))*
      +                                           (Done-Occ_numsa(j))
                If (BBR) x(a,i,b,j) =  x(a,i,b,j)*(Done-Occ_numsb(b))*

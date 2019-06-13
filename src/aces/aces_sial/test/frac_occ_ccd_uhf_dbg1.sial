@@ -3314,8 +3314,8 @@
          request T2new_aa(a,i,a1,i1) i1
          Taiai(a,i,a1,i1) = T2new_aa(a,i,a1,i1)
 #bgn_frac
-#         execute set_aces3_vars  pzozo  four
-#         execute apply_frac_occs Taiai  four
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taiai  four
 #end_frac
          tmp = Taiai(a,i,a1,i1)*Taiai(a,i,a1,i1)
          suma += tmp
@@ -3543,8 +3543,8 @@
          request T2NEW_bb(b,j,b1,j1) j1
          tbjbj(b,j,b1,j1) = T2NEW_bb(b,j,b1,j1)
 #bgn_frac
-#         execute set_aces3_vars  pzozo  four
-#         execute apply_frac_occs Tbjbj  four
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Tbjbj  four
 #end_frac
          tmp = tbjbj(b,j,b1,j1)*tbjbj(b,j,b1,j1)
          suma += tmp
@@ -6308,8 +6308,8 @@
          request T2new_aa(a,i,a1,i1) i1
          Taiai(a,i,a1,i1)=T2new_aa(a,i,a1,i1)
 #bgn_frac
-#         execute set_aces3_vars  pzozo  four
-#         execute apply_frac_occs Taiai  four
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taiai  four
 #end_frac
          tmp = Taiai(a,i,a1,i1)*Taiai(a,i,a1,i1)
          suma += tmp
@@ -6325,6 +6325,25 @@
       PROC T2BBS2 
 #     ----------- 
 #
+#bgn_debug
+     execute server_barrier
+     suma =0.0
+     esuma=0.0
+     PARDO b, j, b1, j1
+         request T2NEW_bb(b,j,b1,j1) j1
+         tbjbj(b,j,b1,j1)=T2NEW_bb(b,j,b1,j1)
+#bgn_frac
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Tbjbj  four
+#end_frac
+         tmp = tbjbj(b,j,b1,j1)*tbjbj(b,j,b1,j1)
+         suma += tmp
+     ENDPARDO b, j, b1, j1
+     execute server_barrier
+     collective esuma += suma
+     execute print_scalar esuma
+#end_debug
+
       PARDO j1, b2, j2 
 #
             DO j 
@@ -6478,7 +6497,7 @@
 #bgn_frac
                      execute set_aces3_vars  zer    one
 #                     execute apply_frac_occs T2qqqq one
-                     execute apply_frac_occs T2bj   one
+                     execute apply_frac_occs Tbj   one
 #end_frac
                      T1jjbj(j2,j1,b2,j) = T2qqqq(b1,j1,b2,j)*Tbj(b1,j2)   
                      Tjjbj(j2,j1,b2,j) += T1jjbj(j2,j1,b2,j)
@@ -6505,7 +6524,25 @@
            ENDDO j 
 #
       ENDPARDO j1, b2, j2 
-#
+#bgn_debug
+     execute server_barrier
+     suma =0.0
+     esuma=0.0
+     PARDO b, j, b1, j1
+         request T2NEW_bb(b,j,b1,j1) j1
+         tbjbj(b,j,b1,j1)=T2NEW_bb(b,j,b1,j1)
+#bgn_frac
+#         execute set_aces3_vars  pzozo  four
+#         execute apply_frac_occs Tbjbj  four
+#end_frac
+         tmp = tbjbj(b,j,b1,j1)*tbjbj(b,j,b1,j1)
+         suma += tmp
+     ENDPARDO b, j, b1, j1
+     execute server_barrier
+     collective esuma += suma
+     execute print_scalar esuma
+#end_debug
+
       PARDO j1, b, j2 
 #
             DO j 
@@ -6698,8 +6735,8 @@
          request T2NEW_bb(b,j,b1,j1) j1
          tbjbj(b,j,b1,j1)=T2NEW_bb(b,j,b1,j1)
 #bgn_frac
-#         execute set_aces3_vars  pzozo  four
-#         execute apply_frac_occs Tbjbj  four
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Tbjbj  four
 #end_frac
          tmp = tbjbj(b,j,b1,j1)*tbjbj(b,j,b1,j1)
          suma += tmp
@@ -6833,8 +6870,8 @@
          request T2NEW_AB(a,i,b,j) j
          Taibj(a,i,b,j)=T2NEW_AB(a,i,b,j)
 #bgn_frac
-#         execute set_aces3_vars  pzozo  four
-#         execute apply_frac_occs Taibj  four
+         execute set_aces3_vars  pzozo  four
+         execute apply_frac_occs Taibj  four
 #end_frac
          tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
          suma += tmp
@@ -10815,29 +10852,6 @@
 
       etemp = 26.0
       execute print_rel_info etemp pinf
-      esum = 0.0
-      DO a
-      DO i
-         GET t1a_old(a,i)
-         etemp = t1a_old(a,i) * t1a_old(a,i)
-         esum += etemp 
-         execute maxamp_print t1a_old
-      ENDDO i
-      ENDDO a
-      execute print_scalar esum
-
-      etemp = 27.0
-      esum = 0.0
-      execute print_rel_info etemp pinf
-      DO b
-      DO j
-         GET t1b_old(b,j)
-         etemp = t1b_old(b,j) * t1b_old(b,j)
-         esum += etemp 
-         execute maxamp_print t1b_old
-      ENDDO j
-      ENDDO b
-      execute print_scalar esum
 #
       CALL WRITE_2EL   
 #

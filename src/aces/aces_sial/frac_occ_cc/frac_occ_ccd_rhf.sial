@@ -786,13 +786,12 @@
            Taibj(a,i,b,j)            = Vpiqj(b,j,a,i)
            Taibj(a,i,b,j)           += Vpiqj(a,i,b,j)
            Taibj(a,i,b,j)           *= 0.5  
-#bgn_debug
-# Turn on this to check the second-order energy
+#bgn_frac
            execute set_aces3_vars  pzozo four
            execute apply_frac_occs Taibj four
            execute energy_denominator_frac_occs Taibj
 #           execute energy_denominator  Taibj
-#endif 
+#end_frac 
            PREPARE T2old_ab(a,i,b,j) = Taibj(a,i,b,j)  
            PREPARE D0aibj(a,i,b,j)   = Taibj(a,i,b,j)  
 #
@@ -957,8 +956,8 @@
                Tia(i,a1)   = Fpqa_me(i,a1)
 #bgn_frac
                execute set_aces3_vars  one one 
-               execute apply_frac_occs tai two 
-#               execute apply_frac_occs tia one
+#               execute apply_frac_occs tai two 
+               execute apply_frac_occs tia one
 #end_frac 
                T1aa(a,a1)  = Tai(a,i) * Tia(i,a1)
                Taa(a,a1)  += T1aa(a,a1)
@@ -1086,8 +1085,8 @@
               T1aibj(a,i,b,j) = Taup_ab(a,i,b,j) 
 #bgn_frac
                execute set_aces3_vars  ozo    thr
-               execute apply_frac_occs tibja  one
-#               execute apply_frac_occs t1aibj two
+#               execute apply_frac_occs tibja  one
+               execute apply_frac_occs t1aibj two
 #end_frac
               Taa(a,a1)        =  T1aibj(a,i,b,j)*Tibja(i,b,j,a1)
               Taa(a,a1)       *= -1.0
@@ -1122,22 +1121,22 @@
 #
       ENDPARDO a1, i, a2, i1
 #bgn_debug
-     execute sip_barrier 
-     suma =0.0
-     esuma=0.0
-     PARDO a,a1
-           get fae_a(a,a1)
-           taa(a,a1) = fae_a(a,a1)
-#bgn_frac
-           execute set_aces3_vars  zer two
-           execute apply_frac_occs taa two
-#end_frac
-           tmp = taa(a,a1) * taa(a,a1)
-           suma += tmp
-     ENDPARDO a, a1
-     execute sip_barrier
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute sip_barrier 
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a,a1
+#           get fae_a(a,a1)
+#           taa(a,a1) = fae_a(a,a1)
+##bgn_frac
+##           execute set_aces3_vars  zer two
+##           execute apply_frac_occs taa two
+##end_frac
+#           tmp = taa(a,a1) * taa(a,a1)
+#           suma += tmp
+#     ENDPARDO a, a1
+#     execute sip_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
 #
       ENDPROC FAEA
@@ -1263,22 +1262,22 @@
 #
       ENDPARDO i, a 
 #bgn_debug
-     execute sip_barrier 
-     suma =0.0
-     esuma=0.0
-     PARDO i,a
-           get fme_a(i,a)
-           tme_a(i,a) =  fme_a(i,a)
-#bgn_frac 
-           execute set_aces3_vars  oz    two
-           execute apply_frac_occs tme_a two
-#end_frac
-           tmp = tme_a(i,a)*tme_a(i,a)
-           suma += tmp
-     ENDPARDO i,a
-     execute sip_barrier
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute sip_barrier 
+#     suma =0.0
+#     esuma=0.0
+#     PARDO i,a
+#           get fme_a(i,a)
+#           tme_a(i,a) =  fme_a(i,a)
+##bgn_frac 
+##           execute set_aces3_vars  oz    two
+##           execute apply_frac_occs tme_a two
+##end_frac
+#           tmp = tme_a(i,a)*tme_a(i,a)
+#           suma += tmp
+#     ENDPARDO i,a
+#     execute sip_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
 
 # 
@@ -1360,8 +1359,8 @@
                   Tiaai(i1,a2,a,i2) = Taiai(a2,i1,a,i2)
 #bgn_frac
                   execute set_aces3_vars  pzzo  thr
-                  execute apply_frac_occs Taaii one 
-#                  execute apply_frac_occs Tiaai two
+#                  execute apply_frac_occs Taaii one 
+                  execute apply_frac_occs Tiaai two
 #end_frac
                   Tii(i1,i)        = Tiaai(i1,a2,a,i2)*Taaii(a2,a,i2,i)
                   Tii(i1,i)       *= 0.5 
@@ -1415,22 +1414,22 @@
 #
       ENDPARDO i1, i, b, j  
 #bgn_debug
-     execute sip_barrier 
-     suma =0.0
-     esuma=0.0
-     PARDO i,i1
-           get fmi_a(i,i1) 
-           tii(i,i1) = fmi_a(i,i1)
-#bgn_frac
-           execute set_aces3_vars  one  two
-           execute apply_frac_occs tii two
-#end_frac
-           tmp =  tii(i,i1) * tii(i,i1)
-           suma += tmp
-     ENDPARDO i,i1
-     execute sip_barrier
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute sip_barrier 
+#     suma =0.0
+#     esuma=0.0
+#     PARDO i,i1
+#           get fmi_a(i,i1) 
+#           tii(i,i1) = fmi_a(i,i1)
+##bgn_frac
+##           execute set_aces3_vars  one  two
+##           execute apply_frac_occs tii two
+##end_frac
+#           tmp =  tii(i,i1) * tii(i,i1)
+#           suma += tmp
+#     ENDPARDO i,i1
+#     execute sip_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
 #
       ENDPROC FMIA
@@ -1638,22 +1637,22 @@
 #
       ENDPARDO a1, i1, i2
 #bgn_debug
-     execute sip_barrier
-     suma =0.0
-     esuma=0.0
-     PARDO a, i
-           get t1a_new(a,i)
-           tai(a,i) = t1a_new(a,i)
-#bgn_frac
-           execute set_aces3_vars  pzo two
-           execute apply_frac_occs tai two
-#end_frac
-           tmp = tai(a,i)*tai(a,i)
-           suma += tmp
-     ENDPARDO a, i
-     execute sip_barrier
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute sip_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a, i
+#           get t1a_new(a,i)
+#           tai(a,i) = t1a_new(a,i)
+##bgn_frac
+#           execute set_aces3_vars  pzo two
+#           execute apply_frac_occs tai two
+##end_frac
+#           tmp = tai(a,i)*tai(a,i)
+#           suma += tmp
+#     ENDPARDO a, i
+#     execute sip_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
 
 #
@@ -1693,22 +1692,22 @@
 #
       ENDPARDO a1, b, j
 #bgn_debug
-     execute sip_barrier
-     suma =0.0
-     esuma=0.0
-     PARDO a, i
-           get t1a_new(a,i)
-           tai(a,i) = t1a_new(a,i)
-#bgn_frac
-           execute set_aces3_vars  pzo two
-           execute apply_frac_occs tai two
-#end_frac
-           tmp = tai(a,i) * tai(a,i)
-           suma += tmp
-     ENDPARDO a, i
-     execute sip_barrier
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute sip_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a, i
+#           get t1a_new(a,i)
+#           tai(a,i) = t1a_new(a,i)
+##bgn_frac
+##           execute set_aces3_vars  pzo two
+##           execute apply_frac_occs tai two
+##end_frac
+#           tmp = tai(a,i) * tai(a,i)
+#           suma += tmp
+#     ENDPARDO a, i
+#     execute sip_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
 
 #
@@ -1747,22 +1746,22 @@
 #
       ENDPARDO b, j, i1
 #bgn_debug
-     execute sip_barrier
-     suma =0.0
-     esuma=0.0
-     PARDO a, i
-           get t1a_new(a,i)
-           tai(a,i) = t1a_new(a,i)
-#bgn_frac
-           execute set_aces3_vars  pzo two
-           execute apply_frac_occs tai two
-#end_frac
-           tmp = tai(a,i)  * tai(a,i) 
-           suma += tmp
-     ENDPARDO a, i
-     execute sip_barrier
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute sip_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a, i
+#           get t1a_new(a,i)
+#           tai(a,i) = t1a_new(a,i)
+##bgn_frac
+#           execute set_aces3_vars  pzo two
+#           execute apply_frac_occs tai two
+##end_frac
+#           tmp = tai(a,i)  * tai(a,i) 
+#           suma += tmp
+#     ENDPARDO a, i
+#     execute sip_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
 #
       ENDPROC T1ANEW 
@@ -1824,8 +1823,8 @@
             Tijab(i,j,a,b) = Taibj(a,i,b,j)
 #bgn_frac
             execute set_aces3_vars  zer   two
-            execute apply_frac_occs Tabij one
-#            execute apply_frac_occs Tijab two
+#            execute apply_frac_occs Tabij one
+            execute apply_frac_occs Tijab two
 #end_frac
             Tiijj(i1,i,j1,j)         = Tijab(i,j,a,b)*Tabij(a,b,i1,j1)
             Tiijj(i1,i,j1,j)        *= 0.5
@@ -1864,22 +1863,22 @@
       execute sip_barrier
       delete Wminj_ab
 #bgn_debug
-     execute server_barrier 
-     suma =0.0
-     esuma=0.0
-     PARDO a,i,b,j
-           request T2new_ab(a,i,b,j) j
-           taibj(a,i,b,j) = T2new_ab(a,i,b,j) 
-#bgn_frac
-           execute set_aces3_vars  pzozo  four
-           execute apply_frac_occs Taibj  four 
-#end_frac
-           tmp = taibj(a,i,b,j) * taibj(a,i,b,j)
-           suma += tmp
-     ENDPARDO a,i,b,j
-     execute server_barrier 
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute server_barrier 
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a,i,b,j
+#           request T2new_ab(a,i,b,j) j
+#           taibj(a,i,b,j) = T2new_ab(a,i,b,j) 
+##bgn_frac
+##           execute set_aces3_vars  pzozo  four
+##           execute apply_frac_occs Taibj  four 
+##end_frac
+#           tmp = taibj(a,i,b,j) * taibj(a,i,b,j)
+#           suma += tmp
+#     ENDPARDO a,i,b,j
+#     execute server_barrier 
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
 #
       ENDPROC WminjAB
@@ -1976,8 +1975,8 @@
 
 #bgn_frac
                   execute set_aces3_vars  zer    one
-                  execute apply_frac_occs Tmp_aa two
-#                  execute apply_frac_occs T2aibj one
+#                  execute apply_frac_occs Tmp_aa two
+                  execute apply_frac_occs T2aibj one
 #end_frac
                   T1aibj(a,i,b,j) = Tmp_aa(a,a1)*T2aibj(a1,i,b,j)  
                   Taibj(a,i,b,j) += T1aibj(a,i,b,j) 
@@ -1996,22 +1995,22 @@
       ENDPARDO i, b, j 
 
 #bgn_debug
-     execute server_barrier
-     suma =0.0
-     esuma=0.0
-     PARDO a,i,b,j
-           request T2new_ab(a,i,b,j) j
-           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
-#bgn_frac
-           execute set_aces3_vars  pzozo  four
-           execute apply_frac_occs Taibj  four
-#end_frac
-           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
-           suma += tmp
-     ENDPARDO a,i,b,j
-     execute server_barrier
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute server_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a,i,b,j
+#           request T2new_ab(a,i,b,j) j
+#           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
+##bgn_frac
+##           execute set_aces3_vars  pzozo  four
+##           execute apply_frac_occs Taibj  four
+##end_frac
+#           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+#           suma += tmp
+#     ENDPARDO a,i,b,j
+#     execute server_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
 
       PARDO a, b, j 
@@ -2102,22 +2101,22 @@
 #
       ENDPARDO a, b, j 
 #bgn_debug
-     execute server_barrier
-     suma =0.0
-     esuma=0.0
-     PARDO a,i,b,j
-           request T2new_ab(a,i,b,j) j
-           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
-#bgn_frac
-           execute set_aces3_vars  pzozo  four
-           execute apply_frac_occs Taibj  four
-#end_frac
-           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
-           suma += tmp
-     ENDPARDO a,i,b,j
-     execute server_barrier
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute server_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a,i,b,j
+#           request T2new_ab(a,i,b,j) j
+#           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
+##bgn_frac
+##           execute set_aces3_vars  pzozo  four
+##           execute apply_frac_occs Taibj  four
+##end_frac
+#           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+#           suma += tmp
+#     ENDPARDO a,i,b,j
+#     execute server_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
 #
       ENDPROC T2NEWAB    
@@ -2305,22 +2304,22 @@
      execute sip_barrier  
      delete t1a_ax 
 #bgn_debug
-     execute server_barrier
-     suma =0.0
-     esuma=0.0
-     PARDO a,i,b,j
-           request T2new_ab(a,i,b,j) j
-           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
-#bgn_frac
-           execute set_aces3_vars  pzozo  four
-           execute apply_frac_occs Taibj  four
-#end_frac
-           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
-           suma += tmp
-     ENDPARDO a,i,b,j
-     execute server_barrier
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute server_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a,i,b,j
+#           request T2new_ab(a,i,b,j) j
+#           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
+##bgn_frac
+##           execute set_aces3_vars  pzozo  four
+##           execute apply_frac_occs Taibj  four
+##end_frac
+#           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+#           suma += tmp
+#     ENDPARDO a,i,b,j
+#     execute server_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
 #
 #    ------------------------------------------------------------------------ 
@@ -2383,8 +2382,8 @@
                T1iiii(i1,j1,i,j) = Tiiii(i1,i,j1,j)
 #bgn_frac
                execute set_aces3_vars  one    two
-               execute apply_frac_occs Tabij  two
-#               execute apply_frac_occs T1iiii one
+#               execute apply_frac_occs Tabij  two
+               execute apply_frac_occs T1iiii one
 #end_frac
 
                Taibj(a,i,b,j)             = Tabij(a,b,i1,j1)*T1iiii(i1,j1,i,j)
@@ -2398,22 +2397,22 @@
       execute sip_barrier 
       delete Wminj_ab 
 #bgn_debug
-     execute server_barrier
-     suma =0.0
-     esuma=0.0
-     PARDO a,i,b,j
-           request T2new_ab(a,i,b,j) j
-           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
-#bgn_frac
-           execute set_aces3_vars  pzozo  four
-           execute apply_frac_occs Taibj  four
-#end_frac
-           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
-           suma += tmp
-     ENDPARDO a,i,b,j
-     execute server_barrier
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute server_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a,i,b,j
+#           request T2new_ab(a,i,b,j) j
+#           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
+##bgn_frac
+##           execute set_aces3_vars  pzozo  four
+##           execute apply_frac_occs Taibj  four
+##end_frac
+#           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+#           suma += tmp
+#     ENDPARDO a,i,b,j
+#     execute server_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
 #
       ENDPROC WAEBFAB 
@@ -2495,8 +2494,8 @@
             Taiai(a1,i1,a2,i2) = VSpipi(a1,i1,a2,i2)
 #bgn_frac
             execute set_aces3_vars  pzo    two
-            execute apply_frac_occs T2aiai one
-#            execute apply_frac_occs Taiai  two
+#            execute apply_frac_occs T2aiai one
+            execute apply_frac_occs Taiai  two
 #end_frac
 
             T3aiai(a1,i1,a,i)           = Taiai(a1,i1,a2,i2)*T2aiai(a2,i2,a,i) 
@@ -2565,22 +2564,22 @@
 #
       ENDPARDO a, i, a1, i1 
 #bgn_debug
-     execute server_barrier
-     suma =0.0
-     esuma=0.0
-     PARDO a,i,b,j
-           request T2new_ab(a,i,b,j) j
-           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
-#bgn_frac
-           execute set_aces3_vars  pzozo  four
-           execute apply_frac_occs Taibj  four
-#end_frac
-           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
-           suma += tmp
-     ENDPARDO a,i,b,j
-     execute server_barrier
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute server_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a,i,b,j
+#           request T2new_ab(a,i,b,j) j
+#           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
+##bgn_frac
+##           execute set_aces3_vars  pzozo  four
+##           execute apply_frac_occs Taibj  four
+##end_frac
+#           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+#           suma += tmp
+#     ENDPARDO a,i,b,j
+#     execute server_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
 #
       ENDPROC WMEBJAA 
@@ -2646,8 +2645,8 @@
 
 #bgn_frac
                   execute set_aces3_vars  pzo    two
-                  execute apply_frac_occs T3bjbj one
-#                  execute apply_frac_occs T1aibj two
+#                  execute apply_frac_occs T3bjbj one
+                  execute apply_frac_occs T1aibj two
 #end_frac
                   Taibj(a,i,b,j)            = T1aibj(a,i,b1,j1)*T3bjbj(b1,j1,b,j)
                   Taibj(a,i,b,j)           *= -1.0  
@@ -2671,8 +2670,8 @@
                T1aiai(a,i,a1,i1) = Taiai(a1,i1,a,i)
 #bgn_frac
                execute set_aces3_vars  pzo    two
-               execute apply_frac_occs Taibj  one
-#               execute apply_frac_occs T1aiai two
+#               execute apply_frac_occs Taibj  one
+               execute apply_frac_occs T1aiai two
 #end_frac
 
                T1aibj(a,i,b,j)           = T1aiai(a,i,a1,i1)*Taibj(a1,i1,b,j)
@@ -2715,22 +2714,22 @@
       ENDPARDO i1, a1, a, i
       execute server_barrier 
 #bgn_debug
-     execute server_barrier
-     suma =0.0
-     esuma=0.0
-     PARDO a,i,b,j
-           request T2new_ab(a,i,b,j) j
-           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
-#bgn_frac
-           execute set_aces3_vars  pzozo  four
-           execute apply_frac_occs Taibj  four
-#end_frac
-           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
-           suma += tmp
-     ENDPARDO a,i,b,j
-     execute server_barrier
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute server_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a,i,b,j
+#           request T2new_ab(a,i,b,j) j
+#           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
+##bgn_frac
+##           execute set_aces3_vars  pzozo  four
+##           execute apply_frac_occs Taibj  four
+##end_frac
+#           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+#           suma += tmp
+#     ENDPARDO a,i,b,j
+#     execute server_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
       ENDPROC WMEBJAB 
 #     ---------------
@@ -2857,22 +2856,22 @@
 #
       ENDPARDO i, j, j1, a  
 #bgn_debug
-     execute server_barrier
-     suma =0.0
-     esuma=0.0
-     PARDO a,i,b,j
-           request T2new_ab(a,i,b,j) j
-           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
-#bgn_frac
-           execute set_aces3_vars  pzozo  four
-           execute apply_frac_occs Taibj  four
-#end_frac
-           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
-           suma += tmp
-     ENDPARDO a,i,b,j
-     execute server_barrier
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute server_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a,i,b,j
+#           request T2new_ab(a,i,b,j) j
+#           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
+##bgn_frac
+##           execute set_aces3_vars  pzozo  four
+##           execute apply_frac_occs Taibj  four
+##end_frac
+#           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+#           suma += tmp
+#     ENDPARDO a,i,b,j
+#     execute server_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
 
       ENDPROC T2ABS2 
@@ -2955,8 +2954,8 @@
 
 #bgn_frac
             execute set_aces3_vars  pzo    two
-            execute apply_frac_occs Tajbi  one
-#            execute apply_frac_occs T1biaj two
+#            execute apply_frac_occs Tajbi  one
+            execute apply_frac_occs T1biaj two
 #end_frac
             Tiiqq(i1,i,b,b1)          = T1biaj(b1,i1,a1,j1)*Tajbi(a1,j1,b,i)
             Tiiqq(i1,i,b,b1)         *= -1.0  
@@ -3001,22 +3000,22 @@
 #
       ENDPARDO a, j, i1, b1
 #bgn_debug
-     execute server_barrier
-     suma =0.0
-     esuma=0.0
-     PARDO a,i,b,j
-           request T2new_ab(a,i,b,j) j
-           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
-#bgn_frac
-           execute set_aces3_vars  pzozo  four
-           execute apply_frac_occs Taibj  four
-#end_frac
-           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
-           suma += tmp
-     ENDPARDO a,i,b,j
-     execute server_barrier
-     collective esuma += suma
-     execute print_scalar esuma
+#     execute server_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO a,i,b,j
+#           request T2new_ab(a,i,b,j) j
+#           taibj(a,i,b,j) = T2new_ab(a,i,b,j)
+##bgn_frac
+##           execute set_aces3_vars  pzozo  four
+##           execute apply_frac_occs Taibj  four
+##end_frac
+#           tmp = Taibj(a,i,b,j)*Taibj(a,i,b,j)
+#           suma += tmp
+#     ENDPARDO a,i,b,j
+#     execute server_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
 #end_debug
 #
       ENDPROC WMJBEab
@@ -3047,42 +3046,42 @@
      esumab  = 0.0 
      execute server_barrier
 #bgn_debug
-     suma = 0.0
-     sumb = 0.0
-     sumc = 0.0
-     esuma= 0.0
-     esumb= 0.0
-     esumc= 0.0
-     PARDO a, b, i, j
-           REQUEST                     T2old_ab(a,i,b,j) j
-           REQUEST                     Vpiqj(a,i,b,j) j
-           REQUEST                     Vpiqj(a,j,b,i) j
-
-           Taibj(a,i,b,j)            = Vpiqj(a,i,b,j)
-           T1aibj(a,i,b,j)           = T2old_ab(a,i,b,j)
-
-           tmp = Taibj(a,i,b,j) * Taibj(a,i,b,j)
-           suma += tmp
-           tmp = T1aibj(a,i,b,j) * T1aibj(a,i,b,j)
-           sumc += tmp
-     ENDPARDO a, b, i, j
-
-     execute sip_barrier
-     collective esuma += suma
-     collective esumc += sumc
-
-     execute print_scalar esuma
-     execute print_scalar esumc
-
-     esuma = 0.0
-     DO a
-     do i
-        get t1a_old(a,i)
-        tmp = t1a_old(a,i) * t1a_old(a,i)
-        esuma += tmp
-     enddo i
-     enddo a
-     execute print_scalar esuma
+#     suma = 0.0
+#     sumb = 0.0
+#     sumc = 0.0
+#     esuma= 0.0
+#     esumb= 0.0
+#     esumc= 0.0
+#     PARDO a, b, i, j
+#           REQUEST                     T2old_ab(a,i,b,j) j
+#           REQUEST                     Vpiqj(a,i,b,j) j
+#           REQUEST                     Vpiqj(a,j,b,i) j
+#
+#           Taibj(a,i,b,j)            = Vpiqj(a,i,b,j)
+#           T1aibj(a,i,b,j)           = T2old_ab(a,i,b,j)
+#
+#           tmp = Taibj(a,i,b,j) * Taibj(a,i,b,j)
+#           suma += tmp
+#           tmp = T1aibj(a,i,b,j) * T1aibj(a,i,b,j)
+#           sumc += tmp
+#     ENDPARDO a, b, i, j
+#
+#     execute sip_barrier
+#     collective esuma += suma
+#     collective esumc += sumc
+#
+#     execute print_scalar esuma
+#     execute print_scalar esumc
+#
+#     esuma = 0.0
+#     DO a
+#     do i
+#        get t1a_old(a,i)
+#        tmp = t1a_old(a,i) * t1a_old(a,i)
+#        esuma += tmp
+#     enddo i
+#     enddo a
+#     execute print_scalar esuma
 #end_debug
 
      PARDO a, b, i, j 
