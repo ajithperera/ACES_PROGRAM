@@ -123,7 +123,7 @@ C
          Call abort_job()
       Endif 
       
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,*) 
       Write(6,"(a)") "Printing from find_near" 
@@ -135,7 +135,7 @@ C#ifdef _DEBUG_LVL0
       Write(6,"(6(1x,F10.5))") ((Roots(i,j),i=1,Ndim2),j=1,Ndim3)
       Write(6,"((a,1x,F10.5))") "Root: ", Root 
       Endif 
-C#endif 
+#endif 
       If (Ndim2 .EQ. 0) Then
 
          Call Dcopy(Ndim1,Eigs_curnt,1,Tmp,1)
@@ -158,13 +158,13 @@ C#endif
          Endif
          Iselect = Ilocmin
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a,a,I2,1X,2F10.5)") "The location and the eigevalue",
      +                            " selected: ", Ilocmin, Vlocmin,
      +                              Root 
       endif
-C#endif
+#endif
 
       Else
 
@@ -190,12 +190,12 @@ C#endif
 
          Iselect = Ilocmin 
 
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a,a,I2,1X,F10.5)") "The location and the eigevalue",
      +                            " selected: ", Ilocmin, Vlocmin
       endif 
-C#endif 
+#endif 
       Endif 
 
       Return

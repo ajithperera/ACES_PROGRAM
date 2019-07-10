@@ -885,17 +885,17 @@
 #               VNORM += VNORM_g3
 #               VNORM += VNORM_g4 
 #--------------------------------------------------------
-               execute print_scalar COEF_R_a
-               execute print_scalar COEF_L_a
-               execute print_scalar COEF_R_b
-               execute print_scalar COEF_L_b
-               execute print_scalar COEF_R_aaa
-               execute print_scalar COEF_L_aaa
-               execute print_scalar COEF_R_bbb
-               execute print_scalar COEF_L_bbb
-               execute print_scalar COEF_R_abb
-               execute print_scalar COEF_L_abb
-
+#               execute print_scalar COEF_R_a
+#               execute print_scalar COEF_L_a
+#               execute print_scalar COEF_R_b
+#               execute print_scalar COEF_L_b
+#               execute print_scalar COEF_R_aaa
+#               execute print_scalar COEF_L_aaa
+#               execute print_scalar COEF_R_bbb
+#               execute print_scalar COEF_L_bbb
+#               execute print_scalar COEF_R_abb
+#               execute print_scalar COEF_L_abb
+#
 #-------------------------------------------------------------- |
                norm_sqr = VNORM
                norm_sqr *= VNORM
@@ -1637,7 +1637,7 @@
 #------------------------------------------------------------------|
 #     Calculate overlap of obtained vectors                        |
 #------------------------------------------------------------------|
-      CALL RLOVER
+#      CALL RLOVER
 #------------------------------------------------------------------|
 
 #---------------------------------------------------------------|

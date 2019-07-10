@@ -29,6 +29,7 @@ c--------------------------------------------------------------------|
       n_tr = n_triplets 
         
       matr_size = 1 + n_si + n_tr*3
+      if(ip_roots.ne.0.and.ea_roots.ne.0) matr_size = n_si + n_tr*3
 c----------------------------------------------------------------
       call do_eom_so_diag(x,bval(1),eval(1),type(1),
      &                      bval(2),eval(2),type(2),
@@ -60,6 +61,7 @@ c-------------Arrays for diagonalization------------------------------
       double complex  VL(msize, msize), VR(msize,msize),
      & eval(msize), WORK(4*msize),UUU,VVV
       double precision RWORK(4*msize),WR4(msize),TTT,TTT1,QQQ,QQQ1
+      double precision Conv 
 c---------------------------------------------------------------------
 
          n_si = n_singlets 
@@ -99,7 +101,7 @@ c-----------Diagonalize complex EOM-SO-CI matrix-----------------------
          call zgeev(JOBVL,JOBVR,msize,CMATR,msize,eval,VL,msize,VR,
      &  msize, WORK, LWORK, RWORK, INFO)
          if(me.eq.0) then 
-          write(6,*) 'Info=',INFO
+C          write(6,*) 'Info=',INFO
           do i = 1, msize
 c          write(6,*) eval(i), '%%%', i 
           WR4(i) = REAL(eval(i))
@@ -174,15 +176,15 @@ c     & zz1, j+jj1,i,"\\\\\\\\\\//////////",j+jj2,III(i)
       enddo  
 c-------------------------------------------------------------------------
             if(me.eq.0) then 
-         write(6,*) '||||||||||||||||||||||||||||||||||||||||||||||' 
+C         write(6,*) '||||||||||||||||||||||||||||||||||||||||||||||' 
 c
          do i = 1,  msize
-         write(6,*) eval(i) 
-         write(6,*) '______________________________________________'
+C         write(6,*) eval(i) 
+C         write(6,*) '______________________________________________'
          do j = 1,  msize
 c         UUU = dcmplx(0.d0,0.d0)
 c         VVV = dcmplx(0.d0,0.d0)
-          write(6,*) VR(j,i), '---->',i,j  
+C          write(6,*) VR(j,i), '---->',i,j  
 
 c         do k = 1, msize   
 c         UUU = UUU + VR(k,i)*CONJG(VR(k,i)) 
@@ -193,32 +195,41 @@ c         write(6,*) UUU,'---->',i,i
 c         write(6,*) VVV,'---->',i,i
 
          enddo
-         write(6,*) '=============================================='  
+C         write(6,*) '=============================================='  
          enddo
 
 c         write(6,*) '||||||||||||||||||||||||||||||||||||||||||||||'
             endif   
-c
-c-------------------------------------------------------------------------        
+C-----------------------------------------------------------------------
+      Conv = 27.21138505
+      If (me .eq. 0)then
+         If(ip_roots.ne.0.and.ea_roots.ne.0) then
+           write(66,10)
+           write(66,100)
+           write(66,30)
+           write(66,100)
+           do i = 1, Msize
+              write(66,20) i, Wr4(i),  Wr4(i)*conv
+           enddo
+           write(66,100)
+         Else
+           write(66,11)
+           write(66,100)
+           write(66,30)
+           write(66,100)
+           do i=1,msize
+              write(66,20) i, (Wr4(i)-WR4(1)),(Wr4(i)-WR4(1))*conv
+           Enddo 
+           write(66,100)
+        Endif 
+      Endif 
 
-        if(me.eq.0) then
-        open(66,file='summary.out',form='FORMATTED',access='APPEND')
+100   format(2x,60('-'))
+10    format(2x,"SOC split STEOM-EOM-CCSD energies")
+11    format(2x,"SOC split EOM-CCSD energies")
+20    format(2x,I4,5x,F20.8,x,F20.8)
+30    format(2x,'ROOT',15x,'Hartree',15x,'eV')
 
-      write(66,*) '----------------------------------------------------'
-      write(66,*) ' Eigenvalues of relativistic EOM-SO-CI matrix '
-      do i=1,msize
-      write(66,*) WR4(i),'----------->',i
-      enddo
-      write(66,*) '-----------------------------------------'
-      do i=1,msize
-      PPP = WR4(i) - WR4(1)
-      PPP = PPP*27.211385
-      write(66,*) PPP,'----------->',i 
-      enddo   
-      write(66,*) '----------------------------------------------------'
-
-        close(66,status='keep')
-        endif 
 c----------------------------------------------------------------------
       return
       end 

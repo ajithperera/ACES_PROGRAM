@@ -461,6 +461,8 @@
       temp tpinf(kiter,kptr1)
       scalar ncount1
       scalar ncount2
+      scalar ncount3
+      scalar ncount4
       scalar one
       scalar two
       scalar five
@@ -5602,7 +5604,13 @@
       F12CALC = 0.0   
       SOCALC = 0.0 
 
-      execute f12info F12CALC
+#      execute f12info F12CALC
+
+
+         IF STGF12 != 0.0
+          F12CALC = 1.0
+         ENDIF
+
       execute so_info SOCALC
       execute print_scalar F12CALC
       execute print_scalar SOCALC     
@@ -5774,7 +5782,10 @@
 #
 # Start iterations
 # ---------------- 
+      ncount3 = 0.0
+
       DO KITER 
+      ncount3 += 1.0
 
       EXECUTE SERVER_BARRIER  
 #
@@ -5948,7 +5959,8 @@
          #if kiter >= 5 
          #   call do_checkpoint
          #endif
-#
+
+
       ENDDO KITER 
 
       IF F12CALC == 1.0
@@ -5963,27 +5975,39 @@
 
       ENDIF
 #------------------------------------------------------------------
+         ncount4 = 0.0 
+         DO jiter
+            ncount4 += 1.0
+            IF ncount4 == ncount3
 
             ncount1 = 0.0
          DO kptr1
             ncount1 = ncount1 + 1.0
             if ncount1 == one
-               tpinf(kiter,kptr1) = ecorrT
-               pinf(kiter,kptr1)  = tpinf(kiter,kptr1)
+               tpinf(jiter,kptr1) = ecorrT
+               pinf(jiter,kptr1)  = tpinf(jiter,kptr1)
             endif
          ENDDO kptr1
+            endif
+         ENDDO jiter
 
+         ncount4 = 0.0
+         DO jiter
+            ncount4 += 1.0
+            IF ncount4 == ncount3   
+ 
             ncount1 = 0.0
          DO kptr1
             ncount1 = ncount1 + 1.0
             if ncount1 == two
                etemp = ecorrT
                etemp+= scfeneg
-               tpinf(kiter,kptr1) = etemp
-               pinf(kiter,kptr1)  = tpinf(kiter,kptr1)
+               tpinf(jiter,kptr1) = etemp
+               pinf(jiter,kptr1)  = tpinf(jiter,kptr1)
             endif
          ENDDO kptr1
-
+         endif
+         ENDDO jiter 
 
 
 #------------------------------------------------------------------

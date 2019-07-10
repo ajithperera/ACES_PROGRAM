@@ -576,7 +576,6 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
 
       endif 
 #endif
-      Return 
       do j = j1,j2
       do b = b1,b2
       do i = i1,i2
@@ -666,6 +665,9 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
      +                                (Done-Occ_numsb(i))*Occ_numsb(b)
                If (ABAL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
      +                                (Done-Occ_numsb(i))*Occ_numsa(b)
+               Write(6,*) (Done-Occ_numsa(a))*
+     +                                (Done-Occ_numsb(i))*Occ_numsa(b)
+
                If (BABL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
      +                                (Done-Occ_numsa(i))*Occ_numsb(b)
                If (BABL) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
@@ -868,13 +870,15 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
       integer a,b,i,j,sind
       double precision eps, epsa, epsb, epsi, epsj
       double precision val,Done
-      Logical OVOV_type,VOVO_type
+      Logical OVOV_type,VOVO_type,OOOO_type,VVVV_type
       Logical AAAA,BBBB,AABB,BBAA,ABAB,BABA
 
       Data Done /1.0D0/
 
       OVOV_type = .False.
       VOVO_type = .False.
+      OOOO_type = .False. 
+      VVVV_type = .False. 
       AAAA      = .FALSE.
       BBBB      = .FALSE.
       AABB      = .FALSE.
@@ -888,8 +892,14 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
       Elseif (VVVV(1) .eq. 1 .and. OOOO(2) .eq. 1 .and. VVVV(3) .eq. 1
      +    .and. OOOO(4) .eq. 1) then
          VOVO_type = .True.
-      Endif
-
+      Elseif (OOOO(1) .eq. 1 .and. OOOO(2) .eq. 1 .and. OOOO(3) .eq. 1
+     +    .and. OOOO(4) .eq. 1) then 
+         OOOO_type = .True.
+      Elseif (VVVV(1) .eq. 1 .and. VVVV(2) .eq. 1 .and. VVVV(3) .eq. 1
+     +    .and. VVVV(4) .eq. 1) then 
+         VVVV_type = .True.
+      Endif 
+         
       AAAA = Atype .eq. Moaindex .and. Itype .eq. Moaindex .and.
      +       Btype .eq. Moaindex .and. Jtype .eq. Moaindex 
 
@@ -961,7 +971,52 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
             If (BABA) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
      +                             Occ_numsa(i)*(Done-Occ_numsb(b))*
      +                             Occ_numsa(j)
-         Endif
+         Elseif (VVVV_type) Then
+             If (AAAA) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                             (Done-Occ_numsa(i))*
+     +                             (Done-Occ_numsa(b))*
+     +                             (Done-Occ_numsa(j))
+            If (BBBB) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                             (Done-Occ_numsb(i))*
+     +                             (Done-Occ_numsb(b))*
+     +                             (Done-Occ_numsb(j))
+            If (AABB) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                             (Done-Occ_numsa(i))*
+     +                             (Done-Occ_numsb(b))*
+     +                             (Done-Occ_numsb(j)) 
+            If (BBAA) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                             (Done-Occ_numsb(i))*
+     +                             (Done-Occ_numsa(b))*
+     +                             (Done-Occ_numsa(j)) 
+            If (ABAB) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsa(a))*
+     +                             (Done-Occ_numsb(i))*
+     +                             (Done-Occ_numsa(b))*
+     +                             (Done-Occ_numsb(j)) 
+            If (BABA) x(a,i,b,j) = x(a,i,b,j)*(Done-Occ_numsb(a))*
+     +                             (Done-Occ_numsa(i))*
+     +                             (Done-Occ_numsb(b))*
+     +                             (Done-Occ_numsa(j)) 
+         Elseif (OOOO_type) Then
+            If (AAAA) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                             Occ_numsa(i)*
+     +                             Occ_numsa(b)*Occ_numsa(j)
+            If (BBBB) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
+     +                             Occ_numsb(i)*
+     +                             Occ_numsb(b)*Occ_numsb(j)
+            If (AABB) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                             Occ_numsa(i)* 
+     +                             Occ_numsb(b)*Occ_numsb(j)
+            If (BBAA) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
+     +                             Occ_numsb(i)*
+     +                             Occ_numsa(b)*Occ_numsa(j)
+            If (ABAB) x(a,i,b,j) = x(a,i,b,j)*Occ_numsa(a)*
+     +                             Occ_numsb(i)*
+     +                             Occ_numsa(b)*Occ_numsb(j)
+            If (BABA) x(a,i,b,j) = x(a,i,b,j)*Occ_numsb(a)*
+     +                             Occ_numsa(i)*
+     +                             Occ_numsb(b)*Occ_numsa(j)
+         Endif 
+         
 
       enddo
       enddo

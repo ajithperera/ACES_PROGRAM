@@ -7146,15 +7146,11 @@
 #
       ENDPARDO a, i, b, j 
 #
-      IF EAEOMF12CALC == ZERO 
-
       PARDO i, a, a1  
             GET                  VCACT1A(a1,i)
             tai(a,i)           = VCACT1A(a1,i)*LHBAR_aa(a,a1)
             PUT VCHACT1A(a,i) += tai(a,i)
       ENDPARDO i, a, a1  
-
-      ENDIF 
 
       PARDO a, i, a1, i1  
 #     
@@ -7450,13 +7446,11 @@
 #
       ENDPARDO a, i, j1
 #
-      IF EAEOMF12CALC == ZERO
       PARDO b, b1, j
           GET                  VCACT1B(b1,j)
           tbj(b,j)           = VCACT1B(b1,j)*LHBAR_bb(b,b1)
           PUT VCHACT1B(b,j) += tbj(b,j)
       ENDPARDO b, b1, j
-      ENDIF 
 
       PARDO b, j, j1 
 #
@@ -7540,13 +7534,11 @@
 #------------Hbar_ij_ab and Hbar_ia_jb F12 terms (AA block)--------------------
 
       PARDO i, a, a1
-          tax(a,a1) = LHBAR_aa (a,a1)
           REQUEST Hbar_ab_eomea(a,a1) a
           GET VCACT1A(a1,i)
           tHbar_ab_eomea(a,a1) = Hbar_ab_eomea(a,a1)
           tHbar_ab_eomea(a,a1) *= -1.0
-          tax(a,a1) += tHbar_ab_eomea(a,a1)
-          tai(a,i)           = VCACT1A(a1,i)*tax(a,a1)
+          tai(a,i)           = VCACT1A(a1,i)*tHbar_ab_eomea(a,a1)
           PUT VCHACT1A(a,i) += tai(a,i)
       ENDPARDO i, a, a1
 
@@ -7573,13 +7565,11 @@
       ENDPARDO a, i, a1, i1
 
       PARDO b, b1, j
-          tbx(b,b1) = LHBAR_bb (b,b1)
           REQUEST Hbar_ab_eomea(b,b1) b
-          GET                  VCACT1B(b1,j)
+          GET     VCACT1B(b1,j)
           tHbar_ab_eomea(b,b1) = Hbar_ab_eomea(b,b1)
           tHbar_ab_eomea(b,b1) *= -1.0
-          tbx(b,b1) += tHbar_ab_eomea(b,b1)
-          tbj(b,j)           = VCACT1B(b1,j)*tbx(b,b1)
+          tbj(b,j)           = VCACT1B(b1,j)*tHbar_ab_eomea(b,b1) 
           PUT VCHACT1B(b,j) += tbj(b,j)
       ENDPARDO b, b1, j
 
@@ -12608,7 +12598,9 @@
      IF EOM_ROOTS !=0.0
         IF STGF12 != 0.0
            EAEOMF12CALC = 1.0
+#bgn_debug
            execute print_scalar EAEOMF12CALC
+#end_debug
         ENDIF
      ENDIF
 #------------------------------------------------------------------------|

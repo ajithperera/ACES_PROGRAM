@@ -224,6 +224,8 @@
       
       Distributed HR2aa_a(a,i,kk1,i1)
       Distributed HR2bb_b(b,j,kk1,j1)
+      Distributed HR2aa_a_I(a,i,kk1,i1)
+      Distributed HR2bb_b_I(b,j,kk1,j1)
       Distributed HR2aa_b(a,i,kk1,j)
       Distributed HR2bb_a(b,j,kk1,i)
 
@@ -682,6 +684,8 @@
       CREATE R2bb_a
       CREATE HR2aa_a
       CREATE HR2bb_b
+      CREATE HR2aa_a_I
+      CREATE HR2bb_b_I
       CREATE HR2aa_b
       CREATE HR2bb_a
       CREATE Y1a
@@ -2782,6 +2786,19 @@
       delete Iax
       delete Ibx
 
+#      PARDO a, i, i1, kk1 
+#          GET HR2aa_a(a,i,kk1,i1)
+#          taixi(a,i,kk1,i1) = HR2aa_a_I(a,i,kk1,i1)
+#          PUT HR2aa_a_I(a,i,kk1,i1) = taixi(a,i,kk1,i1)
+#      ENDPARDO a, i, i1, kk1 
+#
+#      PARDO b, j1, j, kk1
+#          GET HR2bb_b(b,j1,kk1,j)
+#          tbjxj(b,j1,kk1,j) = HR2bb_b_I(b,j1,kk1,j)
+#          PUT HR2bb_b_I(b,j1,kk1,j)  += tbjxj(b,j1,kk1,j)  
+#      ENDPARDO b, j1, j, kk1 
+#      execute sip_barrier
+#
 #      PARDO a, i, i1, kk1
 #
 #            IF i == i1
@@ -7619,7 +7636,7 @@
      ENDIF
      LEFT         = ZERO
      RIGHT        = ZERO
-     FRESH_SBSP   = ZERO
+     FRESH_SBSP   = SUB_SPACE 
      VERY_SMALL   = EOM_THRES
 #
      CALL READ_DATA
@@ -7822,7 +7839,7 @@
 #bgn_debug
 #      execute print_scalar OMEGA 
 #end_debug
-
+         SBSP_COUNT += -1.0
          IF SBSP_COUNT == MAX_SUBSP_DIM
             IF RESIDUAL_NORM  > EOM_THRES
 #

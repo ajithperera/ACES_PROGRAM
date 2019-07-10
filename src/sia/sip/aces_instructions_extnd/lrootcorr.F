@@ -59,7 +59,6 @@ c-----------Search for maximal element in the overlap array-------------
             indmax = j
            endif
        enddo
-      if(me.eq.0) write(6,*) i,'////|||\\\',indmax 
        
       if (dabs(x1(indmax,i)).lt.1d-3) indmax = i 
 

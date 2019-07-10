@@ -7762,7 +7762,11 @@
          EXECUTE SERVER_BARRIER 
 
          ENDDO EOM_CYCLE 
-
+#bgn_debug
+#      execute print_scalar OMEGA
+#      execute print_scalar MAX_SUBSP_DIM
+#      execute print_scalar SBSP_COUNT
+#end_debug
          SBSP_COUNT += MONE 
          IF SBSP_COUNT == MAX_SUBSP_DIM
             IF RESIDUAL_NORM  > EOM_THRES

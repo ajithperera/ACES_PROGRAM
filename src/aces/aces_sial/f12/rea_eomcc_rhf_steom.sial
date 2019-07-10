@@ -209,7 +209,9 @@
       distributed HR1b(b,kk1)
       distributed HR2a_aa(a,kk1,a1,i1)
       distributed HR2a_bb(a,kk1,b,j)
+      distributed HR2a_aa_I(a,kk1,a1,i1)
       distributed HR2b_bb(b,kk1,b1,j1)
+      distributed HR2b_bb_I(b,kk1,b1,j1)
       distributed HR2b_aa(b,kk1,a,i)
       distributed R1a_guess(a)
       distributed R1b_guess(b)
@@ -567,6 +569,8 @@
       SCALAR IDEGEN
       SCALAR DIFF
       SCALAR OMEGA_00
+      SCALAR TWEN 
+      SCALAR CUTOFF
 #-------------------------------------------------------------
       scalar F12CALC
       scalar EAEOMF12CALC
@@ -710,6 +714,8 @@
       CREATE R2b_aa
       CREATE HR2a_aa
       CREATE HR2b_bb
+      CREATE HR2a_aa_I
+      CREATE HR2b_bb_I
       CREATE HR2a_bb
       CREATE HR2b_aa
       CREATE Y1a
@@ -927,17 +933,17 @@
       ENDPARDO a, kk1
 
 #bgn_debug
-      execute sip_barrier
-      tmpa = 0.0
-      do kk1
-      do a
-         get R1a_intmd(a,kk1)
-         Tax(a,kk1) = R1a_intmd(a,kk1)
-         tmp  = Tax(a,kk1) * Tax(a,kk1)
-         tmpa += tmp
-      enddo a
-      enddo kk1
-      execute print_scalar tmpa
+#      execute sip_barrier
+#      tmpa = 0.0
+#      do kk1
+#      do a
+#         get R1a_intmd(a,kk1)
+#         Tax(a,kk1) = R1a_intmd(a,kk1)
+#         tmp  = Tax(a,kk1) * Tax(a,kk1)
+#         tmpa += tmp
+#      enddo a
+#      enddo kk1
+#      execute print_scalar tmpa
 #end_debug
 
       PARDO b, kk1
@@ -2198,74 +2204,123 @@
       delete Xixjj
       delete Xjxii
 
-#bgn_debug
-#      sumab=0.0
-#      tmpa=0.0
-#      tmpb=0.0
-#      suma=0.0
-#      sumb=0.0
-#      pardo a,kk1
-#         get hr1a(a,kk1)
-#         tmp =  hr1a(a,kk1) *  hr1a(a,kk1)
-#         tmpa += tmp
-#      endpardo a,kk1
-#      pardo b,kk1
-#         get hr1b(b,kk1)
-#         tmp = hr1b(b,kk1) * hr1b(b,kk1)
-#         tmpb += tmp
-#      endpardo b,kk1
+#      PARDO a, a1, i
+#          DO kk1
+#             GET HR2a_aa(a,kk1,a1,i) 
+#             taxai(a,kk1,a1,i) = HR2a_aa(a,kk1,a1,i)
+#             PUT HR2a_aa_I(a,kk1,a1,i) = taxai(a,kk1,a1,i)
+#          ENDDO kk1
+#      ENDPARDO a, a1, i
+#      PARDO b, b1, j
+#          DO kk1
+#             GET HR2b_bb(b,kk1,b1,j) 
+#             tbxbj(b,kk1,b1,j) = HR2b_bb(b,kk1,b1,j) 
+#             PUT HR2b_bb_I(b,kk1,b1,j) = tbxbj(b,kk1,b1,j)
+#          ENDDO kk1
+#      ENDPARDO b, b1, j
 #      execute sip_barrier
-#      collective suma +=tmpa
-#      collective sumb +=tmpb
-#      execute print_scalar suma
-#      execute print_scalar sumb
-#      sumab  = suma
-#      sumab += sumb
-#      tmpa =0.0
-#      suma =0.0
-#      pardo a,a1,kk1,i
-#            get  hR2a_aa(a,kk1,a1,i)
-#            tmp = hR2a_aa(a,kk1,a1,i) * hR2a_aa(a,kk1,a1,i)
-#            tmpa += tmp
-#      endpardo a,a1,kk1,i
+#
+#      PARDO a, a1, i, kk1
+#          IF a == a1
+#             GET HR2a_aa_I(a,kk1,a1,i)
+#             taxai(a,kk1,a1,i) = HR2a_aa_I(a,kk1,a1,i)
+#             EXECUTE SYMM_FORCE_A taxai
+#             PUT HR2a_aa(a,kk1,a1,i) = taxai(a,kk1,a1,i)
+#          ENDIF  
+#          IF a < a1
+#             GET HR2a_aa_I(a,kk1,a1,i)
+#             taxai(a,kk1,a1,i) = HR2a_aa_I(a,kk1,a1,i)
+#             t1axai(a1,kk1,a,i) = taxai(a,kk1,a1,i)
+#             t1axai(a1,kk1,a,i) *= MONE 
+#             PUT HR2a_aa(a1,kk1,a,i) = t1axai(a1,kk1,a,i)
+#          ENDIF 
+#      ENDPARDO a, a1, i, kk1
+#
+#      PARDO b, b1, j, kk1
+#          IF b == b1
+#             GET HR2b_bb_I(b,kk1,b1,j) 
+#             tbxbj(b,kk1,b1,j) = HR2b_bb_I(b,kk1,b1,j) 
+#             EXECUTE SYMM_FORCE_A tbxbj
+#             PUT HR2b_bb(b,kk1,b1,j) = tbxbj(b,kk1,b1,j)
+#          ENDIF 
+#          IF b < b1
+#             GET HR2b_bb_I(b,kk1,b1,j) 
+#             tbxbj(b,kk1,b1,j)  = HR2b_bb_I(b,kk1,b1,j) 
+#             t1bxbj(b1,kk1,b,j) = tbxbj(b,kk1,b1,j)
+#             t1bxbj(b1,kk1,b,j)*= MONE 
+#             PUT HR2b_bb(b,kk1,b1,j) = tbxbj(b,kk1,b1,j)
+#          ENDIF 
+#      ENDPARDO b, b1, j, kk1
 #      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo b,b1,j, kk1
-#            get  hR2b_bb(b,kk1,b1,j)
-#            tmp = hR2b_bb(b,kk1,b1,j) * hR2b_bb(b,kk1,b1,j)
-#            tmpa+= tmp
-#      endpardo b,b1,j, kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo a,b,j,kk1
-#            get hR2a_bb(a,kk1,b,j)
-#            tmp = hR2a_bb(a,kk1,b,j) * hR2a_bb(a,kk1,b,j)
-#            tmpa+= tmp
-#      endpardo a,b,j,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      tmpa=0.0
-#      suma=0.0
-#      pardo b,a,i,kk1
-#            get hR2b_aa(b,kk1,a,i)
-#            tmp = hR2b_aa(b,kk1,a,i) * hR2b_aa(b,kk1,a,i)
-#            tmpa+= tmp
-#      endpardo b,a,i,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      execute print_scalar sumab
+        
+##bgn_debug
+      sumab=0.0
+      tmpa=0.0
+      tmpb=0.0
+      suma=0.0
+      sumb=0.0
+      pardo a,kk1
+         get hr1a(a,kk1)
+         tmp =  hr1a(a,kk1) *  hr1a(a,kk1)
+         tmpa += tmp
+      endpardo a,kk1
+      pardo b,kk1
+         get hr1b(b,kk1)
+         tmp = hr1b(b,kk1) * hr1b(b,kk1)
+         tmpb += tmp
+      endpardo b,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      collective sumb +=tmpb
+      execute print_scalar suma
+      execute print_scalar sumb
+      sumab  = suma
+      sumab += sumb
+      tmpa =0.0
+      suma =0.0
+      pardo a,a1,kk1,i
+            get  hR2a_aa(a,kk1,a1,i)
+            tmp = hR2a_aa(a,kk1,a1,i) * hR2a_aa(a,kk1,a1,i)
+            tmpa += tmp
+      endpardo a,a1,kk1,i
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      tmpa =0.0
+      suma =0.0
+      pardo b,b1,j, kk1
+            get  hR2b_bb(b,kk1,b1,j)
+            tmp = hR2b_bb(b,kk1,b1,j) * hR2b_bb(b,kk1,b1,j)
+            tmpa+= tmp
+      endpardo b,b1,j, kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      tmpa =0.0
+      suma =0.0
+      pardo a,b,j,kk1
+            get hR2a_bb(a,kk1,b,j)
+            tmp = hR2a_bb(a,kk1,b,j) * hR2a_bb(a,kk1,b,j)
+            tmpa+= tmp
+      endpardo a,b,j,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      tmpa=0.0
+      suma=0.0
+      pardo b,a,i,kk1
+            get hR2b_aa(b,kk1,a,i)
+            tmp = hR2b_aa(b,kk1,a,i) * hR2b_aa(b,kk1,a,i)
+            tmpa+= tmp
+      endpardo b,a,i,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      execute print_scalar sumab
 #end_debug
 
       ENDPROC HR_MULT
@@ -2303,7 +2358,7 @@
 #
         GET              Ujj(j1,j)
         Sjj(j1,j)      = Ujj(j1,j)
-        execute return_diagonal Sjj Sdjj
+        execute return_diagonal Sjj Sdjj 
         tjj(j1,j)      = Sdjj(j1,j)
         put DDjj(j1,j) = tjj(j1,j)
 #
@@ -2974,6 +3029,7 @@
 #    ----------------
 
      DO MINDEX50
+        OVERLAP_R(MINDEX50) = ZERO 
         DO NINDEX50
            A_MATRIX(MINDEX50,NINDEX50) = 0.0
            DVECTORS(MINDEX50,NINDEX50) = 0.0
@@ -5237,8 +5293,8 @@
         ENDIF
      ENDDO NINDEX50
 
-     EXECUTE SIP_BARRIER
-#
+     EXECUTE SIP_BARRIER 
+
 #bgn_debug
 #      sumab=0.0
 #      tmpa=0.0
@@ -5688,6 +5744,7 @@
      ENDPARDO b, a, kk1, i
 
      EXECUTE SIP_BARRIER
+
 #bgn_debug
 #      execute get_my_rank rank
 #      tmpa=0.0
@@ -5866,8 +5923,9 @@
 
      ENDPROC CHECK_CONVERGENCE
 #    -------------------------
+
     PROC FORM_CORRECTION_VEC
-#    ------------------------
+#   ------------------------
 
 #bgn_debug
 #     execute print_scalar OMEGA
@@ -7623,6 +7681,7 @@
 
      execute print_scalar EOM_TOL
 #------------------------------------------------------
+     EXECUTE GET_MY_RANK RANK
 
      ZERO     = 0.0
      ONE      = 1.0
@@ -7636,21 +7695,35 @@
      THREE    = 3.0
      FORT     = 14.0
      FIFT     = 15.0
+     TWEN     = 20.0
 
      TARGET_ROOTS = EA_ROOTS
      EOM_THRES    = EOM_TOL
      EOM_DENOM    = EE_DENOM
      EOM_MAXCYC   = EE_MAXCYC
      EXACT_HY     = ZERO
-     MAX_OVLP     = ONE
-     MIN_ENEG     = ZERO
+     IF ROOT_SEARCH == ZERO
+        MAX_OVLP  = ONE
+        MIN_ENEG  = ZERO
+     ELSE
+        MAX_OVLP  = ZERO
+        MIN_ENEG  = ONE
+     ENDIF
      LOCK_THRES   = 0.001
-     FIRST_VEC    = ONE
-     PREVS_VEC    = ZERO
+     IF WHAT_TOFOLLOW == ZERO
+        FIRST_VEC = ONE
+        PREVS_VEC = ZERO
+     ELSE
+        FIRST_VEC = ZERO
+        PREVS_VEC = ONE
+     ENDIF
      LEFT         = ZERO
      RIGHT        = ZERO
-     FRESH_SBSP   = ONE
+     FRESH_SBSP   = SUB_SPACE 
      VERY_SMALL   = EOM_THRES
+     CUTOFF       = EOM_THRES
+     CUTOFF      *= 0.001
+     
 
 # Read data from BLOCK_DATA -> to be partially replaced
 # -----------------------------------------------------
@@ -7707,7 +7780,15 @@
 
          IF FRESH_SBSP == ONE
             ITER_COUNT = ZERO
+        ELSE
+# The following logic handles a very rare occurence when the
+# previous subspace of the order 20 (maximum) is used for the
+# next root.
+            IF ITER_COUNT == TWEN
+               ITER_COUNT = ZERO
+            ENDIF
          ENDIF
+
          SBSP_COUNT = ZERO
 
          DO EOM_CYCLE
@@ -7744,7 +7825,12 @@
 #bgn_debug
 #            execute print_static A_MATRIX ITER_COUNT
 #end_debug
-          EXECUTE XGEEV A_MATRIX DVECTORS
+          IF RANK == ZERO 
+             EXECUTE XGEEV A_MATRIX DVECTORS
+          ENDIF 
+          EXECUTE BROADCAST_ARRAY A_MATRIX 
+          EXECUTE BROADCAST_ARRAY DVECTORS
+  
 #bgn_debug
 #            execute print_static A_MATRIX ITER_COUNT
 #end_debug

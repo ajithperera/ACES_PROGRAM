@@ -141,10 +141,10 @@ c------------Information about scalar--------------------------------------
      +              AAAA,BBBB,ABAB
 #endif 
 C--------------updating eom_truncate variables header file----
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       If (me .eq.0) Write(6,"(a,a,2i2,F10.5)") "Setting",
      +              " eom_truncate_vars: ",Int(g),Int(qq),qq
-C#endif 
+#endif 
       If (Int(g) .EQ. 10) Then
          Ndim_new = Int(qq)
       Elseif (Int(g) .EQ. 11) Then
@@ -298,6 +298,8 @@ C At every entry initilize all the type generating arrays to zero.
 
          test1 = (qq-1010D0)   .EQ. 0.0D0
          test2 = (qq-0.0101D0) .EQ. 0.0D0
+         test3 = (qq-1.0D0)    .EQ. 0.0D0
+         test4 = (qq-0.0D0)    .EQ. 0.0D0
 
          If (test1) then
              OOOO(1) = 1
@@ -317,6 +319,24 @@ C At every entry initilize all the type generating arrays to zero.
              VVVV(2) = 0
              VVVV(3) = 1
              VVVV(4) = 0
+         Elseif (test3) then 
+             OOOO(1) = 1
+             OOOO(2) = 1
+             OOOO(3) = 1
+             OOOO(4) = 1
+             VVVV(1) = 0
+             VVVV(2) = 0
+             VVVV(3) = 0
+             VVVV(4) = 0
+         Elseif (test4) then 
+             OOOO(1) = 0
+             OOOO(2) = 0
+             OOOO(3) = 0
+             OOOO(4) = 0
+             VVVV(1) = 1
+             VVVV(2) = 1
+             VVVV(3) = 1
+             VVVV(4) = 1
          Endif 
       Endif 
 #ifdef _DEBUG_LVL0

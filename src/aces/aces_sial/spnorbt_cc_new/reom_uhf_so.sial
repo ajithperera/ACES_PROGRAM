@@ -7053,16 +7053,12 @@
 #
       ENDPARDO a, i, b, j 
 #
-      IF EAEOMF12CALC == ZERO
-
       PARDO i, a, a1  
             GET                  VCACT1A(a1,i)
             tai(a,i)           = VCACT1A(a1,i)*LHBAR_aa(a,a1)
             PUT VCHACT1A(a,i) += tai(a,i)
 #
       ENDPARDO i, a, a1  
-
-      ENDIF 
 
       PARDO a, i, a1, i1  
      
@@ -7358,8 +7354,6 @@
 #
       ENDPARDO a, i, j1
 
-      IF EAEOMF12CALC == ZERO
-
       PARDO b, b1, j
 
             GET                  VCACT1B(b1,j)
@@ -7367,7 +7361,6 @@
             PUT VCHACT1B(b,j) += tbj(b,j)
 #
       ENDPARDO b, b1, j
-      ENDIF 
 #
       PARDO b, j, j1 
 #
@@ -7451,13 +7444,10 @@
      PARDO i, a, a1
 
           REQUEST Hbar_ab_eomea(a,a1) a
-          GET     HBAR_aa(a,a1)
           GET     VCACT1A(a1,i)
-          taa(a,a1) = HBAR_aa(a,a1)
           tHbar_ab_eomea(a,a1) = Hbar_ab_eomea(a,a1)
           tHbar_ab_eomea(a,a1) *= -1.0
-          taa(a,a1) += tHbar_ab_eomea(a,a1)
-          tai(a,i)           = VCACT1A(a1,i)*taa(a,a1)
+          tai(a,i)           = VCACT1A(a1,i)*tHbar_ab_eomea(a,a1)
           PUT VCHACT1A(a,i) += tai(a,i)
 
       ENDPARDO i, a, a1
@@ -7486,13 +7476,10 @@
      PARDO b, b1, j
 
           REQUEST Hbar_ab_eomea(b,b1) b
-          GET     HBAR_bb(b,b1)
           GET     VCACT1B(b1,j)
-          tbb(b,b1) = HBAR_bb(b,b1)
           tHbar_ab_eomea(b,b1) = Hbar_ab_eomea(b,b1)
           tHbar_ab_eomea(b,b1) *= -1.0
-          tbb(b,b1) += tHbar_ab_eomea(b,b1)
-           tbj(b,j)           = VCACT1B(b1,j)*tbb(b,b1)
+          tbj(b,j)           = VCACT1B(b1,j)*tHbar_ab_eomea(b,b1)
            PUT VCHACT1B(b,j) += tbj(b,j)
       ENDPARDO b, b1, j
 

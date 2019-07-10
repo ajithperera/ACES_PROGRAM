@@ -217,8 +217,8 @@ C Reorder the eigenvalues and vectors descending order
       Write(6,"(6(1x,F10.5))") (EigR(i),i=1,Ndim)
       Write(6,"(a)") "The right-hand side"
       call output(EvecR,1,Ndim,1,Ndim,Ndim,Ndim,1)
-C      Write(6,"(a)") "The left-hand side"
-C      call output(EvecL,1,NDIM,1,NDim,Ndim,Ndim,1)
+      Write(6,"(a)") "The left-hand side"
+      call output(EvecL,1,NDIM,1,NDim,Ndim,Ndim,1)
       Endif 
 #endif 
 C 

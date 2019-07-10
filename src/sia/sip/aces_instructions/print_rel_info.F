@@ -1646,7 +1646,7 @@ c
       If (Sval .eq. 911) then
 
       Write(66,*)
-      Write(66,"(2x,a)") "Warnings!!"
+      Write(66,"(2x,a)") "Comments!!"
       Write(66,"(2x,a)") "----------"
       Write(66,"(2x,a)") "Zero entry: Did not converged!"
       Write(66,"(2x,a)") "Left and right energies should be identical."

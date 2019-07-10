@@ -2109,7 +2109,10 @@
             DO kk1
                REQUEST            Wiiai(i,i2,a,i1) i
                GET                L2aa_a(a,i2,kk1,i1)
-               tix(i,kk1)       = L2aa_a(a,i1,kk1,i2)*Wiiai(i,i2,a,i1)
+#               tix(i,kk1)       = L2aa_a(a,i1,kk1,i2)*Wiiai(i,i2,a,i1)
+# Corrected 07/08.
+               tix(i,kk1)       = L2aa_a(a,i2,kk1,i1)*Wiiai(i,i2,a,i1)
+
                tix(i,kk1)      *= -0.5
 #bgn_dbg
 #               tix(i,kk1)      *= 1.0

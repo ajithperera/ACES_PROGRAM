@@ -9524,6 +9524,8 @@
          EXECUTE SERVER_BARRIER
 #bgn_debug
       execute print_scalar OMEGA
+#      execute print_scalar MAX_SUBSP_DIM
+#      execute print_scalar SBSP_COUNT
 #end_debug
          SBSP_COUNT += -1.0
          IF SBSP_COUNT == MAX_SUBSP_DIM

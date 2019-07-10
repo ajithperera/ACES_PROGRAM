@@ -26,7 +26,8 @@ c--------------------------------------------------------------------|
       integer bdim2(*), edim2(*),matr_size
         
 c      matr_size = 1 + n_si + n_tr*3
-       matr_size = 2*eom_roots
+       if(ip_roots.ne.0) matr_size = 2*ip_roots
+       if(ea_roots.ne.0) matr_size = 2*ea_roots
 c----------------------------------------------------------------
        call do_eom_so_diag_ip(x,bval(1),eval(1),type(1),
      &                      bval(2),eval(2),type(2),
@@ -60,8 +61,10 @@ c-------------Arrays for diagonalization------------------------------
       double precision RWORK(4*msize),WR4(msize),TTT,TTT1,QQQ,QQQ1
 c---------------------------------------------------------------------
       double precision E_ccsd
+      Double Precision Conv
+      Integer Sval 
          E_ccsd = totenerg - scf_energy
-         if(me.eq.0) write(6,*) 'CCSD correlation energy = ',E_ccsd
+C         if(me.eq.0) write(6,*) 'CCSD correlation energy = ',E_ccsd
 c-----------Copy static arrays to the temporal arrays-----------------
          do i = 1,  msize
          do j = 1,  msize
@@ -82,12 +85,12 @@ c          if (me.eq.0) write(6,*) '>>>',i,j,'===',CMATR(i,j)
          enddo
          enddo 
       
-         do i=1,msize
-         do j=1,msize
-         CRE = AAA(i,j)
+C         do i=1,msize
+C         do j=1,msize
+C         CRE = AAA(i,j)
 c         if (me.eq.0) write(6,*) '<<<',i,j,'===',CRE
-         enddo
-         enddo
+C         enddo
+C         enddo
 
 
 c-----------Diagonalize complex EOM-SO-CI matrix----------------------- 
@@ -96,8 +99,9 @@ c-----------Diagonalize complex EOM-SO-CI matrix-----------------------
          LWORK = 4*msize
          call zgeev(JOBVL,JOBVR,msize,CMATR,msize,eval,VL,msize,VR,
      &  msize, WORK, LWORK, RWORK, INFO)
+
          if(me.eq.0) then 
-          write(6,*) 'Info=',INFO
+C          write(6,*) 'Info=',INFO
           do i = 1, msize
 c          write(6,*) eval(i), '%%%', i 
           WR4(i) = REAL(eval(i))
@@ -124,17 +128,17 @@ c-----------Sort eigenvalues in acending order-------------------------
       ENDDO
       ENDDO
 
-      DO i=1,msize
-      if(me.eq.0) write(6,*) i,'--->>>',III(i)
-      ENDDO
+C      DO i=1,msize
+C      if(me.eq.0) write(6,*) i,'--->>>',III(i)
+C      ENDDO
 
 C-------------Zero out arrays x1 and x2----------------------------------
-      do i=1,msize
-      do j=1,msize 
-      x1(i,j) = 0.d0
-      x2(i,j) = 0.d0
-      enddo
-      enddo
+C      do i=1,msize
+C      do j=1,msize 
+C      x1(i,j) = 0.d0
+C      x2(i,j) = 0.d0
+C      enddo
+C      enddo
 
 c-------Calculate module of EOM-SO-CI coefficients----------------------
 c      do i=1,msize
@@ -172,15 +176,15 @@ c      enddo
 c      enddo  
 c-------------------------------------------------------------------------
             if(me.eq.0) then 
-         write(6,*) '||||||||||||||||||||||||||||||||||||||||||||||' 
+C         write(6,*) '||||||||||||||||||||||||||||||||||||||||||||||' 
 c
          do i = 1,  msize
-         write(6,*) eval(i) 
-         write(6,*) '______________________________________________'
+C         write(6,*) eval(i) 
+C         write(6,*) '______________________________________________'
          do j = 1,  msize
 c         UUU = dcmplx(0.d0,0.d0)
 c         VVV = dcmplx(0.d0,0.d0)
-          write(6,*) VR(j,i), '---->',i,j  
+C          write(6,*) VR(j,i), '---->',i,j  
 
 c         do k = 1, msize   
 c         UUU = UUU + VR(k,i)*CONJG(VR(k,i)) 
@@ -191,35 +195,34 @@ c         write(6,*) UUU,'---->',i,i
 c         write(6,*) VVV,'---->',i,i
 
          enddo
-         write(6,*) '=============================================='  
+C         write(6,*) '=============================================='  
          enddo
 
 c         write(6,*) '||||||||||||||||||||||||||||||||||||||||||||||'
             endif   
-c
 c-------------------------------------------------------------------------        
+      open(66,file='summary.out')
+      conv = 27.21138505
+      If (me .eq. 0)then
+         If (ip_roots .ne. 0) Then 
+            write(66,10)
+         Elseif(ea_roots .ne.0) Then
+            write(66,11) 
+         Endif 
+         write(66,100)
+         write(66,30)
+         write(66,100)
+         do i = 1, Msize 
+            write(66,20) i, (Wr4(i)- E_ccsd),  (Wr4(i)- E_ccsd)*conv
+         enddo
+         write(66,100)
+      Endif
 
-        if(me.eq.0) then
-        open(66,file='summary.out')
-
-c         open(66,file='summary.out',form='FORMATTED',status='old',
-c     &   access='APPEND')
-      write(66,*) '----------------------------------------------------'
-      write(66,*) ' Eigenvalues of relativistic IP-EOM-SO-CI matrix '
-      do i=1,msize
-      write(66,*) WR4(i),'----------->',i
-      enddo
-      write(66,*) '-----------------------------------------'
-      write(66,*) '-----Spin-orbit splitted ionization potentials------'
-      do i=1,msize
-      PPP = WR4(i) - E_ccsd
-      PPP = PPP*27.211385
-      write(66,*) PPP,'----------->',i 
-      enddo   
-      write(66,*) '----------------------------------------------------'
-
-        close(66,status='keep')
-        endif 
+100   format(2x,60('-'))
+10    format(2x,"SOC split IP-EOM-CCSD energies")
+11    format(2x,"SOC split EA-EOM-CCSD energies")
+20    format(2x,I4,5x,F20.8,x,F20.8)
+30    format(2x,'ROOT',15x,'Hartree',15x,'eV')
 c----------------------------------------------------------------------
       return
       end 

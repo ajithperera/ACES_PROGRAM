@@ -83,7 +83,7 @@ c--------------------------------------------------------------------------
             div = Sign(1.0D-4,div)
          endif 
          val = x(i,j,k,l)/div   
-         x(i,j,k,l) = val 
+         x(i,j,k,l) = val
       enddo 
       enddo 
       enddo 

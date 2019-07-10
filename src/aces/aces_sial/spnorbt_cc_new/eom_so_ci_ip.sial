@@ -597,7 +597,7 @@
       ENDDO kroot1
       ENDDO kroot
 
-      execute prsolrover overvec(kroot,kroot1)
+#      execute prsolrover overvec(kroot,kroot1)
 
 #-----Step 2 - reorder left eigenvectors according to overlap with rirgt eigenvectors-----|
 #--------- also multiply left eigenvectors by normalization factors-----------------------|       
@@ -639,7 +639,7 @@
                half = 0.5
                execute square_root norm_sqr half
 
-               execute print_scalar tmpval
+#               execute print_scalar tmpval
 
                IF norm_sqr > 0.000001
                NORM = 1.0/tmpval
@@ -649,7 +649,7 @@
                NORM = 1.0
                ENDIF
 
-               execute print_scalar NORM
+#               execute print_scalar NORM
 #----------------------------------|
           PARDO i
           tT1_L1A(i,kroot) = 0.0
@@ -746,16 +746,16 @@
       LROVER += LROVER_aaaa
       LROVER += LROVER_aabb
 
-      execute print_scalar LROVER_aa
-      execute print_scalar LROVER_aaaa
-      execute print_scalar LROVER_aabb
+#      execute print_scalar LROVER_aa
+#      execute print_scalar LROVER_aaaa
+#      execute print_scalar LROVER_aabb
 
-      overvec1(kroot,kroot1) = LROVER
+#      overvec1(kroot,kroot1) = LROVER
 
       ENDDO kroot1
       ENDDO kroot
 
-      execute prsolrover overvec1(kroot,kroot1)
+#      execute prsolrover overvec1(kroot,kroot1)
 #-------------------------------------------------------------------|
 #-------------------------------------------------------------------|
       ENDPROC RLOVERLAP

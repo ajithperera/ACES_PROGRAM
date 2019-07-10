@@ -2007,17 +2007,7 @@
 
           GET                   R1_AB(a,b1)
           GET                   HBAR_bb(b,b1)
-
-          ttax(b,b1) =  HBAR_bb(b,b1)
-#---------------------------------------|
-          IF EAEOMF12CALC == 1.0
-             REQUEST Hbar_ab_eomea(b1,b) b
-             tHbar_ab_eomea(b,b1) = Hbar_ab_eomea(b1,b)
-             tHbar_ab_eomea(b,b1) *= -1.0
-             ttax(b,b1) += tHbar_ab_eomea(b,b1)
-         ENDIF
-#---------------------------------------|
-         tab(a,b)            = R1_AB(a,b1)*ttax(b,b1)
+          tab(a,b)            = R1_AB(a,b1)*HBAR_bb(b,b1)
          PUT HR1_AB(a,b) += tab(a,b)
 
       ENDPARDO a, b, b1
@@ -2026,17 +2016,7 @@
 
          GET              R1_AB(a1,b)
          GET              HBAR_aa(a,a1)
-         ttax(a,a1) = HBAR_aa(a,a1)
-
-#---------------------------------------|
-         IF EAEOMF12CALC == 1.0
-            REQUEST Hbar_ab_eomea(a1,a) a
-            tHbar_ab_eomea(a,a1) = Hbar_ab_eomea(a1,a)
-            tHbar_ab_eomea(a,a1) *= -1.0
-            ttax(a,a1) += tHbar_ab_eomea(a,a1)
-         ENDIF
-#---------------------------------------|
-         tab(a,b)       = R1_AB(a1,b)*ttax(a,a1)
+         tab(a,b)       = R1_AB(a1,b)*HBAR_aa(a,a1)
          PUT HR1_AB(a,b) += tab(a,b)
 
       ENDPARDO a, b, a1
@@ -2375,6 +2355,35 @@
      ENDPROC FORM_R2AB
 #    -----------------
 
+     PROC ADD_F12
+#    ------------
+
+      PARDO a, b, b1
+
+          GET     R1_AB(a,b1)
+          REQUEST Hbar_ab_eomea(b1,b) b
+          tHbar_ab_eomea(b,b1) = Hbar_ab_eomea(b1,b)
+          tHbar_ab_eomea(b,b1) *= -1.0
+          tab(a,b)            = R1_AB(a,b1)*tHbar_ab_eomea(b,b1) 
+          PUT HR1_AB(a,b) += tab(a,b)
+
+      ENDPARDO a, b, b1
+
+      PARDO a, b, a1
+
+         GET     R1_AB(a1,b)
+         REQUEST Hbar_ab_eomea(a1,a) a
+         tHbar_ab_eomea(a,a1) = Hbar_ab_eomea(a1,a)
+         tHbar_ab_eomea(a,a1) *= -1.0
+
+         tab(a,b)       = R1_AB(a1,b)*tHbar_ab_eomea(a,a1)
+         PUT HR1_AB(a,b) += tab(a,b)
+
+      ENDPARDO a, b, a1
+
+     ENDPROC ADD_F12
+#    ------------
+
       PROC INIT_AOL_ARRAYS
 #     --------------------
       PARDO mu, nu
@@ -2439,6 +2448,9 @@
       CALL THREE_BODY_INTMD
       CALL FORM_R1AB
       CALL FORM_R2AB
+      IF EAEOMF12CALC == ONE
+         CALL ADD_F12
+      ENDIF 
 
       IF NO_AO_LADDER == ZERO
          CALL INIT_AOL_ARRAYS 
@@ -5378,10 +5390,26 @@
 #       Check if F12 calculation is requested         |
 #-----------------------------------------------------|
 
-     F12CALC = 0.0
-     execute f12info F12CALC
+    F12CALC = 0.0
+     IF STGF12 != 0.0
+        F12CALC = 1.0
+     ENDIF
+#bgn_debug
      execute print_scalar F12CALC
-     execute eomeaf12info EAEOMF12CALC
+#end_debug
+
+    IF EA_ROOTS !=0.0
+       IF STGF12 != 0.0
+          EAEOMF12CALC = 1.0
+#bgn_debug
+      execute print_scalar EAEOMF12CALC
+#end_debug
+       ENDIF
+    ENDIF
+#bgn_debug
+    execute print_scalar EAEOMF12CALC
+#end_debug
+
 #-----------------------------------------------------|
      ZERO     = 0.0
      ONE      = 1.0
