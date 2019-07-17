@@ -7974,17 +7974,17 @@
 #
       PROC UPDATET1 
 #     ------------- 
-      PARDO a, i
-          tai(a,i) = 0.0
-          PUT t1a_old(a,i) = tai(a,i)
-          PUT t1a_new(a,i) = tai(a,i)
-      ENDPARDO a, i
-      PARDO b, j
-          tbj(b,j) = 0.0
-          PUT t1b_old(b,j) = tbj(b,j)
-          PUT t1b_new(b,j) = tbj(b,j)
-      ENDPARDO b, j
-      execute sip_barrier
+#      PARDO a, i
+#          tai(a,i) = 0.0
+#          PUT t1a_old(a,i) = tai(a,i)
+#          PUT t1a_new(a,i) = tai(a,i)
+#      ENDPARDO a, i
+#      PARDO b, j
+#          tbj(b,j) = 0.0
+#          PUT t1b_old(b,j) = tbj(b,j)
+#          PUT t1b_new(b,j) = tbj(b,j)
+#      ENDPARDO b, j
+#      execute sip_barrier
       PARDO a, i 
 #
             GET                t1a_new(a,i) 

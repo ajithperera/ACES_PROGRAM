@@ -11064,10 +11064,10 @@
          CALL T2NEWAB  
 #
          CALL WMINJ 
-#         CALL AOLADDER 
+         CALL AOLADDER 
 #bgn_debug
-         CALL MOLADDER
-         CALL FORM_MOABCD 
+#         CALL MOLADDER
+#         CALL FORM_MOABCD 
 #end_debug
          CALL WAEBF  
          CALL WMEBJ 

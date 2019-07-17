@@ -80,8 +80,10 @@ c----------------------------------------------------------------------
       dptr = dshptr
       xptr = dshptr
 #endif
-      n_s_roots = n_singlets
-      n_t_roots = n_triplets
+
+c-------------------------------------------------------------------
+        
+c-------------------------------------------------------------------
 
 c-------------------------------------------------------------------
 c------------Information about scalar-------------------------------|
@@ -90,7 +92,7 @@ c------------Information about scalar-------------------------------|
       array_type = array_table(c_array_type, array)
       sind =  array_table(c_scalar_index, array)
 
-      scalar_table(sind) = n_s_roots
+      scalar_table(sind) = n_singlets
     
 c-------------------------------------------------------------------|
 c   Compute the block of integrals.
@@ -101,9 +103,9 @@ c------------Information about scalar--------------------------------------
       array_type = array_table(c_array_type, array)
       sind =  array_table(c_scalar_index, array)
 
-      scalar_table(sind) = n_t_roots
+      scalar_table(sind) = n_triplets
 c--------------------------------------------|
-
+c      if(me.eq.0) write(6,*) n_s_roots, n_t_roots, '\\\\'
 
       return
       end
