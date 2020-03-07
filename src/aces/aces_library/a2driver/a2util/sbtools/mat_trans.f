@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine takes a matrix or a block of a matrix and transforms it from
 c one form to another.  This is for a matrix of the same general form as the
 c fock matrix (i.e. a block diagonal matrix where each block is symmetric,

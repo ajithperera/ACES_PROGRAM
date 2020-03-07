@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE TRUST_UPDATE(SCRATCH, GRADINT, HESIAN, TRUST_RAD,
      &                        PRD_ENRG_CHNG, DXDX, EPS, NX, NXM6, NOPT,
      &                        NCYCLE, TS)

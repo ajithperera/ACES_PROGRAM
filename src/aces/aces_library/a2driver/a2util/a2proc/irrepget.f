@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE IRREPGET(PTGRPX,IORDGP,Z,V,LENTOT,LENGTH,LENMAX,
      &                    NDEG,IPTR,NBFATM,ILCATM,SYOP,SCRATCH,
      &                    NATOMS,IRREP,NBAS,NBASX,IANG)

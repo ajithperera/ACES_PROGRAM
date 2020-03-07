@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c A debugging routine that turns dline(izl(1,i):izl(2,i)) to carets (^)
 c repeating for j while making the rest spaces.
 

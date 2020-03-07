@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C THIS ROUTINE DRIVES THE FORMATION OF THE GRADIENT.
 
 c INPUT

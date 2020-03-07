@@ -165,6 +165,17 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE SYMMETRY_AUTO(SCRATCH, QTMP, NEWQ, IT, IDEGEN, 
      &                         ORIEN2, NOSILENT)
 C

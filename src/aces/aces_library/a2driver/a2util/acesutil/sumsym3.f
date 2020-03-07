@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine adds a vector DADD to the first column of an MOIO array in
 c storage. DADD must have the same number of elements as one column of the
 c MOIO array.

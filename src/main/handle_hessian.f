@@ -30,6 +30,12 @@ c   NN hessian. --> Zero out 'small' residuals due to integral accuracy,
 c   etc.
 c--------------------------------------------------------------------------
 
+C      Write(6,"(4(1x,F15.10))") ((hess(i,j),i=1,3*ncenters),j=1,
+C     +                           3*ncenters)
+C      Write(6,*) 
+C      Write(6,"(4(1x,F15.10))") ((NNhess(i,j),i=1,3*ncenters),j=1,
+C     +                           3*ncenters)
+
       do i = 1, Ncenters
       do j = 1, Ncenters
          do ix = 1, 3

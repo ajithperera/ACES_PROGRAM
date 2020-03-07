@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       subroutine wrt_hyprchm(natoms,coords,freqs,feigs,intens,anum,
      .                       tbohr, hfcrap, linear, iord, itag)
 c

@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine initializes the sym common block.
 
       subroutine aces_com_sym

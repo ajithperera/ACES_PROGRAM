@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE NEWRAPH(SCRATCH, GRDHES, HESMOD, DIAGHES, MORSE, 
      &                   NOPT, NX, LUOUT)
 C
@@ -224,6 +235,10 @@ C
 C     
 C Do the Normal Newton-Raphson update
 C
+      Write(6,*) 
+      Write(6, "(1x,a,I5)") "The number of degs. of freed. 
+     &          at NR:", NOPT
+      Write(6,*)
       DO 10 I = 1, NOPT
          DO 20 J = 1, NOPT
             IF (HESMOD(I,I) .EQ. 0.0D0) Then
@@ -236,6 +251,8 @@ C
  20      CONTINUE
  10   CONTINUE
 C
+      Write(6,*) "The unmolested step"
+      Write(6, "(8F10.4)") (SCRATCH(J+NOPT), J=1, NOPT)
 C
 C Notice that there is no Morse adjustments can be made for
 C pure Cartesian OLPtimization (no connections), Also, no 

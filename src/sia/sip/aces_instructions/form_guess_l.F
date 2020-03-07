@@ -12,6 +12,7 @@ c---------------------------------------------------------------|
       include 'interpreter.h'
       include 'trace.h'
       include 'mpif.h'
+      include 'parallel_info.h'
 #ifdef ALTIX
       include 'sheap.h'
 #endif
@@ -36,7 +37,7 @@ c---------------------------------------------------------------|
       integer array_in_type, array_out_type
       integer*8 indblk1, indblk2, get_block_index
       integer stack,ind_in(mx_array_index),ind_out(mx_array_index)
-      integer nsend,Ndim,Mdim
+      integer nsend,Ndim,Mdim,Ldim,Kdim
 
       integer comm
 
@@ -94,10 +95,22 @@ c---------------------------------------------------------------------------
 
       Ndim = n1
       Mdim = n2
+      Ldim = m1
+      Kdim = m2
+
       If (Ndim .Ne. Mdim) then
+         If (Me .eq. 0) Then 
          Write(6,"(a)") "@-FORM_GUESS: Must be a square matrix"
+         Endif 
          call abort_job()
       endif
+      If (Ndim .Ne. Ldim) Then
+         If (Me .eq. 0) Then
+            Write(6,"(a,a)") " @-FORM_GUESS: The number of rows of",
+     &               " the two incoming matrices must be identical."
+         Endif
+         Call abort_job()
+      Endif
 
       Call Get_guess_l(x(iarray_in),1,n1,1,n2,x(iarray_out),1,m1,1,m2,
      &                 Ndim)
@@ -177,9 +190,11 @@ C Return the eigenvalues in the diagonal.
       Implicit None
       include 'parallel_info.h'
       include 'int_gen_parms.h'
+      include 'ex_mask_vars.h'
 
       Integer a1,a2,b1,b2
       Integer i,j,Ndim,k,l,Istart,Nroots 
+      Integer Kdim,Max_allowed
 
       Double Precision Eigr(Ndim), EvecR(Ndim,Ndim)
       Double Precision EvecL(Ndim,Ndim)
@@ -190,6 +205,7 @@ C Return the eigenvalues in the diagonal.
 C Reorder the eigenvalues and vectors descending order
 
       If (Ndim .Eq. 1) Return
+      Kdim = b2-b1+1
 
       Do i = 1, Ndim-1
          Do j = i+1, Ndim 
@@ -270,6 +286,17 @@ C
          Call abort_job()
          Endif 
       Endif 
+      If (Kdim .Lt. Nroots) Then
+         If (me .eq. 0) Then
+            Write(6,"(a,a)") "@-PROCESS_VECS: The number of coulmns",
+     +                    " of the second array is smaller"
+            Write(6,"(2a,I2,a,I2)") " than the requested number of",
+     +                     " roots. Column dimension: ",Kdim,
+     +                     " Nroots:",Nroots
+            Write(6,"(a,i2,a)") " The first or the last ", Nroots,
+     +                          " vectors are processed!"
+         Endif
+      Endif
 
       If (Nroots .Gt. 50 .or. Nroots .Gt. Ndim) Then
          If (me .eq. 0) Then
@@ -281,9 +308,28 @@ C
          Endif 
       Endif 
 
-      Do j = 1, Nroots 
-         Call Dcopy(Ndim, EvecL(1,j), 1, Guess_vec(1,j), 1)
-      Enddo 
+      Max_allowed = Min(Ndim,Kdim)
+
+C#ifdef _DEBUG_LVL0
+      If (me .eq. 0) Then 
+      Write(6,"(a,a,4(1x,I3))") " The variables, Ndim,Kdim,Nsites,",
+     +                        "Max_allowed:",Ndim,Kdim,Nsites,
+     +                         Max_allowed
+      Write(6,*) 
+      Endif 
+C#endif
+
+      If (Nsites .Ne. 0) Then
+         I = 0
+         Do j = Ndim, Ndim-Max_allowed+1, -1
+            I = I + 1
+            Call Dcopy(Ndim, EvecL(1,j), 1, Guess_vec(1,I), 1)
+         Enddo
+      Else
+         Do j = 1, Max_allowed 
+            Call Dcopy(Ndim, EvecL(1,j), 1, Guess_vec(1,j), 1)
+         Enddo
+      Endif
 
       Return
       End

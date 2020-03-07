@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
        Subroutine Write_Prims(NATOMS, NTOT_PRIMS, NBFNS, NAOBFNS,
      &                        COORD, ALPHA, PCOEF, NUNQSHL, NSHL,
      &                        NANGMOMSHL, NCONFUNSHL, NPRIMFUNSHL,
@@ -313,6 +324,34 @@ C
 C
       DATA XTANG /0.529177249D0/ 
 C
+       Write(6,*) 
+       Write(6,"(a,5I4)"), "Input varaibles:",  Natoms, 
+     &         nunqshl, nbfns, NTOT_PRIMS 
+       Write(6,*)
+       write(*, '(a)'), "The exponents"
+       Write(*, '(4(1x,F10.5))') (alpha(i), i=1, NTOT_PRIMS)
+       Write(6,*)
+       Write(*, '(a)'), "Cartesian Coords."
+       Write(*, '(3F10.5)') (Coord(i), i=1, 3*NATOMS)
+       Write(6,*)
+       Write(*, '(a)'), "The NSHL array"
+       Write(*, '(4I5)') (Nshl(i), i=1, NATOMS)
+       Write(6,*)
+       Write(6,*) "The number of primitive in a shell"
+       Write(6, '(4I5)') ((NPRIMFUNSHL(i,j), J=1, Nshl(i)),  
+     &                    i=1,NATOMS)
+       Write(6,*)
+       Write(6,*) "The number of contracted functions in a shell"
+       Write(6, '(4I5)') ((NCONFUNSHL(i,j), J=1, Nshl(i)),  
+     &                    i=1,NATOMS)
+       Write(6,*)
+       Write(6,*) "The angular momentum of shells"
+       Write(6, '(4I5)') ((NANGMOMSHL(i,j), J=1, Nshl(i)), 
+     &                    I=1,NATOMS)
+       write(6,*)
+       Write(*, '(a)') "The Contractions Coef."
+       write(*, '(6F10.5)') ((pcoef(i, j), i=1, NTOT_PRIMS), 
+     &                        j=1,nbfns)
       OPEN(UNIT=IUNIT, FILE="BASIS_LOG", FORM="FORMATTED", STATUS="NEW")
 C       
       CALL A2GET_ANG_TYPE(NATOMs, NTOT_PRIMS, NUNQSHL, NSHL, NANGMOMSHL, 

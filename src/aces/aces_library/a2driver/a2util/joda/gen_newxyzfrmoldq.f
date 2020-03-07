@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE GEN_NEWXYZFRMOLDQ
 C
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)

@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE DUMPCORD(NATOMS,Q,IATNUM)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 C MXATMS     : Maximum number of atoms currently allowed

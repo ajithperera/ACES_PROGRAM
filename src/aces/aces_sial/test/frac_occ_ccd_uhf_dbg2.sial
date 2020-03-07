@@ -30,9 +30,9 @@
 # --------------- 
 #
       index kiter    = 1, cc_iter   
-#      index kiter    = 1, 1 
+#      index kiter    = 1, 2
       index jiter    = 1, cc_iter
-#      index jiter    = 1,1
+#      index jiter    = 1,2
       index   kptr1  = 1, 2
       index   kptr2  = 1, 2
       index   kone   = 1, 1
@@ -108,8 +108,15 @@
 # --------------------- 
 #
       distributed t1a_old(a,i) 
+      distributed t1a_old_sa(a,i) 
+      distributed t1a_old_si(a,i) 
+      distributed t1a_old_sai(a,i) 
+
       distributed t1a_new(a,i) 
       distributed t1b_old(b,j) 
+      distributed t1b_old_sb(b,j) 
+      distributed t1b_old_sj(b,j) 
+      distributed t1b_old_sbj(b,j) 
       distributed t1b_new(b,j) 
 #
       distributed Fae_a(a,a1) 
@@ -164,15 +171,6 @@
       temp Txbbj(mu,b1,b,j)
       temp Tbbbj(b2,b,b1,j)
       temp Txxbj(mu,nu,b,j)
-
-      temp tmp1_aiai(a,i,a1,i1)
-      temp tmp2_aiai(a,i,a1,i1)
-      temp tmp3_aiai(a,i,a1,i1)
-      temp tmp1_bjbj(b,j,b1,j1)
-      temp tmp2_bjbj(b,j,b1,j1)
-      temp tmp3_bjbj(b,j,b1,j1)
-      temp tmp1_aibj(a,i,b,j)
-      temp tmp2_aibj(a,i,b,j)
 #
       served VSqjqj(q1,j,q,j1)
       served Vjbbj(j,b1,b,j1)
@@ -273,6 +271,15 @@
       temp T2aaaa(a,a2,a1,a3)  
       temp T2bbbb(b,b2,b1,b3)
       temp T1abab(a,b,a1,b1) 
+#
+      temp tmp1_aiai(a,i,a1,i1) 
+      temp tmp2_aiai(a,i,a1,i1) 
+      temp tmp3_aiai(a,i,a1,i1) 
+      temp tmp1_bjbj(b,j,b1,j1) 
+      temp tmp2_bjbj(b,j,b1,j1) 
+      temp tmp3_bjbj(b,j,b1,j1) 
+      temp tmp1_aibj(a,i,b,j) 
+      temp tmp2_aibj(a,i,b,j) 
 #
       temp Tai(a,i) 
       temp T1ai(a,i) 
@@ -411,18 +418,9 @@
       served T2new_aa(a,i,a1,i1)
       served T2new_bb(b,j,b1,j1)
       served T2new_ab(a,i,b,j)
-      served Damp_t2aa(a,i,a1,i1)
-      served Damp_t2bb(b,j,b1,j1)
-      served Damp_t2ab(a,i,b,j)
-
-      served Temp_t2aa(a,i,a1,i1)
-      served Temp_t2bb(b,j,b1,j1)
-      served Temp_t2ab(a,i,b,j)
-
       served T2old_aa(a,i,a1,i1)
       served T2old_bb(b,j,b1,j1)
       served T2old_ab(a,i,b,j)
-
 #
       served Tau_aa(a,i,a1,i1)
       served Tau_bb(b,j,b1,j1)
@@ -644,7 +642,6 @@
       scalar ecrit 
       scalar ediff 
       scalar mp2_energy
-      scalar DAMP_FAC
 #
 # Arrays/Scalars used exclusively in DIIS procedure. 
 # -------------------------------------------------- 
@@ -872,7 +869,7 @@
        Scalar pzozo
        Scalar nn
        Scalar ee 
-       Scalar ne 
+       Scalar ne  
 #
 #    ------------------------------------------------------------------------ 
 #
@@ -1236,7 +1233,7 @@
 
       PARDO a,a1
            Taa(a,a1)         = Fpqa_noD_ae(a,a1)
-           PUT Fae_a(a,a1)   = Taa(a,a1)
+           PUT Fae_a(a,a1)  = Taa(a,a1)
       ENDPARDO a, a1
 
       PARDO a,a1
@@ -1248,16 +1245,16 @@
 
                Tai(a,i)    = T1a_old(a,i)
                Tia(i,a1)   = Fpqa_me(i,a1)
-#bgn_frac
+#bgn_frac  
                execute set_aces3_vars  one one
 #               execute apply_frac_occs tai two
                execute apply_frac_occs tia one
 #end_frac
                T1aa(a,a1)  = Tai(a,i) * Tia(i,a1)
                Taa(a,a1)  += T1aa(a,a1)
-               Taa(a,a1)  *= -0.5
             ENDDO i
 
+           Taa(a,a1)  *= -0.5
            PUT Fae_a(a,a1)  += Taa(a,a1)
       ENDPARDO a,a1
 
@@ -1274,7 +1271,7 @@
                   taaia(a1,a,i,a2) = taaai(a1,a,a2,i)
                   tai(a2,i)        = t1a_old(a2,i)
 #bgn_frac
-                  execute set_aces3_vars  zer   one
+                  execute set_aces3_vars  pzo   two 
 #                  execute apply_frac_occs taaai two
                   execute apply_frac_occs tai   one
 #end_frac
@@ -1341,7 +1338,7 @@
                Taaab(a1,a,b,j) = Vaabj(a1,a,b,j)
                Taajb(a1,a,j,b) = Taaab(a1,a,b,j)
 #bgn_frac
-               execute set_aces3_vars  zer   one
+               execute set_aces3_vars  oz    two
 #               execute apply_frac_occs taajb two
                execute apply_frac_occs tjb   two
 #end_frac
@@ -1459,11 +1456,10 @@
                execute apply_frac_occs tbj two
 #end_frac
                T1bb(b,b1)  = Tbj(b,j) * Tjb(j,b1)
-
                Tbb(b,b1)  += T1bb(b,b1)
-               Tbb(b,b1)  *= -0.5
             ENDDO j
 
+           Tbb(b,b1)  *= -0.5
            PUT Fae_b(b,b1)  += Tbb(b,b1)
       ENDPARDO b,b1
 #
@@ -1474,9 +1470,9 @@
                DO b1 
 #
                   REQUEST            VSbbbj(b1,b,b2,j) j  
-                  GET                t1b_old(b2,j) 
+                  GET                t1b_old_sbj(b2,j) 
                   Tbbbj(b1,b,b2,j) = VSbbbj(b1,b,b2,j)
-                  Tbj(b2,j) = t1b_old(b2,j)
+                  Tbj(b2,j) = t1b_old_sbj(b2,j)
 #
                   DO j1 
 #
@@ -1493,9 +1489,9 @@
 #
                   ENDDO j1 
 #bgn_frac
-                  execute set_aces3_vars  pzo   two
+#                  execute set_aces3_vars  pzo   two
 #                  execute apply_frac_occs tbbbj two
-                  execute apply_frac_occs tbj   one
+#                  execute apply_frac_occs tbj   one
 #end_frac
 
                   Tbb(b,b1)        = Tbbbj(b1,b,b2,j)*Tbj(b2,j)
@@ -1521,9 +1517,9 @@
             DO b1  
 #
                REQUEST            Vbbai(b1,b,a,i) i  
-               GET                t1a_old(a,i) 
+               GET                t1a_old_sai(a,i) 
                Tbbai(b1,b,a,i) = Vbbai(b1,b,a,i)
-               Tai(a,i) =  t1a_old(a,i)
+               Tai(a,i) =  t1a_old_sai(a,i)
 #
                DO j 
 #
@@ -1541,11 +1537,10 @@
 #
                ENDDO j 
 #bgn_frac
-               execute set_aces3_vars  pzo   two
+#               execute set_aces3_vars  pzo   two
 #               execute apply_frac_occs tbbai two
-               execute apply_frac_occs tai   two
+#               execute apply_frac_occs tai   two
 #end_frac
-
                Tbb(b,b1)        = Tbbai(b1,b,a,i)*Tai(a,i)
                PUT Fae_b(b,b1) += Tbb(b,b1) 
 #
@@ -1712,8 +1707,8 @@
          get fme_a(i,a)
          tme_a(i,a)=Fme_a(i,a) 
 #bgn_frac
-           execute set_aces3_vars  oz    two
-           execute apply_frac_occs tme_a two
+#           execute set_aces3_vars  oz    two
+#           execute apply_frac_occs tme_a two
 #end_frac
          tmp = tme_a(i,a) * tme_a(i,a)
          suma += tmp
@@ -1794,8 +1789,8 @@
          get fme_b(j,b)
          tme_b(j,b)=fme_b(j,b)
 #bgn_frac 
-        execute set_aces3_vars oz      two 
-        execute apply_frac_occs tme_b two
+#        execute set_aces3_vars oz      two 
+#        execute apply_frac_occs tme_b two
 #end_frac
          tmp = tme_b(j,b)*tme_b(j,b)
          sumb += tmp
@@ -1840,8 +1835,8 @@
                Tia(i1,a) = Fpqa_me(i1,a)
 #bgn_frac
                execute set_aces3_vars  zer one
-#               execute apply_frac_occs Tai one 
-               execute apply_frac_occs Tia two 
+               execute apply_frac_occs Tai one 
+#               execute apply_frac_occs Tia two 
 #end_frac
                T1ii(i1,i) =  Tai(a,i) * Tia(i1,a)
                Tii(i1,i) += T1ii(i1,i)
@@ -1990,7 +1985,7 @@
                Tbj(b,j)  = T1b_old(b,j)
                Tjb(j1,b) = Fpqb_me(j1,b)
 #bgn_frac
-               execute set_aces3_vars  zer two
+               execute set_aces3_vars  zer one 
 #               execute apply_frac_occs Tjb two
                execute apply_frac_occs Tbj one
 #end_frac
@@ -2287,7 +2282,7 @@
 #
       ENDPARDO a1, a2, i1
 
-     PARDO a1, i1, i2
+      PARDO a1, i1, i2
 
            allocate L1aiii(a1,i2,*,i1)
 
@@ -2494,15 +2489,22 @@
             ENDDO a 
 # 
             DO b1 
-#
+
                GET t1b_old(b1,j) 
                GET Fae_b(b,b1) 
-#
-               t1bj(b,j) = t1b_old(b1,j)*Fae_b(b,b1) 
+
+               T2bj(b1,j) = t1b_old(b1,j)
+               Tbb(b,b1) =  Fae_b(b,b1) 
+#bgn_frac
+               execute set_aces3_vars  zer one
+               execute apply_frac_occs Tbb two
+#               execute apply_frac_occs T2bj one 
+#end_frac
+               t1bj(b,j) = T2bj(b1,j)*Tbb(b,b1) 
                tbj(b,j) += t1bj(b,j) 
-#
-               DO j1 
-#
+
+              DO j1 
+
                   REQUEST T2old_bb(b,j,b1,j1) j1  
                   REQUEST Vbbjj(b,b1,j1,j) j  
                   REQUEST Vjbbj(j1,b1,b,j) j  
@@ -2514,12 +2516,12 @@
                   T3bj(b1,j1) = Tjb(j1,b1)
 #bgn_frac
                   execute set_aces3_vars  pzo   two
-#                  execute apply_frac_occs Tbjbj two
                   execute apply_frac_occs T3bj  one
+#                  execute apply_frac_occs Tbjbj two
 #end_frac
                   t1bj(b,j) = Tbjbj(b,j,b1,j1)*T3bj(b1,j1)
                   tbj(b,j) += t1bj(b,j) 
-#
+
                   Tqqqq(j1,b1,b,j)  = Vbbjj(b,b1,j1,j)  
                   Tqqqq(j1,b1,b,j) -= Vjbbj(j1,b1,b,j)  
                   
@@ -2532,15 +2534,14 @@
 #end_frac
                   t2bj(b,j) = T1jb(j1,b1)*Tqqqq(j1,b1,b,j)
                   tbj(b,j) -= t2bj(b,j) 
-#
                ENDDO j1 
-#
+
             ENDDO b1 
-#
+
             PUT t1b_new(b,j) += tbj(b,j) 
 #
       ENDPARDO b, j 
-#
+
       PARDO b1, b2, j1   
 #
            allocate L4bjbj(b1,*,b2,j1)
@@ -5698,25 +5699,6 @@
 #
       ENDPARDO b,j,b2,j2
 
-#bgn_debug
-      execute server_barrier 
-     suma =0.0
-     esuma=0.0
-     PARDO b1,j1,b,j
-         request Taup_bb(b1,j1,b,j) j
-         T1bjbj(b1,j1,b,j) = Taup_bb(b1,j1,b,j)
-#bgn_frac
-#         execute set_aces3_vars  pzozo  four
-#         execute apply_frac_occs T1bjbj four
-#end_frac
-         tmp = T1bjbj(b1,j1,b,j)*T1bjbj(b1,j1,b,j)
-         suma += tmp
-     ENDPARDO b1,j1,b,j
-     execute server_barrier
-     collective esuma += suma
-     execute print_scalar esuma
-#end_debug
-
       PARDO b,j,a,i
                
                REQUEST              T2old_ab(a,i,b,j) j
@@ -7809,7 +7791,7 @@
             Taiai(a,i,a1,i1)         = T2new_aa(a,i,a1,i1)
             T1aiai(a,i,a1,i1)        = T2old_aa(a,i,a1,i1)
 #bgn_frac
-            execute set_aces3_vars  pzozo  four
+#            execute set_aces3_vars  pzozo  four
 #            execute apply_frac_occs Taiai  four
 #            execute apply_frac_occs T1aiai four
             execute energy_denominator_frac_occs Taiai
@@ -7985,8 +7967,9 @@
 #          PUT t1b_new(b,j) = tbj(b,j)
 #      ENDPARDO b, j
 #      execute sip_barrier
+
       PARDO a, i 
-#
+
             GET                t1a_new(a,i) 
             GET                t1a_old(a,i) 
             tai(a,i)         = t1a_new(a,i) 
@@ -10918,120 +10901,75 @@
     ENDPROC STRIP_DIAGS
 #   -------------------
 
-    PROC DAMP_CC_AMPS 
-#   -----------------
+    PROC PREP_SCALED_SINGLES 
+#   ------------------------
 
-    DAMP_FAC = 20.0
-    PARDO a, a1, i, i1
+      PARDO a, i
+          GET T1a_old(a,i)
+          Tai(a,i) = T1a_old(a,i)
+#bgn_frac
+          execute set_aces3_vars  zer one
+          execute apply_frac_occs tai one
+#end_frac
+          PUT T1a_old_sa(a,i) = Tai(a,i)
+      ENDPARDO a, i
 
-        REQUEST                    T2old_aa(a,i,a1,i1) a
-        REQUEST                    T2new_aa(a,i,a1,i1) a
+      PARDO a, i
+          GET T1a_old(a,i)
+          Tai(a,i) = T1a_old(a,i)
+#bgn_frac
+          execute set_aces3_vars  one one
+          execute apply_frac_occs tai two
+#end_frac
+          PUT T1a_old_si(a,i) = Tai(a,i)
+      ENDPARDO a, i
 
-        Taiai(a,i,a1,i1)         = T2new_aa(a,i,a1,i1)
-        T1aiai(a,i,a1,i1)        = T2old_aa(a,i,a1,i1)
+      PARDO a, i
+          GET T1a_old(a,i)
+          Tai(a,i) = T1a_old(a,i)
+#bgn_frac
+          execute set_aces3_vars  pzo two
+          execute apply_frac_occs tai two
+#end_frac
+          PUT T1a_old_sai(a,i) = Tai(a,i)
+      ENDPARDO a, i
+   
+      PARDO b, j
+           GET T1b_old(b,j)
+           Tbj(b,j) = T1b_old(b,j)
+#bgn_frac
+          execute set_aces3_vars  zer one
+          execute apply_frac_occs tbj one
+#end_frac
+          PUT T1b_old_sj(b,j) = Tbj(b,j)
+      ENDPARDO b, j
 
-        Taiai(a,i,a1,i1)       -= T1aiai(a,i,a1,i1)
-        Taiai(a,i,a1,i1)       *= DAMP_FAC
+      PARDO b, j
+           GET T1b_old(b,j)
+           Tbj(b,j) = T1b_old(b,j)
+#bgn_frac
+          execute set_aces3_vars  one one
+          execute apply_frac_occs tbj two
+#end_frac
+          PUT T1b_old_sj(b,j) = Tbj(b,j)
+      ENDPARDO b, j
 
-        PREPARE Damp_t2aa(a,i,a1,i1) = Taiai(a,i,a1,i1)
+      PARDO b, j
+           GET T1b_old(b,j)
+           Tbj(b,j) = T1b_old(b,j)
+#bgn_frac
+          execute set_aces3_vars  pzo two 
+          execute apply_frac_occs tbj two
+#end_frac
+          PUT T1b_old_sbj(b,j) = Tbj(b,j)
+      ENDPARDO b, j
 
-    ENDPARDO a, a1, i, i1
+      EXECUTE SIP_BARRIER
 
-    PARDO b, b1, j, j1
+    ENDPROC PREP_SCALED_SINGLES 
+#   ---------------------------
 
-        REQUEST                    T2old_bb(b,j,b1,j1) b
-        REQUEST                    T2new_bb(b,j,b1,j1) b
-
-        Tbjbj(b,j,b1,j1)         = T2new_bb(b,j,b1,j1)
-        T1bjbj(b,j,b1,j1)        = T2old_bb(b,j,b1,j1)
-
-        Tbjbj(b,j,b1,j1)       -= T1bjbj(b,j,b1,j1)
-        Tbjbj(b,j,b1,j1)       *= DAMP_FAC
-
-        PREPARE Damp_t2bb(b,j,b1,j1) = T1bjbj(b,j,b1,j1)
-
-    ENDPARDO b, b1, j, j1
-
-    PARDO b, a, j, i
-
-       REQUEST                    T2old_ab(a,i,b,j) b
-       REQUEST                    T2new_ab(a,i,b,j) b
-
-       Taibj(a,i,b,j)           = T2new_ab(a,i,b,j)
-       T1aibj(a,i,b,j)          = T2old_ab(a,i,b,j)
-
-       Taibj(a,i,b,j)         -= T1aibj(a,i,b,j)
-       Taibj(a,i,b,j)         *= DAMP_FAC
-
-       PREPARE Damp_t2ab(a,i,b,j) = Taibj(a,i,b,j)
-
-    ENDPARDO b, a, j, i
-
-    EXECUTE SERVER_BARRIER
-
-    PARDO a, a1, i, i1
-
-       REQUEST                    T2new_aa(a,i,a1,i1) a
-       REQUEST                    Damp_t2aa(a,i,a1,i1) a
-
-       Taiai(a,i,a1,i1)         = T2new_aa(a,i,a1,i1)
-       T1aiai(a,i,a1,i1)        = Damp_t2aa(a,i,a1,i1)
-       Taiai(a,i,a1,i1)        += T1aiai(a,i,a1,i1)
-
-       PREPARE Temp_t2aa(a,i,a1,i1)  = Taiai(a,i,a1,i1)
-
-    ENDPARDO a, a1, i, i1
-
-    PARDO b, b1, j, j1
-
-         REQUEST                    T2new_bb(b,j,b1,j1) b
-         REQUEST                    Damp_t2bb(b,j,b1,j1) b
-
-         Tbjbj(b,j,b1,j1)         = T2new_bb(b,j,b1,j1)
-         T1bjbj(b,j,b1,j1)        = Damp_t2bb(b,j,b1,j1)
-         Tbjbj(b,j,b1,j1)        += T1bjbj(b,j,b1,j1)
-
-         PREPARE Temp_t2bb(b,j,b1,j1) = Tbjbj(b,j,b1,j1)
-
-    ENDPARDO b, b1, j, j1
-#
-    PARDO b, a, j, i
-
-        REQUEST                    T2new_ab(a,i,b,j) a
-        REQUEST                    Damp_t2ab(a,i,b,j) a
-
-        Taibj(a,i,b,j)           = T2new_ab(a,i,b,j)
-        T1aibj(a,i,b,j)          = Damp_t2ab(a,i,b,j)
-        Taibj(a,i,b,j)           += T1aibj(a,i,b,j)
-
-        PREPARE Temp_t2ab(a,i,b,j)   = Taibj(a,i,b,j)
-#
-    ENDPARDO b, a, j, i
-
-    EXECUTE SERVER_BARRIER
-
-    PARDO a, a1, i, i1
-       REQUEST                    Temp_t2aa(a,i,a1,i1) a
-       Taiai(a,i,a1,i1)         = Temp_t2aa(a,i,a1,i1)
-       PREPARE T2new_aa(a,i,a1,i1) = Taiai(a,i,a1,i1)
-    ENDPARDO a, a1, i, i1
-
-    PARDO  b, b1, j, j1
-       REQUEST                    Temp_t2bb(b,j,b1,j1) b
-       Tbjbj(b,j,b1,j1)         = Temp_t2bb(b,j,b1,j1)
-       PREPARE T2new_bb(b,j,b1,j1) = Tbjbj(b,j,b1,j1)
-    ENDPARDO  b, b1, j, j1
-
-    PARDO b, a, j, i
-       REQUEST                    Temp_t2ab(a,i,b,j) a
-       Taibj(a,i,b,j)           = Temp_t2ab(a,i,b,j)
-       PREPARE T2new_ab(a,i,b,j)  = Taibj(a,i,b,j)
-    ENDPARDO b, a, j, i
-
-    EXECUTE SERVER_BARRIER
-
-    ENDPROC DAMP_CC_AMPS
-#   ---------------------
+# ---------------------------------------------------------------------------------
 #
 # ---------------------------------------------------------------------------------
 # 
@@ -11076,13 +11014,19 @@
 
       EXECUTE SET_ACES3_VARS OZZ  ZER 
       EXECUTE SET_FRAC_OCCS  PINF ZER 
-
+      
       CALL READ_2EL 
       CALL STRIP_DIAGS
 #
       CREATE t1a_old 
+      CREATE t1a_old_sa
+      CREATE t1a_old_si
+      CREATE t1a_old_sai
       CREATE t1a_new 
-      CREATE t1b_old 
+      CREATE t1b_old
+      CREATE t1b_old_sb
+      CREATE t1b_old_sj
+      CREATE t1b_old_sbj
       CREATE t1b_new 
 #
       CREATE D0ai
@@ -11170,6 +11114,7 @@
 #        Form Tau and Taup 
 #        ----------------- 
          CALL TAU  
+         CALL PREP_SCALED_SINGLES 
 #
 #        Zero-out the new two-particle amplitude arrays
 #        ---------------------------------------------- 
@@ -11206,10 +11151,10 @@
          CALL T2NEWAB  
 #
          CALL WMINJ 
-#         CALL AOLADDER 
+         CALL AOLADDER 
 #bgn_debug
-         CALL MOLADDER
-         CALL FORM_MOABCD 
+#         CALL MOLADDER
+#         CALL FORM_MOABCD 
 #end_debug
          CALL WAEBF  
          CALL WMEBJ 
@@ -11225,8 +11170,6 @@
          DELETE Fme_b
          DELETE Fmi_a 
          DELETE Fmi_b 
-
-#         CALL DAMP_CC_AMPS
          CALL UPDATET1 
          CALL UPDATET2 
 #
@@ -11236,7 +11179,7 @@
          EXECUTE SIP_BARRIER  
          EXECUTE SERVER_BARRIER   
 #
-         if kiter == 45
+         if kiter == 6
 #
 #           Get uptated amplitudes based on DIIS procedure.
 #           -----------------------------------------------
@@ -11245,25 +11188,25 @@
 #
          endif # kiter == 2
 #
-         if kiter == 46
+         if kiter == 7
 #
 #           Get uptated amplitudes based on DIIS procedure.
 #           -----------------------------------------------
 #
             CALL DIIS2
 #
-         endif # kiter == 47
+         endif # kiter == 3
 #
-         if kiter == 4
-#
+         if kiter == 8
+
 #           Get uptated amplitudes based on DIIS procedure.
 #           -----------------------------------------------
 #
             CALL DIIS3
 #
-         endif # kiter == 48
+         endif # kiter == 4
 #
-         if kiter >= 5
+         if kiter >= 9
 #
 #           Get uptated amplitudes based on DIIS procedure.
 #           -----------------------------------------------
@@ -11271,7 +11214,7 @@
             CALL DIIS4
             CALL MOVE4
 #
-         endif # kiter == 49
+         endif # kiter == 5
 #
          CALL MOVET1
          CALL MOVET2

@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE GET_MOPAC_HESS(A, SCRATCH, IMAP, HC, HI, AT, NATOMS,
      &                          NX, NXM6, NREAL, NREAL3, NREAL3M6)
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)

@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       subroutine hyprchm_rd_geomvib(natoms, iatchrg, coord,ifuchrg,
      &                            fucoord,freqco,freq,dnormmd, 
      &                            intensites,iord,normco_exsist,linear)

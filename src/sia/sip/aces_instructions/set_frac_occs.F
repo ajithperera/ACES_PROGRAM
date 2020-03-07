@@ -57,6 +57,10 @@ c---------------------------------------------------------------|
 #ifdef ALTIX
       dptr = dshptr
 #endif
+C The incomming array and the scalar is not used. They are only to
+C make the sial compiler happy (i.e. to avoid having to call SIPs
+C without arguments)
+
       array_in = op(c_result_array)
       array_in_type   = array_table(c_array_type, array_in)
 C

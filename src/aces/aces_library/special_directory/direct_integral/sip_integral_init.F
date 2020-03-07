@@ -245,6 +245,10 @@ C become available.
             do_f12 = .TRUE.
         Endif 
 
+#ifdef _DEBUG_LVL0
+        Write(6,"(a,3(1x,l))") "@-Erd_scratch_mem_calc logicals",
+     +                          Soi,dsh_2p,do_f12
+#endif 
          if (do_erd_scratch_calc) then
             do_erd_scratch_calc = .false.   ! only 1 time EVER!
 

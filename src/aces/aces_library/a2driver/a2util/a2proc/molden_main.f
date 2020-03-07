@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This program writes a molden format file containing the coordinates,
 c basis functions for each center, molecular orbitals, frequencies,
 c frequency coordinates, and normal mode vectors.

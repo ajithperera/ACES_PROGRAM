@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine initializes the syminf common block.
 c The code for the direct product table was taken straight from VMOL.
 

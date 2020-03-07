@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C THIS ROUTINE DETERMINES THE IRREDUCIBLE REPRESENTATION TO WHICH
 C MOLECULAR ORBITALS BELONG, USING A MODEST GENERALIZATION OF THE
 C ALGORITHM USED IN JODA FOR DETERMINING SYMMETRIES OF NORMAL MODES.
@@ -248,14 +259,26 @@ c     END DO IMO = 1, NBAS
       if (iblk.eq.1) then
          if (itime.eq.1) then
            CALL PUTCREC(20,'JOBARC','EVCSYMAF',8*NBAS,IRRSYM)
+         Write(6,"(a)") "The full point group sym. labels: A spin"
+         Write(6,"(8A4)") (IRRSYM(i), i=1, Nbas)
+         Write(6,*)
          else
            CALL PUTCREC(20,'JOBARC','EVCSYMAC',8*NBAS,IRRSYM)
+         Write(6,"(a)") "The comp. point group sym. labels: A spin"
+         Write(6,"(8A4)") (IRRSYM(i), i=1, Nbas)
+         Write(6,*)
          end if
       else
          if (itime.eq.1) then
            CALL PUTCREC(20,'JOBARC','EVCSYMBF',8*NBAS,IRRSYM)
+         Write(6,"(a)") "The full point group sym. labels: B spin" 
+         Write(6,"(8A4)") (IRRSYM(i), i=1, Nbas)
+         Write(6,*)
          else
            CALL PUTCREC(20,'JOBARC','EVCSYMBC',8*NBAS,IRRSYM)
+         Write(6,"(a)") "The comp. point group sym. labels: B spin"
+         Write(6,"(8A4)") (IRRSYM(i), i=1, Nbas)
+         Write(6,*)
          end if
       end if
 

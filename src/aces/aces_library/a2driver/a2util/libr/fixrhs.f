@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       subroutine fixrhs(w,d,den,e,ntsiz,pop,vrt,nocc,nvrt,ispin,iuhf)
 C
 cjp used to prepare from T1 RHS the <j,b|HexpT|0> term for 4.28

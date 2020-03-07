@@ -165,6 +165,17 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
       subroutine Wrt_Prim_Main(Icore, Icrsiz)
 c
       implicit double precision (a-h,o-z)

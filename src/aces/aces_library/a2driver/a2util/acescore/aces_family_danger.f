@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine redimensions the array sizes for an MOIO family of arrays
 c based on two vectors: one, the number of rows, and the other, the number
 c of columns. It requires the groups to be 'packed' in the sense that

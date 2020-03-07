@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine adds an array DADD to an MOIO array in storage. DADD and the
 c MOIO array must have the same number of elements.
 

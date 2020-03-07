@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE GENNBO_GENFILE(NATOMS,NBAS)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 

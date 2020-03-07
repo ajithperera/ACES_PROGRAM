@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
 C
 C A fairly simple routine to identify symmetry unique values in the
 C array RIN and put the symmetry unique elements to the begining

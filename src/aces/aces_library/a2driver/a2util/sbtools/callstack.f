@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c The call stack is a list of routine names. Every time you call a routine,
 c the name of that routine should be pushed onto the stack. When you exit,
 c you should remove the name from the stack.
@@ -22,7 +33,7 @@ c    subroutine callstack_print
 c    subroutine callstack_pop
 c    subroutine callstack_term
 
-c#define _CALLSTACK_TRACE /* for verbose program tracing */
+c#define _CALLSTACK_TRACE 
 
 
 c ----------------------------------------------------------------------

@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine returns the number of elements and the offset of the first
 c element that a numbered process would control in a parallel environment.
 c The main purpose of this routine is to localize the load-balancing algorithm.

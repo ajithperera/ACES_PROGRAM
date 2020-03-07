@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE INITP
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       INTEGER AND,OR,EOR,DSTRT

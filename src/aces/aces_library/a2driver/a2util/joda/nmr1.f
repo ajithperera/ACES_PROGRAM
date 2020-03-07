@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C Computes chemical shieldings and anisotropies from the chemical shielding
 C tensors.
 

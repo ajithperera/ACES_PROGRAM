@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
 C I don't know who wrote this (or why) but we use it and we'll have to suffer
 C the consequences. The old incarnation of this routine crashed the optimizer
 C in Sun's compiler(s), but the new one doesn't. This is really a textbook

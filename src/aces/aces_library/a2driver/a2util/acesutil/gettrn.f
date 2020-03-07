@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine retrieves the transpose of an upper-left rectangular submatrix
 c of an MOIO array. For a stored matrix dList(1:nRows,1:nCols) and given
 c boundaries iRow and iCol, the output would be dDest(1:iCol,1:iRow).

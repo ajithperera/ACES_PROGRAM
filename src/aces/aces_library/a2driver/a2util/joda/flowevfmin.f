@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE FLOWEVFMIN(SCRATCH, GRDHES, HESMOD, DIAGHES, LMBDAN,
      &                      MORSE, NX, NOPT)
 C
@@ -225,6 +236,8 @@ C
 C
  20      CONTINUE
  10   CONTINUE 
+        Write(6,*) "The unscaled RFO step"
+        Write(6, "(3F10.5)") (SCRATCH(J+NOPT), J=1, NOPT)
 C
 C Notice that there is no Morse adjustments can be made for
 C pure Cartesian OLPtimization (no connections), Also, no

@@ -134,7 +134,7 @@ C Hbar is non-symmetric matrix, and we obtain both left/right eigenvectors.
      +                    " dimension allowed in XGEEV"
          Call abort_job()
       Endif 
-         
+
       Call Dgeev("V","V",Ndim, Hbar, Ndim, EigR, EigI,EvecL,NDIM,
      +            EvecR,Ndim,Work,4*Ndim,Ierror)
 
@@ -173,7 +173,7 @@ C then we choose.
       Write(6,"(6(1x,F10.5))") (EigR(i),i=1,k)
       Write(6,"(a)") "The imaginary eigenvalues"
       Write(6,"(6(1x,F10.5))") (EigI(i),i=1,k)
-      call output(Guess_vec,1,k,1,k,Ndim,Ndim,1)
+      call output(Guess_vec,1,Ndim,1,Ndim,Ndim,Ndim,1)
 C      Write(6,"(a)") "The left-hand side"
 C      call output(EvecL,1,k,1,k,Ndim,Ndim,1)
       endif 

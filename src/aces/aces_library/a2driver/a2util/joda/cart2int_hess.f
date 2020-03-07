@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C  *******************************************************
 C  Conversion of the hessian from cartesian to red. internal
 C  coordinates.
@@ -132,9 +143,15 @@ C Build the K-matrix and the (H-K) matrix as shown in JCP, 117, 9160, 2002.
       LENGTH_BGMAT =3*NRATMS*TOTREDNCO
       CALL GETREC(20,'JOBARC','BTGMIN',IINTFP*LENGTH_BGMAT,
      &            dRICHeap(z_BTGInv))
+         print *, 'The BTGINV matrix'
+         CALL OUTPUT(dRICHeap(z_BTGInv), 1, 3*NRATMS, 1, TOTREDNCO, 
+     &               3*NRATMS, TOTREDNCO, 1)
       CALL GETREC(20,'JOBARC','GMATRIX',IINTFP*LENGTH_BGMAT,
      &            GMINBT)
 
+         print *, 'The G matrix'
+         CALL OUTPUT(GMINBT, 1, 3*NRATMS, 1, TOTREDNCO, 
+     &               3*NRATMS, TOTREDNCO, 1)
 C   Here we transpose the GMATRIX from JOBARC, because it was stored as
 C   (G(-)*B)t and we need (G(-)*B)
 
@@ -151,6 +168,9 @@ C   And here what we do is G(-)*B*(HC-K)*B(t)*G(-)
      &           HI,TOTREDNCO)
 
 C Now we have the the Hessian in Redundant Internal Coordinates
+         print *, 'Hessian in redundant internals'
+         CALL OUTPUT(HI, 1, TOTREDNCO, 1, TOTREDNCO, TOTREDNCO,
+     &               TOTREDNCO, 1)
 C Purify the Hessian as recommended by Schlegel et al. (JCC,17,49,1996).
 C G and G{^-1} have been created in the built_bgmatrix.F. The P=GG{^-1}
 C is the projection into the redundant spaces that correspond to actual
@@ -194,6 +214,9 @@ C built the PHP and stored in HI).
 
       CALL DSCAL(TOTREDNCO*TOTREDNCO,1000.0D0,TEMP1,1)
       CALL DAXPY(TOTREDNCO*TOTREDNCO,-1.d0,TEMP1,1,HI,1)
+          print*,'The projected hessian in redundent internals '
+          CALL OUTPUT(HI,1,TOTREDNCO,1,TOTREDNCO,TOTREDNCO,
+     &                TOTREDNCO,1)
       RETURN
       END
 

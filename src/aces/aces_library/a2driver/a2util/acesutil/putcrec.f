@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine writes a character string to the job archive.
 
 c WARNING!

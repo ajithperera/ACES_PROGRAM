@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C Shell to drive LAPACK algorithm.
 
 C A    - REAL SYMMETRIC MATRIX TO BE DIAGONALIZED (E.VALUES IN DIAGS AFTERWARDS)

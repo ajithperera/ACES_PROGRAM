@@ -172,7 +172,7 @@ C#ifdef _DEBUG_LVL0
       write(*,*)
 C#endif
          OPEN(UNIT=IUNIT, FILE="FRAC_OCCNUMS", FORM="FORMATTED")
-         READ(IUNIT,10,END=19) Nbfns_ext
+         READ(IUNIT,10,END=19) NBFNS_EXT 
          READ(IUNIT,10,END=19) ITMP2(1)
          READ(IUNIT,10,END=19) ITMP2(2)
          NALPHA_OCCUPIED = ITMP2(1)

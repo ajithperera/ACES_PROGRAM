@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine reads a character string from the job archive.
 
 c WARNING!

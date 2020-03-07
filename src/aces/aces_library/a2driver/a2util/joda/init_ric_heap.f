@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine allocates a heap for processing RICs and creates pointers
 c into the heap for various arrays.
 

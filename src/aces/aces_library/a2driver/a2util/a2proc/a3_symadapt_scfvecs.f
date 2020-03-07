@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       Subroutine  a3_symadapt_scfvecs(Scfvec_a, Scfveqc_b, Scfevl_a,
      &                                Scfevl_b, Tmp1, Tmp2,
      &                                Oed2AScale, Ioed2Aorder,

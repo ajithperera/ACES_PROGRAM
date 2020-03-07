@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE READ_CNTVTES(IBNDTO, IUNIT, NATOMS)
 
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
@@ -30,6 +41,11 @@ C
             WRITE(6,1000)
             CALL ERREX
          ENDIF
+         Write(6, "(a,I2)") "The # of connectivites: ",
+     &                       NCONPRCNTR(IATOMS)
+         Write(6,*)
+         Write(6,"(a,10I3)") "The NCON array: ",
+     &                     (NCON(J), J=1, NCONPRCNTR(IATOMS))
       ENDDO
    99 FORMAT (I2, 10(1X,I2))
 C

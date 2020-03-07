@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
       double precision function xdot(n,dx,incx,dy,incy)
 
       double precision dx(*),dy(*),ddot

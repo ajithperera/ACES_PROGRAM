@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
 C
 C DRIVER FOR DETERMINATION OF ORBITAL SYMMETRIES. From ACES II. 
 C 

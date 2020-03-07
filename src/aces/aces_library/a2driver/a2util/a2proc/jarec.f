@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine grabs a record from JOBARC and prints its contents.
 c Recognized datatypes include: i/nt/eger, d/ouble, f/loat, r/eal,
 c ad/ouble (2D array), ai/nt/eger (2D array)

@@ -165,6 +165,17 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
       Subroutine Constr_search(Coords_K0OM, Coords_K1C, Coords_K1PM,
      &                         Vcoords, Coords, Coords_K1CM, Grad_K1C,
      &                         Grad_K1CM, Grad_K0O, Grad_K0OM, A2Hess, 
@@ -328,7 +339,15 @@ CSSS      Call Getrec(20,'JOBARC','GRADIENT',3*Nreals*IINTFP,
 CSSS     &               Grad_K1C(1,1))
 CSSS      Call Getrec(20,'JOBARC','TOTENERG', IINTFP, E_previs)
 C
+      Write(6,*)
+      Write(6,"(a,a,F17.13)") "@-Constr_search The energy of the ",
+     &                       "previous IRC point = ", E_previs
 C
+      Write(6,*)
+      Write(6,*) "@-Constr_search Grad_k1C(comp. order)"
+      Write(6, "(3F17.13)") ((Grad_K1C(i,j), i=1,3),j=1,Nreals)
+      Write(6,*) "@-Constr_search The imap array"
+      Write(6, "(5I2)") (Imap(i), i=1, Nreals)
 C
 C First convert to ZMAT order and then remove the dummy atoms.
 C (Note that the gradient record does not have dummy atom 
@@ -362,6 +381,9 @@ C
          Call Dcopy(3*Nreals, Grad_K1C, 1, Grad_K0O, 1)
       Endif
 C
+      Write(6,*)
+      Write(6,*) "@-Constr_search Grad_K1C (ZMAT order)"
+      Write(6, "(3F17.13)") ((Grad_K1C(i,j), i=1,3),j=1,Natoms)
 C
 C Grad_k1c_stat(1-6) are the largest absolute, the smallest absolute,
 C the largest, the largest, the smallest, the norm, and the
@@ -374,6 +396,11 @@ C
 C
       If (Constr_min .EQ. "Found") Then
 C
+      Write(6,*)
+      Write(6,*) "@-Constr_search Grad_K1C stats"
+      Write(6, "(a,2F17.13)") "largest and the norm",Grad_K1C_stat(1),
+     &                        Grad_K1C_stat(5)
+      Write(6,*) "First check for Convergence ", Constr_Min
         Write(6,"(1x,a,a,/a)") "The gradient is below the tolerence,",
      &                      " the IRC search is probably near a PES",
      &                      " minimum. Further search is terminate!"
@@ -413,6 +440,18 @@ C ----DEBUG--
 C---------
 
 C
+      Write(6,*)
+      Write(6,"(a,a)") "@-Constr_search Mass weighted grads, prev.",
+     &                  "current and pivot point"
+      Write(6, "(3F17.13)") ((Grad_K1CM(i,j), i=1,3),j=1,Nreals)
+      Write(6,"(a)")  "The prv. point"
+      Write(6, "(3F17.13)") (Coords_K0OM(i),i=1,3*Nreals)
+      Write(6,"(a)")  "The curr. point"
+      Write(6, "(3F17.13)") (Coords_K1CM(i),i=1,3*Nreals)
+      Write(6,"(a)")  "The curr. point (no. mass weight)"
+      Write(6, "(3F17.13)") (Coords_K1C(i),i=1,3*Nreals)
+      Write(6,"(a)")  "The pivot. point"
+      Write(6, "(3F17.13)") (Coords_K1PM(i),i=1,3*Nreals)
 C
 C Define the vectors k+1: (qk+1 - qk)
 C 
@@ -423,9 +462,19 @@ C
       Enddo
 C
       Call Vstat(Vec_K1C0, Vec_K1C_Stat, 3*Nreals)
+      Write(6,*)
+      Write(6,*) "@-Constr_search Vec_K1C0"
+      Write(6, "(3F17.13)") (VEC_K1C0(i),i=1,3*Nreals)
+      Write(6,*) "@-Constr_search Vec_K1C_stat"
+      Write(6, "(F17.13)") Vec_K1C_stat(5) 
 C
       Vec_K1C_length = Vec_K1C_Stat(5)*Dsqrt(Dble(3*Nreals))
 C
+         Write(6,*) 
+         Write(6,*) "@-Constr_search Test for the norm of the stride"
+         Write(6, "(3F17.13)") Vec_K1C_length, 
+     &                        Abs(Vec_K1C_length - 0.50D0*Stride), 
+     &                        Nreals*Stride_Tol
 
       If (Abs(Vec_K1C_length - 0.50D0*Stride) .GT. Nreals*Stride_Tol)
      &   Then
@@ -452,10 +501,31 @@ C
 C               
       Call Vstat(Grad_on_K1C, Grad_on_K1C_stat, 3*Nreals)
 C
+      Write(6,*)
+      Write(6,*) "@-Constr_search Vec_K1C1 and Grad_on_K1C and state"
+      Write(6,*) "Vec_K1C0"
+      Write(6, "(3F17.13)") (Vec_K1C1(i),i=1,3*Nreals) 
+      Write(6,*)
+      Write(6, "(3F17.13)") ((Grad_on_K1C(i,j), i=1,3),j=1,Nreals)
+      Write(6, "(a,2F17.13)") "largest and the norm of Grad_on_K1C",
+     &                    Grad_on_K1C_stat(1),
+     &                    Grad_on_K1C_stat(5)*Dsqrt(Dble(3*Nreals))
       If (Ncycles .ge. 2) Then
          Powel_upd = .true.
          Call Dcopy(3*Nreals, Grad_K0O, 1, Work, 1)
 C
+      Write(6,*)
+      Write(6,"(a,a)") "@-Constr_search entry to Hess. update",
+     &                 "current, previous gradinets and geo. update"
+      Write(6,*) "The current gradient"
+      Write(6, "(3F17.13)") ((Grad_K1C(i,j), i=1,3),j=1,Nreals)
+      Write(6,*) "The previous gradient"
+      Write(6, "(3F17.13)") (Work(j), j=1,3*Nreals)
+      Write(6,*) "The geo. update"
+      Write(6,"(3F17.13)") (Work(9*Nreals+i), i=1,3*Nreals)
+      Write(6,*) "The restored Hessian"
+      Call output(Hess_K1C, 1, 3*Nreals, 1, 3*Nreals, 3*Nreals,
+     &            3*Nreals, 1)
          Iw_off_pg = 1
          Iw_off_dx = Iw_off_pg + 9*Nreals 
          Iw_off_s1 = Iw_off_dx + 3*Nreals  
@@ -470,13 +540,28 @@ C
      &                                    Work(Iw_off_s2), 1.0D0,
      &                                    3*Nreals)
 C
+      if (Powel_upd) then
+      Write(6,*) "The powel updated Hessian"
+      Call output(Hess_K1C, 1, 3*Nreals, 1, 3*Nreals, 3*Nreals,
+     &            3*Nreals, 1)
+      endif
 C
          If (Bfgs_upd) Call Bfgs_update(Grad_K1C, Work(Iw_off_pg), 
      &                      Hess_K1C, Work(Iw_off_s1), 
      &                      Work(Iw_off_dx), Work(Iw_off_s2),
      &                      3*Nreals)
 C
+      if (Bfgs_upd) then
+      Write(6,*) "The BFGS updated Hessian"
+      Call output(Hess_K1C, 1, 3*Nreals, 1, 3*Nreals, 3*Nreals,
+     &            3*Nreals, 1)
+      endif
 C
+      Write(6,*) "@-constr_search At the entry to ln_interpol"
+      Write(6,*) "The M.W. current gradient"
+      Write(6, "(3F17.13)") ((Grad_K1CM(i,j), i=1,3),j=1,Nreals)
+      Write(6,*) "The M. W. previous gradient"
+      Write(6, "(3F17.13)") (Grad_K0OM(j), j=1,3*Nreals)
       Endif
 C
 C Save the current coordinates in the work array. The current coordinates
@@ -491,6 +576,12 @@ C needed in subsequent steps.
      &                Binsearch_Tol)
       Call Dcopy(3*Nreals, Vcoords, 1, Coords_K1C, 1)
 C
+      Write(6,*)
+      Write(6,"(a,a)") "@-Constr_search The No M. W. updated vector",
+     &                 " (Vec_K1C_Updated)"
+      Write(6,"(3F17.13)") (Work(6*Nreals+i), i=1,3*Nreals)
+      Write(6,*) "@-Constr_search geo. (before updated, no M.W)"
+      Write(6,"(3F17.13)") (Coords_K1C(i), i=1,3*Nreals)
 C
 C Save the previous point coordinates, gradients and tangent gradients before
 C generating the new point.
@@ -515,6 +606,11 @@ C
       Enddo
       Call Daxpy(3*Nreals, 1.0D0, Work(6*Nreals+1), 1, Coords_K1CM, 1)
 C
+      Write(6,*)
+      Write(6,*) "@-Constr_search The updated no M.W. geo."
+      Write(6,"(3F17.13)") (Coords_K1C(i), i=1,3*Nreals)
+      Write(6,*) "@-Constr_search The updated M.W. geo."
+      Write(6,"(3F17.13)") (Coords_K1CM(i), i=1,3*Nreals)
 C 
 CSSS      Delta_q = Ddot(3*Nreals, Work(3*Nreals+1), 1, Work(3*Nreals+1),
 CSSS     &               1)
@@ -524,6 +620,11 @@ C
       Delta_q = Dsqrt(Delta_q)
       Delta_g = Grad_on_K1C_stat(5)*Dsqrt(Dble(3*Nreals))
 C
+      Write(6,*)
+      Write(6,"(a)") "Check for convergence"
+      Write(6,"(a,2F17.13)") "R_cutoff, G_cutoff",R_cutoff, G_cutoff
+      Write(6,"(a,2F17.13)") "Delta_q, Delta_g  ",Delta_q, Delta_g
+CSSS      Write(6,"(a,2F17.13)") "Delta_q1",Delta_q1
       If (Delta_g .LT. G_cutoff .AND. Delta_q .LT. R_cutoff) 
      &   Constr_Min = "Found"       
 C
@@ -534,6 +635,14 @@ C
 C
       If (Constr_min .EQ. "Found") Then
 
+      Write(6,*)
+      Write(6,*) "@-Constr_search The IRC is converged "
+      Write(6,*)
+      Write(6,*) "@-Constr_search The NEW IRC point "
+      Write(6,"(3F17.13)") (Coords_K1C(I), I = 1, 3*Nreals)
+      Write(6,*) "@-Constr_search The Previous IRC point "
+      Ikeep_K0OM = 50*Nreals*Nreals - 3*Nreals
+      Write(6,"(3F17.13)") (Work(Ikeep_K0OM+I-1), I = 1, 3*Nreals)
 C
 C compute the mass-weighted distance between IRC points.
 C
@@ -583,6 +692,9 @@ C
              Call Dcopy(3, Vcoords(Joff), 1, Coords(Ioff), 1)
          Endif
       Enddo
+      Write(6,*)
+      Write(6,*) "@-Constr_search updated geo. to JARC"
+      Write(6,"(3F17.13)") (Coords(i), i=1,3*Nreals)
       Call Putrec(20, "JOBARC", "COORD  ", Natoms*3*IINTFP,
      &            Coords)
 C
@@ -597,6 +709,9 @@ C
      &            Grad_K1C(1,1))
       Call Getrec(20,'JOBARC','TOTENERG', IINTFP, E_currnt)
 C
+      Write(6,*)
+      Write(6,"(a,a,F17.13)") "@-Constr_search The energy of the ",
+     &                       "current IRC point = ", E_currnt
 C
       If (E_currnt .GT. E_previs) Then
           Write(6, "(a,a)") "Warning: The energy is rising ", 
@@ -634,6 +749,18 @@ C
          Enddo
       Enddo
             
+      Write(6,*)
+      Write(6,"(a,a)") "@-Constr_search Grad_K1CM at the updated",
+     &                 " M. W. gradient. (ZMAT order)."
+      Write(6, "(3F17.13)") ((Grad_K1CM(i,j), i=1,3),j=1,Nreals)
+      Write(6,*)
+      Write(6,"(a,a)") "@-Constr_search leaving M. W.,",
+     &                  "prev current and pivot point"
+      Write(6, "(3F17.13)") (Coords_K0OM(i),i=1,3*Nreals)
+      Write(6,"(a)")  "The curr. point"
+      Write(6, "(3F17.13)") (Coords_K1CM(i),i=1,3*Nreals)
+      Write(6,"(a)")  "The pivot. point"
+      Write(6, "(3F17.13)") (Coords_K1PM(i),i=1,3*Nreals)
 C  
       Return
       End 

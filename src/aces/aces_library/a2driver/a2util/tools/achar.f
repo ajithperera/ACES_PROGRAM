@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine supplies the character*1 function 'achar' if the Fortran
 c compiler does not contain it as an intrinsic. This was first seen on
 c an OSF/DEC compiler.

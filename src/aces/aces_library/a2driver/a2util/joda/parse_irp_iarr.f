@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine parses a string, szData, and extracts integers for nIrrps
 c up to dim1 in groups of up to dim2. If nIrrps is zero, then it is set to
 c the number of irreps in the first group up to dim1. The elements are

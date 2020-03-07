@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C THIS ROUTINE PRINTS OUT A SUMMARY OF THE SYMMETRY ADAPTED COORDINATES.
 
 c This routine was essentially the same as the old DUMPCORD routine but had

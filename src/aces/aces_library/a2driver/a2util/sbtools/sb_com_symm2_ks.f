@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
       subroutine sb_com_symm2_ks
       implicit none
 

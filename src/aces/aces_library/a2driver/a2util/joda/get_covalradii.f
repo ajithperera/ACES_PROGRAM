@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE GETCOVLRADI(IATOMICNMBER, SMOFCOVRADI, NRATMS)
 C
 C Compute sum of covalent radii for each unquie pair of atoms. The

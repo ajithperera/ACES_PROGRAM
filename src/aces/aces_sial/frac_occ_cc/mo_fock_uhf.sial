@@ -9,36 +9,36 @@
      index   NbfnsA = 1, eavirtorb
      index   NbfnsB = 1, ebvirtorb 
 
-     moaindex i = baocc, eaocc
-     moaindex i1= baocc, eaocc
-     moaindex i2= baocc, eaocc
-     moaindex i3= baocc, eaocc
-#
-     moaindex a = bavirt, eavirt
-     moaindex a1= bavirt, eavirt
-     moaindex a2= bavirt, eavirt
-     moaindex a3= bavirt, eavirt
-#
-     mobindex j = bbocc, ebocc
-     mobindex j1= bbocc, ebocc
-     mobindex j2= bbocc, ebocc
-     mobindex j3= bbocc, ebocc
-#
-     mobindex b = bbvirt, ebvirt
-     mobindex b1= bbvirt, ebvirt
-     mobindex b2= bbvirt, ebvirt
-     mobindex b3= bbvirt, ebvirt
-#
+     moaindex i = baocc, eavirt
+     moaindex i1= baocc, eavirt
+     moaindex i2= baocc, eavirt
+     moaindex i3= baocc, eavirt
+
+     moaindex a = baocc, eavirt
+     moaindex a1= baocc, eavirt
+     moaindex a2= baocc, eavirt
+     moaindex a3= baocc, eavirt
+
+     mobindex j = bbocc, ebvirt
+     mobindex j1= bbocc, ebvirt
+     mobindex j2= bbocc, ebvirt
+     mobindex j3= bbocc, ebvirt
+
+     mobindex b = bbocc, ebvirt
+     mobindex b1= bbocc, ebvirt
+     mobindex b2= bbocc, ebvirt
+     mobindex b3= bbocc, ebvirt
+
      moaindex p = baocc, eavirt
      moaindex p1= baocc, eavirt
      moaindex p2= baocc, eavirt
      moaindex p3= baocc, eavirt
-#
+
      mobindex q = bbocc, ebvirt
      mobindex q1= bbocc, ebvirt
      mobindex q2= bbocc, ebvirt
      mobindex q3= bbocc, ebvirt
-
+    
      temp Txa(mu,a)
      temp Txat(mu,a)
      temp Txb(mu,b)
@@ -452,16 +452,6 @@
                enddo b
             enddo j
        ENDPARDO mu,nu
-       PARDO mu,nu
-            GET Fpq_b(mu,nu)
-            do j
-               Tjx(j,nu) = Fpq_b(mu,nu)*CB_new(mu,j)
-                do b
-                   Tjb(j,b)  = Tjx(j,nu)*CB_new(nu,b)
-                   PUT Fpqb_me(j,b) += Tjb(j,b)
-               enddo b
-            enddo j
-       ENDPARDO mu,nu
 
        PARDO mu,nu
             GET Fpq_b(mu,nu)
@@ -501,7 +491,6 @@
           get Fpqa_me(i,a)
           etemp = Fpqa_me(i,a) *  Fpqa_me(i,a)
           esuma += etemp
-          esuma += etemp
        enddo i
        enddo a
        do j
@@ -522,7 +511,6 @@
        do j
           get Fpqb_me(j,b)
           etemp = Fpqb_me(j,b) *  Fpqb_me(j,b)
-          esumb += etemp
           esumb += etemp
        enddo j
        enddo b
@@ -1134,11 +1122,26 @@
       CALL HF_ENERGY
       CALL FORM_MO_FOCK
 
+#bgn_debug
+#     execute sip_barrier
+#     suma =0.0
+#     esuma=0.0
+#     PARDO i,a
+#         get fpqa_me(i,a)
+#         tme_a(i,a)=Fpqa_me(i,a)
+#         tmp = tme_a(i,a) * tme_a(i,a)
+#         suma += tmp
+#     ENDPARDO i,a
+#     execute sip_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
+#end_debug
+
       EXECUTE SERVER_BARRIER 
       EXECUTE BLOCKS_TO_LIST Fpqa_mi
       EXECUTE BLOCKS_TO_LIST Fpqb_mi
-      EXECUTE BLOCKS_TO_LIST Fpqb_me 
       EXECUTE BLOCKS_TO_LIST Fpqa_me 
+      EXECUTE BLOCKS_TO_LIST Fpqb_me 
       EXECUTE BLOCKS_TO_LIST Fpqa_ae 
       EXECUTE BLOCKS_TO_LIST Fpqb_ae 
       EXECUTE WRITE_BLOCKS_TO_LIST 

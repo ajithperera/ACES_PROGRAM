@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C COMPUTES C(I) = a(i) / (1./b(i) + denomshift)
 C FOR FIRST N ELEMENTS OF VECTORS A AND B.
 

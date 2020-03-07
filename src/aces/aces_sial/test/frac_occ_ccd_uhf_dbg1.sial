@@ -950,8 +950,8 @@
 #
            Taiai(a,i,a1,i1)            = VSpipi(a,i,a1,i1)
 #bgn_frac
-           execute set_aces3_vars  pzozo four
-           execute apply_frac_occs Taiai four
+#           execute set_aces3_vars  pzozo four
+#           execute apply_frac_occs Taiai four
            execute energy_denominator_frac_occs Taiai
 #           execute energy_denominator Taiai
 #end_frac 
@@ -966,8 +966,8 @@
 #
            Tbjbj(b,j,b1,j1)            = VSqjqj(b,j,b1,j1)  
 #bgn_frac
-           execute set_aces3_vars  pzozo four
-           execute apply_frac_occs Tbjbj four
+#           execute set_aces3_vars  pzozo four
+#           execute apply_frac_occs Tbjbj four
            execute energy_denominator_frac_occs Tbjbj
 #           execute energy_denominator Tbjbj
 #end_frac 
@@ -982,8 +982,8 @@
 #
            Taibj(a,i,b,j)            = Vpiqj(a,i,b,j)
 #bgn_frac
-           execute set_aces3_vars  pzozo four
-           execute apply_frac_occs Taibj four
+#           execute set_aces3_vars  pzozo four
+#           execute apply_frac_occs Taibj four
            execute energy_denominator_frac_occs Taibj
 #           execute energy_denominator Taibj
 #end_frac 
@@ -1245,9 +1245,9 @@
 #end_frac
                T1aa(a,a1)  = Tai(a,i) * Tia(i,a1)
                Taa(a,a1)  += T1aa(a,a1)
-               Taa(a,a1)  *= -0.5
             ENDDO i
 
+           Taa(a,a1)  *= -0.5
            PUT Fae_a(a,a1)  += Taa(a,a1)
       ENDPARDO a,a1
 
@@ -1264,7 +1264,7 @@
                   taaia(a1,a,i,a2) = taaai(a1,a,a2,i)
                   tai(a2,i)        = t1a_old(a2,i)
 #bgn_frac
-                  execute set_aces3_vars  zer   one
+                  execute set_aces3_vars  pzo   two 
 #                  execute apply_frac_occs taaai two
                   execute apply_frac_occs tai   one
 #end_frac
@@ -1331,7 +1331,7 @@
                Taaab(a1,a,b,j) = Vaabj(a1,a,b,j)
                Taajb(a1,a,j,b) = Taaab(a1,a,b,j)
 #bgn_frac
-               execute set_aces3_vars  zer   one
+               execute set_aces3_vars  oz    two
 #               execute apply_frac_occs taajb two
                execute apply_frac_occs tjb   two
 #end_frac
@@ -1451,9 +1451,9 @@
                T1bb(b,b1)  = Tbj(b,j) * Tjb(j,b1)
 
                Tbb(b,b1)  += T1bb(b,b1)
-               Tbb(b,b1)  *= -0.5
             ENDDO j
 
+           Tbb(b,b1)  *= -0.5
            PUT Fae_b(b,b1)  += Tbb(b,b1)
       ENDPARDO b,b1
 #
@@ -1702,8 +1702,8 @@
          get fme_a(i,a)
          tme_a(i,a)=Fme_a(i,a) 
 #bgn_frac
-           execute set_aces3_vars  oz    two
-           execute apply_frac_occs tme_a two
+#           execute set_aces3_vars  oz    two
+#           execute apply_frac_occs tme_a two
 #end_frac
          tmp = tme_a(i,a) * tme_a(i,a)
          suma += tmp
@@ -1784,8 +1784,8 @@
          get fme_b(j,b)
          tme_b(j,b)=fme_b(j,b)
 #bgn_frac 
-        execute set_aces3_vars oz      two 
-        execute apply_frac_occs tme_b two
+#        execute set_aces3_vars oz      two 
+#        execute apply_frac_occs tme_b two
 #end_frac
          tmp = tme_b(j,b)*tme_b(j,b)
          sumb += tmp
@@ -1980,7 +1980,7 @@
                Tbj(b,j)  = T1b_old(b,j)
                Tjb(j1,b) = Fpqb_me(j1,b)
 #bgn_frac
-               execute set_aces3_vars  zer two
+               execute set_aces3_vars  zer one 
 #               execute apply_frac_occs Tjb two
                execute apply_frac_occs Tbj one
 #end_frac
@@ -2487,8 +2487,14 @@
 #
                GET t1b_old(b1,j) 
                GET Fae_b(b,b1) 
-#
-               t1bj(b,j) = t1b_old(b1,j)*Fae_b(b,b1) 
+               T2bj(b1,j) = t1b_old(b1,j)
+               Tbb(b,b1) =  Fae_b(b,b1)
+#bgn_frac
+               execute set_aces3_vars  zer one
+               execute apply_frac_occs Tbb two
+#               execute apply_frac_occs T2bj one
+#end_frac
+               t1bj(b,j) = T2bj(b1,j)*Tbb(b,b1)
                tbj(b,j) += t1bj(b,j) 
 #
                DO j1 
@@ -7619,9 +7625,9 @@
            T2aiai(a,i,a1,i1) -= T3aiai(a,i,a1,i1)
            T2aiai(a,i,a1,i1) += T2old_aa(a,i,a1,i1)
 #bgn_frac
-#           execute set_aces3_vars  pzozo  four
+           execute set_aces3_vars  pzozo  four
 #           execute apply_frac_occs T1aiai four
-#           execute apply_frac_occs T2aiai four
+           execute apply_frac_occs T2aiai four
 #end_frac
 #
            etemp = T1aiai(a,i,a1,i1)*T2aiai(a,i,a1,i1) 
@@ -7650,9 +7656,9 @@
            T2bjbj(b,j,b1,j1) -= T3bjbj(b,j,b1,j1)
            T2bjbj(b,j,b1,j1) += T2old_bb(b,j,b1,j1)
 #bgn_frac
-#           execute set_aces3_vars  pzozo  four
+           execute set_aces3_vars  pzozo  four
 #           execute apply_frac_occs T1bjbj four
-#           execute apply_frac_occs T2bjbj four
+           execute apply_frac_occs T2bjbj four
 #end_frac
            etemp = T1bjbj(b,j,b1,j1)*T2bjbj(b,j,b1,j1) 
            etemp = 0.25*etemp 
@@ -7675,9 +7681,9 @@
            Taibj(a,i,b,j)  = t1a_old(a,i)^t1b_old(b,j) 
            Taibj(a,i,b,j) += T2old_ab(a,i,b,j)  
 #bgn_frac
-#           execute set_aces3_vars  pzozo  four
+           execute set_aces3_vars  pzozo  four
 #           execute apply_frac_occs T1aibj four
-#           execute apply_frac_occs Taibj  four
+           execute apply_frac_occs Taibj  four
 #end_frac
            etemp = Taibj(a,i,b,j)*T1aibj(a,i,b,j) 
            esumab += etemp 
@@ -7780,8 +7786,8 @@
             Taiai(a,i,a1,i1)         = T2new_aa(a,i,a1,i1)
             T1aiai(a,i,a1,i1)        = T2old_aa(a,i,a1,i1)
 #bgn_frac
-            execute set_aces3_vars  pzozo  four
-            execute apply_frac_occs Taiai  four
+#            execute set_aces3_vars  pzozo  four
+#            execute apply_frac_occs Taiai  four
 #            execute apply_frac_occs T1aiai four
             execute energy_denominator_frac_occs Taiai
 #end_frac
@@ -7820,8 +7826,8 @@
             Tbjbj(b,j,b1,j1)         = T2new_bb(b,j,b1,j1)
             T1bjbj(b,j,b1,j1)        = T2old_bb(b,j,b1,j1)
 #bgn_frac
-            execute set_aces3_vars  pzozo  four
-            execute apply_frac_occs Tbjbj  four
+#            execute set_aces3_vars  pzozo  four
+#            execute apply_frac_occs Tbjbj  four
 #            execute apply_frac_occs T1bjbj four
             execute energy_denominator_frac_occs Tbjbj
 #end_frac
@@ -7859,8 +7865,8 @@
             Taibj(a,i,b,j)           = T2new_ab(a,i,b,j)
             T1aibj(a,i,b,j)          = T2old_ab(a,i,b,j)
 #bgn_frac
-            execute set_aces3_vars  pzozo  four
-            execute apply_frac_occs Taibj  four
+#            execute set_aces3_vars  pzozo  four
+#            execute apply_frac_occs Taibj  four
 #            execute apply_frac_occs T1aibj four
             execute energy_denominator_frac_occs Taibj
 #end_frac
@@ -7897,8 +7903,8 @@
             REQUEST                    T2new_aa(a,i,a1,i1) a 
             Taiai(a,i,a1,i1)         = T2new_aa(a,i,a1,i1)
 #bgn_frac
-            execute set_aces3_vars  pzozo  four
-            execute apply_frac_occs Taiai  four
+#            execute set_aces3_vars  pzozo  four
+#            execute apply_frac_occs Taiai  four
             execute energy_denominator_frac_occs Taiai
 #end_frac
 #            execute energy_denominator Taiai
@@ -7911,8 +7917,8 @@
             REQUEST                    T2new_bb(b,j,b1,j1) b 
             Tbjbj(b,j,b1,j1)         = T2new_bb(b,j,b1,j1)
 #bgn_frac
-            execute set_aces3_vars  pzozo  four
-            execute apply_frac_occs Tbjbj  four
+#            execute set_aces3_vars  pzozo  four
+#            execute apply_frac_occs Tbjbj  four
             execute energy_denominator_frac_occs Tbjbj
 #end_frac
 #            execute energy_denominator Tbjbj
@@ -7926,8 +7932,8 @@
             REQUEST                    T2new_ab(a,i,b,j) a
             Taibj(a,i,b,j)           = T2new_ab(a,i,b,j)
 #bgn_frac
-            execute set_aces3_vars  pzozo  four
-            execute apply_frac_occs Taibj  four
+#            execute set_aces3_vars  pzozo  four
+#            execute apply_frac_occs Taibj  four
             execute energy_denominator_frac_occs Taibj
 #end_frac
 #            execute energy_denominator Taibj
@@ -7963,9 +7969,9 @@
             tai(a,i)         = t1a_new(a,i) 
             t1ai(a,i)        = t1a_old(a,i) 
 #bgn_frac
-            execute set_aces3_vars  pzo  two
+#            execute set_aces3_vars  pzo  two
 #            execute apply_frac_occs t1ai two
-            execute apply_frac_occs tai  two
+#            execute apply_frac_occs tai  two
             execute energy_denominator_frac_occs tai 
 #end_frac
 #            execute energy_denominator tai 
@@ -8001,9 +8007,9 @@
             tbj(b,j)         = t1b_new(b,j) 
             t1bj(b,j)        = t1b_old(b,j) 
 #bgn_frac
-            execute set_aces3_vars  pzo  two
+#            execute set_aces3_vars  pzo  two
 #            execute apply_frac_occs t1bj two
-            execute apply_frac_occs tbj  two
+#            execute apply_frac_occs tbj  two
             execute energy_denominator_frac_occs tbj
 #end_frac
 #            execute energy_denominator tbj

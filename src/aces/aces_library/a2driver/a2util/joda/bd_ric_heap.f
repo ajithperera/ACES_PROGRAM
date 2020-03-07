@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine defines the default values for the common block in
 c include/ric_heap.com.
 

@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       Subroutine Bohr2angs(R, NX)
 C 
       Implicit Double Precision (A-H, O-Z)

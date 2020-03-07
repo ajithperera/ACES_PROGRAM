@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine carves up the kscore(i0) space for using setptr/relptr.
 c It's clumsy, but you must communicate with this routine through
 c kscore.com by setting ineeded, dneeded, maxicore, etc.

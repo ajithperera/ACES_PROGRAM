@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine redistributes the array sizes for an MOIO family of arrays
 c based on two-particle symmetry processing. It DOES NOT perform the resort,
 c and it requires the groups to be 'packed' in the sense that aces_list_touch

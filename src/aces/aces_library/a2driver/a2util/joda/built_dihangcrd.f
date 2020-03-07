@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE BULT_DIHANGCRD(CARTCOORD, BMATRX, DANG, ICON1, 
      &                          ICON2, ICON3, ICON4, IDIHS, 
      &                          TOTREDNCO, NRATMS)

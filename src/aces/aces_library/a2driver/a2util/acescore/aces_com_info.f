@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine initializes the info common block.
 
       subroutine aces_com_info

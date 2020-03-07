@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE A2BUILD_QUANTITY(WORK, MAXCOR, PRDUTINT, QUANTITY, 
      &                            SPIN_D, DENSITY_TYPE, 
      &                            NMBR_OF_PERTS, IPICK_PERT, NBFNS,
@@ -108,6 +119,13 @@ C
              END IF
           END DO
 c
+      Print*, "Quantity of interest (perturbed total and/or spin",
+     &        " density)"
+      Write(6,*), KCUBE
+CSS      Do IND_CUBE =1, KCUBE
+      Write(*,'((1x,2F10.6))') QUANTITY(0,KCUBE),
+     &                         QUANTITY(1,KCUBE)
+CSSS      Enddo
       ENDIF
 C
       RETURN

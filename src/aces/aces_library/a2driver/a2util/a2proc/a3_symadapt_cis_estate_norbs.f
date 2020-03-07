@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       subroutine a3_symadapt_cis_estate_norbs(ener,iocc,orb,dens,nlorb,
      &                                    edens,Oed2AScal, Ioed2Aord,
      &                                    tmp1,scr,nao,nbas,maxcor,

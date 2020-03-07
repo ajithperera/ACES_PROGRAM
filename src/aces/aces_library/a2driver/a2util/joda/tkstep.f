@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE TKSTEP(GRD, HES, SCRATCH, HESMOD, GRDMOD, STEP, 
      &                  GRDHES, DIAGHES, VEC, RFAMAT, EVRFAMAT,
      &                  BMATRIX, HES_INTACT, FSCR, WORK, IADITNL)
@@ -363,6 +374,10 @@ C
             GRDHES(I)=GRDHES(I)+GRDMOD(J)*DIAGHES(J,I)
  1179    CONTINUE
  1180 CONTINUE
+        Write(6,*)
+        Write(6,*) "The gradients along eiegenvectors"
+        Write(6,"(3F13.8)") (GRDHES(I), I=1, NOPT)
+        Write(6,*)
 C
 C Do the Newton-Raphson or Morse adjusted Newton-Raphson minima search
 C (Only applies to internal coordinate optimizations, Ajith Perera, 12/08).
@@ -426,6 +441,9 @@ C
      &             NOPT, NX, NXM6, IBREAK, ICONTL, LUOUT, NCYCLE,
      &             LUDONE, BMATRIX, HES_INTACT, FSCR, VEC,
      &             STEP)
+      Write(6,*)
+      Write(6,*) "The R vector before leaving tkstep"
+      Write(6,"(5F13.7)"), (R(I), I =1, NXM6)
 
 C
       RETURN

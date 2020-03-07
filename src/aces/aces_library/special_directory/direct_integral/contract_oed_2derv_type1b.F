@@ -71,7 +71,7 @@ c---------------------------------------------------------------------------
       double precision xold(max_centers), yold(max_centers), 
      *                 zold(max_centers)
       double precision x1,y1,z1,x2,y2,z2, x, y, tess, fact 
-      double precision x1p,y1p,z1p,x2p,y2p,z2p, eps
+      double precision x1p,y1p,z1p,x2p,y2p,z2p, eps,s
 
       if (type .ne. 1) then
          print *,'Error: Invalid type in contract_oed_2derv_type'
@@ -89,12 +89,19 @@ c---------------------------------------------------------------------------
       ind(1) = 1
       ind(2) = 2
 
+CSSS      s = 0.0D0
+CSSS      Do i = da1,da2
+CSSS      Do j = db1,db2 
+CSSS         S = s + Density(i,j)
+CSSS      Enddo
+CSSS      Enddo  
+CSSS      Write(6,"(a,1x,F15.10)") " The sum d elements :",S
+
       if (intpkg .ne. flocke_package) then
          print *,'Error: contract_oed_2derv_type1 requires ERD ',
      *           'integral package.'
          call abort_job()
       endif
-
 c-------------------------------------------------------------------------
 c   Find the shells we need to loop over for this block of density data.
 c--------------------------------------------------------------------------
@@ -434,10 +441,11 @@ c---------------------------------------------------------------------------
 
 c                if (atom(m) .ne. atom(n)) y = y*2.0d0  
 
-c                 if (dbg .and. icomponent .eq. 3 .and. 
-c     *             jcomponent .eq. 3
-c     *           .and. iatom .eq. 1 .and. jatom .eq. 1)
-c     *           write(6,*) ' M N :', m, n, y/eps 
+CSSS                 if (icomponent .eq. 3 .and. 
+CSSS     *              jcomponent .eq. 3
+CSSS     *              .and. iatom .eq. 1 .and. jatom .eq. 1)
+CSSS     *           write(6,*) ' M N :', m, n, y/eps 
+
                  hess(jhess,ihess) = hess(jhess,ihess) + y/eps  
 
                endif ! nints 
@@ -472,6 +480,9 @@ c-------------------------------------------------------------------------
        enddo ! n = n1, n2
        enddo ! m = m1, m2
 
+CSSS      Write(6,*) "Hess at exit"
+CSSS      Write(6,"(4(1x,F15.10))") ((Hess(i,j),i=1,3*Ncenters),
+CSSS     +                            j=1,3*Ncenters)
       return
       end
 

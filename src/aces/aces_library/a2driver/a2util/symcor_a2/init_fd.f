@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine performs all the symmetry analysis needed to generate the grid
 c of displacements. It is essentially a method that uses and updates JOBARC
 c records. NENER is returned solely to tell symcor that there are points to

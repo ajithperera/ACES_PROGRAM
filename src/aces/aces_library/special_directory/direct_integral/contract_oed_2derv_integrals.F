@@ -59,6 +59,9 @@ c---------------------------------------------------------------------------
       integer ind(2)
       integer flopcount
       logical spherical
+      double precision sumxx, sumxy, sumxz
+      double precision sumyx, sumyy, sumyz
+      double precision sumzx, sumzy, sumzz
    
       integer max_dim_coeff
       parameter (max_dim_coeff = 5000)
@@ -84,6 +87,18 @@ c---------------------------------------------------------------------------
 
       ind(1) = 1
       ind(2) = 2
+
+#ifdef _DEBUG_LVL0
+      sumxx=0.0d0
+      sumxy=0.0d0
+      sumxz=0.0d0
+      sumyx=0.0d0
+      sumyy=0.0d0
+      sumyz=0.0d0
+      sumzx=0.0d0
+      sumzy=0.0d0
+      sumzz=0.0d0
+#endif
 
       if (intpkg .ne. flocke_package) then
          print *,'Error: contract_oed_2derv_integrals requires ERD ',
@@ -347,7 +362,30 @@ c---------------------------------------------------------------------------
               hess(jhess,ihess) = hess(jhess,ihess) + y 
 
              endif
-
+#ifdef _DEBUG_LVL0
+      do b = db1, db2
+      do a = da1, da2
+         if (icomponent .eq. 1 .and. jcomponent .eq. 1)
+     &       sumxx = sumxx + z(a,b) *  z(a,b)
+         if (icomponent .eq. 1 .and. jcomponent .eq. 2)
+     &       sumxy = sumxy + z(a,b) *  z(a,b)
+         if (icomponent .eq. 1 .and. jcomponent .eq. 3)
+     &       sumxz = sumxz + z(a,b) * z(a,b)
+         if (icomponent .eq. 2 .and. jcomponent .eq. 1)
+     &       sumyx = sumyx + z(a,b) *  z(a,b)
+         if (icomponent .eq. 2 .and. jcomponent .eq. 2)
+     &       sumyy = sumyy + z(a,b) *  z(a,b)
+         if (icomponent .eq. 2 .and. jcomponent .eq. 3)
+     &       sumyz = sumyz + z(a,b) *  z(a,b)
+         if (icomponent .eq. 3 .and. jcomponent .eq. 1)
+     &       sumzx = sumzx + z(a,b) *  z(a,b)
+         if (icomponent .eq. 3 .and. jcomponent .eq. 2)
+     &       sumzy = sumzy + z(a,b) *  z(a,b)
+         if (icomponent .eq. 3 .and. jcomponent .eq. 3)
+     &       sumzz = sumzz + z(a,b) *  z(a,b)
+      enddo
+      enddo
+#endif
          enddo ! jx
          enddo ! ix
          enddo ! jcomponent
@@ -357,6 +395,52 @@ c---------------------------------------------------------------------------
 
          enddo   ! n shells
          enddo   ! m shells
+
+#ifdef _DEBUG_LVL0
+      write(6,*)
+      if (type .eq. 2) then
+      write(6,"(a,F20.10)")" The 1-el (kin) hes. integral checksumxx =",
+     &sumxx
+      write(6,"(a,F20.10)")" The 1-el (kin) hes. integral checksumxy =",
+     &sumxy
+      write(6,"(a,F20.10)")" The 1-el (kin) hes. integral checksumxz =",
+     &sumxz
+      write(6,"(a,F20.10)")" The 1-el (kin) hes. integral checksumyx =",
+     &sumyx
+      write(6,"(a,F20.10)")" The 1-el (kin) hes. integral checksumyy =",
+     &sumyy
+      write(6,"(a,F20.10)")" The 1-el (kin) hes. integral checksumxz =",
+     &sumyz
+      write(6,"(a,F20.10)")" The 1-el (kin) hes. integral checksumzx =",
+     &sumzx
+      write(6,"(a,F20.10)")" The 1-el (kin) hes. integral checksumzy =",
+     &sumzy
+      write(6,"(a,F20.10)")" The 1-el (kin) hes. integral checksumzz =",
+     &sumzz
+      write(6,*)
+      else if (type .eq. 3) then
+      write(6,"(a,F20.10)")" The 1-el (ovl) hes. integral checksumxx =",
+     &sumxx
+      write(6,"(a,F20.10)")" The 1-el (ovl) hes. integral checksumxy =",
+     &sumxy
+      write(6,"(a,F20.10)")" The 1-el (ovl) hes. integral checksumxz =",
+     &sumxz
+      write(6,"(a,F20.10)")" The 1-el (ovl) hes. integral checksumyx =",
+     &sumyx
+      write(6,"(a,F20.10)")" The 1-el (ovl) hes. integral checksumyy =",
+     &sumyy
+      write(6,"(a,F20.10)")" The 1-el (ovl) hes. integral checksumxz =",
+     &sumyz
+      write(6,"(a,F20.10)")" The 1-el (ovl) hes. integral checksumzx =",
+     &sumzx
+      write(6,"(a,F20.10)")" The 1-el (ovl) hes. integral checksumzy =",
+     &sumzy
+      write(6,"(a,F20.10)")" The 1-el (ovl) hes. integral checksumzz =",
+     &sumzz
+      write(6,*)
+
+      endif
+#endif
 
       return
       end

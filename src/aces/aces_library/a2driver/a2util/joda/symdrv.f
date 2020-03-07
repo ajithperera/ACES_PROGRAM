@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This is a switch for debugging. Apparently, the CRAYs do not like
 c storing characters in integer scratch arrays. Well, porting this
 c to Sun/SPARC causes problems. If anyone decides to spend more time

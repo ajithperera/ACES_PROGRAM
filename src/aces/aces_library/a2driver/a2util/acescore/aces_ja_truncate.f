@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine removes all the records in the JOBARC file at the specified
 c record and offset. It does not decrease the size of the JOBARC file, it merely
 c resets the lookup table data.

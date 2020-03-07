@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine retrieves a record from the JOBARC file.
 
 c INPUT

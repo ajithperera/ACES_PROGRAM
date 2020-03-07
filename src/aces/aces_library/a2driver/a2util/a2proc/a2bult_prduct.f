@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE A2BULT_PRDUCT(INDX, JNDX, ITYPE, JTYPE, MAXPRM,  
      &                         EXP1, EXP2, CENTER, CNTMU, CNTNU, 
      &                         TMP2)

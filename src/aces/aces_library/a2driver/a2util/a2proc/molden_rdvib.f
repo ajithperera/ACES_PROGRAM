@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       subroutine molden_rdvib(natoms,iatchrg,freq,freqco,dnormmd,nvib,
      &                        iunit)
 c-----------------------------------------------------------------------

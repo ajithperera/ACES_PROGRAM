@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       subroutine molden_rdbasis(natoms,iatchrg,gexp,coef,iunit)
 c-----------------------------------------------------------------------
       implicit double precision (a-h,o-z)

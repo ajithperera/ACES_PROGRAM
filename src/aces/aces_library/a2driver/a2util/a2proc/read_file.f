@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
        Subroutine Read_file(NATOMS, NVIBS, Input_Array, Scratch1)
 C 
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
@@ -246,6 +257,7 @@ C
       Nleft = Nvibs - 3*Nfull
       
 
+      Write(6,*) "Nfull and Nleft", Nfull, Nleft
 
       Ioff = 1
       Do Jcount = 1, Nfull
@@ -272,6 +284,10 @@ C
          Enddo
       Enddo
 
+      nt = nfull + Nleft
+      Write(6,*) "Data as read from the external file"
+      Call output(Scratch1, 1, Natoms*nt, 1, 9, natoms*(nfull+3), 9, 
+     &           1)
  10   FORMAT(A2, 3X, 3(3(F7.4,1X), 2x))
 	
       Ntotal = Nfull + Nleft
@@ -289,5 +305,9 @@ C
           Enddo
       Enddo
 
+      nt = nfull + Nleft
+      Write(6,*) "Reordered data from  external file"
+      Call output(Input_array, 1, Natoms*3, 1, natoms*(nfull+3), 9, 
+     &           1)
       Return
       End

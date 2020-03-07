@@ -176,6 +176,17 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE READ_TLC_AMPS(SCR, MAXCOR, NLIST, LENGTH, IUHF)
 C
       IMPLICIT NONE
@@ -234,6 +245,8 @@ C
 C
       LENGTH = I050 - I000
 C
+      Write(6,*) 
+      call checksum("@-Read_tlc_amps", Scr(i000), Length)
 
       RETURN
       END

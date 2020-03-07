@@ -25,13 +25,23 @@ c--------------------------------------------------------------------------
       implicit none
       include 'interpreter.h'
       include 'trace.h'
+      include 'parallel_info.h'
 
-      double precision x
+      double precision x, Thres 
       integer nindex, type(*), bval(*), eval(*)
       integer bdim(*), edim(*)
       double precision x2
       integer nindex2, type2(*), bval2(*), eval2(*)
       integer bdim2(*), edim2(*)
+
+      Thres = 1.0D-09 
+      If (me .eq. 0) Then 
+          If (x .EQ. 0.0D0 .OR. X .LT. Thres) Then
+             Write(6,"(3a,ES8.2E2)") "@-norm_fac: Negative or small", 
+     +                      " values are not allowed as an input. The",
+     +                      " current value is ", x
+          Endif 
+      Endif 
 
       x2 = dsqrt(x)
       x  = 1.0d0/x2

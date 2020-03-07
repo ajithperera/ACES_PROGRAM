@@ -53,6 +53,7 @@ c--------------------------------------------------------------------------
       implicit none
       include 'mpif.h'
       include 'parallel_info.h'
+      include 'aces3_vars.h'
 
       double precision stemp, sumb
       integer i, n, a, b, i1, i2, a1, a2, j1, j2, b1, b2
@@ -67,7 +68,6 @@ c--------------------------------------------------------------------------
        open (unit=66,file="summary.out")
        if (me .eq. 0)then
 
-         write(66,*) ' '
          write(66,20)
          write(66,40)
 c

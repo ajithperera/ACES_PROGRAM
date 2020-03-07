@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE ASSIGN_BONDS(IBNDTO, IREDUNCO, TOTREDNCO, TOTNOFBND,
      &                        NRATMS, MAXREDUNCO)
 C

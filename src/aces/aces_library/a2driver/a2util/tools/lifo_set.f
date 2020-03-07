@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This subroutine sets the free-space index to INDX.
 
 c INPUT

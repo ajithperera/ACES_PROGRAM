@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE ENTRY(BasNam, We_havegeom, Can_do_freq)
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
 

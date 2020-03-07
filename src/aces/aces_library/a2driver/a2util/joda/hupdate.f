@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE HUPDATE(V,H,SCRATCH,STEP,TBT,ITYPE)
 C
 C     ARGUMENTS PASSED ARE NEW GRADIENT, HESSIAN (TO BE READ AND
@@ -387,6 +398,12 @@ C  Modified BFGS update
      $      ' modified BFGS update using ',
      &      'last two gradients and previous step.')
 C
+         Print*, "The BFGS update check"
+         Write(6,*) (V(I), I =1, NXM6)
+         Write(6,*) (SCRATCH(I), I = 1, NXM6)
+         Write(6,*) (STEP(I), I= 1, NXM6)
+         CALL OUTPUT(H, 1, NXM6, 1, NXM6, NXM6,NXM6, 1 )
+         Write(6,*)
 CSSS         CALL MODF_BFGS(V, H, SCRATCH, STEP, TBT)
       ENDIF
 C

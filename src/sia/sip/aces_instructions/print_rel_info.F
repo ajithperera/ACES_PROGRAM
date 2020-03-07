@@ -623,7 +623,9 @@ c----------------------------------------------------------------------------
 c   Warning flags (911:EOM)
 c---------------------------------------------------------------------------
       if (scalar_table(sind) .eq. 911.0 .or.
-     *    scalar_table(sind) .eq. 99.0 ) then 
+     *    scalar_table(sind) .eq. 99.0  .or.
+     *    scalar_table(sind) .eq. 98.0  .or.
+     *    scalar_table(sind) .eq. 97.0) Then
           call print_warning(x(iarray),scalar_table(sind),
      *             1,n1,1,n2)
       endif 
@@ -1410,6 +1412,7 @@ c---------------------------------------------------------------------------
       include 'interpreter.h'
       include 'int_gen_parms.h'
       include 'parallel_info.h'
+      include 'aces3_vars.h'
 c
       integer i, ival, amax, a, a1, a2, b, b1, b2   
       integer ieom_roots 
@@ -1421,7 +1424,11 @@ c
 
       ival = sval 
       conv = 27.21138505 
-      ieom_roots = eom_roots 
+      If (No_core_sites .NE. 0) Then
+         Ieom_roots = eom_roots * No_core_sites
+      Else 
+         Ieom_roots = eom_roots 
+      Endif 
       amax = max(ieom_roots,6) 
       singlet = (Sval .eq. 28)
       triplet = (Sval .eq. 29)
@@ -1480,6 +1487,7 @@ c---------------------------------------------------------------------------
       include 'interpreter.h'
       include 'int_gen_parms.h'
       include 'parallel_info.h'
+      include 'aces3_vars.h'
 c
       integer i, ival, amax, a, a1, a2, b, b1, b2   
       integer ieom_roots 
@@ -1491,7 +1499,11 @@ c
 
       ival = sval 
       conv = 27.21138505 
-      ieom_roots = eom_roots 
+      If (No_core_sites .NE. 0) Then
+         Ieom_roots = eom_roots * No_core_sites
+      Else
+         Ieom_roots = eom_roots
+      Endif
       amax = max(ieom_roots,6) 
       singlet = (Sval .eq. 72)
       triplet = (Sval .eq. 73)
@@ -1546,6 +1558,7 @@ c---------------------------------------------------------------------------
       include 'interpreter.h'
       include 'int_gen_parms.h'
       include 'parallel_info.h'
+      include 'aces3_vars.h'
 c
       integer i, ival, amax, a, a1, a2, b, b1, b2   
       integer ieom_roots 
@@ -1557,9 +1570,12 @@ c
 
       ival = sval 
       conv = 27.21138505 
-      ieom_roots = eom_roots 
+      If (No_core_sites .NE. 0) Then
+         Ieom_roots = eom_roots * No_core_sites
+      Else
+         Ieom_roots = eom_roots
+      Endif
       amax = max(ieom_roots,6) 
-
       singlet = .False.
       triplet = .False.
       Right_hand = .False.
@@ -1659,11 +1675,21 @@ c
       Elseif (Sval .eq. 99) then
    
       Write(66,*)
-      Write(66,"(2x,a,a)") "Singles excitations amplitude above 0.1 is",
-     &                     "printed in the same"
+      Write(66,"(2x,a,a)") "Single excitations amplitude above 0.1 is",
+     &                     " printed in the same"
       Write(66,"(2x,a,a)") "order as the excitation energies appears in",
-     &                     "the above tables." 
+     &                     " the above tables." 
 
+      Elseif (Sval .eq. 98) then
+      Write(66,*)
+      Write(66,"(a,a)") "  ---------Singlet single excitation ",
+     &                  "coefficients-------------"
+      Write(66,*) 
+      Elseif (Sval .eq. 97) then
+      Write(66,*)
+      Write(66,"(a,a)") "  ---------Triplet single excitation ", 
+     &                  "coefficients-------------"
+      Write(66,*) 
       Endif
       Endif
 

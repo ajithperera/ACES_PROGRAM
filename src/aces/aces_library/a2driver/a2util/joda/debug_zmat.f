@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C Read the Z-matrix and find errors.
 
 

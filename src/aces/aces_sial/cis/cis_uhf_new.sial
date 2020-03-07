@@ -269,6 +269,9 @@
       Scalar IMAP
       Scalar LEFT 
       Scalar RIGHT 
+      Scalar MONE 
+      Scalar TZZ
+      Scalar WARNING 
 #
       temp  Tx(MROOTS)
       temp TS(MINDEX50,NINDEX50)
@@ -3794,12 +3797,15 @@
       MULT  = 0.0
       ZERO  = 0.0
       ONE   = 1.0
+      MONE  = -1.0
       TWO   = 2.0
       THREE = 3.0
       LEFT  = ZERO
       RIGHT = ZERO
+      TZZ   = 200.0
    
       EXECUTE SET_ACES3_VARS RIGHT LEFT
+      EXECUTE SET_ACES3_VARS TZZ   ZERO 
 
       SINGLET = ZERO
       TRIPLET = ZERO 
@@ -3900,6 +3906,7 @@
                   CALL CHECK_CONVERGENCE
 #bgn_debug
       execute print_scalar RESIDUAL_NORM
+      execute print_scalar OMEGA
 #      execute print_scalar CIS_THRES 
 #end_debug
                   IF RESIDUAL_NORM  < CIS_THRES
@@ -3922,6 +3929,7 @@
 #          execute print_scalar OMEGA
 #      endif 
 #end_debug
+             ITER_COUNT  += MONE
              IF ITER_COUNT == MAX_SUBSP_DIM
                 IF RESIDUAL_NORM  > CIS_THRES
 #
@@ -3978,33 +3986,33 @@
           ENDDO NROOTS
 
 #bgn_debug
-      mcount=0.0
-      do mroots
-      mcount +=1.0
-      if mcount > target_roots
-      exit
-      Endif
-      tmpb=0.0
-      tmpa=0.0
-      suma=0.0
-      sumb=0.0
-      pardo i,a
-         get CISA_S_VECS(a,i,MROOTS)
-         tai(a,i) = CISA_S_VECS(a,i,MROOTS)
-         Tmp = tai(a,i) * tai(a,i)
-         tmpa += tmp
-      endpardo i,a
-      pardo j,b
-         get CISB_S_VECS(b,j,MROOTS)
-         tbj(b,j) = CISB_S_VECS(b,j,MROOTS)
-         tmpb += tmp
-      endpardo j,b
-      execute server_barrier
-      collective suma +=tmpa
-      collective sumb +=tmpb
-      execute sip_barrier
-      execute print_scalar suma
-      enddo mroots
+#      mcount=0.0
+#      do mroots
+#      mcount +=1.0
+#      if mcount > target_roots
+#      exit
+#      Endif
+#      tmpb=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,a
+#         get CISA_S_VECS(a,i,MROOTS)
+#         tai(a,i) = CISA_S_VECS(a,i,MROOTS)
+#         Tmp = tai(a,i) * tai(a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      pardo j,b
+#         get CISB_S_VECS(b,j,MROOTS)
+#         tbj(b,j) = CISB_S_VECS(b,j,MROOTS)
+#         tmpb += tmp
+#      endpardo j,b
+#      execute server_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute sip_barrier
+#      execute print_scalar suma
+#      enddo mroots
 #end_debug
 
           IF MULT == ONE 
@@ -4017,33 +4025,33 @@
            ENDIF 
 
 #bgn_debug
-      mcount=0.0
-      do mroots
-      mcount +=1.0
-      if mcount > target_roots
-      exit
-      Endif
-      tmpb=0.0
-      tmpa=0.0
-      suma=0.0
-      sumb=0.0
-      pardo i,a
-         get CISA_S_REORD_VECS(a,i,MROOTS)
-         tai(a,i) = CISA_S_REORD_VECS(a,i,MROOTS)
-         Tmp = tai(a,i) * tai(a,i)
-         tmpa += tmp
-      endpardo i,a
-      pardo j,b
-         get CISB_S_REORD_VECS(b,j,MROOTS)
-         tbj(b,j) = CISB_S_REORD_VECS(b,j,MROOTS)
-         tmpb += tmp
-      endpardo j,b
-      execute server_barrier
-      collective suma +=tmpa
-      collective sumb +=tmpb
-      execute sip_barrier
-      execute print_scalar suma
-      enddo mroots
+#      mcount=0.0
+#      do mroots
+#      mcount +=1.0
+#      if mcount > target_roots
+#      exit
+#      Endif
+#      tmpb=0.0
+#      tmpa=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo i,a
+#         get CISA_S_REORD_VECS(a,i,MROOTS)
+#         tai(a,i) = CISA_S_REORD_VECS(a,i,MROOTS)
+#         Tmp = tai(a,i) * tai(a,i)
+#         tmpa += tmp
+#      endpardo i,a
+#      pardo j,b
+#         get CISB_S_REORD_VECS(b,j,MROOTS)
+#         tbj(b,j) = CISB_S_REORD_VECS(b,j,MROOTS)
+#         tmpb += tmp
+#      endpardo j,b
+#      execute server_barrier
+#      collective suma +=tmpa
+#      collective sumb +=tmpb
+#      execute sip_barrier
+#      execute print_scalar suma
+#      enddo mroots
 #end_debug
 
 #bgn_debug
@@ -4063,6 +4071,8 @@
       ENDDO SPN_MULT
 
       EXECUTE SERVER_BARRIER
+      WARNING = 911.0
+      EXECUTE PRINT_REL_INFO WARNING DIAGA 
 
 # The following DENS2JOBARC call add record "CIS" to the JOBARC file.
 

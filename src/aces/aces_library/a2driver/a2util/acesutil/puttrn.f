@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine stores the transpose of a rectangular matrix to the upper-left
 c rectangular submatrix of an MOIO array. For a stored matrix
 c dList(1:nRows,1:nCols) and given the input dSrc(1:iCol,1:iRow), the updated

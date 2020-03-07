@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE MODFY_HESSIAN(DIAGHES, HESMOD, HES, QSTLST_TANGENT,
      &                         SCRATCH, EIGVALUE, WEIGHT, NOPT)
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)

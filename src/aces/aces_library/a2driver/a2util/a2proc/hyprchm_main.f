@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This program writes a drives creation of HYPERCHEM  format file containing 
 c the coordinates, frequencies, normal mode vectors and intensities.
 c

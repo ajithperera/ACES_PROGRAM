@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE GENTRANMAT(SCR, MAXCOR)
 C
 C MAXPRIM  - Maximum number of primitives in a shell (30).

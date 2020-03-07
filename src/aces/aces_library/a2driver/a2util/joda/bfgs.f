@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c The Broyden-Fletcher-Goldfarb-Shanno update.
 
       SUBROUTINE BFGS(V,H,SCRATCH,STEP,TBT)

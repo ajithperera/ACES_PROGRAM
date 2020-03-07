@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine antisymmetrizes an unpacked super-matrix dA by
 c
 c    dA(pq,*) = dA(pq,*) - dA(qp,*)

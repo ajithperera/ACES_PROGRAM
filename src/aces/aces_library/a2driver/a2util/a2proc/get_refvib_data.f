@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE GET_REFVIB_DATA(Vcoords, Norm_coords, Vomega, Omega,
      &                           AtmMass, AtmLabel, SymLabel, Coords,   
      &                           Btmp, A2grad, Grad, Hess, Vhess,  
@@ -132,6 +143,9 @@ CSSS     &               VHess)
           Call Getrec(20,'JOBARC','HESSIANM',9*Nreals*Nreals*IINTFP,
      &                VHess)
 
+         Write(6,*)  
+         Write(6,*) "@get_ref_vibdata; Hessian from JARC"
+         Call output(Vhess,1,3*nreals,1,3*nreals,3*nreals,3*nreals,1)
 c
 c-----Transform to the ZMAT order
 C
@@ -152,6 +166,9 @@ C
                Enddo
             Enddo
          Enddo
+         Write(6,*)
+         Write(6,*) "@get_ref_vibdata; after reorder"
+         Call output(hess,1,3*natoms,1,3*natoms,3*natoms,3*natoms,1)
 C
 C-----Eleminate the entry for dummy atoms
 C
@@ -173,6 +190,9 @@ C
 C
       Endif
 C     
+         Write(6,*)  
+         Write(6,*) "@get_ref_vibdata; Hessian after removing dummies"
+         Call output(hess,1,3*nreals,1,3*nreals,3*nreals,3*nreals,1)
 C
       If (Get_Grad) Then
 

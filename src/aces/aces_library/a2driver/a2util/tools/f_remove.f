@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine removes a file (or directory) without having to open it and
 c then close it with status='DELETE'.
 

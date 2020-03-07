@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE ASSIGN_LABELS (IREDUNCO, TOTREDNCO, TOTNOFBND,
      &                          TOTNOFANG, TOTNOFDIH,INTLABEL)
 C 

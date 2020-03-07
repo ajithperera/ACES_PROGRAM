@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE INERTIA(IT, NOSILENT)
 C
 C BUILD INERTIA TENSOR

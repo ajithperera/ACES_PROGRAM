@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine initializes the job archive environment (via the JAINDX file)
 c in order for getrec and putrec to work properly.
 

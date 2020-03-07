@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       Subroutine Angs2bohr(R, NX)
 C 
       Implicit Double Precision (A-H, O-Z)

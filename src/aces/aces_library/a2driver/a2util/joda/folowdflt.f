@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE FOLOWDFLT(HESMOD, DIAGHES, SCRATCH, VEC, TS, NRORMANR,
      &                     RFA, IVEC, IMODE, NCYCLE, NX, NOPT)
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)

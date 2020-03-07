@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c Single-line parser of Z-matrix elements ONLY.
 
 c INPUT

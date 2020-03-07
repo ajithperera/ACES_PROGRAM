@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       Subroutine Write2_stdout(Etran, Cvtran, Stran, Erot, Cvrot,
      &                         Srot, Evib, Cvvib, Svib, Etot,
      &                         Cvtot, Stot, H) 

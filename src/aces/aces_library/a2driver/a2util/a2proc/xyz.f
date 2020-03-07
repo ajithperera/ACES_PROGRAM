@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine prints the chemical system (minus dummy atoms) in the form:
 c   A1 X1 Y1 Z1
 c   A2 X2 Y2 Z2

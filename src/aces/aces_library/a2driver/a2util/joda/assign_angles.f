@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE ASSIGN_ANGLS(CARTCOORD, IBNDTO, IREDUNCO, TOTREDNCO,
      &                        TOTNOFBND, TOTNOFANG, NRATMS, MAXREDUNCO, 
      &                        THRESHOLD)
@@ -144,12 +155,18 @@ C optimization, Ajith Perera, 03/2011.
 C
                 IF (LOOK4_ANCHOR) THEN
                    DO IANCHOR = 1, NRATMS
+      Write(6, "(a,4I3)") "Check for anchor atom: ICON1", 
+     &      IBNDTO(MIN(ICON1,IANCHOR), MAX(ICON1,IANCHOR)),
+     &      IANCHOR, ICON1
                        IF (IBNDTO(MIN(ICON1,IANCHOR),
      &                      MAX(ICON1,IANCHOR)) .GT. 0) THEN
                             IREDUNCO(4, TOTNOFANG + TOTREDNCO)
      &                      = -IANCHOR
                             GO TO 999
                        ENDIF
+      Write(6, "(a,4I3)") "Check for anchor atom: ICON2", 
+     &      IBNDTO(MIN(ICON3,IANCHOR), MAX(ICON3,IANCHOR)),
+     &      IANCHOR, ICON3
                        IF (IBNDTO(MIN(ICON3,IANCHOR),
      &                     MAX(ICON3,IANCHOR)) .GT. 0) THEN
                            IREDUNCO(4, TOTNOFANG + TOTREDNCO) 

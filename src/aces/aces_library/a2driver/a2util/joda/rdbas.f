@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE RDBAS(TITLE,IENTRY,ICONTX,LUVMOL,INTTYP,NULLST,
      &                 IATNUM,NORD,seward,cpbasis,icpun)
 C

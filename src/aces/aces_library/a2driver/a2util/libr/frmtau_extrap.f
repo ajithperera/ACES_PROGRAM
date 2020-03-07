@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C FORMS THE QUANTITY:
 C
 C         E = SUM  [E(1) + TAU(i) * [E(i)-E(1)]]   

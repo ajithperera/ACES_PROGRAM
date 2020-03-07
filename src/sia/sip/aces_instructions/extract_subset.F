@@ -125,7 +125,7 @@ C
          Endif 
       Endif 
 
-      If (Ndim1 .NE. Ndim1) Then
+      If (Ndim1 .NE. Ndim2) Then
          If (me .eq. 0) Then
          Write(6,"(a,a)") "@-Extract_subset: A dimension mismatch",
      &                    " of the two incomming arrays"

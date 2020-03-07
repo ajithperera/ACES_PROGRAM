@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C Purpose: Produce an VMOL .MOL file based on the ZMAT file
 C
 C Arguments:

@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE PREVIB(NRX,H,SCRATCH,GRAD)
 C
 C FRONT END TO NORMAL COORDINATE CALCULATION.  COMPRESSES DUMMY
@@ -163,6 +174,11 @@ c
       CALL PUTREC(20,'JOBARC','CARTHESC',NRX*NRX*IINTFP,H)
       CALL ZERO(SCRATCH,3*NX)
 C
+C      Write(6,*) "@-previb, The Hessian"
+       CALL output(h, 1, NRX, 1, NRX, NRX, NRX, 1)
+       Write(6,*)
+       Write(6,*) "@-previb, The griadients"
+       Write(6, "(3F10.5)") (GRAD(I), I=1,NX)
 C
 C
 C NOW COMPRESS THE VARIOUS ARRAYS.

@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This transforms a triangular block of a matrix to a square one
       subroutine mat_trans_tri_sqr(tri,sqr,trilen,sqrlen,sqroff)
 

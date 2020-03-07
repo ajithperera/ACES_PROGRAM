@@ -98,6 +98,17 @@ c-------------------------------------------------------------------
           Return
       Endif 
 
+      If (Int(qq) .EQ. 200) Then
+          No_core_sites = Int(g)
+          Ee = .True.
+          Return
+      Endif 
+      If (Int(qq) .EQ. -200) Then
+          No_core_sites = Int(g)
+          Ip = .True.
+          Return
+      Endif 
+
 #ifdef _DEBUG_LVL0
       If(me .eq.0) 
      + Write(6,"(a,8a)") "The stored value of Exc_block: ",Exc_block

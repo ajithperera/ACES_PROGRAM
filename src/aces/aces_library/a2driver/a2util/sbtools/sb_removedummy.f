@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine removes dummy atoms from the molecule.  It is necessary
 c since JODA stores the molecular information with dummy atoms (it needs
 c that information each time), but no other module should ever need

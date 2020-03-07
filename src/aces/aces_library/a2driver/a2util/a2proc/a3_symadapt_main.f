@@ -165,6 +165,17 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
       subroutine A3_symadapt_main(Work, Icrsiz)
 c
       implicit double precision (a-h,o-z)

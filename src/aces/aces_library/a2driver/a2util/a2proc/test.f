@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine grabs a record from JOBARC and compares it to data in test files.
 c Recognized datatypes: i/nt/eger, d/ouble, f/loat, r/eal (technically,
 c anything not an integer is processed as a double)

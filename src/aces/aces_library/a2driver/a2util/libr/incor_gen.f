@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C This routine loads lists into ICORE(I0), increments I0, and decrements
 C ICRSIZ. I0 and ICRSIZ do not have to point to the /ISTART/ common
 C block, but they must be relative to ICORE(1) in the blank common

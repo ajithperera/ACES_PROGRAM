@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine expands a packed super-matrix dA(p<q,*) to dB(pq,*).
 c NOTE: dB may alias dA in which case the matrix is expanded "in place".
 

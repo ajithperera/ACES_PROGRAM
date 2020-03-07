@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
       function is_connected(atom1, atom2, connectiontable, natoms,
      &                      connectlist)
 C

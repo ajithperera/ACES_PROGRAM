@@ -165,6 +165,17 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
       subroutine Den_Plots_Main(Icore, Icrsiz)
 c
       implicit double precision (a-h,o-z)
@@ -403,6 +414,11 @@ C
        If (INext .ge. Maxcor) Call Insmem("Den_plot_main", Inext, 
      &                                     Maxcor)
 C
+      print*, "Entering Reord_MOs:"
+      Print*, "Input variables", Inext, Max_prim_4atom, Itot_prim, 
+     &         icnterbf, Iscfcoef_reord_a, Iscfcoef_reord_b,
+     &         Icoef_a, Icoef_b, Nangmom, Nmomao, Naoatm,ipcoeff
+      write(*,*)
 C
        Call Reord_mos(0, Nreal_atoms, Naobfns, Nbfns, Max_prim_4atom, 
      &                Icore(Icnterbf), ICore(Iscfcoef_a),  
@@ -427,6 +443,8 @@ C
      &               Icore(Icoef_b),Itot_prim)
       End if
 
+      print*, "Entering Nodummy:"
+      write(*,*)
       CALL Nodummy(Natoms, Max_prim_4atom, Iatmchrg, Coord,
      &            Icore(Nangmom), Icore(Nmomfct), Icore(Inuctr))
 C

@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE A2RD_BASIS_4INTGRT(IUATMS,NATOMS,ITFCT,LNP1,LNPO,
      &                              NTANGM,IMEMB,NUC,NFCT,NUFCT,
      &                              NANGMOM,NUMOM,ATMNAM,COORD,NPOP,
@@ -151,6 +162,18 @@ C
  1020    CONTINUE
  1011 CONTINUE
          
+      Write(6,*) "The NANGMOM array"
+      Write(6, "(8i4)") (NANGMOM(I), i=1, Natoms)
+      Write(6,*) "The NFCT array"
+      Write(6, "(8i4)") (NFCT(I), i=1, Natoms)
+      Write(6,*) "The NAOATM array"
+      Write(6, "(8i4)") (NAOATM(I), i=1, Natoms)
+      Write(6,*) "The NPOP array"
+      Write(6, "(8i4)") (NPOP(I), i=1, Natoms)
+      Write(6,*) "The NMBERSHL array"
+      Write(6, "(8i4)") (NMBERSHL(I), i=1, Natoms)
+      Write(6,*) "The IMEMB array"
+      Write(6, "(8i4)") (IMEMB(I), i=1, Natoms)
 C     
 C Built the NCONFUNSHL, NANGMOMSHL arrays for all atoms. Also 
 C get the total number of shells for all the atoms. This data
@@ -164,11 +187,15 @@ C
      &                         NMBERSHL(IATMS-1)
       ENDDO
 C
+      Write(6,*) "The offset array"
+      Write(6, "(8i4)") (ISHLOFF_TMP(I), i=1, Natoms)
 
       DO IATMS = 1, NATOMS
           ISHLOFF(IATMS) = ISHLOFF_TMP(IMEMB(IATMS))
       ENDDO
 
+      Write(6,*) "The reordered offset array"
+      Write(6, "(8i4)") (ISHLOFF(I), i=1, Natoms)
       NTOTSHL = 0
       ITOTATM = 0
 C
@@ -190,6 +217,10 @@ c
          ENDDO
       ENDDO
 C
+      Write(6,*) "The NCONFUNTSHL array @a2rd_basis_4intgrt"
+      Write(6, "(8i4)") (NCONFUNTSHL(I), i=1, NTOTSHL)
+      Write(6,*) "The NANGMOMTSHL array @a2rd_basis_4intgrt"
+      Write(6, "(8i4)") (NANGMOMTSHL(I), i=1, NTOTSHL)
 C Now, I don't know what this was trying to acomplish. Commentted on
 C 
 CSSS      ICOUNT = 0
@@ -201,6 +232,8 @@ CSSS            ICOUNT = ICOUNT + 1
 CSSS            NMBERSHL(ICOUNT) = NMBERSHL(IATMS)
 CSSS         ENDDO
 CSSS      ENDDO
+      Write(6,*) "The NMBERSHL array after expansion"
+      Write(6, "(8i4)") (NMBERSHL(I), i=1, Natoms)
 C
 C Also bulit the offsets for primitives and contracted functions 
 C on each symmetry unique atoms.
@@ -290,7 +323,28 @@ CSS            LANGMOM = IANGMOM*(IANGMOM+1)/2
          END DO
       ENDDO 
 C
+      Write(6,*) 
+      Write(6,*) "The s,p,d,f.. functions ordering" 
+      Write(6,"(a,I5)") "@-A2RD_BASIS_ The number of basis functions ",
+     &                   NAOBSFN
+      Write(6, "(6I4)") (IREORD(I), I =1, NAOBSFN)
 C
+C
+         WRITE(LUOUT, *) "The debug info for two particle density"
+         WRITE(LUOUT, *)  "Total No, shells, Angular momentum components,
+     &   No. of contracted functions per shell"
+C
+         DO 130 IATM=1,IUATMS
+            WRITE(LUOUT,1170) IATM,ATMNAM(IATM),NFCT(IATM),
+     &         (COORD((IATM-1)*3+J),J=1,3)
+         IMANY_SHEL =  NMBERSHL(IATM)
+         WRITE(LUOUT, *) (NANGMOMSHL(IATM,I), I= 1, IMANY_SHEL)
+         WRITE(LUOUT, *) (NCONFUNSHL(IATM,I), I= 1, IMANY_SHEL)
+ 130     CONTINUE
+         WRITE(LUOUT,1130) NTANGM
+         WRITE(LUOUT,1140) ITFCT
+         WRITE(LUOUT,1150) LNP1
+         WRITE(LUOUT,1160) LNPO
  1120 FORMAT(2I5)
  1130 FORMAT(/'THE LARGEST NUMBER OF SHELLS FOR ANY ATOM IS',I3)
  1140 FORMAT('THE MOLECULE HAS',I4,' TOTAL PRIMITIVE FUNCTIONS')

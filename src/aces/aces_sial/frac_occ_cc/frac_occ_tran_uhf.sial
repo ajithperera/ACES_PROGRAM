@@ -255,6 +255,9 @@
       temp T1xxii(mu,nu,i1,i) 
       temp Tixxi(i1,mu,nu,i) 
       temp T1ixxi(i1,mu,nu,i) 
+      temp tme_a(i,a)
+      temp tme_b(j,b)
+      temp tmi_a(i,i1)
 #
 # Declare integral arrays 
 # ------------------------  
@@ -309,6 +312,9 @@
       scalar e2 
       scalar e3 
       scalar esum  
+      scalar tmp
+      scalar suma
+      scalar esuma
 #
 #    ------------------------------------------------------------------------
 #
@@ -1400,14 +1406,40 @@
      EXECUTE LIST_TO_BLOCKS Fpqb_me
      EXECUTE LIST_TO_BLOCKS Fpqa_ae
      EXECUTE LIST_TO_BLOCKS Fpqb_ae
+     EXECUTE READ_LIST_TO_BLOCKS 
      EXECUTE SERVER_BARRIER
+
+#bgn_debug
+     suma =0.0
+     esuma=0.0
+     PARDO b,j
+         get fpqb_me(j,b)
+         tme_b(j,b)=Fpqb_me(j,b)
+         tmp = tme_b(j,b) * tme_b(j,b)
+         suma += tmp
+     ENDPARDO b,j
+     execute sip_barrier
+     collective esuma += suma
+     execute print_scalar esuma
+#
+#     suma =0.0
+#     esuma=0.0
+#     PARDO i,i1
+#         get fpqa_mi(i,i1)
+#         tmi_a(i,i1)=Fpqa_mi(i,i1)
+#         tmp = tmi_a(i,i1) * tmi_a(i,i1)
+#         suma += tmp
+#     ENDPARDO i,i1
+#     execute sip_barrier
+#     collective esuma += suma
+#     execute print_scalar esuma
+#end_debug
 
      ENDPROC READ_MO_FOCK
 #    --------------------
 #
 #    Main Program 
 #
-     execute server_barrier 
      CALL READ_MO_FOCK
      CALL TRAN_UHF 
      #execute server_barrier 

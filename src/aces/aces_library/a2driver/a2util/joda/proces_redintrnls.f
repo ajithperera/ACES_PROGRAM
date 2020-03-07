@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE PROCESS_REDINTRNLS(Q, REDUNCO, IREDUNCO, IBNDTO, 
      &                              I_UNIQUE, PTGRP, TOTNOFBND, 
      &                              TOTNOFANG, TOTNOFDIH, TOTREDNCO,

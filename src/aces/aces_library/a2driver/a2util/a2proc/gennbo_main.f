@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE GENNBO_MAIN
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 

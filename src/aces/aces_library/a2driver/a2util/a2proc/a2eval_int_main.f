@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE A2EVAL_INT_MAIN(MAXATMS, NATOMS, MAXSHELL, MAXPRM,
      &                           IREDUN, NSHL, NTOTPRIM, NTOTCRF, 
      &                           NOFFSETATMP, NOFFSETATMC, 

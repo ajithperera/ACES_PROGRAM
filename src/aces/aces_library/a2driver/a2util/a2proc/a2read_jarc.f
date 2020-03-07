@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
 C---------------------------------------------------------------------
 C
       SubroutinE a2read_jarc(FlgACESGeom,FlgACESElec,FlgACESGrad,
@@ -273,6 +284,8 @@ C
 C
       Enddo
 C
+      Write(6,*) "The vibrational Frequencies"
+      Write(*,"(4(2X,F10.4))") (Omega(I), I = 1, Nvibs)
 C
       Open(IUnitO,File='Freq.rate',Status='Unknown')
       ierr = 0

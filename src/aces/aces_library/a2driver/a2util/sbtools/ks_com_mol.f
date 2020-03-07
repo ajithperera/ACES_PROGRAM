@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine gets all of the standard information from the JOBARC file
 c for the molecule.
 

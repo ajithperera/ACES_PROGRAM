@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine prints the unique factors of a number.
 
       subroutine factor(args,dimargs)

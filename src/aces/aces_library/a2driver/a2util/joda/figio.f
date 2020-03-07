@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c The purpose of this routine is to set the number of CACHE_RECS and
 c the FILE_RECSIZE based on the MEMORY_SIZE.  The goals are to use 5%
 c of ICORE for the I/O cache and to have between 32 and 128

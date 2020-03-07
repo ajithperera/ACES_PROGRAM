@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE WHAT2FOLLOW(HESMOD, DIAGHES, QSTLST_TANGENT,
      &                       SCRATCH, NX, NOPT, IMODE)
       IMPLICIT DOUBLE PRECISION(A-H, O-Z)

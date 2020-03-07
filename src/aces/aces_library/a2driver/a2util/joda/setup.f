@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE SETUP(HES, GRD, HESMOD, GRDMOD, IQFIX, STPMAX, LUOUT)
 C
 C Build the Hessian and Gradient vectors symmetry coordintes (
@@ -38,6 +49,7 @@ C
 C
 C Let's update the number of cycles right away!
 C
+      Write(6,*) "The number of opt. cycles:", NCYCLE 
 C
       NCYCLE = NCYCLE + 1 
 C

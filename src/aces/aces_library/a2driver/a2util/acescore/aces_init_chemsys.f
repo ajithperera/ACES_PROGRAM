@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine initializes the chemical system in order that the executable
 c understands symmetry, orbital, and list information.
 

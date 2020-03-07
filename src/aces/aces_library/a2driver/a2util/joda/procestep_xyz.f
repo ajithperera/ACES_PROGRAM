@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE PROCESTEP_XYZ(SCRATCH, AMATRX, TOTREDNCO)
 C
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
@@ -250,6 +261,17 @@ C
          ENDDO
       ENDDO
 C
+      Write(6,*)
+      WRITE(6,*) "The optimization parameters:nx, nopt, totrednco nxm6",
+     &            nx, totrednco, nopt, nxm6
+      Write(6,*)
+      WRITE(6,*) "The delta q0"
+      Write(6,*)
+      WRITE(6,10) (SCRATCH_LCL(I), I = 1, TOTREDNCO)
+      Write(6,*) "The The rnew (q1)"
+      WRITE(6,10) (R(I), I = 1, TOTREDNCO)
+   10 Format (5(1X,F10.6))
+      Write(6,*)
 C
       IOFF4q0  = 3*NATOMS + 3*TOTREDNCO
       IOFF4X0  = IOFF4q0  + TOTREDNCO
@@ -287,6 +309,17 @@ C
      &          .NOT. CHANGED .AND. .NOT. NO_ITER) 
 C
          CALL DCOPY(3*NATOMS, Q, 1, SCRATCH_LCL(3*TOTREDNCO + 1), 1)
+         Write(6,*)
+CSSS         Write(6,*) "The A matrix"
+CSSS         CALL OUTPUT(AMATRX, 1, 3*NATOMS, 1, TOTREDNCO, 3*NATOMS,
+CSSS     &               TOTREDNCO, 1) 
+         WRITE(6,*) "The starting Cartesian during iteration; x_K"
+         CALL OUTPUT(Q, 1, 3, 1, Natoms,3, Natoms, 1)
+         Write(6,*)
+         Write(6,*) "The starting internal increments:delta q_k"
+         Write(6,*) 
+         WRITE(6,10) (SCRATCH_LCL(I), I=1, TOTREDNCO)
+         Write(6,*)
          CALL XGEMM('N', 'N', 3*NATOMS, 1, TOTREDNCO, 1.0D0,
      &               AMATRX, 3*NATOMS, SCRATCH_LCL, TOTREDNCO,
      &               1.0D0, Q, 3*NATOMS)
@@ -296,6 +329,8 @@ CSSS         CALL XGEMM('T', 'N', 3, NATOMS, 3, 1.0D0, ORIENT, 3, Q,
 CSSS     &               3, 0.0D0, SCRATCH_LCL(INEWQ), 3)
 CSSS         CALL  DCOPY(3*NATOMS, SCRATCH_LCL(INEWQ), 1, Q, 1)
 C
+         Print*, "The Cartesian after the update: x_k+1"
+         CALL OUTPUT(Q, 1, 3, 1, Natoms,3, Natoms, 1)
          CALL GEN_NEW_RIC(Q, REDUNCO, IATNUM, NATOMS, TOTNOFBND,
      &                    NW_TOTREDNCO, TOTNOFANG, .FALSE.)
 C
@@ -322,6 +357,10 @@ C
      &              SCRATCH_LCL, 1)
          CALL DAXPY(TOTREDNCO, -1.0D0, R, 1, SCRATCH_LCL, 1)
 C
+      WRITE(6,*) "The delta delta q_k" 
+      Write(6,*)
+      WRITE(6,10) (SCRATCH_LCL(I), I=1, TOTREDNCO)
+      Write(6,*)
          CALL REMOVE_360(SCRATCH_LCL, TOTNOFBND, TOTNOFANG, 
      &                   TOTREDNCO)
 C
@@ -382,6 +421,9 @@ C
          READ(HOLDQ,  "(F12.7)") Q(IATOM)
       ENDDO 
 
+      Write(6,*)
+      WRITE(6,*) "The new Cartesian Coord., x+delta x0"
+      WRITE(6,"(3F13.9)") (Q(I), I = 1, 3*NATOMS)
 C
       CALL GEN_NEW_RIC(Q, REDUNCO, IATNUM, NATOMS, TOTNOFBND,
      &                 NW_TOTREDNCO, TOTNOFANG, .TRUE.)

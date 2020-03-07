@@ -1030,9 +1030,9 @@
                Tai(a,i)    = T1a_old(a,i)
                T1aa(a,a1)  = Tai(a,i) * Fpqa_me(i,a1)
                Taa(a,a1)  += T1aa(a,a1)
-               Taa(a,a1)  *= -0.5
             ENDDO i
 
+           Taa(a,a1)  *= -0.5
            PUT Fae_a(a,a1)  += Taa(a,a1)
       ENDPARDO a,a1
 #

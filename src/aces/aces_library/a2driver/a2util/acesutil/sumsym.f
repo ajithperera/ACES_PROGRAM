@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine is a wrapper for looping over sumsym2. (I know, don't ask,
 c it's a legacy thing...) It adds a group of arrays DADD to an MOIO family in
 c storage. DADD and the MOIO family (up to the number of irreps) must have the

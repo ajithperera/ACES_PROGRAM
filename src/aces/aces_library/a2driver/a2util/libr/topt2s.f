@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE TOPT2S(ISPIN,ILIST,NTOP,NT2SIZ,NOCCA,NOCCB,
      &                  NVRTA,NVRTB,NSMSZ1,NSMSZ2,T,TOPT2,
      &                  SYVEC1,SYVEC2,ITOPT2,I,J,A,B,TYPE)

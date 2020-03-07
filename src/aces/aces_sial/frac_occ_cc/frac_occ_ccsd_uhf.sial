@@ -1243,9 +1243,9 @@
 #end_frac
                T1aa(a,a1)  = Tai(a,i) * Tia(i,a1)
                Taa(a,a1)  += T1aa(a,a1)
-               Taa(a,a1)  *= -0.5
             ENDDO i
 
+           Taa(a,a1)  *= -0.5
            PUT Fae_a(a,a1)  += Taa(a,a1)
       ENDPARDO a,a1
 
@@ -1262,7 +1262,7 @@
                   taaia(a1,a,i,a2) = taaai(a1,a,a2,i)
                   tai(a2,i)        = t1a_old(a2,i)
 #bgn_frac
-                  execute set_aces3_vars  zer   one
+                  execute set_aces3_vars  pzo  two
 #                  execute apply_frac_occs taaai two
                   execute apply_frac_occs tai   one
 #end_frac
@@ -1329,7 +1329,7 @@
                Taaab(a1,a,b,j) = Vaabj(a1,a,b,j)
                Taajb(a1,a,j,b) = Taaab(a1,a,b,j)
 #bgn_frac
-               execute set_aces3_vars  zer   one
+               execute set_aces3_vars  oz    two
 #               execute apply_frac_occs taajb two
                execute apply_frac_occs tjb   two
 #end_frac
@@ -1449,9 +1449,9 @@
                T1bb(b,b1)  = Tbj(b,j) * Tjb(j,b1)
 
                Tbb(b,b1)  += T1bb(b,b1)
-               Tbb(b,b1)  *= -0.5
             ENDDO j
 
+           Tbb(b,b1)  *= -0.5
            PUT Fae_b(b,b1)  += Tbb(b,b1)
       ENDPARDO b,b1
 #
@@ -1978,7 +1978,7 @@
                Tbj(b,j)  = T1b_old(b,j)
                Tjb(j1,b) = Fpqb_me(j1,b)
 #bgn_frac
-               execute set_aces3_vars  zer two
+               execute set_aces3_vars  zer one
 #               execute apply_frac_occs Tjb two
                execute apply_frac_occs Tbj one
 #end_frac
@@ -2485,8 +2485,14 @@
 #
                GET t1b_old(b1,j) 
                GET Fae_b(b,b1) 
-#
-               t1bj(b,j) = t1b_old(b1,j)*Fae_b(b,b1) 
+               T2bj(b1,j) = t1b_old(b1,j)
+               Tbb(b,b1) =  Fae_b(b,b1)
+#bgn_frac
+               execute set_aces3_vars  zer one
+               execute apply_frac_occs Tbb two
+#               execute apply_frac_occs T2bj one
+#end_frac
+               t1bj(b,j) = T2bj(b1,j)*Tbb(b,b1) 
                tbj(b,j) += t1bj(b,j) 
 #
                DO j1 
@@ -7960,23 +7966,23 @@
             PUT t1a_old(a,i) = tai(a,i) 
             tai(a,i)        -= t1ai(a,i) 
 #
-            if kiter == 1 
+            if kiter == 1
                PUT e1ai(a,i) = Tai(a,i) 
             endif 
 #
-            if kiter == 2 
+            if kiter == 2
                PUT e2ai(a,i) = Tai(a,i) 
             endif 
 #
-            if kiter == 3 
+            if kiter == 3
                PUT e3ai(a,i) = Tai(a,i) 
             endif 
 #
-            if kiter == 4 
+            if kiter == 4
                PUT e4ai(a,i) = Tai(a,i) 
             endif 
 #
-            if kiter >= 5 
+            if kiter >= 5
                PUT e5ai(a,i) = Tai(a,i) 
             endif 
 #
@@ -7999,23 +8005,23 @@
             PUT t1b_old(b,j) = tbj(b,j) 
             tbj(b,j)        -= t1bj(b,j) 
 #
-            if kiter == 1 
+            if kiter == 1
                PUT e1bj(b,j) = Tbj(b,j) 
             endif 
 #
-            if kiter == 2 
+            if kiter == 2
                PUT e2bj(b,j) = Tbj(b,j) 
             endif 
 #
-            if kiter == 3 
+            if kiter == 3
                PUT e3bj(b,j) = Tbj(b,j) 
             endif 
 #
-            if kiter == 4 
+            if kiter == 4
                PUT e4bj(b,j) = Tbj(b,j) 
             endif 
 #
-            if kiter >= 5 
+            if kiter >= 5
                PUT e5bj(b,j) = Tbj(b,j) 
             endif 
 #
@@ -11105,9 +11111,9 @@
 #
             CALL DIIS3
 #
-         endif # kiter == 4
+         endif # kiter == 5 
 #
-         if kiter >= 5
+         if kiter >= 53
 #
 #           Get uptated amplitudes based on DIIS procedure.
 #           -----------------------------------------------

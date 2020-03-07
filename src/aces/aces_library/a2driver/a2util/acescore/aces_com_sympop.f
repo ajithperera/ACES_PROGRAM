@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine initializes the sympop common block, but isytyp is loaded in
 c aces_io_init.
 

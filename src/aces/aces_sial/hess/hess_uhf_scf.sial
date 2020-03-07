@@ -8209,7 +8209,7 @@
 #           -------------------------------------- 
 #
             execute sip_barrier
-            execute print_scalar hessxy  
+#            execute print_scalar hessxy  
 #
            #delete Hxa 
            #delete Hxb 
@@ -8230,10 +8230,12 @@
             execute server_barrier
 #
             collective phessxy       += hessxy  
+            execute print_scalar phessxy  
             thess(jatom,jx,iatom,ix) *= phessxy  
             execute                     read_hess thess(jatom,jx,iatom,ix) 
 #
             collective phessyx       += hessyx  
+            execute print_scalar phessxy  
             xhess(iatom,ix,jatom,jx) *= phessyx  
             execute                     read_hess xhess(iatom,ix,jatom,jx) 
 #

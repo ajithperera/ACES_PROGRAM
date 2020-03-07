@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       Subroutine Stpsize(Omega, Deltaq, Delx, Nvibs)
 C 
       Implicit Double Precision (A-H, O-Z)

@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This function returns the number of columns in an MOIO array.
 
 c INPUT

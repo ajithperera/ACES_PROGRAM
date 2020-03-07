@@ -1069,8 +1069,11 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
       Endif 
 #ifdef _DEBUG_LVL0
       if (me .eq. 0) then
-         write(6,"(4l)")AL,BL,AR,BR
-         write(6,"(2l)")o,v
+         write(6,"(a,4i3)") "i,a ranges: ", i1,i2,a1,a2
+         write(6,"(a,4i3)") "Array lengths: ", na1,na2,ni1,ni2
+         write(6,"(a,4l)")"AL,BL,AR,BR: ", AL,BL,AR,BR
+         write(6,"(a,2l)") "O,V: ", O,V 
+         write(6,"(a,2l)") "Lft,Rit: ", Lft_one,Rit_one
          Write(6,"(a)") "The Occ_num arrays"
          Write(6,"(6F4.1)") (Occ_numsa(i),i=1, Nbasis)
          Write(6,"(6F4.1)") (Occ_numsb(i),i=1, Nbasis)
@@ -1107,6 +1110,8 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
       implicit none
       include 'interpreter.h'
       include 'frac_occ_vars.h'
+      include 'int_gen_parms.h'
+      include 'parallel_info.h'
 
       integer a1,a2,i1,i2
       integer atype, itype
@@ -1141,10 +1146,23 @@ C      write(6,"(a,3l)") "The AO-Ladder spin: ",AO_AA,AO_BB,AO_AB
          VO_type = .True.
       Endif
 
-      AA = Itype .eq. Moaindex .and. Atype .eq. Moaindex 
-      BB = Itype .eq. Mobindex .and. Atype .eq. Mobindex 
-      AB = Itype .eq. Moaindex .and. Atype .eq. Mobindex 
-      BA = Itype .eq. Mobindex .and. Atype .eq. Moaindex 
+      AA = Atype .eq. Moaindex .and. Itype .eq. Moaindex
+      BB = Atype .eq. Mobindex .and. Itype .eq. Mobindex
+      AB = Atype .eq. Moaindex .and. Itype .eq. Mobindex
+      BA = Atype .eq. Mobindex .and. Itype .eq. Moaindex
+
+#ifdef _DEBUG_LVL0
+      If (me .eq. 0) Then
+         write(6,"(a,4i3)") "i,a ranges: ", i1,i2,a1,a2
+         write(6,"(a,4l)") "The type:",OO_type,VV_type,OV_type,
+     +                                 VO_type
+         write(6,"(a,4l)") "AA,BB,AB,BA:",
+     +                      AA,BB,AB,BA
+         Write(6,"(a)") "The Occ_num arrays"
+         Write(6,"(6F4.1)") (Occ_numsa(i),i=1, Nbasis)
+         Write(6,"(6F4.1)") (Occ_numsb(i),i=1, Nbasis)
+      Endif
+#endif
 
       do i = i1, i2
       do a = a1,a2

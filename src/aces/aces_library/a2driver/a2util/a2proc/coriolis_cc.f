@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
 C
       Subroutine Coriolis_cc(Natom,Nreal,Nx,Nxm6,AtmMass,Coord,Bmat,
      &                       Gmat,Hess,vectors,vib_vectors,Btmp,Scr1,

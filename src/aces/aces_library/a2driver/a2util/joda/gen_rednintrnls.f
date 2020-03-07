@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE GEN_REDNINTRNLS(CARTCOORD, REDUNCO, INTLABEL,
      &                           IBNDTO, BMATRX, GMATRX,
      &                           TOTREDNCO, IATOMICNMBER, NRATMS,
@@ -135,6 +146,7 @@ C some what experimental. We need to improve this to include hydrogen
 C bonds, dimer bonds and so on. This should be improved as we gain 
 C more experience with this stuff.
 C     
+      Print*, "Entering assign connectivities"
       CALL ASIGN_CNTVTES(CARTCOORD, BNDLENTHS, IATOMICNMBER, 
      &                   SMOFCOVRADI, NCONPRCNTR, IBNDTO, MAXCNTVS,
      &                   NRATMS, MARK_FRAGMENTS, LENGTH_FRAGMENTS,
@@ -142,12 +154,16 @@ C
 C 
 C Assign bond length Coordinates.
 C
+      Print*, "Entering assign bonds"
+      Write(6,*)
 
       CALL ASSIGN_BONDS(IBNDTO, IREDUNCO, TOTREDNCO, TOTNOFBND, NRATMS,
      &                  MAXREDUNCO)
 C
 C Assign bond angle Coordinates.
 C
+      Print*, "Entering assign angles"
+      Print*, "Total # of bonds:", TOTNOFBND
 
       CALL ASSIGN_ANGLS(CARTCOORD, IBNDTO, IREDUNCO, TOTREDNCO,
      &                  TOTNOFBND, TOTNOFANG, NRATMS, MAXREDUNCO,
@@ -155,6 +171,8 @@ C
 C
 C Assign bond dihedral angle Coordinates.
 C
+      Print*, "Entering assign dihedral angles"
+      Print*, "Total # of Angles:", TOTNOFANG 
 
       CALL ASSIGN_DIHLS(IBNDTO, IREDUNCO, TOTREDNCO, TOTNOFBND,
      &                  TOTNOFANG, NRATMS, TOTNOFDIH, MAXREDUNCO)
@@ -164,9 +182,20 @@ C
 C
 C Assign Label for redundent internal coordinates.
 C
+      Write(6,*)
+      Print*, "Entering assign lables"
+      Print*, "Total # of dihedrals:", TOTNOFDIH 
+      Print*, "The total redundent internal", TOTREDNCO 
 
       CALL ASSIGN_LABELS(IREDUNCO, TOTREDNCO, TOTNOFBND, TOTNOFANG,
      &                   TOTNOFDIH, INTLABEL)
+      Print*, "The redundent internal coordinates assignments"
+      Write(6,*)
+      Do i = 1, TOTREDNCO
+         Write(6,111) (iredunco(j, i), j=1, 4)
+      Enddo
+ 111  Format(5X, 4(I3, 1X))
+
 C
 C Make sure the number of RICs has not increased.
 C
@@ -184,10 +213,18 @@ C
 C
 C Now built the B and G matrices.
 C
+      Write(6,*)
+      Print*, "Entering B and G matrix generation"
+      Write(6,*)
       CALL BUILT_BGMTRX(CARTCOORD, REDUNCO, IREDUNCO, TOTREDNCO,
      &                  TOTNOFBND, TOTNOFANG, TOTNOFDIH, 
      &                  NRATMS, BMATRX, GMATRX, 
      &                  EIGVECTORS,EPSILON,BTGMIN,dRICHeap(z_DerBMat))
+      Write(6,*) 
+      Print*, "The redundent internal coordinates:"
+      write(6,*)
+      Write(6, 9) (redunco(i), I=1, TOTREDNCO)
+  9   Format (5(1X,F10.6))
 
 C
 C some labels for internal coords...

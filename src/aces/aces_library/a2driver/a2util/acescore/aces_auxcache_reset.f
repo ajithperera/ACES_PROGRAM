@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine destroys the icore indices in quikget so aces_fin can complete.
 
 c ! WARNING ! WARNING ! WARNING ! WARNING ! WARNING ! WARNING ! WARNING !

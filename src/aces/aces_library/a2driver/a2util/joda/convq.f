@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE CONVQ(A,FC,FI,IX,ISYM)
 C
 C CONVERTS FORCES IN CARTESIAN COORDINATES TO INTERNAL COORDINATES (IX=0
@@ -294,6 +305,10 @@ C
 
 C
 
+         Write(6,*)
+         Write(6,*) "@-CONVQF,  The outgoing internal gradients"
+         WRITE(6,"(3F13.7)") (FI(IJL), IJL = 1, NXM6)
+         Write(6,*)
 C
 C
 C SYMMETRIZE THE GRADIENT IF NECESSARY

@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       subroutine molden_rdgeom(natoms,iatchrg,coord,ifuchrg,fucoord,
      &                         iunit)
 c------------------------------------------------------------------------------

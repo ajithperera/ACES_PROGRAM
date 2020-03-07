@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This subroutine scans a string and returns the first valid integer
 c that falls into one of the following two regular expressions:
 c         " *[+-]? *[0-9]+"     -->  1,   +1,   -1

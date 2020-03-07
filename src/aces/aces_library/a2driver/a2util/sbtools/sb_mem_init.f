@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine carves up the icore(i0) space for using setptr/relptr.
 c It's clumsy, but you must communicate with this routine through
 c sbcore.com by setting ineeded, dneeded, maxicore, etc.

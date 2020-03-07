@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE GEN_NEW_RIC(CARTCOORD, REDUNCO, IATOMICNMBER, 
      &                       NRATMS, TOTNOFBND, NW_TOTREDNCO, 
      &                       TOTNOFANG, TEST_4CHANGE)
@@ -128,6 +139,11 @@ C
       CALL GETREC(20, 'JOBARC', 'IBONDTO ', NRATMS*NRATMS,
      &            IBNDTO)
 C
+      Print*, "The redundent internal coordinates assignments"
+      Write(6,*)
+      Do i = 1, TOTREDNCO
+         Write(6,111) (iredunco(j, i), j=1, 4)
+      Enddo
 C
 C Assign bond coordiante
 C
@@ -140,6 +156,7 @@ C
      &               CARTCOORD(3*ICON2 - 2))
             REDUNCO(IBNDS) = DISTAB
 C     
+            WRITE(6,"(a,F10.5)") "The bond distance =",DISTAB*0.529177249d0
          ENDIF
       ENDDO
 C
@@ -153,6 +170,7 @@ C This is for linear arrangements (two angle coordinates are
 C required). 
 C
             REDUNCO(IANGS) = 180.0D0*DINVPI
+            WRITE(6,"(a,F10.5)") "The Bond Angle =", ANGL/DINVPI
 C
          ELSE
 C
@@ -167,6 +185,7 @@ C
      &               VECBA, 1)
             ANGL    = ANGLE(VECBC, VECBA, 3)*DINVPI
             REDUNCO(IANGS) = ANGL
+            WRITE(6,"(a,F10.5)") "The Bond Angle =", ANGL/DINVPI
          ENDIF
 C
       ENDDO
@@ -233,14 +252,30 @@ C
      &                   SMOFCOVRADI, NCONPRCNTR, IBNDTO, MAXCNTVS,
      &                   NRATMS, MARK_FRAGMENTS, LENGTH_FRAGEMENTS,
      &                   FRAGSCR, BLNGT_IJFRGS)
+      Print*, "Entering assign bonds"
+      Write(6,*)
       CALL ASSIGN_BONDS(IBNDTO, IREDUNCO, NW_TOTREDNCO, TOTNOFBND,
      &                  NRATMS, MAXREDUNCO)
+      Print*, "Entering assign angles"
+      Print*, "Total # of bonds:", TOTNOFBND
       CALL ASSIGN_ANGLS(CARTCOORD, IBNDTO, IREDUNCO, NW_TOTREDNCO,
      &                  TOTNOFBND, TOTNOFANG, NRATMS, MAXREDUNCO,
      &                  THRESHOLD)
+      Print*, "Entering assign dihedral angles"
+      Print*, "Total # of Angles:", TOTNOFANG
       CALL ASSIGN_DIHLS(IBNDTO, IREDUNCO, NW_TOTREDNCO, TOTNOFBND,
      &                  TOTNOFANG, NRATMS, TOTNOFDIH, MAXREDUNCO)
 
+      Write(6,*)
+      Print*, "Total # of dihedrals:", TOTNOFDIH
+      Print*, "The total redundent internal", TOTREDNCO
+      Write(6,*)
+      Print*, "The redundent internal coordinates assignments"
+      Write(6,*)
+      Do i = 1, TOTREDNCO
+         Write(6,111) (iredunco(j, i), j=1, 4)
+      Enddo
+ 111  Format(5X, 4(I3, 1X))
       IF (NW_TOTREDNCO .NE. TOTREDNCO) THEN
           Write(6,*) 
           Write(6,"(1x,a,a,a,a)")"The total number of redundent ",

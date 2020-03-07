@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE EVLOUT_GS(EVAL, IRERDR, IVMLSYM, IREPS, NBAS, NIRREP,
      &                     NOCC, ISPIN, IFLAG, STATE)
 C
@@ -64,6 +75,8 @@ C
           CALL GETREC(20,'JOBARC','EVCSYMBC',NBAS*IINTFP,IRRSYM2)
       Endif
 C
+      Write(6,"(a)") "Irrep labels" 
+      Write(6,"(6(8a))")(IRRSYM1(i),i=1,Nbas)
       DO 101 I=1,NBAS
          IRERDR(I)=I
   101 CONTINUE

@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       Subroutine SAVORI ( PtGrp, NAtms, Q, AtNr, At1, At2, XYOri, Err )
 C:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 C $Id: savori.F,v 1.1.1.1 2003/04/02 19:21:35 aces Exp $

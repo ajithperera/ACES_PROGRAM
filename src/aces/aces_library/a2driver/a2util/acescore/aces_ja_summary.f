@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine prints a summary of all the records in the JOBARC file up to
 c the next open slot.
 

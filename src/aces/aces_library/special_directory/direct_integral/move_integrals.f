@@ -109,11 +109,15 @@ c---------------------------------------------------------------------------
       arange1 = max(va1, a1)
       arange2 = min(va2, a2)
 
+CSSSS         Sum =0.0D0
          do b = brange1, brange2
          do a = arange1, arange2
             v(a,b) = intblk(a,b)
+CSSSS            Sum = Sum + V(a,b)*V(a,b)
          enddo
          enddo
+
+CSSSS      Write(6,"(a,F15.10)") "@-move_integrals2: ", Sum
 
       return
       end
@@ -251,11 +255,15 @@ c---------------------------------------------------------------------------
          write(6,*) a1, a2, b1, b2   
       endif 
 
+CSSS      Temp = 0.0D0
       do b = brange1, brange2
       do a = arange1, arange2
-         v(a,b) = v(a,b) + intblk(a,b)*fact
+         v(a,b) = v(a,b)*fact + intblk(a,b)
+CSSS         Temp   = Temp + V(a,b)*V(a,b)
       enddo
       enddo
+
+CSSS      Write(6,"(a,F15.10)") "@-add_integrals2: ", Temp
 
       return
       end

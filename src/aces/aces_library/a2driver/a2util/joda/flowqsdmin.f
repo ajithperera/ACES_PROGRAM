@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       subroutine flowqsdmin(scratch, grad, ehess, eigvh, dmr1, dmr2,
      &                      stp, eps, nx, ndim, ncycle)
 c

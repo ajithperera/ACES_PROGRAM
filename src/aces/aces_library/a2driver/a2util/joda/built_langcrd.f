@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE BULT_LANGCRD(CARTCOORD, BMATRX, ANGL, ICON1, ICON2, 
      &                        ICON3, ICON4, IANGS, NRATMS, TOTREDNCO,
      &                        EPSILON)
@@ -28,6 +39,8 @@ C
       DATA ZERO /0.0D0/
       DATA MONE /-1/
 C
+          Write(6,*)
+          Write(6, "(a)") "Entering the special linear angle block"
 C
       DISTBA = DIST(CARTCOORD(3*ICON1 - 2), CARTCOORD(3*ICON2 - 2))
       DISTBC = DIST(CARTCOORD(3*ICON3 - 2), CARTCOORD(3*ICON2 - 2))
@@ -44,11 +57,19 @@ C
       CALL CROSS(VECBA, VECBC, VECN2AC, 0)
       CALL NORMAL(VECN2AC, 3)
 
+          Write(6, *)
+          Write(6, *) "The normal vector"
+          Write(6, "(a, 3F10.4)") "VECN2AC", (VECN2AC(I), I=1,3)
 C
       CALL CROSS(VECBC, VECN2AC, VECW, 1)
       CALL CROSS(VECBC, VECW, VECBN2A, 1)
       CALL CROSS(VECW, VECBA, VECBN2B, 1)
 C
+          Write(6, *)
+          Write(6, *) "The basis vctors for special angles"
+          Write(6, "(a, 3F10.4)") "VECBN2A", (VECBN2A(I), I=1,3)
+          Write(6, "(a, 3F10.4)") "VECBN2B", (VECBN2B(I), I=1,3)
+          Write(6,*)
 C
       DO IXYZ = 1, 3
          BMATRX(IANGS, (3*ICON3 - 3) + IXYZ) =

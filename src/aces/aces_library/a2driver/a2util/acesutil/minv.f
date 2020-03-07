@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C     A subroutine that calculates the determinant and inverse of
 C          a matrix, as well as solving systems of linear equations.
 C     Martin J. McBride.  11/25/85.

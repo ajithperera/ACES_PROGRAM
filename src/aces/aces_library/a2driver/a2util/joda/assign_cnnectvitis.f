@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE ASIGN_CNTVTES(CARTCOORD, BNDLENTHS, IATOMICNMBER, 
      &                         SMOFCOVRADI, NCONPRCNTR, IBNDTO,
      &                         MAXCNTVS, NRATMS, MARK_FRAGMENTS, 
@@ -61,6 +72,7 @@ C
       IF (CONN_FILE_EXISTS) THEN
           OPEN(UNIT=IUNIT,FILE='CONNECT',FORM='FORMATTED',
      &         STATUS='OLD')
+          Write(6,*) "Entering Read Connectivities"
           CALL READ_CNTVTES(IBNDTO, IUNIT, NRATMS)
           CLOSE (IUNIT)
           RETURN
@@ -82,6 +94,9 @@ C pair of atoms
 C     
 cSSS CALL GETREC(20, 'JOBARC', 'ATOMCHRG', NRATMS, IATOMICNMBER)
 C      
+          Write(6,*)
+          Write(6,*) "Entering GETCOVLRADI: Atomic numbers"
+          Write(6,"(4I2)") (IATOMICNMBER(j),j=1,NRATMS)
       CALL GETCOVLRADI(IATOMICNMBER, SMOFCOVRADI, NRATMS)
 C      
 C Now assign preliminary connectivites based on simple fact that
@@ -215,6 +230,8 @@ C
       END DO
 C
 C
+      Write(6,*)
+      Write(6,"(a,I4)") "The no. of H bonds", NHBONDS
 C Replaced by new non-recursive routine developed by Tom Watson, 03/2011.
 C#ifdef _NOSKIP
 C
@@ -229,13 +246,25 @@ CSSS      enddo
 C                       
 C Watson                   
 C                          
-      iprint =0
+      iprint = 0
 
       CALL  FRAG__INIT (nratms,ibndto,iprint,ierr,fragscr,
      +                  nfrags,length_fragments,mark_fragments)
 C                          
 C Watson                
 C      
+      Write(6,"(a,i3)"), "The number of isolated fragments per center", 
+     &  nfrags
+      Write(6,*)
+      Write(6,"(a)") "The length_fragment array"
+      Write(6,*)
+      Write(6,"(4I3)")  (length_fragments(I), I=1, NRATMS)
+      Write(6,*)
+      Write(6,"(a)"), "Fragment atom lables"
+      Write(6,*)
+      do i=1, nratms
+      Write(6,"(4I3)"), (mark_fragments(I, J), j=1, nratms)
+      enddo 
 C
 C Assign the primary interfragment connectivity
 C
@@ -253,6 +282,9 @@ C
                      DIST_IJFRAG = BNDLENTHS(IFRAG_CENT,
      &                                       JFRAG_CENT)
 C               
+                     Write(6,"(4I4)") IATMS, JATMS, IFRAG_CENT, 
+     &                                JFRAG_CENT
+                     Write(6,"(2F10.5)") DIST_IJFRAG, ARCH_DIST
 
                      IF (DIST_IJFRAG .LE. ARCH_DIST) THEN
                          ARCH_DIST = DIST_IJFRAG

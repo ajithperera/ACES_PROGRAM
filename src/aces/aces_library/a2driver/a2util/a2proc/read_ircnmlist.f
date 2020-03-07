@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       subroutine Read_IRCnmlist(Stride, Trans_state, Direction, 
      &                          Max_IRC_Step)
 C

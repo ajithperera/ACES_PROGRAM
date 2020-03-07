@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine reads a string which MUST be one of the strings given in list.
 c list contains n values numbered 1..n.
 c

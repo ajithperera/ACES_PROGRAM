@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE SHELLINF(NORBIT,NTOTATOM,NTOTSHEL,INUMSHEL,ISHLOFF,
      &                   ISHELTP,ISHELSZ)
 C

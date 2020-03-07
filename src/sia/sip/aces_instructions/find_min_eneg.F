@@ -171,7 +171,7 @@ C also to 1.0D+30
 C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,"(a,a,I2,1X,F10.5)") "The screened eigenvalues"
-      Write(6,"(6(1x,F10.5))") (Tmp(i),i=1,Ndim1)
+      Write(6,"(6(1x,ES8.2E2Z))") (Tmp(i),i=1,Ndim1)
       endif 
 C#endif 
 

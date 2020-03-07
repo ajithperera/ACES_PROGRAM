@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 cjp closes moints and moabcd and reopens them with new iref
 
       subroutine reopenmo

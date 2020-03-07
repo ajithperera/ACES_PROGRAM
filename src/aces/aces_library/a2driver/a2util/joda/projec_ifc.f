@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       Subroutine projec_IFC(HESS, PHESS, PMAT, GMATRX_N, GMATRX_M,
      &                      GRD, NXM6)
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)

@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE GMETRY(We_havegeom, NOSILENT)
 C
 C     ROUTINE TO CALCULATE CARTESIAN COORDINATES FROM INTERNAL
@@ -196,5 +207,6 @@ C
 C Only one out-of-bound is all it takes to regenerate Cartesians.
       IF (NOT_IN_BOUND) CALL GEN_CART_COORD(Q0, NOSILENT)
 C
+      Call geomout
       RETURN
       END

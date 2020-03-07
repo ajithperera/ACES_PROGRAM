@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine creates storage statistics for a new double-precision array,
 c and extends the proper storage unit by the requested amount of data.
 c It will bomb if there is not enough disk space.
@@ -16,8 +27,8 @@ c                     arrays in one family to be packed together with no space
 c                     between them.
 
 c#define _FLUSH_WITH_NaN
-c#define _TRAP_LIST_FAM 6 /* iRight */
-c#define _TRAP_LIST_GRP 1 /* iLeft */
+c#define _TRAP_LIST_FAM 6 
+c#define _TRAP_LIST_GRP 1 
 c#define _WARN_LIST_FAM 165
 c#define _WARN_LIST_GRP 1
 

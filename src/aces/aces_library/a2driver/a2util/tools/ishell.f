@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
       integer function ishell(string)
       character*(*) string
       character*1 achar

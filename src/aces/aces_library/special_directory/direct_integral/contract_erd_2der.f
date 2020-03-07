@@ -70,6 +70,7 @@ c---------------------------------------------------------------------------
       double precision in(a1:a2,b1:b2,c1:c2,d1:d2)
       double precision scr(*), eps, fact, y
       double precision hess(3*ncenters,3*ncenters)
+      double precision sum
       integer iscr(*)
       integer myder(4,3), mySder(4,3) 
 
@@ -94,6 +95,12 @@ c---------------------------------------------------------------------------
          call abort_job()
       endif
 
+c#ifdef _DEBUG_LVL0
+C      sum = 0.0d0
+c#endif
+CSSS      Write(6,*) "Hess at entry to contract_erd_2der"
+CSSS      Write(6,"(4(1x,F15.10))") ((Hess(i,j),i=1,3*Ncenters),
+CSSS     +                            j=1,3*Ncenters)
 c----------------------------------------------------------------------------
 c   Set the flags array for the FIRST derivative.
 c----------------------------------------------------------------------------
@@ -497,11 +504,15 @@ c----------------------------------------------------------------------------
 c -------------------------------------------------------------------------
 c   Set the derivative flag arguments.
 c--------------------------------------------------------------------------
-
-c              write(6,*) '       ATOM :', iatom,jatom
-c              write(6,*) '       COMP :', icomponent, jcomponent
-c              write(6,*) '       FLAGS:', (der_test(a),a=1,12)
-
+#ifdef _DEBUG_LVL0
+C      Write(6,"(a)") "The derivative flags"
+C      Write(6,"(6(I4))") atom(m),atom(n),atom(r),atom(s),
+C     *                   icomponent,jcomponent 
+C      Write(6,"(3I4)") der_test(1), der_test(2), der_test(3)
+C      Write(6,"(3I4)") der_test(4), der_test(5), der_test(6)
+C      Write(6,"(3I4)") der_test(7), der_test(8), der_test(9)
+C      Write(6,"(3I4)") der_test(10), der_test(11), der_test(12)
+#endif
                ncsum = ncfps(m) + ncfps(n) + ncfps(r) + ncfps(s)
 
                   call ERD__GENER_ERI_DERV_BATCH(intmax, zmax,
@@ -541,6 +552,10 @@ c---------------------------------------------------------------------------
                do i = aa1, aa2
                   next = next + 1 
                   y = y + in(i,j,k,l)*scr(nfirst+next-1)
+#ifdef _DEBUG_LVL0
+C                 sum = sum + scr(nfirst+next-1) * scr(nfirst+next-1)
+#endif
+
                enddo
                enddo
                enddo
@@ -570,7 +585,14 @@ c---------------------------------------------------------------------------
 
          enddo   ! n
          enddo   ! m
-
+#ifdef _DEBUG_LVL0
+C      Write(6,*) "Hess at exit to contract_erd_2der"
+C      Write(6,"(4(1x,F15.10))") ((Hess(i,j),i=1,3*Ncenters),
+C     +                            j=1,3*Ncenters)
+C      write(6,*)
+C      write(6,"(a,F20.10)")" The 2-el hess. integral checksum =",
+C     &                     sum
+#endif
       return
       end
 

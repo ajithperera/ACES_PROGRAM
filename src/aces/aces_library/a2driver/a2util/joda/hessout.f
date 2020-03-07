@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE HESSOUT(X,IR,IC,NSYM)
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
 C MXATMS     : Maximum number of atoms currently allowed

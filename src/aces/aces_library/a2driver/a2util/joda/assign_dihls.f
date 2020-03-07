@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE ASSIGN_DIHLS(IBNDTO, IREDUNCO, TOTREDNCO, TOTNOFBND, 
      &                        TOTNOFANG, NRATMS, TOTNOFDIH, MAXREDUNCO)
 C

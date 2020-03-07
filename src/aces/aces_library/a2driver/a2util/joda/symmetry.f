@@ -165,6 +165,17 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE SYMMETRY(SCRATCH,QTMP,NEWQ,NOSILENT)
 C
 C This is a front end routine that handles geometry/symmetry related

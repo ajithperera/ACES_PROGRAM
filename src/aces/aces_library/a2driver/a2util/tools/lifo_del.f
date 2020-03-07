@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This subroutine deletes a stack. WARNING: It is possible to delete any
 c stack, but the number of active stacks will be decremented iff the id
 c is that of the last stack.

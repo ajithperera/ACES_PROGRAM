@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       Subroutine reorder(Vecin, Vecout, Iang, nao)
 
       Implicit Double Precision (A-H, O-Z)

@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This subroutine creates a new LIFO indexing structure (i.e. stack).
 
 c OUTPUT

@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c dx(i) *= da
 
       subroutine xscal(n,da,dx,incx)

@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine flushes any modified cache slots in the automatic file cache.
 c The operation is also called a "write-back". This routine DOES NOT zero
 c (destroy) the contents of the cache.
@@ -16,7 +27,7 @@ c These common blocks contain global information about the automatic file cache.
 c getlst and putlst REQUIRE a cache, hence the term 'automatic' (compared to the
 c auxiliary cache controlled by /auxcache/quikget).
 
-c#define _CACHE_BYPASS /* bypasses cache on reading/writing of full records */
+c#define _CACHE_BYPASS 
 c#define _CACHE_HIST
 c#define _CACHE_HIST_VERBOSE
 

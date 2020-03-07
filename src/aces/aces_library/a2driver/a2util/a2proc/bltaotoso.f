@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE BLTAOTOSO(I2,ITRAN,CUN,CONTUN,CTEMP,NU,NR,AT,KABS,
      &                  I1,NXYZ,NUC,NRC,NBAS,CORR,KA,C,JCO,PT,
      &                  TITLE,JTRAN,A,CTRAN,ICDS,NDEG,CHARGT,X,

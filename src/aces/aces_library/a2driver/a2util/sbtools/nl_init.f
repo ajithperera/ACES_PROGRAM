@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine opens the ZMAT file and searches for a namelist.
 c If found, it is read into the array namelist for parsing.
 c

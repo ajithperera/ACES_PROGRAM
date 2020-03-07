@@ -165,6 +165,17 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
       subroutine vib_rot_coupl
 C
       implicit double precision (a-h,o-z)

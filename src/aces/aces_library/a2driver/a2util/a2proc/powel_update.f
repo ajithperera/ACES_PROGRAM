@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE POWEL_UPDATE(VC,VP,H,SCRATCH,STEP,TBT,PHI,NXM6)
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
 
@@ -22,6 +33,13 @@ C
       CALL VADD(SCRATCH(N3),VC,VP,NXM6,-1.D0)
       CALL VADD(SCRATCH(N4),SCRATCH(N3),SCRATCH(N2),NXM6,-1.D0)
 
+      Write(6,*)
+      Write(6,"(a)") "@-Powel_update DG and HDX and DG-HDX"
+      Write(6, "(3F12.8)") (scratch((n3-1)+i),i=1,NXM6)
+      Write(6,*)
+      Write(6, "(3F12.8)") (scratch((n2-1)+i),i=1,NXM6)
+      Write(6,*)
+      Write(6, "(3F12.8)") (scratch((n4-1)+i),i=1,NXM6)
       N2=NXM6*NXM6+1
       N3=NXM6*NXM6+N2
 C
@@ -41,6 +59,7 @@ C
       dtmp = xdot(NXM6,SCRATCH(N4),1,STEP,1)
      
       CALL xscal(NXM6*NXM6,dtmp/X,TBT(1),1)
+      Write(6,"(a,3F17.13)")"The scaling factor",dtmp,dtmp/X, x
 C
 C TBT(N3) = (DG - HDX)DX + [(DG - HDX)DX]^{t} - [DXdot(DG - HDX)]DXDX/DX{dot}DX
 C
@@ -57,6 +76,8 @@ C
 C DON'T WRITE ENTIRE HESSIAN UNLESS SPECIFICALLY REQUESTED.  FOR
 C NOW, JUST USE AN IN-CODE PARAMETER.
 C
+         Print*, "-----The Powel updated Hessian-----"
+         CALL output(H,1,NXM6,1,NXM6,NXM6,NXm6,1)
       RETURN
       END
 

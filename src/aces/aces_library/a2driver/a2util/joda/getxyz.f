@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C Read Cartesian coordinates from Z-matrix
 
       SUBROUTINE GETXYZ

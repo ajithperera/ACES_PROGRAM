@@ -156,7 +156,9 @@ C
 
       external apply_frac_occs,energy_denominator_frac_occs 
       external set_frac_occs
-c 
+      external drive_core_states,built_emask,form_norm_with_bmat
+      external adjust_evals_tocore
+
 c VFL SCF instructions 
 
       external compute_batch1
@@ -891,6 +893,13 @@ C New IP-EOM related SIPs.
       dummy = load_user_sub('energy_denominator_frac_occs'//char(0),
      &                       energy_denominator_frac_occs)
       dummy = load_user_sub('set_frac_occs'//char(0),set_frac_occs)
+      dummy = load_user_sub('built_emask'//char(0),built_emask)
+      dummy = load_user_sub('drive_core_states'//char(0),
+     &                       drive_core_states)
+      dummy = load_user_sub('form_norm_with_bmat'//char(0),
+     &                       form_norm_with_bmat) 
+      dummy = load_user_sub('adjust_evals_tocore'//char(0),
+     &                       adjust_evals_tocore) 
 c-----------------------------------------------------------------------
 c Prakash instructions for delta integrals
 c----------------------------------------------------------------------

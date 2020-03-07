@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE ADM(Q, Natoms)
 C
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)

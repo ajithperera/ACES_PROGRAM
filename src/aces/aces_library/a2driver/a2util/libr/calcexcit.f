@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       subroutine calcexcit(erank,efrom,eto,espin,jr,ir,norb)
 
       implicit none

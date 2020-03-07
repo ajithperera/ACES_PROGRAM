@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine writes a physical record to a direct access file.
 
 c INPUT

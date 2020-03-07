@@ -107,7 +107,7 @@ C
       Integer Ndim1,Ndim2,Ndim3,Iloc,Ilocmin
       Integer Istart,Ierror 
       Double precision Eigs_curnt(i1:i2),Roots(a1:a2,b1:b2)
-      Double Precision X,X2,Vlocmin,Tol,Xclose 
+      Double Precision X,X2,Vlocmin,Tol,Xclose,Tol_run
 
       Parameter(Tol = 1.0D-03)
 
@@ -123,7 +123,7 @@ C
          Call abort_job()
       Endif 
       
-#ifdef _DEBUG_LVL0
+C#ifdef _DEBUG_LVL0
       If(me.eq.0) Then
       Write(6,*) 
       Write(6,"(a)") "Printing from find_near" 
@@ -133,18 +133,23 @@ C
       Write(6,"(6(1x,F10.5))") (Eigs_curnt(i),i=1,Ndim1)
       Write(6,"(a)") "The roots already found"
       Write(6,"(6(1x,F10.5))") ((Roots(i,j),i=1,Ndim2),j=1,Ndim3)
-      Write(6,"((a,1x,F10.5))") "Root: ", Root 
+      Write(6,"((a,1x,F10.5))") "Currnet Root: ", Root 
       Endif 
-#endif 
+C#endif 
+      Ilocmin = 0
       If (Ndim2 .EQ. 0) Then
 
          Call Dcopy(Ndim1,Eigs_curnt,1,Tmp,1)
-         Xclose = Tol
+         Tol_run = Tol
+ 10      Continue 
+         Xclose = Tol_run
          Do I = 1, Ndim1
             X = Dabs(Tmp(I)-Root)
-            if (me .eq. 0 .and. ndim1 .gt.15) then
-               write(6,"(3F10.5)") Tmp(I), Root, X 
+#ifdef _DEBUG_LVL0
+            if (me .eq. 0) then
+               write(6,"(4F10.5)") Tmp(I), Root, X, Xclose 
             endif 
+#endif 
             If (X .LT. Xclose) Then
                Ilocmin = I
                Vlocmin = Eigs_curnt(I)
@@ -152,10 +157,16 @@ C
             Endif
          Enddo
 
-         If (Ilocmin .EQ. 0) Then
-             Ilocmin = 1
-             Vlocmin = Eigs_curnt(Ilocmin)
-         Endif
+C If we have not located an eigenvalue close to the one that
+C we homing on reduce the tolarence by factor of 10 retry. Lets do this
+C for until the tolarence is 1.0. At that point assume that the lowest
+C eigenvalue in the set is the right one to follow. 
+
+         If (Ilocmin .EQ. 0) Then 
+             Tol_run = Tol_run*10.0D0 
+             Go to 10
+         Endif 
+
          Iselect = Ilocmin
 
 #ifdef _DEBUG_LVL0

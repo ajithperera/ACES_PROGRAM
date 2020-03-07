@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C This routine expands a triangularly packed vector of numbers
 C into a square matrix.
 C

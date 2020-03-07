@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       subroutine A2RDZMAT_4GRIDINF(GRID_TYPE, DENSITY_TYPE, SPIN_D,
      &                             NMBR_OF_PERTS, IPICK_PERT, 
      &                             STEP_SIZE, D2RANGE, D3RANGE, 

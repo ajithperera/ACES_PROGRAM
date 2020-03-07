@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE BUILT_BGMTRX(CARTCOORD, REDUNCO, IREDUNCO,
      &                        TOTREDNCO, TOTNOFBND, TOTNOFANG,
      &                        TOTNOFDIH, NRATMS, 
@@ -302,6 +313,7 @@ C
      &                               IREDUNCO, TOTREDNCO)
             REDUNCO(IBNDS) = DISTAB
 C
+            WRITE(6,"(a,F10.5)") "The bond distance =",DISTAB*0.529177249d0
 C
          ENDIF
 C
@@ -318,6 +330,7 @@ C
      &                         IREDUNCO(3, IANGS), IREDUNCO(4, IANGS), 
      &                         IANGS, NRATMS, TOTREDNCO, EPSILON)
             REDUNCO(IANGS) = ANGL
+            WRITE(6,"(a,F10.5)") "The bond Angle =", ANGL/DINVPI
 C
 C The Derivative of B matrix is zero for the angle 0.0 and 180.00
 CSSS            IF (CMP_DBMAT) CALL DEANG(CARTCOORD, IREDUNCO(1,IANGS),
@@ -336,6 +349,7 @@ C
      &                       NRATMS)
             REDUNCO(IANGS) = ANGL
 C
+            WRITE(6,"(a,F10.5)") "The Bond Angle =", ANGL/DINVPI
             IF (CMP_DBMAT .AND. ANGL/DINVPI .LE. 175.0D0)
      &                     CALL DEANG(CARTCOORD, IREDUNCO(1,IANGS),     
      &                                IREDUNCO(2,IANGS),
@@ -348,6 +362,7 @@ C
 C
  30   CONTINUE
 C
+            WRITE(6,*) "Entering the dihedral angle block"
   
       DO 40 IDIHS = (TOTNOFANG + TOTNOFBND + 1),  TOTREDNCO
 C
@@ -362,6 +377,7 @@ C
      &                            MAXREDUNCO, DERBMAT)
             REDUNCO(IDIHS) = DANG
 C
+            WRITE(6,"(a,F10.5)") "The Dihedral Angle =", DANG/DINVPI
 C    
  40   CONTINUE
 C
@@ -386,6 +402,9 @@ C Built G = BuB(t) where u is an arbitrary nonsingular matrix, usually
 C the unit matrix. The notations are consistent with Pulay et al.
 C paper.
 C
+      Write(6,*) "B-Matrix"
+      CALL OUTPUT(BMATRX, 1, TOTREDNCO, 1, 3*NRATMS, TOTREDNCO,
+     &            3*NRATMS, 1)    
 C
       CALL DCOPY(3*NRATMS*TOTREDNCO, BMATRX, 1, BTMP, 1)
 C

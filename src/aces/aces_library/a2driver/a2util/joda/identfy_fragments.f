@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       subroutine identfy_fragments(nratms,ibndto,connected_atoms,
      &                             nfrags, ifraglen,ifragmat)
 C     This routine separates all of the atoms into disconnected fragments.

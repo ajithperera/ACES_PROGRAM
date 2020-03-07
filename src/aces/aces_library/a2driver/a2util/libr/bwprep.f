@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c this procedure checks consistency of bw input and prepares
 c renumbering vectors between MO numbers and separate numbering of
 c particle and hole orbitals

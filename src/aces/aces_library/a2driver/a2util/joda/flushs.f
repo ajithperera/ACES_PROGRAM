@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
 C
 C FLUSHES SYMMETRY INFORMATION TO FILE SYMINF.
 C

@@ -80,6 +80,9 @@ c--------------------------------------------------------------------------
 
 
       if (dbg) then
+      Write(6,"(4(1x,F15.10))") ((hess(i,j),i=1,3*ncenters),j=1,
+     +                           3*ncenters)
+  
          write(6,*) ' HCOORD :', iatoms,icomponents,jatoms,
      *                    jcomponents
          write(6,*) ' Hessian from Loops ',x(iatoms,icomponents, 
@@ -99,6 +102,10 @@ c      hess(jhess,ihess) = hess(jhess,ihess)
 c     *                  + x(iatoms,icomponents,jatoms,jcomponents) 
 
 33    format(3F16.8)
+CSSS      if (me .eq. 0) Then
+CSSS      Write(6,"(4(1x,F15.10))") ((hess(i,j),i=1,3*ncenters),j=1,
+CSSS     +                           3*ncenters)
+CSSS      endif 
 
       return
       end

@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This function returns the amount of memory remaining.
 
       integer function memleft(stack,type)

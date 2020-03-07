@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine reads the MOL file and initializes data in /MOL/.
 c It should be called only by sb_com_mol(), but its main purpose is
 c to recast icore() addresses into convenient variables.

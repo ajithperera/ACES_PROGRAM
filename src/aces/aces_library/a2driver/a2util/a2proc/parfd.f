@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine prepares or loads data needed for parallel finite differences.
 c The goto routine for what should be done is symcor/upd_fd.F
 

@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This function returns the number of doubles per column of an MOIO array.
 
 c INPUT

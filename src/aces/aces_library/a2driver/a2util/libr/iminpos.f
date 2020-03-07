@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine returns the index of the smallest number in T(*).
 c BEWARE - IMINPOS is 1 if n=0
 

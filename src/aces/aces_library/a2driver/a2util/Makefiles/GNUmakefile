@@ -861,7 +861,7 @@ endif
 
 ifeq (${OPSYS},linux) ##########################################################
    CPP = cpp -traditional
-   CPPFLAGS       = -P -C
+   CPPFLAGS       = -P #-C
    CPPFLAG_DEPEND = -MM # do not check system includes
    AR_REPLACE = rs
 endif

@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C     mkc2z1 -- First step in producing the transformation from the
 C     computational basis to the "nice" ZMAT-ordered basis
 C

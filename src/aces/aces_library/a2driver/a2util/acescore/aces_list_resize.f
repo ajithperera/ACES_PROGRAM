@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine changes the number of doubles per column of one array (irrep)
 c in an MOIO family. The array may only have one column (like T1(A,I)).
 c    This is really a shameful routine. The entire list processing subsystem

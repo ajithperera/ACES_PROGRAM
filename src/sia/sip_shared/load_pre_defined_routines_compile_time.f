@@ -446,6 +446,10 @@ C
       dummy = load_user_sub('apply_frac_occs'//char(0),0)
       dummy = load_user_sub('energy_denominator_frac_occs'//char(0),0)
       dummy = load_user_sub('set_frac_occs'//char(0),0)
+      dummy = load_user_sub('built_emask'//char(0),0)
+      dummy = load_user_sub('drive_core_states'//char(0),0)
+      dummy = load_user_sub('form_norm_with_bmat'//char(0),0)
+      dummy = load_user_sub('adjust_evals_tocore'//char(0),0)
 c -----------------------------------------------------------------
 c Prakash instructions need for delta integrals
 c ------------------------------------------------------------------

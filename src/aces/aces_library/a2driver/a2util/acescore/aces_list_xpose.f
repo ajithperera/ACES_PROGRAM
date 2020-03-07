@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine transposes the dimensions of one MOIO array and optionally
 c transposes the actual data (but not yet).
 

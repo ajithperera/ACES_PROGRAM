@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This function returns a pointer to some location in an array (either
 c kscore or dcore).  It also keeps track of memory usage and memory
 c requirements.

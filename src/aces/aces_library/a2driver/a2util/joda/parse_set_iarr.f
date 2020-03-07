@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 c This routine parses a string, szData, and extracts a one-dimensional
 c array of integers up to nMax. The elements are separated by forward slashes,
 c ranges are defined with dashes or '>', and elements can be enclosed by

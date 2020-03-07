@@ -1,4 +1,15 @@
 
+
+
+
+
+
+
+
+
+
+
+
 C Compute a "new" gradient using the SCF gradient and the
 C total (SCF + correlation) gradient. This can be considered
 C as one (among a family) of gradient extrapolation schemes.

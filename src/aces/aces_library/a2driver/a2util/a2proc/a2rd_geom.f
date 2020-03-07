@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
       subroutine A2rd_geom(natoms,iatchrg,coord,ifuchrg,fucoord,
      &                         iunit,Write_molden_file)
 c------------------------------------------------------------------------------
