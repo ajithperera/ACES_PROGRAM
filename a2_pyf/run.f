@@ -1,0 +1,49 @@
+
+
+
+
+
+
+
+
+
+
+
+      Subroutine Run(String)
+
+      Implicit None
+
+      Integer Iuhf 
+c flags.com : begin
+      integer*8      iflags(100)
+      common /flags/ iflags
+c flags.com : end
+     
+      Character*(*) String
+
+      if (iflags(11).eq.0) then
+         iUHF = 0
+      else
+         iUHF = 1
+      end if
+
+      If (String(1:4) .Eq. "ints") Then
+         Call Runints(Iuhf)
+      Elseif(String(1:3) .Eq. "scf") Then 
+         Call Runscf(Iuhf)
+      Elseif(String(1:2) .Eq. "cc") Then
+         Call Runcc(Iuhf)
+      Elseif(String(1:2) .Eq. "ee") Then
+         Call Runee(Iuhf)
+      Elseif(String(1:6) .Eq. "1props") Then
+         Call Run1props(Iuhf)
+      Elseif(String(1:4) .Eq. "hbar") Then
+         Call Runhbar(Iuhf)
+      Elseif(String(1:5) .Eq. "grads") Then
+         Call Rungrads(Iuhf)
+      Endif 
+
+      Return
+      End
+
+

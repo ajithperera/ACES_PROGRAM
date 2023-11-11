@@ -1,0 +1,15 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module get2ehpy ! in 
+    interface  ! in :get2ehpy
+        subroutine get2ehpy(name,dest,ndim) ! in :get2ehpy:get2ehpy.F
+            character*80 :: name
+            double precision dimension(ndim*ndim*ndim*ndim),depend(ndim) :: dest
+            integer*8 :: ndim
+        end subroutine get2ehpy
+    end interface 
+end python module get2ehpy
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

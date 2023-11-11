@@ -1,0 +1,17 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module putrec ! in 
+    interface  ! in :putrec
+        subroutine putrec(flag,file,name,length,source) ! in :putrec:putrec.F
+            integer*8, intent(in)   :: flag
+            character*6, intent(in) :: file
+            character*8, intent(in) :: name
+            integer*8, optional,check(len(source)>=length),depend(source), intent(in):: length=len(source)
+            double precision dimension(length), intent(in):: source
+        end subroutine putrec
+    end interface 
+end python module putrec
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

@@ -1,0 +1,15 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module get1eh ! in 
+    interface  ! in :get1eh
+        subroutine get1eh(name,dest,ndim) ! in :get1eh:get1eh.F
+            character*80 :: name
+            double precision dimension(ndim*ndim),depend(ndim) :: dest
+            integer*8 :: ndim
+        end subroutine get1eh
+    end interface 
+end python module get1eh
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

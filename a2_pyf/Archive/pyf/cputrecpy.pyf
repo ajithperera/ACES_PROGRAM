@@ -1,0 +1,15 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module cputrecpy ! in 
+    interface  ! in :cputrecpy
+        subroutine cputrecpy(name,length,source) ! in :cputrecpy:cputrecpy.F
+            character*8 :: name
+            integer*8 :: length
+            character*8 intent(inout) :: source
+        end subroutine cputrecpy
+    end interface 
+end python module cputrecpy
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

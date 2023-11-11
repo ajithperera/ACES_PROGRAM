@@ -1,0 +1,13 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module runaces2 ! in 
+    interface  ! in :runaces2
+        subroutine runaces2(flag) ! in :runaces2:runaces2.F
+            integer*8, intent(in) :: flag
+        end subroutine runaces2
+    end interface 
+end python module runaces2
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

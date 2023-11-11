@@ -1,0 +1,15 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module getcrecpy ! in 
+    interface  ! in :getcrecpy
+        subroutine getcrecpy(name,length,dest) ! in :getcrecpy:getcrecpy.F
+            character*8 :: name
+            integer*8 :: length
+            character*8 :: dest
+        end subroutine getcrecpy
+    end interface 
+end python module getcrecpy
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

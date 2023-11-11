@@ -1,0 +1,30 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module add ! in 
+    interface  ! in :add
+        subroutine add(a,b,n) ! in :add:add.F
+            double precision dimension(n) :: a
+            double precision dimension(n),depend(n) :: b
+            integer*8, optional,check(shape(a, 0) == n),depend(a) :: n=shape(a, 0)
+            double precision dimension(10) :: a_1
+            logical :: set_it
+            common /internal/ a_1,set_it
+        end subroutine add
+    end interface 
+
+!python module check_strngs ! in
+    interface  ! in :check_strngs
+        subroutine check_strngs(a,b,d) ! in :check_strings:check_strngs.F
+            character*5 :: a
+            character*9 :: b
+            character*16 intent(inout) :: d
+        end subroutine check_strngs
+    end interface
+!end python module check_strngs
+
+end python module add
+
+! This file was auto-generated with f2py (version:1.22.4).
+! See:
+! https://web.archive.org/web/20140822061353/http://cens.ioc.ee/projects/f2py2e

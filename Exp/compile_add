@@ -1,0 +1,4 @@
+python -m numpy.f2py --fcompiler=intelem -c -m  add add.pyf add.F substract.so check_strngs.so
+
+
+

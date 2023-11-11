@@ -1,0 +1,97 @@
+
+A master fortran routine that drives the interface (or dirtectly callable
+from python is required). This is the program that generate the .pyf 
+file (if one desire to have multiple FORTRAN entry points, then all of 
+them need a .pyf file and the correspinding FORTRAN routine). The 
+.pyf can be created directly or by 
+
+f2py -h <filename.pyf> -m <filename> <options> <fortran files>  (-m flag
+specify the module name).
+
+For advanced options https://numpy.org/doc/stable/f2py/usage.html
+
+It is prefarable that Fortran files are in F90 or above. Since the intent,
+type specification of arguments must be specified. Examples of a .pyf
+file 
+
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module add ! in
+    interface  ! in :add
+        subroutine add(a,b,n) ! in :add:add.f
+            double precision dimension(n), intent(inout) :: a
+            double precision dimension(n),depend(n), intent(in):: b
+            integer*8 optional,check(len(a)>=n),depend(a), intent(n):: n=len(a)
+        end subroutine add
+    end interface
+end python module add
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/
+
+Note the integer*8. All our codes are compiled with -i8 (64bit integer) flags.
+Unless we specificaly decalare integers are 64  bits all the dependent routines
+fails. It seems the default numpy integers are 64 bits since I did not need to
+create integers with 64 bit flags (numpy.int8). 
+
+All the dependent routines (that are not directly called by python but 
+accessed through the master FORTRAN files must be compiled with standard
+way with new flags -shared -fPIC. For example routine in ACES II core 
+libraries (acescore,acesutil,tools, lb(for blas and lapack)) compiled as
+
+
+ifort -c -Wall -traceback -shared -fPIC -O2 -Zp8 -zero -i8 *.f 
+
+(all the facilitites of standard FORTRN can be used, including include
+files, directives etc). This step is simply handle by the makefiles 
+(cmake).
+
+Then we need to build a shared archive *.so (instead static .a archive)
+I used the folliwing command to built the .so archive but I am sure 
+there are better ways (similar to ar command for *.a archives)
+
+ifort  -shared -fPIC -o libacescore.so *.o
+
+These steps need to happen within the makefile framework.
+We can inspect the archive by
+nm -D  libacescore.so 
+The results appeare like 
+
+0000000000003710 T aces_auxcache_flush_
+0000000000003800 T aces_auxcache_ldblk_
+0000000000003e00 T aces_auxcache_reset_
+0000000000007090 T aces_bd_aces_reflag_
+listing for all the routines in acescore 
+
+Now the building the extension module:
+
+f2py -c --fcompiler=intel -m add add.pyf add.f subtract.so
+
+or more when you have multiple *.so archives 
+
+f2py -c --fcompiler=intel -m aces2py aces2.pyf aces2.F aces2_main.so  aces_libs.so libacescore.s
+o libacesutil.so libtools.so liblb.so
+
+(--fcompiler tells it to use the Intel compiler since the default is gfortran)
+When this is done we ends up with files
+
+pyscf_2aces2.cpython-36m-x86_64-linux-gnu.so
+add.cpython-36m-x86_64-linux-gnu.so 
+
+The name of the extension module is add or pyscf_2aces2. The rest tell us 
+about the system and apprently convention from python congress. 
+
+These modules can be imported in python (like we import numpy)
+
+Important to set LD_LIBRARY_PATH as 
+export LD_LIBRARY_PATH=/home/perera/Develop/ACESII/acespy/libso:$LD_LIBRARY_PATH
+ (for shared objects)
+
+export PYTHONPATH=/home/perera/Develop/ACESII/acespy/aces2:$PYTHONPATH
+(for pyf generated shared objects). These seems to act like .py files but
+unreadble. 
+
+
+
+

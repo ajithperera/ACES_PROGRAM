@@ -1,0 +1,16 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module getallpy ! in 
+    interface  ! in :getallpy
+        subroutine getallpy(destn,ndim,irrep,right_index) ! in :getallpy:getallpy.F
+            double precision dimension(ndim) :: destn
+            integer*8, optional,check(len(destn)>=ndim),depend(destn) :: ndim=len(destn)
+            integer*8 :: irrep
+            integer*8 :: right_index
+        end subroutine getallpy
+    end interface 
+end python module getallpy
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

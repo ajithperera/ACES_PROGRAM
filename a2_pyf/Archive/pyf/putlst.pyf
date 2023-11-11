@@ -1,0 +1,19 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module putlst ! in 
+    interface  ! in :putlst
+        subroutine getlst(source,column_index,no_columns,ndim,irrep,left_index,right_index) ! in :putlst:putlst.F
+            double precision dimension(ndim), intent(in) :: source
+            integer*8, intent(in):: column_index
+            integer*8, intent(in) :: no_columns
+            integer*8, optional,check(len(source)>=ndim),depend(source), intent(in) :: ndim=len(source)
+            integer*8, intent(in) :: irrep
+            integer*8, intent(in) :: left_index
+            integer*8, intent(in) :: right_index
+        end subroutine getlst
+    end interface 
+end python module putlst
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

@@ -1,0 +1,40 @@
+#include "flags.h"
+      Subroutine Rungrads(Iuhf)
+
+      Implicit None
+      Integer Iuhf 
+
+#include "icore.com"
+#include "istart.com"
+#include "flags.com"
+#include "flags2.com"
+#include "machsp.com"
+#include "jobarc.com"
+
+      Call Ints_(Icore(i0),Icrsiz,Iuhf)
+      Call V2ja(icore(i0),Icrsiz,Iuhf)
+      Call Vscf(Icore(i0),Icrsiz,Iuhf)
+
+      If (Iflags(h_IFLAGS_calc) .Gt. 0) Then
+         Call aces_init_chemsys()
+         Call Vtran(icore(i0),Icrsiz,Iuhf)
+         Call aces_init_chemsys()
+         Call Init_legacies()
+         Call Intproc(icore(i0),Icrsiz,Iuhf)
+         Call Vcc(icore(i0),Icrsiz,Iuhf)
+         Call Vlambda(icore(i0),Icrsiz,Iuhf)
+         Call Vdens(icore(i0),Icrsiz,Iuhf)
+         Call anti(icore(i0),Icrsiz,Iuhf)
+         Call bcktrn(icore(i0),Icrsiz,Iuhf)
+         Call derints(icore(i0),icrsiz,Iuhf)
+      Else
+         Call aces_init_chemsys()
+         Call derints(icore(i0),icrsiz,Iuhf)
+      Endif 
+
+      Call aces_fin
+      Call C_free(Icore)
+
+      Return
+      End
+

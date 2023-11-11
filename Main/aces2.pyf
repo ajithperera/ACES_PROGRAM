@@ -1,0 +1,178 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module aces2py ! in 
+    interface  ! in :aces2py
+        subroutine init() ! in :aces2py:init.F
+            integer*8 :: iintln
+            integer*8 :: ifltln
+            integer*8 :: iintfp
+            integer*8 :: ialone
+            integer*8 :: ibitwd
+            character dimension(1000,8),intent(c) :: marker
+            integer*8 dimension(1000) :: rloc
+            integer*8 dimension(1000) :: rsize
+            integer*8 :: nrecs
+            integer*8 :: irecwd
+            integer*8 :: irecln
+            logical :: bjaup
+            logical :: bjamod
+            integer dimension(1) :: icore
+            integer*8 :: i0
+            integer*8 :: icrsiz
+            integer*8 dimension(100) :: iflags
+            integer*8 dimension(500) :: iflags2
+            integer*8 dimension(10,500) :: moio
+            integer*8 dimension(10,500) :: moiowd
+            integer*8 dimension(10,500) :: moiosz
+            integer*8 dimension(10,500) :: moiods
+            integer*8 dimension(10,500) :: moiofl
+            integer*8 dimension(10,500,1) :: bwmoio
+            integer*8 dimension(10,500,1) :: bwmoiowd
+            integer*8 dimension(10,500,1) :: bwmoiosz
+            integer*8 dimension(10,500,1) :: bwmoiods
+            integer*8 dimension(10,500,1) :: bwmoiofl
+            integer*8 dimension(10,500) :: moiomxsz
+            integer*8 dimension(10,500,1) :: bwmoiomxsz
+            integer*8 dimension(5) :: prec
+            integer*8 dimension(5) :: iintoff
+            integer*8 dimension(5,1) :: bwprec
+            integer*8 dimension(5,1) :: bwiintoff
+            logical :: bioup
+            logical :: biomod
+            integer*8 :: iprcln
+            integer*8 :: iprcwd
+            integer*8 :: iprcrl
+            integer*8 dimension(10,500) :: quikget
+            common /machsp/ iintln,ifltln,iintfp,ialone,ibitwd
+            common /jobarc/ marker,rloc,rsize,nrecs,irecwd,irecln
+            common /ja_flags/ bjaup,bjamod
+            common / /icore
+            common /istart/ i0,icrsiz
+            common /flags/ iflags
+            common /flags2/ iflags2
+            common /lists/ moio,moiowd,moiosz,moiods,moiofl,bwmoio, bwmoiowd,bwmoiosz,bwmoiods,bwmoiofl
+            common /lists_mxsz/ moiomxsz,bwmoiomxsz
+            common /io_ptrs/ prec,iintoff,bwprec,bwiintoff
+            common /io_flags/ bioup,biomod
+            common /filspc/ iprcln,iprcwd,iprcrl
+            common /auxcache/ quikget
+        end subroutine aces2
+        subroutine dgetrecpy(name,length,dest) ! in :dgetrecpy:dgetrecpy.F
+            character*8, intent(in) :: name
+            integer*8, optional,check(len(dest)>=length),depend(dest), intent(in) :: length=len(dest)
+            double precision dimension(length), intent(inout) :: dest
+        end subroutine getrecpy
+
+        subroutine igetrecpy(name,length,idest) ! in :igetrecpy:igetrecpy.F
+            character*8, intent(in) :: name
+            integer*8, optional,check(len(idest)>=length),depend(idest), intent(in) :: length=len(idest)
+            integer*8 dimension(length), intent(inout) :: idest
+       end subroutine igetrecpy
+
+       subroutine dputrecpy(name,length,source) ! in :dputrecpy:dputrecpy.F
+            character*8 :: name
+            integer*8, optional,check(len(source)>=length),depend(source) :: length=len(source)
+            double precision dimension(length) :: source
+        end subroutine putrecpy
+
+        subroutine iputrecpy(name,length,isource) ! in :iputrecpy:iputrecpy.F
+            character*8, intent(in) :: name
+            integer*8, optional,check(len(isource)>=length),depend(isource), intent(in) :: length=len(isource)
+            integer*8 dimension(length), intent(inout) :: isource
+        end subroutine iputrecpy
+
+        subroutine cgetrecpy(name,length,dest) ! in :cgetrecpy:cgetrecpy.F
+            character*8, intent(in) :: name
+            integer*8,   intent(in) :: length
+            character*8  intent(inout) :: dest
+        end subroutine getcrecpy
+
+        subroutine cputrecpy(name,length,source) ! in :cputrecpy:cputrecpy.F
+            character*8, intent(in) :: name
+            integer*8, intent(in)   :: length
+            character*8,  intent(inout) :: source
+        end subroutine putcrecpy
+
+        subroutine getlstpy(column_index,no_columns,irrep,left_index,right_index,ndim,destn)
+! in :getlstpy:getlstpy.F
+            integer*8, intent(in) :: column_index
+            integer*8, intent(in) :: no_columns
+            integer*8, intent(in) :: irrep
+            integer*8, intent(in) :: left_index
+            integer*8, intent(in) :: right_index
+            integer*8, optional,check(len(destn)>=ndim),depend(destn), intent(in) :: ndim=len(destn)
+            double precision dimension(ndim), intent(inout) :: destn
+        end subroutine getlstpy
+
+        subroutine putlstpy(source,column_index,no_columns,ndim,irrep,left_index,right_index)
+! in :putlstpy:putlstpy.F
+            double precision dimension(ndim) :: source
+            integer*8 :: column_index
+            integer*8 :: no_columns
+            integer*8, optional,check(len(source)>=ndim),depend(source) :: ndim=len(source)
+            integer*8 :: irrep
+            integer*8 :: left_index
+            integer*8 :: right_index
+        end subroutine putlstpy
+
+        subroutine getallpy(destn,ndim,irrep,right_index) ! in :getallpy:getallpy.F
+            double precision dimension(ndim) :: destn
+            integer*8, optional,check(len(destn)>=ndim),depend(destn) :: ndim=len(destn)
+            integer*8 :: irrep
+            integer*8 :: right_index
+        end subroutine getallpy
+
+        subroutine putallpy(source,ndim,irrep,right_index) ! in :putallpy:putallpy.F
+            double precision dimension(ndim) :: source
+            integer*8, optional,check(len(source)>=ndim),depend(source) :: ndim=len(source)
+            integer*8 :: irrep
+            integer*8 :: right_index
+        end subroutine putallpy
+  
+        subroutine getreclenpy(name,length) ! in :getreclenpy:getreclenpy.F
+            character*8 :: name
+            integer*8, intent(inout) :: length
+        end subroutine getrelen
+
+        subroutine run(string_bn) ! in :run:run.F
+            character*(*) :: string_bn
+        end subroutine run
+
+        subroutine get1ehpy(name,dest,ndim) ! in :get1ehp:get1ehpy.F
+            character*80 :: name
+            double precision dimension(ndim*ndim),depend(ndim) :: dest
+            integer*8 :: ndim
+        end subroutine get1ehpy
+
+        subroutine get2ehpy(name,dest,ndim) ! in :get2ehpy:get2ehpy.F
+            character*80 :: name
+            double precision dimension(ndim*ndim*ndim*ndim),depend(ndim) :: dest
+            integer*8 :: ndim
+        end subroutine get2ehpy
+
+        subroutine buildhbar() ! in :buildhbar:buildhbar.F
+        end subroutine buildhbar
+
+        subroutine runints     ! in :runints:runints.F
+        end subroutine runints
+        subroutine runscf      ! in :runscf:runscf.F
+        end subroutine runscf
+        subroutine runcc       ! in :runcc:runcc.F
+        end subroutine runcc
+        subroutine runhbar     ! in :runhbar:runhbar.F
+        end subroutine runhbar
+        subroutine rungrads    ! in :rungrads:rungrads.F
+        end subroutine rungrads
+        subroutine run1props   ! in :run1props:run1props.F
+        end subroutine run1props
+        subroutine runprops    ! in :runprops:runprops.F
+        end subroutine runprops
+        subroutine runpccd     ! in :runpccd:runpccd.F
+        end subroutine runprops
+    end interface
+
+end python module aces2py
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

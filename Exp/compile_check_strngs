@@ -1,0 +1,4 @@
+python -m numpy.f2py --fcompiler=intelem -c -m  check_strngs check_strngs.pyf check_strngs.F
+
+
+

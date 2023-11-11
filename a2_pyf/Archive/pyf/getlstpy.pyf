@@ -1,0 +1,19 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module getlstpy ! in 
+    interface  ! in :getlstpy
+        subroutine getlstpy(destn,column_index,no_columns,ndim,irrep,left_index,right_index) ! in :getlstpy:getlstpy.F
+            double precision dimension(ndim) :: destn
+            integer*8 :: column_index
+            integer*8 :: no_columns
+            integer*8, optional,check(len(destn)>=ndim),depend(destn) :: ndim=len(destn)
+            integer*8 :: irrep
+            integer*8 :: left_index
+            integer*8 :: right_index
+        end subroutine getlstpy
+    end interface 
+end python module getlstpy
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

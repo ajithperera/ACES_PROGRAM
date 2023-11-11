@@ -1,0 +1,15 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module putcrecpy ! in 
+    interface  ! in :putcrecpy
+        subroutine putcrecpy(name,length,source) ! in :putcrecpy:putcrecpy.F
+            character*8 :: name
+            integer*8 :: length
+            character*8 intent(inout) :: source
+        end subroutine putcrecpy
+    end interface 
+end python module putcrecpy
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/
