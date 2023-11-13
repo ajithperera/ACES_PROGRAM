@@ -94,15 +94,33 @@ python module aces2py ! in
             character*8,  intent(inout) :: source
         end subroutine putcrecpy
 
-        subroutine getlstpy(column_index,no_columns,irrep,left_index,right_index,ndim,destn)
-! in :getlstpy:getlstpy.F
-            integer*8, intent(in) :: column_index
-            integer*8, intent(in) :: no_columns
-            integer*8, intent(in) :: irrep
-            integer*8, intent(in) :: left_index
-            integer*8, intent(in) :: right_index
-            integer*8, optional,check(len(destn)>=ndim),depend(destn), intent(in) :: ndim=len(destn)
-            double precision dimension(ndim), intent(inout) :: destn
+!        subroutine getlstpy(column_index,no_columns,irrep,left_index,right_index,ndim,destn) ! in getlstpy.F
+!                   integer*8 :: column_index
+!                   integer*8 :: no_columns
+!                   integer*8 :: irrep
+!                   integer*8 :: left_index
+!                   integer*8 :: right_index
+!                   integer*8, optional,check(shape(destn, 0) == ndim),depend(destn) :: ndim=shape(destn, 0)
+!                   double precision dimension(ndim) :: destn
+!        end subroutine getlstpy
+
+        subroutine getlstpy(column_index,no_columns,irrep,left_index,right_index,ndim,destn) ! in getlstpy.F
+                   integer*8 :: column_index
+                   integer*8 :: no_columns
+                   integer*8 :: irrep
+                   integer*8 :: left_index
+                   integer*8 :: right_index
+                   integer*8 :: ndim
+                   double precision dimension(ndim),depend(ndim), intent(inout) :: dest
+        end subroutine getlstpy
+
+        subroutine getlstpy_dbg(column_index,no_columns,irrep,left_index,right_index,ndim) ! in getlstpy.F
+                   integer*8 :: column_index
+                   integer*8 :: no_columns
+                   integer*8 :: irrep
+                   integer*8 :: left_index
+                   integer*8 :: right_index
+                   integer*8 :: ndim 
         end subroutine getlstpy
 
         subroutine putlstpy(source,column_index,no_columns,ndim,irrep,left_index,right_index)
