@@ -56,8 +56,6 @@
          Call Hbar_(icore(i0),Icrsiz,Iuhf)
       Endif 
 
-      Call C_free(Icore)
-
       Return
       End
 

@@ -1,15 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
 c This routine retrieves NCOLS columns starting at column IFIRST
 c of a stored double precision 2-dimensional array.
 
