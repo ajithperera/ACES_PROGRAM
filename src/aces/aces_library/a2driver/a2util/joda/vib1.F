@@ -9,8 +9,12 @@ C
 #include "fnamelen.par"
 C TOLERANCE FOR DEGENERACY OF EIGENVALUES.
       PARAMETER (DEGTLX = 1.D-6)
-      CHARACTER*1 XYZ(3),FLAG(3*MXATMS)
+      CHARACTER*1 XYZ(3),FLAG(3*MXATMS), A_RI
+      INTEGER ISORT(3*MXATMS)
       CHARACTER*11 TYPE(3*MXATMS)
+      logical idone(3*MXATMS)
+      character*8 irrnmc(32)
+      character*8 irpname, irpname2
       CHARACTER*4 IRREP(3*MXATMS)
       CHARACTER*10 LABEL
       CHARACTER*4 TMPSTR, CIRREP(3*MXATMS), CHA_TMP1,
@@ -25,13 +29,15 @@ C
 #include "coord.com"
 C
       LOGICAL YESNO,DIPOLE,READIS,RAMAN,POLDER_EXIST,
-     &        SYMINFO_EXSIST
+     &        SYMINFO_EXSIST, TREATED 
       INTEGER EOR(8, 8), KA(8, 3)
       DIMENSION SCRATCH(3*NRX),ECKART(2*NRX),IPT(3),BUF1(NXM6,NRX),
      &          SCR2(NRX*NRX),SYOP(72)
       DIMENSION BMAT(NXM6,NRX),GRAD(NRX), POLDER(9*NRX), POLTMP(9,NRX)
       DIMENSION H(NRX,NRX),HBUF(NRX,NRX),HINT(NRX),NORD(6*MXATMS),
      &          RINT(NRX),RDPL(NRX)
+      DOUBLE PRECISION ZERO3(3)
+      DIMENSION IREPOS(MXATMS)
       COMMON /USINT/ NX, NXM6, IARCH, NCYCLE, NUNIQUE, NOPT
       COMMON /MACHSP/ IINTLN,IFLTLN,IINTFP,IALONE,IBITWD
       COMMON /FLAGS/ IFLAGS(100),IFLAGS2(500)
@@ -606,23 +612,39 @@ C
       IOFF = 1
       DO 1399 IMODE = 1, NRX
 C
+#ifdef _DEBUG_LVL0
+      Write(6,*) "Raman intensities before sym averaging"
+      Write(6,"(6F12.8)") (RINT(I), I=1, NRX)
+      Write(6,"(a,a)") "The irrep label:", IRREP(ImodE)(1:4)
+      Write(6,*) "The ioff :", ioff
+#endif
+         TREATED = .FALSE. 
          DO 1499 I = 1, 4
             IF(IRREP(IOFF)(I:I).EQ.'A'.OR.IRREP(IOFF)(I:I).EQ.'B') THEN
                IOFF = IOFF + 1
+               TREATED = .TRUE. 
             ELSE IF (IRREP(IOFF)(I:I) .EQ. 'E') THEN
                RINT(IOFF) = (RINT(IOFF)+RINT(IOFF+1))/4.0D0
                RINT(IOFF+1) = RINT(IOFF)
                IOFF = IOFF + 2
+               TREATED = .TRUE. 
             ELSE IF (IRREP(IOFF)(I:I) .EQ. 'T') THEN
                RINT(IOFF)=(RINT(IOFF)+RINT(IOFF+1)+RINT(IOFF+2))/9.0D0
                RINT(IOFF+1) = RINT(IOFF)
                RINT(IOFF+2) = RINT(IOFF)
                IOFF = IOFF + 3
+               TREATED = .TRUE. 
             ENDIF
  1499    CONTINUE
-         IOFF = IOFF + 1
+         IF (.NOT. TREATED) IOFF = IOFF + 1
 C
  1399 CONTINUE
+#ifdef _DEBUG_LVL0
+      Write(6,*) "IR intensities"
+      Write(6,"(6F12.8)") (HINT(I), I=1, NRX)
+      Write(6,*) "Raman intensities"
+      Write(6,"(6F12.8)") (RINT(I), I=1, NRX)
+#endif
 C
 C NOW PUT EVERYTHING BACK INTO ACES2 ORIENTATION.
 C
@@ -643,7 +665,7 @@ C
        CALL PUTREC(20, "JOBARC", "SYM_NMDS", NRX*NRX*IINTFP, HBUF)
        CALL PUTCREC(20, "JOBARC", "VIB_SYMS", NRX*4, IRREP)
 C
-#ifdef _DEBUG_LVLM1
+#ifdef _DEBUG_LVL0
        Write(6,*)
        Write(6,*) "@-VIB1 The normal modes back in stand. orientation"
        call output (HBUF, 1, NRX, 1, NRX, NRX, NRX, 1)
@@ -988,6 +1010,333 @@ C
          CALL ZERO(HBUF(1,I),NRX)
         ENDIF
  623   CONTINUE
+
+cmn Begin section designed for interface with VIBRONIC MODELS
+C WRITE SET OF Cartesian NORMAL COORDINATES TO FILE NORMAL_FDIF
+C Include dummy atoms!
+CMN this file is needed in calculations of vibronic Hamiltonians
+c
+cmn:
+c sort normal modes as is done in Vibron  i.e. setpts4_heff in symcor
+c module
+c
+c
+        ione =1
+        nirrep = nirrepc
+c        call getrec(20, 'JOBARC', 'NAMEIRPC', nirrepc, irrnmc)
+#ifdef _DEBUG_LVL0
+        write(6,*)
+        write(6,*) ' Prepare Sorting normal_fdif '
+#endif 
+c
+c make sure that every irrepname occurs only once. Something stupid is
+c going on for Dxh for example.
+c
+        do i = 1, nirrep
+           irpname = irrnmc(i)
+           do j = i + 1, nirrep
+              if (irrnmc(j) .eq. irpname)
+     $             irrnmc(j) = '----    '
+           enddo
+        enddo
+c
+#ifdef _DEBUG_LVL0
+        do i = 1, nirrep
+           write(6,*) irrnmc(i)
+        enddo
+#endif 
+c
+        nvib = 0
+        nrot = 0
+        do i = 1, nrx
+           idone(i) = .false.
+        enddo
+       j = 0
+        do i = 1, nrx
+           if (TYPE(i) .eq. ' VIBRATION ') then
+              nvib = nvib + 1
+           else
+              j = j + 1
+              nrot = nrot + 1
+              isort(j) = i
+              idone(i) = .true.
+           endif
+        enddo
+#ifdef _DEBUG_LVL0
+        write(6,*) ' number of non-vibrations ', j
+#endif 
+c
+        do i = 1, 8
+           irpname(i:i) = ' '
+        enddo
+        do irp = 1, nirrep
+           do i = 1, nrx
+              IF(TYPE(I).EQ.' VIBRATION ')THEN
+                 irpname = CIRREP(I)
+cmn                 write(6,*) j, i, irpname, irrnmc(irp)
+                 if (irpname .eq. irrnmc(irp)) then
+                    j = j + 1
+                    isort(j) = i
+                    idone(i) = .true.
+                 endif
+              endif
+           enddo
+        enddo
+c
+           do i = 1, nrx
+              if (.not. idone(i)) then
+                 j = j + 1
+                 isort(j) = i
+              endif
+           enddo
+C
+        if (j .ne. nrx) then
+           write(6,*) ' Wrong sorting in vib1 ', j, nrx
+           write(6,*) ' nrot, nvib ', nrot, nvib
+           call errex
+        endif
+C
+      CALL GETREC(20,'JOBARC','DUMSTRIP',NATOMS,IREPOS)
+c
+      IUNIT=70
+      OPEN(UNIT=IUNIT,FILE='NORMAL_FDIF',FORM='FORMATTED')
+      REWIND(70)
+C
+      KBOT = 1
+ 8100 J=KBOT
+ 4107 IF(TYPE(isort(J)).EQ.' VIBRATION ')THEN
+       IPT2=isort(J)
+       J=J+1
+      ELSE
+       J=J+1
+       IF(J.LT.NRX+1)GOTO 4107
+      ENDIF
+      KBOT=J
+      A_RI = 'r'
+      if (FLAG(IPT2) .eq. 'i' ) A_RI= 'i'
+      WRITE(IUNIT,2111) IRREP(IPT2), CIRREP(IPT2),
+     $     H(IPT2,IPT2), A_RI
+2111  FORMAT(t3,A4,t12,A4,T20,F14.2,T40,A1)
+c
+c print the normal coordinates but include zeros for dummies.
+c
+      jbt = 1
+      do i =1 ,3
+         zero3(i) = 0.0d0
+      enddo
+      do i = 1, natoms
+         if (irepos(i) . eq. 0) then
+c
+c dummy atom
+c
+            write(iunit, 2115) 'X    ', (zero3(k), k=1,3)
+         else
+            write(iunit,2115)zsym(1+(jbt-1)/3),
+     &           (hbuf(j,ipt2),j=jbt,jbt+2)
+            jbt = jbt + 3
+         endif
+      enddo
+2115   FORMAT(T3,A5,T10,F14.8,T30,F14.8,T50,F14.8)
+       IF(KBOT.GT.NRX)GOTO 9100
+       GOTO 8100
+9100   CONTINUE
+C
+       CLOSE(70, STATUS='KEEP')
+cmn
+c end writing file normal_fdif
+c
+cmn
+c write file with reference geometry, for Vibron
+c
+      iunit = 70
+      OPEN(UNIT=70,FILE='EQ_GEOM')
+      REWIND(iunit)
+      write(iunit, *) ' Number of Atoms'
+      write(iunit,'(i8)') NRX / 3
+      write(iunit,*) ' Atomic masses '
+      write(iunit,'(5F20.10)') (Atmass(J), J=1,NRX/3)
+      write(iunit,3503)
+ 3503 FORMAT(' Reference geometry in Cartesian coordinates')
+      IOFF=1
+      DO  I=1,NRX/3
+       WRITE(iunit,'(3F20.10)'),(Q(J),J=IOFF,IOFF+2)
+       IOFF=IOFF+3
+      enddo
+      close(iunit, status='KEEP')
+c
+C
+C WRITE FC_ACES FILE. This file contains the information to find
+C Duschinsky rotation matrices. File used in certain applications of
+C vibron.
+C
+C
+      OPEN(UNIT=57,FILE='FC_ACES',FORM='FORMATTED',STATUS='UNKNOWN')
+      write(57, *) ' Number of Atoms'
+      write(57,'(i8)') NRX / 3
+      icount = 0
+      do iMODE = 1,NRX
+        if (TYPE(IMODE) .eq. ' VIBRATION ') icount = icount + 1
+      enddo
+      write(57, *) ' Number of Vibrations'
+      write(57,'(i8)') icount
+      write(57,*) ' Atomic masses '
+      write(57,'(5F20.10)') (Atmass(J), J=1,NRX/3)
+      write(57,3500)
+3500  FORMAT(' Reference geometry in mass weighted coordinates')
+      IOFF=1
+      DO  I=1,NRX/3
+       WRITE(57,'(3F20.10)')(SQRT(ATMASS(I))*Q(J),J=IOFF,IOFF+2)
+       IOFF=IOFF+3
+      enddo
+      DO IMODE=1,NRX
+        if (TYPE(IMODE) .eq. ' VIBRATION ') then
+       if (flag(IMODE) .eq. 'i') then
+          freq = - (H(iMODE,IMODE)/8065.5) **2
+       endif
+      else
+         freq = 0.0d0
+      endif
+ 3501  FORMAT(' force constant (in eV)')
+       WRITE(57,3501)
+       WRITE(57,'(F20.10)') freq
+       WRITE(57,3502)
+3502   FORMAT(' Normal mode in mass weighted coordinates ')
+       WRITE(57,'((3F20.10))')(HBUF(J,IMODE),J=1,NRX)
+cmn       endif
+      ENDDO
+      close(57, status='KEEP')
+cmn
+c end writing FC_ACES file
+       CALL PUTREC(20,'JOBARC','REALATOM',1,INT(NRX/3))
+       CALL PUTREC(20,'JOBARC','NORMCORD',NRX*NRX*IINTFP,HBUF)
+C
+       IF(IFLAGS(68).NE.1) THEN
+C
+cmn write a file with normal modes in internal coordinates
+c
+      IUNIT=70
+      OPEN(UNIT=IUNIT,FILE='CURVY_FDIF',FORM='FORMATTED')
+      REWIND(70)
+c
+        CALL GETREC(20,'JOBARC','BMATRIXC',IINTFP*NRX*NXM6,BMAT)
+c        write(6,*) ' @vib1: BMATRXC read from file '
+c        call output(bmat, 1, nxm6, 1, nrx, nxm6, nrc, 1)
+        CALL XGEMM('N','N',NXM6,NRX,NRX,1.0D0,BMAT,NXM6,HBUF,NRX,
+     &             0.0D0,BUF1,NXM6)
+        if (.false.) then
+           write(6,*) ' Prepare curvilinear ', NXM6, NRX
+           write(6,*) ' Bmat read from file '
+           call output(BMat, 1, NXM6, 1, NRX, NXM6, NRX, 1)
+           write(6,*) ' HBUF '
+           call output(HBUF, 1, NRX, 1, NRX, NRX, NRX, 1)
+           write(6,*) ' transformed coordinates BUF1 '
+           call output(BUF1, 1, NXM6, 1, NRX, NXM6, NRX, 1)
+        endif
+c
+c first write normal modes, in unnormalized fashion to file
+c
+c sort normal modes as is done in Vibron  i.e. setpts4_heff in symcor
+c module
+c
+c
+        ione =1
+        nirrep = nirrepc
+c        call getrec(20, 'JOBARC', 'NAMEIRPC', nirrepc, irrnmc)
+#ifdef _DEBUG_LVL0
+        write(6,*)
+        write(6,*) ' Preparing Curvy_linear '
+#endif 
+c        do i = 1, nirrep
+c           write(6,*) irrnmc(i)
+c        enddo
+c
+        do i = 1, nrx
+           idone(i) = .false.
+        enddo
+        nvib = 0
+        j = 0
+        do i = 1, nrx
+           if (TYPE(i) .eq. ' VIBRATION ') then
+              nvib = nvib + 1
+          else
+              j = j + 1
+              isort(j) = i
+              idone(i) = .true.
+           endif
+        enddo
+c
+        do i = 1, 8
+           irpname(i:i) = ' '
+        enddo
+        do irp = 1, nirrep
+           do i = 1, nrx
+              IF(TYPE(I).EQ.' VIBRATION ')THEN
+                 irpname = CIRREP(I)
+                 if (irpname .eq. irrnmc(irp)) then
+                    j = j + 1
+                    isort(j) = i
+                    idone(i) = .true.
+c                    write(6,*) j, i, irpname, irrnmc(irp)
+                 endif
+              endif
+           enddo
+        enddo
+c
+           do i = 1, nrx
+              if (.not. idone(i)) then
+                 j = j + 1
+                 isort(j) = i
+              endif
+           enddo
+        if (j .ne. nrx) then
+           write(6,*) ' Wrong sorting in vib1 ', j, nrx
+           call errex
+        endif
+c
+c resort normal modes in BUF1
+c
+c        write(6,*) ' transformed coordinates BUF1 '
+c        call output(BUF1, 1, NXM6, 1, NRX, NXM6, NRX, 1)
+        call dcopy(nxm6*nrx, buf1, 1, bmat, 1)
+        do j = 1, nrx
+           i = isort(j)
+           scr2(j) = H(i,i)
+           call dcopy(nxm6, bmat(1,i), 1, buf1(1,j), 1)
+        enddo
+c        write(6,*) ' permuted coordinates BUF1 '
+c        call output(BUF1, 1, NXM6, 1, NRX, NXM6, NRX, 1)
+c
+#ifdef _DEBUG_LVL0
+        write(6,*) ' Resorting normal modes '
+        do j = 1, nrx
+           write(6,733) j, isort(j), scr2(j)
+        enddo
+ 733    format('  New: ', i8, ' Old: ', i8, ' New Freq: ', F12.4)
+#endif 
+
+        IBOT=1
+        WRITE(iunit,3117)
+3117    FORMAT(T20,'   Normal modes in internal coordinates ')
+        write(iunit, *) NRX, NXM6
+ 114    ITOP=MIN(IBOT+4,NRX)
+        WRITE(iunit,3116)
+3116    FORMAT(75('-'))
+        WRITE(iunit,'(5X,5(5X,F9.3))')(scr2(j),J=IBOT,ITOP)
+        DO ICOORD=1,NXM6
+         WRITE(iunit,'(A,5(5X,F9.6))')VARNAM(ISQUASH(ICOORD)),
+     &         (BUF1(ICOORD,J),J=IBOT,ITOP)
+        ENDDO
+        IBOT=ITOP+1
+        IF(IBOT.LE.NRX)GOTO 114
+        WRITE(iunit,3116)
+        close(70, status='KEEP')
+c
+c done writing to file. Now repeat, writing things to output file, as
+c always.
+c
+        endif
+c
+cmn END section VIBRONIC MODELS
 C
 C Note that the REALATOM record is also written eleswhere. The normal
 C modes in NORMCORD record is without mass weighing. The SYM_NMDS
@@ -1012,10 +1361,8 @@ C
         IBOT=1
         WRITE(6,*)
         WRITE(6,3117)
-3117    FORMAT(T20,'   Normal modes in internal coordinates ')
 3114    ITOP=MIN(IBOT+4,NRX)
         WRITE(6,3116)
-3116    FORMAT(75('-'))
         WRITE(6,'(5X,5(5X,F9.3))')(H(J,J),J=IBOT,ITOP)
         WRITE(6,3116)
         DO 3115 ICOORD=1,NXM6
@@ -1201,6 +1548,12 @@ C
       Write(6,*) "Eigenvalues of the projected Hessian"
       Write(6, "(5F10.5)") (H(I,I), I=1, nrx)
 #endif
+C Write the projected frequencies to NORMCO file. This is needed in a2proc
+C partition function calculations. This eliminate the potential problems
+C that partition function are computed with unprojected frequencies.
+C Ajith Perera, 12/2019
+
+      WRITE(56,'(A)') "Projected frequencies"
 
 c   o gather the diagonal eigenvalues back into column 1 for dumping to JOBARC
 c     (Obviously we cannot use this matrix afterward.)
@@ -1217,10 +1570,12 @@ c     (Obviously we cannot use this matrix afterward.)
       IF(H(I,I).LT.0.D0)THEN
        H(I,I)=FACT*DSQRT(-H(I,I))
        FLAG(I)='i'
+       WRITE(56,'(F20.10,A1)')H(I,I),FLAG(I)
       ELSE
        H(I,I)=FACT*DSQRT(H(I,I))
        FLAG(I)=' '
        ZPE=ZPE+H(I,I)
+       WRITE(56,'(F20.10,A1)')H(I,I),FLAG(I)
       ENDIF
       WRITE(LUOUT,9903)I,H(I,I),FLAG(I)
 9903  FORMAT(T10,I4,T25,F10.4,A1)

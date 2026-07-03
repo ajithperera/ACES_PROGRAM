@@ -535,15 +535,11 @@ c---------------------------------------------------------------------------
       endif
 c----------------------------------------------------------------------------
 c   EOM-CCSD excitation energy(RHF,UHF) Print Flag = 70,71 (Right,triplet)
-c                                                       72 (Right from SOC)
 c                                                    80,81 (Left,triplet)
-C                                                       82 (Left,from SOC) 
 c---------------------------------------------------------------------------
       st_flag = scalar_table(sind)
       if (st_flag .eq. 70.0 .or. st_flag .eq. 71.0 .or. 
-     *    st_flag .eq. 79.0 .or. 
-     *    st_flag .eq. 80.0 .or. st_flag .eq. 81.0 .or.
-     *    st_flag .eq. 89) then
+     *    st_flag .eq. 80.0 .or. st_flag .eq. 81.0) Then 
           call print_eomccsd_cinfo(x(iarray),scalar_table(sind),
      *             1,n1,1,n2)
       endif
@@ -1582,12 +1578,9 @@ c
       Left_hand  = .False.
       singlet = (Sval .eq. 70 .or. Sval .eq. 80)
       triplet = (Sval .eq. 71 .or. Sval .eq. 81)
-      triplet = (Sval .eq. 79 .or. Sval .eq. 89)
 
-      Right_hand = (Sval .eq. 70 .or. Sval .eq. 71 .or.
-     +              Sval .eq. 79)
-      Left_hand  = (Sval .eq. 80 .or. Sval .eq. 81 .or.
-     +              Sval .eq. 89)
+      Right_hand = (Sval .eq. 70 .or. Sval .eq. 71)
+      Left_hand  = (Sval .eq. 80 .or. Sval .eq. 81)
 
       if (me .eq. 0)then
 
@@ -1618,15 +1611,9 @@ c
             write(66,30) 
             write(66,100) 
 
-            If (Sval .eq. 71 .or. Sval .eq. 81) Then 
-            do i = 1, ieom_roots
-               write(66,20) i, array1(i+12,1), array1(i+12,1)*conv
-            enddo 
-            Elseif (Sval .eq. 79 .or. Sval .eq. 89) Then 
             do i = 1, ieom_roots
                write(66,20) i, array1(i,1), array1(i,1)*conv
             enddo 
-            Endif 
 
             Call Dputrec(20,"JOBARC","EOM_EXET",ieom_roots,Array1(1,1))
             write(66,100) 

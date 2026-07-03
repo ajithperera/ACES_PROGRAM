@@ -1,4 +1,4 @@
-
+#include "flags.h"
 C Read Cartesian coordinates from Z-matrix
 
       SUBROUTINE GETXYZ
@@ -42,7 +42,7 @@ C
      $   ICONTL,IRECAL,INTTYP,IDISFD,IGRDFD,ICNTYP,ISYM,IBASIS,
      $   XYZTol
 
-      double precision xyz(3,mxatms)
+      double precision rxyz(3,mxatms), pxyz(3,mxatms)
       integer izl(2,7), iStruct
       CHARACTER*(linelen) ZLINE
       logical btmp, bStruct, bAtom
@@ -112,6 +112,12 @@ c   o process the reactant as the main structure
       if (iflags(78).eq.0) call xscal(nx,factor,q,1)
       call pertable
 
+#ifdef _DEBUG_LVL0
+      Write(6,"(a)") "Creating CUSTRUCT jobarc record"
+      Write(6,"(3(1x,F12.6))") ((q(i,j),i=1,3),j=1,natoms)
+#endif
+      call putrec(1,'JOBARC','CUSTRUCT',nx*iintfp,q)
+
 c   o flush remaining atom slots
       if (natoms.lt.mxatms) then
          i = 3*(mxatms-natoms)
@@ -121,7 +127,7 @@ c   o flush remaining atom slots
          end do
       end if
 
-c   o read additional structures into xyz until we hit a namelist
+c   o read additional structures into rxyz until we hit a namelist
 c     (iStruct corresponds to the structure we expect to read)
       iStruct = 1
       bStruct = .true.
@@ -137,6 +143,17 @@ c         o only read the first line of the secondary structure
             end if
             i = izl(1,1)
             if (i.ne.0.and.(ndx.ne.0.or.zline(i:i).ne.'*')) then
+C
+C This small loop allows us to designate the character of the 
+C additional structures (Products, Transition state, etc.)
+C Ajith Perera, 12/2012.
+C
+                if (ndx .eq. 0) Then
+                   read(luz,'(a)') zline
+                   call parsez(zline,izl)
+                   i = izl(1,1)
+                endif
+C
 c            o increment atom counter
                ndx = ndx + 1
                if (ndx.gt.natoms) then
@@ -160,7 +177,7 @@ c            o load the coordinates
                   print *, '         atom ',ndx,': ',zline
                   call errex
                end if
-               read(zline(izl(1,2):izl(2,4)),*) (xyz(i,ndx),i=1,3)
+               read(zline(izl(1,2):izl(2,4)),*) (rxyz(i,ndx),i=1,3)
             else
                bAtom = .false.
                if (ndx.eq.0) then
@@ -195,25 +212,49 @@ c            o read the next line and see if this structure was the TS or PR
                if (btmp) then
                   print *, 'Product structure:'
                else
-                  print *, 'Transition-state structure:'
+                  print *, 'Reactant structure:'
                end if
                do ndx = 1, natoms
-                  print *, zsym(ndx),(xyz(i,ndx),i=1,3)
+                  print *, zsym(ndx),(rxyz(i,ndx),i=1,3)
                end do
 c           end if (print structures)
             end if
-            if (iflags(78).eq.0) call xscal(nx,factor,xyz,1)
+            if (iflags(78).eq.0) call xscal(nx,factor,rxyz,1)
             if (btmp) then
-               call putrec(1,'JOBARC','PRSTRUCT',nx*iintfp,xyz)
+               If (iStruct.eq.2) Then
+#ifdef _DEBUG_LVL0
+      Write(6,"(a)") "Creating RXSTRUCT jobarc record"
+      Write(6,"(3(1x,F12.6))") ((rxyz(i,j),i=1,3),j=1,natoms)
+#endif
+                  call putrec(1,'JOBARC','RXSTRUCT',nx*iintfp,rxyz)
+                Else
+#ifdef _DEBUG_LVL0
+      Write(6,"(a)") "Creating PRSTRUCT jobarc record"
+      Write(6,"(3(1x,F12.6))") ((rxyz(i,j),i=1,3),j=1,natoms)
+#endif
+                  call putrec(1,'JOBARC','PRSTRUCT',nx*iintfp,rxyz)
+                Endif
             else
 c            o move Q to RXSTRUCT since we are optimizing the TS structure
-               call putrec(1,'JOBARC','RXSTRUCT',nx*iintfp,q)
-               call dcopy(nx,xyz,1,q,1)
+
+#ifdef _DEBUG_LVL0
+      Write(6,"(a)") "Creating RXSTRUCT jobarc record"
+      Write(6,"(3(1x,F12.6))") ((rxyz(i,j),i=1,3),j=1,natoms)
+#endif
+               call putrec(1,'JOBARC','RXSTRUCT',nx*iintfp,rxyz)
+
+C q contains the first block of coordinates which is the approx. TS  
+C structure (better designation must be current structure). 
+c  Commented 12/2012, Ajith Perera
+CSSS               call dcopy(nx,rxyz,1,q,1)
             end if
 c        end if (bStruct)
          end if
 c     end do while (bStruct)
       end do
+
+      If (IFLAGS2(h_IFLAGS2_opt_control) .EQ. 1)
+     &    Call Gen_curr_coords(Rxyz, Pxyz, q, Nx, .TRUE.)
 
       RETURN
       END

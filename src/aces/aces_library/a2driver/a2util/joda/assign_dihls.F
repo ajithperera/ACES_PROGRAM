@@ -14,7 +14,7 @@ C
       DATA IZERO /0/
 C
 
-#ifdef _DEBUG_LVLM1
+#ifdef _DEBUG_LVLM
       Write(6,*)
       Print*, "MAXREDUNCO, TOTNOFBND, TOTREDNCO"
       Print*, MAXREDUNCO, TOTNOFBND, TOTREDNCO
@@ -119,7 +119,7 @@ C
         WRITE(6, 99) TOTREDNCO, MAXREDUNCO
  99     FORMAT(T3,'Maximum No. of redundant coordinates allowed',
      &         ' exceeded.',/,
-     &         T3,'Required:',I3,' Current Maximum:',I3)
+     &         T3,'Required:',I8,' Current Maximum:',I5)
         Write(6,*)
         CALL ERREX
       ENDIF

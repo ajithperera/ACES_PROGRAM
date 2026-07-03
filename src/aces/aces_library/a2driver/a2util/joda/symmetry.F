@@ -53,7 +53,7 @@ C
      &                              (ATMASS(J),J = 1,NATOMS)
  7733 FORMAT(1X,F15.10)
 C
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Write(6,"(a, 5I)"), "The number of atoms", Natoms
       Write(6,*)
       Print*, "The Cartesians before translations to CM" 
@@ -86,7 +86,7 @@ cYAU         CLOSE(UNIT=LUARC,STATUS='DELETE')
           Q(3*I-J) = Q(3*I-J)-CM(3-J)
   301   continue
    30 continue
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Write(6,*), "The Cartesians in center of mass coords"
       Write(6, "(3F12.7)"), (Q(I), I=1, 3*NATOMS)
       Write(6,*)
@@ -98,14 +98,14 @@ cYAU         CLOSE(UNIT=LUARC,STATUS='DELETE')
 c
 cjdw 5/26/95
 c
-      IF (IPRNT .GE. 4 .AND. NOSILENT) THEN
+C      IF (IPRNT .GE. 4 .AND. NOSILENT) THEN
       write(6,*)
       write(6,*) ' @symmetry-i, Coordinates after  COM shift '
       do 1010 i=1,natoms
         write(6,'(3F20.12)') q(3*i-2),q(3*i-1),q(3*i)
  1010 continue
       write(6,*)
-      ENDIF
+C      ENDIF
 C
 C     BUILD INERTIA TENSOR
 C
@@ -118,6 +118,33 @@ C DIAGONALIZE INERTIA TENSOR.
 C
       CALL FILTER(IT,9,1.D-12)
       CALL EIG(IT,IV,3,3,0)
+c
+c preserve approximate definition of x, y, z axis
+c
+c check that largest element in each column is positive
+cmn
+      do j = 1, 3
+         amax = 0.0d0
+         do i = 1, 3
+            if (amax .lt. abs(IV(i,j))) then
+               imax = i
+               amax = abs(IV(i,j))
+            endif
+         enddo
+         if (IV(imax,j) .lt. 0.0d0)
+     $        call SSCAL(3, -1.0d0, IV(1,j), 1)
+      enddo
+c
+      if (det3x3(IV) .le. 0.0d0) then
+         write(6,*) ' Determinant Principal axis Rot -1'
+         write(6,*) ' Scale first column '
+         call SSCAL(3, -1.0d0, IV(1,1), 1)
+         write(6,*) ' mn ORIEN2 matrix '
+         write(6,*) ' Determinant ? ', det3x3(IV)
+         WRITE(LUOUT,80)((IV(I,J),J = 1,3),
+     &        I = 1,3)
+      endif
+
       CALL SCOPY(9,IV,1,ORIEN2,1)
 C
 C CHECK *NOW* FOR DEGENERACY OF EIGENVALUES -- IF PRESENT, THEN SEE IF
@@ -139,6 +166,8 @@ C
         ATMP=IT(1,1)
         IT(1,1)=IT(3,3)
         IT(3,3)=ATMP
+cmn IV has changed. -> also orien2
+        CALL SCOPY(9,IV,1,ORIEN2,1)
       ENDIF
 
 CJDW 1/6/98. Replace MATMULV by XGEMM call. NEWQ = (IV)^T * Q.
@@ -212,13 +241,13 @@ C
  3146    FORMAT(T3,'@SYMMETRY-I, The symmetry group is ',i1,'-fold ',
      &          'degenerate.')
 C
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Write(6,*)
       Print*, "The symmetry processing begins"
 #endif
 
       IF (IFLAGS(h_IFLAGS_symmetry).EQ.0) THEN
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Print*, "The symmetry is not used for anything"
       Write(6,*)
 #endif
@@ -231,7 +260,7 @@ CSSS         DO J = 0,2
 CSSS            Q(3*I-J) = Q(3*I-J)+ CM(3-J)
 CSSS         ENDDO
 CSSS      ENDDO
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Print*, "The Cartesians wrt CM origin"
       Write(6, "(3F10.5)"), (Q(I), I=1, 3*NATOMS)
       Write(6,*)
@@ -260,14 +289,52 @@ C
          CALL PUTREC(20,'JOBARC','FULLNORB',IONE,NATOMS)
          CALL PUTREC(20,'JOBARC','COMPNORB',IONE,NATOMS)
 C
+C
+C convoluted logic to take care of dummy atoms
+C
          ISIZE=NATOMS
+         write(6,*) ' @symmetry, natoms ', natoms
          iNdx = IONE
+         do i = 1, isize
+            member(i) = 999
+         enddo
+         j = 0
          do i = 1, iSize
              STSYM(i)  = 'C1      '
-             MEMBER(i) = i
+            if (iatnum(i) .eq. 0) then
+                member(i) = 999
+            else
+               j = j + 1
+               MEMBER(i) = j
+            endif
              szStSymTmp(iNdx:iNdx+7) = STSYM(i)(1:8)
            iNdx = iNdx + 8
+        enddo
+C
+        CALL GETREC(-1, 'JOBARC', '12SWITCH', ione, ibad)
+         IF (IBAD .EQ. 1 .and. j .eq. isize) THEN
+            MEMBER(2) = 1
+            MEMBER(1) = 2
+         ENDIF
+
+         CALL PUTREC(20,'JOBARC','ZMAT2MOL',ISIZE,MEMBER)
+C
+         ISIZE=NATOMS
+         iNdx = IONE
+         do i = 1, isize
+            member(i) = 999
+         enddo
+         j = 0
+         do i = 1, iSize
+             STSYM(i)  = 'C1      '
+             if (iatnum(i) .ne. 0) then
+               j = j + 1
+               MEMBER(j) = i
+             endif
+               szStSymTmp(iNdx:iNdx+7) = STSYM(i)(1:8)
+           iNdx = iNdx + 8
          end do
+C
          CALL PUTCREC(20,'JOBARC','FULLSTGP',iSize*8,
      &                szStSymTmp(1:iSize))
          CALL PUTCREC(20, 'JOBARC', 'FULLPTGP', 8, STSYM(1))
@@ -326,7 +393,7 @@ C
             ENDIF  
 C
             CALL XGEMM('N','N',3,NATOMS,3,ONE,IV,3,NEWQ,3,ZILCH,Q,3)
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Write(6,*)
       Print*, "The Cartesians after no-principal axis rot. "
       Write(6, "(3F10.5)"), (Q(I), I=1, 3*NATOMS)
@@ -336,7 +403,7 @@ C
                   Q(3*I-J) = Q(3*I-J)+ CM(3-J)
                ENDDO
             ENDDO
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Write(6,*)
       Print*, "The Cartesians after no-reorintation CM"
       Write(6, "(3F10.5)"), (Q(I), I=1, 3*NATOMS)
@@ -348,7 +415,7 @@ C in principle this block is inactive.
 C 
             CALL DCOPY(3*nAtoms, NEWQ, 1, Q, 1)
 
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Write(6,*)
       Print*, "The Cartesians used when sym=none,noreori=off"
       Write(6, "(3F10.5)"), (NEWQ(I), I=1, 3*NATOMS)
@@ -391,7 +458,7 @@ C
 C
             CALL XGEMM('N','N',3,NATOMS,3,ONE,IV,3,NEWQ,3,ZILCH,
      &                     QOLD,3)
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Print*, "The Cartesians before translations to CM:NO REORIENT"
       Print*, (QOLD(I), I=1, 3*NATOMS)
 #endif
@@ -401,7 +468,7 @@ C
                ENDDO
             ENDDO
 #endif
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Print*, "The Cartesians before entering symmetry auto"
       Write(6, "(3F10.5)"), (NEWQ(I), I=1, 3*NATOMS)
       Write(6, "(3F10.5)"), (QTMP(I), I=1, 3*NATOMS)
@@ -428,7 +495,7 @@ C
                ENDDO
             ENDIF
 
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Write(6,*), "The Cartesians in the principal axis rotation ori."
       Write(6, "(3F12.7)"), (NEWQ(I), I=1, 3*NATOMS)                  
       Write(6,*)
@@ -442,7 +509,7 @@ C If no reorientation is requested, undo the rotation and translation.
 C
                CALL XGEMM('N','N',3,NATOMS,3,ONE,IV,3,NEWQ,3,ZILCH,
      &                     QTMP,3)
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Write(6,*), "The Cartesians in center of mass coords"
       Write(6, "(3F12.7)"), (QTMP(J), J=1, 3*NATOMS)                  
       Write(6,*)
@@ -456,7 +523,7 @@ C
      &                     QTMP)
                CALL DCOPY(3*NATOMS, QTMP, 1, Q, 1)
 
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Write(6,*), "The Cartesians after undoing the sym. REORIENT"
       Write(6, "(3F12.7)"), (QTMP(J), J=1, 3*NATOMS)                  
 #endif
@@ -472,7 +539,7 @@ C
                CALL PUTREC(20,'JOBARC','NOREOCOR',3*NATOMS*IINTFP,
      &                     QOLD)
 
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0     
       Print*, "The Cartesians before translations to CM:NO REORIENT"
       Print*, (QOLD(I), I=1, 3*NATOMS)
 #endif
@@ -493,6 +560,11 @@ C
       END IF
 C
 C DUMP SOME NECESSARIES TO JOBARC
+C
+C The ORIENT2: The transformation from inpout orientation to 
+C principle axix orientation.
+C The ORIENT: The transformation from principle axis to symmetry
+c prefered orientation. 05/2015, Ajith Perera.
 C
       CALL PUTREC(20,'JOBARC','ORIENT2 ',ININE*IINTFP,SCRATCH)
       CALL PUTREC(20,'JOBARC','NATOMS  ',IONE,NATOMS)

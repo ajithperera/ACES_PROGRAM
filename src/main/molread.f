@@ -62,7 +62,7 @@ C
 C     
       DIMENSION NFCT(MAX_ATOMS), NAOATM(MAX_ATOMS),
      &          NUFCT(MAX_ATOMS), NAOUATM(MAX_ATOMS),
-     &          COORD(3)
+     &          COORD(3),SCR(MAX_ATOMS)
 
       INTEGER NAOUATM2(MAX_ATOMS)
       INTEGER NAOBASIS, NAOTMP2, NP22
@@ -144,8 +144,16 @@ C
                angmom(nshells) = iangmom   ! same a. m. value for each subshell
                atomic_label(nshells) = iatm
 C
-               READ(10,1120) NP1, NAO
+               READ(10,1120) NP1, NAO 
+ 
  1120          FORMAT(2I5)
+
+               IF (NAO .GT. MAX_ATOMS) THEN
+                  WRITE(6,"(3a)")" The number of contracted functions",
+     &                           " per shell exceeded the maximum"
+     &                           " allowed", MAX_ATOMS
+                  CALL ABORT_JOB()
+               ENDIF 
 C
                NPT  = NPT  + NP1
                NAOT = NAOT + NAO
@@ -168,8 +176,8 @@ C
                IF ((NAO-3) .GT. (NLN*4)) NLN = NLN + 1
                NLN = (NLN + 1)*NP1
 C
-               DO 30 J=1,NLN
-                  READ(10,'(A)') XLINE
+               DO 30 J=1, NP1
+                  READ(10,*) A, (SCR(K),K=1,NAO)
  30            CONTINUE
 C
                IF(NPT .GT. LNP1) THEN
@@ -266,7 +274,7 @@ C NBASIS  = Total number of basis functions (contracted)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 C     
       CHARACTER*4 ATMNAM
-      CHARACTER*80 XLINE
+      CHARACTER*120 XLINE
       LOGICAL CARTESIAN
 C     
       DIMENSION IREORDER(NATOMS), NFCT(NATOMS), NAOATM(NATOMS),
@@ -494,7 +502,9 @@ C
                ENDIF
 C
                DO 32 I = 1, NP1
-                  READ(10,1060) SALPHA(I),(SPCOEF((J-1)*NP1+I),J=1,NAO)
+CSSS                  READ(10,1060) SALPHA(I),(SPCOEF((J-1)*NP1+I),J=1,NAO)
+                  READ(10,*) SALPHA(I),(SPCOEF((J-1)*NP1+I),J=1,NAO)
+                  IF (SALPHA(I) .EQ. 0.0D0) SALPHA(I)=1.0D-57
  32            CONTINUE
 C     
 C Renormalize the atomic orbitals. Multiply the renormalized
@@ -510,10 +520,14 @@ C
                         AI=SALPHA(I)
                         AJ=SALPHA(J)
 C
+                        IF (AI .EQ. 0.0D0 .AND. AJ .EQ. 0.0D0) THEN
+                        TMP=SPCOEF((INAO-1)*NP1+I)*SPCOEF((INAO-1)*
+     &                      NP1+J)
+                        ELSE
                         TMP=SPCOEF((INAO-1)*NP1+I)*SPCOEF((INAO-1)*
      &                      NP1+J)*(2.0D+00*DSQRT(AI*AJ)/
      &                     (AI+AJ))**(REAL(LL)+0.5D+00)
-C
+                        ENDIF
                         SUM = SUM + TMP
                         IF(I .NE. J) SUM = SUM + TMP
 C

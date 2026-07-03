@@ -52,6 +52,7 @@ c
       Write(6,*)
       Write(6,"(3F10.5)"), (R(I), I=1, NX)
       Write(6,"(4I5)")  (NCON(I), I=1, NX)
+      IPRNT=600
 #endif
 C
 C

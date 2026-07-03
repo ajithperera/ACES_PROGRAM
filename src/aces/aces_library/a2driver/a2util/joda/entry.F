@@ -77,7 +77,7 @@ C
       CALL GFNAME(ARCFIL,FNAME,ILENGTH)
       INQUIRE (FILE=FNAME(1:ILENGTH), EXIST=OLDARC)
 
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Print*, "The OPTARC is here?", OLDARC, We_havegeom 
       Print*, "Do we have geom?", We_havegeom
       Print*, "Hessian in JOBARC?", Length
@@ -190,13 +190,15 @@ C
              itmp = iflags(18)
       iflags(18)  = mod(itmp,100)
       Can_do_freq = (IVIB .GT. 0 .AND. We_havegeom) 
-C
+
+      Write(6,*) "Can_do_frq", Can_do_freq 
+
       IF((.NOT. Can_do_freq ) .AND.IFLAGS(18).NE.3.
      &   AND.IFLAGS(18).NE.8.AND.IFLAGS(18).NE.9.
      &   AND.IFLAGS(18).NE.10.AND.IFLAGS2(3).NE.1.
      &   AND.IFLAGS(18).NE.4.AND.IFLAGS(18).NE.5.AND.OLDARC)THEN
 C
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
        Write(6,*) "@-Entry, the optimization cycle", Ncycle
 #endif 
        IF(.NOT.OPTRES) WRITE(LUOUT, 9010) NCYCLE+1

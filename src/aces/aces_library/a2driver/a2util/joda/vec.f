@@ -17,8 +17,10 @@ C
       Enddo
       D2sqrt = Dsqrt(D2)
       If (D2sqrt .LT. 1.0D-14) Then
-         Write(6,"(a)") "@-VEC: The null vector is returned"
-         If (Ix .NE.0) Call Errex
+         If (IX .NE. 0) Then
+            Write(6,"(a)") "@-VEC: The null vector is returned"
+            Call Errex
+         Endif
       Endif
 C
       IF(IX.EQ.1)CALL NORMAL(V,3)

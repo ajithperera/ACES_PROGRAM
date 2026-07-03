@@ -180,7 +180,7 @@
 
 
 
-      subroutine rd_intcoord(RINT)
+      subroutine rd_intcoord(RINT, Verify)
       implicit none
 
       DOUBLE PRECISION DACOS, RINT
@@ -292,11 +292,11 @@ C
       COMMON /FLAGS/ IFLAGS,IFLAGS2
 
       DOUBLE PRECISION RTOA, dTmp
-      INTEGER I, J, IBOMB, ISTP
+      INTEGER I, J, IbOMB, ISTP
       CHARACTER*(linelen) DUMSTR
       CHARACTER*5 CHTEST
       CHARACTER*1 czTab
-      LOGICAL PRINTI
+      LOGICAL PRINTI, Verify
 
 c ----------------------------------------------------------------------
 
@@ -332,10 +332,14 @@ C angles to radians. I obsoleted the XTOR2.F and extended the
 C XTOR.F. The IPRT flag (don't know why it was named that)
 C controls whether the conversion is needed (IPRT==1) or not
 C (IPRT!=1).
+C
+C A bug fix (fixing incorrect use of R instead of R during read) 
+C and improvements to handle mutiple structures.; Ajith Perera, 12/2012. 
+C
          WRITE(LUOUT,*) '@RD_INTCOORD: Input coordinates are ',
      &      'transformed to internal representation.'
          READ(LUZ,*) (Q(I),I=1,NX)
-         CALL XTOR(R,1)
+         CALL XTOR(RINT,1)
 
       ELSE
 
@@ -345,7 +349,7 @@ C (IPRT!=1).
          RTOA   = 180.D0/DACOS(-1.D0)
          IBOMB  = 0
          DO I = 1, NX
-            R(I) = dSmallNumber
+            RINT(I) = dSmallNumber
          END DO
 
          READ(LUZ,'(A)',END=987) DUMSTR
@@ -378,7 +382,7 @@ C (IPRT!=1).
             do while (ISTP.eq.0.and.I.le.NXM6)
                IF (CHTEST.EQ.VARNAM(ISQUASH(I))) THEN
                   ISTP = 1
-                  IF (RINT(I).NE.dSmallNumber) THEN
+                  IF (RINT(I).NE.dSmallNumber .AND. Verify) THEN
                      IBOMB = 1
                      WRITE(*,*) '@RD_INTCOORD: ',CHTEST,
      &                          ' multiply defined.'
@@ -395,7 +399,7 @@ C (IPRT!=1).
                      IF (PRINTI) WRITE(LUOUT,*)
      & '@RD_INTCOORD: Variable OA set to 0.5 * exact tetrahedral angle.'
                   ELSE
-                     R(I) = dTmp
+                     RINT(I) = dTmp
                   END IF
                END IF
                I = I + 1
@@ -433,7 +437,8 @@ c      o stop on all errors
       END IF
 
 c   o unsquash R
-      CALL USQUSH(R,NXM6)
+
+      CALL USQUSH(RINT, NXM6)
 
       return
       end

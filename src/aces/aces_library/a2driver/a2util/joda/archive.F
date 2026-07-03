@@ -96,6 +96,7 @@ C
 C
 #ifdef _DEBUG_LVL0
       Write(6,*) "@-ARCHIVE, the number of opt. cycles", NCYCLE
+      Write(6, "(3F10.5)") (R(I), I= 1, NXM6)
 #endif 
       WRITE(LuArc)CRAP,iarch,NCYCLE,NATOMS,NX,NUNIQUE,NOPT,IPRNT,INR,
      $     IVEC,

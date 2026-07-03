@@ -1,3 +1,4 @@
+#include "flags.h"
       SUBROUTINE GEN_REDNINTRNLS(CARTCOORD, REDUNCO, INTLABEL,
      &                           IBNDTO, BMATRX, GMATRX,
      &                           TOTREDNCO, IATOMICNMBER, NRATMS,
@@ -15,13 +16,16 @@ C
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
 C
 #include "mxatms.par"
+#include "machsp.com"
 #include "io_units.par"
+#include "jodaflags.com"
 C 
       PARAMETER(THRESHOLD = 5.0D00, EPSILON = 1.0D-10)
 C
       INTEGER TOTREDNCO, TOTNOFBND, TOTNOFANG, TOTNOFDIH,
      &        FRAGSCR
       CHARACTER*4 INTLABEL(MAXREDUNCO)
+      Logical Constrained, Not_found
 C
 C The following arrays need to be managed dynamically:
 C
@@ -132,6 +136,48 @@ C
  111  Format(5X, 4(I3, 1X))
 
 #endif 
+C
+C Assign the bonds, angles and dihedrals for recatants and products
+C if this is a redundent internal optimization. Note that the transition
+C state is the current structure and both reactants and products is
+C assumed to have the same connectivit pattern, Ajith Perera, 12/2012. 
+C
+      Call Getrec(0,'JOBARC','PRSTRUCT',Length, Redunco)
+      If (Length .Gt. 0) Then 
+C
+C Note that the length should be 3*NRATMS.
+C
+         Call Getrec(20,'JOBARC','PRSTRUCT',3*NRATMS*IINTFP, CARTCOORD) 
+         Call Gen_RICS(CARTCOORD, TOTREDNCO, TOTNOFBND, TOTNOFANG, 
+     &                 TOTNOFDIH, IREDUNCO, REDUNCO)
+         Call Putrec(20,'JOBARC','PR_RICS_',TOTREDNCO*IINTFP, 
+     &               REDUNCO)
+         Call Getrec(20,'JOBARC','CUSTRUCT',3*NRATMS*IINTFP, CARTCOORD) 
+      Endif 
+C
+      Call Getrec(0,'JOBARC','RXSTRUCT',Length, Redunco)
+      If (Length .Gt. 0) Then 
+         Call Getrec(20,'JOBARC','RXSTRUCT',3*NRATMS*IINTFP, CARTCOORD) 
+         Call Gen_RICS(CARTCOORD, TOTREDNCO, TOTNOFBND, TOTNOFANG, 
+     &                 TOTNOFDIH, IREDUNCO, REDUNCO)
+         Call Putrec(20,'JOBARC','RX_RICS_',TOTREDNCO*IINTFP, 
+     &               REDUNCO)
+         Call Getrec(20,'JOBARC','CUSTRUCT',3*NRATMS*IINTFP, CARTCOORD) 
+      Endif 
+C  
+C Read and process the constraints for constrained geometry 
+C optimizations. Ajith Perera, 11/2012
+C   
+      Constrained = .False.
+      If (Iflags2(h_IFLAGS2_opt_control) .EQ. 3) constrained = .True.
+      If (Constrained) Call Idntfy_constraints(IREDUNCO, TOTREDNCO, 
+     &                                         TOTNOFBND,
+     &                                         TOTNOFANG, TOTNOFDIH,
+     &                                         Not_found)
+C
+C If no constrains were found, we do FULL (or RIC) optimizations.
+C
+      If (NOt_found) Iflags2(h_IFLAGS2_geom_opt) = 4
 C
 C Make sure the number of RICs has not increased.
 C

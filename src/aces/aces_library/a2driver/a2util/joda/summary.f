@@ -365,7 +365,6 @@ C
             write(6,*)
             write(6,*) '  Summary of optimized internal coordinates'
             write(6,*) '  (Angstroms and degrees)'
-            write(6,*) (Iflags2(5))
             CALL GETREC(20, 'JOBARC', 'REDNCORD', 1, TOTREDNCO)
             CALL GETREC(20, 'JOBARC', 'UNIQUEDF', TOTREDNCO, I_UNIQUE)
             CALL GETREC(20, 'JOBARC', 'CONTEVIT', 4*TOTREDNCO,
@@ -428,7 +427,8 @@ c         o print out the Cartesian coordinate matrix (broken)
        write(6,*) ' Summary of optimized Cartesian coordinates (Ang) '
        write(6,*)
 C 
-            CALL GETREC(20, 'JOBARC', 'COORD_OP',3*NATOMS*IINTFP, Q)
+            If (NCYCLE .GT. 1) 
+     &      CALL GETREC(20, 'JOBARC', 'COORD_OP',3*NATOMS*IINTFP, Q)
 C
             IOFF=1
             CNF = 0.529177249D0
@@ -445,7 +445,6 @@ C
             write(6,*)
             write(6,*) '  Summary of optimized internal coordinates'
             write(6,*) '  (Angstroms and degrees)'
-            write(6,*) (Iflags2(5))
 
             DO I=1,NOPT
                OPT_GEOMETRY = SCRATCH(I) - SCRATCH(NOPT+I)
@@ -488,7 +487,8 @@ c    o print out the Cartesian coordinate matrix (broken)
      &                          ' coordinates (Angs) '
             write(6,*) 
 C      
-            CALL GETREC(20, 'JOBARC', 'COORD_OP',3*NATOMS*IINTFP, Q)
+            If (NCYCLE .GT. 1)
+     &      CALL GETREC(20, 'JOBARC', 'COORD_OP',3*NATOMS*IINTFP, Q)
 C           
             IOFF=1
             CNF = 0.529177249D0

@@ -25,11 +25,11 @@ C
 
       CALL SORTXYZ(VEC,scr,NORD(NATOMS+1),NATOMS)
 C
-#ifdef _DEBUG_LVLM1
+#ifdef _DEBUG_LVLM
       WRITE(6,*)'--------------I'
       WRITE(6,80)(VECR(JAP),JAP=1,3*NATOMS)
       WRITE(6,*)'--------------O'
-      WRITE(6,80)(VEC(JAP),JAP=1,3*NATOMS)
+      WRITE(6,80)(SCR(JAP),JAP=1,3*NATOMS)
 #endif
 
       ICOMP = 0
@@ -40,8 +40,8 @@ C As a temporary fix to a problem Gennady is having
 C following changes have been made. We hope to find the exact
 C reason for the failure. AP 03/14/97.
 
-         IF ((Z .GT. TOL) .AND. (Z .GT. 10*TOL)) ICOMP = ICOMP + 1
-         IF ((Z .GT. TOL) .AND. (Z .LT. 10*TOL)) THEN
+         IF ((Z .GT. TOL) .AND. (Z .GT. 100*TOL)) ICOMP = ICOMP + 1
+         IF ((Z .GT. TOL) .AND. (Z .LT. 100*TOL)) THEN
             WRITE(*,*) 'Warning - Less tighter tolerance is used.'
          END IF
 

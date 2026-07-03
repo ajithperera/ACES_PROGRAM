@@ -9,7 +9,8 @@ C
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
 #include "mxatms.par"
 #include "coord.com"
-      LOGICAL OPTRES
+#include "const.h"
+      LOGICAL OPTRES,FIRST_FIX
       INTEGER NA(MXATMS),NB(MXATMS),NC(MXATMS)
       DIMENSION A(3,MXATMS),Q0(3*MXATMS)
 C
@@ -36,6 +37,7 @@ C
      $   XYZTol
 C
       COMMON/RESTART2/OPTRES
+      COMMON/FIXED/FIRST_FIX 
 C
       LOGICAL NOT_IN_BOUND, We_havegeom, NOSILENT
 #include "io_units.par"
@@ -48,10 +50,14 @@ CSSS      CALL GETREC(-1,'JOBARC', 'VIB_POPT',IONE, ipost_vib)
          Write (LuOut,'((I3,1X,f12.6))') (i,R(i),i=1,NX)
       EndIf
 C
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Print*, "In Gmetry; ncycle, ix, and ipost_vib"
       Print*, ncycle, is, ipost_vib
 #endif
+      ATOR  = DACOS(-1.D0)/180.D0
+      TODEG = 1.0D0/ATOR 
+      ATOB  = CONV_a0_a 
+
       IF (ncycle .NE. 0. or. ix.ne.0) THEN
 C
 C DECOMPRESS R
@@ -62,8 +68,6 @@ C
          IF(.NOT.OPTRES .AND. NOSILENT)  WRITE(LuOut,78)
  78      FORMAT(' Updating structure...')
       ELSE
-         ATOR=DACOS(-1.D0)/180.D0
-         ATOB=0.529177249D0
          If (IPrnt .ge. 20 .AND. NOSILENT) Write (LuOut,*)
      $      'GMETRY: Converting to radians & bohr.',ator,atob
          DO 19 IX=8,NX-1,3
@@ -85,17 +89,19 @@ C
 C DEAL WITH CASE WHERE ANGLES OR DIHEDRALS NOT WITHIN BOUNDS HERE.
 C
       CALL ZERO(Q0,3*MXATMS)
-      CALL VADD(Q0,R,Q0,NX,1.D0)
+      CALL DCOPY(NX,R,1,Q0,1)
       CALL XTOR(R,0)
       CALL USQUSH(R,NXM6)
       NOT_IN_BOUND = .FALSE.
       DO 107 I=1,NX
        IF(DABS(DABS(R(I))-DABS(Q0(I))).GT.1.D-4)THEN
-        IF(NOSILENT) WRITE(6,8331)I,Q0(I),R(I)
+        IF(NOSILENT) WRITE(6,8331)I,Q0(I)*TODEG,R(I)*TODEG 
  8331   FORMAT('@GMETRY-W, Internal coordinate #',i3,
      &' not within bounds:',
      &/,t3,' Value was: ',f10.5,' and has been changed to ',f10.5,'.')
         NOT_IN_BOUND = .TRUE.
+        CALL GETREC(0,"JOBARC","DIH_FIX ",LENGTH,JUNK)
+        IF (LENGTH .LE. 0) CALL FIXDIH(I,NX) 
        ENDIF
  107  CONTINUE
 C
@@ -121,7 +127,10 @@ C internal coordinates and connectivities (from ACES II common blocks)
 C and generates ACES II Cartesians (nothing else). Ajith Perera, 04/2005
 C
 C Only one out-of-bound is all it takes to regenerate Cartesians.
-      IF (NOT_IN_BOUND) CALL GEN_CART_COORD(Q0, NOSILENT)
+      
+      IF (NOT_IN_BOUND)  THEN
+         CALL GEN_CART_COORD(Q0, NOSILENT)
+      ENDIF 
 C
 #ifdef _DEBUG_LVL0
       Call geomout

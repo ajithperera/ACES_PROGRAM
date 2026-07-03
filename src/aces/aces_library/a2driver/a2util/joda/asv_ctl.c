@@ -107,7 +107,7 @@ const ASV_nl_t ASV_nl[] =
 {/*4*/   "ICCCNV",	"CC_C#ONV",	h_ICHAR_f_int,	7,	"(tol)"},
 {/*5*/   "ISCFCV",	"SCF_C#ONV",	h_ICHAR_f_int,	7,	"(tol)"},
 {/*6*/   "IXFTOL",	"XFORM#_TOL",	h_ICHAR_f_int,	11,	"(tol)"},
-{/*7*/   "ICCCYC",	"CC_MAX#CYC",	h_ICHAR_f_int,	0,	"cycles"},
+{/*7*/   "ICCCYC",	"CC_MAX#CYC",	h_ICHAR_f_int,	50,	"cycles"},
 {/*8*/   "ILINDP",	"LIN#DEP_TOL",	h_ICHAR_f_int,	8,	""},
 {/*9*/   "IRDOFM",	"RDO#",		h_ICHAR_handle,	-1,	""},
 {/*10*/  "IRPP",	"SCF_EXTRAP#",	h_ICHAR_handle,	1,	""},
@@ -162,10 +162,10 @@ const ASV_nl_t ASV_nl[] =
 {/*57*/  "IDISFD",	"FD_STEP#SIZE",	h_ICHAR_f_int,	0,	"10-4 bohr"},
 {/*58*/  "IGRDFD",	"POI#NTS",	h_ICHAR_handle,	0,	""},
 {/*59*/  "ICNTYP",	"CONT#RACTION",	h_ICHAR_handle,	1,	""},
-{/*60*/  "ISYM",	"SYM#METRY",	h_ICHAR_handle,	1,	""},
+{/*60*/  "ISYM",	"SYM#METRY",	h_ICHAR_handle,	2,	""},
 /*       *alias,	*oppar,		ichar,		ideflt,	*units */
 {/*61*/  "IBASIS",	"BAS#IS",	h_ICHAR_string,	0,	""},
-{/*62*/  "IDFGHI",	"SPHER#ICAL",	h_ICHAR_handle,	1,	""},
+{/*62*/  "IDFGHI",	"SPHER#ICAL",	h_ICHAR_handle, 1,	""},
 {/*63*/  "IRESET",	"RESET#_FLAGS",	h_ICHAR_handle,	0,	""},
 {/*64*/  "IPTORB",	"PER#T_ORB",	h_ICHAR_handle,	2,	""},
 {/*65*/  "IGNBS1",	"GENBAS_1#",	h_ICHAR_f_int,	0,	""},
@@ -356,9 +356,9 @@ const ASV_nl_t ASV_nl[] =
 /*       *alias,	*oppar,		ichar,		ideflt,	*units */
 {/*241*/ "IGLBMM",	"GLOBAL_MEM#",	h_ICHAR_f_int,	0,	"Words"},
 {/*242*/ "IPRPNT",	"PRP_INT#S",	h_ICHAR_handle,	0,	""},
-{/*243*/ "IFNOKP",	"FNO_KEEP#",	h_ICHAR_f_int,	0,	"percent"},
-{/*244*/ "IFNOPT",	"FNO_POST#",	h_ICHAR_handle,	0,	""},
-{/*245*/ "IFNOAC",	"FNO_ACT#IVE",	h_ICHAR_f_int,	0,	"percent"},
+{/*243*/ "ITRUNC",      "TRUNC#_ORBS",  h_ICHAR_handle, 0,      ""},
+{/*244*/ "IFNOKP",      "FNO_KEEP#",    h_ICHAR_f_int,  0,      "percent"},
+{/*245*/ "IFNOBS",      "FNO_BSSE#",    h_ICHAR_handle, 0,      ""},
 {/*246*/ "INAT",	"NATURAL#",	h_ICHAR_handle,	0,	""},
 {/*247*/ "ICCSYM",	"ACC_SYM#",	h_ICHAR_string,	0,	""},
 {/*248*/ "IUNO_R",	"UNO_REF#",	h_ICHAR_handle,	0,	""},
@@ -369,13 +369,30 @@ const ASV_nl_t ASV_nl[] =
 {/*253*/ "ISCF",	"SCF_TYPE#",	h_ICHAR_handle,	0,	""},
 {/*254*/ "IDIRCT",	"DIRECT#",	h_ICHAR_handle,	0,	""},
 {/*255*/ "BSNGST",	"SINGLE_STOR#E",h_ICHAR_handle,	0,	""},
-{/*256*/ "","",0,0,""},
-{/*257*/ "","",0,0,""},
-{/*258*/ "","",0,0,""},
-{/*259*/ "","",0,0,""},
-{/*260*/ "","",0,0,""}
+{/*256*/ "IPRVIB",      "PREP_VIB#RON", h_ICHAR_handle, 0,      ""},
+{/*257*/ "IGRVIB",      "GRID_VIB#RON", h_ICHAR_handle, 0,      ""},
+{/*258*/ "ISCAN",       "SCAN_NORMAL#", h_ICHAR_handle, 0,      ""},
+{/*259*/ "ICURVN",      "NORMAL_CURVY#",h_ICHAR_handle, 0,      ""},
+{/*260*/ "ISAMPLE",     "GEO_SAMPLE#"  ,h_ICHAR_handle, 0,      ""},
+{/*261*/ "IPARTEOM",    "PART_EOM#"    ,h_ICHAR_handle, 0,      ""},
+{/*262*/ "IORDER_A",    "ORDER_ALPHA#" ,h_ICHAR_handle, 0,      ""},
+{/*263*/ "IFFIELD ",    "FFIELD#"      ,h_ICHAR_f_int,  0,      "x 10-6"},
+{/*264*/ "AUTO_OCC",    "AUTO_OCC#"    ,h_ICHAR_handle, 2,      ""},
+{/*265*/ "IQUARTIC",    "GEN_QUARTIC#" ,h_ICHAR_handle, 0,      ""},
+{/*266*/ "IOOMPC",      "OOMP_CYC#"    ,h_ICHAR_f_int , 50,     ""},
+{/*267*/ "DKHORDER",    "DKH_ORD#ER"   ,h_ICHAR_f_int,  0,      ""},
+{/*268*/ "UNCONTRACT",  "UNCONT#RACT"  ,h_ICHAR_handle, 0,      ""},
+{/*269*/ "IOPT_CTRL",   "OPT_CONT#ROL" ,h_ICHAR_handle, 0,      ""},
+{/*270*/ "IDAMP_CC",    "DAMP_CC#"     ,h_ICHAR_f_int , 100,     "x 0.01"},
+{/*271*/ "IPES_SCAN",   "PES_SCAN#"    ,h_ICHAR_handle, 0,      ""},
+{/*272*/ "CORE_WINDOW", "CORE_WINDOW#" ,h_ICHAR_string, 0,      ""},
+{/*273*/ "IPRJCT",      "PRJCT_SINGLE#",h_ICHAR_handle, 1,      ""},
+{/*274*/ "ICOPT",       "COPT#"        ,h_ICHAR_handle, 0,      ""},
+{/*275*/ "IRPA_SOLVE",  "RPA_SOLVE"    ,h_ICHAR_handle, 0,      ""},
+{/*276*/ "TIME_DPD_CC", "TIME_DPD_CC" , h_ICHAR_handle, 0,      ""},
+{/*277*/ "","",0,0,""},
 }; /* end ASV_nl[] definition */
-#define MAX_ASVs 260
+#define MAX_ASVs 277
 
 /******************************************************************************/
 
@@ -456,7 +473,8 @@ void asv_handle_proc(const f_int * index, const char * value)
       /*32-35*/ "CCSD-T",	"CC3",		"CCSDT-T1T2",	"CCSDTQ-1",
       /*36-39*/ "CCSDTQF-1",	"CCSDTQ-2",	"CCSDTQ-3",	"CCSDTQ",
       /*40-43*/ "ACCSD",	"HFDFT",	"ACCSD(T)",	"CCSD(TQf)",
-      /*44-47*/ "CCSDT(Qf)",	""
+      /*44-47*/ "CCSDT(Qf)",	"OO-MP2",       "OO-MBPT(2)",   "CC2",
+      /*48-51*/ "rCCD",         "drCCD", 
             };
             asv_update_handle(index,value,handles);
             break;
@@ -511,7 +529,7 @@ void asv_handle_proc(const f_int * index, const char * value)
 
         case h_IOPPAR_scf_extrap:
         {
-            const char *handles[] = { "NONE", "RPP", "QC",""};
+            const char *handles[] = { "NONE", "RPP", "QC","C2DIIS",""};
             asv_update_handle(index,value,handles);
             break;
         }
@@ -535,7 +553,15 @@ void asv_handle_proc(const f_int * index, const char * value)
 
         case h_IOPPAR_orbitals:
         {
-            const char *handles[] = { "STANDARD", "SEMICANONICAL", "" };
+            const char *handles[] = 
+            { "STANDARD", 
+              "SEMICANONICAL", 
+              "CANONICAL",
+              "FRACTIONAL",
+              "BCANONICAL",
+              "BFRACTIONAL",
+              "" 
+            };
             asv_update_handle(index,value,handles);
             break;
         }
@@ -553,7 +579,8 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "MIN_BASIS",	/* 6 */
                 "HUCKEL",	/* 7 */
                 "OVERRIDE",     /* 8 */
-                "ATOMIC"        /* 9 */
+                "ATOMIC",       /* 9 */
+                "AODENS"        /* 10 */
                 ""
             };
             asv_update_handle(index,value,handles);
@@ -569,7 +596,7 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "CART",		/* 2 */
                 "FULL",		/* 3 */
                 "RIC" ,         /* 4 */
-                ""  
+                ""             
             };
             asv_update_handle(index,value,handles);
             break;
@@ -658,6 +685,20 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "IGTS",		/* 6 - used to be ENERONLY? */
                 "QSD",		/* 7 */
                 ""
+            };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_opt_control:
+        {
+            const char *handles[] =
+            {
+                "NONE",         /* 0 */
+                "LST",          /* 1 */
+                "QST",          /* 2 */
+                "CONSTRAINED",  /* 3 */
+                "COMBO"         /* 4 - reserved for QST/LST and constrained*/
             };
             asv_update_handle(index,value,handles);
             break;
@@ -816,18 +857,28 @@ void asv_handle_proc(const f_int * index, const char * value)
         {
             const char *handles[] =
             {
-                "NONE",		/* 0 */
-                "TDA",		/* 1 */
-                "RPA",		/* 2 */
-                "EOMEE",	/* 3 */
-                "-=EOMIP=-",	/* 4 - unused? */
-                "CIS",		/* 5 */
-                "CIS(D)",	/* 6 */
-                "P-EOMEE",	/* 7 */
-                "EOM-BWPT2",	/* 8 */
-                "STEOM",	/* 9 */
-                ""
-            };
+                "NONE",	  	  /* 0 */
+                "TDA",		  /* 1 */
+                "RPA",		  /* 2 */
+                "EOMEE",	  /* 3 */
+                "DRPA",   	  /* 4 */
+                "CIS",		  /* 5 */
+                "CIS(D)", 	  /* 6 */
+                "P-EOMEE",        /* 7 */
+                "EOM-BWPT2 ",	  /* 8 */
+                "STEOM",  	  /* 9 */
+                "EOM-CCSD",       /* 10 */
+                "EOM-CCSD(T)",    /* 11 */
+                "EOM-CC2",        /* 12 */
+                "EOM(S)-DRCCD",   /* 13 */
+                "EOM(D)-DRCCD",   /* 14 */
+                "EOM(S)-RCCD",    /* 15 */
+                "EOM(D)-RCCD",    /* 16 */
+                "EOM(Sf)-RCCD",   /* 17 */
+                "EOM(Sf)-DRCCD",  /* 18 */
+                "EOM(S)-DXRCCD",  /* 19 */ 
+                "EOM(SF)-DXRCCD", /* 20 */ 
+            };  
             asv_update_handle(index,value,handles);
             break;
         }
@@ -842,7 +893,7 @@ void asv_handle_proc(const f_int * index, const char * value)
         case h_IOPPAR_estate_prop:
         {
             const char *handles[] = { "OFF",       "EXPECTATION",
-                                      "UNRELAXED", "DERIVATIVE",  "" };
+                                      "RESPONSE",  "DERIVATIVE",  "" };
             asv_update_handle(index,value,handles);
             break;
         }
@@ -965,7 +1016,26 @@ void asv_handle_proc(const f_int * index, const char * value)
 
         case h_IOPPAR_eomref:
         {
-            const char *handles[] = { "NONE", "CCSD", "MBPT(2)", "" };
+            const char *handles[] = 
+            { 
+                "NONE",       /* 0 */
+                "CCSD",       /* 1 */
+                "MBPT(2)",    /* 2 */
+                "CCD",        /* 3 */
+                "RPA",        /* 4 */
+                "DRPA",       /* 5 */
+                "LCCD",       /* 6 */
+                "LCCSD",      /* 7 */
+                "EOM-MBPTx",  /* 8 */
+                "CC2",        /* 9 */
+                "RCCD",       /* 10 */
+                "DRCCD",      /* 11 */
+                "ADC(2)",     /* 12 */
+                "ADCC(2)",    /* 13 */
+                "COPT",       /* 14 */
+                "DRXCCD"      /* 15 */
+                ""  
+            };
             asv_update_handle(index,value,handles);
             break;
         }
@@ -980,7 +1050,8 @@ void asv_handle_proc(const f_int * index, const char * value)
         case h_IOPPAR_eom_prjct:
         {
             const char *handles[] = { "NO", "SEARCH_ONLY", "PRJCT_ALL",
-                                      "PRJCT_NOISE", "" };
+                                      "PRJCT_NOISE", "CORE",
+                                      "NTO","" };
             asv_update_handle(index,value,handles);
             break;
         }
@@ -1087,9 +1158,74 @@ void asv_handle_proc(const f_int * index, const char * value)
             break;
         }
 
+        case h_IOPPAR_trunc_orbs:
+        {
+            const char *handles[] = { "NONE", "FNO", "OVOS", "" };
+            asv_update_handle(index,value,handles);
+            break;      
+        }
+
         case h_IOPPAR_noreori:
         {
             const char *handles[] = { "OFF", "ON", "AUTO", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_rpa_solve:
+        {
+            const char *handles[] = { "FULL_DIAG", "DAVIDSON" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_grid_vibron:
+        {
+            const char *handles[] =
+            {
+                "GRID_1",     /* 1 */
+                "GRID_2",     /* 2 */
+                "GRID_3",     /* 3 */
+                "GRID_4",     /* 4 */
+                "GRID_5",     /* 5 */
+                "GRID_6",     /* 6 */
+                "GRID_7",     /* 7 */
+                "GRID_8",     /* 8 */
+                "GRID_9",    /* 9 */
+                "GRID10",    /* 10 */
+                "GRID11",    /* 11 */
+                "GRID12",    /* 12 */
+                "GRID13",    /* 13 */
+                ""
+            };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_parteom:
+        {
+            const char *handles[] = { "OFF", "ON", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_newvrt:
+        {
+            const char *handles[] = { "OFF", "SELF_CONSISTENT", "POST_HF" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_order_alpha:
+        {
+          const char *handles[] = { "DIPOLE", "QUADRUPOLE", "OCTUPOLE","" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_auto_occ:
+        {
+           const char *handles[] = { "OFF", "ON", "AUTO", "" };
             asv_update_handle(index,value,handles);
             break;
         }

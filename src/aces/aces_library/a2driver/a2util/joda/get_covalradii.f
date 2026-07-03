@@ -17,7 +17,7 @@ C Stefan Fau (1999/2000).
 C
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
 C
-      PARAMETER (MAXPERTABLE =86, SCALE = 1.30D00)
+      PARAMETER (MAXPERTABLE =96, SCALE = 1.30D00)
       DIMENSION COVLNTRADI(MAXPERTABLE), IATOMICNMBER(NRATMS), 
      &          SMOFCOVRADI(NRATMS, NRATMS)
 C
@@ -31,7 +31,8 @@ C
      &                  1.69, 1.65, 1.65, 1.64, 1.64, 1.68, 1.85, 1.61,
      &                  1.59, 1.59, 1.57, 1.57, 1.56, 1.70, 1.56, 1.44,
      &                  1.34, 1.30, 1.28, 1.26, 1.27, 1.30, 1.34, 1.49,      
-     &                  1.48, 1.47, 1.46, 1.46, 1.45, 2.14/
+     &                  1.48, 1.47, 1.46, 1.46, 1.45, 1.50, 2.60, 2.21,
+     &                  2.15, 2.06, 2.00, 1.96, 1.90, 1.87, 1.80, 1.69/
 
       DATA AMTOBOHR /1.8897265/
 C

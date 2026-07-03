@@ -69,7 +69,7 @@ c--------------------------------------------------------------------------
 c---------------------------------------------------------------------------
 c   Find the indices of the array block.
 c---------------------------------------------------------------------------
-       
+      Sta = .False.
       array = op(c_result_array)
       nindex = array_table(c_nindex, array)
       do i = 1, nindex
@@ -376,7 +376,7 @@ C#endif
       include 'ex_mask_vars.h'
 
       integer a1,a2,i1,i2,Itype,Atype
-      logical Lda,Ldb,Ldc
+      integer Lda,Ldb,Ldc
       integer na1,na2,ni1,ni2,nk1,nk2
       integer Iroots,Nroots,Isites,Ioff 
       double precision x(na1:na2,ni1:ni2,nk1:nk2)
@@ -467,7 +467,7 @@ C#endif
       include 'ex_mask_vars.h'
 
       integer a1,a2,i1,i2,Itype,Atype
-      logical Lda,Ldb,Ldc,Iwant
+      integer Lda,Ldb,Ldc,Iwant
       integer na1,na2,ni1,ni2
       integer Iroots,Nroots,Isites,Ipick 
       double precision x(na1:na2,ni1:ni2)

@@ -49,6 +49,7 @@ C
 C
 C Let's update the number of cycles right away!
 C
+      Write(6,*)
       Write(6,*) "The number of opt. cycles:", NCYCLE 
 C
       NCYCLE = NCYCLE + 1 
@@ -85,6 +86,13 @@ C
  20      CONTINUE
  19   CONTINUE
 C
+          Write(6,*)
+          WRITE(LUOUT,115)
+ 115      FORMAT(T3,' Hessian matrix in totally symmetric symmetry ',
+     &      'coordinates: ')
+          IF(ICURVY.EQ.1) WRITE(LuOut,117)
+ 117      FORMAT(T3,'            (Curvilinear representation) ')
+          CALL OUTPUT(HESMOD, 1, NOPT, 1, NOPT, NOPT, NOPT, 1)
 C     
 C Form modified Gradient vector and symmetrize it. 
 C
@@ -92,6 +100,10 @@ C
          GRDMOD(I)=DSQRT(DFLOAT(NEQ(NOPTI(I))+1))*GRD(NOPTI(I))
  1177 CONTINUE
 C
+      Write(6,*) 
+      Write(6,*)  "The gradients in sym. adapted coordinates"
+      Write(6, "(6F10.5)") (GRDMOD(I), I=1, NOPT)
+      Write(6,*)
 C
 C The maximum step size can be controlled by the user by setting
 C the flag MAX_STEP. The default value for maximum is set 300.

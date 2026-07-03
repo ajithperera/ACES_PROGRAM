@@ -105,6 +105,7 @@ c io_units.par : end
       DIMENSION NORD(2*NATOM),IPTR(NATOM,NORDER)
       INTEGER CLSTYP(NORDER)
       CHARACTER*6 RESULT
+      IP(I)=1+(I-1)*9
 
       ICOMP = 0
       CALL ZERO(SCR,3*NATOM)
@@ -127,11 +128,12 @@ c io_units.par : end
       ISUCC = 0
       NFAIL = 0
       DO I = 1, NORDER
-         itmp = -8 + ( 9 * I )
+         itmp = IP(I)
          CALL XGEMM('T','N',3,NATOM,3,
      &              1.0d0,V(itmp),       3,
      &                    Q,             3,
      &              0.0d0,SCR(3*NATOM+1),3)
+
          CALL COMPARE2(SCR(3*NATOM+1),SCR,NORD,ICOMP,SYMTOL)
          CALL STPTR(NATOM,NORD,NORD(NATOM+1),IPTR(1,I))
          IF (ICOMP.EQ.0) THEN

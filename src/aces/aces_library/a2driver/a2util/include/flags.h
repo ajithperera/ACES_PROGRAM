@@ -513,14 +513,69 @@
 #define h_IOPPAR_single_store	255
 #define h_IFLAGS2_single_store	155
 
-#define h_IOPPAR_oomp_cyc       256
-#define h_IFLAGS2_oomp_cyc	156
+#define h_IOPPAR_prep_vibron    256
+#define h_IFLAGS2_prep_vibron   156
 
-#define h_IOPPAR_dkh_order      257
-#define h_IFLAGS2_dkh_order     157
+#define h_IOPPAR_grid_vibron    257
+#define h_IFLAGS2_grid_vibron   157
 
-#define h_IOPPAR_uncontract     258
-#define h_IFLAGS2_uncontract    158
+#define h_IOPPAR_scan_normal    258
+#define h_IFLAGS2_scan_normal   158
+
+#define h_IOPPAR_normal_curvy    259
+#define h_IFLAGS2_normal_curvy   159
+
+#define h_IOPPAR_geo_sample    260
+#define h_IFLAGS2_geo_sample   160
+
+#define h_IOPPAR_parteom    261
+#define h_IFLAGS2_parteom   161
+
+#define h_IOPPAR_order_alpha    262
+#define h_IFLAGS2_order_alpha   162
+
+#define h_IOPPAR_ffield    263
+#define h_IFLAGS2_ffield   163
+
+#define h_IOPPAR_auto_occ    264
+#define h_IFLAGS2_auto_occ   164
+
+#define h_IOPPAR_gen_quartic    265
+#define h_IFLAGS2_gen_quartic   165
+
+#define h_IOPPAR_oomp_cyc       266
+#define h_IFLAGS2_oomp_cyc	166
+
+#define h_IOPPAR_dkh_order      267
+#define h_IFLAGS2_dkh_order     167
+
+#define h_IOPPAR_uncontract     268
+#define h_IFLAGS2_uncontract    168
+
+#define h_IOPPAR_opt_control    269
+#define h_IFLAGS2_opt_control   169
+
+#define h_IOPPAR_damp_cc        270
+#define h_IFLAGS2_damp_cc       170
+
+#define h_IOPPAR_pes_scan       271
+#define h_IFLAGS2_pes_scan      171
+
+#define h_IOPPAR_core_window    272
+#define h_IFLAGS2_core_window   172
+
+#define h_IOPPAR_prjct_single   273
+#define h_IFLAGS2_prjct_single  173
+
+#define h_IOPPAR_copt           274
+#define h_IFLAGS2_copt          174
+
+#define h_IOPPAR_rpa_solve      275
+#define h_IFLAGS2_rpa_solve     175
+
+#define h_IOPPAR_time_dpd_cc     276
+#define h_IFLAGS2_time_dpd_cc    176
+
 
 #endif /* _FLAGS_H_ */
 

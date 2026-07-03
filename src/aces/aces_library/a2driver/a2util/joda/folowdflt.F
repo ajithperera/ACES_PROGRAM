@@ -42,7 +42,7 @@ C Ajith Perera 07/04
       IF (ICYCLE.GT.0.AND.TS) THEN
          ZOVLP = 0.d0
          DO 1833 I=1, NOPT
-            SVH = xdot(NOPT,VEC,1,DIAGHES(1,I),1)
+            SVH = ddot(NOPT,VEC,1,DIAGHES(1,I),1)
             IF (DABS(SVH).GT.ZOVLP) THEN
                ZOVLP = DABS(SVH)
                IMODE = I

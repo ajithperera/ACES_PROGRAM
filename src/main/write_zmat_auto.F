@@ -85,7 +85,8 @@ c---------------------------------------------------------------------------
       props    = iflags(18)   ! Watson: get props.
       grad_calc = iflags2(138)
 
-      if ((geom_opt .gt. 0) .and. (calc .eq. 22)) then
+      if ((geom_opt .gt. 0) .and. (calc .eq. 22) .and. 
+     *     grad_calc .eq. 1) then
         print *,'ACES III does not support CALC=CCSD(T) with geometry ',
      *          'optimization'
         nerr = nerr + 1

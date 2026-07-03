@@ -48,14 +48,12 @@ C This requires defining TMP1 and TMP2 arrays.
       Write(6,"(6F13.7)") (tmp2(i), i=1, NULLEVAL)
 #endif
 C
-
 #ifdef _DEBUG_LVL0
          Write(6,*)
          Write(6,*) "@-CONVQF,  The outgoing internal gradients"
          WRITE(6,"(3F13.7)") (FI(IJL), IJL = 1, NXM6)
          Write(6,*)
 #endif
-C
 C
 C SYMMETRIZE THE GRADIENT IF NECESSARY
 C

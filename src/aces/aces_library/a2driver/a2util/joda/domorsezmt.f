@@ -79,6 +79,7 @@ C
             Z = SCRATCH(NOPT + I)/DSQRT(DFLOAT(NEQ(NOPTI(I)) + 1))
 C
             IF (DABS(Z) .GT. 0.75D0) THEN
+               Write(6,*) LUOUT
                WRITE(LUOUT, 7208) VARNAM(IK)
  7208          FORMAT(T3,' NR step for ',A5,' too large.  MANR ',
      &                'scaling not done.')

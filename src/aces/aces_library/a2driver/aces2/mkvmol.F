@@ -387,14 +387,23 @@ C
                 Endif
              Enddo
           Enddo
-
-          If(Bad123)then
-            ScrBas=BasNam(1)
-            BasNam(1)=BasNam(2)
-            BasNam(2)=ScrBas
-          EndIf
-C
       Endif 
+
+      If(IBasis.eq.0)Read (LuZ,'(A)', ERR=8500, END=8510) Wrk
+
+C ADDITION (JFS,4/90)
+C Now take care of situation which occurs when 2--1--3 Z-matrix
+C  specification and nonstandard basis set input is used.  In this case,
+C  the basis sets for atoms #1 and #2 must be switched.
+C
+       CALL GETREC(-1,"JOBARC","12SWITCH",IONE,IAMBAD)
+       BAD23 = (IAMBAD .EQ. 1)
+
+       IF (BAD123 .AND. IBASIS .EQ.0 .AND. INEWFD .NE. 0) then
+          ScrBas=BasNam(1)
+          BasNam(1)=BasNam(2)
+          BasNam(2)=ScrBas
+       EndIf
 
 #ifdef _DEBUG_LVL0
       Write(6,*)
@@ -403,19 +412,6 @@ C
          Write(6,"(1x,i3,1x,A20)") Atnr(i), basnam(i)
       enddo
 #endif
-C
-      If(IBasis.eq.0)Read (LuZ,'(A)', ERR=8500, END=8510) Wrk
-
-C ADDITION (JFS,4/90)
-C Now take care of situation which occurs when 2--1--3 Z-matrix
-C  specification and nonstandard basis set input is used.  In this case,
-C  the basis sets for atoms #1 and #2 must be switched.
-C
-      If(Bad123.and.IBasis.eq.0)then
-       ScrBas=BasNam(1)
-       BasNam(1)=BasNam(2)
-       BasNam(2)=ScrBas
-      EndIf
 C
 C DEAL WITh ECPs
 C
@@ -471,14 +467,21 @@ C
                 Endif
              Enddo
           Enddo
-
-          If(Bad123)then
-            ScrBas=BasNam(1)
-            BasNam(1)=BasNam(2)
-            BasNam(2)=ScrBas
-          EndIf
 C
         Endif
+
+        IF(IBASIS.EQ.0)READ (LUZ,'(A)', ERR=8500, END=8510) WRK
+
+C ADDITION (JFS,4/90)
+C Now take care of situation which occurs when 2--1--3 Z-matrix
+C  specification and nonstandard basis set input is used.  In this case,
+C  the basis sets for atoms #1 and #2 must be switched.
+C
+       IF (BAD123 .AND. IBASIS .EQ.0 .AND. INEWFD .NE. 0) then
+          SCRBAS=ECPNAM(1)
+          ECPNAM(1)=ECPNAM(2)
+          ECPNAM(2)=SCRBAS
+        ENDIF
 
 #ifdef _DEBUG_LVL0
       Write(6,*)
@@ -489,18 +492,6 @@ C
       Write(6,*)
 #endif
 
-        IF(IBASIS.EQ.0)READ (LUZ,'(A)', ERR=8500, END=8510) WRK
-
-C ADDITION (JFS,4/90)
-C Now take care of situation which occurs when 2--1--3 Z-matrix
-C  specification and nonstandard basis set input is used.  In this case,
-C  the basis sets for atoms #1 and #2 must be switched.
-C
-        IF(BAD123.AND.IBASIS.EQ.0) THEN
-          SCRBAS=ECPNAM(1)
-          ECPNAM(1)=ECPNAM(2)
-          ECPNAM(2)=SCRBAS
-        ENDIF
 C
 C NOW CORRECT THE CHARGES OF THE ATOMS BY THE CORE-ELECTRONS
 C DESCRIBED BY THE ECP

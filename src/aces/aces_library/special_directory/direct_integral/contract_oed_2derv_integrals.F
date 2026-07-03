@@ -321,7 +321,7 @@ c
      *                 pcoeff_pack, ccbeg_pack, ccend_pack,spherical,
      *                 .true., ibuf(ipkgscr), nints, nfirst,
      *                 dbuf(dpkgscr))
-               endif
+               endif 
 
             if (nints .gt. 0) then
                a2 = end_nfps(m)

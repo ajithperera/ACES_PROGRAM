@@ -138,14 +138,16 @@ c---------------------------------------------------------------------------
       if (intpkg .eq.flocke_package) then
 
 
-c        call contract_oed_2derv_type1a(1, x(indblk), x(iscr),
-c    *                  a1, a2, b1, b2, x(ix_hess))
-
-         call contract_oed_2derv_type1b(1, x(indblk), x(iscr),
+        call contract_oed_2derv_type1a(1, x(indblk), x(iscr),
+     *                  a1, a2, b1, b2, x(ix_hess))
+        call contract_oed_2derv_type1b(1, x(indblk), x(iscr),
      *                  a1, a2, b1, b2, x(ix_hess))
         call contract_oed_2derv_integrals(2, x(indblk), x(iscr),
      *                  a1, a2, b1, b2, x(ix_hess))
 
+C         call contract_oed_2derv_integrals_nai(1, x(indblk), x(iscr),
+C     *                  a1, a2, b1, b2, x(ix_hess)
+C
 c         call contract_oed_2derv_numint(2, x(indblk), x(iscr),
 c     *                  a1, a2, b1, b2, x(ix_hess))
 

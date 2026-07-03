@@ -27,7 +27,7 @@ C
          DO 20 J = 1, NOPT
             IF (HESMOD(I,I) .EQ. 0.0D0) Then
                     SCRATCH(J+NOPT) = SCRATCH(J+NOPT) - 0.0D0
-            ELSE
+            eLSE
 C
                 SCRATCH(J+NOPT)=SCRATCH(J+NOPT)-GRDHES(I)*
      &                          DIAGHES(J,I)/HESMOD(I,I) 

@@ -1,6 +1,7 @@
       SUBROUTINE TKSTEP(GRD, HES, SCRATCH, HESMOD, GRDMOD, STEP, 
      &                  GRDHES, DIAGHES, VEC, RFAMAT, EVRFAMAT,
-     &                  BMATRIX, HES_INTACT, FSCR, WORK, IADITNL)
+     &                  BMATRIX, HES_INTACT, FSCR, WORK, PMAT, 
+     &                  IADITNL)
 C
 C Control all the optimiztion alogrithms. The old EFOL (John Stanton)
 C subroutine was not flexible enough to add new optimization 
@@ -13,16 +14,19 @@ C
 C
       DOUBLE PRECISION LMBDAN, LMBDAP
       LOGICAL MORSE, TS, NRORMANR, RFA, EVFTS, IGTS, QSD,
-     &        QSTLST_CLIMB
+     &        QSTLST_CLIMB, NOT_FOUND
 C
 #include "mxatms.par"
 #include "machsp.com"
 #include "coord.com"
 #include "jodaflags.com"
 #include "flags.h"
+
       PARAMETER (STPTOL = 1.0D-12, LUOUT = 6,
      &           LUDONE = 80,
      &           EPS = 1.0D-8)
+   
+      INTEGER CONSTRAINS
 
       COMMON /USINT/ NX, NXM6, IARCH, NCYCLE, NUNIQUE, NOPT
 C
@@ -36,7 +40,9 @@ C
      &          GRDHES(NOPT),VEC(NOPT),  EVRFAMAT(NOPT+IADITNL,
      &          NOPT+IADITNL), RFAMAT(NOPT+IADITNL, NOPT+IADITNL),
      &          BMATRIX(NXM6*NX), HES_INTACT(NX*NX), FSCR(NXM6*NX),
-     &          ENERGY(2),WORK(6*NX)
+     &          ENERGY(2),WORK(6*NX),PMAT(NX*NX)
+C
+      DIMENSION CONSTRAINS(3*MXATMS)
 C
 C Form modified Hessian containing optimized coordinates
 C only, and transform it to totally symmetric coordinates. Do the 
@@ -72,24 +78,44 @@ C
          CALL PROJEC_FC(Q, Hes, Fscr, GrdMOD, HesMOd, Scratch, 
      &                  EPS, Nx/3, .True., .True., .False.)
 C
-#ifdef _DEBUG_LVLM1
+#ifdef _DEBUG_LVL0
       Write(6,*) "@-TKSTEP The Hessian after the projection"
       call output(Hes, 1, NX, 1, NX, NX, NX, 1)
 #endif
+
+C If the optimization is constrained lets handle it here instead
+C of in projec_fc.F in libr (projec_fc.F is shared by other modules).
+C Ajith Perera, 06/2013.
+
+      IF (iFlags2(h_IFLAGS2_opt_control) .EQ. 3) Then
+
+         CALL READ_CART_CONSTRAINS(CONSTRAINS, NUM_CONSTRAINS,
+     &                             NOT_FOUND)
+         IF (NOT_FOUND) THEN
+            WRITE(6, "(1x, 2a)") "Constrained optimization requested "
+     &                         , "but no constrains found. Proceeded "
+            WRITE(6, "(1x,a)") "to do a full optimization."
+         ELSE 
+            CALL APP_CART_CONSTRAINS(HES, SCRATCH, PMAT,
+     &                               GRD, GRDMOD, CONSTRAINS, 
+     &                               NUM_CONSTRAINS, NX)
+         ENDIF
+      ENDIF
 C
 C Note that for Cartesian opts., setup call really do nothing,
 C but it need to be called to update several variable, especially
 C the ncycle. 
 C 
+
          CALL SETUP(HES, GRD, HESMOD, GRDMOD, IQFIX, STPMAX, LUOUT)
          CALL DCOPY(NOPT*NOPT, HES, 1, HESMOD, 1)
 C
       ELSE IF (iFlags2(h_IFLAGS2_geom_opt) .gt. 2) THEN
 C
-C This is a redundant internal optimization
+C This is a redundant internal optimization.
 C
-         CALL  PROJEC_IFC(HES, FSCR, HESMOD, HES_INTACT, DIAGHES,
-     &                    GRD, NXM6)
+         CALL  PROJEC_IFC(HES, FSCR, SCRATCH, PMAT, HES_INTACT, 
+     &                    DIAGHES, GRD, GRDMOD, NXM6)
          CALL SETUP(HES, GRD, HESMOD, GRDMOD, IQFIX, STPMAX, LUOUT)
       ENDIF
 C
@@ -99,11 +125,14 @@ C procedure. See the dependents of ANLYSHES that deal
 C with the QST/LST procedure. Note that HESMOD and DIAGHES
 C will be changed for QST/LST steps (see modfy_hessian.F).
 C
-      CALL DCOPY(NOPT*NOPT, HESMOD, 1, HES, 1)
+      IF (IFLAGS2(h_IFLAGS2_opt_control) .GT. 0) CALL 
+     &    DCOPY(NOPT*NOPT, HESMOD, 1, HES, 1)
 
-#ifdef _DEBUG_LVLM1
+#ifdef _DEBUG_LVL0
+      If (IFLAGS2(h_IFLAGS2_opt_control) .GT. 0) then
       Write(6,*) "@-TKSTEP The Hessian restored for QST/LST"
       CALL OUTPUT(HES, 1, NOPT, 1, NOPT, NOPT, NOPT, 1)
+      endif 
 #endif
 #ifdef _DEBUG_LVLM1
       Write(6,*) NX, NOPT
@@ -134,7 +163,7 @@ C                 revert back to zero after their use in ANLYSHES so that
 C                 there intended use in GETLAMBDA is not upset.
 C
       CALL ANLYSHES(HESMOD, DIAGHES, RFAMAT, EVRFAMAT, HES,
-     &              GRDMOD, SCRATCH, VEC, NOPT, NX,
+     &              GRDMOD, SCRATCH, PMAT, VEC, NOPT, NX,
      &              NCYCLE, INR, IVEC, IMODE, IDIE, TS,
      &              NRORMANR, RFA, EVFTS, IGTS, QSD, LUOUT,
      &              QSTLST_CLIMB, NATOMS, IPRNT)
@@ -216,6 +245,10 @@ C
      &                NX, LUOUT)
 C         
       ELSE IF (TS .OR. RFA) THEN
+
+#ifdef _DEBUG_LVL0
+      Write(6,"(a,l)") "Debug Info: The QST and LST climb",QSTLST_CLIMB
+#endif
 C
 C First get the Lambda(P) and Lambda(N) parameters: Jon Baker
 C J. Comput. Chem. 7, 385, 1986 and references their in. In general

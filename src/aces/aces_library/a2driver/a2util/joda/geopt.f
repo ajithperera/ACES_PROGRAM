@@ -185,6 +185,25 @@ C Modifications for [name it] by: The ACES Development Team
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE GEOPT
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
 
@@ -226,7 +245,9 @@ C     VARNAM  Symbols of all variable parameters
 C     PARNAM  Symbols of all variables *and* (fixed) parameters
 C
       CHARACTER*7 EXPRT_INT_HESS
-
+      CHARACTER*8 GRPSYM
+      CHARACTER*4 DOIT
+      character*8 irrnmc(32)
 cYAU passed down to entry for mkvmol
 c     Maximum string length of basis set
       INTEGER BASLEN
@@ -379,6 +400,8 @@ C
 C IF .OPT FILE NOT THERE, READ Z-MATRIX AND GET THINGS SET UP
       call getrec(-1,'JOBARC', 'HAVEGEOM', 1, i_havegeom)
       call getrec(-1,'JOBARC', 'PES_SCAN', 1, i_pes_scan)
+      Print*, "The value of HAVEGEOM record:", i_havegeom 
+      Print*, "The value of PES_SCAN record:", i_pes_scan
       We_havegeom = .false.
       Can_do_freq = .false.
       Do_pes_scan = .false.
@@ -395,6 +418,11 @@ C
       Geomtry_opt     =  (Iflags2(5) .NE. 0)
       If (Do_pes_scan) XYZIN = .True.
 C
+      Print*, "-----After call to Entry-----"
+      Print*, "The FNDDONE in Geopt:", iTmp 
+      Print*, "The gradient calcs:", iflags2(138)
+      Print*, "Hessian calc.,Geo. opt. and iarch:", Anlytic_hessian,
+     &         Geomtry_opt, iarch
 C
 C The logical argument to FETCHZ, controls whether it is the
 C the very first call to the FETCHZ. In the case of user
@@ -408,6 +436,7 @@ C B-matrix and A-matrix that corresponds to new coordiantes using the
 C RIC's generated in the first call. Ajith Perera, 08/2002
 C
       If (We_havegeom .AND. (Anlytic_hessian .OR. iTmp .EQ. 1)) Then
+      Print*, "Reading previous step from JOBARC file"
            Call Getrec(20, 'JOBARC', 'ZMATATMS', 1, NATOMS)
            Call Getrec(20, 'JOBARC', 'LINEAR  ', 1, ILINEAR)
            If (ILINEAR .EQ. 1) Then
@@ -419,6 +448,7 @@ C
            Endif
            IF (iflags(68) .EQ. 1) XYZIN = .TRUE. 
            Call Getrec(20, "JOBARC", "COORD   ", NX*IINTFP, Q)
+           Write(6,*) "Coordiantes read in from jobarc"
            Write(6, "(3F10.5)") (Q(I), I=1, NX)
            Call Getrec(-1, 'JOBARC', 'CONCTVTY', NX, NCON)
            Call Getrec(-1, 'JOBARC', 'CORD_INT', NX*IINTFP, R)
@@ -429,6 +459,11 @@ CSSS           If (Anlytic_hessian) Call Bohr2angs(R, NX)
            Call Getrec(20, 'JOBARC', 'ORIENTMT', 9*IINTFP,
      &                 ORIENT)
            Call Getrec(20, 'JOBARC', 'ATOMCHRG', NATOMS, IATNUM)
+           IF (IFLAGS(71) .EQ. 1) THEN
+              Call Getrec(20, 'JOBARC', 'ATCHRORG', NATOMS, IATNUM)
+           ELSE
+              Call Getrec(20, 'JOBARC', 'ATOMCHRG', NATOMS, IATNUM)
+           ENDIF 
            Call Getrec(-1, 'JOBARC', 'ICSQUASH', NX, ISQUASH)
            Call Getcrec(20, 'JOBARC', "PTGP    ", 4, FPGRP)
            Call Getcrec(20, 'JOBARC', "ABL_PTGP", 4, BPGRP)
@@ -438,8 +473,20 @@ CSSS           If (Anlytic_hessian) Call Bohr2angs(R, NX)
 CSS           IF (.not. Geomtry_opt .And. Iarch .Ne. 1 .And. .not. 
 CSS     &          Do_pes_scan) CALL FETCHZ(.TRUE., Z, MAXMEM)
            CALL ZERO(Z, MEMREQ)
+           Print*, "The data read from JOBARC"
+           Print*, "The NATOMS:", NATOMS
+           Write(6,*)
+           IF (.not. xyzin) Write(6,*) "Internal coords:"
+           IF (.not. xyzin) Write(6,"(3F10.5)") (R(I), I=1, NX)  
+           Write(6,*)
+           Write(6,*) "The Cartesian coords:"
+           Write(6, "(3F10.5)") (Q(I), I=1, NX)
+           Write(6,*)
+           if (.not. xyzin) Write(6,*) "The connectivities:" 
+           if (.not. xyzin) Write(6, "(5I2)")(NCON(I), I=1, NX) 
       Else
 c
+          Print*, "Entering Fetchz IARCH .NE. 1", IARCH
           IF (iarch .NE.1) CALL FETCHZ(.TRUE., Z, MAXMEM)
       Endif
 C
@@ -501,6 +548,8 @@ cYAU        VIBRES=.true.
       ELSE
 cYAU        VIBRES=.false.
       ENDIF
+      Write(6,*)
+      Print*, "@GEOPT, IPASS1,  PS1EXIST=:", IPASS1, PS1EXIST
 C
 C Allocate memory, Note that in the case of pure Cartesian Optimizations
 C the number of internal coordinates is always correspond to
@@ -520,15 +569,20 @@ C it, so the above is the alternative.
 C
           CALL GETREC(-1, 'JOBARC','REDNCORD', 1, TOTREDNCO)
           NXM6 = TOTREDNCO
+    
       ENDIF
 C
 C The following applies for the user defined internal optimizations.
 C Somewhat overaloaded because PS1EXIST control numerical finite
 C differencing. Ajith Perera, 08/2008.
+C A bug fix for Numerical finte difference redundent internal 
+C and Cartesian only optimizations, Ajith Perera, 04/2012.
+C (.OR. PS1EXIST is removed). 
 C
-      IF (iFlags(68).eq.0 .OR. PS1EXIST .or.
+      IF (iFlags(68).eq.0 .OR. 
      &    iFlags2(5) .eq. 0) NXM6 = MAX(NX-6,1)
 C
+ 
 C FOR DUMMY B-MATRIX (AND CARTESIAN HESSIAN AFTER BUILDB)
 C
       N1 = (NX * NX) + 1
@@ -634,13 +688,18 @@ C
 C Allocate memory for a scratch array in line search, Ajith, 03/10.
   
       N32 = 6*NX + N31
+C
+C Allocate memory for the projector required in redundent internal 
+C optimizations, Ajith, 02/2012 (++20*MXATMS)
+
+      N33 = NX*NX + N32
 C 
-C The memory for this block (++20*3*MXATMS)
+C The memory for this block (++9*MXATMS^2)
 C
-      MEMTOP = N32
+      MEMTOP = N33
 C
-C The total memory required  (9*15*MXATMS^2 +  3*34*MXATMS ) assuming 
-C (3*MXATMS-6)=3*MXATMS for user defined internals and 15*MAXREDUNCO^2
+C The total memory required  (9*16*MXATMS^2 +  3*34*MXATMS ) assuming 
+C (3*MXATMS-6)=3*MXATMS for user defined internals and 16*MAXREDUNCO^2
 C 34*MAXREDUNCO) for redundent internals
 C
       IF (MEMTOP .GT. MEMREQ) THEN
@@ -683,19 +742,40 @@ CSSS           Call Angs2bohr(R, NX)
            Call Getcrec(20, 'JOBARC', "CMP_PTGP", 4, PGRP)
            Call Getcrec(-1, 'JOBARC', "INTCNAM", 5*NX, VARNAM)
            CALL ZERO(Z, N11)
+           Print*, "The Retrive-2"
+           Print*, "Coordiantes:",iflags(68)
+           Print*, "The data read from JOBARC"
+           Print*, "The NATOMS:", NATOMS
+           Print*, "Untested change (undoB2A) on 07/09/06"
+           IF (.not. xyzin) Write(6,*) "Internal coords:"
+           IF (.not. xyzin) Write(6,"(3F10.5)") (R(I), I=1, NX)
+           Write(6,*)
+           Write(6,*) "The Cartesian coords:"
+           Write(6, "(3F10.5)") (Q(I), I=1, NX)
+           Write(6,*)
+           If (.not. xyzin) Write(6,*) "The connectivities:"
+           If (.not. xyzin) Write(6, "(5I2)")(NCON(I), I=1, NX)
         Else
             CALL RETRIEVE( E, Z(N4), Z(N8), Z(1), Z(N18))
             CALL ZERO(Z, N11)
 C
+      Write(6,*), "Data read from OPTARC file"
+      Write(6,*) 
+      Print*, "The COORD COMMON BLOCK/AFTER RETRIVE"
+      Write(6,"(3F10.5)"), (Q (I), I= 1, NX)
+      Write(6,*)
+      Write(6, "(3F10.5)"), (R(I), I= 1, NXM6)
+      Write(6,*)
         Endif 
 C 
       ELSE
 C
 C CALL SYMMETRY PACKAGE AND NEW FINDIF SYMMETRY ROUTINES.
 C
+            Print*, "Before the call to GMETRY, XYZIN", XYZIN
         IF (.NOT. XYZIN) CALL GMETRY(We_havegeom, .TRUE.)
         IF (XYZIN .AND. Iflags(54) .GT. 1 .AND. 
-     &      IPASS1 .EQ. 0) CALL GETXYZ
+     &      IPASS1 .EQ. 0 .AND. .NOT. DO_PES_SCAN) CALL GETXYZ
 C
 C Internal coordinate geo. optimizations, Cartesian Coordinate 
 C frequency calcualtions requires following call to SYMMETRY.  
@@ -828,6 +908,13 @@ C
           Call MkVMOL (q, PGrp, NAtoms, NUnique, ZSym, IAtNum,
      &         GenBy, Z(N11), IStat, BasNam)
 
+C Make a MOL file for Norbert's ERD/OED programs. ERD/OED does
+C not know anything about symmetry. Therefore MOL_ERDEOD contains
+C description of all the centers; not just symmetry uniques ones
+C as is the case for MOL file 06/2018
+
+          Call MKERDOED(q, PGrp, NAtoms, NUnique, ZSym, IAtNum,
+     &                  GenBy, Z(N11), IStat, BasNam)
            if (iflags(45).eq.2) then
               call mknddo(q, PGrp, NAtoms, NUnique, ZSym, IAtNum,
      &                    GenBy, Z(N11), IStat, BasNam)
@@ -867,7 +954,7 @@ C point or atomic, create archive file OPTARC, else print a message and
 C move on to next ME.
 C 
         IF (NOpt .ne. 0 .AND. NAtoms .gt. 1 .or. IVib .eq. 1 .or.
-     &       IVIB.EQ.2
+     &       IVIB.EQ.3
      &       .OR. IFLAGS(18).EQ.3
      &       .OR. IFLAGS(18).EQ.4
      &       .OR. IFLAGS(18).EQ.5
@@ -876,6 +963,7 @@ C
      &       .OR. IFLAGS(18).EQ.10
      &       .OR. IFLAGS2(3).NE.0
      &       ) then
+          Write(6,"(a)") " Creating Archive file"
           CALL ARCHIVE(E, Z(N7), Z(N8), Z(NXM6 + 1), 1,
      &                 Z(N18))
         ElseIf (NOpt .eq. 0) then
@@ -910,6 +998,8 @@ C program exit is from the main program GEOPT.F. Ajith Perera 03/2003.
 C 
 C Note that during the first run IPASS1 is 0 and PS1EXIST is false. 
 C 
+      Write(6,*)
+      Print*, "@GEOPT, IPASS1,  PS1EXIST=:", IPASS1, PS1EXIST
         iflags(18)=itmp
         if(IPASS1 .eq. 1 .or. .not. PS1EXIST)then
           IF(IPRNT.EQ.999)WRITE(LUOUT,8888)(I,Z(I),I=1,N27)
@@ -990,6 +1080,9 @@ C
         Call READGH (0,IHES,NATOMS,Z(N6),Z(1),Z(N1),Z(N2),IAVGRD,
      &       IAVHES)
 
+       Print*, "The exact Hessian after reading in READGH."
+       CALL OUTPUT(Z(1), 1, 3*NATOMS, 1, 3*NATOMS, 3*NATOMS,
+     &             3*NATOMS, 1) 
 C
 C
         IF(ISTAT.NE.0)THEN
@@ -1068,9 +1161,77 @@ C internal Hessian. Ajith Perera, 06/2004.
 C
         CALL CONVHESS(Z(N3),Z(N4),Z(1),Z(N2),Z(N1),-1)
         CALL PREVIB(NRX,Z(1),Z(N11),Z(N6))
+cmn
+c obtain symmetry info as in symcor. This is used in vib1 to create
+c curvy_fdif file. Use full irreps following symcor 'fds4' logic
+c
+CMN      CALL GETCREC(20,'JOBARC','FULLPTGP',8,GRPSYM)
+      CALL GETCREC(20,'JOBARC','PTGP',8,GRPSYM)
+      IPOS = LINBLNK(GRPSYM(1:4))
+      IF (
+     &    (GRPSYM(1:1).EQ.'C'.AND.GRPSYM(IPOS:IPOS).NE.'v'.OR.
+     &     GRPSYM(1:3).EQ.'T h'.OR.
+     &     GRPSYM(1:3).EQ.'T  '.OR.
+     &     GRPSYM(1:1).EQ.'S'
+     &    )
+     &   ) THEN
+         DOIT='COMP'
+      ELSE
+         DOIT='FULL'
+      END IF
+
+      CALL GETREC(20,'JOBARC',DOIT//'ORDR',1,IORDERF)
+      CALL GETREC(20,'JOBARC','COMPORDR',1,IORDERC)
+      IORDER=MAX(IORDERF,IORDERC)
+c
+      CALL GETREC(20,'JOBARC',DOIT//'NORB',1,NORBITF)
+      CALL GETREC(20,'JOBARC','COMPNORB',1,NORBITC)
+      NORBIT=MAX(NORBITF,NORBITC)
+
+      I0 = memtop
+c      write(6,*) ' Joda mn modification: ',
+c     $     N12, iorder, iintfp, iand(iorder,1), memtop
+      I000=I0
+      I010=I000 + IINTFP*IORDER*9
+      I020=I010 + IINTFP*IORDER*IORDER*9
+      I030=I020 + IINTFP*IORDER*IORDER
+      I040=I030 + IINTFP*IORDER*IORDER
+      I050=I040 + 3*IORDER
+      I060=I050 + IORDER*IORDER
+      I080=I060 + IORDER + IAND(IORDER,1)
+      I090=I080 + 6*IORDER
+      I100=I090 + IINTFP*3*IORDER
+      if (I100 .gt. memreq) then
+         write(6,*) ' memory problem in geopt? ', i100, memreq
+c         call errex
+      endif
+c
+cmn I am not sure if this will overwrite vital information. The memory
+C usage of this procedure is hardwired ...
+
+      write(6,*) ' @GEOPT: Enter symcor_chrtable ', doit,
+     $     ' ', FPGRP
+      CALL symcor_CHRTABLE(IORDER,Z(I000),Z(I010),Z(I020),
+     &     Z(I030),Z(I040),Z(I050),Z(I060),
+     &     IRRNMC,Z(I080),doit,fpgrp,Z(I090))
+
+      CALL GETREC(-1,'JOBARC',DOIT//'NIRX',1,NIRREPC)
+c      call putrec(20, 'JOBARC', 'NAMEIRPC', nirrepc, irrnmc)
+c
+      write(6,*) ' Finished symcor_chrtable '
+      write(6,*) ' value of DOIT' , doit
+      write(6,*) ' POINTGROUP NAME ', GRPSYM
+      write(6,*) ' Irrep names ', nirrepc
+      do i = 1, nirrepc
+         write(6,*) irrnmc(i)
+      enddo
+      write(6,*)
+c
         CALL VIB1(Z(1),Z(N24),Z(N21),Z(N25),Z(N12),Z(N25),Z(N1),Z(N6),
-     &            Z(N27), Z(N28), Z(N29), Z(N30),NRX,IStat,Z(N26))
+     &            Z(N27), Z(N28), Z(N29), Z(N30),NRX,IStat,Z(N26),
+     &            irrnmc, nirrepc)
         CALL PUTREC(20,'JOBARC','JODAOUT ',IONE,IJUNK)
+
 c YAU: leave the Hessian so we can re-run xjoda with ISOMASS files
 c (A lot of single-point stuff will break, but those calcs made no
 c sense without reference info anyway.)
@@ -1181,6 +1342,13 @@ C
                                    EXPRT_INT_HESS = "EXACT  "
       END IF
 C
+      Write(6,*)
+      Print*, "The COORD COMMON BLOCK/at opt. start:"
+C      Write(6,*)
+C      Write(6,"(3F10.5)"), (Q(I), I= 1, 3*NATOMS)
+      Write(6,*)
+      Write(6,"(3F10.5)"), (R(I), I= 1, NXM6)
+      Write(6,*)
 C
 C This is for those who don't want to give explicit instructions. 
 C By specifying IRECAL=EVAL_HESS=n, they are telling the program
@@ -1234,6 +1402,13 @@ C
       Call READGH (IGRD,IHES,NATOMS,Z(N6),Z(1),Z(N1),Z(N2),IAVGRD,
      &     IAVHES)
 C
+      Print*, "The Cart. Hessian in after reading from READGH"   
+      Print*, "IAVHES flags: Cartesian exact Hess. read",IAVHES,IHESS
+      Print*, "If the Hessian is from VIB=EXACT, the trans/rot" 
+      Print*, "contaminants are included. If VIB=FINDIF it is"
+      Print*, "projected."
+      CALL OUTPUT(Z(1), 1, 3*NATOMS, 1, 3*NATOMS, 3*NATOMS,
+     &            3*NATOMS, 1)
 C
 C The following comments deal with what is going on in GETICFCM.
 C
@@ -1299,6 +1474,26 @@ C
 C
          END IF
       EndIf
+      Write(6,*) iFlags2(5)
+      Print*, "The Cartesian Hessian after reading from GETICFCM"
+      if (ncycle .eq.0 .and. (EXPRT_INT_HESS .eq. "FCMINT ")) then
+      if (iFlags2(5).eq.2) Then
+      CALL output(Z(N2), 1, 3*NATOMS, 1, 3*NATOMS,  3*NATOMS, 
+     &            3*NATOMS, 1)
+      else if (iFlags2(5).eq. 1) Then
+      Write(6,*) "The NXM6 =", NXM6
+      CALL output(Z(N2), 1, NXM6, 1, NXM6,  NXM6,
+     &            NXM6, 1)
+
+      endif
+      endif
+      Write(6,*)
+      Print*, "The COORD COMMON BLOCK/at opt. start:"
+C      Write(6,*)
+C      Write(6,"(3F10.5)"), (Q(I), I= 1, 3*NATOMS)
+      Write(6,*)
+      Write(6,"(3F10.5)"), (R(I), I= 1, NXM6)
+      Write(6,*)
 C
 C:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 C Convert gradient to internal coordinates & print it out
@@ -1384,11 +1579,18 @@ C
               CALL GET_MOPAC_HESS(Z(N3), Z(N4), Z(N5), Z(1), Z(N2),
      &                            Z(N1), NATOMS, NX, NXM6, NREAL,
      &                            NREAL3, NREAL3M6)
+       Write(6,*)
+       Print*, "The Cart. Hessian generated by MOPAC"
+       CALL OUTPUT(Z(1), 1, 3*NATOMS, 1, 3*NATOMS, 3*NATOMS,
+     &             3*NATOMS, 1)
 C
            ELSE IF (EXPRT_INT_HESS.EQ."SPECIAL".AND.IAVHES.EQ.0) THEN
 C 
 C Educated guess Hessian in internal or redundent internals Z(N2)!
 C
+       Write(6,*)
+       Print*, "Entering convhess:form an educated guess4hess"
+       Write(6,*)
               CALL CONVHESS(Z(N3),Z(N4),Z(1),Z(N2),Z(N1),1-IAVHES)
 C
            ELSE IF (.NOT. XYZIN .AND. IAVHES.EQ.1) THEN
@@ -1396,6 +1598,8 @@ C
 C Cartesian exact Hessian is read Z(1), do part of the transformation 
 C that does not depends on the derivative of the B matrix!
 C
+       Print*, "Entering convhess:piece of cart2int transformation"
+       Print*, "IAVHES: ", IAVHES
                  cALL CONVHESS(Z(N3),Z(N4),Z(1),Z(N2),Z(N1),-IAVHES)
 C
            END IF
@@ -1437,6 +1641,11 @@ CSSS        Write(6,*) "IMPORT_CART_HESS", EXPRT_INT_HESS
 C
         IF (IMPORT_CART_HESS .AND. XYZIN .AND.
      &      iFlags2(5).ge.3) THEN
+       Write(6,"(1x,a,a)") "The RIC: Importing Cartesian Hessian",
+     &          IMPORT_CART_HESS
+       Write(6,"(a)") "The Cart. Hessian in geopt-before CART2INT"
+       CALL OUTPUT(Z(1), 1, 3*NATOMS, 1, 3*NATOMS, 3*NATOMS,
+     &             3*NATOMS, 1)
 C
            CALL CART2INT_HESS(Z(N7),Z(1),TOTREDNCO,NATOMS,Z(N2))
         END IF
@@ -1444,16 +1653,33 @@ C
 C FORCE CURVILINEAR <-- RECTILINEAR TRANSFORMATION IF TS SEARCH
 C AND TRANSFORMATION HAS NOT BEEN TURNED OFF BY EXTERNAL
 C REQUEST (ICURVY>1).
+C 
+C Important note: ICURVY = 0 by default, ICURVY=1 or 2 
+C depending on whether you want it done or not. Since there
+C are objection to invoking when it is not requested, I
+C have turned it off.  Ajith Perera, 12/2012.
 C
 CSSS        IF (.NOT.XYZIN) THEN
 C
         IF (iFlags2(5).eq.1) Then
-           IF (IMPORT_CART_HESS .AND. ICURVY.EQ.0) ICURVY = 1 
-           IF (IMPORT_CART_HESS .AND. ICURVY .GT. 1) WRITE(6,9920)
+CSSS           IF (IMPORT_CART_HESS .AND. ICURVY.EQ.0) ICURVY = 1 
+           IF (IMPORT_CART_HESS .AND. 
+     &        (ICURVY .EQ. 2 .OR. ICURVY .EQ.0)) WRITE(6,9920)
+C
  9920      FORMAT(T3,' Transformation to curvilinear coordinates ',
      &               'has been turned off.')
 C
+       Write(6,*) 
+       Write(6,"(a,l,1x,i2)") "Importing Cartesian Hessian",
+     &                         IMPORT_CART_HESS, ICURVY
+       Write(6,"(1x,a,a)") "The Partialy trans. Cart. Hessian",
+     &                     " in geopt-before TWIDLE"
+       CALL OUTPUT(Z(N2), 1, NXM6, 1, NXM6, NXM6, NXM6, 1)
            IF (ICURVY .EQ. 1 .AND. IMPORT_CART_HESS) THEN
+
+              Write(6,"(3x,a,a)")"Hessian is transformed to",
+     &                           " curvilinear coordinates."
+C
               CALL TWIDLE(Z(N3),Z(N2),Z(N7),Z(N25),Z(N21),
      &                    Z(N22),Z(N23),Z(N24),Z(N26))
            END IF
@@ -1463,9 +1689,17 @@ C DO NOT WRITE OUT WHOLE HESSIAN UNLESS IT HAS BEEN SPECIFICALLY
 C REQUESTED.  THIS CAN EVENTUALLY BE MADE INTO AN ADJUSTABLE
 C PARAMETER, BUT WILL BE IN CODE FOR NOW.
 C
-CSSS        IF(IPRNT.GE.10) THEN
-          CALL HESSOUT(Z(N2),NXM6,NXM6,0)
-CSSS        ENDIF
+        IF(IPRNT.GE.10) THEN
+          Write(6,*)
+          Write(6,"(15x,a,a)") "Force constant matrix (in optimized",
+     &                         " coordinates)" 
+          Write(6,*) 
+          If (iFlags2(5) .NE. 2) Then
+             CALL HESSOUT(Z(N2),NXM6,NXM6,0)
+          Else
+             CALL OUTPUT(Z(N2), 1, NXM6, 1, NXM6, NXM6, NXM6, 1)
+          Endif
+        ENDIF
 C
 C The logic for cycles other than the first cycle begins here.
 C Also, note that regeneration of a new Hessian rather than an
@@ -1517,7 +1751,7 @@ C
       CALL DCOPY(NXM6*NXM6, Z(N2), 1, Z(N25), 1)
       CALL TKSTEP(Z(N7), Z(N2), Z(1), Z(N14), Z(N15), Z(N1), Z(N16),
      &            Z(N17), Z(N18), Z(N19), Z(N20), Z(N3), Z(N25),
-     &            Z(N4), Z(N31), IAUGHS)
+     &            Z(N4), Z(N31), Z(N32), IAUGHS)
 C
 C Save the energy of the current step for the trust
 C radius step size control algorithm. 11/04, Ajith Perera.
@@ -1562,6 +1796,11 @@ C
          CALL DCOPY(NX, R, 1, Q, 1) 
          CALL PUTREC(20, 'JOBARC', 'COORD_OP', IINTFP*NX, Q)
 C
+           Write(6,*)
+           Write(6,"(a,a)"), "Updating the new 3*natoms geometries",
+     &     " for Cartesian optimizations"
+           Write(6, "(a)"),"The Cartesian coords:"
+           Write(6, "(3F10.5)"), (Q(I), I=1, NX)
 C
       ELSE 
          CALL GMETRY(We_havegeom, .TRUE.)
@@ -1626,6 +1865,9 @@ C the very first run). Tom Watson Jr. and Ajith Perera; 01/2011.
 C
           Call MkVMOL (q, PGrp, NAtoms, NUnique, ZSym, IAtNum,
      &         GenBy, Z(N11), IStat, BasNam)
+
+         Call MKERDOED(q, PGrp, NAtoms, NUnique, ZSym, IAtNum,
+     &                  GenBy, Z(N11), IStat, BasNam)
 C
          if (iflags(45).eq.2) then
             call mknddo(q, PGrp, NAtoms, NUnique, ZSym, IAtNum, GenBy,

@@ -210,6 +210,25 @@ c machsp.com : end
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 c flags.com : begin
       integer        iflags(100)
       common /flags/ iflags
@@ -295,8 +314,11 @@ C This requires defining TMP1 and TMP2 arrays.
       CALL XGEMM('T', 'N', NULLEVAL, 1, TOTREDNCO, 1.0D0,
      &               TMP1, TOTREDNCO, SCRATCH_LCL, TOTREDNCO,
      &               0.0D0, TMP2, NULLEVAL)
-      Write(6,*) "Check for the redundencies in deltaq0"
+      Write(6,"(a,I4)") "  Check for the redundencies in delta q0:",
+     &                     NULLEVAL
+      IF (NULLEVAL .NE. 0) THEN
       Write(6,"(6F13.7)") (tmp2(i), i=1, NULLEVAL)
+      ENDIF 
 C#endif
 C
 C     
@@ -384,8 +406,11 @@ C This requires defining TMP1 and TMP2 arrays.
      &               TMP1, TOTREDNCO, SCRATCH_LCL, TOTREDNCO,
      &               0.0D0, TMP2, NULLEVAL)
       Write(6,*)
-      Write(6,*) "Check for the redundencies in delta delta q_K"
+      Write(6,"(a,a,I4)") "  Check for the redundencies in delta",
+     &                    " delta q_K:",NULLEVAL
+      IF (NULLEVAL .NE. 0) THEN
       Write(6,"(6F13.7)") (tmp2(i), i=1, NULLEVAL)
+      ENDIF 
 C#endif
 C
          CALL DAXPY(3*NATOMS, -1.0D0, Q, 1, SCRATCH_LCL
@@ -396,7 +421,7 @@ C
          NITER = NITER + 1 
 
       ENDDO 
-      IF (CONVERGED) Write(6, "(a,a,I2,a)") "Iterative update ",
+      IF (CONVERGED) Write(6, "(a,a,I2,a)") "  Iterative update ",
      &                         "converged in ", NITER, " iterations."
 C
 C If the iterative procedure fail to converge in maximum iterations
@@ -405,7 +430,7 @@ C
 C#endif
 C
       IF (.NOT. CONVERGED) THEN
-         Write(6, "(a,a)") "Iterative update did not converged.",
+         Write(6, "(a,a)") "  Iterative update did not converged.",
      &                     " linear update is used. "
          CALL DCOPY(3*NATOMS, SCRATCH_LCL(IOFF4X0 +1), 1, Q, 1)
          CALL XGEMM('N', 'N', 3*NATOMS, 1, TOTREDNCO, 1.0D0,
@@ -433,6 +458,9 @@ C Store the Cartesian coordinates with a different record label
 C from COORD since finite difference calculations use COORD
 C for the grid points, not the current point.
 C
+      Write(6,*)
+      WRITE(6,*) "The new Cartesian Coord"
+      WRITE(6,"(3F13.9)") (Q(I), I = 1, 3*NATOMS)
 
       CALL PUTREC(1,'JOBARC','COORD_OP',IINTFP*3*NATOMS,Q)
 C

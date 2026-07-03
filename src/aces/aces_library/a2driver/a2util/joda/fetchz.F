@@ -36,7 +36,7 @@ C     PARNAM  Symbols of all variables *and* (fixed) parameters
      &        VERY_FIRST_TIME, UNCONSTRAINED
       logical bStruct, Write_as_read
 C
-      double precision rtmp(3*mxatms)
+      double precision rtmp(3*mxatms), ptmp(3*mxatms)
 
 C The arrays in FETCHZ that need to be managed dynamically are:
 C
@@ -219,7 +219,7 @@ C
             INEWQ    = ITMPQ    + 3*NATOMS
             ILAST    = INEWQ    + 3*NATOMS
             CALL SYMMETRY(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .TRUE.)
-#ifdef _DEBUG_LVLM1
+#ifdef _DEBUG_LVLM
             Print*, "Entering the Redundent Internal block"
 #endif
             CALL GEN_REDNINTRNLS(Q, REDUNCO, INTLABEL, IBNDTO,
@@ -236,6 +236,15 @@ C
             CALL PUTREC(20, 'JOBARC', 'TNUMODIH', 1, TOTNOFDIH)
             CALL PUTREC(20, 'JOBARC', 'IBONDTO ', NATOMS*NATOMS, 
      &                  IBNDTO)
+C
+C To fix the printing problem in summary.F if the input geometry
+C is already optimum, Ajith Perera, 11,2012; The conditional 
+C ncycle .eq. 0 was added to fix a problem that showed up 
+C when numerical geo. optimizations with RICs was used. Ajith Perera
+C 08/2016.
+C
+            IF (NCYCLE .EQ. 0) 
+     &         CALL PUTREC(20,'JOBARC','COORD_OP',IINTFP*3*NATOMS,Q)
 C
             IF (IFLAGS(h_IFLAGS_symmetry).EQ. 2 .AND. 
      &          FPGRP .NE. 'C1') THEN
@@ -312,8 +321,13 @@ C
 C
 C This is the place where info about constrained optimizations
 C are added. At the moment all the unique coordinates are 
-C optimized.
-C 
+C optimized. Constrained optimizations are added (11/2012). The
+C constrined RIC optimizations are handlled by projectors to maintain
+C that there are no displacements along the constrained coordinates.
+C As a result even for constrained optimizations, there is no 
+C difference between total number of coordinates and the ones that
+C are optimized, Ajith Perera, 12/2012.
+C
             UNCONSTRAINED  = .TRUE.  
             IF (UNCONSTRAINED) THEN
                IF (I_UNIQUE(IVAR)) THEN
@@ -623,9 +637,15 @@ C
 c   o read the blank line after the Z-matrix
       READ(LUZ,'(A)') ZLINE
 
-c   o load the first structure into R
-      call rd_intcoord(R)
+c   o load the first structure into R; only when it loads the
+c   o first structure, it will check whether the same varible 
+c   o name is being used multiple times; Ajith Perera, 12/2012.
 
+      call rd_intcoord(R, .True.)
+#ifdef _DEBUG_LVL0
+      Write(6,"(a)") " The Current structure "
+      Write(6,"(6(1x,F12.6))") (r(i),i=1,nx)
+#endif
 c   o read additional structures until we hit a namelist
 c     (iStruct corresponds to the structure we expect to read)
       iStruct = 1
@@ -633,15 +653,23 @@ c     (iStruct corresponds to the structure we expect to read)
       do while (bStruct.and.iStruct.lt.3)
          iStruct = iStruct + 1
          read(luz,'(a)') zline
+         If (.Not. ((zline(1:2) .EQ. "Pr") .or. 
+     &             (zline(1:2) .EQ. "Re"))) backspace(luz)
+C--The additional line is to give a label to the reactants
+         read(luz,'(a)') zline
          backspace(luz)
          ISTP = INDEX(zline(1:),'=')
          I    = INDEX(zline(1:),'*')
          bStruct = ((i.eq.0).and.(istp.ne.0))
          if (bStruct) then
-            call rd_intcoord(rtmp)
+            call rd_intcoord(rtmp, .False.)
             if (iStruct.eq.2) then
 c            o read the next line and see if this structure was the TS or PR
+C--The additional lines (read and backspace) are to give a label to the
+C  product structures. 
                read(luz,'(a)') zline
+               read(luz,'(a)') zline
+               backspace(luz)
                backspace(luz)
                ISTP = INDEX(zline(1:),'=')
                I    = INDEX(zline(1:),'*')
@@ -650,11 +678,34 @@ c            o read the next line and see if this structure was the TS or PR
                btmp = .true.
             end if
             if (btmp) then
-               call putrec(1,'JOBARC','PRSTRUCT',nx*iintfp,rtmp)
+
+               If ( iStruct.eq.2) Then
+#ifdef _DEBUG_LVL0
+      Write(6,"(a)") "Creating RXSTRUCT jobarc record"
+      Write(6,"(6(1x,F12.6))") (rtmp(i),i=1,nx)
+#endif      
+                  call putrec(1,'JOBARC','RXSTRUCT',nx*iintfp,rtmp)
+               Else
+#ifdef _DEBUG_LVL0
+      Write(6,"(a)") "Creating PRSTRUCT jobarc record"
+      Write(6,"(6(1x,F12.6))") (rtmp(i),i=1,nx)
+      Write(6,*) Istruct
+#endif
+                  call putrec(1,'JOBARC','PRSTRUCT',nx*iintfp,rtmp)
+               Endif 
             else
 c            o move R to RXSTRUCT since we are optimizing the TS structure
-               call putrec(1,'JOBARC','RXSTRUCT',nx*iintfp,R)
-               call dcopy(nx,rtmp,1,R,1)
+C
+#ifdef _DEBUG_LVL0
+      Write(6,"(a)") "Creating RXSTRUCT jobarc record"
+      Write(6,"(6(1x,F12.6))") (rtmp(i),i=1,nx)
+#endif
+               call putrec(1,'JOBARC','RXSTRUCT',nx*iintfp,Rtmp)
+C
+C R contains the first block of coordinates which is the approx. TS
+C structure (better designation must be current structure).
+c Commented 12/2012, Ajith Perera
+CSSS               call dcopy(nx,rtmp,1,R,1)
             end if
 c        end if (bStruct)
          end if
@@ -662,6 +713,10 @@ c     end do while (bStruct)
       end do
 
  3441 continue
+
+      If (IFLAGS2(h_IFLAGS2_opt_control) .EQ. 1) 
+     &    Call Gen_curr_coords(Rtmp, Ptmp, R, Nx, .FALSE.)
+ 
 
 C WRITE OUT RELEVANT INFORMATION
       IF (PRINTI.AND. ncycle.EQ.0) THEN
@@ -700,7 +755,7 @@ c SB fixed output for atomic and diatomic calculations
   734    FORMAT(T9,A,T19,I2,T30,A,T40,I2,T50,A,T60,I2,T70,A)
          if (nunique.gt.0) then
             WRITE(LUOUT,1000)
- 1000       FORMAT(T18,' *Initial values for internal coordinates* ',/,
+ 1000       FORMAT(T18,' *Initial values for current coordinates* ',/,
      &             T23,'Name',t40,'Value')
  1002       FORMAT(T18,' *Initial values for reactant coordinates* ',/,
      &             T23,'Name',t40,'Value')

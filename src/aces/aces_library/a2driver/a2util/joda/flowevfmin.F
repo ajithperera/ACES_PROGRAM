@@ -8,6 +8,7 @@ C
 C
 #include "flags.h"
 #include "jodaflags.com"
+#include "io_units.par"
 C
       DIMENSION SCRATCH(NX*NX), GRDHES(NOPT), HESMOD(NOPT, NOPT),
      &          DIAGHES(NOPT, NOPT)

@@ -9,7 +9,7 @@ C
       PI = (ATAN(DFLOAT(1))*DFLOAT(4))
       DINVPI = (ATAN(DFLOAT(1))*DFLOAT(4))/180.0D0
 C
-C#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVL0
       Write(6,*) ' In CHECK4_180...'
       DINVPI = PI/180.0D0
       Print*, "TOTNFBND, TOTNOFANG: ",
@@ -19,7 +19,7 @@ C#ifdef _DEBUG_LVL0
       Write(6,10) ((QRIC(I) + DELTAQ(I))/DINVPI, I = (TOTNOFBND + 1), 
      &             TOTNOFANG+TOTNOFBND)
    10 Format (5(1X,F10.6)) 
-C#endif
+#endif
 C  
       DO I = (TOTNOFBND + 1), TOTNOFANG+TOTNOFBND
          DVAL = (QRIC(I) + DELTAQ(I)) - PI

@@ -148,7 +148,7 @@ C Built G = BuB(t) where u is an arbitrary nonsingular matrix, usually
 C the unit matrix. The notations are consistent with Pulay et al.
 C paper.
 C
-#ifdef _DEBUG_LVL0
+#ifdef _DEBUG_LVLM
       Write(6,*) "B-Matrix"
       CALL OUTPUT(BMATRX, 1, TOTREDNCO, 1, 3*NRATMS, TOTREDNCO,
      &            3*NRATMS, 1)    

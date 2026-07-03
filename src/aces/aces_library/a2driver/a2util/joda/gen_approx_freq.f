@@ -176,6 +176,25 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE GEN_APPROX_FREQ(SCRATCH, BMATRIX, TMP, HES_INTACT)
 C
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)

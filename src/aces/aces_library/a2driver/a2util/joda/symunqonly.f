@@ -43,7 +43,7 @@ C coord.com : end
       COMMON /USINT/ NX, NXM6, IARCH, NCYCLE, NUNIQUE, NOPT
 
       DIMENSION RIN(NX), ROUT(NX)
-
+C#ifdef _NOSKIP
       DO I = 1, NUNIQUE
          IP = IUNIQUE(I)
          Z  = RIN(IP)
@@ -51,10 +51,15 @@ C coord.com : end
             Z = Z + RIN(IEQUIV(I,J))
          END DO
          FIAVE  = Z/(NEQ(IP)+1)
-         RIN(I) = FIAVE
+         Do J = 1, NEQ(IP)
+            RIN(IEQUIV(I,J)) = FIAVE
+         ENDDO
       END DO
-      DO IUNQ = 1, NUNIQUE
-         ROUT(IUNQ) = RIN(NOPTI(IUNQ))
+C#endif
+CC
+      DO IUNQ = 1, NOPT
+         ROUT(IUNQ) = DSQRT(DFLOAT(NEQ(NOPTI(IUNQ))+1))*
+     &                RIN(NOPTI(IUNQ))
       END DO
       RETURN
       END

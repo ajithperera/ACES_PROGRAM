@@ -285,7 +285,7 @@ c     logical flags
      &        bTDCalc, DoABCD, DoABCI, ACES2, bMN_A3, DoQRHF, bSTEOM,
      &        EOM, bGeomOpt, bTDA, bOpenShell
       logical bOpened, bTmp, bDone, bDelLastChar, bHaveKeys, bVerbose
-      logical bAutoCart, NO_AGRAD
+      logical bAutoCart, NO_AGRAD, Vibron_on
 c     character constants
       character*1 czPercent, czAsterisk, czHash, czSpace, czFirstNLChar
       character*1 czTab
@@ -309,6 +309,25 @@ c pseudo-registers (one-time temporary integers)
 c COMMON BLOCKS
       INTEGER        NX,NXM6,IARCH,NCYCLE,NUNIQUE,NOPT
       COMMON /USINT/ NX,NXM6,IARCH,NCYCLE,NUNIQUE,NOPT
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -518,6 +537,7 @@ c machsp.com : end
 
 
 
+
 c ----------------------------------------------------------------------
 
 c DECLARATIONS AND DATA STATEMENTS
@@ -530,8 +550,8 @@ c also part of some predefined structure)
 c RHF-UHF ENERGY CALCULATION AVAILABILITY
       DATA iEnAva1 /1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,0,0,
      &     1,1,1,1,1,
-     &     1,1,0,1,0, 1,1,1,1,1, 1,1,1,1,1, 1,1,0,0,0,
-     &     0,0,0,0,0/
+     &     1,1,0,1,0, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1,
+     &     1,1,1,1,0/
 c ROHF ENERGY CALCULATION AVAILABILITY
       DATA iEnAva2 /1, 1,1,1,1,0, 0,0,0,0,1, 0,0,1,1,0, 1,1,1,0,0,
      &     0,1,0,1,1,
@@ -543,10 +563,10 @@ c TWO-DETERMINANT ENERGY CALCULATION AVAILABILITY
      &     0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 1,0,0,0,0,
      &     0,0,0,0,0 /
 c RHF-UHF GRADIENT AVAILABILITY
-      DATA iGrAva1 /1, 1,1,1,1,0, 0,1,1,1,1, 1,0,0,0,0, 0,0,0,0,0,
-     &     1,1,1,0,0,
+      DATA iGrAva1 /1, 1,1,1,1,1, 1,1,1,1,1, 1,0,0,0,0, 0,0,0,0,0,
+     &     1,1,1,1,1,
      &     0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,1,0,0,0,
-     &     0,0,0,0,0/
+     &     0,1,0,0,0/
 c ROHF GRADIENT AVAILABILITY
       DATA iGrAva2 /1, 1,1,1,1,0, 0,0,0,0,1, 1,0,0,0,0, 0,0,0,0,0,
      &     0,1,0,0,0,
@@ -1122,6 +1142,14 @@ c         o ESTATE_SYM
                goto 101
             end if
 
+c         o CORE_WINDO 
+            if (iASV.eq.272) then
+               call parse_set_iarr(szData(1:ValueSize),j,iArr,8)
+               call PutRec(20,'JOBARC','EEWINDOW',j,iArr)
+               ioppar(272) = j
+               goto 101
+            end if
+
 c         o QRHF orbital arrays
             if (iASV.eq.77) then
                call parse_set_iarr(szData(1:ValueSize),j,iArr,1000)
@@ -1192,6 +1220,27 @@ c   o two QRHF keys are dependent on qrhf_gen
          call errex
       end if
 
+cmn New keyword auto_occ added. Used in vscf (automate branch for initguess).
+c
+c   o Set auto_occ keyword if not set yet (cmn)
+      if (ioppar(264) .eq. 2) then
+c
+c 2 = auto  is the default value. Now set recommended value.
+c
+         if (ioppar(17) .ne. 0) then
+c
+c if occupation is specified then turn auto_occ to on. This translates
+c occupation to subgroups when distortions are made with numerical
+c frequencies.
+c
+            ioppar(264) = 1
+         else
+c if occupation vector is not needed then do not uses auto_occ, since it
+c is not stable for certain degenerate pointgroups (needs a fix)
+            ioppar(264) = 0
+         endif
+      endif
+
 c ----------------------------------------------------------------------
 
 c VALIDATE THE ASVs...
@@ -1227,7 +1276,7 @@ c   o convert CALC aliases
             call asv_update_kv('CALC=CCSDT'//achar(0),iASV,szData,0)
             call asv_update_kv('KUCHARSKI'//achar(0),iASV,szData,0)
          else
-            print *, '@GTFLGS: logic error at line ',949
+            print *, '@GTFLGS: logic error at line ',979
             call errex
          end if
       end if
@@ -1289,12 +1338,13 @@ c an expert if you have questions about these issues!
             szTmp = 'REF=UHF'//achar(0)
          else
 C
-C If the user insist on ROHF and NON-HF is set, then allow it.
-C 03/2001, Ajith Perera
+C If the user insist on UHF and NON-HF is set, then allow it.
+C 03/2001, Ajith Perera, Reset to UHF instead of ROHF. 
+C 07/2014, Ajith Perera.
 C
             if (.NOT. (ioppar(11).eq.1) .and. 
      &                (ioppar(38).eq.1))
-     &      szTmp = 'REF=ROHF'//achar(0)
+     &      szTmp = 'REF=UHF'//achar(0)
          end if
          call asv_update_kv(szTmp,iASV,szData,0)
          iSpin = 2
@@ -1379,7 +1429,15 @@ c   o direct integrals are only useful for FOCK=AO
 
 c   o UNO ref implies semi-canonical orbitals, NON-HF=ON
       if (ioppar(248).eq.1) then
-         szTmp = 'orbitals=semicanonical'//achar(0)
+         if (ioppar(240) .eq. 1) then
+            if (ioppar(232) .eq. 3) then
+                szTmp = 'orbitals=standard'//achar(0) 
+            else 
+                szTmp = 'orbitals=standard'//achar(0) 
+            endif 
+          else
+            szTmp = 'orbitals=semicanonical'//achar(0)
+         endif
          call asv_update_kv(szTmp,iASV,szData,0)
          call asv_update_kv('non-hf'//achar(0),iASV,szData,0)
       end if
@@ -1439,6 +1497,17 @@ c         o geom_opt=partial
          end if
       end if
 c
+c    o LST or QST is set but not a transition state search, 12/2012.
+c      Ajith Perera.
+
+      if (ioppar(269) .EQ. 1 .OR.
+     &    ioppar(269) .EQ. 2) Then
+         if (ioppar(47) .lt. 4) Then
+             szTmp = 'opt_method=4'//achar(0)
+             call asv_update_kv(szTmp,iASV,szData,0)
+          endif
+      endif
+c
 c    o Geometry optimizations with exact Hessians need to be told how
 c      the Hessian is calcualted. If not specified set it to 1 
 c      (at each update Hessian is recalculated!).
@@ -1472,6 +1541,7 @@ c      the jobarc record HAVEGEOM to 0 indicate the geometry optimizations
 c      can proceed.
 c
       Call GetRec(0, 'JOBARC', 'HAVEGEOM', i_length, i_havegeom)
+      Print*, "A geometry for frequency {0,1} present:", i_length 
       if (i_length .lt. 0) Call Putrec(20, 'JOBARC', 'HAVEGEOM', 
      &                                 1, 0) 
 c
@@ -1514,49 +1584,46 @@ C project those motions from the Hessian, and until that
 C is done do not turn on the noreori for SYM=NONE
 C runs. Ajith Perera, 12/08.
 C
-C This joda will not be used for any geo. optimizations. Only
-C thing that it does is to help post-SCF printing and parallel 
-C finite difference calculations. Always use the sym=off option.
-C 07/2013, Ajith Perera
+
 c Turn off symmetry if subgroup=C1.
-CSSS      if (ioppar(85).eq.1) then
-CSSS         call asv_update_kv('!sym'//achar(0),iASV,szData,0)
-CSSS      end if
-CSSS      if ((ioppar(105) .ge. 2)) Then
-CSSS         szTmp = 'SYMMETRY=NONE'//achar(0)
-CSSS         if (ioppar(60).ne.0) then
-CSSS             call asv_update_kv(szTmp,iASV,szData,0)
-CSSS         Endif
+      if (ioppar(85).eq.1) then
+         call asv_update_kv('!sym'//achar(0),iASV,szData,0)
+      end if
+      if ((ioppar(105) .ge. 2)) Then
+         szTmp = 'SYMMETRY=NONE'//achar(0)
+         if (ioppar(60).ne.0) then
+             call asv_update_kv(szTmp,iASV,szData,0)
+         Endif
 C
 C For geo. opt with FULL/RIC and SYM=NONE turn on the NOREORI
 C if it is not given as an input. Ajith Perera, 12/08
 C 
-CSSS          if (ioppar(225) .eq. 2 .and. .not.
-CSSS     &        ioppar(54).ge.1 ) then
-CSSS             szTmp = 'NOREORI=ON'//achar(0)
-CSSS             call asv_update_kv(szTmp,iASV,szData,0)
-CSSS          endif
+          if (ioppar(225) .eq. 2 .and. .not.
+     &        ioppar(54).ge.1 ) then
+             szTmp = 'NOREORI=ON'//achar(0)
+             call asv_update_kv(szTmp,iASV,szData,0)
+          endif
 C
 C For Cartesian only optimizations (geo_opt=cart) set the opt_method
 C to RFA. Ajith Perera, 04/2011.
 C
-CSSS          if ((ioppar(105) .eq. 2) .and.
-CSSS     &         (ioppar(47) .ne. 4)) Then
-CSSS          Write(6,"(5x,a,a)") "Cartesian only minima searches only RFA", 
-CSSS     &                     " algorithm is "
-CSSS          Write(6,"(5x,a)") "allowed: Changing to RFA."
-CSSS               szTmp = "OPT_METHOD=RFA"//achar(0)
-CSSS               call asv_update_kv(szTmp,iASV,szData,0)
-CSSS          endif
-CSS      endif
+          if ((ioppar(105) .eq. 2) .and.
+     &         (ioppar(47) .ne. 4)) Then
+          Write(6,"(5x,a,a)") "Cartesian only minima searches only RFA", 
+     &                     " algorithm is "
+          Write(6,"(5x,a)") "allowed: Changing to RFA."
+               szTmp = "OPT_METHOD=RFA"//achar(0)
+               call asv_update_kv(szTmp,iASV,szData,0)
+          endif
+      endif
 C
 C For internal Coordinates do not allow symmetry=none (symmetry=none do no harm
-C except when dummy atoms are present but there is no need of this). 
-C Ajith Perera 02/2012; Ammendment; for post ACESIII joda runs always
-C turn the  symmetry off, 07/2013, Ajith Perera
+C except when dummy atoms are present but there is no need of this).
+C Ajith Perera 02/2012.
 C
-      if ((ioppar(60).eq.1)) then
-          szTmp = 'SYMMETRY=OFF'//achar(0)
+      if ((ioppar(68).eq.0) .and.
+     &   (ioppar(60).eq.0)) then
+          szTmp = 'SYMMETRY=ON'//achar(0)
           call asv_update_kv(szTmp,iASV,szData,0)
       endif
 C
@@ -1609,6 +1676,10 @@ c RHF EA-EOM
       if (ioppar(201).ge.1.and.
      &    .not.bOpenShell                   ) bMN_A3=.true.
 
+c RHF IP-EOM
+      if (ioppar(214).ge.1.and.
+     &    .not.bOpenShell                   ) bMN_A3=.true.
+
 c only SCF, MBPT(2), LCCSD, LCCD, CCD, CCSD, and ACCSD
       if (.not.(ioppar(2).eq. 0.or.
      &          ioppar(2).eq. 1.or.
@@ -1628,7 +1699,22 @@ c
       if (bOpenShell) ACES2 = .true.
 
 c no properties
+C
+C   ...Watson...
+C
+c except for performing Douglas-Kroll-Hess because
+c the pVp integrals are computed in vprops before vscf. But be careful
+c because there still should be no properties computed, but the user
+c won't realize (probably)
+
       if (ioppar(18).ne.0) ACES2 = .true.
+ 
+      if ((ioppar(18)     .ge. 1) .and.
+     &    (ioppar(267) .gt. 0) .and.
+     &    (bSTEOM                             .or.
+     &     bTDA                               .or.
+     &     ioppar(214)   .ge. 1  .or.
+     &     ioppar(2   )   .eq.40) ) ACES2 = .false.
 
 c excite=?
       if (ioppar(87).eq.2.or.
@@ -1711,6 +1797,7 @@ c
       ACES2 = ioppar(232).eq.2
       bTmp = bGeomOpt.or.(ioppar(54).ge.2) 
       bMN_A3 = .not.ACES2
+      No_AGRAD = .FALSE.
 
       if (bMN_A3) then
 c
@@ -1759,15 +1846,37 @@ c         o set grad_calc if none (default to analytical)
          end if
 C
          if (bTmp.and.(ioppar(238).eq.1)) then
-            if (eom.or.ioppar(1).gt.1) then
+
+C I do not know what print has got to do with this. Ajith Perera,
+C 12/2013.
+C
+CSSS            if (eom.or.ioppar(1).gt.1) then
+CSSS               szTmp = 'vtran=full'//achar(0)
+CSSS               call asv_update_kv(szTmp,iASV,szData,0)
+CSSS            end if
+            if (eom) then
                szTmp = 'vtran=full'//achar(0)
                call asv_update_kv(szTmp,iASV,szData,0)
-            end if
-            if (eom) then
                szTmp = 'estate_prop=expectation'//achar(0)
                call asv_update_kv(szTmp,iASV,szData,0)
             end if
             call asv_update_kv('abcdfull'//achar(0),iASV,szData,0)
+         end if
+Cmn
+C Turn on the finite diffences for VIBRON runs and change the
+C default step size from 25 to 50. 03/06, Ajith Perera
+Cmn
+         vibron_on= (ioppar(256).eq.1) .or.
+     &              (ioppar(258).eq.1) .or.
+     &              (ioppar(265).eq.1) .or.
+     &              (ioppar(260).eq.1)
+         if (vibron_on) Then
+             szTmp = 'grad_calc=numerical'//achar(0)
+             call asv_update_kv(szTmp,iASV,szData,0)
+            if (ioppar(57).eq.0) then
+               szTmp = 'fd_stepsize=-25'//achar(0)
+               call asv_update_kv(szTmp,iASV,szData,0)
+            endif
          end if
 c     else if (ACES2) then
       else
@@ -1777,6 +1886,23 @@ c     else if (ACES2) then
                 call asv_update_kv(szTmp,iASV,szData,0)
             end if
          endif 
+Cmn
+C Turn on the finite diffences for VIBRON runs and change the
+C default step size from 25 to 50. 03/06, Ajith Perera
+Cmn
+cmn         vibron_on= (ioppar(265).eq.1)
+         vibron_on= (ioppar(256).eq.1) .or.
+     &              (ioppar(258).eq.1) .or.
+     &              (ioppar(265).eq.1) .or.
+     &              (ioppar(260).eq.1)
+         if (vibron_on) Then
+             szTmp = 'grad_calc=numerical'//achar(0)
+             call asv_update_kv(szTmp,iASV,szData,0)
+            if (ioppar(57).eq.0) then
+             szTmp = 'fd_stepsize=-25'//achar(0)
+             call asv_update_kv(szTmp,iASV,szData,0)
+          endif
+         end if
 c     end if (bMN_A3)
       end if
 
@@ -1842,8 +1968,28 @@ C
                   call asv_update_kv(szTmp,iASV,szData,0)
                   call asv_update_kv('save_ints'//achar(0),
      &                                iASV,szData,0)
+C The HF-DFT gradients for symmetry is not available.  
+C turn it off. Several other add ons  for various things
+C A. Perera 06/2018.
+
+                  if (ioppar(60) .ne.0) then
+                     szTmp = 'symmetry=off'//achar(0)
+                     call asv_update_kv(szTmp,iASV,szData,0)
+                  endif
+                  if (ioppar(2) .ne.0) then
+                     szTmp = 'calclevel=scf'//achar(0)
+                     call asv_update_kv(szTmp,iASV,szData,0)
+                  endif
               EndIF
-C
+C Use correlated densities 
+
+              if (ioppar(2) .ne.0) then
+                  call asv_update_kv('save_ints'//achar(0),
+     &                                iASV,szData,0)
+                  szTmp = 'props=first_order'//achar(0)
+                  call asv_update_kv(szTmp,iASV,szData,0)
+              Endif 
+
           Endif 
 C
 C If SCF_TYPE is set to OEP options turn off symmetry, set
@@ -1867,7 +2013,21 @@ C
                  call asv_update_kv(szTmp,iASV,szData,0)
               endif
            Endif
+C KS based CC calcs, set the NONHF by default. In reality this
+
+          If (ioppar(253).eq.1) Then
+             if (ioppar(2).gt.0) then
+                if (ioppar(38) .ne.1) then
+                    szTmp = 'nonhf=on'//achar(0)
+                    call asv_update_kv(szTmp,iASV,szData,0) 
+                endif
+             endif 
+           endif 
 C
+      Print*, "The value of grad calc", ioppar(238)
+      Print*, "The Deriv. level, havegeom?, and vib? :",
+     &     ioppar(3),  i_havegeom, 
+     &     ioppar(105), ioppar(54) 
 c
       If (ioppar(54)      .eq. 1 .and. 
      &    ioppar(105) .ne. 0 .and. 
@@ -1875,6 +2035,7 @@ c
               szTmp = 'deriv=first'//achar(0)  
               call asv_update_kv(szTmp,iASV,szData,0)
       Endif
+      Print*, "The derivative level @exit", ioppar(3) 
 
 c    
 c    o If we have not yet change the default deriavative level from
@@ -1906,12 +2067,14 @@ c   o Brueckner calculation
 cKJW 1/18/98
 c turn save_ints on for all fno methods
 c props need to be first order for cc densities
-      if (ioppar(244).gt.0) then
+C 
+      if (ioppar(243).gt.0) then
          call asv_update_kv('save_ints'//achar(0),iASV,szData,0)
-         if (ioppar(2).gt.1) then
-            szTmp = 'props=first_order'//achar(0)
-            call asv_update_kv(szTmp,iASV,szData,0)
-         end if
+C I am not sure why properties are turned on here, Ajith Perera, 06/2011.
+C         if (ioppar(2).gt.1) then
+C            szTmp = 'props=first_order'//achar(0)
+C            call asv_update_kv(szTmp,iASV,szData,0)
+C         end if
       end if
 
 c   o TRAP METHODS WHICH DON'T WORK YET
@@ -1963,6 +2126,8 @@ c   o If CC calc, then set MAXCYC and turn on RLE with order equal to 5
       end if
 
 c   o PROPERTY CALCULATION FOR CORRELATED CALCULATION
+      Print*, "First order props and grad flags @enter:",
+     &         ioppar(18),ioppar(238) 
       if (ioppar(18).ge.1) then
          szTmp = 'deriv=first'//achar(0)
          call asv_update_kv(szTmp,iASV,szData,0)
@@ -1971,6 +2136,9 @@ c   o PROPERTY CALCULATION FOR CORRELATED CALCULATION
              call asv_update_kv(szTmp,iASV,szData,0) 
          endif 
       end if
+      Print*, "First order props, deriv level and grad_calc @exit:", 
+     &         ioppar(18), ioppar(3),
+     &         ioppar(238)
      
 cJDW 6/16/95
 c Try to keep ioppar(3)=1 for PROP=J_FC, J_SD, J_SO
@@ -2137,9 +2305,15 @@ cJDW 6/16/95
 c Three lines for PROP=J_FC, J_SD, J_SO.
 cMN/JDW 10/23/95
 c Extra options for 18, 87,
-c 201, 214 included.
+c 201, 214 included. 
+C EXCITE=EOM-CCSD(T) (11) is intrduced (note that EXCITE=EOM-CCSD(10) is
+C compatible with EXCITE=EOME, 03/2014, Ajith Perera.
+
       if (ioppar(87  ).eq.  3.or.
      &    ioppar(87  ).eq.  7.or.
+     &    ioppar(87  ).eq.  2.or.
+     &    ioppar(87  ).eq. 11.or.
+     &    ioppar(87  ).eq. 10.or.
      &    ioppar(18   ).eq.  8.or.
      &    ioppar(18   ).eq.  9.or.
      &    ioppar(18   ).eq. 10.or.
@@ -2152,21 +2326,71 @@ c 201, 214 included.
      &    ioppar(230).ge.  2
      &   ) then
 
-         if (ioppar(91).eq.3) then
+         if (ioppar(91).eq.3 .and. 
+     &      (ioppar(87  ) .ne. 10 .or. 
+     &       ioppar(87  ) .ne. 3)) then
             print *, '@GTFLGS: Analytic response properties not ',
      &               ' available for EOM-CC calculations.'
             call errex
          end if
-
-         if (ioppar(2).eq.0) then
+C EXCITE=EOM-CCSD(T) and ABCDTYPE=AOBASIS is not supported.
+      if (ioppar(87  ).eq. 11 .and.
+     &     ioppar(93).gt. 0) Then
+          write(6,*)
+          Write(6,"(a,a)") " ABCDTYPE=AOBASIS option is not supported",
+     &                   " for EOM-CCSD(T) calculations"
+          call errex
+      ENdif 
+C      
+C The extra test for tdhf was added since Johannes could not do
+C RPA calculations with cacl=scf, Ajith Perera, 08/2016.
+C
+         if (ioppar(2).eq.0 .and.
+     &      (ioppar(203).eq.1)) then
+  
             szTmp = 'deriv=second'//achar(0)
             call asv_update_kv(szTmp,iASV,szData,0)
          end if
-
+C
+C EOM extensions from CCD, LCCD, LCCSD, RPA and DRPA references adeed 
+C Ajith Perera, 07/2013. 
+C
          if      (ioppar(2).eq. 0) then
             szTmp = 'eomref=none'//achar(0)
          else if (ioppar(2).eq. 1) then
-            szTmp = 'eomref=mbpt(2)'//achar(0)
+            if (.NOT. (ioppar(217) .eq. 4  .or.
+     &                 ioppar(217) .eq. 5  .or.
+     &                 ioppar(217) .eq. 8  .or. 
+     &                 ioppar(217) .eq. 10)) then
+               szTmp = 'eomref=mbpt(2)'//achar(0)
+            endif
+         else if (ioppar(2).eq. 8) then
+            if (.NOT. (ioppar(217).eq. 4 .OR.
+     &          ioppar(217).eq. 5)) then
+                szTmp = 'eomref=ccd'//achar(0)
+            endif
+        else if (ioppar(2).eq. 5) then
+            if (.NOT. (ioppar(217).eq. 4 .OR.
+     &          ioppar(217).eq. 5)) then
+                szTmp = 'eomref=lccd'//achar(0)
+            endif
+        else if (ioppar(2).eq. 6) then
+            if (.NOT. (ioppar(217).eq. 4 .OR.
+     &          ioppar(217).eq. 5)) then
+                szTmp = 'eomref=lccsd'//achar(0)
+            endif
+        else if (ioppar(2).eq. 47) then
+            if (.NOT. (ioppar(217).eq. 9)) then
+                szTmp = 'eomref=cc2'//achar(0)
+            endif 
+        else if (ioppar(2).eq. 48) then
+            if (.NOT. (ioppar(217).eq. 10)) then
+                szTmp = 'eomref=rccd'//achar(0)
+            endif
+        else if (ioppar(2).eq. 49) then
+            if (.NOT. (ioppar(217).eq. 11)) then
+                szTmp = 'eomref=drccd'//achar(0)
+            endif
          else if (ioppar(2).eq.10.or.
      &            ioppar(2).eq.13.or.
      &            ioppar(2).eq.14.or.
@@ -2179,13 +2403,13 @@ c 201, 214 included.
      &            ioppar(2).eq.40
      &           ) then
             szTmp = 'eomref=ccsd'//achar(0)
+    
          else
-            print *, '@GTFLGS: EOM calculation not possible with ',
+            print *, '@GTFL: EOM calculation not possible with ',
      &               'CALC=',ioppar(2)
             call errex
          end if
          call asv_update_kv(szTmp,iASV,szData,0)
-
          call asv_update_kv('hbar'//achar(0),iASV,szData,0)
 
 cMN/JDW 8 EA
@@ -2230,7 +2454,7 @@ c New parameters in vee (does not work with old vee)
      &       ioppar(103 ).eq.1.or.
      &       ioppar(3).eq.1
      &      ) then
-            szTmp = 'estate_prop=unrelaxed'//achar(0)
+            szTmp = 'estate_prop=response'//achar(0)
             call asv_update_kv(szTmp,iASV,szData,0)
          end if
       end if
@@ -2240,8 +2464,14 @@ c   o CALC=SCF FOR TDA AND =MBPT(2) FOR CIS(D)
      &    ioppar(87).eq.1    ) then
          szTmp = 'excite=tda'//achar(0)
          call asv_update_kv(szTmp,iASV,szData,0)
-         szTmp = 'calc=scf'//achar(0)
-         call asv_update_kv(szTmp,iASV,szData,0)
+c If calculation level is set to rCCD or drCCD lets not reset the
+c calculation level to scf; Ajith Perera, 09/2018
+
+         If (.not.(ioppar(2).eq. 48 .or.
+     &             ioppar(2).eq. 49)) Then
+              szTmp = 'calc=scf'//achar(0)
+              call asv_update_kv(szTmp,iASV,szData,0)  
+         Endif 
       else
          if (ioppar(87).eq.6) then
             szTmp = 'calc=mbpt(2)'//achar(0)
@@ -2277,6 +2507,7 @@ c  make sure that analytic gradients are available if requested
          end if
          if (.not.( ioppar(87).eq.1.or.
      &              ioppar(87).eq.3.or.
+     &              ioppar(87).eq.10.or.
      &              ioppar(87).eq.5.or.
      &              ioppar(87).eq.9.or.
      &             (ioppar(87).eq.7.and.
@@ -2379,9 +2610,16 @@ c      o numerical gradients
             end if
          end if
 c
+C The best Hessian update that works for all is not known. I
+C find Bofill mixture of Powell and Murtagh-Sargent seems to
+C work better, 07/2013. Ajith Perera; not so sure anymore
+C for minima reverting back to BFGS for minima. April/2017.
+C
          if (ioppar(107).eq.0) then
             if (ioppar(47).le.3) then
+CSSS; on 07/2013               ioppar(107) = 2
                ioppar(107) = 2
+ 
             else
                ioppar(107) = 4
             end if
@@ -2412,18 +2650,111 @@ c      o numerical gradients
             szTmp = 'fd_stepsize=25'//achar(0)
             call asv_update_kv(szTmp,iASV,szData,0)
          end if
+      else if (ioppar(256) .eq. 1) then
+c      o Calculate Vibronic model
+         if (ioppar(57).eq.0) then
+            szTmp = 'fd_stepsize=-25'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+c
+      else if (ioppar(258) .eq. 1) then
+c      o Calculate Vibronic scan
+         if (ioppar(57).eq.0) then
+            szTmp = 'fd_stepsize=-25'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+c
+      else if (ioppar(265) .eq. 1) then
+c      o Calculate Vibronic scan
+         if (ioppar(57).eq.0) then
+            szTmp = 'fd_stepsize=50'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+c
+      else if (ioppar(260) .eq. 1) then
+c      o Calculate Vibronic scan
+         if (ioppar(57).eq.0) then
+            szTmp = 'fd_stepsize=-25'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
 c     end if (bGeomOpt)
       end if
 
-c   o restarting something other than finite differences?
-      if (ioppar(72).ne.0) then
+c   o restarting something other than finite differences or time
+C     dependent CC? See below for time-dependent CC work.
+      if (ioppar(72).ne.0 .and. 
+     &    ioppar(276).eq.0) then
          if (ioppar(54     ).ne.3.and.
-     &       ioppar(105).eq.0     ) then
-            szTmp = 'restart=0'//achar(0)
+     &       ioppar(105).eq.0     )  Then
+             szTmp = 'restart=0'//achar(0)
             call asv_update_kv(szTmp,iASV,szData,0)
          end if
       end if
-c
+C  o FLags controls EOM triples contribution. The excite EOMEE is 
+C    combined with CALC=CCSD used to EOM-CCSD. This is kind of 
+C    problematic to set flags for various triples. Introduce EOM-CCSD
+C    option to excite and make it backward compatible. Take care of
+C    the setting for NT3EOMEE key-word (a dangerous flags that
+C    should have been taken out of users control).
+C    03/2014, Ajith Perera,
+    
+      If (ioppar(87).eq.10) then
+         szTmp = 'excite=EOMEE'//achar(0)
+         call asv_update_kv(szTmp,iASV,szData,0)
+      Endif
+      If (ioppar(87).eq.11) then 
+         If (ioppar(224).eq.0) then
+            szTmp = 'nt3eomee=1'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         Endif
+      Endif 
+
+C Time dependent dipole vector propagation, Ajith Perera 06/2018, 
+C Hbarbacd and Hbarabci also need to set to false. See below. 
+
+      If (ioppar(276).eq.1) Then
+         If (ioppar(87).eq.0) then
+            szTmp = 'excite=eomee'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+          Endif
+         If (ioppar(18).ne.11) then
+            szTmp = 'props=eom_nlo'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         Endif 
+         If (ioppar(72).eq.0) then
+            szTmp = 'restart=1'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         Endif 
+         If (ioppar(3).eq.0) then
+            szTmp = 'deriv_lev=1'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         Endif 
+         If (ioppar(217).eq.0) then
+            szTmp = 'eomref=CCSD'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         Endif 
+         If (ioppar(238).eq.0) then
+            szTmp = 'grad_calc=1'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         Endif 
+         If (ioppar(43).eq.0) then
+            szTmp = 'hbar=1'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         Endif 
+         If (ioppar(64).ne.0) then
+            szTmp = 'pert_orb=0'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         Endif 
+         If (ioppar(64).ne.0) then
+            szTmp = 'pert_orb=0'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         Endif 
+         If (ioppar(83).eq.0) then
+            szTmp = 'vtran=1'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         Endif 
+      Endif 
+  
 cJDW 10/23/95. Block of code from MN.
 
 c   LOGIC FOR DEALING WITH NEWVRT
@@ -2452,9 +2783,18 @@ c      o set DoABCD and DoABCI
      &        ioppar(18).le.11).or.
      &        ioppar(18).eq.13
      &      ) then
-            DoABCD = (ioppar(87 ).lt.7.or.
-     &                ioppar(206).gt.1)
-            DoABCI = .true.
+
+C The AO LADDERS for response property calculations are added. 
+C 05/2019, Ajith Perera
+
+            If (ioppar(93) .Eq. 2) Then
+                DoABCI = .false.
+                DoABCD = .false.
+            Else
+                DoABCD = (ioppar(87 ).lt.7.or.
+     &                    ioppar(206).gt.1)
+                DoABCI = .true.
+            Endif 
          else
             DoABCD = .false.
             DoABCI = .false.
@@ -2473,6 +2813,14 @@ c      o elevate DoABCD and DoABCI
          if (ioppar(217).eq.2.and.
      &       ioppar(38 ).eq.0)
      &      DoABCI = .false.
+
+c Time dependent dipole propagation; set HBARABCD and HBARABCI to 
+c false 
+         if (ioppar(276).eq.1) Then
+            If (DoABCD) DoABCD = .false.
+            If (DoABCI) DoABCI = .false.
+         Endif 
+
 c      o update ASVs
          if (DoABCD) then
             if (ioppar(222).eq.0) then
@@ -2561,6 +2909,7 @@ cJDW. 6/28/93.  CCSDT3 extended to include noniterative fifth-order
 c                  triples in "CCSD+T*(CCSD)" (CC5SD(T)).
 cJDW. 10/14/93. CCSDT3 extended to include other noniterative
 c                  fifth-order calculations.
+C Monika's CCSDTQ also need fullf ABCD and ABCI, 05/2015, Ajith Perera
 
 c   o set bCompress
       bCCSDT3 = ( ioppar(2).eq.12      .or.
@@ -2569,7 +2918,8 @@ c   o set bCompress
      &           (ioppar(2).ge.16.and.
      &            ioppar(2).le.18     ).or.
      &            ioppar(2).eq.33      .or.
-     &            ioppar(2).eq.34
+     &            ioppar(2).eq.34      .or.
+     &            ioppar(2).eq.39
      &          )
       bCompress = (.not.bCCSDT3)
 c   o elevate bCompress
@@ -2589,6 +2939,14 @@ c   o elevate bCompress
       if (ioppar(87     ).ge.3.and.
      &    ioppar(91).eq.2)
      &   bCompress = .false.
+C
+C CCn(n=1, 2) excitation energy also calcs needs full hbarabcd. 05/2015
+C Ajith Perera. 
+C 
+      if (ioppar(87).ge.3.and.
+     &    ioppar(2)  .eq.47)
+     &   bCompress = .false.
+C
       if (ioppar(222).eq.2.or.
      &    ioppar(223).eq.2)
      &   bCompress = .false.
@@ -2718,13 +3076,18 @@ c Stop NMR calculations (apart from CCSDeH) which cannot use sphericals.
 c Also, always stop if PROP=TDHF has been specified.
       if (ioppar(62).eq. 1.and.
      &    ioppar(18    ).ne. 7.and.
-     &    ioppar(18    ).ne.11.and.
+     &    ioppar(18    ).ne. 8.and.
+     &    ioppar(18    ).ne. 9.and.
+     &    ioppar(18    ).ne. 10.and.
+     &    ioppar(18    ).ne. 13.and.
+     &    ioppar(18    ).ne. 11.and.
      &    ioppar(18    ).ge. 3     ) then
          print *, '@GTFLGS: SPHERICAL=ON impossible for this',
      &            ' kind of NMR calculation.'
          call errex
       end if
-      if (ioppar(18).eq.7) then
+      if (ioppar(18).eq.7 .and. 
+     &    ioppar(203) .eq.0)  then
          print *, '@GTFLGS: Use TDHF=ON and $INPUT namelist for',
      &            ' TDHF calculations (see manual).'
          call errex
@@ -2798,14 +3161,24 @@ c   o DROPMO limitations
       if (nDrop(1)+nDrop(2).ne.0) then
          if (ioppar(93 ).ne.0.and.
 CSSS Bug fix Ajith Perera, 02/2012 (the test should be about dropmo
-CSSS AO-algoorithm) 
+CSSS AO-algoorithm)
 CSSS     &       ioppar(3).gt.0    ) then
      &       ioppar(238).eq.1    ) then
             print *, '@GTFLGS: No AO-basis gradients with dropped MOs.'
             call errex
          end if
       end if
-C
+C There are no MBPT(4) gradients with AO LADDERS. 
+
+      if (ioppar(93 ).ne.0.and.
+     &    ioppar(238).eq.1) then
+          If (ioppar(2) .eq.4) Then
+              Write(6,"(a,a)") " @-GTFLGS; No AO-basis analytical",
+     &                         " gradients for MBPT(4)"         
+              Call Errex
+          Endif 
+      Endif 
+
 c   o NOREORI and finite difference vibrational frequency calculations.
 c
       if (ioppar(54) .gt. 1) then
@@ -2885,6 +3258,13 @@ c   o ESTATE_SYM (max 8)
          iTmpReg28 = ioppar(89)
          call GetRec(20,'JOBARC','EESYMINF',iTmpReg28,iArr)
          print '(10x,a,8i4)', 'ESTATE_SYM = ',(iArr(j),j=1,iTmpReg28)
+      end if
+
+c   o CORE_WINDOE (max 8)
+      if (ioppar(272).ne.0) then
+         iTmpReg28 = ioppar(89)
+         call GetRec(20,'JOBARC','EEWINDOW',iTmpReg28,iArr)
+         print '(10x,a,8i4)', 'CORE_WINDOW = ',(iArr(j),j=1,iTmpReg28)
       end if
 
 c   o QRHF ASVs
@@ -3006,4 +3386,3 @@ c      GOTO 159
 
       return
       end
-

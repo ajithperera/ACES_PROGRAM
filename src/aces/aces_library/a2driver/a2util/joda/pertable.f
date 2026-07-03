@@ -224,6 +224,10 @@ C
             ELSE IF (ZSYM(I).EQ.'GH') THEN
                IATNUM(I) = 110
                ATMASS(I) = 100.0
+cmn no good               ATMASS(I) = 0.0
+            ELSE IF (ZSYM(I).EQ.'GX') THEN
+               IATNUM(I) = 111
+               ATMASS(I) = 5000.0
             ELSE
                PRINT *, '@PERTABLE: Unknown element ',ZSYM(I)
                IERR = 1

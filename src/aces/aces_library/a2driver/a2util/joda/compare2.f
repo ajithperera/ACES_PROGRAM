@@ -59,8 +59,8 @@ C As a temporary fix to a problem Gennady is having
 C following changes have been made. We hope to find the exact
 C reason for the failure. AP 03/14/97.
 
-         IF ((Z .GT. TOL) .AND. (Z .GT. 10*TOL)) ICOMP = ICOMP + 1
-         IF ((Z .GT. TOL) .AND. (Z .LT. 10*TOL)) THEN
+         IF ((Z .GT. TOL) .AND. (Z .GT. 100*TOL)) ICOMP = ICOMP + 1
+         IF ((Z .GT. TOL) .AND. (Z .LT. 100*TOL)) THEN
             WRITE(*,*) 'Warning - Less tighter tolerance is used.'
          END IF
 

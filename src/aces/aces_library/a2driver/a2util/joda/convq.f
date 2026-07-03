@@ -195,6 +195,25 @@ C
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 c This common block contains the IFLAGS and IFLAGS2 arrays for JODA ROUTINES
 c ONLY! The reason is that it contains both arrays back-to-back. If the
 c preprocessor define MONSTER_FLAGS is set, then the arrays are compressed
@@ -304,12 +323,10 @@ C
  10      CONTINUE
 
 C
-
          Write(6,*)
          Write(6,*) "@-CONVQF,  The outgoing internal gradients"
          WRITE(6,"(3F13.7)") (FI(IJL), IJL = 1, NXM6)
          Write(6,*)
-C
 C
 C SYMMETRIZE THE GRADIENT IF NECESSARY
 C

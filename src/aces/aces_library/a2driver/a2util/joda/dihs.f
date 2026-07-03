@@ -33,7 +33,7 @@ C
 
 CSSS       Write(6, "(2F10.5)") ANGLUW, ANGLVW 
        IF ((ANGLUW .EQ. 0.0D0 .OR. ANGLUW .GT. 175.0D0) .OR. 
-     &     (ANGLVW .EQ. 0.0D0 .OR. ANGLWV .GT. 175.0D0)) RETURN
+     &     (ANGLVW .EQ. 0.0D0 .OR. ANGLVW .GT. 175.0D0)) RETURN
 C
 c      print *,'vecu',vecu(1),vecu(2),vecu(3)
 c      print *,'vecv',vecv(1),vecv(2),vecv(3)

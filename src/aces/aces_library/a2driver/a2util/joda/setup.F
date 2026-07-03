@@ -21,6 +21,7 @@ C
 C Let's update the number of cycles right away!
 C
 #ifdef _DEBUG_LVL0
+      Write(6,*)
       Write(6,*) "The number of opt. cycles:", NCYCLE 
 #endif
 C
@@ -58,7 +59,7 @@ C
  20      CONTINUE
  19   CONTINUE
 C
-#ifdef _DEBUG_LVLM1
+#ifdef _DEBUG_LVL0
           Write(6,*)
           WRITE(LUOUT,115)
  115      FORMAT(T3,' Hessian matrix in totally symmetric symmetry ',
@@ -74,10 +75,10 @@ C
          GRDMOD(I)=DSQRT(DFLOAT(NEQ(NOPTI(I))+1))*GRD(NOPTI(I))
  1177 CONTINUE
 C
-#ifdef _DEBUG_LVLM1
+#ifdef _DEBUG_LVL0
       Write(6,*) 
-      Write(6,*)  "The modified gradients"
-      Write(6, "(3F10.5)") (GRDMOD(I), I=1, NOPT)
+      Write(6,*)  "The gradients in sym. adapted coordinates"
+      Write(6, "(6F10.5)") (GRDMOD(I), I=1, NOPT)
       Write(6,*)
 #endif
 C

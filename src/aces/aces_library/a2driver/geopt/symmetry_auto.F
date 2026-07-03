@@ -734,11 +734,11 @@ C
 C This is the entry point for Abelain subgrop. All these 'GO TO 9000"
 C could have been easily avoided.
  9000 CONTINUE
-      IF(IPRNT.GE.0 .AND. NOSILENT) THEN
-        WRITE(LUOUT,8202)
- 8202   FORMAT(T3,' Principal axis orientation for molecule:')
-        WRITE(LUOUT,80)(NEWQ(I),I=1,NX)
-      ENDIF
+C Always print this, please!
+
+      WRITE(LUOUT,8202)
+ 8202 FORMAT(T3,' Principal axis orientation for molecule:')
+      WRITE(LUOUT,80)(NEWQ(I),I=1,NX)
 C
 C     CHECK SYMMETRY OPERATIONS BELONGING TO ABELIAN GROUPS
 C

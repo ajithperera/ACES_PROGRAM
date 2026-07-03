@@ -7,7 +7,7 @@
       integer iLast
       integer i, f_iargc, num_args
       character arg*80
-      logical bDoNext
+      logical bDoNext, ACESIII
 
       character*1 achar
       integer  f_strpbrk, c_atol
@@ -70,6 +70,14 @@ c        end if (bDoNext)
 
 c     end do i = 1, num_args
       end do
+C
+C This is useful for ACESIII. Test for this flag to terminate after
+C gradients are done (in ACES II, indiviudal MEs are called in 
+C sequence for gradient calculation), Ajith Perera, 04/2012.
+C
+      ACESIII = .FALSE. 
+      If (Nprocs .Ne. 0 .And. Irank .Ne. 0 .And. ACESIII) 
+     &    Call Putrec(20,"JOBARC", "NFDMANUL", 1, 1)
 
 c ----------------------------------------------------------------------
 

@@ -189,6 +189,25 @@ C
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 c This common block contains the IFLAGS and IFLAGS2 arrays for JODA ROUTINES
 c ONLY! The reason is that it contains both arrays back-to-back. If the
 c preprocessor define MONSTER_FLAGS is set, then the arrays are compressed
@@ -218,7 +237,7 @@ C
       Write(6,*)
       WRITE(6, "(a,(4F10.5))") "The step size at entry",
      &          (SCRATCH(J+NOPT), J=1, NOPT)
-      WRITE(6, "(a,(4F10.5))") "The gradhes at entry",
+      WRITE(6, "(a,(I4,4F10.5))") "The gradient along mode :",Imode, 
      &          (GRDHES(J), J=1, NOPT)
       Write(6,*)
 
@@ -261,10 +280,12 @@ C
 C     ENDIF (.NOT.QSTLST_CLIMB)
       ENDIF
 C
+      if (.NOT.QSTLST_CLIMB) THEN
       Write(6,*)
       WRITE(6, "(a,(4F10.5))") "The step size before Morse",
      &          (SCRATCH(J+NOPT), J=1, NOPT)
       Write(6,*)
+      Endif
 
       IF (MORSE) THEN
          IF (iFlags2(5) .ge. 3) THEN
@@ -289,9 +310,9 @@ C
  30   CONTINUE
 C
       Write(6,*)
-      WRITE(6,"(a,(4F10.5))") "The unscaled step size", 
+      WRITE(6,"(a,(4F10.5))") "The unscaled step size: ", 
+
      &            (SCRATCH(J+NOPT), J=1, NOPT)
       Write(6,*)
-C
       RETURN
       END

@@ -45,7 +45,9 @@ C
         IERR=1
         GOTO 10
        ELSE
-        IF(IATNUM(I).NE.110.AND.IATNUM(J).NE.110)THEN
+        IF(IATNUM(I).NE.110.AND.IATNUM(J).NE.110
+     $         .and. IATNUM(I) .ne. 111
+     $         .and. IATNUM(J) .ne. 111)THEN
 c        IGNORE GHOST ATOMS
          TOP=FLOAT(IATNUM(I)*IATNUM(J))
          Z=Z+(TOP/BOT)

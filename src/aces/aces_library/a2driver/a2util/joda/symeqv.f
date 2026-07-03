@@ -47,10 +47,13 @@ C
       IOFF=1
       DO 50 I=1,IORBIT
        GENBY(MEMBER(IOFF))=0
-       DO 51 J=1,ORBPOP(I)-1
-        GENBY(MEMBER(IOFF+J))=MEMBER(IOFF)
-51     CONTINUE
-       IOFF=IOFF+ORBPOP(I)
+       IF (MEMBER(IOFF) .NE. 999) THEN
+           GENBY(MEMBER(IOFF))=0
+           DO 51 J=1,ORBPOP(I)-1
+              GENBY(MEMBER(IOFF+J))=MEMBER(IOFF)
+51         CONTINUE
+           IOFF=IOFF+ORBPOP(I)
+       ENDIF 
 50    CONTINUE
       
       RETURN

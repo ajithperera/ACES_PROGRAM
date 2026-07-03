@@ -402,9 +402,6 @@ C Built G = BuB(t) where u is an arbitrary nonsingular matrix, usually
 C the unit matrix. The notations are consistent with Pulay et al.
 C paper.
 C
-      Write(6,*) "B-Matrix"
-      CALL OUTPUT(BMATRX, 1, TOTREDNCO, 1, 3*NRATMS, TOTREDNCO,
-     &            3*NRATMS, 1)    
 C
       CALL DCOPY(3*NRATMS*TOTREDNCO, BMATRX, 1, BTMP, 1)
 C

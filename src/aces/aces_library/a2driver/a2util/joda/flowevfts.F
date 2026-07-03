@@ -19,7 +19,7 @@ C
       Write(6,*)
       WRITE(6, "(a,(4F10.5))") "The step size at entry",
      &          (SCRATCH(J+NOPT), J=1, NOPT)
-      WRITE(6, "(a,(4F10.5))") "The gradhes at entry",
+      WRITE(6, "(a,(I4,4F10.5))") "The gradient along mode :",Imode, 
      &          (GRDHES(J), J=1, NOPT)
       Write(6,*)
 #endif
@@ -41,7 +41,7 @@ C
             DENOM = HESMOD(I,I) - LMBDAP
 
 
-#ifdef _KEEP_OBS
+#ifdef _NO_OBSOLETE 
             IF (DABS(GRDHES(I)) .LT. 1.0D-8 .AND. 
      &           DENOM .LT. 1.0D-11) THEN
                CALL ZERO(SCRATCH(NOPT + 1), NOPT)
@@ -87,10 +87,12 @@ C     ENDIF (.NOT.QSTLST_CLIMB)
       ENDIF
 C
 #ifdef _DEBUG_LVL0
+      if (.NOT.QSTLST_CLIMB) THEN
       Write(6,*)
       WRITE(6, "(a,(4F10.5))") "The step size before Morse",
      &          (SCRATCH(J+NOPT), J=1, NOPT)
       Write(6,*)
+      Endif
 #endif
 
       IF (MORSE) THEN
@@ -122,10 +124,10 @@ C
 C
 #ifdef _DEBUG_LVL0
       Write(6,*)
-      WRITE(6,"(a,(4F10.5))") "The unscaled step size", 
+      WRITE(6,"(a,(4F10.5))") "The unscaled step size: ", 
+
      &            (SCRATCH(J+NOPT), J=1, NOPT)
       Write(6,*)
 #endif
-C
       RETURN
       END

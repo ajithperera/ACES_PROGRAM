@@ -2103,39 +2103,6 @@
                PUT HR1a(i,kk1) += tix(i,kk1)
             ENDDO kk1
       ENDPARDO i, a, i1, i2
-#bgn_debug
-#      execute sip_barrier
-#      tmpa=0.0
-#      suma=0.0
-#      pardo i,kk1
-#         get hr1a(i,kk1)
-#         tmp = hr1a(i,kk1) * hr1a(i,kk1)
-#         tmpa += tmp
-#      endpardo i,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo a,i1,kk1,i
-#            get  R2aa_a(a,i1,kk1,i)
-#            tmp = R2aa_a(a,i1,kk1,i) * R2aa_a(a,i1,kk1,i)
-#            tmpa += tmp
-#      endpardo a,i1,kk1,i
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      tmpa=0.0
-#      suma=0.0
-#      pardo i,a,i1,i2
-#          request Wiiia(i2,i,i1,a) i
-#          tmp = Wiiia(i2,i,i1,a) * Wiiia(i2,i,i1,a)
-#          tmpa += tmp
-#      endpardo i,a,i1,i2
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#end_debug
 #
       PARDO i, b, j1, i2
             DO kk1
@@ -2294,7 +2261,7 @@
                GET                       R2aa_a(a,i2,kk1,i)
                taixi(a,i1,kk1,i)       = R2aa_a(a,i2,kk1,i)*Uii(i2,i1)
                taixi(a,i1,kk1,i)      *= -1.0
-               PUT HR2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
+#               PUT HR2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
             ENDDO kk1
       ENDPARDO a, i1, i, i2
 #
@@ -2304,7 +2271,7 @@
                GET                       R2aa_a(a,i1,kk1,i2)
                taixi(a,i1,kk1,i)       = R2aa_a(a,i1,kk1,i2)*Uii(i2,i)
                taixi(a,i1,kk1,i)      *= -1.0
-               PUT HR2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
+#               PUT HR2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
             ENDDO kk1
       ENDPARDO i, i1, a, i2
 #
@@ -2336,10 +2303,10 @@
             DO kk1
                GET                        R2aa_a(a1,i2,kk1,i)
                taixi(a,i1,kk1,i)        = R2aa_a(a1,i2,kk1,i)*Wiaai(i2,a1,a,i1)  
-               PUT HR2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
+#               PUT HR2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
                t1aixi(a,i,kk1,i1)       = taixi(a,i1,kk1,i)
                t1aixi(a,i,kk1,i1)      *= -1.0
-               PUT HR2aa_a(a,i,kk1,i1) += t1aixi(a,i,kk1,i1)
+#               PUT HR2aa_a(a,i,kk1,i1) += t1aixi(a,i,kk1,i1)
             ENDDO kk1
             ENDDO i
       ENDPARDO i1, a, a1, i2
@@ -2350,14 +2317,14 @@
             DO kk1
                GET                        R2bb_a(b1,j2,kk1,i)
                taixi(a,i1,kk1,i)        = R2bb_a(b1,j2,kk1,i)*Wjbai(j2,b1,a,i1)  
-               PUT HR2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
+#               PUT HR2aa_a(a,i1,kk1,i) += taixi(a,i1,kk1,i)
                t1aixi(a,i,kk1,i1)       = taixi(a,i1,kk1,i)
                t1aixi(a,i,kk1,i1)      *= -1.0
-               PUT HR2aa_a(a,i,kk1,i1) += t1aixi(a,i,kk1,i1)
+#               PUT HR2aa_a(a,i,kk1,i1) += t1aixi(a,i,kk1,i1)
             ENDDO kk1
             ENDDO i
       ENDPARDO i1, a, b1, j2
-#
+
 # (HR)^b_{j,j1)
 # -------------
 #
@@ -2377,7 +2344,7 @@
                GET                       R2bb_b(b,j2,kk1,j)
                tbjxj(b,j1,kk1,j)       = R2bb_b(b,j2,kk1,j)*Ujj(j2,j1)
                tbjxj(b,j1,kk1,j)      *= -1.0
-               PUT HR2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
+#               PUT HR2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
             ENDDO kk1
       ENDPARDO b, j1, j, j2
 #
@@ -2387,7 +2354,7 @@
                GET                       R2bb_b(b,j1,kk1,j2)
                tbjxj(b,j1,kk1,j)       = R2bb_b(b,j1,kk1,j2)*Ujj(j2,j)           
                tbjxj(b,j1,kk1,j)      *= -1.0
-               PUT HR2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
+#               PUT HR2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
             ENDDO kk1
       ENDPARDO j, j1, b, j2
 #
@@ -2418,10 +2385,10 @@
             DO kk1
                GET                        R2bb_b(b1,j2,kk1,j)
                tbjxj(b,j1,kk1,j)        = R2bb_b(b1,j2,kk1,j)*Wjbbj(j2,b1,b,j1)  
-               PUT HR2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
+#               PUT HR2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
                t1bjxj(b,j,kk1,j1)       = tbjxj(b,j1,kk1,j)
                t1bjxj(b,j,kk1,j1)      *= -1.0
-               PUT HR2bb_b(b,j,kk1,j1) += t1bjxj(b,j,kk1,j1)
+#               PUT HR2bb_b(b,j,kk1,j1) += t1bjxj(b,j,kk1,j1)
             ENDDO kk1
             ENDDO j
       ENDPARDO j1, b, b1, j2
@@ -2432,10 +2399,10 @@
             DO kk1
                GET                        R2aa_b(a1,i2,kk1,j)
                tbjxj(b,j1,kk1,j)        = R2aa_b(a1,i2,kk1,j)*Wiabj(i2,a1,b,j1)  
-               PUT HR2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
+#               PUT HR2bb_b(b,j1,kk1,j) += tbjxj(b,j1,kk1,j)
                t1bjxj(b,j,kk1,j1)       = tbjxj(b,j1,kk1,j)
                t1bjxj(b,j,kk1,j1)      *= -1.0
-               PUT HR2bb_b(b,j,kk1,j1) += t1bjxj(b,j,kk1,j1)
+#               PUT HR2bb_b(b,j,kk1,j1) += t1bjxj(b,j,kk1,j1)
             ENDDO kk1
             ENDDO j
       ENDPARDO j1, b, a1, i2
@@ -2473,7 +2440,7 @@
                   GET                       Uii(i1,i)
                   taixj(a,i,kk1,j)        = R2aa_b(a,i1,kk1,j)*Uii(i1,i)
                   taixj(a,i,kk1,j)       *= -1.0
-                  PUT HR2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
+#                  PUT HR2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
                ENDDO i
             ENDDO kk1
       ENDPARDO j, a, i1
@@ -2485,7 +2452,7 @@
                   GET                       Ujj(j1,j)
                   taixj(a,i,kk1,j)        = R2aa_b(a,i,kk1,j1)*Ujj(j1,j)
                   taixj(a,i,kk1,j)       *= -1.0
-                  PUT HR2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
+#                  PUT HR2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
                ENDDO j
             ENDDO kk1
       ENDPARDO a, i, j1
@@ -2518,7 +2485,7 @@
             DO kk1
                GET                       R2bb_b(b,j1,kk1,j)
                taixj(a,i,kk1,j)        = Wjbai(j1,b,a,i)*R2bb_b(b,j1,kk1,j)
-               PUT HR2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
+#               PUT HR2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
             ENDDO kk1
             ENDDO j
       ENDPARDO i, a, j1, b
@@ -2529,7 +2496,7 @@
             DO kk1
                GET                       R2aa_b(a1,i1,kk1,j)
                taixj(a,i,kk1,j)        = Wiaai(i1,a1,a,i)*R2aa_b(a1,i1,kk1,j)
-               PUT HR2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
+#               PUT HR2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
             ENDDO kk1
             ENDDO j
       ENDPARDO i, a, i1, a1
@@ -2581,7 +2548,7 @@
                   GET                       Ujj(j1,j)
                   tbjxi(b,j,kk1,i)        = R2bb_a(b,j1,kk1,i)*Ujj(j1,j)
                   tbjxi(b,j,kk1,i)       *= -1.0
-                  PUT HR2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
+#                  PUT HR2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
                ENDDO j
             ENDDO kk1
       ENDPARDO i, b, j1
@@ -2593,7 +2560,7 @@
                   GET                       Uii(i1,i)
                   tbjxi(b,j,kk1,i)        = R2bb_a(b,j,kk1,i1)*Uii(i1,i)
                   tbjxi(b,j,kk1,i)       *= -1.0
-                  PUT HR2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
+#                  PUT HR2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
                ENDDO i
             ENDDO kk1
       ENDPARDO b, j, i1
@@ -2627,7 +2594,7 @@
             DO kk1
                GET                       R2aa_a(a,i1,kk1,i)
                tbjxi(b,j,kk1,i)        = Wiabj(i1,a,b,j)*R2aa_a(a,i1,kk1,i)
-               PUT HR2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
+#               PUT HR2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
             ENDDO kk1
             ENDDO i
       ENDPARDO j, b, i1, a
@@ -2638,7 +2605,7 @@
             DO kk1
                GET                       R2bb_a(b1,j1,kk1,i)
                tbjxi(b,j,kk1,i)        = Wjbbj(j1,b1,b,j)*R2bb_a(b1,j1,kk1,i)
-               PUT HR2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
+#               PUT HR2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
             ENDDO kk1
             ENDDO i
       ENDPARDO j, b, j1, b1
@@ -2706,7 +2673,7 @@
              GET                       R2bb_a(b1,j,kk1,i1)
              tbjxi(b,j,kk1,i)        = R2bb_a(b1,j,kk1,i1)*Wiibb(i1,i,b,b1)
             #tbjxi(b,j,kk1,i)       *= -1.0
-             PUT HR2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
+#             PUT HR2bb_a(b,j,kk1,i) += tbjxi(b,j,kk1,i)
           ENDDO kk1
           ENDDO j
       ENDPARDO b, b1, i, i1
@@ -2718,7 +2685,7 @@
              GET                       R2aa_b(a1,i,kk1,j1)
              taixj(a,i,kk1,j)        = R2aa_b(a1,i,kk1,j1)*Wjjaa(j1,j,a,a1)
             #taixj(a,i,kk1,j)       *= -1.0
-             PUT HR2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
+#             PUT HR2aa_b(a,i,kk1,j) += taixj(a,i,kk1,j)
           ENDDO kk1
           ENDDO i
       ENDPARDO a, a1, j, j1
@@ -2776,65 +2743,65 @@
 #      EXECUTE SERVER_BARRIER 
 #
 #bgn_debug
-#      tmpa=0.0
-#      tmpb=0.0
-#      suma=0.0
-#      sumb=0.0
-#      pardo i,kk1
-#         get hr1a(i,kk1)
-#         tmp = hr1a(i,kk1) * hr1a(i,kk1)
-#         tmpa += tmp
-#      endpardo i,kk1
-#      pardo j,kk1
-#         get hr1b(j,kk1)
-#         tmp = hr1b(j,kk1) * hr1b(j,kk1)
-#         tmpb += tmp
-#      endpardo j,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      collective sumb +=tmpb
-#      execute print_scalar suma
-#      execute print_scalar sumb
-#      tmpa =0.0
-#      suma =0.0
-#      pardo a,i1,kk1,i
-#            get  HR2aa_a(a,i1,kk1,i)
-#            tmp = HR2aa_a(a,i1,kk1,i) * HR2aa_a(a,i1,kk1,i)
-#            tmpa += tmp
-#      endpardo a,i1,kk1,i
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo b,j,j1, kk1
-#            get  HR2bb_b(b,j1,kk1,j)
-#            tmp = HR2bb_b(b,j1,kk1,j) * HR2bb_b(b,j1,kk1,j)
-#            tmpa+= tmp
-#      endpardo b,j,j1, kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo j,i1,a,kk1
-#            get HR2aa_b(a,i1,kk1,j)
-#            tmp = HR2aa_b(a,i1,kk1,j) * HR2aa_b(a,i1,kk1,j)
-#            tmpa+= tmp
-#      endpardo j,i1,a,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo i,j1,b,kk1
-#            get HR2bb_a(b,j1,kk1,i)
-#            tmp = HR2bb_a(b,j1,kk1,i) * HR2bb_a(b,j1,kk1,i)
-#            tmpa+= tmp
-#      endpardo i,j1,b,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
+      tmpa=0.0
+      tmpb=0.0
+      suma=0.0
+      sumb=0.0
+      pardo i,kk1
+         get hr1a(i,kk1)
+         tmp = hr1a(i,kk1) * hr1a(i,kk1)
+         tmpa += tmp
+      endpardo i,kk1
+      pardo j,kk1
+         get hr1b(j,kk1)
+         tmp = hr1b(j,kk1) * hr1b(j,kk1)
+         tmpb += tmp
+      endpardo j,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      collective sumb +=tmpb
+      execute print_scalar suma
+      execute print_scalar sumb
+      tmpa =0.0
+      suma =0.0
+      pardo a,i1,kk1,i
+            get  HR2aa_a(a,i1,kk1,i)
+            tmp = HR2aa_a(a,i1,kk1,i) * HR2aa_a(a,i1,kk1,i)
+            tmpa += tmp
+      endpardo a,i1,kk1,i
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa =0.0
+      suma =0.0
+      pardo b,j,j1, kk1
+            get  HR2bb_b(b,j1,kk1,j)
+            tmp = HR2bb_b(b,j1,kk1,j) * HR2bb_b(b,j1,kk1,j)
+            tmpa+= tmp
+      endpardo b,j,j1, kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa =0.0
+      suma =0.0
+      pardo j,i1,a,kk1
+            get HR2aa_b(a,i1,kk1,j)
+            tmp = HR2aa_b(a,i1,kk1,j) * HR2aa_b(a,i1,kk1,j)
+            tmpa+= tmp
+      endpardo j,i1,a,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      tmpa =0.0
+      suma =0.0
+      pardo i,j1,b,kk1
+            get HR2bb_a(b,j1,kk1,i)
+            tmp = HR2bb_a(b,j1,kk1,i) * HR2bb_a(b,j1,kk1,i)
+            tmpa+= tmp
+      endpardo i,j1,b,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
 #end_debug
 #
       ENDPROC HR_MULT
@@ -4207,71 +4174,71 @@
      EXECUTE SERVER_BARRIER
 #
 #bgn_debug
-#      tmpb=0.0
-#      suma=0.0
-#      sumb=0.0
-#      pardo i,kk1
-#         get r1a(i,kk1)
-#         tmp = r1a(i,kk1) * r1a(i,kk1)
-#         tmpa += tmp
-#      endpardo i,kk1
-#      pardo j,kk1
-#        get r1b(j,kk1)
-#        tmp = r1b(j,kk1) * r1b(j,kk1)
-#        tmpb += tmp
-#      endpardo j,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      collective sumb +=tmpb
-#      execute print_scalar suma
-#      execute print_scalar sumb
-#      sumab  = suma
-#      sumab += sumb
-#      tmpa =0.0
-#      suma =0.0
-#      pardo a,i1,kk1,i
-#            get  R2aa_a(a,i1,kk1,i)
-#            tmp = R2aa_a(a,i1,kk1,i) * R2aa_a(a,i1,kk1,i)
-#            tmpa += tmp
-#      endpardo a,i1,kk1,i
-#      execute server_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo b,j,j1, kk1
-#            get  R2bb_b(b,j1,kk1,j)
-#            tmp = R2bb_b(b,j1,kk1,j) * R2bb_b(b,j1,kk1,j)
-#            tmpa+= tmp
-#      endpardo b,j,j1, kk1
-#      execute server_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo j,i1,a,kk1
-#            get R2aa_b(a,i1,kk1,j)
-#            tmp = R2aa_b(a,i1,kk1,j) * R2aa_b(a,i1,kk1,j)
-#            tmpa+= tmp
-#      endpardo j,i1,a,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo i,j1,b,kk1
-#            get R2bb_a(b,j1,kk1,i)
-#            tmp = R2bb_a(b,j1,kk1,i) * R2bb_a(b,j1,kk1,i)
-#            tmpa+= tmp
-#      endpardo i,j1,b,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      execute print_scalar sumab
+      tmpb=0.0
+      suma=0.0
+      sumb=0.0
+      pardo i,kk1
+         get r1a(i,kk1)
+         tmp = r1a(i,kk1) * r1a(i,kk1)
+         tmpa += tmp
+      endpardo i,kk1
+      pardo j,kk1
+        get r1b(j,kk1)
+        tmp = r1b(j,kk1) * r1b(j,kk1)
+        tmpb += tmp
+      endpardo j,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      collective sumb +=tmpb
+      execute print_scalar suma
+      execute print_scalar sumb
+      sumab  = suma
+      sumab += sumb
+      tmpa =0.0
+      suma =0.0
+      pardo a,i1,kk1,i
+            get  R2aa_a(a,i1,kk1,i)
+            tmp = R2aa_a(a,i1,kk1,i) * R2aa_a(a,i1,kk1,i)
+            tmpa += tmp
+      endpardo a,i1,kk1,i
+      execute server_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      tmpa =0.0
+      suma =0.0
+      pardo b,j,j1, kk1
+            get  R2bb_b(b,j1,kk1,j)
+            tmp = R2bb_b(b,j1,kk1,j) * R2bb_b(b,j1,kk1,j)
+            tmpa+= tmp
+      endpardo b,j,j1, kk1
+      execute server_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      tmpa =0.0
+      suma =0.0
+      pardo j,i1,a,kk1
+            get R2aa_b(a,i1,kk1,j)
+            tmp = R2aa_b(a,i1,kk1,j) * R2aa_b(a,i1,kk1,j)
+            tmpa+= tmp
+      endpardo j,i1,a,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      tmpa =0.0
+      suma =0.0
+      pardo i,j1,b,kk1
+            get R2bb_a(b,j1,kk1,i)
+            tmp = R2bb_a(b,j1,kk1,i) * R2bb_a(b,j1,kk1,i)
+            tmpa+= tmp
+      endpardo i,j1,b,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      execute print_scalar sumab
 #end_debug
 
      ENDPROC FORM_NEWVECS_ITR1
@@ -6410,73 +6377,73 @@
      EXECUTE SIP_BARRIER
 
 #bgn_debug
-#      sumab=0.0
-#      tmpa=0.0
-#      tmpb=0.0
-#      suma=0.0
-#      sumb=0.0
-#      pardo i,kk1
-#         get r1a(i,kk1)
-#         tmp = r1a(i,kk1) * r1a(i,kk1)
-#         tmpa += tmp
-#      endpardo i,kk1
-#      pardo j,kk1
-#         get r1b(j,kk1)
-#         tmp = r1b(j,kk1) * r1b(j,kk1)
-#         tmpb += tmp
-#      endpardo j,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      collective sumb +=tmpb
-#      execute print_scalar suma
-#      execute print_scalar sumb
-#      sumab  = suma
-#      sumab += sumb
-#      tmpa =0.0
-#      suma =0.0
-#      pardo a,i1,kk1,i
-#            get  R2aa_a(a,i1,kk1,i)
-#            tmp = R2aa_a(a,i1,kk1,i) * R2aa_a(a,i1,kk1,i)
-#            tmpa += tmp
-#      endpardo a,i1,kk1,i
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo b,j,j1, kk1
-#            get  R2bb_b(b,j1,kk1,j)
-#            tmp = R2bb_b(b,j1,kk1,j) * R2bb_b(b,j1,kk1,j)
-#            tmpa+= tmp
-#      endpardo b,j,j1, kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      tmpa =0.0
-#      suma =0.0
-#      pardo j,i1,a,kk1
-#            get R2aa_b(a,i1,kk1,j)
-#            tmp = R2aa_b(a,i1,kk1,j) * R2aa_b(a,i1,kk1,j)
-#            tmpa+= tmp
-#      endpardo j,i1,a,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      tmpa=0.0
-#      suma=0.0
-#      pardo i,j1,b,kk1
-#            get R2bb_a(b,j1,kk1,i)
-#            tmp = R2bb_a(b,j1,kk1,i) * R2bb_a(b,j1,kk1,i)
-#            tmpa+= tmp
-#      endpardo i,j1,b,kk1
-#      execute sip_barrier
-#      collective suma +=tmpa
-#      execute print_scalar suma
-#      sumab += suma
-#      execute print_scalar sumab
+      sumab=0.0
+      tmpa=0.0
+      tmpb=0.0
+      suma=0.0
+      sumb=0.0
+      pardo i,kk1
+         get r1a(i,kk1)
+         tmp = r1a(i,kk1) * r1a(i,kk1)
+         tmpa += tmp
+      endpardo i,kk1
+      pardo j,kk1
+         get r1b(j,kk1)
+         tmp = r1b(j,kk1) * r1b(j,kk1)
+         tmpb += tmp
+      endpardo j,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      collective sumb +=tmpb
+      execute print_scalar suma
+      execute print_scalar sumb
+      sumab  = suma
+      sumab += sumb
+      tmpa =0.0
+      suma =0.0
+      pardo a,i1,kk1,i
+            get  R2aa_a(a,i1,kk1,i)
+            tmp = R2aa_a(a,i1,kk1,i) * R2aa_a(a,i1,kk1,i)
+            tmpa += tmp
+      endpardo a,i1,kk1,i
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      tmpa =0.0
+      suma =0.0
+      pardo b,j,j1, kk1
+            get  R2bb_b(b,j1,kk1,j)
+            tmp = R2bb_b(b,j1,kk1,j) * R2bb_b(b,j1,kk1,j)
+            tmpa+= tmp
+      endpardo b,j,j1, kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      tmpa =0.0
+      suma =0.0
+      pardo j,i1,a,kk1
+            get R2aa_b(a,i1,kk1,j)
+            tmp = R2aa_b(a,i1,kk1,j) * R2aa_b(a,i1,kk1,j)
+            tmpa+= tmp
+      endpardo j,i1,a,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      tmpa=0.0
+      suma=0.0
+      pardo i,j1,b,kk1
+            get R2bb_a(b,j1,kk1,i)
+            tmp = R2bb_a(b,j1,kk1,i) * R2bb_a(b,j1,kk1,i)
+            tmpa+= tmp
+      endpardo i,j1,b,kk1
+      execute sip_barrier
+      collective suma +=tmpa
+      execute print_scalar suma
+      sumab += suma
+      execute print_scalar sumab
 #end_debug
      ENDPROC RESCALE_NEW_C
 #    ---------------------
@@ -7661,7 +7628,7 @@
               CALL FORM_A_MATRIX_II
             ENDIF 
 #bgn_debug
-#            execute print_static A_MATRIX ITER_COUNT 
+            execute print_static A_MATRIX ITER_COUNT 
 #end_debug
           EXECUTE XGEEV A_MATRIX DVECTORS 
 #bgn_debug

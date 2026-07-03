@@ -14,7 +14,7 @@
 C
 C Let's get the eigenvector of the Hessian that has the largest overlap
 C with the LST or QST tangent. If there is no eigenvector that has
-C an overlap of larger than 10^(-8) or twice as big as the next
+C an overlap of larger than 0.8 or twice as big as the next
 C largest overlap, then follow the eigenvector corresponding to
 C the smallest eigenvalue. If the user wants to follow something
 C other than said eigenvectors, then there is no point of doing
@@ -33,12 +33,20 @@ C
             ZOVRLP2 = DABS(OVRLP)
          END IF
  10   CONTINUE
-C
-c      Write(6,*) "The maximum overlaps = ", ZOVRLP1,ZOVRLP2,
-c     &                                      MEFOLOW, OVRLP_MIN
-C
+
+#ifdef _DEBUG_LVL0
+      Write(6,"(a,1x,F12.6,1x,F12.6,1x,I3)") "The maximum overlaps = ", 
+     &                                      ZOVRLP1,ZOVRLP2,
+     &                                      MEFOLOW
+#endif
+
       IF (ZOVRLP1 .GT. OVRLP_MIN .OR. ZOVRLP1 .GT. TWO*ZOVRLP2) THEN
          IMODE = MEFOLOW
+
+#ifdef _DEBUG_LVL0
+      Write(6,"(a,1x,I3)")"The LST/QST mode that is being followed  = ", 
+     &                    Imode
+#endif
 C
 C The pure eigenvector following logic. ie. follow the eiegenvector corresponds
 C to the lowest eigenvalue (or user's choice). Find out the eigenvector
@@ -56,6 +64,11 @@ C
                 Z = SCRATCH(I)
              END IF
  50       CONTINUE
+
+#ifdef _DEBUG_LVL0
+      Write(6,"(a,a,1x,I3)")"The LST/QST, but lowest eig. value is",
+     &                   " being followed  = ", Imode
+#endif
 
       ENDIF
 

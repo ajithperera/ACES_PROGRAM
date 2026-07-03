@@ -90,11 +90,11 @@ C
             Call ErrEx
          EndIf
 C
-#ifdef _DEBUG_LVLM1
+#ifdef _DEBUG_LVL0
       Print*, "The COORD COMMON BLOCK AT RETRIEVE BEFORE DECOMPRESS"
       Write(6, "(3F10.5)") (Q (I), I= 1, 3*NATOMS)
       Write(6,*)
-      if (XYZIN)Write(6, "(3F10.5)") (R(I), I= 1, NXM6)
+      if (.NOT. XYZIN)Write(6, "(3F10.5)") (R(I), I= 1, NXM6)
 #endif
 
 C
@@ -117,11 +117,11 @@ C
          R(9)=0.D0
        ENDIF
 C
-#ifdef _DEBUG_LVLM1
+#ifdef _DEBUG_LVL0
       Print*, "The COORD COMMON BLOCK AT RETRIEVE"
       Write(6, "(3F10.5)") (Q (I), I= 1, 3*NATOMS)
       Write(6,*)
-      if (XYZIN)Write(6, "(3F10.5)") (R(I), I= 1, NXM6)
+      if (.NOT. XYZIN)Write(6, "(3F10.5)") (R(I), I= 1, NXM6)
 #endif
 
 C

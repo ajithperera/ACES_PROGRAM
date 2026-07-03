@@ -1030,6 +1030,7 @@ C be we can use this record to store normal modes in internal coordiantes.
 C Ajith Perera, 02/09.
        CALL IPUTREC(20,'JOBARC','REALATOM',1,INT(NRX/3))
        CALL DPUTREC(20,'JOBARC','NORMCORD',NRX*NRX,HBUF)
+       CALL PUTCREC(20,'JOBARC','VIB_TYPE',NRX*11*IINTFP,TYPE)
 C
        IF(IFLAGS(68).NE.1) THEN
 C
@@ -1064,6 +1065,7 @@ C
         WRITE(6,3116)
         WRITE(6,*)
        ENDIF
+
 C
 C IF DIPDERS WERE EVALUATED, WRITE OUT DIPOLE MOMENT FUNCTION.
 C
@@ -1223,6 +1225,8 @@ c     (Obviously we cannot use this matrix afterward.)
       WRITE(LUOUT, *) 
       WRITE(LUSUM, *) 
 
+      WRITE(56,'(A)') "Projected frequencies"
+
       WRITE(LUOUT,9901)
       WRITE(66,9901)
 9901  FORMAT(T3,' Vibrational frequencies after rotational projection ',
@@ -1233,10 +1237,12 @@ c     (Obviously we cannot use this matrix afterward.)
       IF(H(I,I).LT.0.D0)THEN
        H(I,I)=FACT*DSQRT(-H(I,I))
        FLAG(I)='i'
+       WRITE(56,'(F20.10,A1)')H(I,I),FLAG(I)
       ELSE
        H(I,I)=FACT*DSQRT(H(I,I))
        FLAG(I)=' '
        ZPE=ZPE+H(I,I)
+       WRITE(56,'(F20.10,A1)')H(I,I),FLAG(I)
       ENDIF
       WRITE(LUOUT,9903)I,H(I,I),FLAG(I)
       WRITE(66,9903)I,H(I,I),FLAG(I)

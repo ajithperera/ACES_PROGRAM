@@ -74,6 +74,7 @@ c         o mid-stream -> keep going
             if (i.eq.0) call symcor(icore(i0),icrsiz)
          else
 c         o first run -> reset finite difference series
+            Write(6,*) "First run and copy the OPTARC to BACK"
             if (geomopt) i=ishell('cp OPTARC OPTARCBK')
             call putrec(1,'JOBARC','FNDFDONE',1,0)
             call symcor(icore(i0),icrsiz)
@@ -86,11 +87,13 @@ c         o vib freqs w/ an grads -OR- geom opts w/ num grads
             call putrec(1,'JOBARC','FIRSTRUN',1,0)
             call putrec(1,'JOBARC','DIRTYFLG',1,1)
             if (geomopt.and.pass1.eq.0) then
+               Write(6,*) "Copying OPTARBACK to OPTARC"
                i=ishell('cp OPTARCBK OPTARC')
                call geopt
                call getrec(1,'JOBARC','JODADONE',1,i)
                if (i.ne.1) then
 c               o new geom -> reset finite difference series
+                  Write(6,*) "Copying OPTARC to BACK"
                   i=ishell('cp OPTARC OPTARCBK')
                   call putrec(1,'JOBARC','FNDFDONE',1,0)
                   call symcor(icore(i0),icrsiz)

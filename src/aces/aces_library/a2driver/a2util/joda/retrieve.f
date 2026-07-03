@@ -176,6 +176,25 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE RETRIEVE(E, V1,V2,STEP,VEC)
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
 C MXATMS     : Maximum number of atoms currently allowed
@@ -352,6 +371,10 @@ C
             Call ErrEx
          EndIf
 C
+      Print*, "The COORD COMMON BLOCK AT RETRIEVE BEFORE DECOMPRESS"
+      Write(6, "(3F10.5)") (Q (I), I= 1, 3*NATOMS)
+      Write(6,*)
+      if (.NOT. XYZIN)Write(6, "(3F10.5)") (R(I), I= 1, NXM6)
 
 C
 C DECOMPRESS INTERNAL COORINATE VECTOR
@@ -373,6 +396,10 @@ C
          R(9)=0.D0
        ENDIF
 C
+      Print*, "The COORD COMMON BLOCK AT RETRIEVE"
+      Write(6, "(3F10.5)") (Q (I), I= 1, 3*NATOMS)
+      Write(6,*)
+      if (.NOT. XYZIN)Write(6, "(3F10.5)") (R(I), I= 1, NXM6)
 
 C
       CLOSE(77,STATUS='KEEP')

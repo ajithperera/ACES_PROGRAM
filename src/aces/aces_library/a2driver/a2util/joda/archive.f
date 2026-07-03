@@ -191,6 +191,7 @@ C
       ENDIF
 C
       Write(6,*) "@-ARCHIVE, the number of opt. cycles", NCYCLE
+      Write(6, "(3F10.5)") (R(I), I= 1, NXM6)
       WRITE(LuArc)CRAP,iarch,NCYCLE,NATOMS,NX,NUNIQUE,NOPT,IPRNT,INR,
      $     IVEC,
      $   IDIE,IMXSTP,ISTCRT,IVIB,ICURVY,ICONTL,IRECAL,INTTYP,IDISFD,

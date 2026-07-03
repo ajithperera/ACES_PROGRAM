@@ -9,6 +9,173 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE GEN_REDNINTRNLS(CARTCOORD, REDUNCO, INTLABEL,
      &                           IBNDTO, BMATRX, GMATRX,
      &                           TOTREDNCO, IATOMICNMBER, NRATMS,
@@ -31,6 +198,26 @@ C MAXREDUNCO : Maximum number of redundant coordinates.
 C
       INTEGER MXATMS, MAXCNTVS, MAXREDUNCO
       PARAMETER (MXATMS=200, MAXCNTVS = 10, MAXREDUNCO = 3*MXATMS)
+
+
+c machsp.com : begin
+
+c This data is used to measure byte-lengths and integer ratios of variables.
+
+c iintln : the byte-length of a default integer
+c ifltln : the byte-length of a double precision float
+c iintfp : the number of integers in a double precision float
+c ialone : the bitmask used to filter out the lowest fourth bits in an integer
+c ibitwd : the number of bits in one-fourth of an integer
+
+      integer         iintln, ifltln, iintfp, ialone, ibitwd
+      common /machsp/ iintln, ifltln, iintfp, ialone, ibitwd
+      save   /machsp/
+
+c machsp.com : end
+
+
+
 c io_units.par : begin
 
       integer    LuOut
@@ -91,12 +278,37 @@ c io_units.par : begin
       parameter (LuFiles = 90)
 
 c io_units.par : end
+
+
+
+
+
+
+
+c This common block contains the IFLAGS and IFLAGS2 arrays for JODA ROUTINES
+c ONLY! The reason is that it contains both arrays back-to-back. If the
+c preprocessor define MONSTER_FLAGS is set, then the arrays are compressed
+c into one large (currently) 600 element long array; otherwise, they are
+c split into IFLAGS(100) and IFLAGS2(500).
+
+c iflags(100)  ASVs reserved for Stanton, Gauss, and Co.
+c              (Our code is already irrevocably split, why bother anymore?)
+c iflags2(500) ASVs for everyone else
+
+      integer        iflags(100), iflags2(500)
+      common /flags/ iflags,      iflags2
+      save   /flags/
+
+
+
+
 C 
       PARAMETER(THRESHOLD = 5.0D00, EPSILON = 1.0D-10)
 C
       INTEGER TOTREDNCO, TOTNOFBND, TOTNOFANG, TOTNOFDIH,
      &        FRAGSCR
       CHARACTER*4 INTLABEL(MAXREDUNCO)
+      Logical Constrained, Not_found
 C
 C The following arrays need to be managed dynamically:
 C
@@ -196,6 +408,48 @@ C
       Enddo
  111  Format(5X, 4(I3, 1X))
 
+C
+C Assign the bonds, angles and dihedrals for recatants and products
+C if this is a redundent internal optimization. Note that the transition
+C state is the current structure and both reactants and products is
+C assumed to have the same connectivit pattern, Ajith Perera, 12/2012. 
+C
+      Call Getrec(0,'JOBARC','PRSTRUCT',Length, Redunco)
+      If (Length .Gt. 0) Then 
+C
+C Note that the length should be 3*NRATMS.
+C
+         Call Getrec(20,'JOBARC','PRSTRUCT',3*NRATMS*IINTFP, CARTCOORD) 
+         Call Gen_RICS(CARTCOORD, TOTREDNCO, TOTNOFBND, TOTNOFANG, 
+     &                 TOTNOFDIH, IREDUNCO, REDUNCO)
+         Call Putrec(20,'JOBARC','PR_RICS_',TOTREDNCO*IINTFP, 
+     &               REDUNCO)
+         Call Getrec(20,'JOBARC','CUSTRUCT',3*NRATMS*IINTFP, CARTCOORD) 
+      Endif 
+C
+      Call Getrec(0,'JOBARC','RXSTRUCT',Length, Redunco)
+      If (Length .Gt. 0) Then 
+         Call Getrec(20,'JOBARC','RXSTRUCT',3*NRATMS*IINTFP, CARTCOORD) 
+         Call Gen_RICS(CARTCOORD, TOTREDNCO, TOTNOFBND, TOTNOFANG, 
+     &                 TOTNOFDIH, IREDUNCO, REDUNCO)
+         Call Putrec(20,'JOBARC','RX_RICS_',TOTREDNCO*IINTFP, 
+     &               REDUNCO)
+         Call Getrec(20,'JOBARC','CUSTRUCT',3*NRATMS*IINTFP, CARTCOORD) 
+      Endif 
+C  
+C Read and process the constraints for constrained geometry 
+C optimizations. Ajith Perera, 11/2012
+C   
+      Constrained = .False.
+      If (Iflags2(h_IFLAGS2_opt_control) .EQ. 3) constrained = .True.
+      If (Constrained) Call Idntfy_constraints(IREDUNCO, TOTREDNCO, 
+     &                                         TOTNOFBND,
+     &                                         TOTNOFANG, TOTNOFDIH,
+     &                                         Not_found)
+C
+C If no constrains were found, we do FULL (or RIC) optimizations.
+C
+      If (NOt_found) Iflags2(5) = 4
 C
 C Make sure the number of RICs has not increased.
 C

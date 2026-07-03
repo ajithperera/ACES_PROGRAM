@@ -421,7 +421,8 @@ C coord.com : end
       Character*3 Ka(3)
       Character*6 Slask,NullSt
       Character*1 Lb
-      Character*1 Indxx(150)
+      Character*2 Indxx(150)
+      Character*2 Symbol
 
 cYAU - parse ZMAT like fetchz()
       integer izl(2,7)
@@ -431,7 +432,8 @@ csb 1/97 Hold long basis set names
 c     Maximum string length of basis set
       INTEGER BASLEN
       PARAMETER (BASLEN=80)
-      character*(baslen) BasNam(MxAtms),BlnkBN,ScrBas,EcpNam(MxAtms)
+      character*(baslen) BasNam(MxAtms), BasNam_hold(MxAtms), BlnkBN,
+     &                   ScrBas,EcpNam(MxAtms),EcpNam_hold(MxAtms)
 
       dimension icrcor(mxatms)
       common /turbo / iturbo,matom,ioffsh
@@ -448,6 +450,9 @@ CKJW 5-24-00
       logical seward,bCpBasis,bExist,bOpened
       Integer OldLu
       Dimension Nord(2*MxAtms),Scratch(NAtms)
+
+      integer  atomnumb
+C
 C     Main OPTIM control data
 C     IPRNT   Print level - not used yet by most routines
 C     INR     Step-taking algorithm to use
@@ -483,11 +488,19 @@ C
 C
 C     This length is fixed by ABINITIO's input section
 C
-      Data Indxx /'1','2','3','4','5','6','7','8','9','0','A'
-     &,'B','C','D','E','F','G','H','I','J','K','L','M','N'
-     &,'O','P','Q','R','S','T','U','V','W','X','Y','Z','a'
-     &,'b','c','d','e','f','g','h','i','j','k','l','m','n'
-     &,'o','p','q','r','s','t','u','v','w','x','y','z',88*'*'/
+      Data Indxx /'01','02','03','04','05','06','07','08','09','00',
+     & '0A','0B','0C','0D','0E','0F','0G','0H','0I','0J','0K','0L',
+     & '0M','0N','0O','0P','0Q','0R','0S','0T','0U','0V','0W','0X',
+     & '0Y','0Z','0a','0b','0c','0d','0e','0f','0g','0h','0i','0j',
+     & '0k','0l','0m','0n','0o','0p','0q','0r','0s','0t','0u','0v',
+     & '0w','0x','0y','0z',"11","12","13","14","15","16","17","18",
+     & "19","10","21","22","23","24","25","26","27","28","29","20",
+     & "31","32","33","34","35","36","37","38","39","30","41","42",
+     & "43","44","45","46","47","48","49","40","51","52","53","54",
+     & "55","56","57","58","59","50","61","62","63","64","65","67",
+     & "68","69","60","71","72","73","74","75","76","77","78","79",
+     & "70","81","82","83","84","85","86","87","88","89","80","91",
+     & "92","93","94","95","96","97","98","99"/
 
 csb
 csb      DATA BASIS /'PBS     ','STO-3G  ','DZ      ',
@@ -504,6 +517,7 @@ csb     &            'qz2p    ','pz2p    '/
 
 c ----------------------------------------------------------------------
 
+      external atomnumb
 C
 C Initialize some things.
 C
@@ -589,6 +603,15 @@ C     skip the header
          End Do
       END IF
       Read (LuZ, '(A)', ERR=8500, END=8800) Wrk
+C
+C I think this is the best way to avoid the problem of Cartesian  
+C frequency finite difference runs when the first two atoms are 
+C not the same. This problem must have existed from the very 
+C begining. It get unnoticed because we do not do lots and lots 
+C of Cartesian Frqs (and then of course the first two atoms are
+C the same, then no one notice it). 01/2016, Ajith Perera.
+
+      IF (XYZIN) BAD123 = .FALSE.
 
 c YAU : old
 c     Get the optimizer settings & another blank line after
@@ -654,16 +677,43 @@ C     center in the Z-matrix, in the order of appearance.  We put this
 C     into an array length NAtms, with blanks for dummies.  This makes
 C     it easier to match the basis with the right coordinates later.
 C     NOTE: blank line after basis names.
-      Do 250 i = 1, NAtms
-         BasNam(i) = BlnkBN
-         if (AtNr(i).ne.0) then
-            if (iBasis.eq.0) then
-c            o read special
-               read(LuZ,'(A)',err=8500,end=8510,iostat=IOS) BasNam(i)
-            else
+C     
+C Having to type the same basis set name for every atom is error prone
+C and time consuming for when the molecule is large (> 10 atoms). In
+C order to aviod that this new logic will ask the user to input the 
+C number of distinct atoms in the molecule and the use specify the 
+C basis for those distinct atoms and the rest will get generated 
+C automatically. If the user wants to have different basis sets for
+C distinct atoms then he/she has to specify the basis set for each
+C line correspond to a center in the Z-matrix. The distinct atom 
+C basis pair do not need need to be in particular order. The 
+C same applies for ECP basis sets. Ajith Perera, 06/2013.
+C
+C     
+      If (Ibasis .EQ. 0) Then
+          backspace(luz)
+          read(LuZ,'(i4)',err=8500,end=8510,iostat=IOS) Num_unique
+      Else
+          Num_unique = 0
+      Endif 
+
+      If (Num_unique .EQ. Natms .OR. Num_unique .EQ. 0) Then
+
+          Do 250 i = 1, NAtms
+             BasNam(i) = BlnkBN
+             if (AtNr(i).ne.0) then
+               if (iBasis.eq.0) then
+
+c   o read special
+                 read(LuZ,'(A)',err=8500,end=8510,iostat=IOS) BasNam(i)
+
+               else
+C
 csb 1/97 Allow arbitrary basis set names
-               BasNam(i)=ZSym(i)(1:linblnk(ZSym(i)))//':'//
-     &                   BasName(1:linblnk(BasName))
+
+                  BasNam(i)=ZSym(i)(1:linblnk(ZSym(i)))//':'//
+     &                      BasName(1:linblnk(BasName))
+C
 csb               izz=index(Basis(IBasis),'*')
 csb               ixx=index(Basis(IBasis),'**')
 csb               ipop=0
@@ -672,43 +722,135 @@ csb               if(ixx.ne.0.and.atmass(i).gt.4.5)ipop=1
 csb               if(izz.ne.ixx.and.atmass(i).lt.4.5)ipop=1
 csb               BasNam(i)=ZSym(i)(1:linblnk(ZSym(i)))//':'//
 csb     &                   Basis(IBasis)(1:linblnk(Basis(IBasis))-ipop)
-            end if
+               end if
+
 c        end if ([not dummy atom])
-         end if
- 250  Continue
+             end if
+ 250      Continue
+     
+      Else
+
+          Do Iatm = 1,  Num_unique
+             read(LuZ,'(A)',err=8500,end=8510,iostat=IOS) 
+     &                      BasNam_hold(Iatm)
+          Enddo
+C
+          Katm  = 0
+          Do Iatm = 1, NAtms
+             If (AtNr(Iatm).EQ.0) Katm = Katm + 1
+
+             Do Jatm = 1, Num_unique
+                Ilen   = Index(Basnam_hold(Jatm), ":")
+                Symbol = Basnam_hold(Jatm)(1:Ilen-1)
+                JAtnr  = ATOMNUMB(Symbol)
+                If (AtNr(Iatm) .EQ. JAtNr) Then
+                    Katm = Katm + 1
+                    Basnam(Katm) = Basnam_hold(Jatm)
+                Endif
+             Enddo
+          Enddo
+
+      Endif 
+
+C      If(Bad123)then
+C        ScrBas=BasNam(1)
+C        BasNam(1)=BasNam(2)
+C        BasNam(2)=ScrBas
+C      EndIf
+
       If(IBasis.eq.0)Read (LuZ,'(A)', ERR=8500, END=8510) Wrk
+
 C ADDITION (JFS,4/90)
 C Now take care of situation which occurs when 2--1--3 Z-matrix
 C  specification and nonstandard basis set input is used.  In this case,
 C  the basis sets for atoms #1 and #2 must be switched.
 C
-      If(Bad123.and.IBasis.eq.0)then
+      If(Bad123.and.IBasis.eq.0) then
        ScrBas=BasNam(1)
        BasNam(1)=BasNam(2)
        BasNam(2)=ScrBas
       EndIf
+
+      IF(INEWFD .NE.0) THEN
+         CALL GETREC(-1,"JOBARC","12SWITCH",IONE,IAMBAD)
+         IF (IAMBAD) THEN
+            ScrBas=BasNam(1)
+            BasNam(1)=BasNam(2)
+            BasNam(2)=ScrBas
+        ENDIF
+      ENDIF
+
+      Write(6,*)
+      Write(6,"(a)") "The basis set definitions"
+      do i=1,natms
+         if ( Atnr(i).ne.0) Write(6,"(1x,i3,1x,A20)") 
+     +                      Atnr(i), basnam(i)
+      enddo
 C
 C DEAL WITh ECPs
 C
       IF (IECP.EQ.1) THEN
+
 csb        IF (IBASIS.EQ.0) THEN
 C
 C  NOW READ THE NAMES OF THE ECPS. JODA TRIES TO READ THEM FROM
 C  THE ZMAT FILE. THE USE OF ECPS REQUIRES "BASIS = SPECIAL"
 C
+        Read (LuZ,'(A)', ERR=8500, END=8510) Wrk
+        If (Wrk(2:2) .EQ. ":" .OR. Wrk(3:3) .EQ. ":") Then
+           backspace(Luz)
+           Num_unique = 0
+        Else
+           backspace(Luz)
+           read(LuZ,'(i4)',err=8500,end=8510,iostat=IOS) Num_unique
+        ENdif 
 
-        DO 255 I = 1, NATMS
-          ECPNAM(I) = BLNKBN
-          IF (ATNR(i) .NE. 0 .AND. IBASIS .EQ. 0) THEN
-            READ (LUZ, '(A)', ERR=8500, END=8510, IOSTAT=IOS)
+        If (Num_unique .EQ. Natms .OR. Num_unique .EQ. 0) Then
+           DO 255 I = 1, NATMS
+              ECPNAM(I) = BLNKBN
+              IF (ATNR(i) .NE. 0 .AND. IBASIS .EQ. 0) THEN
+                 READ (LUZ, '(A)', ERR=8500, END=8510, IOSTAT=IOS)
      &           ECPNAM(I)
 csb
-          ElseIf(AtNr(i) .ne. 0 .and. IBasis .ne. 0)then
-            EcpNam(i)=BasName
+              ElseIf(AtNr(i) .ne. 0 .and. IBasis .ne. 0)then
 
-          ENDIF
-  255   CONTINUE
+                 EcpNam(i)=BasName
+
+              ENDIF
+ 255       CONTINUE
+
+        Else
+
+          Do Iatm = 1,  Num_unique
+
+              read(LuZ,'(A)',err=8500,end=8510,iostat=IOS)
+     &                   Ecpnam_hold(Iatm)
+          Enddo
+C
+          Katm = 0
+          Do Iatm = 1, NAtms
+             If (AtNr(Iatm).EQ.0) Katm = Katm + 1
+             Do Jatm = 1, Num_unique
+                Ilen   = Index(Basnam_hold(Jatm), ":")
+                Symbol = Ecpnam_hold(Jatm)(1:Ilen-1)
+                JAtnr  = ATOMNUMB(Symbol)
+                If (AtNr(Iatm) .EQ. JAtNr) Then
+                   Katm  = Katm + 1
+                   Ecpnam(Katm) = Ecpnam_hold(Jatm)
+                Endif
+             Enddo
+          Enddo
+
+        Endif
+
+C        If(Bad123 .and. Ibasis .eq. 0)then
+C          ScrBas=BasNam(1)
+C          BasNam(1)=BasNam(2)
+C          BasNam(2)=ScrBas
+C        EndIf
+
         IF(IBASIS.EQ.0)READ (LUZ,'(A)', ERR=8500, END=8510) WRK
+
 C ADDITION (JFS,4/90)
 C Now take care of situation which occurs when 2--1--3 Z-matrix
 C  specification and nonstandard basis set input is used.  In this case,
@@ -719,25 +861,54 @@ C
           ECPNAM(1)=ECPNAM(2)
           ECPNAM(2)=SCRBAS
         ENDIF
+
+C The variable IAMBAD is true for cases where 12SWITCH is true for
+C  finite difference calculations
+
+        IF (IAMBAD) THEN
+          SCRBAS=ECPNAM(1)
+          ECPNAM(1)=ECPNAM(2)
+          ECPNAM(2)=SCRBAS
+        ENDIF
+
+      Write(6,"(a)") "The ECP definitions" 
+      do i=1,natms
+         if ( Atnr(i).ne.0) Write(6,"(1x,i3,1x,A20)") 
+     +                      Atnr(i), Ecpnam(i)
+      enddo
+      Write(6,*)
+
 C
 C NOW CORRECT THE CHARGES OF THE ATOMS BY THE CORE-ELECTRONS
 C DESCRIBED BY THE ECP
 C
-C ECP processing in joda is not necessary for ACES III use of 
-c joda, Ajith Perera, 02/2012
-CSSS        CALL CORCHR(ECPNAM,ATNR,ICRCOR,NATMS)
+        CALL CORCHR(ECPNAM,ATNR,ICRCOR,NATMS)
         DO 94 I=1,NATMS
           IF (ATNR(I).NE.0) THEN
             ICRCOR(i)=ATNR(I)-ICRCOR(i)
           ENDIF
    94   CONTINUE
-        CALL PUTREC(10,'JOBARC','ECPNAM',80*NATMS,ECPNAM)
-        CALL PUTREC(10,'JOBARC','NATOLD',1,NATMS)
+
+C The following block of code is needed for inputs that has 
+C dummy atoms and basis=special specification along with 
+C number of unique atoms. 
+
+        NREAL = 0
+        DO IATMS = 1, NATMS
+           IF (ATNR(IATMS) .NE. 0) THEN
+              NREAL = NREAL + 1
+              ECPNAM_HOLD(NREAL) = ECPNAM(IATMS)
+           ENDIF
+        ENDDO 
+        CALL PUTREC(10,'JOBARC','ECPNAM',80*NREAL,ECPNAM_HOLD)
+        CALL PUTREC(10,'JOBARC','NATOLD',1,NREAL)
+C
 csb        ELSE
 csb          WRITE(*,*) 'INCOMPATIBLE KEYWORDS IN MKVMOL!'
 csb          CALL ERREX
 csb        ENDIF
       ENDIF
+C
 CCH END OF READING ECP NAMES
 
 C:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -805,7 +976,7 @@ C
       Open (30, FILE='VMLSYM', STATUS='OLD',FORM='UNFORMATTED')
       Rewind(30)
       Read (30,Err=9400) NSymOp, (KA(i),i=1,3)
-      Close(30, Status='Delete')
+      Close(30, Status='Keep')
 5400  CONTINUE
       If (PtGrp.EQ.'C1 ') Then
          Do I = 1, 3
@@ -932,8 +1103,8 @@ c7001   Format(F10.1,I5,$)
           IINFIL = IINFIL + 1
           IZLOC(IINFIL) = NORD(NSTART+J-1)
           Icount = Icount + 1
-          Write(LuVMol,'(A2,A1,A1,3F20.12)',ERR=8300)
-     &                  ZSym(Nord(NStart)),LB,Indxx(ICOUNT),
+          Write(LuVMol,'(A2,A2,3F20.12)',ERR=8300)
+     &                  ZSym(Nord(NStart)),Indxx(ICOUNT),
      &                  (geom(IJ),IJ=IBotm,Ibotm+2)
        End Do
        IF(GENBAS)THEN
@@ -1037,6 +1208,7 @@ C
       NTOTSHEL=IOFFSHEL-1
       IF(IECP.EQ.1) THEN
        CALL PUTREC(20,'JOBARC','ATOMCHRG',NATOMS,ICRCOR)
+       CALL PUTREC(20,'JOBARC','ATCHRORG',NATOMS,IATNUM)
       ELSE
        CALL PUTREC(20,'JOBARC','ATOMCHRG',NATOMS,IATNUM)
       ENDIF

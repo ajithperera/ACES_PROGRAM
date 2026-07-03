@@ -178,6 +178,25 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       program joda
       implicit none
 
@@ -260,7 +279,7 @@ c   o evaluate and repair the health of the current file set
 
 c   o initialize the job archive subsystem
       call aces_ja_init
-c
+
 CSSS      call init_coord_com 
 
       if (.not.ignore) then
@@ -290,9 +309,22 @@ c
       vib_frqs=(iflags(54).eq.3)
 c
       fd = ((iflags(54).eq.3 .and. we_havegeom)
-     &     .or. num_grad .or. (geomopt.and.num_grad))
+     &     .or. num_grad .or. (geomopt.and.num_grad)
+     $     .or. (iflags2(156) .eq. 1)
+     $     .or. (iflags2(158) .eq. 1)
+     $     .or. (iflags2(165) .eq. 1)
+     $     .or. (iflags2(160) .eq. 1))
       if (do_pes_scan .eq. 1 .and. fd) ignore = .false.
 c
+      Print*, "Finite diffs; ignore and geomopt vars:",
+     &         ignore, geomopt
+      Print*, "The vib calc. related varrs:"
+      Print*, "iflags(h_IFLAGS_vib):", iflags(54)
+      Print*, "The finite diffs:", fd
+      Print*, "iflags2(h_IFLAGS2_geom_opt):",
+     &         iflags2(5)
+      Print*, "first run of popt num. frq:", popt_num_fd
+ 
 c
       if (fd) then
 
@@ -316,13 +348,26 @@ c         o mid-stream -> keep going
             if (i.eq.0) call symcor(icore(i0),icrsiz)
          else
 c         o first run -> reset finite difference series
+            Write(6,*) "Saving OPTARC to BACK", geomopt 
+            i= ishell('pwd > ishell.out 2>&1')
+            i= ishell('ls -l >> ishell.out 2>&1')
+            i= ishell('cp OPTARC OPTARCBK >> ishell.out 2>&1')
             if (geomopt) i=ishell('cp OPTARC OPTARCBK')
+            Write(6,*) "Value returned from ishell", i
             call putrec(1,'JOBARC','FNDFDONE',1,0)
             call symcor(icore(i0),icrsiz)
             ignore=.true.
          end if
 
          call getrec(1,'JOBARC','PASS1',1,pass1)
+      Print*, "Finite diffs; PASS1",pass1
+        if ( (pass1 .eq. 0) .and.
+     $       ( (iflags2(156) .eq. 1) .or.
+     $        (iflags2(160) .eq. 1) .or.
+     $        (iflags2(165) .eq. 1) .or.
+     $        (iflags2(158) .eq. 1) ) ) then
+            write(6,*) ' All done in constructing vibronic Hamiltonian '
+        else
          if (pass1.ne.-1) then
 c         o vib freqs w/ an grads -OR- geom opts w/ num grads
             call putrec(1,'JOBARC','FIRSTRUN',1,0)
@@ -333,6 +378,7 @@ c         o vib freqs w/ an grads -OR- geom opts w/ num grads
                call getrec(1,'JOBARC','JODADONE',1,i)
                if (i.ne.1) then
 c               o new geom -> reset finite difference series
+                  Write(6,*) "Starting a new FD series"
                   i=ishell('cp OPTARC OPTARCBK')
                   call putrec(1,'JOBARC','FNDFDONE',1,0)
                   call symcor(icore(i0),icrsiz)
@@ -347,7 +393,7 @@ c               o new geom -> reset finite difference series
                call getrec(1,'JOBARC','FNDFDONE',1,i) 
             end if
          end if
-
+        endif 
       else
 
          if (ignore) then

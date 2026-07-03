@@ -186,6 +186,25 @@ C
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 c     Maximum string length of basis set
       INTEGER BASLEN
       PARAMETER (BASLEN=80)

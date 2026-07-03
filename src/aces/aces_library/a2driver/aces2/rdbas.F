@@ -88,7 +88,7 @@ C
 C          Initialize UNCONTRACT
 C
       CALL  IGETREC (1,'JOBARC','IFLAGS2',500,iflags2)
-      UNCONTRACT = (iflags2(158) .eq. 1)
+      UNCONTRACT = (iflags2(168) .eq. 1)
 
       IF (UNCONTRACT) THEN
           IF (cpbasis .AND. (icpun .EQ. 13)) THEN
@@ -304,11 +304,13 @@ C   ...Watson...
 C
        NJUNK=NINSHL(LANGSH(ISHELL)+1)
        READ(12,*)
-       READ(12,'((5F14.6))')(EEXP(I),I=1,NPRIM)
+CSSS       READ(12,'((5F14.6))')(EEXP(I),I=1,NPRIM)
+       READ(12,*)(EEXP(I),I=1,NPRIM)
        READ(12,*)
        if (cpbasis) then
           write(icpun,*)
-          write(icpun,'((5F14.6))')(EEXP(I),I=1,NPRIM)
+CSSS          write(icpun,'((5F14.6))')(EEXP(I),I=1,NPRIM)
+          write(icpun,*)(EEXP(I),I=1,NPRIM)
           write(icpun,*)
        end if
        IF(MIN(NPRIM,NCONT,NJUNK).NE.0)THEN
@@ -334,10 +336,12 @@ C        READ(12,'((7(F10.7,1X)))')(COEFMT(J),J=1,LENG)
 C
         IF (.NOT. UNCONTRACT) THEN
             LENG = MAX(1,NCONT)
-            READ(12,'((7(F10.7,1X)))')(COEFMT(J),J=1,LENG)
+CSSS            READ(12,'((7(F10.7,1X)))')(COEFMT(J),J=1,LENG)
+            READ(12,*)(COEFMT(J),J=1,LENG)
         ELSE
             LENG = MAX(1,NORGCNT)
-            READ(12,'((7(F10.7,1X)))')(COEFMT(J),J=1,LENG)
+CSSS            READ(12,'((7(F10.7,1X)))')(COEFMT(J),J=1,LENG)
+            READ(12,*)(COEFMT(J),J=1,LENG)
             LENG = MAX (1,NPRIM)
             DO J = 1, LENG
                COEFMT (J) = 0.D0
@@ -348,7 +352,8 @@ C
 C
 C   ...Watson...
 C
-        if (cpbasis) write(icpun,'((7(F10.7,1X)))')(COEFMT(J),J=1,LENG)
+CSSS        if (cpbasis) write(icpun,'((7(F10.7,1X)))')(COEFMT(J),J=1,LENG)
+        if (cpbasis) write(icpun,*)(COEFMT(J),J=1,LENG)
         CALL SCOPY(NCONT,COEFMT,1,BASISCNT(IOFF0),NPRIM)
         IOFF0=IOFF0+1
 C
@@ -362,7 +367,9 @@ C
         IF(MIN(NJUNK,NCONT).NE.0)THEN
 CJDW 9/8/97 2 lines (from Thomas Steinke).
 C        WRITE(LUVMOL,'((4F18.10))')EEXP(IPRIM),(COEFMT(J),J=1,NCONT)
-           WRITE(LUVMOL,CFORMAT)EEXP(IPRIM),(COEFMT(J),J=1,NCONT)
+CSSS           WRITE(LUVMOL,CFORMAT)EEXP(IPRIM),(COEFMT(J),J=1,NCONT)
+
+           WRITE(LUVMOL,*)EEXP(IPRIM),(COEFMT(J),J=1,NCONT)
          if(seward) then
            if(iprim.eq.1)then
              do 111 isewprim=1,nprim

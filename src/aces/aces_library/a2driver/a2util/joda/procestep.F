@@ -173,11 +173,13 @@ C
  410     CONTINUE
  400  CONTINUE
 C
-#ifdef _DEBUG_LVLM1
+#ifdef _DEBUG_LVL0 
       Write(6,*)
       WRITE(6,*) "The scaling factor", scale
-      Write(6,*) "The R vector to check I can have the old R"
-      Write(6,"(5F13.7)"), (R(I), I =1, NXM6)
+      Write(6,*) "The new R vector"
+      Write(6,"(5F13.7)"), (R(I), I =1, NOPT)
+      Write(6,*) "The old R vector"
+      Write(6,"(5F13.7)"), (Scratch(I), I =1, NOPT)
 #endif
 C
 C

@@ -402,6 +402,12 @@ C
  410     CONTINUE
  400  CONTINUE
 C
+      Write(6,*)
+      WRITE(6,*) "The scaling factor", scale
+      Write(6,*) "The new R vector"
+      Write(6,"(5F13.7)"), (R(I), I =1, NOPT)
+      Write(6,*) "The old R vector"
+      Write(6,"(5F13.7)"), (Scratch(I), I =1, NOPT)
 C
 C
 C Calculate the predicted energy change (Grad DeltaX + 1/2 DelatX H DeltaX)

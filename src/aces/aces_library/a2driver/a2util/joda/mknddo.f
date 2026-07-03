@@ -186,6 +186,25 @@ C     -CARLOS TAYLOR
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE MKNDDO(geom, PTGRP,NATMS,NUNIQUE,ZSYM,ATNR,GENBY,
      $     SCRATCH, ISTAT, BasName)
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)

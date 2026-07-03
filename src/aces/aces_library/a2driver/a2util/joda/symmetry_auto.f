@@ -176,6 +176,25 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE SYMMETRY_AUTO(SCRATCH, QTMP, NEWQ, IT, IDEGEN, 
      &                         ORIEN2, NOSILENT)
 C
@@ -596,9 +615,7 @@ C   POSSIBILITY THAT ATOMS I AND J ARE 180 DEGREES APART; IF THIS
 C   IS THE CASE, JUST GO TO BOTTOM OF LOOP SINCE THESE DO NOT
 C   DEFINE ANY AXIS UNIQUELY.
 C
-            Write(6,*) "Enetring Vec"
             CALL VEC(NEWQ(IBOT),NEWQ(IBOT2),SCRATCH(1),0)
-            Write(6,*) "out of Vec"
             dtmp = xdot(3,SCRATCH(1),1,SCRATCH(1),1)
             DIST = DSQRT(dtmp)
             CALL VADD(SCRATCH(1),NEWQ(IBOT),NEWQ(IBOT2),NX,ONE)
@@ -1094,6 +1111,7 @@ C
         CALL DUMPCORD(NATOMS,NEWQ,IATNUM)
         IF(FPGRP.EQ.'    ')FPGRP=PGRP
         IF(ISYM .EQ. 1)    PGRP='C1  '
+        Print*, "PGRP, FPGRP:", FPGRP, PGRP
         CALL SUBGROUP(IFLAGS(85),PGRP,FPGRP,IROTATE)
 C 
         IF(IROTATE.EQ.1)THEN
@@ -1364,9 +1382,25 @@ C
 C DUMP SOME NECESSARIES TO JOBARC
 C
       IF(FPGRP(2:2).EQ.'X')ILINEAR=1
+      Print*, "@-SYM_AUTO The Orientation matrices: ORIEN2 and ORIENT"
+      Write(6,*)
+      CALL OUTPUT(ORIEN2, 1, 3, 1, 3, 3, 3, 0)
+      Write(6,*)
+      CALL OUTPUT(ORIENT, 1, 3, 1, 3, 3, 3, 0)
+      Write(6,*)
+      Write(6,*) "@-SYM_AUTO The variables in /COORD/ common block"
+      Write(6, "(3F10.5)"), (Q(I), I=1, 3*NATOMS)
+      Write(6,*)
+      Write(6,*) "The NEWQ array "
+      Write(6, "(F10.5)"), (NEWQ(I), I=1, 3*NATOMS)
+      Write(6,*)
+
       CALL XGEMM('N','N',3,3,3,ONE,ORIEN2,3,ORIENT,3,ZILCH,
      &     SCRATCH,3)
 C
+      Write(6,*)
+      Write(6,*) "@-SYM_AUTO ORIENT2=ORIEN2xORIENT" 
+      CALL OUTPUT(SCRATCH, 1, 3, 1, 3, 3, 3, 0)
 
       CALL PUTREC(20,'JOBARC','LINEAR  ',IONE,ILINEAR)
       RETURN

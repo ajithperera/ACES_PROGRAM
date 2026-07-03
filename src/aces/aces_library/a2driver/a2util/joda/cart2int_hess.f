@@ -171,52 +171,6 @@ C Now we have the the Hessian in Redundant Internal Coordinates
          print *, 'Hessian in redundant internals'
          CALL OUTPUT(HI, 1, TOTREDNCO, 1, TOTREDNCO, TOTREDNCO,
      &               TOTREDNCO, 1)
-C Purify the Hessian as recommended by Schlegel et al. (JCC,17,49,1996).
-C G and G{^-1} have been created in the built_bgmatrix.F. The P=GG{^-1}
-C is the projection into the redundant spaces that correspond to actual
-C Cartesian displacements.
-
-      LENGMAT=TOTREDNCO*TOTREDNCO
-      CALL GETREC(20,'JOBARC','G-MATRX ',LENGMAT*IINTFP,DIFTEMP)
-      CALL GETREC(20,'JOBARC','GI-MATRX',LENGMAT*IINTFP,
-     &            dRICHeap(z_BTGInv))
-
-      CALL ZERO(TEMP1,LENGMAT)
-      CALL XGEMM('N','N',TOTREDNCO,TOTREDNCO,TOTREDNCO,1.0D0,
-     &           DIFTEMP,TOTREDNCO,dRICHeap(z_BTGInv),TOTREDNCO,0.0D0,
-     &           TEMP1,TOTREDNCO)
-
-      CALL PUTREC(20,'JOBARC',"PROJECTR",LENGMAT*IINTFP,TEMP1)
-
-      CALL XGEMM('N','N',TOTREDNCO,TOTREDNCO,TOTREDNCO,1.0D0,
-     &           TEMP1,TOTREDNCO,HI,TOTREDNCO,0.0D0,GMINB,
-     &           TOTREDNCO)
-      CALL XGEMM('N','N',TOTREDNCO,TOTREDNCO,TOTREDNCO,1.0D0,
-     &           GMINB,TOTREDNCO,TEMP1,TOTREDNCO,0.0D0, HI,
-     &           TOTREDNCO)
-
-C Also project the gradients. Then copy the projected gradient
-C to the FI array so that the rest of the code can proceed.
-      CALL XGEMM('N', 'N',TOTREDNCO,1,TOTREDNCO,1.0D0,
-     &           TEMP1,TOTREDNCO,FI,TOTREDNCO,0.0D0,
-     &           PFI,TOTREDNCO)
-      CALL DCOPY(TOTREDNCO,PFI,1,FI,1)
-
-C Use GMINB to store the identity matrix.
-      CALL ZERO(GMINB,TOTREDNCO*TOTREDNCO)
-      DO I=1,TOTREDNCO
-         GMINB((I-1)*TOTREDNCO+I) = 1.d0
-      END DO
-
-C Let's do the PHP + 1000.0(1-P) (note that we have already
-C built the PHP and stored in HI).
-      CALL DAXPY(TOTREDNCO*TOTREDNCO,-1.d0,GMINB,1,TEMP1,1)
-
-      CALL DSCAL(TOTREDNCO*TOTREDNCO,1000.0D0,TEMP1,1)
-      CALL DAXPY(TOTREDNCO*TOTREDNCO,-1.d0,TEMP1,1,HI,1)
-          print*,'The projected hessian in redundent internals '
-          CALL OUTPUT(HI,1,TOTREDNCO,1,TOTREDNCO,TOTREDNCO,
-     &                TOTREDNCO,1)
       RETURN
       END
 

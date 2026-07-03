@@ -88,6 +88,9 @@ C Now we have the the Hessian in Redundant Internal Coordinates
          CALL OUTPUT(HI, 1, TOTREDNCO, 1, TOTREDNCO, TOTREDNCO,
      &               TOTREDNCO, 1)
 #endif
+#ifdef _NO_OBSOLETE
+C----------------Following block of code now done in projec_ifc---
+C It is convenient to do projection in one place. Ajith Perera 
 C Purify the Hessian as recommended by Schlegel et al. (JCC,17,49,1996).
 C G and G{^-1} have been created in the built_bgmatrix.F. The P=GG{^-1}
 C is the projection into the redundant spaces that correspond to actual
@@ -136,6 +139,7 @@ C built the PHP and stored in HI).
           CALL OUTPUT(HI,1,TOTREDNCO,1,TOTREDNCO,TOTREDNCO,
      &                TOTREDNCO,1)
 #endif
+#endif 
       RETURN
       END
 

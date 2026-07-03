@@ -149,10 +149,17 @@ C     CALL MATMULV(NEWQ,Q,IV,NATOMS,3,3)
         WRITE(LUOUT,80)((IT(I,J),J = 1,3),I = 1,3)
         WRITE(LUOUT,*)'   Eigenvectors of inertia tensor: '
         WRITE(LUOUT,80)((Iv(I,J),J = 1,3),I = 1,3)
-        WRITE (LUOUT,*) '   Principal axis orientation ',
-     $       'for molecular system: '
-        WRITE (LUOUT,80) (NEWQ(I),I = 1,NX)
       ENDIF
+      
+      WRITE(LUOUT,*) 
+      WRITE(LUOUT,"(9x,2a)") ' Principal axis orientation ',
+     $                       'for molecular system: '
+      WRITE(LUOUT,"(9x,2a)") "-----------------------------------------",
+     $                       "--------"
+      WRITE(LUOUT,80) (NEWQ(I),I = 1,NX)
+      WRITE(LUOUT,"(9x,2a)") "-----------------------------------------"
+     $                       "--------"
+      WRITE(LUOUT,*) 
 C
 C     Print out the rotational constants from the inertia
 C

@@ -1,4 +1,4 @@
-#  Copyright (c) 2003-2010 University of Florida  
+	#  Copyright (c) 2003-2010 University of Florida  
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -596,8 +596,8 @@
       SCALAR  POLTOTXZ
       SCALAR  POLTOTYZ
       SCALAR  SECONDMOM
-      SCALAR  SEVEN_ZERO
-      SCALAR  SEVEN_ONE 
+      SCALAR  EIGHT_ZERO
+      SCALAR  EIGHT_ONE
       SCALAR  EOM_GUESS
       SCALAR  EOM_DENOM
       SCALAR  EOM_MAXCYC
@@ -633,6 +633,7 @@
       SCALAR OMEGA_00
       SCALAR F12CALC   
       SCALAR EAEOMF12CALC
+      SCALAR WARNING 
 #
 # ENDARRAYS USED IN XPROC 
 #
@@ -13063,10 +13064,12 @@
 #end_debug
       ENDDO SPN_MULT
 
-      SEVEN_ZERO = 70.0
-      SEVEN_ONE  = 71.0
-      EXECUTE PRINT_REL_INFO  SEVEN_ZERO EOM_S_EES
-      EXECUTE PRINT_REL_INFO  SEVEN_ONE  EOM_T_EES
+      EIGHT_ZERO = 80.0
+      EIGHT_ONE  = 81.0
+      WARNING    = 911.0
+      EXECUTE PRINT_REL_INFO  EIGHT_ZERO EOM_S_EES
+      EXECUTE PRINT_REL_INFO  EIGHT_ONE  EOM_T_EES
+      EXECUTE PRINT_REL_INFO  WARNING    DUMMY
     
 #bgn_debug
 #      ncount = 0.0

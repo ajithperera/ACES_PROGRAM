@@ -332,9 +332,7 @@ C   POSSIBILITY THAT ATOMS I AND J ARE 180 DEGREES APART; IF THIS
 C   IS THE CASE, JUST GO TO BOTTOM OF LOOP SINCE THESE DO NOT
 C   DEFINE ANY AXIS UNIQUELY.
 C
-            Write(6,*) "Enetring Vec"
             CALL VEC(NEWQ(IBOT),NEWQ(IBOT2),SCRATCH(1),0)
-            Write(6,*) "out of Vec"
             dtmp = xdot(3,SCRATCH(1),1,SCRATCH(1),1)
             DIST = DSQRT(dtmp)
             CALL VADD(SCRATCH(1),NEWQ(IBOT),NEWQ(IBOT2),NX,ONE)
@@ -830,7 +828,7 @@ C
         CALL DUMPCORD(NATOMS,NEWQ,IATNUM)
         IF(FPGRP.EQ.'    ')FPGRP=PGRP
         IF(ISYM .EQ. 1)    PGRP='C1  '
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
         Print*, "PGRP, FPGRP:", FPGRP, PGRP
 #endif
         CALL SUBGROUP(IFLAGS(85),PGRP,FPGRP,IROTATE)
@@ -1112,7 +1110,7 @@ C
 C DUMP SOME NECESSARIES TO JOBARC
 C
       IF(FPGRP(2:2).EQ.'X')ILINEAR=1
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Print*, "@-SYM_AUTO The Orientation matrices: ORIEN2 and ORIENT"
       Write(6,*)
       CALL OUTPUT(ORIEN2, 1, 3, 1, 3, 3, 3, 0)
@@ -1130,7 +1128,7 @@ C
       CALL XGEMM('N','N',3,3,3,ONE,ORIEN2,3,ORIENT,3,ZILCH,
      &     SCRATCH,3)
 C
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Write(6,*)
       Write(6,*) "@-SYM_AUTO ORIENT2=ORIEN2xORIENT" 
       CALL OUTPUT(SCRATCH, 1, 3, 1, 3, 3, 3, 0)
