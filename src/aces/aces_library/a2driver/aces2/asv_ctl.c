@@ -1780,6 +1780,6 @@ void
 F77_NAME(str2d,STR2D) (const char* sgamma, double *dgamma)
 {
 *dgamma = atof(sgamma);
-return 0;
+return;
 }
 

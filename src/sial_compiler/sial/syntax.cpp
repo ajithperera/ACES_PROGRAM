@@ -362,7 +362,7 @@ int IsInstruction(const int x)
             outArray[x]==execute ||outArray[x]==doo||
             outArray[x]==call||outArray[x]==iff ||
             outArray[x]==create ||outArray[x]==deletee||
-            outArray[x]==pardo ||outArray[x]==get||
+            outArray[x]==pardo ||outArray[x]==::get||
             outArray[x]==prepare ||outArray[x]==request||
             outArray[x]==destroye ||outArray[x]==writee||
             outArray[x]==collective||outArray[x]==computeint||
@@ -1917,7 +1917,7 @@ void instructionsyntax(int &lexpos, int &lineno)
     else if (where==outArray[lexpos])
         wheresyntax(lexpos, lineno);
 
-    else if (get==outArray[lexpos])
+    else if (::get==outArray[lexpos])
         getcomputesyntax(lexpos, lineno);
 
     else if (prepare==outArray[lexpos])

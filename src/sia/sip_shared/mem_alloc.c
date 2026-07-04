@@ -68,15 +68,15 @@ void F77_NAME(mem_alloc_init,MEM_ALLOC_INIT)(f_int *megabytes, f_int *sheap_flag
  *  @param[in]  heap         Not currently implemented
  *  @param[out] ierr         Value is 0 if successful
  */
-void F77_NAME(mem_alloc,MEM_ALLOC) (void  *base_addr, 
-                                    f_int *elements, 
-                                    f_int *element_size, 
-                                    long long *offset, 
-                                    f_int *heap, 
+void F77_NAME(mem_alloc,MEM_ALLOC) (char  *base_addr,
+                                    f_int *elements,
+                                    f_int *element_size,
+                                    long long *offset,
+                                    f_int *heap,
                                     f_int *ierr) {
 
-        void *nxt_addr;
-        void *alloc_addr;
+        char *nxt_addr;
+        char *alloc_addr;
 
         if ( debug_on ) {
             printf("mem_alloc(): Entering\n");
@@ -106,7 +106,7 @@ void F77_NAME(mem_alloc,MEM_ALLOC) (void  *base_addr,
 
         // Align on ALIGN-byte boundary
 	//alloc_addr = (nxt_addr + alignment) & ~(alignment); 
-	alloc_addr = (long long) (nxt_addr + alignment) & AMASK;
+	alloc_addr = (char *)(((long long) (nxt_addr + alignment)) & AMASK);
 	nxt_addr   = alloc_addr + nbytes;
 
 //      printf("mem_alloc calculated nxt_addr is %lld.\n",nxt_addr);
@@ -163,7 +163,7 @@ char * mem_alloc_c(size_t nbytes){
  *  Note:  mem_alloc_free will fail if called with invalid input.  There is no scenario where there is a normal
  *  return and ierr != 0.  We may want to change this interface.
 */
-void F77_NAME(mem_alloc_free,MEM_ALLOC_FREE)(void *addr, f_int *ierr){
+void F77_NAME(mem_alloc_free,MEM_ALLOC_FREE)(char *addr, f_int *ierr){
 	*ierr = 0;
 	assert(base_ptr <= addr && (long long) addr <= top_int); //given address must be in allocated memory
 	nxt_ptr = addr;

@@ -150,14 +150,14 @@ void InstructCls::insert(int type, int idno, int nindex, int*indexarray)
 
     if (!HaveEnoughSize())  return;
 
-    if (type!=setindex&&type!=get&&type!=computeint)
+    if (type!=setindex&&type!=::get&&type!=computeint)
     {
         outerror(glno, 
             "Internal error in instruction insert, please contact writer");
         return;
     }
 
-    if (get==type)
+    if (::get==type)
     {
         if (CheckConvert(idno, nindex, indexarray)!=0)
             return;
@@ -965,7 +965,7 @@ void InstructCls::outputll() const
             add_optable_c(type, t1, t2, t3, &instruction[i][1], 
                 t7, lineno);
         }
-        else if (get==instruction[i][0])
+        else if (::get==instruction[i][0])
         {
             type=106;
             add_optable_c(type, t1, t2, instruction[i][1]+1, 

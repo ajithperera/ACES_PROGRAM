@@ -63,7 +63,7 @@
 
 void
 F77_NAME(aces_malloc,ACES_MALLOC)
-(long long *fiInts, f_int *lCore, size_t *l0, f_adr **heapptr)
+(long long *fiInts, f_int *lCore, size_t *l0, f_adr *heapptr)
 {
     const int iIntLn = sizeof(f_int);
 #ifdef _PTRS_ARE_WORDS
@@ -82,7 +82,7 @@ F77_NAME(aces_malloc,ACES_MALLOC)
     {
      /* define lCore itself (leave *fiInts) */
         *lCore = 0; *l0 = 1;
-        *heapptr = NULL;
+        *heapptr = (f_adr) NULL;
         return;
     }
 

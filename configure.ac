@@ -6,15 +6,15 @@ AC_CONFIG_HEADER([config.h])
 
 # Checks for compilers
 #If fortan compiler is not specified then try to autodetect it
-if test x$FC = x; then
+if test "x$FC" = x; then
 AC_PROG_FC(mpif77 mpif90 ftn)
 fi
 #If C compiler is not specified then try to autodetect it
-if test x$CC = x; then
+if test "x$CC" = x; then
 AC_PROG_CC(mpicc gcc cc)
 fi
 #If C++ compiler is not specified then try to autodetect it
-if test x$CXX = x; then
+if test "x$CXX" = x; then
 AC_PROG_CXX(mpicxx g++ cc)
 fi
 AC_SUBST(SIAL_COMPILER_LIBS)
@@ -30,17 +30,17 @@ SERIAL_CPP="g++"
 AC_ARG_ENABLE([mkl],
     [AS_HELP_STRING([--enable-mkl], [Use Intel MKL Library])],
 [
-if test x$MKLLIBS = x; then
+if test "x$MKLLIBS" = x; then
    AC_MSG_ERROR([Please specify all the required mkl libraries in variable MKLLIBS])
 fi
 
-if test x$MKLFLAGS = x; then
+if test "x$MKLFLAGS" = x; then
    AC_MSG_ERROR([Please specify mkl library location in variable  MKLFLAGS])
 fi
-#If intel mkl is used, use icpc as c++ compiler
-SERIAL_CPP="icpc"
+#If intel mkl is used, use icpx as c++ compiler (icpc was removed in oneAPI 2024+)
+SERIAL_CPP="icpx"
 #Also set SIAL_COMPILER_LIBS accordingly
-if test x$SIAL_COMPILER_LIBS = x; then
+if test "x$SIAL_COMPILER_LIBS" = x; then
 SIAL_COMPILER_LIBS="-lsial -lsip_shared -laces2  -lifcore"
 fi
 ACESLIBS=$MKLLIBS
@@ -52,17 +52,17 @@ ACESFLAGS=$MKLFLAGS
 AC_ARG_ENABLE([gnu],
     [AS_HELP_STRING([--enable-gnu], [Use GNU Library])],
 [
-if test x$GNULIBS = x; then
+if test "x$GNULIBS" = x; then
    AC_MSG_ERROR([Please specify all the required gnu libraries in variable GNULIBS])
 fi
 
-if test x$GNUFLAGS = x; then
+if test "x$GNUFLAGS" = x; then
    AC_MSG_ERROR([Please specify all the gnu library locations in variable  GNUFLAGS])
 fi
 #Set c++ compiler
 SERIAL_CPP="g++"
 #Also set SIAL_COMPILER_LIBS accordingly
-if test x$SIAL_COMPILER_LIBS = x; then
+if test "x$SIAL_COMPILER_LIBS" = x; then
 SIAL_COMPILER_LIBS="-lsial -lsip_shared -laces2 -lgfortranbegin -lgfortran -ldl -lsip1 -lsip2"
 fi
 ACESLIBS=$GNULIBS
@@ -73,17 +73,17 @@ ACESFLAGS=$GNUFLAGS
 AC_ARG_ENABLE([cray],
     [AS_HELP_STRING([--enable-cray], [Use ACESIII on Cray system])],
 [
-if test x$CRAYLIBS = x; then
+if test "x$CRAYLIBS" = x; then
    AC_MSG_ERROR([Please specify all the required libraries in variable CRAYLIBS])
 fi
 
-if test x$CRAYFLAGS = x; then
+if test "x$CRAYFLAGS" = x; then
    AC_MSG_ERROR([Please specify all the library locations in variable  CRAYFLAGS])
 fi
 #Set c++ compiler
 SERIAL_CPP=$CXX
 #Also set COMPILER_LIBS accordingly
-if test x$SIAL_COMPILER_LIBS = x; then
+if test "x$SIAL_COMPILER_LIBS" = x; then
 SIAL_COMPILER_LIBS="-lsial -lsip_shared -lacescore -ltools -lsip1 -lsip2 -lsip3"
 fi
 ACESLIBS=$CRAYLIBS
