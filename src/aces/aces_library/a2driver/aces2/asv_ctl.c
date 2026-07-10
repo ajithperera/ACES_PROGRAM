@@ -373,7 +373,7 @@ const ASV_nl_t ASV_nl[] =
 {/*257*/ "DKHORDER",    "DKH_ORD#ER",   h_ICHAR_f_int,  0,      ""},
 {/*258*/ "UNCONTRACT",  "UNCONT#RACT",  h_ICHAR_handle, 0,      ""},
 {/*259*/ "IOPT_CTRL",   "OPT_CONT#ROL", h_ICHAR_handle, 0,      ""},
-{/*260*/ "ILOCK_ORBS",  "LOCK_ORBITALS",h_ICHAR_handle, 0,      ""},
+{/*260*/ "ILOCK_ORBS", "LOCK_ORBI#TALS",h_ICHAR_handle, 0,      ""},
 {/*261*/ "IDAMP_END",   "DAMP_END"     ,h_ICHAR_handle, 20,     ""},
 {/*262*/ "EE_GUESS",    "EE_GUESS"     ,h_ICHAR_handle, 0,      ""},
 {/*263*/ "EE_DENOM",    "EE_DENOM"     ,h_ICHAR_handle, 0,      ""},
@@ -385,7 +385,7 @@ const ASV_nl_t ASV_nl[] =
 {/*269*/ "IF12GAMMA",   "F12GAMMA"     ,h_ICHAR_string, 1.5,    ""},
 {/*270*/ "IFREQ",       "FREQ"         ,h_ICHAR_string, 0.0,    ""},
 {/*271*/ "IIMFREQ",     "IMFREQ"       ,h_ICHAR_string, 0.0,    ""},
-{/*272*/ "ISPINORB",    "SPINORB_CC"   ,h_ICHAR_handle, 0,      ""},
+{/*272*/ "ISPINORB",    "SPINORB#_CC"  ,h_ICHAR_handle, 0,      ""},
 {/*273*/ "ISOC_ROOTS",  "SOC_ROOTS"    ,h_ICHAR_f_int,  0,      ""},
 {/*274*/ "",   ""     ,0,0,""},
 }; /* end ASV_nl[] definition */
@@ -1228,7 +1228,7 @@ void asv_handle_proc(const f_int * index, const char * value)
 char *get_keyname(char *keyname, const char *keydef, const char *delim)
 {
     size_t stublen = strcspn(keydef,delim);
-    if (stublen)
+    if (keydef[stublen])
     {
         strncpy(keyname,keydef,stublen);
         strcpy(keyname+stublen,keydef+stublen+1);

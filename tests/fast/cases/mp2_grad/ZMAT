@@ -1,0 +1,17 @@
+H2O MBPT(2) analytic gradient small test
+H
+O 1 R
+H 2 R 1 A
+
+R=0.957
+A=104.5
+
+*ACES2(CALC=MBPT(2),BASIS=DZP
+units=angstrom
+spherical=on
+REF=RHF,SYMMETRY=NONE)
+
+*SIP
+MAXMEM=1500
+SIAL_PROGRAM=scf_rhf.sio
+SIAL_PROGRAM=mp2grad_rhf.sio

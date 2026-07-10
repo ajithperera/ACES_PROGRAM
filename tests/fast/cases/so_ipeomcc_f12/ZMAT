@@ -1,0 +1,21 @@
+H20:Test calculation H2O mole.
+NE   0.0   0.0   0.0 
+
+*ACES2(BASIS=CC-PCVDZ,CALC=CCSD,SCF_CONV=7,CC_CONV=7,CC_MAXCYC=100,
+IP_CALC=IP_EOMCC,IP_SYM=4, STGF12=OFF,F12GAMMA=1.5,UNITS=ANGSTROM,
+SPINORB_CC=ON,PROPS=SOC,SOC_ROOTS=3,ESTATE_TOL=6,EOM_MAXCYC=50)
+
+*SIP
+MAXMEM=2500
+SIAL_PROGRAM=scf_aguess.sio
+SIAL_PROGRAM=scf_rhf_aguess.sio
+SIAL_PROGRAM=tran_rhf_ao_sv1.sio
+SIAL_PROGRAM=ccsd_rhf_ao_sv1_diis5_F12.sio
+SIAL_PROGRAM=hbar_uhf_ao_ipeomcc_F12.sio
+SIAL_PROGRAM=lambda_rhf_F12.sio
+SIAL_PROGRAM=rip_eomcc_rhf_so.sio
+SIAL_PROGRAM=lip_eomcc_rhf_so.sio
+SIAL_PROGRAM=GS_ip.sio
+SIAL_PROGRAM=eom_so_ci_ip.sio
+
+

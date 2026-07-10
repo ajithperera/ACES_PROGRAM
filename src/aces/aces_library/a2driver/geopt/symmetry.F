@@ -1,3 +1,4 @@
+#define _DEBUG_LVL0
 #include "flags.h"
       SUBROUTINE SYMMETRY(SCRATCH,QTMP,NEWQ,NOSILENT)
 C
@@ -113,12 +114,25 @@ C
       IF(IPRNT .GE. 4 .AND. NOSILENT)WRITE(LUOUT,*)'Inertia tensor:'
       IF(IPRNT .GE. 4 .AND. NOSILENT)WRITE(LUOUT,80)((IT(I,J),J = 1,3),
      &                               I = 1,3)
+#ifdef _DEBUG_LVL0
+      Write(6,*)
+      Print*, "Raw inertia tensor (from INERTIA):"
+      Write(6, "(3F16.10)"), ((IT(I,J),J=1,3),I=1,3)
+#endif
 C
 C DIAGONALIZE INERTIA TENSOR.
 C
       CALL FILTER(IT,9,1.D-12)
       CALL EIG(IT,IV,3,3,0)
       CALL XDCOPY(9,IV,1,ORIEN2,1)
+#ifdef _DEBUG_LVL0
+      Write(6,*)
+      Print*, "Diagonalized IT and eigenvectors IV right after EIG:"
+      Write(6, "(3F16.10)"), ((IT(I,J),J=1,3),I=1,3)
+      Write(6,*)
+      Write(6, "(3F16.10)"), ((IV(I,J),J=1,3),I=1,3)
+      Print*, "DEGTOL =", DEGTOL
+#endif
 C
 C CHECK *NOW* FOR DEGENERACY OF EIGENVALUES -- IF PRESENT, THEN SEE IF
 C  UNIQUE MOMENT OF INERTIA IS ALONG X.  IF SO, CHANGE THIS AXIS TO Z
@@ -132,13 +146,24 @@ C
       ELSE
         RELDIF=0.0
       ENDIF
+#ifdef _DEBUG_LVL0
+      Print*, "ABSDIF, Z, RELDIF =", ABSDIF, Z, RELDIF
+#endif
       IF(RELDIF.LT.DEGTOL)THEN
         RANG=90.D0
         CALL ROTM(2,RANG,1,RM)
+#ifdef _DEBUG_LVL0
+      Print*, "RM from ROTM(2,90,1,RM):"
+      Write(6, "(3F16.10)"), ((RM(I,J),J=1,3),I=1,3)
+#endif
         CALL MODMATMUL(IV,IV,RM,3,3,3,3,3,3)
         ATMP=IT(1,1)
         IT(1,1)=IT(3,3)
         IT(3,3)=ATMP
+#ifdef _DEBUG_LVL0
+      Print*, "Took the degenerate-swap branch. IV after swap:"
+      Write(6, "(3F16.10)"), ((IV(I,J),J=1,3),I=1,3)
+#endif
       ENDIF
 
 CJDW 1/6/98. Replace MATMULV by XGEMM call. NEWQ = (IV)^T * Q.
@@ -163,7 +188,7 @@ C     CALL MATMULV(NEWQ,Q,IV,NATOMS,3,3)
 C
 C     Print out the rotational constants from the inertia
 C
-#ifdef _DEBUG_LVL1
+#ifdef _DEBUG_LVL0
       Print*, "Rotational constant computation"
 #endif
       Call RotCon (IT, 1, IErr, NOSILENT)
@@ -402,7 +427,7 @@ C
 C
       ELSE
 C
-#ifdef _DEBUG_LVL1
+#ifdef _DEBUG_LVL0
       Print*, "Entering the symmetry auto procedure"
 #endif
 #ifdef _NOSKIP

@@ -1375,15 +1375,16 @@ C Ajith Perera 02/2012. It is not possible to have reorientation off
 C when symmetry is off or on. Currently reorientation is only possible
 C when symmetry is set to none.
 C
-      if ((ioppar(h_IOPPAR_coordinates).eq.0) .and.
-     &   (ioppar(h_IOPPAR_sym).eq.0)) then
-          szTmp = 'SYMMETRY=OFF'//achar(0)
-          call asv_update_kv(szTmp,iASV,szData,0)
-          If (ioppar(h_IOPPAR_noreori) .eq. 1) then
-              szTmp = 'NOREORI=OFF'//achar(0)
-             call asv_update_kv(szTmp,iASV,szData,0)
-          endif
-      endif
+C      if ((ioppar(h_IOPPAR_coordinates).eq.0) .and.
+C     &   (ioppar(h_IOPPAR_sym).eq.0)) then
+C          szTmp = 'SYMMETRY=OFF'//achar(0)
+C          call asv_update_kv(szTmp,iASV,szData,0)
+C         If (ioppar(h_IOPPAR_noreori) .eq. 1) then
+C              szTmp = 'NOREORI=OFF'//achar(0)
+C             call asv_update_kv(szTmp,iASV,szData,0)
+C          endif
+C      endif
+
 C
 c Ajith 11/98.
 c Raman intensity calculations:
