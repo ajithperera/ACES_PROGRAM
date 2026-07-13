@@ -56,6 +56,10 @@ c-------------------------------------------------------------------------
          call server_abort_job(server_table, nserver_table)
 
   100 continue
+c        print *,'DEBUGRACE Server ',me,' REQUEST array ',array,
+c    *       ' ix ',ix,' status ',served_array_status(ix),
+c    *       ' seqno ',server_msg(c_msg_seqno,node),
+c    *       ' line ',server_msg(c_msg_current_line,node)
          if (served_array_status(ix) .eq. 0) then
             served_array_status(ix) = readonly_flag
          else if (served_array_status(ix) .ne. readonly_flag) then
@@ -84,6 +88,10 @@ c--------------------------------------------------------------------------
          call server_abort_job(server_table, nserver_table)
 
   200 continue
+c        print *,'DEBUGRACE Server ',me,' PREPARE array ',array,
+c    *       ' ix ',ix,' status ',served_array_status(ix),
+c    *       ' seqno ',server_msg(c_msg_seqno,node),
+c    *       ' line ',server_msg(c_msg_current_line,node)
          if (served_array_status(ix) .eq. 0) then
             served_array_status(ix) = writeonly_flag
          else if (served_array_status(ix) .ne. writeonly_flag) then

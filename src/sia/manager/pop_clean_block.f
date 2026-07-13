@@ -25,25 +25,44 @@ c-------------------------------------------------------------------------
       integer server_table(lserver_table_entry,nserver_table)
 
       integer i, j, jblock, flagval, ptr
+      logical block_is_free
 
 c--------------------------------------------------------------------------
 c   Search backwards through the clean block "stack" until we find one that is
-c   not busy.  
+c   not busy.
 c--------------------------------------------------------------------------
 
       iblock = -1
 
-      if (clean_block_ptr .lt. 1) go to 200 
+      if (clean_block_ptr .lt. 1) go to 200
 
       flagval = or(server_busy_flag, server_dirty_flag)
 
       do i = clean_block_ptr, 1, -1
          jblock = clean_blocks(i)
          ptr    = server_table_ptr(jblock)
-         if (ptr .eq. 0 .or.
-     *      (ptr .gt. 0 .and.
-     *       and(flagval, server_table(c_server_flags,ptr)) .eq.
-     *                           0)) then
+
+c--------------------------------------------------------------------------
+c   NOTE: this must NOT be written as a single ".or."/".and." logical
+c   expression testing "ptr .eq. 0 .or. (ptr .gt. 0 .and. ...)".  Fortran
+c   does not guarantee short-circuit evaluation of logical operators, so
+c   server_table(c_server_flags,ptr) could still be evaluated with ptr=0
+c   (or ptr=-1, the message-buffer marker set in sip_server_init.F), an
+c   out-of-bounds subscript (caught by -check bounds; a real SIGSEGV under
+c   -O2 without it).  ptr < 0 (message buffer) is NOT a free block, same
+c   as the original combined-expression logic.
+c--------------------------------------------------------------------------
+
+         if (ptr .eq. 0) then
+            block_is_free = .true.
+         else if (ptr .gt. 0) then
+            block_is_free = and(flagval,
+     *                    server_table(c_server_flags,ptr)) .eq. 0
+         else
+            block_is_free = .false.
+         endif
+
+         if (block_is_free) then
             iblock = jblock
             j      = i
             go to 100

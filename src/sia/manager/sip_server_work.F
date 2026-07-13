@@ -383,13 +383,18 @@ c---------------------------------------------------------------------------
 c   Clear all the array statuses.
 c---------------------------------------------------------------------------
 
+c              print *,'DEBUGRACE Server ',me,
+c    *             ' resetting served_array_status at seqno ',
+c    *             server_seqno,' barrier_seqno ',barrier_seqno
                do i = 1, nserved_arrays
                   served_array_status(i) = 0
                enddo
+c              print *,'DEBUGRACE Server ',me,
+c    *             ' reset complete, sending barrier ack'
 
 c--------------------------------------------------------------------------
 c   Send an acknowledgement message back to the sender of the barrier.
-c   The message tag is a server_barrier_signal to avoid confusion with 
+c   The message tag is a server_barrier_signal to avoid confusion with
 c   other messages being sent back from the server.
 c--------------------------------------------------------------------------
 
