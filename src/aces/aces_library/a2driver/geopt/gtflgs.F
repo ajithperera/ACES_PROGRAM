@@ -225,7 +225,7 @@ c     logical flags
      &        bTDCalc, DoABCD, DoABCI, ACES3, bMN_A3, DoQRHF, bSTEOM,
      &        EOM, bGeomOpt, bTDA, bOpenShell
       logical bOpened, bTmp, bDone, bDelLastChar, bHaveKeys, bVerbose
-      logical bAutoCart, NO_AGRAD
+      logical bAutoCart, NO_AGRAD, bHasDummy
 c     character constants
       character*1 czPercent, czAsterisk, czHash, czSpace, czFirstNLChar
       character*1 czTab
@@ -254,6 +254,8 @@ c COMMON BLOCKS
 #define MONSTER_FLAGS /* use ioppar */
 #include "jodaflags.com"
 #include "machsp.com"
+#include "mxatms.par"
+#include "coord.com"
 
 c ----------------------------------------------------------------------
 
@@ -1369,21 +1371,27 @@ C
           endif
 CSSS      endif
 C
-C For internal Coordinates do not allow symmetry=none (symmetry=none do no harm
-C except when dummy atoms are present but there is no need of this). 
-C Ajith Perera 02/2012. It is not possible to have reorientation off
-C when symmetry is off or on. Currently reorientation is only possible
-C when symmetry is set to none.
+C For internal coordinates with dummy atoms present, do not allow
+C symmetry=none (symmetry=none does no harm otherwise). Ajith Perera
+C 02/2012; rescoped 2026-07-14 to only fire when dummy atoms are
+C actually present (IATNUM(i).eq.0, same test symmetry.F itself uses),
+C instead of overriding every internal-coordinate SYM=NONE run. Also
+C restored the reset target to SYMMETRY=ON (matching ACES II's
+C gtflgs.F) instead of SYMMETRY=OFF, and dropped the NOREORI override,
+C which has no ACES II counterpart and is moot here since NOREORI is
+C only consulted by symmetry.F inside the SYM=NONE branch anyway.
 C
-C      if ((ioppar(h_IOPPAR_coordinates).eq.0) .and.
-C     &   (ioppar(h_IOPPAR_sym).eq.0)) then
-C          szTmp = 'SYMMETRY=OFF'//achar(0)
-C          call asv_update_kv(szTmp,iASV,szData,0)
-C         If (ioppar(h_IOPPAR_noreori) .eq. 1) then
-C              szTmp = 'NOREORI=OFF'//achar(0)
-C             call asv_update_kv(szTmp,iASV,szData,0)
-C          endif
-C      endif
+      if ((ioppar(h_IOPPAR_coordinates).eq.0) .and.
+     &   (ioppar(h_IOPPAR_sym).eq.0)) then
+         bHasDummy = .FALSE.
+         do i = 1, NATOMS
+            if (IATNUM(i) .eq. 0) bHasDummy = .TRUE.
+         enddo
+         if (bHasDummy) then
+            szTmp = 'SYMMETRY=ON'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         endif
+      endif
 
 C
 c Ajith 11/98.
