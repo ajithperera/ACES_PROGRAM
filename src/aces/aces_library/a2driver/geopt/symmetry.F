@@ -13,7 +13,7 @@ C
 #include "coord.com"
 #include "cbchar.com"
 
-      DOUBLE PRECISION IT(3,3),CM(3),IV(3,3),NEWQ(NX),dtmp
+      DOUBLE PRECISION IT(3,3),CM(3),IV(3,3),IVTMP(3,3),NEWQ(NX),dtmp
       DOUBLE PRECISION RM(3,3),QTMP(NX),TATB(3),QOLD(100)
       DOUBLE PRECISION SCRATCH(3*NX),MOLWT,ORIEN2(9)
       LOGICAL XYZIN,NWFINDIF,NOSILENT
@@ -124,6 +124,33 @@ C DIAGONALIZE INERTIA TENSOR.
 C
       CALL FILTER(IT,9,1.D-12)
       CALL EIG(IT,IV,3,3,0)
+C
+C ACES II normalizes the raw EIG eigenvector matrix here (preserve an
+C approximate x/y/z axis definition by pinning each column's sign so
+C its largest-magnitude element is positive, then flip the first
+C column if IV is still left-handed/a reflection rather than a proper
+C rotation). This ACES III copy of the routine was missing that
+C normalization entirely. For an exactly linear system (e.g. H2),
+C EIG's raw IV here comes out as a reflection (det<0), and skipping
+C this fix is what left NEWQ degenerate/collapsed-to-zero further
+C down for GEOM_OPT runs. Ported from ACESII_build/joda/symmetry.F,
+C 2026-07-14 (using DSCAL, not ACES II's SSCAL, since IV is double
+C precision and DSCAL is what's already linked in this build).
+C
+      DO J = 1, 3
+         AMAX = 0.0D0
+         DO I = 1, 3
+            IF (AMAX .LT. ABS(IV(I,J))) THEN
+               IMAX = I
+               AMAX = ABS(IV(I,J))
+            ENDIF
+         ENDDO
+         IF (IV(IMAX,J) .LT. 0.0D0) CALL DSCAL(3, -1.0D0, IV(1,J), 1)
+      ENDDO
+      DET = IV(1,1)*(IV(2,2)*IV(3,3)-IV(2,3)*IV(3,2))
+     &    - IV(1,2)*(IV(2,1)*IV(3,3)-IV(3,1)*IV(2,3))
+     &    + IV(1,3)*(IV(2,1)*IV(3,2)-IV(2,2)*IV(3,1))
+      IF (DET .LE. 0.0D0) CALL DSCAL(3, -1.0D0, IV(1,1), 1)
       CALL XDCOPY(9,IV,1,ORIEN2,1)
 #ifdef _DEBUG_LVL0
       Write(6,*)
@@ -156,10 +183,26 @@ C
       Print*, "RM from ROTM(2,90,1,RM):"
       Write(6, "(3F16.10)"), ((RM(I,J),J=1,3),I=1,3)
 #endif
-        CALL MODMATMUL(IV,IV,RM,3,3,3,3,3,3)
+C MODMATMUL(A,B,C,...) computes A=B*C via an internal SCRATCH buffer,
+C which its own comments say is safe when A and C alias (its BUILDB
+C caller relies on that). This call instead aliases A and B (both
+C IV) -- a pattern the routine was never shown to be safe for, and
+C which the Fortran standard doesn't guarantee is safe for an
+C optimizing compiler (dummy arguments generally must not alias when
+C one is written). Confirmed via _DEBUG_LVL0 tracing (2026-07-14):
+C under ifx -O2, this in-place call left IV corrupted (a zero row,
+C not orthogonal) for a degenerate/linear system (e.g. H2), which is
+C what collapsed NEWQ to zero and crashed geometry optimization.
+C Fixed by copying IV to a genuinely separate array first, removing
+C the aliasing outright rather than relying on MODMATMUL's internals.
+        CALL XDCOPY(9,IV,1,IVTMP,1)
+        CALL MODMATMUL(IV,IVTMP,RM,3,3,3,3,3,3)
         ATMP=IT(1,1)
         IT(1,1)=IT(3,3)
         IT(3,3)=ATMP
+C IV changed by the degenerate-swap above -- ORIEN2 must track it
+C (matches ACES II; ACES III previously left ORIEN2 stale here).
+        CALL XDCOPY(9,IV,1,ORIEN2,1)
 #ifdef _DEBUG_LVL0
       Print*, "Took the degenerate-swap branch. IV after swap:"
       Write(6, "(3F16.10)"), ((IV(I,J),J=1,3),I=1,3)
