@@ -1,0 +1,22 @@
+NO3 frozen-core CCSD(T) UHF
+C
+O 1 RCO
+H 1 RCH 2 AHCO
+
+RCO  =     1.1920448443
+RCH  =     1.1350646174
+AHCO =   124.0553424051
+
+*ACES2(CALC=CCSD(T),
+BASIS=DZP,REF=UHF,MULT=2,DROPMO=1-2)
+
+*SIP
+MAXMEM=2000
+SIAL_PROGRAM = scf_aguess.sio
+SIAL_PROGRAM = scf_uhf_finish_aguess.sio
+SIAL_PROGRAM = tran_uhf_ao_sv1.sio
+SIAL_PROGRAM = rccsd_uhf.sio
+SIAL_PROGRAM = urccsdpt_aaa.sio
+SIAL_PROGRAM = urccsdpt_bbb.sio
+SIAL_PROGRAM = urccsdpt_aab.sio
+SIAL_PROGRAM = urccsdpt_bba.sio

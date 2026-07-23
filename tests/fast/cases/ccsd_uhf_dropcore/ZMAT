@@ -1,0 +1,21 @@
+H2O frozen-core CCSD UHF
+H
+O 1 R
+H 2 R 1 A
+
+R=0.957
+A=104.5
+
+*ACES2
+BASIS=DZP
+CALC=ccsd
+cc_conv=10
+scf_conv=10
+ref=uhf
+DROPMO=1
+
+*SIP
+MAXMEM=1500
+SIAL_PROGRAM=scf_uhf.sio
+SIAL_PROGRAM=tran_uhf_ao_sv1.sio
+SIAL_PROGRAM=ccsd_uhf_debug.sio

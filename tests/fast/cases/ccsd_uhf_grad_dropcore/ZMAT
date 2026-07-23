@@ -1,0 +1,26 @@
+H2O+ frozen-core CC grad test.
+H
+O 1 R
+H 2 R 1 A
+
+R=0.957
+A=104.5
+
+*ACES2
+BASIS=DZP
+scf_conv=12
+cc_conv=12
+CALC=ccsd
+ref=uhf,charge=1,mult=2
+DROPMO=1
+
+*SIP
+MAXMEM=2800
+SIAL_PROGRAM=scf_uhf.sio
+SIAL_PROGRAM=tran_uhf_ao_sv1.sio
+SIAL_PROGRAM=ccsd_uhf_ao_sv2_diis5.sio
+SIAL_PROGRAM=lambda_uhf_dropmo.sio
+SIAL_PROGRAM=expand_cc.sio
+SIAL_PROGRAM=tran_uhf_expanded.sio
+SIAL_PROGRAM=one_grad_uhf_ao_sv1_dropmo_diis5.sio
+SIAL_PROGRAM=two_grad_uhf_ao_sv1_dropmo.sio
