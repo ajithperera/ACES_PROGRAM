@@ -1,0 +1,11 @@
+NO useless basis
+N
+O 1 R*
+
+R=0.7
+
+*ACES2
+basis=STO-3G,genbas_2=200
+mult=2,SPHERICAL=OFF
+ref=rohf,calc=ccsd,abcdtype=aobasis,single_store
+

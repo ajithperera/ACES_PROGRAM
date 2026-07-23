@@ -1,0 +1,20 @@
+%FCMINT=../fcmint.126
+
+HCN. CCSD/DZP TS search.
+H
+C 1 RHC*
+X 2 RX 1 AX
+N 2 RCN* 3 AX 1 DIH*
+
+RHC =  1.2
+RCN =  1.2
+DIH = 68.0
+RX  =  1.0
+AX  = 90.0
+
+*ACES2
+!restart
+basis=DZP,spherical
+ref=uhf,calc=CCSD
+opt_method=evfts
+

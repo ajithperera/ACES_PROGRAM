@@ -1,0 +1,9 @@
+Electron affinity for the NA atom
+NA
+
+*ACES2
+BASIS=DZP,SPHERICAL=ON
+MULT=2
+REF=UHF,CALC=CCSD
+EA_CALC=EA_EOMCC
+

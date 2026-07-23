@@ -1,0 +1,17 @@
+EOM-CCSD excitation energies and transition moments for water
+H
+O 1 R*
+H 2 R* 1 A*
+
+R=0.957
+A=104.5
+
+*ACES2
+BASIS=DZP
+MEM_SIZE=1gb
+SYM=ON
+cc_conv=10,scf_conv=10
+CALC=CCSD,SPHERICAL=OFF
+opt_maxcyc=1
+EXCITE=EOMEE,ESTATE_SYM=1/0/0/0,ESTATE_PROP=EXPECTATION
+

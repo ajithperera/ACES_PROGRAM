@@ -1,0 +1,15 @@
+ANALYTICAL GRADIENT VIBRATIONAL FREQUENCIES H2O/3-21G*
+H
+O 1 R
+H 2 R 1 A
+
+R=0.9430518265
+A=105.9676873798
+
+*ACES2
+!restart
+BASIS=3-21G*
+vib=findif,SPHERICAL=OFF,SPHERICAL=OFF
+
+this tests 1st-order findiff grids without an inversion center in vibfreqs
+

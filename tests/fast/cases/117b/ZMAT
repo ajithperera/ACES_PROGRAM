@@ -1,0 +1,17 @@
+UHF direct MBPT(2)
+H
+O 1 R
+H 2 R 1 A
+
+R=1.07
+A=106.
+
+*ACES2
+!sym
+basis=3-21G*,SPHERICAL=OFF
+ref=uhf,fock=ao,direct,integrals=gamess,calc=mbpt(2)
+
+*GAMESS
+SCHWRZ=T
+FDIFF=T
+
