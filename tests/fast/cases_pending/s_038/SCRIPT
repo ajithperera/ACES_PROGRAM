@@ -1,0 +1,30 @@
+test -n "$USERDIR" || exit 1
+
+cat <<. >ZMAT
+Water frequency calculation
+X
+O 1 R
+H 2 R1 1 A
+H 2 R1 1 A 3 T
+
+R=1.0
+R1=0.95
+A=130.
+T=180.
+
+*ACES2
+BASIS=DZP
+CALC=SCF
+VIB=EXACT,spherical=off
+
+.
+cat <<. >ISOMASS
+18.0
+1.00797
+1.00797
+
+.
+ln -s $GENBAS . || exit 1
+xaces2 || exit 1
+
+exit 0

@@ -51,12 +51,26 @@ def load_test_results():
     return refs
 
 
-def run_case(name, ref_energy, env):
-    case_dir = os.path.join(CASES_DIR, name)
-    zmat = os.path.join(case_dir, "ZMAT")
-    if not os.path.isfile(zmat):
-        return name, "ERROR", 0.0, f"no ZMAT found at {zmat}"
+def _compare_totenerg(scratch, env, name, ref_energy, elapsed):
+    jr = subprocess.run(
+        ["xa2proc", "jareq", "d", "TOTENERG", "1"],
+        cwd=scratch, env=env, capture_output=True, text=True, timeout=60,
+    )
+    m = re.search(r"[-+]?\d*\.\d+[eEdD][-+]?\d+", jr.stdout)
+    if not m:
+        return name, "ERROR", elapsed, (
+            "xa2proc jareq produced no parseable value\n"
+            f"stdout: {jr.stdout}\nstderr: {jr.stderr}"
+        )
+    got = float(m.group(0).replace("D", "E").replace("d", "e"))
+    tol = TOLERANCE_OVERRIDES.get(name, DEFAULT_TOLERANCE)
+    diff = abs(got - ref_energy)
+    status = "PASS" if diff <= tol else "FAIL"
+    detail = f"got {got:.10f}  ref {ref_energy:.10f}  diff {diff:.2e} (tol {tol:.1e})"
+    return name, status, elapsed, detail
 
+
+def run_case_zmat(name, zmat, ref_energy, env):
     with tempfile.TemporaryDirectory(prefix=f"acesii_fast_{name}_") as scratch:
         shutil.copy(GENBAS, os.path.join(scratch, "GENBAS"))
         shutil.copy(zmat, os.path.join(scratch, "ZMAT"))
@@ -75,22 +89,47 @@ def run_case(name, ref_energy, env):
             tail = "\n".join(run.stdout.splitlines()[-15:])
             return name, "ERROR", elapsed, f"xaces2 exited {run.returncode}\n{tail}"
 
-        jr = subprocess.run(
-            ["xa2proc", "jareq", "d", "TOTENERG", "1"],
-            cwd=scratch, env=env, capture_output=True, text=True, timeout=60,
-        )
-        m = re.search(r"[-+]?\d*\.\d+[eEdD][-+]?\d+", jr.stdout)
-        if not m:
-            return name, "ERROR", elapsed, (
-                "xa2proc jareq produced no parseable value\n"
-                f"stdout: {jr.stdout}\nstderr: {jr.stderr}"
+        return _compare_totenerg(scratch, env, name, ref_energy, elapsed)
+
+
+def run_case_script(name, script, ref_energy, env):
+    # SCRIPT cases chain multiple ACES2 jobs in one shell script, saving an
+    # intermediate file (FCMINT/OLDMOS/etc.) outside the working dir before
+    # an internal `rm -rf *` cleanup between jobs -- USERDIR must therefore
+    # be a directory the script's own cleanup can't reach, i.e. NOT a
+    # subdirectory of the script's cwd.
+    with tempfile.TemporaryDirectory(prefix=f"acesii_fast_{name}_") as scratch, \
+         tempfile.TemporaryDirectory(prefix=f"acesii_fast_{name}_userdir_") as userdir:
+        script_env = dict(env)
+        script_env["GENBAS"] = GENBAS
+        script_env["USERDIR"] = userdir
+
+        t0 = time.time()
+        try:
+            run = subprocess.run(
+                ["sh", script], cwd=scratch, env=script_env,
+                capture_output=True, text=True, timeout=300,
             )
-        got = float(m.group(0).replace("D", "E").replace("d", "e"))
-        tol = TOLERANCE_OVERRIDES.get(name, DEFAULT_TOLERANCE)
-        diff = abs(got - ref_energy)
-        status = "PASS" if diff <= tol else "FAIL"
-        detail = f"got {got:.10f}  ref {ref_energy:.10f}  diff {diff:.2e} (tol {tol:.1e})"
-        return name, status, elapsed, detail
+        except subprocess.TimeoutExpired:
+            return name, "ERROR", time.time() - t0, "script timed out (300s)"
+        elapsed = time.time() - t0
+
+        if run.returncode != 0:
+            tail = "\n".join(run.stdout.splitlines()[-15:])
+            return name, "ERROR", elapsed, f"script exited {run.returncode}\n{tail}"
+
+        return _compare_totenerg(scratch, env, name, ref_energy, elapsed)
+
+
+def run_case(name, ref_energy, env):
+    case_dir = os.path.join(CASES_DIR, name)
+    zmat = os.path.join(case_dir, "ZMAT")
+    script = os.path.join(case_dir, "SCRIPT")
+    if os.path.isfile(zmat):
+        return run_case_zmat(name, zmat, ref_energy, env)
+    if os.path.isfile(script):
+        return run_case_script(name, script, ref_energy, env)
+    return name, "ERROR", 0.0, f"no ZMAT or SCRIPT found in {case_dir}"
 
 
 def main():
@@ -117,6 +156,7 @@ def main():
     all_cases = sorted(
         d for d in os.listdir(CASES_DIR)
         if os.path.isfile(os.path.join(CASES_DIR, d, "ZMAT"))
+        or os.path.isfile(os.path.join(CASES_DIR, d, "SCRIPT"))
     )
     cases = args.cases if args.cases else all_cases
     unknown = set(cases) - set(all_cases)

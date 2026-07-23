@@ -1,0 +1,43 @@
+test -n "$USERDIR" || exit 1
+
+cat <<. >ZMAT
+ANALYTICAL GRADIENT VIBRATIONAL FREQUENCIES H2O/3-21G*
+H
+O 1 R
+H 2 R 1 A
+
+R=0.9430518265
+A=105.9676873798
+
+*ACES2
+!restart
+BASIS=3-21G*
+vib=findif,spherical=off
+
+.
+ln -s $GENBAS . || exit 1
+
+# loop over 4 processes
+procs=4
+for rank in 3 2 1 0
+do xj="xjoda -rank $rank -procs $procs"
+   # clean
+   for file in *
+   do case $file in
+      ZMAT|GENBAS|ZMAT.BAS|*.out) ;;
+      *) rm -rf $file ;;
+      esac
+   done
+   last=0
+   while test $last -eq 0
+   do $xj || exit 1
+      xvmol && xvmol2ja && xvscf && xvdint || exit 1
+      last=$(xa2proc jareq i LASTGEOM 1)
+   done
+   xa2proc parfd updump > fd.$rank.out
+done
+cat fd.*.out > fd.out
+xa2proc parfd load fd.out
+$xj
+
+exit 0
