@@ -25,9 +25,7 @@ rccsd_uhf.sio
 ENDJOBFLOW CCSD_UHF_ENERGY
 
 JOBFLOW CCSD_UHF_GRADIENT
-scf_aguess.sio
-scf_uhf_ainit_aguess.sio
-scf_uhf_finish_aguess.sio
+scf_uhf.sio
 tran_uhf_ao_sv1.sio
 ccsd_uhf_ao_sv2_diis5.sio
 lambda_uhf_ao_sv1_new.sio
