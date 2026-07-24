@@ -2,10 +2,17 @@
 """ACES II fast regression suite.
 
 Runs each small test case in tests/fast/cases/<name>/ against the current
-build, pulls the resulting TOTENERG straight out of JOBARC via
-`xa2proc jareq d TOTENERG 1` (a quiet, single-line JOBARC-record print --
+build, pulls the resulting value straight out of JOBARC via
+`xa2proc jareq d <RECORD> 1` (a quiet, single-line JOBARC-record print --
 no Fortran comparison module needed), compares it to test_results, and
 reports PASS/FAIL/ERROR with a tolerance-based gate.
+
+test_results normally names TOTENERG as the record to check. A few cases
+(VIB=EXACT analytic-Hessian jobs at a correlated level) never get TOTENERG
+written to JOBARC at all -- ACES II's formt2.F deliberately skips that
+PUTREC for "SCF Hessian Polyrate" runs (see project memory) -- so their
+test_results entry names SCFENEG instead, which is always written and still
+verifies the underlying electronic structure.
 
 Usage:
     module load intel/2025.1.0 openmpi/5.0.7   # must be loaded first
@@ -44,22 +51,23 @@ def load_test_results():
             i += 1
             continue
         name = lines[i].split()[0]
-        # lines[i+1] is "TOTENERG 1", lines[i+2] is the value
+        # lines[i+1] is "<RECORD> 1", lines[i+2] is the value
+        record = lines[i + 1].split()[0]
         value = float(lines[i + 2].replace("D", "E").replace("d", "e"))
-        refs[name] = value
+        refs[name] = (record, value)
         i += 3
     return refs
 
 
-def _compare_totenerg(scratch, env, name, ref_energy, elapsed):
+def _compare_record(scratch, env, name, record, ref_energy, elapsed):
     jr = subprocess.run(
-        ["xa2proc", "jareq", "d", "TOTENERG", "1"],
+        ["xa2proc", "jareq", "d", record, "1"],
         cwd=scratch, env=env, capture_output=True, text=True, timeout=60,
     )
     m = re.search(r"[-+]?\d*\.\d+[eEdD][-+]?\d+", jr.stdout)
     if not m:
         return name, "ERROR", elapsed, (
-            "xa2proc jareq produced no parseable value\n"
+            f"xa2proc jareq produced no parseable value for {record}\n"
             f"stdout: {jr.stdout}\nstderr: {jr.stderr}"
         )
     got = float(m.group(0).replace("D", "E").replace("d", "e"))
@@ -70,7 +78,7 @@ def _compare_totenerg(scratch, env, name, ref_energy, elapsed):
     return name, status, elapsed, detail
 
 
-def run_case_zmat(name, zmat, ref_energy, env):
+def run_case_zmat(name, zmat, record, ref_energy, env):
     with tempfile.TemporaryDirectory(prefix=f"acesii_fast_{name}_") as scratch:
         shutil.copy(GENBAS, os.path.join(scratch, "GENBAS"))
         shutil.copy(zmat, os.path.join(scratch, "ZMAT"))
@@ -89,10 +97,10 @@ def run_case_zmat(name, zmat, ref_energy, env):
             tail = "\n".join(run.stdout.splitlines()[-15:])
             return name, "ERROR", elapsed, f"xaces2 exited {run.returncode}\n{tail}"
 
-        return _compare_totenerg(scratch, env, name, ref_energy, elapsed)
+        return _compare_record(scratch, env, name, record, ref_energy, elapsed)
 
 
-def run_case_script(name, script, ref_energy, env):
+def run_case_script(name, script, record, ref_energy, env):
     # SCRIPT cases chain multiple ACES2 jobs in one shell script, saving an
     # intermediate file (FCMINT/OLDMOS/etc.) outside the working dir before
     # an internal `rm -rf *` cleanup between jobs -- USERDIR must therefore
@@ -118,17 +126,17 @@ def run_case_script(name, script, ref_energy, env):
             tail = "\n".join(run.stdout.splitlines()[-15:])
             return name, "ERROR", elapsed, f"script exited {run.returncode}\n{tail}"
 
-        return _compare_totenerg(scratch, env, name, ref_energy, elapsed)
+        return _compare_record(scratch, env, name, record, ref_energy, elapsed)
 
 
-def run_case(name, ref_energy, env):
+def run_case(name, record, ref_energy, env):
     case_dir = os.path.join(CASES_DIR, name)
     zmat = os.path.join(case_dir, "ZMAT")
     script = os.path.join(case_dir, "SCRIPT")
     if os.path.isfile(zmat):
-        return run_case_zmat(name, zmat, ref_energy, env)
+        return run_case_zmat(name, zmat, record, ref_energy, env)
     if os.path.isfile(script):
-        return run_case_script(name, script, ref_energy, env)
+        return run_case_script(name, script, record, ref_energy, env)
     return name, "ERROR", 0.0, f"no ZMAT or SCRIPT found in {case_dir}"
 
 
@@ -172,7 +180,10 @@ def main():
 
     results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as ex:
-        futures = {ex.submit(run_case, name, refs[name], env): name for name in cases}
+        futures = {
+            ex.submit(run_case, name, refs[name][0], refs[name][1], env): name
+            for name in cases
+        }
         for fut in concurrent.futures.as_completed(futures):
             results.append(fut.result())
 
