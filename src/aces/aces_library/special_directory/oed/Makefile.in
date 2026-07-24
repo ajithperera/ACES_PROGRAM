@@ -66,3 +66,18 @@ binclean relink archive: % : ;
 .c.o:
 	$(CC) -c $(CFLAGS) $(INCLUDE_DIRS) $< 1>>make.out 2>>make.err
 
+# 2026-07-18/19: oed__ovl_prepare_ctr.F/oed__nai_prepare_ctr.F copy the NIJ
+# exponential-prefactor array RHO into RHOAB, which their own header comments
+# document can alias RHO in memory -- safe only if copied element-by-element
+# in reverse (N=NIJ,1,-1). At -O2, ifx's loop-idiom recognition matches this
+# reverse loop as a plain array-range copy regardless of direction and lowers
+# it to a memcpy-family call, which assumes non-overlapping memory, silently
+# corrupting data whenever RHO/RHOAB really do alias. -no-vec/-no-fma/
+# -fp-model precise/-no-ansi-alias do NOT suppress it; only -O1 (or -O0)
+# does. oed__kin_prepare_ctr.F has the identical vulnerable pattern but
+# wasn't observed to misbehave in the cases tested -- included defensively.
+# Verified fix bit-identical to the -O0 reference on the H2/STO-3G a3ecp
+# probe; same fix already landed in ACES II's
+# ~/Develop/ACESII_build/Makefiles/GNUmakefile.src (byte-identical source).
+oed__ovl_prepare_ctr.o oed__nai_prepare_ctr.o oed__kin_prepare_ctr.o: FFLAGS += -O1
+
