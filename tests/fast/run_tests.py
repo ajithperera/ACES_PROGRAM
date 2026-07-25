@@ -36,6 +36,12 @@ TEST_RESULTS = os.path.join(FAST_DIR, "test_results")
 DEFAULT_TOLERANCE = 1e-6  # a.u.
 TOLERANCE_OVERRIDES = {}
 
+# Cases that are expected to exit nonzero even when correct -- e.g.
+# opt_maxcyc=1 gradient-only jobs that intentionally hit "Maximum number of
+# optimization steps exceeded" after computing the one cycle's JOBARC
+# records (the archive's own original 1995 reference run ends the same way).
+EXPECT_NONZERO_EXIT = {"153.eomgrad"}
+
 # ifx's runtime libs aren't always on LD_LIBRARY_PATH after `module load` --
 # append the known location defensively so callers don't have to remember.
 _EXTRA_LD_PATH = "/apps/compilers/intel/2025/1.0.666/compiler/2025.1/lib"
@@ -93,7 +99,7 @@ def run_case_zmat(name, zmat, record, ref_energy, env):
             return name, "ERROR", time.time() - t0, "xaces2 timed out (300s)"
         elapsed = time.time() - t0
 
-        if run.returncode != 0:
+        if run.returncode != 0 and name not in EXPECT_NONZERO_EXIT:
             tail = "\n".join(run.stdout.splitlines()[-15:])
             return name, "ERROR", elapsed, f"xaces2 exited {run.returncode}\n{tail}"
 
