@@ -1,0 +1,41 @@
+CN
+C
+N 1 R
+
+R=2.214
+
+*ACES2
+BASIS=AUG-CC-PVTZ
+UNITS=BOHR
+PROPS=G-TEN
+#PROPS=polar
+DAMP_TYPE=DAVIDSON
+CALC=CCSD,SPHERICAL=ON
+CC_CONV=9
+SCF_CONV=9
+REF=UHF,SYM=OFF,MULT=2
+
+*SIP
+MAXMEM=2500
+#SIP_MX_OCC_SEGSIZE=5
+#SIP_MX_VRT_SEGSIZE=3
+#SIAL_PROGRAM = scf_aguess.sio
+#SIAL_PROGRAM = scf_uhf_ainit_aguess.sio
+#SIAL_PROGRAM = scf_uhf_finish_aguess.sio
+SIAL_PROGRAM = scf_uhf.sio
+SIAL_PROGRAM = tran_uhf_ao_sv1.sio
+#SIAL_PROGRAM = ccsd_uhf_fd.sio
+#SIAL_PROGRAM = lambda_uhf_fd.sio
+SIAL_PROGRAM = ccsd_uhf_ao_sv2_diis5.sio
+SIAL_PROGRAM = lambda_uhf_ao_sv1_new.sio
+#SIAL_PROGRAM = two_grad_uhf_fdp.sio
+#SIAL_PROGRAM = two_grad_uhf_fdm.sio
+#SIAL_PROGRAM = fd_2pd.sio
+SIAL_PROGRAM = CCSD_Txyz_UHF.sio
+SIAL_PROGRAM = CCSD_Lxyz_UHF.sio
+#SIAL_PROGRAM = ad_sym_2pd.sio
+#SIAL_PROGRAM = ad_asym_2pd.sio
+SIAL_PROGRAM = CCSD_resp_asym_1D.sio
+SIAL_PROGRAM = CCSD_resp_asym_2D.sio
+
+
