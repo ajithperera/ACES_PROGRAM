@@ -28,6 +28,21 @@ XACES3 = os.path.join(REPO_DIR, "bin", "xaces3")
 XTEST_COMPARE = os.path.join(REPO_DIR, "bin", "xtest_compare")
 
 DEFAULT_TOLERANCE = 1e-6  # a.u., RMS error gate
+DEFAULT_TIMEOUT = 600  # seconds, per-case xaces3 wall-clock budget
+
+# Per-case timeout overrides. The gten_* cases are full CCSD g-tensor
+# property runs (SCF+transform+CCSD+lambda+response, np=4) that measured
+# ~454s/~358s wall clock end-to-end on a dedicated reference run -- close
+# enough to the 600s default that this suite's own (--oversubscribe,
+# tempfile-scratch-on-/tmp) conditions blow past it. gten_no confirmed this
+# directly: it finished at 599.20s under the old default, a hair from a
+# spurious timeout-FAIL. Give real headroom rather than nudging the number
+# until it barely passes.
+TIMEOUT_OVERRIDES = {
+    "gten_h2op": 1200,
+    "gten_cn": 1200,
+    "gten_no": 1200,
+}
 
 # Per-case tolerance overrides, for methods that may not reproduce to the
 # same tightness every run (e.g. loosely-converging EOM/STEOM iterative
@@ -36,6 +51,74 @@ DEFAULT_TOLERANCE = 1e-6  # a.u., RMS error gate
 TOLERANCE_OVERRIDES = {}
 
 RMS_ERROR_RE = re.compile(r"RMS error\s+([-\d.eEdD+]+)")
+
+# g-tensor table verification (gten_* cases). SCFENEG alone doesn't check
+# the actual g-tensor property calculation these cases exist to exercise --
+# see reference_gtensor.txt in each such case dir, extracted from a known-
+# good run's summary.out (unit 66, written by
+# src/sia/sip/aces_instructions/print_rel_info.F). A case dir carrying a
+# reference_gtensor.txt gets its own summary.out parsed and diffed
+# elementwise against it, on top of the normal xtest_compare check.
+GTENSOR_TOLERANCE = 1e-3  # ppm, RMS over all tensor elements across tables
+GTENSOR_TOLERANCE_OVERRIDES = {}
+
+GTENSOR_HEADER_RE = re.compile(r"g-tensor:\s*(.+?)\s*\(ppm\)")
+GTENSOR_COLHDR_RE = re.compile(r"^\s*X\s+Y\s+Z\s*$")
+GTENSOR_ROW_RE = re.compile(
+    r"^\s*([XYZ])\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s*$")
+
+
+def parse_gtensor_tables(text):
+    """Extract {table name: 3x3 matrix (rows/cols in X,Y,Z order)} from a
+    summary.out-shaped block of text. Table headers and their column-header/
+    data rows can have unrelated lines (timing prints, blank lines) between
+    them, so this scans forward from each header looking for the next X/Y/Z
+    column-header line, then the next 3 row lines after that."""
+    tables = {}
+    lines = text.splitlines()
+    i = 0
+    pending_name = None
+    while i < len(lines):
+        m = GTENSOR_HEADER_RE.search(lines[i])
+        if m:
+            pending_name = re.sub(r"\s+", " ", m.group(1)).strip()
+            i += 1
+            continue
+        if pending_name and GTENSOR_COLHDR_RE.match(lines[i]):
+            rows = {}
+            j = i + 1
+            while j < len(lines) and len(rows) < 3:
+                rm = GTENSOR_ROW_RE.match(lines[j])
+                if rm:
+                    rows[rm.group(1)] = [float(rm.group(k)) for k in (2, 3, 4)]
+                j += 1
+            if len(rows) == 3:
+                tables[pending_name] = [rows["X"], rows["Y"], rows["Z"]]
+            pending_name = None
+            i = j
+            continue
+        i += 1
+    return tables
+
+
+def compare_gtensor(name, ref_text, actual_text):
+    ref_tables = parse_gtensor_tables(ref_text)
+    actual_tables = parse_gtensor_tables(actual_text)
+    missing = [k for k in ref_tables if k not in actual_tables]
+    if missing or not ref_tables:
+        return False, 0.0, (
+            f"g-tensor table(s) missing from actual summary.out: "
+            f"{', '.join(missing) if missing else '(no reference tables parsed)'}"
+        )
+    diffs = []
+    for tname, ref_mat in ref_tables.items():
+        act_mat = actual_tables[tname]
+        for r in range(3):
+            for c in range(3):
+                diffs.append(act_mat[r][c] - ref_mat[r][c])
+    rms = (sum(d * d for d in diffs) / len(diffs)) ** 0.5
+    tol = GTENSOR_TOLERANCE_OVERRIDES.get(name, GTENSOR_TOLERANCE)
+    return rms <= tol, rms, f"g-tensor RMS error {rms:.3e} (tol {tol:.1e})"
 
 
 def run_case(name, np):
@@ -51,11 +134,17 @@ def run_case(name, np):
         env = os.environ.copy()
         env["ACES_EXE_PATH"] = os.path.join(REPO_DIR, "bin")
 
+        timeout = TIMEOUT_OVERRIDES.get(name, DEFAULT_TIMEOUT)
         t0 = time.time()
-        run = subprocess.run(
-            ["mpirun", "--oversubscribe", "-np", str(np), XACES3],
-            cwd=scratch, env=env, capture_output=True, text=True, timeout=600,
-        )
+        try:
+            run = subprocess.run(
+                ["mpirun", "--oversubscribe", "-np", str(np), XACES3],
+                cwd=scratch, env=env, capture_output=True, text=True,
+                timeout=timeout,
+            )
+        except subprocess.TimeoutExpired:
+            elapsed = time.time() - t0
+            return name, False, elapsed, f"xaces3 timed out after {timeout}s"
         elapsed = time.time() - t0
 
         if run.returncode != 0:
@@ -79,6 +168,22 @@ def run_case(name, np):
         tol = TOLERANCE_OVERRIDES.get(name, DEFAULT_TOLERANCE)
         passed = rms_error <= tol
         detail = f"RMS error {rms_error:.3e} (tol {tol:.1e})"
+
+        gtensor_ref = os.path.join(case_dir, "reference_gtensor.txt")
+        if os.path.isfile(gtensor_ref):
+            summary_path = os.path.join(scratch, "summary.out")
+            if not os.path.isfile(summary_path):
+                passed = False
+                detail += "\nreference_gtensor.txt present but no summary.out produced"
+            else:
+                with open(gtensor_ref) as f:
+                    ref_text = f.read()
+                with open(summary_path) as f:
+                    actual_text = f.read()
+                g_ok, g_rms, g_detail = compare_gtensor(name, ref_text, actual_text)
+                passed = passed and g_ok
+                detail += "\n" + g_detail
+
         return name, passed, elapsed, detail
 
 

@@ -1,0 +1,21 @@
+H2O+
+H
+O 1 R
+H 2 R 1 A
+
+R=2.089322
+A=109.62
+
+*ACES2(PROPS=G-TEN,CALC=CCSD,UNITS=BOHR,CHARGE=1
+BASIS=AUG-CC-PVTZ,REF=UHF,MULT=2,SYM=OFF)
+
+*SIP
+MAXMEM=2000
+SIAL_PROGRAM = scf_uhf.sio
+SIAL_PROGRAM = tran_uhf_ao_sv1.sio
+SIAL_PROGRAM = ccsd_uhf_ao_sv2_diis5.sio
+SIAL_PROGRAM = lambda_uhf_ao_sv1_new.sio
+SIAL_PROGRAM = CCSD_Txyz_UHF.sio
+SIAL_PROGRAM = CCSD_Lxyz_UHF.sio
+SIAL_PROGRAM = CCSD_resp_asym_1D.sio
+SIAL_PROGRAM = CCSD_resp_asym_2D.sio
