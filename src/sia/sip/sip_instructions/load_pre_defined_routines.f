@@ -281,6 +281,8 @@ C-------------------------------------------------------------------
      & efgnintx,efgninty,efgnintz,copy24,efgn_setup,freqinfo,
      & prsolrover,lrootcorr,eom_so_diag_ip,print_eomso_roots,
      & set_tr_sin,eom_so_diag
+      external energy_denominator_freq,diis_setup_im,compute_diis_im,
+     & energy_denominator_imfreq
 
 
 c--------------------------------------------------------------------
@@ -958,36 +960,38 @@ c-------Explicitly-correlated part-----------------------------------
       dummy = load_user_sub('frag_index_range'//char(0),
      &                       frag_index_range)
 c---------------F12 properties----------------------------------------
-      dummy = load_user_sub('dipole_scalar'//char(0), 0)
+      dummy = load_user_sub('dipole_scalar'//char(0), dipole_scalar)
       call set_upgrade_flag(dummy)
-      dummy = load_user_sub('overdipx'//char(0), 0)
+      dummy = load_user_sub('overdipx'//char(0), overdipx)
       call set_upgrade_flag(dummy)
-      dummy = load_user_sub('overdipy'//char(0), 0)
+      dummy = load_user_sub('overdipy'//char(0), overdipy)
       call set_upgrade_flag(dummy)
-      dummy = load_user_sub('overdipz'//char(0), 0)
+      dummy = load_user_sub('overdipz'//char(0), overdipz)
       call set_upgrade_flag(dummy)
-      dummy = load_user_sub('overquadx'//char(0), 0)
+      dummy = load_user_sub('overquadx'//char(0), overquadx)
       call set_upgrade_flag(dummy)
-      dummy = load_user_sub('overquady'//char(0), 0)
+      dummy = load_user_sub('overquady'//char(0), overquady)
       call set_upgrade_flag(dummy)
-      dummy = load_user_sub('overquadz'//char(0), 0)
+      dummy = load_user_sub('overquadz'//char(0), overquadz)
       call set_upgrade_flag(dummy)
-      dummy = load_user_sub('efgnintx'//char(0), 0)
+      dummy = load_user_sub('efgnintx'//char(0), efgnintx)
       call set_upgrade_flag(dummy)
-      dummy = load_user_sub('efgninty'//char(0), 0)
+      dummy = load_user_sub('efgninty'//char(0), efgninty)
       call set_upgrade_flag(dummy)
-      dummy = load_user_sub('efgnintz'//char(0), 0)
+      dummy = load_user_sub('efgnintz'//char(0), efgnintz)
       call set_upgrade_flag(dummy)
-      dummy = load_user_sub('copy24'//char(0), 0)
+      dummy = load_user_sub('copy24'//char(0), copy24)
       call set_upgrade_flag(dummy)
-      dummy = load_user_sub('efgn_setup'//char(0), 0)
+      dummy = load_user_sub('efgn_setup'//char(0), efgn_setup)
       call set_upgrade_flag(dummy)
-      dummy = load_user_sub('freqinfo'//char(0), 0)
+      dummy = load_user_sub('freqinfo'//char(0), freqinfo)
       call set_upgrade_flag(dummy)
-      dummy = load_user_sub('energy_denominator_freq' // char(0),0)
-      dummy = load_user_sub('diis_setup_im'//char(0), 0)
-      dummy = load_user_sub('compute_diis_im'//char(0), 0)
-      dummy = load_user_sub('energy_denominator_imfreq' // char(0),0)
+      dummy = load_user_sub('energy_denominator_freq' // char(0),
+     &                       energy_denominator_freq)
+      dummy = load_user_sub('diis_setup_im'//char(0), diis_setup_im)
+      dummy = load_user_sub('compute_diis_im'//char(0), compute_diis_im)
+      dummy = load_user_sub('energy_denominator_imfreq' // char(0),
+     &                       energy_denominator_imfreq)
 c---------------------EOM/STEOM------------------------------------------------
       dummy = load_user_sub('eomeaf12info'//char(0),eomeaf12info)
       dummy = load_user_sub('f12_c_ijab_coef'//char(0),f12_c_ijab_coef)

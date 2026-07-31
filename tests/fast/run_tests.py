@@ -67,6 +67,54 @@ GTENSOR_COLHDR_RE = re.compile(r"^\s*X\s+Y\s+Z\s*$")
 GTENSOR_ROW_RE = re.compile(
     r"^\s*([XYZ])\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s*$")
 
+# General property-block verification (dipole/quadrupole/polar/... cases).
+# TOTENERG alone only proves the CCSD ground state reproduced -- it says
+# nothing about the property calculation these cases exist to exercise (the
+# 2026-07-31 eom_ee_so case is the cautionary example: TOTENERG and the
+# singlet EOM roots matched the archive exactly while the triplet roots
+# silently failed to converge to all-zero, which only showed up by actually
+# diffing the printed root table). A case dir carrying a
+# reference_properties.txt (a verbatim snippet copied from a known-good
+# summary.out, header line first) gets that exact number of lines located in
+# the actual summary.out by matching the header line, then every number in
+# both blocks is extracted in order and compared elementwise.
+PROPERTY_TOLERANCE = 1e-4  # a.u., RMS over all numbers in the reference block
+PROPERTY_TOLERANCE_OVERRIDES = {}
+
+NUMBER_RE = re.compile(r"[-+]?\d+\.\d+(?:[DdEe][-+]?\d+)?")
+
+
+def parse_numbers(text):
+    return [float(tok.replace("D", "E").replace("d", "e"))
+            for tok in NUMBER_RE.findall(text)]
+
+
+def compare_property_block(name, ref_text, actual_text):
+    ref_lines = ref_text.splitlines()
+    if not ref_lines:
+        return False, 0.0, "reference_properties.txt is empty"
+    header = ref_lines[0].strip()
+    actual_lines = actual_text.splitlines()
+    start = next((i for i, l in enumerate(actual_lines)
+                  if l.strip() == header), None)
+    if start is None:
+        return False, 0.0, (
+            f"reference_properties.txt header line not found in actual "
+            f"summary.out: {header!r}"
+        )
+    actual_block = "\n".join(actual_lines[start:start + len(ref_lines)])
+    ref_nums = parse_numbers(ref_text)
+    actual_nums = parse_numbers(actual_block)
+    if len(ref_nums) != len(actual_nums) or not ref_nums:
+        return False, 0.0, (
+            f"property block number count mismatch: expected {len(ref_nums)}, "
+            f"got {len(actual_nums)}"
+        )
+    diffs = [a - r for a, r in zip(actual_nums, ref_nums)]
+    rms = (sum(d * d for d in diffs) / len(diffs)) ** 0.5
+    tol = PROPERTY_TOLERANCE_OVERRIDES.get(name, PROPERTY_TOLERANCE)
+    return rms <= tol, rms, f"property RMS error {rms:.3e} (tol {tol:.1e})"
+
 
 def parse_gtensor_tables(text):
     """Extract {table name: 3x3 matrix (rows/cols in X,Y,Z order)} from a
@@ -183,6 +231,21 @@ def run_case(name, np):
                 g_ok, g_rms, g_detail = compare_gtensor(name, ref_text, actual_text)
                 passed = passed and g_ok
                 detail += "\n" + g_detail
+
+        property_ref = os.path.join(case_dir, "reference_properties.txt")
+        if os.path.isfile(property_ref):
+            summary_path = os.path.join(scratch, "summary.out")
+            if not os.path.isfile(summary_path):
+                passed = False
+                detail += "\nreference_properties.txt present but no summary.out produced"
+            else:
+                with open(property_ref) as f:
+                    ref_text = f.read()
+                with open(summary_path) as f:
+                    actual_text = f.read()
+                p_ok, p_rms, p_detail = compare_property_block(name, ref_text, actual_text)
+                passed = passed and p_ok
+                detail += "\n" + p_detail
 
         return name, passed, elapsed, detail
 

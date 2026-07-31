@@ -422,11 +422,13 @@
       execute list_to_blocks                Wbbbj # HBAR_ABCI_bbbb
       execute list_to_blocks                Waabj # HBAR_ABCI_aabb
       execute list_to_blocks                Wbbai # HBAR_ABCI_bbaa
+      IF EAEOMF12CALC == 1.0
       execute list_to_blocks                Hbar_ab_eomea
       execute list_to_blocks                Hbar_ia_eomea
       execute list_to_blocks                Hbar_ik_aj_eomea
       execute list_to_blocks                Hbar_ij_ab_eomea
       execute list_to_blocks                Hbar_ai_jb_eomea
+      ENDIF
 
 #--------------Read F12 - related intermediates-------------------
                  IF F12CALC == 1.0
@@ -1964,6 +1966,10 @@
       F12CALC = 0.0
       execute f12info F12CALC
       execute print_scalar F12CALC
+      execute eomeaf12info EAEOMF12CALC
+      IF F12CALC == 1.0
+      EAEOMF12CALC = 1.0
+      ENDIF
 #---------------------------------------------------------|
 #   Read necessary elements of Hbar, integrals, lambda    |
 #      amplitudes, and amplitude derivatives              |
