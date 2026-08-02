@@ -11555,12 +11555,13 @@
             Tpq(mu,nu)       = ca(mu,i)*Txi(nu,i)  
             PUT DhfA(mu,nu) += Tpq(mu,nu) 
       ENDPARDO mu, nu, i  
-      PARDO mu, nu, j  
-            Txj(nu,j)        = cb(nu,j) 
-            Tpq(mu,nu)       = cb(mu,j)*Txj(nu,j)  
-            PUT DhfB(mu,nu) += Tpq(mu,nu) 
-      ENDPARDO mu, nu, j  
-      ENDPROC HFDENS  
+      PARDO mu, nu, j
+            Txj(nu,j)        = cb(nu,j)
+            Tpq(mu,nu)       = cb(mu,j)*Txj(nu,j)
+            PUT DhfB(mu,nu) += Tpq(mu,nu)
+      ENDPARDO mu, nu, j
+      execute server_barrier
+      ENDPROC HFDENS
 
 #______________________________________________________________________________
 
