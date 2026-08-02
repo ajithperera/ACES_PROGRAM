@@ -54,6 +54,7 @@ c---------------Variables--------------------------------------------
       integer msg(len_sip_server_message)
       integer flag,ind(mx_array_index)
       integer stack,g,n1,n2,m1,m2
+      integer ip_roots_i, ea_roots_i
 
       double precision x(1),int_type_d,dind1
       double precision dbuf(1), temp
@@ -112,7 +113,10 @@ c-------------------U_inv(+/-) output array------------------------------
       m1 = index_table(c_index_size, ind(1))  ! pick up length of index
       m2 = index_table(c_index_size, ind(2))  ! pick up length of index
 c-------------------------------------------------------------------------
-      call do_u_inv(x(iarray),n1,n2,x(iarray1),m1,m2,ip_roots,ea_roots)
+      ip_roots_i = ip_roots
+      ea_roots_i = ea_roots
+      call do_u_inv(x(iarray),n1,n2,x(iarray1),m1,m2,
+     *              ip_roots_i,ea_roots_i)
 c-------------------------------------------------------------------------
 
       return
