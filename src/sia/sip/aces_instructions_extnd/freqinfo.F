@@ -36,6 +36,17 @@ C----------------------------------------------------------------
       include 'int_gen_parms.h'
       include 'machine_types.h'
 C      include 'freq.h'
+C     freq.h's /FR/ common (FREQ, IMFREQ) can't be included directly here --
+C     it would clash with int_gen_parms.h's own freq/imfreq names (the
+C     ASV-parsed values read below). Declare local aliases bound to the same
+C     /FR/ common block (matched by block name, not variable name) so the
+C     real ASV frequency actually reaches eps_divide*_fr / eps_divide*_imfr
+C     in energy_denominator_freq.F / energy_denominator_imfreq.F, which read
+C     FREQ/IMFREQ from /FR/ -- previously left permanently at 0.0 since
+C     nothing ever wrote to /FR/, making the +FREQ/-FREQ (and IMFREQ) branches
+C     in those routines identical.
+      double precision freq_fr, imfreq_fr
+      common /FR/ freq_fr, imfreq_fr
 
       integer a1,a2,b1,b2,c1,c2,d1,d2,i1,i2,j1,j2,k1,k2
       integer i,j,k,l,a,b,l1,l2,g,kk1,ll1
@@ -43,7 +54,9 @@ C      include 'freq.h'
       double precision x1,x2
 
       x1 = FREQ
-      x2 = IMFREQ 
+      x2 = IMFREQ
+      freq_fr = FREQ
+      imfreq_fr = IMFREQ
 c--------------------------------------------------------------------------------
       return
       end
