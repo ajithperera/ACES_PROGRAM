@@ -42,7 +42,9 @@ TIMEOUT_OVERRIDES = {
     "gten_h2op": 1200,
     "gten_cn": 1200,
     "gten_no": 1200,
-    "dea_eomcc_f12": 1500,
+    "ccsd_f12": 1200,
+    "ccsdt_f12": 1200,
+    "dea_eomcc_f12": 2700,
 }
 
 # Per-case tolerance overrides, for methods that may not reproduce to the

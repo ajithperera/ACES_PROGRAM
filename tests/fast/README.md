@@ -38,3 +38,20 @@ multi-reference/multi-determinantal treatment of degenerate states -- new
 method development, not test-suite hygiene. `gten_no` is therefore checked
 against `SCFENEG` only (not the g-tensor tables) until/unless that method
 work happens.
+
+## F12 cases (`ccsd_f12`, `ccsdt_f12`, and any `*_f12` property case)
+
+`STGF12=ON` deliberately runs the primary/orbital SCF over a fully
+decontracted basis (every primitive treated as its own basis function --
+confirmed directly by diffing the generated `MOL` file for water/aug-cc-pVDZ:
+41 contracted basis functions with `STGF12=OFF` vs. 57 with it on, matching
+each shell's primitive count 1:1). This is expected/correct behavior for
+ACES III's STG-F12 method, not a bug -- so SCF and CCSD energies for F12
+cases will *not* match the pre-2026 `/blue/bartlett/perera/TESTS` archive,
+which predates (or otherwise doesn't reflect) this decontraction. **Do not
+use that archive as ground truth for any `STGF12=ON` case.** `test_results`
+entries for F12 cases are self-consistent baselines from a verified clean
+run of the current code instead (same convention as `steom_so`), not
+archive-matched. Note the decontraction is F12-specific plumbing, not the
+general-purpose `UNCONTRACT` ASV keyword -- tried in isolation, `UNCONTRACT=ON`
+does not reproduce it (confirmed 2026-08-03).
