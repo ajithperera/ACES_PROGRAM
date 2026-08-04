@@ -128,6 +128,7 @@ C
      +                JUNK,NBAS, 1 )
      +
      +
+         Print*, "I am here"
          DO I = 1, NBAS
             SCR1 (I,I) = ONE / DSQRT (SCR1 (I,I))
          ENDDO
@@ -172,6 +173,7 @@ C
      +              ( SCR2,OMGA,
      +                JUNK,NBAS,-1 )
      +
+         Print*, "I am here"
      +
          CALL  DKH__MATMUL_NN
      +

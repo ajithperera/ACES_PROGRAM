@@ -3,6 +3,7 @@
  * This routine mimics (blas)dcopy for integers.
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h> /* for labs */
 

@@ -15,12 +15,12 @@ DEBUG=0
 INCDIRS= ../include ../include/mpi ./include  ../intgrt/include/ ../sbtools/include
 MKL_GRP:= -Bstatic -lmkl_intel_ilp64 -lmkl_lapack95_ilp64 -lmkl_sequential -lmkl_core -Bdynamic
 
-#LDFLAGS_NUMLIBS:= -L/apps/compilers/intel/2020/0.166/mkl/lib/intel64  -Wl,--start-group $(MKL_GRP) -Wl,--end-group -pthread -L//apps/shared/bartlett/ACESII-2.14.0/lib -llb -llinpack
+LDFLAGS_NUMLIBS:= -L/apps/compilers/intel/2025/1.0.166/mkl/lib/intel64  -Wl,--start-group $(MKL_GRP) -Wl,--end-group -pthread -L//home/perera/Develop/ACESII-build/lib -llb -llinpack
 
-LDFLAGS_NUMLIBS:= -L/apps/shared/bartlett/ACESII-2.14.0/lib -llinpack -llb
+#LDFLAGS_NUMLIBS:= -L/home/perera/Develop/lib -llinpack -llb
 
-DIR_INSTBIN := /home/perera/Develop/ACESII/bin
-DIR_INSTLIB := /home/perera/Develop/ACESII/lib
+DIR_INSTBIN := /home/perera/Develop/bin
+DIR_INSTLIB := /home/perera/Develop/lib
 DIR_SRCLIB  := ${DIR_INSTLIB}
 
 ###################################
@@ -35,4 +35,50 @@ ifeq (${CURR},asv)
    LDFLAGS_EXTRA := ../joda/asv_ctl.o
    LDFLAGS_NUMLIBS :=
 endif
+
+# 2026-07-17, joda only: found while debugging a SIGSEGV in the H2 SCF/RHF
+# GEOM_OPT=PARTIAL reference job. ifx -O2 -i8 lowers a block of ~17 sequential
+# scalar copies from COMMON /FLAGS/ into COMMON /OPTCTL/ (IPrnt = iFlags(46),
+# etc., in mkerdoed.F) into an aligned SSE `movaps` struct-copy, but the linked
+# commons land only 8-byte aligned at runtime, so the aligned SIMD load faults.
+# -no-vec and -O1 do NOT suppress this (confirmed empirically); only -O0 does.
+# Rest of joda stays at production -O2 -- this routine runs once per geometry
+# point and is not performance-sensitive.
+ifeq (${CURR},joda)
+   mkerdoed.o: compile_f += -O0
+endif
+
+# 2026-07-18, oed only: found while bisecting the overlap/NAI-derivative-integral
+# discrepancy vs ACES III. oed__ovl_prepare_ctr.f/oed__nai_prepare_ctr.f copy the
+# NIJ exponential-prefactor array RHO into RHOAB, which the routine's own header
+# comment documents can alias RHO in memory (same underlying WORK/ZCORE block) --
+# safe only if copied element-by-element in reverse (N=NIJ,1,-1). At -O2, ifx's
+# loop-idiom recognition matches this reverse loop as a plain array-range copy
+# (regardless of iteration direction) and lowers it to a memcpy-family call,
+# which assumes non-overlapping memory -- silently corrupting data whenever RHO
+# and RHOAB really do alias at the call site. -no-vec/-no-fma/-fp-model precise/
+# -no-ansi-alias do NOT suppress this (confirmed empirically); only dropping to
+# -O1 (or -O0) does. oed__kin_prepare_ctr.o has the identical vulnerable pattern
+# but wasn't observed to misbehave in the cases tested here -- included
+# defensively since it's the same latent hazard. Rest of oed stays at -O2.
+ifeq (${CURR},oed)
+   oed__ovl_prepare_ctr.o: compile_f += -O1
+   oed__nai_prepare_ctr.o: compile_f += -O1
+   oed__kin_prepare_ctr.o: compile_f += -O1
+endif
+
+# 2026-07-19, libr only: found while bisecting the TSTOPS-on-water symmetry
+# failure. UNITRY calls MODMATMUL(rot,TRNMAT,TRNMAT,3) -- the same actual array
+# aliased into both the B and C dummy arguments, to transform TRNMAT in place
+# (used by GENDIH to build the second mirror-plane matrix for even-order point
+# groups, e.g. C2v's sigma-v'). MODMATMUL's own read-into-SCRATCH-then-write
+# design is provably alias-safe at the source level, but ifx -O2 miscompiles it
+# anyway under this self-aliased call, producing a non-orthogonal matrix. Only
+# -O0 was tested/confirmed to suppress this. Rest of libr stays at production
+# -O2 -- MODMATMUL is a small utility routine, not a hot loop.
+ifeq (${CURR},libr)
+   modmatmul.o: compile_f += -O0
+endif
+
+
 

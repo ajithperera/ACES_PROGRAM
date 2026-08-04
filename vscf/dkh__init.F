@@ -112,6 +112,7 @@ C
       
         CONTRACT =  (IFLAGS2(h_IFLAGS2_uncontract) .eq.0)
 
+
 C The contracted basis DKH one-particle term is computed using OED
 C integrals in a separate module (dkh). It also works when the basis
 C is uncontracted but I will leave the orginal path for those calcs. 

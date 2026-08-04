@@ -7,6 +7,7 @@ void sighandler(int sig)
 {
     /*call fortran handler*/
 #define f_ncycread F77_NAME(ncycread,NCYCREAD)
+    void f_ncycread(void);
     f_ncycread();
 
     /*install handler again*/

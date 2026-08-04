@@ -1317,7 +1317,7 @@ void asv_handle_proc(const f_int * index, const char * value)
 char *get_keyname(char *keyname, const char *keydef, const char *delim)
 {
     size_t stublen = strcspn(keydef,delim);
-    if (stublen)
+    if (keydef[stublen])
     {
         strncpy(keyname,keydef,stublen);
         strcpy(keyname+stublen,keydef+stublen+1);

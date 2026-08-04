@@ -47,7 +47,7 @@ cPV
        logical delta_int, twoCent_int,FourCent_soi, angmom_int,
      &         efield_int, Dshield_int, Nattrac, fourcent_dshield,
      &         fourcent_repl,Fourcent_spnspn_cpling,pvp_ints,
-     &         secnd_der_nai,Two_cent_fld_grad
+     &         secnd_der_nai,Two_cent_fld_grad,ovl_der_int
 cendPV
 C
       Call aces_init(icore, i0,icrsiz, iuhf, .true.) 
@@ -260,8 +260,11 @@ C
       Ioed_nai_x2        = Ioed_nai_z1        + Nbfns**2
       Ioed_nai_y2        = Ioed_nai_x2        + Nbfns**2
       Ioed_nai_z2        = Ioed_nai_y2        + Nbfns**2
-      Ioed_nai           = Ioed_nai_z2        + Nbfns**2 
-      Iend               = Ioed_nai           + Nbfns**2 
+      Ioed_nai           = Ioed_nai_z2        + Nbfns**2
+      Ioed_ovl_x         = Ioed_nai           + Nbfns**2
+      Ioed_ovl_y         = Ioed_ovl_x         + Nbfns**2
+      Ioed_ovl_z         = Ioed_ovl_y         + Nbfns**2
+      Iend               = Ioed_ovl_z         + Nbfns**2
 #ifdef _DEBUG_LVL0     
       Write(6,"(a,1x,i5,1x,i5)") "Iend and Mxdcor:", Iend, Mxdcor
 #endif
@@ -301,9 +304,26 @@ C
       dshield_int=.false.
       Fourcent_dshield=.false.
       Fourcent_spnspn_cpling=.false. 
-      pvp_ints=.false. 
-      secnd_der_nai=.false.
+      pvp_ints=.false.
+      secnd_der_nai=.true.
       two_cent_fld_grad=.false.
+      ovl_der_int=.true.
+
+      if(ovl_der_int) then
+      Call compute_1derovl_integrals(val1(1),val2(1),val1(2),val2(2),
+     &                       Work(Ierd_dbuf),Zmax,
+     &                       IWork(1),
+     &                       Cord,Work(ipcoef),Work(ialpha),
+     &                       Ccbeg,Ccend,End_nfps, Nshells, Nbfns,
+     &                       Zmax, Intmax, Npfps, Ncfps, Ivangmom,
+     &                       Ixalpha, Indx_cc, Atm_4shell, Ixpcoef,
+     &                       Ispherical,
+     &                       Work(Ioed_ovl_x),Work(Ioed_ovl_y),
+     &                       Work(Ioed_ovl_z),
+     &                       Nsend,
+     &                       Nalpha, Npcoef,
+     &                       max_centers)
+      end if
 
       if(Nattrac) then
 
@@ -404,7 +424,6 @@ c      write(*,*) 'twoCent_int=',twoCent_int
 
       if(secnd_der_nai) then
 
-#ifdef _NOSKIP
       Do Iatm = 1, 2
       Call Dcopy(3*Ncenters,Cord,1,CordM,1)
       Do Ixyz  = 3, 3
@@ -456,7 +475,6 @@ c      write(*,*) 'twoCent_int=',twoCent_int
       Enddo
       Enddo
       Enddo
-#endif 
 C#ifdef _NOSKIP
       Call compute_2dernai_integrals(val1(1),val2(1),val1(2),val2(2),
      &                       Work(Ierd_dbuf),Zmax,

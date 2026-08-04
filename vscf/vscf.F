@@ -592,6 +592,9 @@ c           buffer for MPI_ALLREDUCE
          end if
          imemget = imemget + iTmp
       end if
+
+      If (IFLAGS(h_IFLAGS_guess) .EQ. 5) imemget=Max(imemget,Maxcor)
+     
 cwc0
 C
 c OEP SCF block, Igor Schweigert, Sep 2003,
@@ -904,7 +907,7 @@ c the indexing math must be changed to doubles.
      &                ICORE(I190),ICORE(I200),
      &                ITRILN(NIRREP+1),MXIRR2,
      &                NBAS,NBASX,NATOMS,IUHF,IOLDOCC,
-     &                ICORE(I210),(I000+MAXMEM-I220)/IINTFP)
+     &                ICORE(I210),(I000+MAXCOR-I220)/IINTFP)
       END IF
 C
 #ifdef _IMPORT_CORR_ORBS
