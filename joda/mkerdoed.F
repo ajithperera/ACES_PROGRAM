@@ -538,7 +538,7 @@ C
         CALL RDBAS(SCRBAS,0,IFLAGS(64+IATTYP),LUERDOED,
      &             IntTyp,NullSt,IAtnum(Nord(NStart)),
      &             Nord(MxAtms+I),seward,.false.,6)
-       Do J = 1, Nord(MxAtms+J)
+       Do J = 1, Nord(MxAtms+I)
           IBotm = -2 + 3*Nord(NStart-1+J)
           IINFIL = IINFIL + 1
           IZLOC(IINFIL) = NORD(NSTART+J-1)

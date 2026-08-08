@@ -8,7 +8,7 @@ C
 C    SINGLES(ISPIN), DOUBLES (ISPIN, 3-ISPIN)                         [ RHF ]
 C
       IMPLICIT INTEGER (A-Z)
-      DOUBLE PRECISION S
+      DOUBLE PRECISION S,SNORM
       DIMENSION S(NIP), LISTS2(2,2)
 C
       COMMON /MACHSP/ IINTLN,IFLTLN,IINTFP,IALONE,IBITWD
@@ -17,8 +17,9 @@ C
       COMMON /SYMPOP/ IRPDPD(8,22),ISYTYP(2,500),ID(18)
       COMMON /SINFO/ NS(8), SIRREP
 C
+
       CALL PUTLST(S(1), 1, 1, 1, ISPIN, LISTS1)
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       write(6,"(a)") "@-puts_hhp-S"
       write(6,"(6(1x,f12.6))")(s(i),i=1,Nip) 
       Call checksum("@putshhs:",S,Pop(Sirrep,Ispin))

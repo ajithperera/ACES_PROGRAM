@@ -221,7 +221,7 @@ CSSS       Call Spin_orbit(Scr(Itmp1), Scr(Itmp3), Mxcor, Nao)
 
        IF (IFLAGS(1) .GE. 40) THEN
           CALL HEADER ('@-TDENS Transition density matrix', 0, 6) 
-          CALL TAB (6, SCR(ITMP1), NAO, NAO, NAO, NAO)
+          CALL TAB_VEE (6, SCR(ITMP1), NAO, NAO, NAO, NAO)
        ENDIF
        ITHR=3*IINTFP
        CALL PUTREC(20,'JOBARC',STRNG(ISIDE),ITHR,TM)

@@ -78,7 +78,7 @@ c    FB(J,L) = FB(J,L) - 1/2 DB(I,K) (IJ|KL)
 c    FB(I,L) = FB(I,L) - 1/2 DB(J,K) (IJ|KL)
 c    FB(J,K) = FB(J,K) - 1/2 DB(I,L) (IJ|KL)
 c
-      SUBROUTINE MKUHFF(FA,FB,DA,DB,DT,BUF,IBUF,NTOTAL,
+      SUBROUTINE MKUHFF_CCSD_LIGHT(FA,FB,DA,DB,DT,BUF,IBUF,NTOTAL,
      &                  NBAST,NBAS,IMAP,ILNBUF,LUINT,
      &                  naobasfn,iuhf)
 

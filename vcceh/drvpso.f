@@ -82,7 +82,8 @@ C
 C     
                IF (IPRINT .GE. 40) THEN
                   CALL HEADER ('PSO INTEGRALS', -1, 6)
-                  CALL TAB (LUOUT, PSOINT(I000), NAO, NAO, NAO, NAO)
+                  CALL TAB_VCCEH (LUOUT, PSOINT(I000), NAO, NAO, NAO,
+     &                            NAO)
                ENDIF
 C     
                IRWND = IONE 

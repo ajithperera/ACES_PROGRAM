@@ -81,9 +81,9 @@ C
 C
             IF (IFLAGS(1) .GT. 40) THEN
                CALL HEADER ('PROPERTY INTEGRALS (FC)', 1, 6)
-               CALL TAB (LUOUT, SCR(I000), NAO, NAO, NAO, NAO)
+               CALL TAB_VEE (LUOUT, SCR(I000), NAO, NAO, NAO, NAO)
                CALL HEADER ('TRANSITION DENSITY', 1, 6)
-               CALL TAB (LUOUT, TRNDEN, NAO, NAO, NAO, NAO)
+               CALL TAB_VEE (LUOUT, TRNDEN, NAO, NAO, NAO, NAO)
             ENDIF
 C     
             TMNMR(IPERT) = TMNMR(IPERT) + SIGN*SDOT(NAO*NAO, 
@@ -107,9 +107,9 @@ C
 C     
                IF (IFLAGS(1) .GT. 40) THEN
                   CALL HEADER ('PROPERTY INTEGRALS (SD)', 1, 6)
-                  CALL TAB (LUOUT, SCR(I000), NAO, NAO, NAO, NAO)
+                  CALL TAB_VEE (LUOUT, SCR(I000), NAO, NAO, NAO, NAO)
                   CALL HEADER ('TRANSITION DENSITY', 1, 6)
-                  CALL TAB (LUOUT, TRNDEN, NAO, NAO, NAO, NAO)
+                  CALL TAB_VEE (LUOUT, TRNDEN, NAO, NAO, NAO, NAO)
                ENDIF
 C     
                TMNMR(ICONT) = TMNMR(ICONT) + SIGN*SDOT(NAO*NAO, 
@@ -136,9 +136,9 @@ C
 C
                IF (IFLAGS(1) .GT. 40) THEN
                   CALL HEADER ('PROPERTY INTEGRALS (PSO)', 1, 6)
-                  CALL TAB (LUOUT, SCR(I000), NAO, NAO, NAO, NAO)
+                  CALL TAB_VEE (LUOUT, SCR(I000), NAO, NAO, NAO, NAO)
                   CALL HEADER ('TRANSITION DENSITY', 1, 6)
-                  CALL TAB (LUOUT, TRNDEN, NAO, NAO, NAO, NAO)
+                  CALL TAB_VEE (LUOUT, TRNDEN, NAO, NAO, NAO, NAO)
                ENDIF
 C     
                TMNMR(ICONT) = TMNMR(ICONT) + SIGN*SDOT(NAO*NAO, 

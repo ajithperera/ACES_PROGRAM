@@ -5,7 +5,10 @@
 
 #include "molcas.com"
 
-      call aces_fin
+c In pyaces's single-process model, do not finalize (close) the job
+c archive/I-O subsystem here -- the caller (Python, via runscf.F) may
+c still need to read records after Runscf returns, matching runscf.F's
+c own existing "do not call aces_fin" decision for the same reason.
 
       if (seward) then
 c      o $MOLCAS/src/scf/scf.f finalization routines... (fatal)
@@ -21,6 +24,6 @@ cSEWTRACE         call qexit("VSCF")
 cSEWARD         call finish(itmp)
       end if
 
-      stop
+      return
       end
 

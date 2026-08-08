@@ -6,7 +6,7 @@ C TD-CC EXTENSION ADDED BY P.G. SZALAY (ROUTINES WITH 'OS')
 C
 #include "flags.h" /* for h_IFLAGS_* and h_IFLAGS2_* */
 
-      PROGRAM VCC
+      SUBROUTINE VCC(ICORE,ICRSIZ,IUHF)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       INTEGER DISTSZ,RLECYC,T1_CYCLE
       INTEGER POP(8,2),VRT(8,2)
@@ -21,8 +21,7 @@ C
       LOGICAL pCCD,pCCDS,pCCDTS,pCCDTSD,OO_CC
       CHARACTER*4 ACT
       DIMENSION ECORR(3)
-      COMMON / / ICORE(1)
-      COMMON /ISTART/ I0,ICRSIZ
+      INTEGER ICORE(ICRSIZ),ICRSIZ,IUHF,I0
       COMMON /INFO/ NOCCO(2),NVRTO(2)
       COMMON /FLAGS/  IFLAGS(100)
       COMMON /FLAGS2/ IFLAGS2(500)
@@ -59,8 +58,8 @@ C
 C
       iref = 1
       ibwpass = 0
+      I0 = 1
 
-      CALL CRAPSI(ICORE,IUHF,0)
       bPrint = iflags(1).ge.10
       NO_REDUNDANT = iflags2(h_IFLAGS2_single_store).ne.0
 
@@ -103,7 +102,7 @@ C
 
       CALL ZERO(ENERGY,1000)
       CALL IZERO(IXTRLE,500)
-      CALL SETMET(pCCD,pCCDS,pCCDTS,pCCDTSD)
+      CALL SETMET_VCC(pCCD,pCCDS,pCCDTS,pCCDTSD)
       CALL SETLOG
 
       ICONVG=1
@@ -340,10 +339,9 @@ C
                CALL ACES_AUXCACHE_RESET
             END IF
             WRITE(6,1020)
-            call aces_fin
-            stop
+            RETURN
 c        END IF (IFLAGS2(117).EQ.2)
-         ENDIF 
+         ENDIF
 C
 C Standard EOM-MBPT(2) ends here. Start the PEOM_X. What is it. The
 C first-step of it to solve the Brueckner MBPT(2). That is equivalent
@@ -442,8 +440,7 @@ C Breuckner is not absolutely necessary.
 C
             IF (BRUECK) THEN
                CALL BRUECKIT(ICORE(I0),MAXCOR,IUHF,BRKCNV,pCCD)
-               call aces_fin
-               stop
+               RETURN
             END IF
             
             IF (BRKCNV) THEN
@@ -572,10 +569,9 @@ C
                CALL ACES_AUXCACHE_RESET
             END IF
             WRITE(6,1020)
-            call aces_fin
-            stop
+            RETURN
 c        END IF (IFLAGS2(117).EQ.2)
-         ENDIF 
+         ENDIF
 C
 C IN CASE OF MBPT BASED ON BRUECKNER ORBITALS, GET NEW ORBITALS
 C BY CALLING BRUECKIT
@@ -1410,9 +1406,8 @@ C
             ENDIF
          ENDIF
 C
-         call aces_fin
          WRITE(6,1020)
-         call aces_exit(0)
+         RETURN
 
 c     END IF (ICONVG.EQ.0)
       END IF
@@ -1457,10 +1452,10 @@ C LISTS IF NECESSARY
          CALL ACES_AUXCACHE_FLUSH
          CALL ACES_AUXCACHE_RESET
       END IF
-      call aces_fin
 
  1020 FORMAT(/,77('-'),/,32X,'Exiting xvcc',/,77('-'),/)
       WRITE(6,1020)
 
+      RETURN
       END
 

@@ -7,7 +7,7 @@ c Revision 1.1  89/07/14  10:26:42  sosa
 c Initial revision
 c 
 C....+!..1.........2.........3.........4.........5.........6.........7.*
-      SUBROUTINE TAB(NOUT,A,N,M,NNN,MMM)
+      SUBROUTINE TAB_FBLOCAL(NOUT,A,N,M,NNN,MMM)
 C  modified by RPM for an 80-character wide display.  un-comment the 
 C  appropriate set of parameters and format statements to choose how
 C  many columns across the page.

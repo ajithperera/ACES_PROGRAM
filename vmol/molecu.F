@@ -1,7 +1,7 @@
 
 #include "flags.h"
 
-       PROGRAM MOLECU
+       SUBROUTINE INTS_(ICORE,ICRSIZ,IUHF)
 C
 C GAUSSIAN INTEGRAL PROGRAM, ORIGINALLY WRITTEN BY J. ALMLOF IN 1971,
 C WITH EXTENSIVE MODIFICATIONS BY PETER TAYLOR.
@@ -106,8 +106,7 @@ cch---------------------------------------------------------------------
       COMMON /MMMM/ M2(12)
       COMMON /REP/ NEWIND(MXCBF) ,MSTOLD(8)
       COMMON /READINBF/ X(MXMEMRDIN)
-      COMMON // ICORE(1)
-      COMMON /ISTART/ I0,ICRSIZ
+      INTEGER ICORE(ICRSIZ),ICRSIZ,IUHF
       COMMON /HARMON/HARMT
       COMMON /FLAGS/ IFLAGS(100)
 #include "flags2.com"
@@ -131,10 +130,14 @@ C
       COMMON /MACHSP/ IINTLN,IFLTLN,IINTFP,IALONE,IBITWD
       COMMON /MEMINF/ IJUNK(2),ITOTMEM,IHWM1,IHWM2
       COMMON /TIMEINFO/ TIMEIN, TIMENOW, TIMETOT, TIMENEW
+#include "f_types.h"
+      F_ADR C_ADR
+      EXTERNAL C_ADR
 C-----------------------------------------------------------------------
 C
+      WRITE(6,*) '@INTS_-DEBUG: entry ICORE(1) addr=',C_ADR(ICORE(1)),
+     &           ' ICRSIZ=', ICRSIZ
       IPRINT = IFLAGS(1)
-      CALL CRAPSI(X,IUHF,-1)
       INTES=0
       INTE53=0
       INTE32=0
@@ -201,16 +204,12 @@ CSSS     &            KWD,NH4,X(I280),X(I290),X(I300),
      &            NSYMOP)
       CALL TIMER(1)
 C
-C DIVIDE UP CORE 
+C DIVIDE UP CORE
 C
-      CALL ACES_MALLOC(ITOTMEM,ICORE,I0)
-      IF(I0.EQ.-1)THEN
-       WRITE(6,1111)
-1111   FORMAT(T3,'@MOLECU-F, Unable to allocate memory.')
-       CALL ERREX
-      ENDIF
+      IF (ITOTMEM .GT. ICRSIZ) Call INSMEM("-ints",ITOTMEM,ICRSIZ)
 
-      I000=I0
+      I000=1
+      ITOTMEM = ICRSIZ
       J000=I000+IHWM2+MOD(IHWM2,2)
       CALL DCOPY(50+KWD*3,X(I090),1,ICORE(J000),1)
       CALL IZERO(ICORE(I000),J000-I000)
@@ -368,6 +367,10 @@ C
      &        T9,'I',T14,'J',T19,'K',T24,'L',T37,'Value')
       ENDIF
       IF (ITASK .EQ. 0 .OR. ITASK .GE. 3) THEN
+         WRITE(6,*) '@INTS_-DEBUG: pre-TWOEL I000=',I000,' J000=',J000,
+     &      ' ICRSIZ=',ICRSIZ,' addr(ICORE(I000))=',C_ADR(ICORE(I000)),
+     &      ' addr(ICORE(J000))=',C_ADR(ICORE(J000)),
+     &      ' addr(ICORE(ICRSIZ))=',C_ADR(ICORE(ICRSIZ))
          CALL TWOEL(ICORE(I000),ICORE(J000), NSYMOP)
       ENDIF
       CALL TIMER(1)
@@ -379,6 +382,5 @@ c     end if (!direct)
       end if
 
       CLOSE(UNIT=13,STATUS='DELETE')
-      call aces_fin
-      STOP
+      RETURN
       END

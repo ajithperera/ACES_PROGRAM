@@ -90,8 +90,8 @@ C
 C
 C     Now add W*T1 pieces to form intermediate.
 C
-      CALL GAMMA5(ICORE,MAXCOR,IUHF)
-      CALL GAMMA6(ICORE,MAXCOR,IUHF)
+      CALL GAMMA5_TRP(ICORE,MAXCOR,IUHF)
+      CALL GAMMA6_TRP(ICORE,MAXCOR,IUHF)
 C
       RETURN
       END

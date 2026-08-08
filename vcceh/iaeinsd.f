@@ -94,7 +94,7 @@ C
 C
          IF (IFLAGS(1) .GE. 40) THEN
             CALL HEADER('Quadratic I(AE) Int. @IAEINSD', 0, LUOUT)
-            CALL TAB(LUOUT, ICORE(I0BB), NFVVBB, 1, NFVVBB, 1)
+            CALL TAB_VCCEH(LUOUT, ICORE(I0BB), NFVVBB, 1, NFVVBB, 1)
          ENDIF
 C
       ENDIF

@@ -43,14 +43,14 @@ C
             CALL HEADER('T1(AA) Amplitudes', 0, IUNIT)
             LENT1 = IRPDPD(IRREPX, 9)
             CALL GETLST(SCR, 1, 1, 1, ISPIN, LIST)
-            CALL TAB(IUNIT, SCR, LENT1, 1, LENT1, 1)
+            CALL TAB_VCCEH(IUNIT, SCR, LENT1, 1, LENT1, 1)
 C
          ELSE IF (ISPIN .EQ. 2) THEN
 C
             CALL HEADER('T1(BB) Amplitudes', 0, IUNIT)
             LENT1 = IRPDPD(IRREPX, 10)
             CALL GETLST(SCR, 1, 1, 1, ISPIN, LIST)
-            CALL TAB(IUNIT, SCR, LENT1, 1, LENT1, 1)
+            CALL TAB_VCCEH(IUNIT, SCR, LENT1, 1, LENT1, 1)
 C
          ENDIF
 C
@@ -76,7 +76,7 @@ C
 C
             CALL GETLST(SCR, 1, NUMSYT2, 1, IRREPR, LIST)
 C
-            CALL TAB(IUNIT, SCR, DISSYT2, NUMSYT2, DISSYT2,
+            CALL TAB_VCCEH(IUNIT, SCR, DISSYT2, NUMSYT2, DISSYT2,
      &               NUMSYT2)
  10      CONTINUE
 C

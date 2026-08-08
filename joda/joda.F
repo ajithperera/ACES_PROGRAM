@@ -1,7 +1,7 @@
 
 #include "flags.h"
 
-      program joda
+      subroutine joda_()
       implicit none
 
 #include "fnamelen.par" 

@@ -61,7 +61,7 @@ C
 C
       IF (IFLAGS(1) .GT. 20) THEN
             CALL HEADER('Nuclear Spin-Spin Coupling Tensor', -1, LUOUT)
-            CALL TAB (6, JJFC, NTPERT, NTPERT, NTPERT, NTPERT)
+            CALL TAB_VCCEH (6, JJFC, NTPERT, NTPERT, NTPERT, NTPERT)
       ENDIF
 C Now we have transformed JJ coupling constants. Multiply by the
 C appropriate factors to get the coupling constant in MHZ.

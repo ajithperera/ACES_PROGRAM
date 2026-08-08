@@ -1,4 +1,4 @@
-      PROGRAM VTRAN
+      SUBROUTINE VTRAN(ICORE,MAXCOR,IUHF)
 C
 C INTEGRAL TRANSFORMATION PROGRAM
 C
@@ -22,8 +22,7 @@ C
 C
 #include "flags.h"
 C
-      COMMON//ICORE(1)
-      COMMON/ISTART/I0,ICRSIZ
+      INTEGER ICORE(MAXCOR),MAXCOR,IUHF,I0
       COMMON/MACHSP/IINTLN,IFLTLN,IINTFP,IALONE,IBITWD
       COMMON/FLAGS/IFLAGS(100)
       COMMON/FLAGS2/IFLAGS2(500)
@@ -70,15 +69,7 @@ C
       NWRIT3B=0
       NWRIT4B=0
 C
-C INITIALIZE THE PROGRAM BY CALLING CRAPSI, GET IUHF FLAG
-C
-      CALL CRAPSI(ICORE,IUHF,0)
-C
-C MAXIMUM CORE AVAILABLE FOR THIS CALCULATION
-C
-      MAXCOR=ICRSIZ
-C
-      CALL SETMET(IUHF)
+      CALL SETMET_VTRAN(IUHF)
       IGNORE_DROP_MO = (Iflags(h_IOPPAR_calclevel) .EQ. 0 .OR. 
      &                  Iflags(h_IOPPAR_vibration) .EQ. 1 .OR.
      &                  Iflags(h_IOPPAR_eval_hess) .GT. 0)
@@ -129,7 +120,7 @@ C     'SCF' ORDERING        :   ALL OCCUPIED FIRST, THEN ALL VIRTUALS
 C     'CORRELATED' ORDERING :   WITHIN ONE IRREP ALL OCCUPIED FIRST,
 C                               THEN ALL VIRTUALS
 C
-      CALL GTNRB2(ICORE(I0),MAXCOR,IUHF,NBASIS,NBASIS,1)
+      CALL GTNRB2(ICORE,MAXCOR,IUHF,NBASIS,NBASIS,1)
 C 
 C DROP MOS AND FORM CMO AND EVAL LISTS FOR CORRELATED 
 C CALCULATION. The following block of code was added
@@ -144,8 +135,9 @@ C
          MAXSIZE = 2*NIRREP
       ELSE
          MAXSIZE = 2*NBASIS
-      ENDIF 
-C  
+      ENDIF
+C
+      I0  =1
       I000=I0
       I010=I000+NBASIS*NBASIS*IINTFP
 C 
@@ -215,8 +207,7 @@ c-----------------------------------------------------------------------
 c--  For the second run in Drop-MO analytical gradient  ------ KB ------
 c-----------------------------------------------------------------------
       if (ndrgeo.eq.2) then
-        call aces_fin
-        stop 
+        return
       endif
 c-----------------------------------------------------------------------
 C
@@ -423,10 +414,7 @@ c-----------------------------------------------------------------------
      &            ICORE(I060))
        NCOMP=NBASIS-NDROP
        CALL SYMDRV(ICORE(I0),MAXCOR,NCOMP,IUHF)
-      endif 
+      endif
 c-----------------------------------------------------------------------
-      call aces_fin   
-C
-      STOP
-C        
+      RETURN
       END

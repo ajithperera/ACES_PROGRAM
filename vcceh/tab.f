@@ -1,5 +1,5 @@
 C
-      SUBROUTINE TAB(NOUT,A,N,M,NNN,MMM)
+      SUBROUTINE TAB_VCCEH(NOUT,A,N,M,NNN,MMM)
 C
 C  modified by RPM for an 80-character wide display.  un-comment the 
 C  appropriate set of parameters and format statements to choose how

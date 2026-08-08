@@ -86,7 +86,7 @@ C
 C****Debug
 C         Write(Luout,*)
 C         Write(Luout,*) 'AO BASIS DIPOLE INTEGRALS'
-C         Call Tab(Luout,Dipol(1,1,I),Nbasis,Nbasis,Nbasis,Nbasis)
+C         Call Tab_Fblocal(Luout,Dipol(1,1,I),Nbasis,Nbasis,Nbasis,Nbasis)
 C*****End
  10   continue
 C     
@@ -114,7 +114,7 @@ C
 C****Debug
 C         Write(Luout,*)
 C         Write(Luout,*) 'MO BASIS DIPOLE INTEGRALS'
-C         Call Tab(Luout,Dipol(1,1,I),Nbasis,Nbasis,Nbasis,Nbasis)
+C         Call Tab_Fblocal(Luout,Dipol(1,1,I),Nbasis,Nbasis,Nbasis,Nbasis)
 C*****End
  20   Continue
 C     
@@ -206,7 +206,7 @@ C
             Do 90 K = 1, 3
 C*****
 C               Write(luout,*) 'MO Dipole integrals in loop'
-C               Call Tab(Luout, Dipol(1,1,K),Nbasis,Nbasis,Nbasis,Nbasis)
+C               Call Tab_Fblocal(Luout, Dipol(1,1,K),Nbasis,Nbasis,Nbasis,Nbasis)
 C***** 
                CIJ = Dipol(J, J, K) - Dipol(I, I, K)
                AIJ = AIJ + (Dipol(I, J, K)**2 - CIJ**2/Four)
@@ -415,14 +415,14 @@ C
      &            Norbs, Trans, Norbs, 0.0D0, Scr1, Nbasis)
       Write(6,*) 
       Write(6,"(2x,a)") "Unitary check of FB transformation"
-      Call Tab(Luout, scr1, Norbs, Norbs, Nbasis, Nbasis)
+      Call Tab_Fblocal(Luout, scr1, Norbs, Norbs, Nbasis, Nbasis)
 #endif
 
       Write(Luout, *)
       Write(Luout, *)
       Write(Luout, 5080) 'THE LOCALIZTION TRANSFORMATION MATRIX'
  5080 Format(20X, A)
-      Call Tab(Luout, Trans, Norbs, Norbs, Norbs, Norbs)
+      Call Tab_Fblocal(Luout, Trans, Norbs, Norbs, Norbs, Norbs)
       Write(Luout, *)
       Write(Luout, *)
 C
@@ -437,7 +437,7 @@ C
 
       Write(Luout, 5090) 'THE LOCALIZED ORBITALS'
  5090 Format(30X, A)
-      Call Tab(Luout, Scr1, Nbasis, Nbasis, Nbasis, Nbasis)
+      Call Tab_Fblocal(Luout, Scr1, Nbasis, Nbasis, Nbasis, Nbasis)
 C
       Write(Luout, *)
       Write(Luout, *)

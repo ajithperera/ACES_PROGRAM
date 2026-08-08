@@ -41,6 +41,11 @@ c PARAMETERS
 c INTERNAL VARIABLES
       double precision dTmp
       integer i0, iMem, iTmp
+c i0 must survive across reentrant calls: on a reentrant call (xFlag.ne.0)
+c the malloc block below that sets it is skipped, but iCoreNdx=i0 further
+c down still runs unconditionally -- without SAVE, i0 is undefined on
+c that path and corrupts the caller's ICORE indexing (istart.com's I0).
+      save i0
 
 c TIMING VARIABLES
       integer stime_sec, stime_usec
@@ -52,6 +57,8 @@ c COMMON BLOCKS
 #include "flags2.com" /* for iflags2 */
 #include "machsp.com" /* for iintfp */
 #include "aces_time.com" /* for timing stats */
+#include "jobarc.com" /* for bJAUp, to make the job archive re-init below reentrant */
+#include "lists.com" /* for bIOUp, to make the I/O subsystem re-init below reentrant */
 c BWCC needs aces_init to be reentrant, so an initialized common value must
 c exist. The blockdata routine is appended to the end of this file.
       external aces_bd_aces_reflag
@@ -88,6 +95,14 @@ c   o gather parallel statistics (needed by gfname in ja_init)
       call aces_com_parallel_aces
 
 c   o initialize the job archive subsystem (getrec/putrec)
+c     In pyaces's single-process model, aces_init can be called again by
+c     legacy routines (e.g. CRAPSI) after the job archive is already up
+c     from an earlier phase in the SAME process (separate processes each
+c     called this exactly once in the traditional architecture). Cycle it
+c     closed-then-reopened instead of hard-erroring; aces_ja_fin flushes
+c     the in-memory record index to disk first, so nothing already
+c     written is lost, and the following aces_ja_init re-reads it fresh.
+      if (bJAUp) call aces_ja_fin
       call aces_ja_init
 c???      call getrec(1,'JOBARC','IENDSTAT',1,iStat)
 
@@ -100,6 +115,8 @@ c   o allocate memory and initialize the I/O subsystem
 
 c      o load the requested core size
          iMem = iflags(36)
+         WRITE(6,*) '@ACES_INIT-DEBUG: iflags(36)=', iflags(36),
+     &              ' iMem=', iMem
 
 c      o allocate core memory
          if (xFlag.eq.0) then
@@ -118,6 +135,10 @@ c      o allocate core memory
                print *, '            allocated ',iMem,' integers'
             end if
             if (iCore(1).ne.0) then
+               WRITE(6,*) '@ACES_INIT-DEBUG: base addr=',
+     &                    c_adr(iCore(i0)), ' end addr=',
+     &                    c_adr(iCore(i0+iMem))-1, ' i0=', i0,
+     &                    ' iMem=', iMem
 #ifdef _DEBUG
 c            o make sure iCore(i0) starts on a double word boundary
                print *, '@ACES_INIT: heap range',c_adr(iCore(i0)),
@@ -149,6 +170,11 @@ c     &                  ' integers of memory failed.'
          end if
 
 c      o initialize the I/O subsystem ('T' creates and initializes the cache)
+c        Same reentrancy issue as the job archive above: cycle it
+c        closed-then-reopened if a legacy routine calls aces_init again
+c        later in the same process; aces_io_fin flushes pending list
+c        metadata to JOBARC first, so nothing already written is lost.
+         if (bIOUp) call aces_io_fin
          call aces_io_init(iCore,i0,iMem,.true.)
 
 c      o transfer the iCore statistics

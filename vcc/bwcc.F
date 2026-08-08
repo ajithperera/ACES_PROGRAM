@@ -67,7 +67,7 @@ c this could be done parallelized, but is negligible
 
       CALL ZERO(ENERGY,1000)
       CALL IZERO(IXTRLE,500)
-      CALL SETMET(.FALSE.,.FALSE.,.FALSE.,.FALSE.)
+      CALL SETMET_VCC(.FALSE.,.FALSE.,.FALSE.,.FALSE.)
       CALL SETLOG
       ICONVG=1
       DO_HBAR_4LCCSD = .FALSE.

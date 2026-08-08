@@ -5,7 +5,7 @@ C block, but they must be relative to ICORE(1) in the blank common
 C block. The logic is also reentrant, so it will not load lists that are
 C already in memory.
 
-      SUBROUTINE INCOR(I0,ICRSIZ,IUHF)
+      SUBROUTINE INCOR_LAMBDA(I0,ICRSIZ,IUHF)
       IMPLICIT NONE
       INTEGER I0,ICRSIZ,IUHF
       INTEGER ICORE(1),IINTLN,IFLTLN,IINTFP,IALONE,IBITWD,IFLAGS(100)

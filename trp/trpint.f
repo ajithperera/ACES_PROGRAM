@@ -192,7 +192,7 @@ C
 C
       IF(IFLAGS(2).EQ.18) CALL FIXFBAR(ICORE,MAXCOR,IUHF)
       IF(IFLAGS(2).EQ.18) CALL FORMW1(ICORE,MAXCOR,IUHF,.TRUE.)
-      IF(IFLAGS(2).EQ.18) CALL HBARCRAP(ICORE,MAXCOR,IUHF,.TRUE.)
+      IF(IFLAGS(2).EQ.18) CALL HBARCRAP_TRP(ICORE,MAXCOR,IUHF,.TRUE.)
 C
 C     N.B. In CCSDT calculations lists 231-233 are reset by TRPS --- the
 C          above three lines assume that plain integrals reside on 231-3.

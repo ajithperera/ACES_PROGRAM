@@ -176,6 +176,10 @@ c (Lagrange multipliers) at i06
       call c2dens (iuhf,na,nb,icore(i00),icore(j00),
      > icore(i03),icore(j03), NAO,nmo,icore(i05),icore(j05),icore(i06))
 
+      call checksum('GRAD_DENSA', icore(i05), NAO*NAO)
+      if (iuhf.ne.0) call checksum('GRAD_DENSB', icore(j05), NAO*NAO)
+      call checksum('GRAD_EWDM ', icore(i06), NAO*NAO)
+
 
 c--------------------
 c Lagrangian in the ROHF case requires the Fock matrices

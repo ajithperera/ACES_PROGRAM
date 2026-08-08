@@ -22,11 +22,12 @@ C
 C Extension of DKH optimizations added on 05/2012. Ajith Perera.
 C
          If (Iflags2(h_IFLAGS2_dkh_order) .Gt. 0 .and. 
-     &      .not. contract) Call runit('xvprops')
+     &       .not. contract) Call runit('xvprops')
 
       if (hf_scf) then
          if (nddo_guess) call runit('xnddo')
-         If (dkh .and. contract) Call Runit("xdkh")
+         If (dkh .and. contract) Call Runit("xvprops")
+         Print*, "I am here"
          call runit('xvscf')
 
          if (iflags(74).ne.0) then

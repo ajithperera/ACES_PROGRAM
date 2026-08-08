@@ -286,13 +286,14 @@ C
       Ireord        = Idkh        + Nprims**2
       IEnd          = Ireord      + 40*Nprims**2 
       Ileft         = Mxdcor - Iend 
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
       Write(6,*)
       Write(6,*)"The Erd_index and Erd_scalae arrays"
       Write(6,"(10(1x,I4))") (Erd_index(i), i=1,Nbfns)
       Write(6,"(10(1x,F5.2))") (Erd_Scale(i), i=1,Nbfns)
       Write(6,*)
-      Write(6,"(a,1x,i5,1x,i5)") "Iend and Mxdcor:", Iend, Mxdcor
+      Write(6,"(a,1x,i10,1x,i10)") "Iend and Mxdcor  :", Iend, Mxdcor
+      Write(6,"(a,1x,i10,1x,i10)") "Intmax and Mxicor:", Intmax,Mxicor
 #endif
 
       If (Iend .Ge. Mxdcor) Call insmem("Dkh:", Iend, Mxdcor)

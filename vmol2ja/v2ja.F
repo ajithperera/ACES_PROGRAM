@@ -4,7 +4,7 @@ C      or include files.  This file has been produced
 C      with 'make vmol2ja.f' from the original sources.
 C      It is NOT the original source code itself.
 C WARNING WARNING WARNING WARNING WARNING WARNING WARNING
-      Program v2ja
+      SUBROUTINE V2JA(ICORE,ICRSIZ,IUHF)
 C:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 C $Id: v2ja.F,v 1.6 2008/11/19 15:48:33 perera Exp $
 C:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -188,12 +188,12 @@ C     flags.inc   Flags   CRAPS & JODA control flags
 C
 C     Include 'memman.inc'
 C $Id: v2ja.F,v 1.6 2008/11/19 15:48:33 perera Exp $
-      integer icore
-      COMMON / / ICORE(1)
+      integer icrsiz
+      integer icore(icrsiz)
+      integer iuhf
+      integer i0
 C     Include 'memini.inc'
 C $Id: v2ja.F,v 1.6 2008/11/19 15:48:33 perera Exp $
-      integer i0, icrsiz
-      common /istart/ i0, icrsiz
 C     Include 'mach.inc'
 C $Id: v2ja.F,v 1.6 2008/11/19 15:48:33 perera Exp $
       integer iintln, ifltln, iintfp, ialone, ibitwd
@@ -282,12 +282,15 @@ C     By waiting until after we've checked for the existance of an
 C     integral file, we may avoid wasting the effort of allocating
 C     memory, etc.
 C
+      I0 = 1
       Call CrapsI (ICore(1), LJunk, 0)
 C
       SEWARD = IFLAGS(56).EQ.4
       IACESIII = 0
       CALL GETREC(-1, "JOBARC", "AIIIJARC", 1, IACESIII)
       IF (IACESIII .GT. 0) ACESIII = .TRUE.
+      WRITE(6,*) '@V2JA-DEBUG: IFLAGS(56)=', IFLAGS(56),
+     &           ' SEWARD=', SEWARD, ' IACESIII=', IACESIII
 C
 C     *************************
 C     * Find an integral file *
@@ -675,6 +678,5 @@ C     ************
 C     * All done *
 C     ************
 C
-      call aces_fin
-      Stop
+      RETURN
       End

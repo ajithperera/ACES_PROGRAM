@@ -9,14 +9,13 @@ cjp MR-BW-CC extension added by Jiri Pittner (1998-2000)
 
 #include "flags.h"
 
-      PROGRAM INTPROC
+      SUBROUTINE INTPROC(ICORE,MAXCOR,IUHF)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+      INTEGER ICORE(MAXCOR),MAXCOR,IUHF,I0
       INTEGER DIRPRD,USEC,ABCDTYPE
       LOGICAL DOPHPH,ABIJ,DOALL,NOABCD
-      LOGICAL COMPRESS,SYMMETRIC 
-      LOGICAL MACRO_ITER 
-      COMMON / / ICORE(1)
-      COMMON /ISTART/ I0,ICRSIZ
+      LOGICAL COMPRESS,SYMMETRIC
+      LOGICAL MACRO_ITER
       COMMON /FLAGS/ IFLAGS(100)
       COMMON /FLAGS2/ IFLAGS2(500)
       COMMON /SYMINF/ NSTART,NIRREP,IRREPY(255,2),DIRPRD(8,8)
@@ -51,8 +50,8 @@ C
       CALL CRAPSI(ICORE(1),IUHF,0)
       if (isbwcc) call bwprep(nocco,nvrto,iuhf)
 C
-      CALL SETMET
-      MAXCOR = ICRSIZ
+      CALL SETMET_PROC
+      I0     = 1
       ITWO   = 2
 cjp prepare for reopenmo
       do iref=1,nref
@@ -274,8 +273,7 @@ c-----    end of w2 processing   --------- May 94,  KB  ------------
 c-------------------------------------------------------------------
       if (ishift.ne.0) then
          CALL PUTSTF(ICORE(I0),MAXCOR,IUHF)
-         call aces_fin
-         stop
+         RETURN
       end if
 c-------------------------------------------------------------------
 CJDW END
@@ -333,8 +331,6 @@ CSSS      call check_ints(icore(i0),Maxcor,iuhf,.false.)
 
  1234 continue
 
-      call aces_fin
-
-      stop
-      end
+      RETURN
+      END
 

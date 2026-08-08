@@ -166,6 +166,7 @@ pairs += hpc11-[0-9]*:hpc11 eagle-[0-9]*:eagle falcon-[0-9]*:falcon
 pairs += k[1-9][0-9]*n[1-9][0-9]*e*:kraken
 pairs += sapphire[0-9]*:sapphire
 pairs += gator[0-9]*:gator
+pairs += c[0-9]*a-s[0-9]*:hipergator
 mapname := $(shell for pair in ${pairs}; \
              do pat=`echo $$pair | sed 's/:.*//'`; \
                 name=`echo $$pair | sed 's/.*://'`; \
@@ -187,7 +188,7 @@ MACHSTATS := \
    xxx:X86_64:linux:gnu\
    castor:athlonmp:freebsd:gnu pollux:athlonmp:freebsd:gnu \
    haku01:em64t:linux:gnu i21a-s1:em64t:linux:intel linx32:pentium4:linux:intel \
-   c0711a-s30:em64t:linux:intel \
+   support2:em64t:linux:intel \
    c0712a-s30:em64t:linux:intel \
    c0710a-s30:em64t:linux:intel \
    c0709a-s30:em64t:linux:intel \
@@ -197,6 +198,7 @@ MACHSTATS := \
    i21b-s2:em64t:linux:intel \
    dev1:em64t:linux:intel\
    dev2:em64t:linux:intel\
+   hipergator:em64t:linux:intel\
    crunchb:native64:sunos:forte \
    solx:x86:sunos:pg \
    simu:pwr3:aix:xl ock:itanium2:linux:intel\
@@ -788,9 +790,9 @@ ifeq (${CMPLR},intel) ##########################################################
       MPLD = mpif90
    endif
    C_SUFFIX = 1
-   CC   = icc -c  #-shared -fPIC 
-   F9XC = ifort -c -Wall -traceback #-shared -fPIC
-   LD   = ifort 
+   CC   = icx -c  #-shared -fPIC 
+   F9XC = ifx -c -Wall -traceback #-shared -fPIC
+   LD   = ifx
  # make sure the other compilers f9x, cc, and CC all get double alignment
    CFLAGS   = -Zp8 
    F9XFLAGS = -Zp8 -zero 
@@ -884,6 +886,16 @@ endif
 
 # the names of all the ACES stand-alone libraries
 # If ${CURR} is in this string, then BUILDBIN=NO.
+# 2026-08-04, acesii_build_pic (pyaces's own independent tree) ONLY: all 12
+# PROGRAM->SUBROUTINE pyaces conversions (intprc, vmol, vscf, vtran, vcc,
+# hbar, lambda, vee, pccd, joda, props, vmol2ja -- see project memory) no
+# longer have a MAIN__ symbol, so a top-level `gmake` trying to link
+# xjoda/xvcc/etc as standalone binaries fails with "undefined reference to
+# `MAIN__'". Added here so BUILDBIN=NO for exactly these 12 in this tree
+# only -- .a libraries still get built and installed normally (that's all
+# pyaces's own build.sh actually needs). Do NOT copy this change into
+# ~/Develop/ACESII_build -- that tree's own copies of these files are
+# unconverted and its xjoda/xvcc/etc must still build.
 ACES_LIBS = \
    mpistubs mpw p_mpw blas lapack lb eispack linpack \
    tools nlo \
@@ -894,7 +906,8 @@ ACES_LIBS = \
    imm omm symtools diagtools \
    sbtools ecplib blockdave\
    mrcca3 mrcccore apg apg2 cse_mn eomprocs mbdirect mbgrad mbtest mbdiag mbtools \
-   molcas oeptools lnczos liboo libpccd
+   molcas oeptools lnczos liboo libpccd \
+   intprc vmol joda vcc vscf vtran hbar lambda vee pccd props vmol2ja
 
 # the names of the parallel libraries and binaries
 PACES_DIRS = \
@@ -1700,7 +1713,7 @@ ifdef buildbin
          LIST_LINKLIBS := ${curr}:${LIST_DEF_LIBS}
       endif
       LIST_LINKLIBS := ${LIST_LINKLIBS}:${curr}mods
-   endif
+  endif
    list_linklibs := $(subst :, , ${LIST_LINKLIBS})
    LIST_LINKLIBS :=
    LINKLIBS      ?= $(strip ${list_linklibs})

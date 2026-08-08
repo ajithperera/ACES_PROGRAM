@@ -1,4 +1,4 @@
-      SUBROUTINE WVT323(T3,W,CORE,
+      SUBROUTINE WVT323_LAMBDA(T3,W,CORE,
      1                  IADT3,IADW,
      1                  IRPI,IRPJ,IRPK,IRPIJ,IRPIK,IRPJK,IRPIJK,
      1                  I,J,K,SCR1,SCR2,SCR3,IUHF,

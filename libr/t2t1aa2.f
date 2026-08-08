@@ -32,7 +32,9 @@ C  ROHF-MBPT code, since this routine is called by two others at
 C  different times.  The value of "99" is set before the second call
 C  to E3S in ROHFPT.
 C
-      IF(LAMBDA) THEN 
+      WRITE(6,*) '@T2T1AA2-ENTRY-DEBUG: ISPIN=',ISPIN,' LSTOFF=',
+     &           LSTOFF,' NIRREP=',NIRREP
+      IF(LAMBDA) THEN
        LISTT=143+ISPIN
       ELSEIF(IFLAGS(11).EQ.2.AND.IFLAGS(39).EQ.99) THEN
        LISTT=ISPIN+93
@@ -63,6 +65,8 @@ C
         CALL TRANSP(ICORE(I002),ICORE(I001),NUMSYT,DISSYT)
         CALL SYMEXP(IRREP,VRT,NUMSYT,ICORE(I001))
         CALL GETLST(ICORE(I002),1,NUMSYW,2,IRREP,LISTW)
+        IF (NUMSYW*DISSYW.GT.0) call checksum_vcc_debug(
+     &        'T2T1AA2-W',ICORE(I002),NUMSYW*DISSYW)
         CALL SYMTR1(IRREP,POP,VRT,DISSYW,ICORE(I002),ICORE(I003),
      &              ICORE(I004),ICORE(I005))
         IOFFT=0

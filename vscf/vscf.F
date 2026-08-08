@@ -1,5 +1,5 @@
 
-      PROGRAM VSCF
+      SUBROUTINE VSCF(ICORE,ICRSIZ,IUHFARG)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 
       PARAMETER(LUINT=10)
@@ -56,8 +56,7 @@ c...watson...
       DIMENSION NPRVOCC(16)
       DIMENSION IADERR(200),IADFCK(200,2)
 C
-      COMMON // ICORE(1)
-      COMMON /ISTART/ I0,ICRSIZ
+      INTEGER ICORE(ICRSIZ),ICRSIZ,IUHFARG,I0
       COMMON /MACHSP/ IINTLN,IFLTLN,IINTFP,IALONE,IBITWD
       COMMON /FILES/  LUOUT,MOINTS
       COMMON /FLAGS/  IFLAGS(100)
@@ -107,6 +106,7 @@ c   o variables for QC-SCF
       DATA QC_PHASE /.FALSE./
       DATA QC_THRESH /1.d-2/
 
+         IUHF = IUHFARG
          call callstack_init('VSCF')
           
 c ----------------------------------------------------------------------
@@ -140,7 +140,6 @@ c ----------------------------------------------------------------------
 
       CALL IZERO(KILLFLG,3)
       CALL TIMER(1)
-      CALL CRAPSI(ICORE(1),IUHF,-1)
 cwc1
       dirscf=.false.
       fdiff=.false.
@@ -592,6 +591,9 @@ c           buffer for MPI_ALLREDUCE
          end if
          imemget = imemget + iTmp
       end if
+
+      If (IFLAGS(h_IFLAGS_guess) .EQ. 5) imemget=Max(imemget,Maxcor)
+     
 cwc0
 C
 c OEP SCF block, Igor Schweigert, Sep 2003,
@@ -610,12 +612,8 @@ c via the MEMORY ASV.
          endif
       endif
 C
-      CALL ACES_MALLOC(IMEMGET,ICORE,I0)
-      IF (ICORE(1).EQ.0) THEN
-         WRITE(*,*) "@VSCF: Unable to allocate ",IMEMGET,
-     &              " words of memory for AO integral sorting."
-         CALL ERREX
-      END IF
+      IF (IMEMGET .GT. ICRSIZ) CALL INSMEM("scf", IMEMGET,ICRSIZ)
+      I0 = 1
 cwc1
 c i011 = exchange integrals
 c i012 = density matrix compressed to shells
@@ -655,6 +653,12 @@ c i024 =     beta Fock from previous iteration
 cwc0
 
 c   o initialize the I/O subsystem for PK chaining
+c     In pyaces's single-process model this may already be up from an
+c     earlier phase in the same process; cycle it closed-then-reopened
+c     (aces_io_fin flushes pending list metadata to JOBARC first) rather
+c     than hitting aces_io_init's own hard "already initialized" guard.
+c     aces_io_fin is a safe no-op if the subsystem isn't up yet.
+      call aces_io_fin
       call aces_io_init(icore,i0,imemget,.true.)
       call aces_init_chemsys
 #ifndef _IMPORT_CORR_ORBS
@@ -728,7 +732,7 @@ C OPEN IIII INTEGRAL FILE FOR READING 1E INTEGRALS IN GET1E
          CALL MKPK2(ICORE(I000),ICORE(I010),ICORE(I020),IBUFLN,
      &              IPKSIZ,NBAS,IUHF)
       END IF
-C 
+C
 C
 c OEP SCF block, Igor Schweigert, Sep 2003,
 c $Id: vscfoep.FPP,v 1.13 2008/06/06 18:10:43 taube Exp $
@@ -904,7 +908,7 @@ c the indexing math must be changed to doubles.
      &                ICORE(I190),ICORE(I200),
      &                ITRILN(NIRREP+1),MXIRR2,
      &                NBAS,NBASX,NATOMS,IUHF,IOLDOCC,
-     &                ICORE(I210),(I000+MAXMEM-I220)/IINTFP)
+     &                ICORE(I210),(I000+MAXCOR-I220)/IINTFP)
       END IF
 C
 #ifdef _IMPORT_CORR_ORBS
@@ -2541,5 +2545,6 @@ C to disk.
          CALL ENDSCF
       END IF
       call callstack_term
+      RETURN
       END
 

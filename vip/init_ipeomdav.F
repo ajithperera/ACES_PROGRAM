@@ -64,7 +64,7 @@ C
         I020 = I010 + NSIZEC
         CALL GETLST(SCR(I000), 4,1,1,1, LISTH0)
 
-#ifdef _DEBUG_LVLM
+#ifdef _DEBUG_LVL0
         Write(6,"(a)") " The digonals of Hbar_0 (eigenvalues)"
         Write(6,"(6(1x,F15.9))"),(scr(i000+j-1),j=1,nsizec)
 #endif

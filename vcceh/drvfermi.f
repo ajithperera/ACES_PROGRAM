@@ -76,7 +76,7 @@ C
 C     
             IF (IPRINT .GE. 40) THEN
                CALL HEADER ('FERMI-CONTACT INTEGRALS', -1, 6)
-               CALL TAB (LUOUT, FERMINT(I000), NAO, NAO, NAO, NAO)
+               CALL TAB_VCCEH (LUOUT, FERMINT(I000), NAO, NAO, NAO, NAO)
             ENDIF
 C
             IRWND = IONE 

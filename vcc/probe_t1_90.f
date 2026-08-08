@@ -1,0 +1,16 @@
+      SUBROUTINE PROBE_T1_90(TAGA,TAGB,IUHF)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+      CHARACTER*(*) TAGA,TAGB
+      COMMON /SYM/ POP(8,2),VRT(8,2),NTAA,NTBB,NF1AA,NF2AA,
+     &             NF1BB,NF2BB
+      DIMENSION BUF(20000)
+      IF (NTAA.GT.0.AND.NTAA.LE.20000) THEN
+        CALL GETLST(BUF,1,1,1,3,90)
+        call checksum_vcc_debug(TAGA,BUF,NTAA)
+      ENDIF
+      IF (IUHF.NE.0.AND.NTBB.GT.0.AND.NTBB.LE.20000) THEN
+        CALL GETLST(BUF,1,1,1,4,90)
+        call checksum_vcc_debug(TAGB,BUF,NTBB)
+      ENDIF
+      RETURN
+      END

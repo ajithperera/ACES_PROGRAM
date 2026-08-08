@@ -82,9 +82,9 @@ endif
 tl_tmp :=
 tl_tmp += \
           mpistubs mpw p_mpw blas lapack eispack linpack \
-          lb tools nlo blockdave liboo\
+          lb tools nlo blockdave liboo libpccd \
           acescore p_acescore acesutil libr libr_extn ecplib symcor joda \
-          crust libr2 librt3 oed erd trp pccd dens vcc lambda liboo lsccresp \
+          crust libr2 librt3 oed erd trp dens vcc lambda liboo lsccresp \
           a3ecp vea ringcc aces2_libr
 tl_tmp += \
           oed erd soi gamess p_gamess \
@@ -94,7 +94,7 @@ tl_tmp += \
           diagtools symtools omm imm
 tl_tmp += \
           vmol vmol2ja vscf vtran intprc lambda dens anti bcktrn vdint \
-          hbar vcceh vee pdens aces2 runpccd psi4dbg
+          hbar vcceh vee pdens aces2 pccd runpccd psi4dbg
 tl_libs := $(strip ${tl_tmp})
 
 # Mature subtrees have their own build environment and should minimally

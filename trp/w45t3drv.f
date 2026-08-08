@@ -34,7 +34,7 @@ C
  1000 FORMAT(' @W45T3DRV-I, Calculating triples contributions to',
      1       ' W(abci) and W(ijka). ')
 C
-      CALL SETOOOV(CORE(1),MAXCOR,IUHF,1)
+      CALL SETOOOV_TRP(CORE(1),MAXCOR,IUHF,1)
 C
       SCRSIZ = 0
       DO   5 IRREP=1,NIRREP
@@ -213,7 +213,7 @@ C
       ENDIF
 C
       IF(IPASS.EQ.2)THEN
-      CALL TSPABCI2(CORE(1),MAXCOR,1,EXTRNL_CCSD)
+      CALL TSPABCI2_TRP(CORE(1),MAXCOR,1,EXTRNL_CCSD)
 C     if general approach works, we don't need next call.
 C      CALL   AT2IAB(CORE(1),0,INT2)
       ENDIF
@@ -418,7 +418,7 @@ C
   200 CONTINUE
 C
       IF(IPASS.EQ.2)THEN
-      CALL TSPABCI2(CORE(1),MAXCOR,2,EXTRNL_CCSD)
+      CALL TSPABCI2_TRP(CORE(1),MAXCOR,2,EXTRNL_CCSD)
 C      CALL   AT2IAB(CORE(1),1,INT2)
       ENDIF
 C
@@ -468,7 +468,7 @@ C
   210 CONTINUE
 
 C
-      CALL SETOOOV(CORE(1),MAXCOR,IUHF,2)
+      CALL SETOOOV_TRP(CORE(1),MAXCOR,IUHF,2)
 C
       call chksmg(core(1),IUHF)
 C

@@ -1,25 +1,22 @@
 #include "flags.h"
 
-      program hbar
+      SUBROUTINE HBAR_(ICORE,ICRSIZ,IUHF)
       implicit none
 
-      integeriuhf
+      integer icore(icrsiz),icrsiz,iuhf,i0
 
 c COMMON BLOCKS
-#include "icore.com"
-#include "istart.com"
 #include "flags.com"
 #include "flags2.com"
 #include "machsp.com"
 
 c ----------------------------------------------------------------------
-      Call aces_init(icore, i0,icrsiz, iuhf, .true.)
+      I0 = 1
 C
       Call Drive_Hbar(Icore(i0), icrsiz/iintfp, Iuhf)
 
-      Call aces_fin
 C
 c ----------------------------------------------------------------------
-      stop
+      RETURN
       end
 

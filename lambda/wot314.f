@@ -1,4 +1,4 @@
-      SUBROUTINE WOT314(W,CORE,IADW,
+      SUBROUTINE WOT314_LAMBDA(W,CORE,IADW,
      1                 IRPI,IRPJ,IRPK,IRPIJ,IRPIK,IRPJK,
      1                 I,J,K,ISPIN,LZOFF,LWOFF,SIGN)
 C    1                 I,J,K,ISPIN,IMODE)

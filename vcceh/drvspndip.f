@@ -85,7 +85,8 @@ C
 C     
                IF (IPRINT .GE. 40) THEN
                   CALL HEADER ('SD INTEGRALS', -1, 6)
-                  CALL TAB (LUOUT, SPNDINT(I000), NAO, NAO, NAO, NAO)
+                  CALL TAB_VCCEH (LUOUT, SPNDINT(I000), NAO, NAO, NAO,
+     &                            NAO)
                ENDIF
 C     
                IRWND = IONE 

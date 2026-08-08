@@ -1,8 +1,8 @@
 #include "flags.h"
 
-      Program  pccd 
+      SUBROUTINE PCCD(ICORE,ICRSIZ,IUHF)
       Implicit none
-      Integer iuhf
+      Integer icore(icrsiz),icrsiz,iuhf,i0
       Integer IGrad_calc
       Integer IHess_calc
       Integer Pccd_refr,Itest
@@ -19,8 +19,6 @@
 
 c COMMON BLOCKS
 #include "syminf.com"
-#include "icore.com"
-#include "istart.com"
 #include "flags.com"
 #include "flags2.com"
 #include "sympop.com"
@@ -28,7 +26,7 @@ c COMMON BLOCKS
 
       Common /OO_info/Opt_orbs,OO_constr,OV_constr
 c ----------------------------------------------------------------------
-      Call Aces_init(icore, i0,icrsiz, iuhf, .true.)
+      I0 = 1
 #ifdef _NOSKIP
       If (Iuhf .Eq. 1) Then
          Write(6,*)
@@ -124,9 +122,8 @@ C is achieved before computing orbital gradients.
 
  10   Continue
 
-      Call aces_fin
 C
 c ----------------------------------------------------------------------
-      Stop
+      RETURN
       End
 

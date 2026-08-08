@@ -71,9 +71,9 @@ F77_NAME(coarse_restore,COARSE_RESTORE)
                 while (fgets(&szBuf[0],BUFLEN,fpFILES))
                 {
                     char *cz = &szBuf[0]; int i = 0;
-                    while ((*cz != ' ') && (*cz != '\n')) cz++; *cz++ = NULL;
+                    while ((*cz != ' ') && (*cz != '\n')) cz++; *cz++ = '\0';
                     if (*cz)
-                    { char *c = cz; while (*c != '\n') c++; *c = NULL; }
+                    { char *c = cz; while (*c != '\n') c++; *c = '\0'; }
                     if (!strncmp(&szBuf[0],&szFile[0],FILLEN))
                     { strncpy(&szFile[0],cz,FILLEN); i = 1; }
                     if (i) break;

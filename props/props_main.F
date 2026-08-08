@@ -1,6 +1,6 @@
 #include "flags.h"
 
-      Program  Props_main
+      SUBROUTINE PROPS_(IUHF)
       Implicit none
       Integer iuhf
 
@@ -19,6 +19,6 @@ c ----------------------------------------------------------------------
 
 c ----------------------------------------------------------------------
 
-      Stop
+      RETURN
       End
 

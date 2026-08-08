@@ -14,7 +14,7 @@ C
 C WRITTEN BY J. GAUSS AND J.F. STANTON
 #include "flags.h" /* for h_IFLAGS_* and h_IFLAGS2_* */
 
-      PROGRAM VLAMCC
+      SUBROUTINE VLAMBDA(ICORE,ICRSIZ,IUHF)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       INTEGER RLECYC,POP,VRT,DIRPRD,DISTSZ
 c& new line
@@ -29,8 +29,7 @@ c& new line
       LOGICAL LCC
       CHARACTER*4 ACT
       DIMENSION ECORR(3)
-      COMMON // ICORE(1)
-      COMMON /ISTART/I0,ICRSIZ
+      INTEGER ICORE(ICRSIZ),ICRSIZ,IUHF,I0
       COMMON /INFO/ NOCCO(2),NVRTO(2)
       COMMON /FLAGS/IFLAGS(100)
       COMMON /FLAGS2/IFLAGS2(500)
@@ -73,9 +72,7 @@ C
 C
       WRITE(6,1000)
 C
-C  INITIALIZE CRAPS
-C 
-      CALL CRAPSI(ICORE,IUHF,0)
+      I0 = 1
       MAXCOR=ICRSIZ
 
 C Set pCCD and LCC (LCCD and LCCSD) flags 
@@ -107,7 +104,7 @@ C
 C
 C  FILL /METH/ WHICH DETERMINES THE METHOD
 C
-      CALL SETMET(pCCD,pCCDS,pCCDST)
+      CALL SETMET_LAMBDA(pCCD,pCCDS,pCCDST)
 
       if (method .eq. 10 .or. method .eq. 8
      $     .or. method .eq. 22 .or. method  .eq. 13
@@ -301,8 +298,7 @@ C
            CALL ACES_AUXCACHE_FLUSH
            CALL ACES_AUXCACHE_RESET
         END IF
-        call aces_fin
-        STOP
+        RETURN
        ENDIF
 
 C The above ENDIF ends the RPHF only logic.
@@ -517,8 +513,7 @@ C 10/2021
            CALL PUTREC(20,"JOBARC","PCCD_RUN",1,1)
            CALL PUTREC(20,"JOBARC","IFLAGS  ",100,IFLAGS)
         ENDIF
-        call aces_fin
-        STOP
+        RETURN
        ENDIF
 C
 C The above ENDIF is for IHBAR. If only IHBAR is set the calculation
@@ -547,8 +542,8 @@ CSSS        Call checkhbar(Icore(i0),Maxcor,iuhf)
          ENDIF
          CALL LGENINT(ICORE(i0),MAXCOR,IUHF)
          CALL ACES_FIN
-         STOP
-      ENDIF 
+         RETURN
+      ENDIF
 C
 C START OF CC LOOP
 C
@@ -592,7 +587,7 @@ C
       CALL LGENINT(ICORE(i0),MAXCOR,IUHF)
       Write(*,"(a)") " Caution: The true lambada is not constructed"
       CALL ACES_FIN
-      STOP
+      RETURN
 #endif
        DO 55 ICYCLE=1,NCYCLE
         RLECYC=RLECYC+1
@@ -936,9 +931,8 @@ C
          CALL ACES_AUXCACHE_RESET
       END IF
 
-      call aces_fin
       WRITE(6,1010)
-      STOP
  1000 FORMAT(/,77('-'),/,T30,' Entering xlambda',/,77('-'),/)
  1010 FORMAT(/,77('-'),/,T30,' Exiting xlambda',/,77('-'))
+      RETURN
       END

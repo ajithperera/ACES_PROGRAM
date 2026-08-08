@@ -1,7 +1,7 @@
 C
 C RUN-DOWN ROUTINE FOR CC CALCULATIONS.
 C
-      SUBROUTINE FINISH(ICYCLE,pCCD)
+      SUBROUTINE FINISH_LAMBDA(ICYCLE,pCCD)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       CHARACTER*6 STAR
       LOGICAL pCCD
@@ -67,7 +67,5 @@ C For pCCD, restore the CCD for any module beyond lambda, 10/2021
          CALL PUTREC(20,"JOBARC","PCCD_RUN",1,1)
          CALL PUTREC(20,"JOBARC","IFLAGS  ",100,IFLAGS)
       ENDIF 
-      call aces_fin
-      STOP
       RETURN
       END

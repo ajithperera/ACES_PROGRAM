@@ -1,4 +1,4 @@
-      SUBROUTINE WVT314(W,ICORE,
+      SUBROUTINE WVT314_LAMBDA(W,ICORE,
      1                 IADW,
      1                 IRPI,IRPJ,IRPK,IRPIJ,IRPIK,IRPJK,IRPIJK,
      1                 I,J,K,ISPIN,LZOFF,LWOFF,SIGN)
