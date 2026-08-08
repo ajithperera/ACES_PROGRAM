@@ -1,0 +1,4614 @@
+                          SIAL DIRECT_RPA_UHF  
+#                         -------------------
+
+# Template definitions of simple and block indices.
+# The maximum number of roots can be modified as needed. 
+
+      index kiter             = 1, cc_iter
+      index mindex20          = 1, 20
+      index nindex20          = 1, 20
+      index kindex20          = 1, 20
+      index lindex20          = 1, 20
+      index SUBSP_DIM         = 1, 20
+      index MAX_NO_ROOTS      = 1, 12
+      index Spn_mult          = 1, 2
+      Index Mroots            = 1, 12
+
+      aoindex mu     = 1, norb
+      aoindex nu     = 1, norb
+      aoindex lambda = 1, norb
+      aoindex sigma  = 1, norb
+#
+      moaindex i = baocc, eaocc
+      moaindex i1= baocc, eaocc
+      moaindex i2= baocc, eaocc
+      moaindex i3= baocc, eaocc
+#
+      moaindex a = bavirt, eavirt
+      moaindex a1= bavirt, eavirt
+      moaindex a2= bavirt, eavirt
+      moaindex a3= bavirt, eavirt
+#
+      mobindex j = bbocc, ebocc
+      mobindex j1= bbocc, ebocc
+      mobindex j2= bbocc, ebocc
+      mobindex j3= bbocc, ebocc
+#
+      mobindex b = bbvirt, ebvirt
+      mobindex b1= bbvirt, ebvirt
+      mobindex b2= bbvirt, ebvirt
+      mobindex b3= bbvirt, ebvirt
+#
+      moaindex p = baocc, eavirt
+      moaindex p1= baocc, eavirt
+      moaindex p2= baocc, eavirt
+      moaindex p3= baocc, eavirt
+#
+      mobindex q = bbocc, ebvirt
+      mobindex q1= bbocc, ebvirt
+      mobindex q2= bbocc, ebvirt
+      mobindex q3= bbocc, ebvirt
+
+# Destributed arrays
+
+      DISTRIBUTED R1A_MO_P_START_R(A,I,MAX_NO_ROOTS)
+      DISTRIBUTED R1A_MO_M_START_L(A,I,MAX_NO_ROOTS)
+      DISTRIBUTED R1B_MO_P_START_R(B,J,MAX_NO_ROOTS)
+      DISTRIBUTED R1B_MO_M_START_L(B,J,MAX_NO_ROOTS)
+      DISTRIBUTED R1A_MO_P_INTMD_R(A,I)
+      DISTRIBUTED R1A_MO_M_INTMD_L(A,I)
+      DISTRIBUTED R1B_MO_P_INTMD_R(B,J)
+      DISTRIBUTED R1B_MO_M_INTMD_L(B,J)
+
+      DISTRIBUTED INIT_AVEC_R(A,I)
+      DISTRIBUTED INIT_AVEC_L(A,I)
+      DISTRIBUTED INIT_BVEC_R(B,J)
+      DISTRIBUTED INIT_BVEC_L(B,J)
+
+      DISTRIBUTED R1A_MO_P_CURRENT_R(A,I)
+      DISTRIBUTED R1A_MO_M_CURRENT_L(A,I)
+      DISTRIBUTED R1B_MO_P_CURRENT_R(B,J)
+      DISTRIBUTED R1B_MO_M_CURRENT_L(B,J)
+      DISTRIBUTED R1A_MO_M_CURRENT_R(A,I)
+      DISTRIBUTED R1A_MO_P_CURRENT_L(A,I)
+      DISTRIBUTED R1B_MO_M_CURRENT_R(B,J)
+      DISTRIBUTED R1B_MO_P_CURRENT_L(B,J)
+
+      DISTRIBUTED R1A_AO_P_CURRENT_R(MU,NU)
+      DISTRIBUTED R1A_AO_M_CURRENT_L(MU,NU)
+      DISTRIBUTED R1B_AO_P_CURRENT_R(MU,NU)
+      DISTRIBUTED R1B_AO_M_CURRENT_L(MU,NU)
+      DISTRIBUTED HR1A_AO_P_CURRENT_R(MU,NU) 
+      DISTRIBUTED HR1A_AO_M_CURRENT_L(MU,NU) 
+      DISTRIBUTED HR1B_AO_P_CURRENT_R(MU,NU) 
+      DISTRIBUTED HR1B_AO_M_CURRENT_L(MU,NU) 
+      DISTRIBUTED HR1A_MO_P_CURRENT_R(A,I) 
+      DISTRIBUTED HR1A_MO_M_CURRENT_L(A,I) 
+      DISTRIBUTED HR1B_MO_P_CURRENT_R(B,J) 
+      DISTRIBUTED HR1B_MO_M_CURRENT_L(B,J) 
+      DISTRIBUTED R1A_MO_P_HIST_R(A,I,MINDEX20)
+      DISTRIBUTED R1A_MO_M_HIST_L(A,I,MINDEX20)
+      DISTRIBUTED R1B_MO_P_HIST_R(B,J,MINDEX20)
+      DISTRIBUTED R1B_MO_M_HIST_L(B,J,MINDEX20)
+      DISTRIBUTED HR1A_MO_P_HIST_R(A,I,MINDEX20)
+      DISTRIBUTED HR1A_MO_M_HIST_L(A,I,MINDEX20)
+      DISTRIBUTED HR1B_MO_P_HIST_R(B,J,MINDEX20)
+      DISTRIBUTED HR1B_MO_M_HIST_L(B,J,MINDEX20)
+      DISTRIBUTED R1A_MO_P_INIT_R(A,I)
+      DISTRIBUTED R1A_MO_M_INIT_L(A,I)
+      DISTRIBUTED R1B_MO_P_NEW_R(B,J,NINDEX20)
+      DISTRIBUTED R1B_MO_M_NEW_L(B,J,NINDEX20)
+      DISTRIBUTED HR1A_MO_P_NEW_R(A,I,NINDEX20)
+      DISTRIBUTED HR1A_MO_M_NEW_L(A,I,NINDEX20)
+      DISTRIBUTED HR1B_MO_P_NEW_R(B,J,NINDEX20)
+      DISTRIBUTED HR1B_MO_M_NEW_L(B,J,NINDEX20)
+
+      DISTRIBUTED R1A_MO_P_PICKED_R(A,I)
+      DISTRIBUTED R1A_MO_M_PICKED_L(A,I)
+      DISTRIBUTED R1B_MO_P_PICKED_R(B,J)
+      DISTRIBUTED R1B_MO_M_PICKED_L(B,J)
+
+      DISTRIBUTED HR1A_MO_P_PICKED_R(A,I)
+      DISTRIBUTED HR1A_MO_M_PICKED_L(A,I)
+      DISTRIBUTED HR1B_MO_P_PICKED_R(B,J)
+      DISTRIBUTED HR1B_MO_M_PICKED_L(B,J)
+      DISTRIBUTED RESIDUEA_P_VEC_R(A,I)
+      DISTRIBUTED RESIDUEA_M_VEC_L(A,I)
+      DISTRIBUTED RESIDUEB_P_VEC_R(B,J)
+      DISTRIBUTED RESIDUEB_M_VEC_L(B,J)
+      DISTRIBUTED CORR_VECA_INTMD_P_R(A,I)
+      DISTRIBUTED CORR_VECA_INTMD_M_L(A,I)
+      DISTRIBUTED CORR_VECB_INTMD_P_R(B,J)
+      DISTRIBUTED CORR_VECB_INTMD_M_L(B,J)
+      DISTRIBUTED ORTHO_COEFS_P_RL(MINDEX20,NINDEX20)
+      DISTRIBUTED ORTHO_COEFS_M_RL(MINDEX20,NINDEX20)
+      DISTRIBUTED R1DA(a,i)
+      DISTRIBUTED R1DB(b,j)
+      DISTRIBUTED Y1P_A_R(A,I,MINDEX20)
+      DISTRIBUTED Y1P_B_R(B,J,MINDEX20)
+      DISTRIBUTED Y1M_A_L(A,I,MINDEX20)
+      DISTRIBUTED Y1M_B_L(B,J,MINDEX20)
+      DISTRIBUTED HY1P_A_R(A,I,MINDEX20)
+      DISTRIBUTED HY1P_B_R(B,J,MINDEX20)
+      DISTRIBUTED HY1M_A_L(A,I,MINDEX20)
+      DISTRIBUTED HY1M_B_L(B,J,MINDEX20)
+      DISTRIBUTED DDAA(a,a1)
+      DISTRIBUTED DDBB(b,b1)
+      DISTRIBUTED DDII(i,i1)
+      DISTRIBUTED DDJJ(j,j1)
+      DISTRIBUTED RPAA_S_VECS_R(A,I,MROOTS)
+      DISTRIBUTED RPAA_S_VECS_L(A,I,MROOTS)
+      DISTRIBUTED RPAA_T_VECS_R(A,I,MROOTS)
+      DISTRIBUTED RPAA_T_VECS_L(A,I,MROOTS)
+      DISTRIBUTED RPAB_S_VECS_R(B,J,MROOTS)
+      DISTRIBUTED RPAB_S_VECS_L(B,J,MROOTS)
+      DISTRIBUTED RPAB_T_VECS_R(B,J,MROOTS)
+      DISTRIBUTED RPAB_T_VECS_L(B,J,MROOTS) 
+      DISTRIBUTED HR1A_AO_P_TMP(mu,nu)
+
+# Local and static arrays 
+
+      STATIC INIT_RVEC_AA(A,I,MAX_NO_ROOTS)
+      STATIC INIT_RVEC_BB(B,J,MAX_NO_ROOTS)
+
+      STATIC B_A_MATRIX_P(NINDEX20,MINDEX20)
+      STATIC B_A_MATRIX_M(NINDEX20,MINDEX20)
+      STATIC B_A_MATRIX_P_KEEP(NINDEX20,MINDEX20)
+      STATIC B_A_MATRIX_M_KEEP(NINDEX20,MINDEX20)
+
+      STATIC TMNP_R(NINDEX20,MINDEX20)
+      STATIC TMNM_L(NINDEX20,MINDEX20)
+      STATIC EIG_VECS_P_R(NINDEX20,MINDEX20)
+      STATIC EIG_VECS_M_L(NINDEX20,MINDEX20)
+      STATIC OVLPAB_HISTORY_P_R(NINDEX20)
+      STATIC OVLPAB_HISTORY_M_L(NINDEX20)
+      STATIC DIAGA(A,I)
+      STATIC DIAGB(B,J)
+      STATIC AB_DIAGS_P(MINDEX20)
+      STATIC AB_DIAGS_M(MINDEX20)
+      STATIC ETEMP_P(MINDEX20,NINDEX20)
+      STATIC ETEMP_M(MINDEX20,NINDEX20)
+      STATIC RPA_S_EES(MROOTS)  
+      STATIC RPA_T_EES(MROOTS)  
+     
+# Temporaray arrays
+
+      TEMP AOINT(MU,NU,LAMBDA,SIGMA)
+
+      TEMP TAI_R(A,I)
+      TEMP TAI_L(A,I)
+      TEMP TAIP_R(A,I)
+      TEMP TAIM_L(A,I)
+      TEMP T1AIP_R(A,I)
+      TEMP T1AIM_L(A,I)
+      TEMP T2AIP_R(A,I)
+      TEMP T2AIM_L(A,I)
+      TEMP TBJ_R(B,J)
+      TEMP TBJ_L(B,J) 
+      TEMP TBJP_R(B,J)
+      TEMP TBJM_L(B,J) 
+      TEMP T1BJP_R(B,J)
+      TEMP T1BJM_L(B,J) 
+      TEMP T2BJP_R(B,J)
+      TEMP T2BJM_L(B,J) 
+      TEMP TAIP_RX(A,I,MINDEX20)
+      TEMP TAIM_LX(A,I,MINDEX20)
+      TEMP TBJP_RX(B,J,MINDEX20)
+      TEMP TBJM_LX(B,J,MINDEX20) 
+      
+
+      TEMP TXAP(MU,A)
+      TEMP TXAM(MU,A)
+      TEMP TS(MINDEX20,NINDEX20)
+      
+      TEMP TXXP_T(MU,NU)
+      TEMP TXXM_T(MU,NU)
+      TEMP TXXP(MU,NU) 
+      TEMP TXXM(MU,NU) 
+      TEMP TXX_P(MINDEX20,NINDEX20)
+      TEMP TXX_M(MINDEX20,NINDEX20)
+      TEMP TXX(MINDEX20,NINDEX20)
+      TEMP TNORM_P_R(NINDEX20,MINDEX20)
+      TEMP TNORM_M_L(NINDEX20,MINDEX20)
+
+      TEMP TXBP(MU,B)
+      TEMP TXBM(MU,B)
+      TEMP TAXXP(MU,NU)
+      TEMP TAXXM(MU,NU)
+      TEMP TBXXP(MU,NU)
+      TEMP TBXXM(MU,NU)
+      TEMP TAPXX_INT(LAMBDA,SIGMA)
+      TEMP TBPXX_INT(LAMBDA,SIGMA)
+      TEMP TAMXX_INT(LAMBDA,SIGMA)
+      TEMP TBMXX_INT(LAMBDA,SIGMA)
+      TEMP TC0XXXX(MU,LAMBDA,NU,SIGMA)
+      TEMP TE1XXXX(MU,LAMBDA,NU,SIGMA)
+      TEMP TE2XXXX(MU,LAMBDA,NU,SIGMA)
+      TEMP TAPXX(LAMBDA,SIGMA)
+      TEMP TAMXX(LAMBDA,SIGMA)
+      TEMP TBPXX(LAMBDA,SIGMA)
+      TEMP TBMXX(LAMBDA,SIGMA)
+      TEMP TXIP_T(NU,I)
+      TEMP TXIM_T(NU,I)
+      TEMP TXJP_T(NU,J)
+      TEMP TXJM_T(NU,J)
+      TEMP TXIP(NU,I)
+      TEMP TXIM(NU,I)
+      TEMP TXJP(NU,J)
+      TEMP TXJM(NU,J)
+      TEMP TAIP_T(A,I)
+      TEMP TAIM_T(A,I)
+      TEMP TBJP_T(B,J)
+      TEMP TBJM_T(B,J)
+      TEMP TAP_R_T(A,I)
+      TEMP TAP_R(A,I)
+      TEMP TAM_L_T(A,I)
+      TEMP TAM_L(A,I)
+      TEMP TBP_R_T(B,J)
+      TEMP TBP_R(B,J)
+      TEMP TBM_L_T(B,J)
+      TEMP TBM_L(B,J)
+      TEMP TAI(A,I)
+      TEMP T2AI(A,I)
+      TEMP TBJ(B,J)
+      TEMP T2BJ(B,J)
+      TEMP TIA(I,A)
+      TEMP TJB(J,B)
+      TEMP T2IA(I,A)
+      TEMP T2JB(J,B)
+      TEMP TIAIA(I1,A1,I,A)
+      TEMP TJBJB(J1,B1,J,B)
+
+      TEMP T2AP_R(A,I,MINDEX20)
+      TEMP T2AM_L(A,I,MINDEX20)
+      TEMP T2BP_R(B,J,MINDEX20)
+      TEMP T2BM_L(B,J,MINDEX20)
+      TEMP T3AP_R(A,I,MINDEX20)
+      TEMP T3AM_L(A,I,MINDEX20)
+      TEMP T3BP_R(B,J,MINDEX20)
+      TEMP T3BM_L(B,J,MINDEX20)
+
+      TEMP T1AI(A,I)
+      TEMP T1BJ(B,J)
+
+      TEMP T1AI_R(A,I)
+      TEMP T1BJ_R(B,J)
+      TEMP T1AI_L(A,I)
+      TEMP T1BJ_L(B,J)
+
+      TEMP T1AP_R_T(A,I)
+      TEMP T1AP_R(A,I)
+      TEMP T1AM_L_T(A,I)
+      TEMP T1AM_L(A,I)
+      TEMP T1BP_R_T(B,J)
+      TEMP T1BP_R(B,J)
+      TEMP T1BM_L_T(B,J)
+      TEMP T1BM_L(B,J)
+      TEMP TII(I,I1)
+      TEMP TAA(A,A1)
+      TEMP TJJ(J,J1)
+      TEMP TBB(B,B1)
+      TEMP TXI(MU,I)
+      TEMP TXA(MU,A)
+      TEMP TXJ(MU,J)
+      TEMP TXB(MU,B)
+      TEMP TAI_P(A,I)
+      TEMP TAI_M(A,I)
+      TEMP TBJ_P(B,J)
+      TEMP TBJ_M(B,J)
+    
+ 
+# Scalars 
+
+      SCALAR TARGET_ROOTS
+      SCALAR CONV_TOLERANCE
+      SCALAR OMEGA_P
+      SCALAR OMEGA_M
+      SCALAR MOMEGA_P
+      SCALAR MOMEGA_M
+
+      SCALAR STWO
+      SCALAR HALF 
+      SCALAR INV_SQR_TWO
+      SCALAR RCOUNT
+      SCALAR MCOUNT
+      SCALAR NCOUNT
+      SCALAR KCOUNT
+      SCALAR LCOUNT
+      SCALAR COUNT_NO_ROOTS
+      SCALAR ITER_COUNT
+      SCALAR TMP
+      SCALAR SUMP
+      SCALAR SUMM
+      SCALAR OVLPAB_P_MAX_R
+      SCALAR OVLPAB_M_MAX_L
+      SCALAR OVLPA_P_R_INTMD
+      SCALAR OVLPA_M_L_INTMD
+      SCALAR OVLPB_P_R_INTMD
+      SCALAR OVLPB_M_L_INTMD
+      SCALAR OVLPA_P_R
+      SCALAR OVLPA_M_L
+      SCALAR OVLPB_P_R
+      SCALAR OVLPB_M_L
+      SCALAR EVECS_A_P_R
+      SCALAR EVECS_A_M_L
+      SCALAR EVECS_B_P_R
+      SCALAR EVECS_B_M_L
+
+      SCALAR NORM_INTMD_P_R
+      SCALAR NORM_INTMD_M_L  
+      SCALAR NORMA_P_R
+      SCALAR NORMA_M_L
+      SCALAR NORMB_P_R
+      SCALAR NORMB_M_L
+      SCALAR NORMA_INTMD_P_R_NEW
+      SCALAR NORMA_INTMD_M_L_NEW
+      SCALAR NORMA_P_R_NEW
+      SCALAR NORMA_M_L_NEW
+      SCALAR NORMB_INTMD_P_R_NEW
+      SCALAR NORMB_INTMD_M_L_NEW
+      SCALAR NORMB_P_R_NEW
+      SCALAR NORMB_M_L_NEW
+      SCALAR RLP_NORM
+      SCALAR RLM_NORM
+      SCALAR RANK
+      SCALAR SUMA
+      SCALAR SUMB
+      SCALAR SUMAP
+      SCALAR SUMAM
+      SCALAR SUMBP
+      SCALAR SUMBM
+      SCALAR RPA_THRES 
+      SCALAR RHF_UHF 
+      SCALAR RPA_MAXCYC
+      SCALAR MULT
+      SCALAR ZERO 
+      SCALAR ONE
+      SCALAR MONE
+      SCALAR TWO 
+      SCALAR THREE 
+      SCALAR SINGLET 
+      SCALAR TRIPLET 
+      SCALAR MYROOT 
+      SCALAR SUMP_A 
+      SCALAR SUMM_A 
+      SCALAR SUMP_B 
+      SCALAR SUMM_B 
+      SCALAR HC_A_P 
+      SCALAR HC_A_M
+      SCALAR HC_B_P
+      SCALAR HC_B_M 
+      SCALAR EIG_VALUE 
+      SCALAR OVLPAB_P_R
+      SCALAR OVLPAB_M_L
+      SCALAR IMAX_P
+      SCALAR IMAX_M
+      SCALAR NORM_INTMD_P_R_A 
+      SCALAR NORM_INTMD_M_L_A
+      SCALAR NORM_INTMD_P_R_B
+      SCALAR NORM_INTMD_M_L_B 
+      SCALAR TMPAP
+      SCALAR TMPAM
+      SCALAR TMPBP
+      SCALAR TMPBM
+      SCALAR NORMA_P_R_A
+      SCALAR NORMA_P_R_B
+      SCALAR NORMA_M_L_A
+      SCALAR NORMA_M_L_B
+      SCALAR EXPONENT 
+      SCALAR INV_SQRT_NORM_PR
+      SCALAR INV_NORM_PR
+      SCALAR INV_SQRT_NORM_ML
+      SCALAR EXACT_HY
+      SCALAR A_VALUE_P
+      SCALAR A_VALUE_M
+      SCALAR NORMAB_P
+      SCALAR NORMAB_M
+      SCALAR MAX_SUBSP_DIM 
+      SCALAR RESIDUAL_NORM_P
+      SCALAR RESIDUAL_NORM_M
+      SCALAR SIGN
+      SCALAR CIS 
+      SCALAR LEFT 
+      SCALAR RIGHT
+      SCALAR DO_CIS 
+      SCALAR NNN
+      SCALAR MARKER 
+      SCALAR E_OLD 
+      SCALAR EDIFF 
+
+      PROC FORM_INITIAL_GUESS
+#     -----------------------
+
+      DO MAX_NO_ROOTS
+         PARDO A, I
+             INIT_RVEC_AA(A,I,MAX_NO_ROOTS) = 0.0
+             DIAGA(a,i)                     = 0.0
+         ENDPARDO A, I
+      ENDDO MAX_NO_ROOTS 
+
+      DO MAX_NO_ROOTS
+         PARDO B, J
+             INIT_RVEC_BB(B,J,MAX_NO_ROOTS) = 0.0
+             DIAGB(b,j)                     = 0.0
+         ENDPARDO B, J
+      ENDDO MAX_NO_ROOTS 
+
+      DO a
+      DO i
+         GET R1DA(a,i)
+         Tai(a,i)   = R1DA(a,i)
+         DIAGA(a,i) = Tai(a,i)
+      ENDDO i
+      ENDDO a
+
+     DO b
+     DO j
+        GET R1DB(b,j)
+        Tbj(b,j)   = R1DB(b,j)
+        DIAGB(b,j) = Tbj(b,j)
+     ENDDO j
+     ENDDO b
+
+     EXECUTE SIP_BARRIER
+
+     EXECUTE FORM_RPA_GUESS DIAGA INIT_RVEC_AA
+     EXECUTE FORM_RPA_GUESS DIAGB INIT_RVEC_BB
+
+
+     ENDPROC FORM_INITIAL_GUESS
+#    --------------------------
+
+     PROC MOVE_GUESS_2CURRENT
+#    -------------------------
+
+      EXECUTE GUESS_4CURRENT_ROOT INIT_RVEC_AA MYROOT
+      IF TRIPLET == ONE
+          MYROOT *= -1.0
+      ENDIF
+      EXECUTE GUESS_4CURRENT_ROOT INIT_RVEC_BB MYROOT
+      IF TRIPLET == ONE
+          MYROOT *= -1.0
+      ENDIF
+
+     RCOUNT = 0.0
+     DO MAX_NO_ROOTS
+        RCOUNT += ONE
+
+        IF RCOUNT > ONE
+           EXIT
+        ENDIF 
+
+        PARDO A, I
+
+            TAIP_R(A,I) =  INIT_RVEC_AA(A,I,MAX_NO_ROOTS)
+            TAIM_L(A,I) =  INIT_RVEC_AA(A,I,MAX_NO_ROOTS)
+  
+            PUT R1A_MO_P_INTMD_R(A,I) = TAIP_R(A,I)
+            PUT R1A_MO_M_INTMD_L(A,I) = TAIM_L(A,I)
+
+            PUT INIT_AVEC_R(A,I) = TAIP_R(A,I)
+            PUT INIT_AVEC_L(A,I) = TAIM_L(A,I)
+
+        ENDPARDO A, I
+
+        PARDO B, J
+
+            TBJP_R(B,J) =  INIT_RVEC_BB(B,J,MAX_NO_ROOTS)
+            TBJM_L(B,J) =  INIT_RVEC_BB(B,J,MAX_NO_ROOTS)
+
+            PUT R1B_MO_P_INTMD_R(B,J) = TBJP_R(B,J)
+            PUT R1B_MO_M_INTMD_L(B,J) = TBJM_L(B,J)
+
+            PUT INIT_BVEC_R(B,J) = TBJP_R(B,J)
+            PUT INIT_BVEC_L(B,J) = TBJM_L(B,J)
+
+        ENDPARDO B, J
+
+
+     ENDDO MAX_NO_ROOTS
+
+     EXECUTE SIP_BARRIER 
+
+#bgn_debug
+#     execute get_my_rank rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get R1A_MO_P_INTMD_R(A,I)
+#        get R1A_MO_M_INTMD_L(A,I)
+#        tmp   = R1A_MO_P_INTMD_R(A,I) * R1A_MO_P_INTMD_R(A,I)
+#        sumap += tmp
+#        tmp   = R1A_MO_M_INTMD_L(A,I) * R1A_MO_M_INTMD_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get R1B_MO_P_INTMD_R(B,J)
+#        get R1B_MO_M_INTMD_L(B,J)
+#        tmp = R1B_MO_P_INTMD_R(B,J) * R1B_MO_P_INTMD_R(B,J)
+#        sumbp += tmp
+#        tmp = R1B_MO_M_INTMD_L(B,J) * R1B_MO_M_INTMD_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
+#end_debug
+
+     NORM_INTMD_P_R_A = 0.0
+     NORM_INTMD_M_L_A = 0.0
+     NORM_INTMD_P_R_B = 0.0
+     NORM_INTMD_M_L_B = 0.0
+     NORMA_P_R = 0.0
+     NORMA_M_L = 0.0
+
+     PARDO A, I
+
+         GET R1A_MO_P_INTMD_R(A,I) 
+         GET R1A_MO_M_INTMD_L(A,I) 
+
+         TAIP_R(A,I) = R1A_MO_P_INTMD_R(A,I)
+         TAIM_L(A,I) = R1A_MO_M_INTMD_L(A,I) 
+
+         TMP = TAIP_R(A,I) * TAIP_R(A,I)
+         NORM_INTMD_P_R_A += TMP 
+ 
+         TMP = TAIM_L(A,I) * TAIM_L(A,I)
+         NORM_INTMD_M_L_A += TMP 
+
+     ENDPARDO A, I
+
+     PARDO B, J
+
+         GET R1B_MO_P_INTMD_R(B,J) 
+         GET R1B_MO_M_INTMD_L(B,J) 
+
+         TBJP_R(B,J) = R1B_MO_P_INTMD_R(B,J)
+         TBJM_L(B,J) = R1B_MO_M_INTMD_L(B,J)
+  
+         TMP = TBJP_R(B,J) * TBJP_R(B,J)  
+         NORM_INTMD_P_R_B += TMP 
+
+         TMP = TBJM_L(B,J) * TBJM_L(B,J)  
+         NORM_INTMD_M_L_B += TMP 
+
+     ENDPARDO B, J
+
+     execute sip_barrier
+     COLLECTIVE NORMA_P_R_A += NORM_INTMD_P_R_A
+     COLLECTIVE NORMA_M_L_A += NORM_INTMD_M_L_A
+     COLLECTIVE NORMA_P_R_B += NORM_INTMD_P_R_B
+     COLLECTIVE NORMA_M_L_B += NORM_INTMD_M_L_B
+
+     NORMA_P_R  = NORMA_P_R_A
+     NORMA_P_R += NORMA_P_R_B 
+
+     NORMA_M_L  = NORMA_M_L_A
+     NORMA_M_L += NORMA_M_L_B
+
+     EXPONENT = HALF 
+     EXECUTE NORM_FAC NORMA_P_R EXPONENT
+     EXPONENT = HALF 
+     EXECUTE NORM_FAC NORMA_M_L EXPONENT
+     INV_SQRT_NORM_PR = NORMA_P_R
+     INV_SQRT_NORM_ML = NORMA_M_L
+
+     PARDO A, I
+
+         GET R1A_MO_P_INTMD_R(A,I)
+         GET R1A_MO_M_INTMD_L(A,I)
+
+         TAIP_R(A,I) = R1A_MO_P_INTMD_R(A,I)
+         TAIM_L(A,I) = R1A_MO_M_INTMD_L(A,I)
+
+         TAIP_R(A,I)*= INV_SQRT_NORM_PR
+         TAIM_L(A,I)*= INV_SQRT_NORM_ML
+
+         PUT  R1A_MO_P_CURRENT_R(A,I) = TAIP_R(A,I)
+         PUT  R1A_MO_M_CURRENT_L(A,I) = TAIM_L(A,I)
+
+     ENDPARDO A, I
+
+     PARDO B, J
+
+         GET R1B_MO_P_INTMD_R(B,J)
+         GET R1B_MO_M_INTMD_L(B,J)
+
+         TBJP_R(B,J) = R1B_MO_P_INTMD_R(B,J)
+         TBJM_L(B,J) = R1B_MO_M_INTMD_L(B,J)
+
+         TBJP_R(B,J) *= INV_SQRT_NORM_PR
+         TBJM_L(B,J) *= INV_SQRT_NORM_ML
+
+         PUT  R1B_MO_P_CURRENT_R(B,J) = TBJP_R(B,J)
+         PUT  R1B_MO_M_CURRENT_L(B,J) = TBJM_L(B,J)
+
+     ENDPARDO B, J
+     EXECUTE SIP_BARRIER 
+#bgn_debug
+#     execute get_my_rank rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get R1A_MO_P_CURRENT_R(A,I)
+#        get R1A_MO_M_CURRENT_L(A,I)
+#        tmp   = R1A_MO_P_CURRENT_R(A,I) * R1A_MO_P_CURRENT_R(A,I)
+#        sumap += tmp
+#        tmp   = R1A_MO_M_CURRENT_L(A,I) * R1A_MO_M_CURRENT_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get R1B_MO_P_CURRENT_R(B,J)
+#        get R1B_MO_M_CURRENT_L(B,J)
+#        tmp = R1B_MO_P_CURRENT_R(B,J) * R1B_MO_P_CURRENT_R(B,J)
+#        sumbp += tmp
+#        tmp = R1B_MO_M_CURRENT_L(B,J) * R1B_MO_M_CURRENT_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
+#end_debug
+
+     ENDPROC MOVE_GUESS_2CURRENT
+#    ---------------------------
+
+     PROC SAVE_C_VECTORS
+#    --------------------
+
+     MCOUNT = ZERO
+     DO MINDEX20
+
+        MCOUNT  += ONE
+        IF MCOUNT == ITER_COUNT
+
+        PARDO A, I
+
+           GET R1A_MO_P_CURRENT_R(A,I)
+           GET R1A_MO_M_CURRENT_L(A,I)
+
+           TAIP_R(A,I) = R1A_MO_P_CURRENT_R(A,I)
+           TAIM_L(A,I) = R1A_MO_M_CURRENT_L(A,I)
+
+           PUT R1A_MO_P_HIST_R(A,I,MINDEX20) = TAIP_R(A,I)
+           PUT R1A_MO_M_HIST_L(A,I,MINDEX20) = TAIM_L(A,I)
+
+        ENDPARDO A, I
+       
+        PARDO B, J
+
+           GET R1B_MO_P_CURRENT_R(B,J)
+           GET R1B_MO_M_CURRENT_L(B,J)
+
+           TBJP_R(B,J) = R1B_MO_P_CURRENT_R(B,J)
+           TBJM_L(B,J) = R1B_MO_M_CURRENT_L(B,J)
+
+           PUT R1B_MO_P_HIST_R(B,J,MINDEX20) = TBJP_R(B,J)
+           PUT R1B_MO_M_HIST_L(B,J,MINDEX20) = TBJM_L(B,J) 
+
+        ENDPARDO B, J
+        ENDIF
+
+     ENDDO MINDEX20
+
+     EXECUTE SIP_BARRIER 
+
+#bgn_debug
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     ncount = 0.0
+#     do mindex20
+#     ncount += 1.0
+#     if ncount > iter_count
+#        exit
+#     endif 
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get R1A_MO_P_HIST_R(A,I,MINDEX20)
+#        get R1A_MO_M_HIST_L(A,I,MINDEX20)
+#        tmp   = R1A_MO_P_HIST_R(A,I,MINDEX20) * R1A_MO_P_HIST_R(A,I,MINDEX20)
+#        sumap += tmp
+#        tmp   = R1A_MO_M_HIST_L(A,I,MINDEX20) * R1A_MO_M_HIST_L(A,I,MINDEX20)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get R1B_MO_P_HIST_R(B,J,MINDEX20)
+#        get R1B_MO_M_HIST_L(B,J,MINDEX20)
+#        tmp = R1B_MO_P_HIST_R(B,J,MINDEX20) * R1B_MO_P_HIST_R(B,J,MINDEX20)
+#        sumbp += tmp
+#        tmp = R1B_MO_M_HIST_L(B,J,MINDEX20) * R1B_MO_M_HIST_L(B,J,MINDEX20)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     enddo mindex20
+#     endif
+#end_debug
+
+
+    ENDPROC SAVE_C_VECTORS
+#   -----------------------
+
+     PROC FORM_FOCK_CONTRIBUTION
+#    ---------------------------
+
+     PARDO A, I,
+
+         TAI_R(A,I) = 0.0
+         TAI_L(A,I) = 0.0
+
+         DO I1
+
+            GET R1A_MO_P_CURRENT_R(A,I1)
+            GET R1A_MO_M_CURRENT_L(A,I1)
+
+            T1AIP_R(A,I) = R1A_MO_P_CURRENT_R(A,I1) * FOCK_A(I1,I)
+            T1AIM_L(A,I) = R1A_MO_M_CURRENT_L(A,I1) * FOCK_A(I1,I)
+
+            TAI_R(A,I) -= T1AIP_R(A,I)
+            TAI_L(A,I) -= T1AIM_L(A,I)
+
+         ENDDO I1
+
+         DO A1
+
+            GET R1A_MO_P_CURRENT_R(A1,I)
+            GET R1A_MO_M_CURRENT_L(A1,I)
+
+            T2AIP_R(A,I) = R1A_MO_P_CURRENT_R(A1,I) * FOCK_A(A,A1)
+            T2AIM_L(A,I) = R1A_MO_M_CURRENT_L(A1,I) * FOCK_A(A,A1)
+
+            TAI_R(A,I) += T2AIP_R(A,I)
+            TAI_L(A,I) += T2AIM_L(A,I)
+
+          ENDDO A1
+
+          PUT HR1A_MO_P_CURRENT_R(A,I) += TAI_R(A,I)
+          PUT HR1A_MO_M_CURRENT_L(A,I) += TAI_L(A,I)
+
+     ENDPARDO A, I
+
+     PARDO B, J
+
+         TBJ_R(B,J) = 0.0
+         TBJ_L(B,J) = 0.0
+
+         DO J1
+
+            GET R1B_MO_P_CURRENT_R(B,J1)
+            GET R1B_MO_M_CURRENT_L(B,J1)
+   
+            T1BJP_R(B,J) = R1B_MO_P_CURRENT_R(B,J1) * FOCK_B(J1,J)
+            T1BJM_L(B,J) = R1B_MO_M_CURRENT_L(B,J1) * FOCK_B(J1,J)
+
+            TBJ_R(B,J) -= T1BJP_R(B,J)
+            TBJ_L(B,J) -= T1BJM_L(B,J)
+
+         ENDDO J1
+
+         DO B1
+
+            GET R1B_MO_P_CURRENT_R(B1,J)
+            GET R1B_MO_M_CURRENT_L(B1,J)
+  
+            T2BJP_R(B,J) = R1B_MO_P_CURRENT_R(B1,J) * FOCK_B(B,B1)
+            T2BJM_L(B,J) = R1B_MO_M_CURRENT_L(B1,J) * FOCK_B(B,B1)
+
+            TBJ_R(B,J) += T2BJP_R(B,J)
+            TBJ_L(B,J) += T2BJM_L(B,J)
+
+         ENDDO B1
+
+         PUT HR1B_MO_P_CURRENT_R(B,J) += TBJ_R(B,J)
+         PUT HR1B_MO_M_CURRENT_L(B,J) += TBJ_L(B,J)
+
+     ENDPARDO B, J
+
+     EXECUTE SIP_BARRIER 
+
+#bgn_debug
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get HR1A_MO_P_CURRENT_R(A,I)
+#        get HR1A_MO_M_CURRENT_L(A,I)
+#
+#        tmp   = HR1A_MO_P_CURRENT_R(A,I) * HR1A_MO_P_CURRENT_R(A,I)
+#        sumap += tmp
+#        tmp   = HR1A_MO_M_CURRENT_L(A,I) * HR1A_MO_M_CURRENT_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#
+#        get HR1B_MO_P_CURRENT_R(B,J)
+#        get HR1B_MO_M_CURRENT_L(B,J)
+#        tmp = HR1B_MO_P_CURRENT_R(B,J) * HR1B_MO_P_CURRENT_R(B,J)
+#        sumbp += tmp
+#        tmp = HR1B_MO_M_CURRENT_L(B,J) * HR1B_MO_M_CURRENT_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
+#end_debug
+
+     ENDPROC FORM_FOCK_CONTRIBUTION
+#    ------------------------------
+
+     PROC FORM_AO_R1AB
+#    -----------------
+      PARDO A, I
+
+          GET R1A_MO_P_CURRENT_R(A,I)
+          GET R1A_MO_M_CURRENT_L(A,I)
+
+          TAIP_R(A,I) = R1A_MO_P_CURRENT_R(A,I)
+          TAIM_L(A,I) = R1A_MO_M_CURRENT_L(A,I)
+
+          DO MU
+
+             TXIP_T(MU,I) = TAIP_R(A,I) * CA(MU,A)
+             TXIM_T(MU,I) = TAIM_L(A,I) * CA(MU,A)
+
+             DO NU
+
+                TXXP_T(MU,NU) = TXIP_T(MU,I) * CA(NU,I)
+                TXXM_T(MU,NU) = TXIM_T(MU,I) * CA(NU,I)
+
+                PUT R1A_AO_P_CURRENT_R(MU,NU) +=  TXXP_T(MU,NU)
+                PUT R1A_AO_M_CURRENT_L(MU,NU) +=  TXXM_T(MU,NU)
+
+             ENDDO NU
+          ENDDO MU 
+
+      ENDPARDO A, I
+
+      PARDO B, J
+
+          GET R1B_MO_P_CURRENT_R(B,J)
+          GET R1B_MO_M_CURRENT_L(B,J)
+
+          TBJP_R(B,J) = R1B_MO_P_CURRENT_R(B,J)
+          TBJM_L(B,J) = R1B_MO_M_CURRENT_L(B,J)
+
+          DO MU
+
+            TXJP_T(MU,J) = TBJP_R(B,J) * CB(MU,B)
+            TXJM_T(MU,J) = TBJM_L(B,J) * CB(MU,B)
+
+            DO NU
+
+               TXXP_T(MU,NU) = TXJP_T(MU,J) * CB(NU,J)
+               TXXM_T(MU,NU) = TXJM_T(MU,J) * CB(NU,J)
+
+               PUT R1B_AO_P_CURRENT_R(MU,NU) +=  TXXP_T(MU,NU)
+               PUT R1B_AO_M_CURRENT_L(MU,NU) +=  TXXM_T(MU,NU)
+
+            ENDDO NU
+          ENDDO MU
+
+      ENDPARDO B, J
+
+      EXECUTE SIP_BARRIER 
+
+#bgn_debug
+#     execute get_my_rank rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do mu
+#     do nu
+#        get R1A_AO_P_CURRENT_R(mu,nu)
+#        get R1A_AO_M_CURRENT_L(mu,nu)
+#        tmp   = R1A_AO_P_CURRENT_R(mu,nu) * R1A_AO_M_CURRENT_L(mu,nu)
+#        sumap += tmp
+#        tmp   = R1A_AO_M_CURRENT_L(mu,nu) * R1A_AO_M_CURRENT_L(mu,nu)
+#        sumam += tmp
+#     enddo nu
+#     enddo mu
+#     do mu
+#     do nu
+#
+#        get R1B_AO_P_CURRENT_R(mu,nu)
+#        get R1B_AO_M_CURRENT_L(mu,nu)
+#        tmp = R1B_AO_P_CURRENT_R(mu,nu) * R1B_AO_P_CURRENT_r(mu,nu)
+#        sumbp += tmp
+#        tmp = R1B_AO_M_CURRENT_L(mu,nu) * R1B_AO_P_CURRENT_r(mu,nu)
+#        sumbm += tmp
+#     enddo nu
+#     enddo mu
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
+#end_debug
+
+     ENDPROC FORM_AO_R1AB
+#    --------------------
+
+     PROC HC_MULTIPLY_RPA_RL
+#    ----------------------
+#  (A+B)(ai,bj)  R+_old(b,J)  = R+_new(a,i)
+#  (A-B)(ai,bj)  R-_old(b,J)  = R__new(a,i)
+
+#  All possible spin-combinations are included.
+
+     PARDO MU, NU, LAMBDA, SIGMA
+
+         TAPXX(MU,LAMBDA) = 0.0
+         TAMXX(MU,LAMBDA) = 0.0
+         TBPXX(MU,LAMBDA) = 0.0
+         TBMXX(MU,LAMBDA) = 0.0
+         
+         COMPUTE_INTEGRALS AOINT(MU,LAMBDA,NU,SIGMA)
+         TC0XXXX(MU,LAMBDA,NU,SIGMA) = AOINT(MU,LAMBDA,NU,SIGMA)
+         COMPUTE_INTEGRALS AOINT(MU,SIGMA,LAMBDA,NU)
+         TE1XXXX(MU,SIGMA,LAMBDA,NU) = AOINT(MU,SIGMA,LAMBDA,NU)
+         COMPUTE_INTEGRALS AOINT(MU,NU,LAMBDA,SIGMA) 
+         TE2XXXX(MU,NU,LAMBDA,SIGMA) = AOINT(MU,NU,LAMBDA,SIGMA) 
+
+         GET R1A_AO_P_CURRENT_R(NU,SIGMA)
+         GET R1B_AO_P_CURRENT_R(NU,SIGMA)  
+
+         GET R1A_AO_M_CURRENT_L(NU,SIGMA)
+         GET R1B_AO_M_CURRENT_L(NU,SIGMA)
+
+         TAXXP(NU,SIGMA) = R1A_AO_P_CURRENT_R(NU,SIGMA)
+         TBXXP(NU,SIGMA) = R1B_AO_P_CURRENT_R(NU,SIGMA)
+
+         TAXXM(NU,SIGMA) = R1A_AO_M_CURRENT_L(NU,SIGMA)
+         TBXXM(NU,SIGMA) = R1B_AO_M_CURRENT_L(NU,SIGMA)
+
+         TAPXX_INT(MU,LAMBDA)  = TAXXP(NU,SIGMA) * TC0XXXX(MU,LAMBDA,NU,SIGMA)
+         TAPXX_INT(MU,LAMBDA) *= 2.0
+         TAPXX(MU,LAMBDA)     += TAPXX_INT(MU,LAMBDA)
+
+         TAPXX_INT(MU,LAMBDA)  = TBXXP(NU,SIGMA) * TC0XXXX(MU,LAMBDA,NU,SIGMA)
+         TAPXX_INT(MU,LAMBDA) *= 2.0
+         TAPXX(MU,LAMBDA)     += TAPXX_INT(MU,LAMBDA)
+
+         TAPXX_INT(MU,LAMBDA)  = TAXXP(NU,SIGMA) * TE1XXXX(MU,SIGMA,LAMBDA,NU)
+         TAPXX_INT(MU,LAMBDA) *= -1.0
+         TAPXX(MU,LAMBDA)     += TAPXX_INT(MU,LAMBDA)
+
+         TAPXX_INT(MU,LAMBDA)  = TAXXP(NU,SIGMA) * TE2XXXX(MU,NU,LAMBDA,SIGMA)
+         TAPXX_INT(MU,LAMBDA) *= -1.0
+         TAPXX(MU,LAMBDA)     += TAPXX_INT(MU,LAMBDA)
+
+         TBPXX_INT(MU,LAMBDA)  = TBXXP(NU,SIGMA) * TC0XXXX(MU,LAMBDA,NU,SIGMA)
+         TBPXX_INT(MU,LAMBDA) *= 2.0
+         TBPXX(MU,LAMBDA)     += TBPXX_INT(MU,LAMBDA)
+
+         TBPXX_INT(MU,LAMBDA)  = TAXXP(NU,SIGMA) * TC0XXXX(MU,LAMBDA,NU,SIGMA)
+         TBPXX_INT(MU,LAMBDA) *= 2.0
+         TBPXX(MU,LAMBDA)     += TBPXX_INT(MU,LAMBDA)
+
+         TBPXX_INT(MU,LAMBDA)  = TBXXP(NU,SIGMA) * TE1XXXX(MU,SIGMA,LAMBDA,NU)
+         TBPXX_INT(MU,LAMBDA) *= -1.0
+         TBPXX(MU,LAMBDA)     += TBPXX_INT(MU,LAMBDA)
+
+         TBPXX_INT(MU,LAMBDA)  = TBXXP(NU,SIGMA) * TE2XXXX(MU,NU,LAMBDA,SIGMA)
+         TBPXX_INT(MU,LAMBDA) *= -1.0
+         TBPXX(MU,LAMBDA)     += TBPXX_INT(MU,LAMBDA)
+
+         PUT HR1A_AO_P_CURRENT_R(MU,LAMBDA) += TAPXX(MU,LAMBDA) 
+         PUT HR1B_AO_P_CURRENT_R(MU,LAMBDA) += TBPXX(MU,LAMBDA)
+
+         TAMXX_INT(MU,LAMBDA)  = TAXXM(NU,SIGMA) * TE1XXXX(MU,SIGMA,LAMBDA,NU)
+         TAMXX_INT(MU,LAMBDA) *= -1.0
+         TAMXX(MU,LAMBDA)     += TAMXX_INT(MU,LAMBDA)
+
+         TAMXX_INT(MU,LAMBDA)  = TAXXM(NU,SIGMA) * TE2XXXX(MU,NU,LAMBDA,SIGMA)
+         TAMXX(MU,LAMBDA)     += TAMXX_INT(MU,LAMBDA)
+
+         TBMXX_INT(MU,LAMBDA)  = TBXXM(NU,SIGMA) * TE1XXXX(MU,SIGMA,LAMBDA,NU)
+         TBMXX_INT(MU,LAMBDA) *= -1.0
+         TBMXX(MU,LAMBDA)     += TBMXX_INT(MU,LAMBDA)
+
+         TBMXX_INT(MU,LAMBDA)  = TBXXM(NU,SIGMA) * TE2XXXX(MU,NU,LAMBDA,SIGMA)
+         TBMXX(MU,LAMBDA)     += TBMXX_INT(MU,LAMBDA)
+
+         PUT HR1A_AO_M_CURRENT_L(MU,LAMBDA) += TAMXX(MU,LAMBDA)
+         PUT HR1B_AO_M_CURRENT_L(MU,LAMBDA) += TBMXX(MU,LAMBDA)
+
+     ENDPARDO MU, NU, LAMBDA, SIGMA
+
+     EXECUTE SIP_BARRIER
+
+#bgn_debug
+#     execute get_my_rank rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do mu
+#     do nu
+#        get HR1A_AO_P_CURRENT_R(mu,nu)
+#        get HR1A_AO_M_CURRENT_L(mu,nu)
+#        tmp   = HR1A_AO_P_CURRENT_R(mu,nu) * HR1A_AO_P_CURRENT_R(mu,nu)
+#        sumap += tmp
+#        tmp   = HR1A_AO_M_CURRENT_L(mu,nu) * HR1A_AO_M_CURRENT_L(mu,nu)
+#        sumam += tmp
+#     enddo nu
+#     enddo mu
+#     do mu
+#     do nu
+#        get HR1B_AO_P_CURRENT_R(mu,nu)
+#        get HR1B_AO_M_CURRENT_L(mu,nu)
+#        tmp = HR1B_AO_P_CURRENT_R(mu,nu) * HR1B_AO_P_CURRENT_R(mu,nu)
+#        sumbp += tmp
+#        tmp = HR1B_AO_M_CURRENT_L(mu,nu) * HR1B_AO_M_CURRENT_L(mu,nu)
+#        sumbm += tmp
+#     enddo nu
+#     enddo mu
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
+#end_debug
+#bgn_debug
+# Form 1/2(A-B)(A+B)=A i.e. CIS. A fantastic debugging option.
+#     pardo mu,lambda
+#           get HR1A_AO_P_CURRENT_R(mu,lambda)
+#           get HR1A_AO_M_CURRENT_L(mu,lambda)
+#           TAPXX(MU,LAMBDA) = HR1A_AO_P_CURRENT_R(mu,lambda)
+#           TAPXX(MU,LAMBDA)*= 0.5
+#           TAMXX(MU,LAMBDA) = HR1A_AO_M_CURRENT_L(mu,lambda)
+#           TAMXX(MU,LAMBDA)*= 0.5
+#           TAPXX(MU,LAMBDA) += TAMXX(MU,LAMBDA)
+#           PUT HR1A_AO_P_TMP(mu,lambda) =  TAPXX(MU,LAMBDA)
+#     endpardo mu,lambda
+#     EXECUTE SIP_BARRIER
+#    pardo mu,lambda
+#           GET HR1A_AO_P_TMP(mu,lambda)
+#           TAPXX(MU,LAMBDA) = HR1A_AO_P_TMP(mu,lambda)
+#           PUT HR1A_AO_P_CURRENT_R(mu,lambda)=TAPXX(MU,LAMBDA)
+#           PUT HR1A_AO_M_CURRENT_L(mu,lambda)=TAPXX(MU,LAMBDA)
+#           PUT HR1B_AO_P_CURRENT_R(mu,lambda)=TAPXX(MU,LAMBDA)
+#           PUT HR1B_AO_M_CURRENT_L(mu,lambda)=TAPXX(MU,LAMBDA)
+#     endpardo mu,lambda
+#     EXECUTE SIP_BARRIER
+#end_debug
+         
+     ENDPROC HC_MULTIPLY_RPA_RL
+#    --------------------------
+
+     PROC HC_MULTIPLY_CIS
+#    --------------------
+#  (A+B)(ai,bj)  R+_old(b,J)  = R+_new(a,i)
+#  (A-B)(ai,bj)  R-_old(b,J)  = R__new(a,i)
+
+#  All possible spin-combinations are included.
+
+     PARDO MU, NU, LAMBDA, SIGMA
+
+         TAPXX(MU,LAMBDA) = 0.0
+         TAMXX(MU,LAMBDA) = 0.0
+         TBPXX(MU,LAMBDA) = 0.0
+         TBMXX(MU,LAMBDA) = 0.0
+
+         COMPUTE_INTEGRALS AOINT(MU,LAMBDA,NU,SIGMA)
+         TC0XXXX(MU,LAMBDA,NU,SIGMA) = AOINT(MU,LAMBDA,NU,SIGMA)
+         COMPUTE_INTEGRALS AOINT(MU,SIGMA,LAMBDA,NU)
+         TE1XXXX(MU,SIGMA,LAMBDA,NU) = AOINT(MU,SIGMA,LAMBDA,NU)
+
+         GET R1A_AO_P_CURRENT_R(NU,SIGMA)
+         GET R1B_AO_P_CURRENT_R(NU,SIGMA)  
+
+         GET R1A_AO_M_CURRENT_L(NU,SIGMA)
+         GET R1B_AO_M_CURRENT_L(NU,SIGMA)
+
+         TAXXP(NU,SIGMA) = R1A_AO_P_CURRENT_R(NU,SIGMA)
+         TBXXP(NU,SIGMA) = R1B_AO_P_CURRENT_R(NU,SIGMA)
+
+         TAXXM(NU,SIGMA) = R1A_AO_M_CURRENT_L(NU,SIGMA)
+         TBXXM(NU,SIGMA) = R1B_AO_M_CURRENT_L(NU,SIGMA)
+
+         TAPXX_INT(MU,LAMBDA)  = TAXXP(NU,SIGMA) * TC0XXXX(MU,LAMBDA,NU,SIGMA)
+         TAPXX(MU,LAMBDA)     += TAPXX_INT(MU,LAMBDA)
+
+         TAPXX_INT(MU,LAMBDA)  = TBXXP(NU,SIGMA) * TC0XXXX(MU,LAMBDA,NU,SIGMA)
+         TAPXX(MU,LAMBDA)     += TAPXX_INT(MU,LAMBDA)
+
+         TAPXX_INT(MU,LAMBDA)  = TAXXP(NU,SIGMA) * TE1XXXX(MU,SIGMA,LAMBDA,NU)
+         TAPXX_INT(MU,LAMBDA) *= -1.0
+         TAPXX(MU,LAMBDA)     += TAPXX_INT(MU,LAMBDA)
+
+         TBPXX_INT(MU,LAMBDA)  = TBXXP(NU,SIGMA) * TC0XXXX(MU,LAMBDA,NU,SIGMA)
+         TBPXX(MU,LAMBDA)     += TBPXX_INT(MU,LAMBDA)
+
+         TBPXX_INT(MU,LAMBDA)  = TAXXP(NU,SIGMA) * TC0XXXX(MU,LAMBDA,NU,SIGMA)
+         TBPXX(MU,LAMBDA)     += TBPXX_INT(MU,LAMBDA)
+
+         TBPXX_INT(MU,LAMBDA)  = TBXXP(NU,SIGMA) * TE1XXXX(MU,SIGMA,LAMBDA,NU)
+         TBPXX_INT(MU,LAMBDA) *= -1.0
+         TBPXX(MU,LAMBDA)     += TBPXX_INT(MU,LAMBDA)
+
+         PUT HR1A_AO_P_CURRENT_R(MU,LAMBDA) += TAPXX(MU,LAMBDA) 
+         PUT HR1B_AO_P_CURRENT_R(MU,LAMBDA) += TBPXX(MU,LAMBDA)
+
+         PUT HR1A_AO_M_CURRENT_L(MU,LAMBDA) += TAPXX(MU,LAMBDA)
+         PUT HR1B_AO_M_CURRENT_L(MU,LAMBDA) += TBPXX(MU,LAMBDA)
+
+     ENDPARDO MU, NU, LAMBDA, SIGMA
+
+     EXECUTE SIP_BARRIER
+#bgn_debug
+#     execute get_my_rank rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do mu
+#     do nu
+#        get HR1A_AO_P_CURRENT_R(mu,nu)
+#        get HR1A_AO_M_CURRENT_L(mu,nu)
+#        tmp   = HR1A_AO_P_CURRENT_R(mu,nu) * HR1A_AO_P_CURRENT_R(mu,nu)
+#        sumap += tmp
+#        tmp   = HR1A_AO_M_CURRENT_L(mu,nu) * HR1A_AO_M_CURRENT_L(mu,nu)
+#        sumam += tmp
+#     enddo nu
+#     enddo mu
+#     do mu
+#     do nu
+#        get HR1B_AO_P_CURRENT_R(mu,nu)
+#        get HR1B_AO_M_CURRENT_L(mu,nu)
+#        tmp = HR1B_AO_P_CURRENT_R(mu,nu) * HR1B_AO_P_CURRENT_R(mu,nu)
+#        sumbp += tmp
+#        tmp = HR1B_AO_M_CURRENT_L(mu,nu) * HR1B_AO_M_CURRENT_L(mu,nu)
+#        sumbm += tmp
+#     enddo nu
+#     enddo mu
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
+#end_debug
+         
+     ENDPROC HC_MULTIPLY_CIS
+#    ----------------------
+
+     PROC FORM_MO_R1AB
+#    -----------------
+
+     PARDO MU, NU
+
+         GET HR1A_AO_P_CURRENT_R(NU,MU)
+         GET HR1A_AO_M_CURRENT_L(NU,MU)
+
+         TXXP(NU,MU) = HR1A_AO_P_CURRENT_R(NU,MU)
+         TXXM(NU,MU) = HR1A_AO_M_CURRENT_L(NU,MU)
+
+         DO A
+
+            TXAP(NU,A) = TXXP(NU,MU) * CA(MU,A)
+            TXAM(NU,A) = TXXM(NU,MU) * CA(MU,A)
+              
+            DO I
+
+               TAIP_R(A,I) = TXAP(NU,A) * CA(NU,I)
+               TAIM_L(A,I) = TXAM(NU,A) * CA(NU,I)
+          
+               PUT HR1A_MO_P_CURRENT_R(A,I) += TAIP_R(A,I)
+               PUT HR1A_MO_M_CURRENT_L(A,I) += TAIM_L(A,I)
+
+            ENDDO I
+
+         ENDDO A
+
+     ENDPARDO MU, NU
+
+     PARDO MU, NU
+
+         GET HR1B_AO_P_CURRENT_R(NU,MU)
+         GET HR1B_AO_M_CURRENT_L(NU,MU)
+
+         TXXP(NU,MU) = HR1B_AO_P_CURRENT_R(NU,MU)
+         TXXM(NU,MU) = HR1B_AO_M_CURRENT_L(NU,MU)
+
+         DO B
+
+            TXBP(NU,B) = TXXP(NU,MU) * CB(MU,B)
+            TXBM(NU,B) = TXXM(NU,MU) * CB(MU,B)
+
+            DO J
+
+               TBJP_R(B,J) = TXBP(NU,B) * CB(NU,J)
+               TBJM_L(B,J) = TXBM(NU,B) * CB(NU,J)
+
+               PUT HR1B_MO_P_CURRENT_R(B,J) += TBJP_R(B,J)
+               PUT HR1B_MO_M_CURRENT_L(B,J) += TBJM_L(B,J)
+
+             ENDDO J
+
+         ENDDO B
+
+     ENDPARDO MU, NU
+
+     EXECUTE SIP_BARRIER 
+   
+#bgn_debug
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get HR1A_MO_P_CURRENT_R(A,I)
+#        get HR1A_MO_M_CURRENT_L(A,I)
+#
+#        tmp   = HR1A_MO_P_CURRENT_R(A,I) * HR1A_MO_P_CURRENT_R(A,I)
+#        sumap += tmp
+#        tmp   = HR1A_MO_M_CURRENT_L(A,I) * HR1A_MO_M_CURRENT_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#      
+#        get HR1B_MO_P_CURRENT_R(B,J)
+#        get HR1B_MO_M_CURRENT_L(B,J)
+#        tmp = HR1B_MO_P_CURRENT_R(B,J) * HR1B_MO_P_CURRENT_R(B,J)
+#        sumbp += tmp
+#        tmp = HR1B_MO_M_CURRENT_L(B,J) * HR1B_MO_M_CURRENT_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
+#end_debug
+
+     ENDPROC FORM_MO_R1AB
+#    --------------------
+
+     PROC DIRECT_AO_HC_MULT_RL
+#    -------------------------
+
+     PARDO A, I
+
+        TAIP_R(A,I) = 0.0
+        TAIM_L(A,I) = 0.0
+
+        PUT HR1A_MO_P_CURRENT_R(A,I) = TAIP_R(A,I)
+        PUT HR1A_MO_M_CURRENT_L(A,I) = TAIM_L(A,I)
+
+     ENDPARDO A, I
+
+     PARDO B, J
+
+        TBJP_R(B,J) = 0.0
+        TBJM_L(B,J) = 0.0
+
+        PUT HR1B_MO_P_CURRENT_R(B,J) = TBJP_R(B,J)
+        PUT HR1B_MO_M_CURRENT_L(B,J) = TBJM_L(B,J)
+
+     ENDPARDO B, J
+
+     PARDO mu, nu
+
+          TXXP_T(MU,NU) = 0.0
+          TXXM_T(MU,NU) = 0.0
+
+          PUT R1A_AO_P_CURRENT_R(MU,NU) =  TXXP_T(MU,NU)
+          PUT R1A_AO_M_CURRENT_L(MU,NU) =  TXXM_T(MU,NU)
+          PUT R1B_AO_P_CURRENT_R(MU,NU) =  TXXP_T(MU,NU)
+          PUT R1B_AO_M_CURRENT_L(MU,NU) =  TXXM_T(MU,NU)
+
+          PUT HR1A_AO_P_CURRENT_R(MU,NU) =  TXXP_T(MU,NU)
+          PUT HR1A_AO_M_CURRENT_L(MU,NU) =  TXXM_T(MU,NU)
+          PUT HR1B_AO_P_CURRENT_R(MU,NU) =  TXXP_T(MU,NU)
+          PUT HR1B_AO_M_CURRENT_L(MU,NU) =  TXXM_T(MU,NU)
+
+      ENDPARDO mu, nu
+      EXECUTE SIP_BARRIER
+
+     CALL FORM_AO_R1AB
+     
+     IF DO_CIS == ONE
+        CALL HC_MULTIPLY_CIS
+     ELSE 
+        CALL HC_MULTIPLY_RPA_RL
+     ENDIF 
+
+     CALL FORM_FOCK_CONTRIBUTION
+
+     CALL FORM_MO_R1AB
+
+     ENDPROC DIRECT_AO_HC_MULT_RL
+#    ---------------------------
+
+     PROC SAVE_HC_VECTORS
+#    --------------------
+
+     MCOUNT = ZERO
+     DO MINDEX20
+
+        MCOUNT  += ONE
+        IF MCOUNT == ITER_COUNT
+
+        PARDO A, I
+
+           GET HR1A_MO_P_CURRENT_R(A,I)
+           GET HR1A_MO_M_CURRENT_L(A,I)
+
+           TAIP_R(A,I) = HR1A_MO_P_CURRENT_R(A,I)
+           TAIM_L(A,I) = HR1A_MO_M_CURRENT_L(A,I)
+
+           PUT HR1A_MO_P_HIST_R(A,I,MINDEX20) = TAIP_R(A,I)
+           PUT HR1A_MO_M_HIST_L(A,I,MINDEX20) = TAIM_L(A,I)
+
+        ENDPARDO A, I
+
+        PARDO B, J
+
+           GET HR1B_MO_P_CURRENT_R(B,J)
+           GET HR1B_MO_M_CURRENT_L(B,J)
+
+           TBJP_R(B,J) = HR1B_MO_P_CURRENT_R(B,J)
+           TBJM_L(B,J) = HR1B_MO_M_CURRENT_L(B,J)
+
+           PUT HR1B_MO_P_HIST_R(B,J,MINDEX20) = TBJP_R(B,J)
+           PUT HR1B_MO_M_HIST_L(B,J,MINDEX20) = TBJM_L(B,J)
+
+        ENDPARDO B, J
+        ENDIF
+
+     ENDDO MINDEX20
+
+     EXECUTE SIP_BARRIER
+
+#bgn_debug
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     ncount = 0.0
+#     do mindex20
+#     ncount += 1.0
+#     if ncount > iter_count
+#        exit
+#     endif
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get HR1A_MO_P_HIST_R(A,I,MINDEX20)
+#        get HR1A_MO_M_HIST_L(A,I,MINDEX20)
+#        tmp   = HR1A_MO_P_HIST_R(A,I,MINDEX20) * HR1A_MO_P_HIST_R(A,I,MINDEX20)
+#        sumap += tmp
+#        tmp   = HR1A_MO_M_HIST_L(A,I,MINDEX20) * HR1A_MO_M_HIST_L(A,I,MINDEX20)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get HR1B_MO_P_HIST_R(B,J,MINDEX20)
+#        get HR1B_MO_M_HIST_L(B,J,MINDEX20)
+#        tmp = HR1B_MO_P_HIST_R(B,J,MINDEX20) * HR1B_MO_P_HIST_R(B,J,MINDEX20)
+#        sumbp += tmp
+#        tmp = HR1B_MO_M_HIST_L(B,J,MINDEX20) * HR1B_MO_M_HIST_L(B,J,MINDEX20)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     enddo mindex20
+#     endif
+#end_debug
+    ENDPROC SAVE_HC_VECTORS
+#   -----------------------
+
+     PROC FORM_A_MATRIX_11
+#    ---------------------
+
+# Build A(1,1) for the first iteraion
+
+        SUMP_A = 0.0
+        SUMM_A = 0.0
+        SUMP_B = 0.0
+        SUMM_B = 0.0
+        HC_A_P = 0.0
+        HC_B_P = 0.0
+        HC_A_M = 0.0
+        HC_B_M = 0.0
+
+        MCOUNT = 0.0
+        DO MINDEX20
+           MCOUNT += 1.0
+           
+           IF MCOUNT == ITER_COUNT
+           NCOUNT = 0.0
+           DO NINDEX20
+              NCOUNT += 1.0
+
+              IF NCOUNT == ITER_COUNT 
+
+                 PARDO A, I
+                     GET R1A_MO_P_HIST_R(A,I,NINDEX20)
+                     GET HR1A_MO_P_HIST_R(A,I,MINDEX20)
+
+                     GET R1A_MO_M_HIST_L(A,I,NINDEX20)
+                     GET HR1A_MO_M_HIST_L(A,I,MINDEX20)
+
+                     T1AIP_R(A,I) = R1A_MO_P_HIST_R(A,I,NINDEX20)
+                     TAIP_R(A,I)  = HR1A_MO_P_HIST_R(A,I,MINDEX20)
+
+                     TAIM_L(A,I)  = HR1A_MO_M_HIST_L(A,I,MINDEX20)
+                     T1AIM_L(A,I) = R1A_MO_M_HIST_L(A,I,NINDEX20)
+
+                     TMP        = TAIP_R(A,I) * T1AIP_R(A,I)
+                     SUMP_A    += TMP
+
+                     TMP        = TAIM_L(A,I) * T1AIM_L(A,I)
+                     SUMM_A    += TMP
+                 ENDPARDO A, I
+
+                 PARDO B, J
+                     GET R1B_MO_P_HIST_R(B,J,NINDEX20)
+                     GET HR1B_MO_P_HIST_R(B,J,MINDEX20)
+
+                     GET R1B_MO_M_HIST_L(B,J,NINDEX20)
+                     GET HR1B_MO_M_HIST_L(B,J,MINDEX20)
+
+                     TBJP_R(B,J)  = HR1B_MO_P_HIST_R(B,J,MINDEX20)
+                     T1BJP_R(B,J) = R1B_MO_P_HIST_R(B,J,NINDEX20)
+
+                     TBJM_L(B,J)  = HR1B_MO_M_HIST_L(B,J,MINDEX20)
+                     T1BJM_L(B,J) = R1B_MO_M_HIST_L(B,J,NINDEX20)
+
+                     TMP       = TBJP_R(B,J) * T1BJP_R(B,J)
+                     SUMP_B   += TMP
+
+                     TMP       = TBJM_L(B,J) * T1BJM_L(B,J)
+                     SUMM_B   += TMP
+                 ENDPARDO B, J
+
+                 EXECUTE SIP_BARRIER 
+                 COLLECTIVE HC_A_P += SUMP_A
+                 COLLECTIVE HC_B_P += SUMP_B
+                 COLLECTIVE HC_A_M += SUMM_A
+                 COLLECTIVE HC_B_M += SUMM_B
+
+              ENDIF 
+
+           ENDDO NINDEX20
+           ENDIF 
+
+        ENDDO MINDEX20
+
+        SUMP  = HC_A_P
+        SUMP += HC_B_P
+        SUMM  = HC_A_M
+        SUMM += HC_B_M
+#bgn_debug
+#     execute print_scalar sump
+#     execute print_scalar summ
+#end_debug
+
+        MCOUNT = 0.0
+        NCOUNT = 0.0
+
+        DO MINDEX20
+        MCOUNT += 1.0
+        IF MCOUNT == 1.0
+
+           DO NINDEX20
+              NCOUNT += 1.0
+
+              IF NCOUNT == 1.0
+
+                 B_A_MATRIX_P(NINDEX20,MINDEX20) = SUMP
+                 B_A_MATRIX_M(NINDEX20,MINDEX20) = SUMM
+
+              ENDIF
+
+          ENDDO NINDEX20
+        ENDIF
+
+       ENDDO MINDEX20
+       
+       EXECUTE SIP_BARRIER 
+
+# This is not wrong. This is in anticipating what happens after 
+# AM(1/2)APAM(1/2) is carried out (for iterations one). 
+
+      IF DO_CIS == ONE
+          A_VALUE_P = SUMP
+          A_VALUE_M = SUMM
+      ELSE 
+          TMP  = SUMP
+          TMP *= SUMM
+          EXECUTE SQUARE_ROOT TMP HALF 
+          A_VALUE_P = TMP
+          A_VALUE_M = TMP
+      ENDIF 
+
+     ENDPROC FORM_A_MATRIX_11
+#    ------------------------
+
+     PROC FORM_A_MATRIX_II
+#    ---------------------
+
+# Build  A(i,j) i=j  first
+
+     MCOUNT = ZERO
+     DO MINDEX20
+        MCOUNT += ONE
+        IF MCOUNT > ITER_COUNT
+           EXIT
+        ENDIF
+
+        IF MCOUNT  == ITER_COUNT 
+
+           NCOUNT = ZERO
+           DO NINDEX20
+              NCOUNT += ONE
+
+              SUMP_A = ZERO
+              SUMM_A = ZERO
+              SUMP_B = ZERO
+              SUMM_B = ZERO
+              HC_A_P = ZERO
+              HC_A_M = ZERO
+              HC_B_P = ZERO
+              HC_B_M = ZERO
+               
+              IF MCOUNT == NCOUNT 
+                 PARDO A, I
+                     GET R1A_MO_P_HIST_R(A,I,NINDEX20)
+                     GET HR1A_MO_P_HIST_R(A,I,MINDEX20)
+
+                     GET R1A_MO_M_HIST_L(A,I,NINDEX20)
+                     GET HR1A_MO_M_HIST_L(A,I,MINDEX20)
+
+                     T1AIP_R(A,I) = R1A_MO_P_HIST_R(A,I,NINDEX20)
+                     TAIP_R(A,I)  = HR1A_MO_P_HIST_R(A,I,MINDEX20)
+
+                     TAIM_L(A,I)  = HR1A_MO_M_HIST_L(A,I,MINDEX20)
+                     T1AIM_L(A,I) = R1A_MO_M_HIST_L(A,I,NINDEX20)
+
+                     TMP        = TAIP_R(A,I) * T1AIP_R(A,I)
+                     SUMP_A    += TMP
+
+                     TMP        = TAIM_L(A,I) * T1AIM_L(A,I)
+                     SUMM_A    += TMP
+                 ENDPARDO A, I
+
+                 EXECUTE SIP_BARRIER 
+                 COLLECTIVE HC_A_P += SUMP_A
+                 COLLECTIVE HC_A_M += SUMM_A
+
+                 PARDO B, J
+                     GET R1B_MO_P_HIST_R(B,J,NINDEX20)
+                     GET HR1B_MO_P_HIST_R(B,J,MINDEX20)
+
+                     GET R1B_MO_M_HIST_L(B,J,NINDEX20)
+                     GET HR1B_MO_M_HIST_L(B,J,MINDEX20)
+
+                     TBJP_R(B,J)  = HR1B_MO_P_HIST_R(B,J,MINDEX20)
+                     T1BJP_R(B,J) = R1B_MO_P_HIST_R(B,J,NINDEX20)
+
+                     TBJM_L(B,J)  = HR1B_MO_M_HIST_L(B,J,MINDEX20)
+                     T1BJM_L(B,J) = R1B_MO_M_HIST_L(B,J,NINDEX20)
+
+                     TMP       = TBJP_R(B,J) * T1BJP_R(B,J)
+                     SUMP_B   += TMP
+
+                     TMP       = TBJM_L(B,J) * T1BJM_L(B,J)
+                     SUMM_B   += TMP
+
+                 ENDPARDO B, J
+
+                 EXECUTE SIP_BARRIER 
+                 COLLECTIVE HC_B_P += SUMP_B
+                 COLLECTIVE HC_B_M += SUMM_B
+               
+                 SUMP  = HC_A_P
+                 SUMP += HC_B_P
+                 SUMM  = HC_A_M
+                 SUMM += HC_B_M
+
+                 KCOUNT = ZERO
+                 DO KINDEX20
+                   KCOUNT += ONE
+                    IF KCOUNT  == NCOUNT
+ 
+                       LCOUNT = ZERO
+                       DO LINDEX20
+                          LCOUNT += ONE
+   
+                          IF LCOUNT == MCOUNT
+ 
+                             B_A_MATRIX_P(NINDEX20,MINDEX20) = SUMP
+                             B_A_MATRIX_M(NINDEX20,MINDEX20) = SUMM
+ 
+                          ENDIF
+                       ENDDO LINDEX20
+                    ENDIF
+                 ENDDO KINDEX20
+              ENDIF
+     
+            ENDDO NINDEX20
+         ENDIF
+    
+     ENDDO MINDEX20
+
+     ENDPROC FORM_A_MATRIX_II
+#    ------------------------
+
+     PROC FORM_A_MATRIX_IJ
+#    ---------------------
+# Build  A(i,j) i<j  now.
+
+     NCOUNT = ZERO
+     DO NINDEX20
+        NCOUNT += ONE
+        IF NCOUNT > ITER_COUNT
+           EXIT
+        ENDIF
+
+        MCOUNT = ZERO 
+        DO MINDEX20
+           MCOUNT += ONE
+
+           IF MCOUNT > NCOUNT
+              EXIT
+           ENDIF
+
+           IF MCOUNT == ITER_COUNT
+              IF NCOUNT == ITER_COUNT
+                 EXIT
+              ENDIF
+           ENDIF
+
+           SUMP_A = ZERO
+           SUMM_A = ZERO
+           SUMP_B = ZERO
+           SUMM_B = ZERO
+           HC_A_P = ZERO
+           HC_A_M = ZERO
+           HC_B_P = ZERO
+           HC_B_M = ZERO
+
+           PARDO A, I
+               GET R1A_MO_P_HIST_R(A,I,MINDEX20)
+               GET R1A_MO_M_HIST_L(A,I,MINDEX20)
+
+               TAIP_R(A,I) = R1A_MO_P_HIST_R(A,I,MINDEX20)
+               TAIM_L(A,I) = R1A_MO_M_HIST_L(A,I,MINDEX20)
+
+               GET HR1A_MO_P_HIST_R(A,I,NINDEX20)
+               GET HR1A_MO_M_HIST_L(A,I,NINDEX20)
+
+               T1AIP_R(A,I) = HR1A_MO_P_HIST_R(A,I,NINDEX20)
+               T1AIM_L(A,I) = HR1A_MO_M_HIST_L(A,I,NINDEX20)
+
+               TMP       = TAIP_R(A,I) * T1AIP_R(A,I)
+               SUMP_A   += TMP
+
+               TMP       = TAIM_L(A,I) * T1AIM_L(A,I)
+               SUMM_A   += TMP
+           ENDPARDO A, I
+
+           PARDO B, J
+                GET R1B_MO_P_HIST_R(B,J,MINDEX20)
+                GET R1B_MO_M_HIST_L(B,J,MINDEX20)
+
+                TBJP_R(B,J) = R1B_MO_P_HIST_R(B,J,MINDEX20)
+                TBJM_L(B,J) = R1B_MO_M_HIST_L(B,J,MINDEX20)
+
+                GET HR1B_MO_P_HIST_R(B,J,NINDEX20)
+                GET HR1B_MO_M_HIST_L(B,J,NINDEX20)
+
+                T1BJP_R(B,J) = HR1B_MO_P_HIST_R(B,J,NINDEX20)
+                T1BJM_L(B,J) = HR1B_MO_M_HIST_L(B,J,NINDEX20)
+
+                TMP       = TBJP_R(B,J) * T1BJP_R(B,J)
+                SUMP_B   += TMP
+
+                TMP       = TBJM_L(B,J) * T1BJM_L(B,J)
+                SUMM_B   += TMP
+           ENDPARDO B, J
+
+           EXECUTE SERVER_BARRIER
+           COLLECTIVE HC_A_P += SUMP_A
+           COLLECTIVE HC_A_M += SUMM_A
+           COLLECTIVE HC_B_P += SUMP_B
+           COLLECTIVE HC_B_M += SUMM_B
+
+           SUMP  = HC_A_P
+           SUMP += HC_B_P
+           SUMM  = HC_A_M
+           SUMM += HC_B_M
+#bgn_debug
+#         execute print_scalar ncount 
+#         execute print_scalar mcount 
+#         execute print_scalar SUMP
+#         execute print_scalar SUMM
+#end_debug
+
+           KCOUNT = ZERO
+           DO KINDEX20
+              KCOUNT += ONE
+              IF KCOUNT  == NCOUNT
+
+                  LCOUNT = ZERO
+                  DO LINDEX20
+                     LCOUNT += ONE
+
+                     IF LCOUNT == MCOUNT
+                         B_A_MATRIX_P(MINDEX20,NINDEX20) = SUMP
+                         B_A_MATRIX_M(MINDEX20,NINDEX20) = SUMM
+                      ENDIF
+                  ENDDO LINDEX20
+               ENDIF
+
+           ENDDO KINDEX20
+
+        ENDDO MINDEX20
+     ENDDO NINDEX20
+
+     ENDPROC FORM_A_MATRIX_IJ
+#    ------------------------
+
+     PROC FORM_A_MATRIX_JI
+#    ---------------------
+
+# Now A(I,J)  i > j
+
+     NCOUNT = ZERO
+     DO NINDEX20
+        NCOUNT += ONE
+        IF NCOUNT > ITER_COUNT
+           EXIT
+        ENDIF
+
+        MCOUNT = ZERO
+        DO MINDEX20
+           MCOUNT += ONE
+
+           IF MCOUNT >= NCOUNT
+              EXIT
+           ENDIF
+
+           IF MCOUNT == ITER_COUNT
+              IF NCOUNT == ITER_COUNT
+                 EXIT
+             ENDIF
+           ENDIF
+
+           SUMP_A = ZERO
+           SUMM_A = ZERO
+           SUMP_B = ZERO
+           SUMM_B = ZERO
+           HC_A_P = ZERO
+           HC_A_M = ZERO
+           HC_B_P = ZERO
+           HC_B_M = ZERO
+
+           PARDO A, I
+               GET R1A_MO_P_HIST_R(A,I,NINDEX20)
+               GET R1A_MO_M_HIST_L(A,I,NINDEX20)
+
+               TAIP_R(A,I) = R1A_MO_P_HIST_R(A,I,NINDEX20)
+               TAIM_L(A,I) = R1A_MO_M_HIST_L(A,I,NINDEX20)
+
+               GET HR1A_MO_P_HIST_R(A,I,MINDEX20)
+               GET HR1A_MO_M_HIST_L(A,I,MINDEX20)
+
+               T1AIP_R(A,I) = HR1A_MO_P_HIST_R(A,I,MINDEX20)
+               T1AIM_L(A,I) = HR1A_MO_M_HIST_L(A,I,MINDEX20)
+
+               TMP       = TAIP_R(A,I) * T1AIP_R(A,I)
+               SUMP_A   += TMP
+
+               TMP       = TAIM_L(A,I) * T1AIM_L(A,I)
+               SUMM_A   += TMP
+           ENDPARDO A, I
+
+           PARDO B, J
+                GET R1B_MO_P_HIST_R(B,J,NINDEX20)
+                GET R1B_MO_M_HIST_L(B,J,NINDEX20)
+
+                TBJP_R(B,J) = R1B_MO_P_HIST_R(B,J,NINDEX20)
+                TBJM_L(B,J) = R1B_MO_M_HIST_L(B,J,NINDEX20)
+
+                GET HR1B_MO_P_HIST_R(B,J,MINDEX20)
+                GET HR1B_MO_M_HIST_L(B,J,MINDEX20)
+
+                T1BJP_R(B,J) = HR1B_MO_P_HIST_R(B,J,MINDEX20)
+                T1BJM_L(B,J) = HR1B_MO_M_HIST_L(B,J,MINDEX20)
+
+                TMP        = TBJP_R(B,J) * T1BJP_R(B,J)
+                SUMP_B   += TMP
+
+                TMP       = TBJM_L(B,J) * T1BJM_L(B,J)
+                SUMM_B   += TMP
+           ENDPARDO B, J
+
+           EXECUTE SERVER_BARRIER
+           COLLECTIVE HC_A_P += SUMP_A
+           COLLECTIVE HC_A_M += SUMM_A
+           COLLECTIVE HC_B_P += SUMP_B
+           COLLECTIVE HC_B_M += SUMM_B
+
+           SUMP  = HC_A_P
+           SUMP += HC_B_P
+           SUMM  = HC_A_M
+           SUMM += HC_B_M
+#bgn_debug
+#         execute print_scalar ncount
+#         execute print_scalar mcount
+#         execute print_scalar SUMP
+#         execute print_scalar SUMM
+#end_debug
+
+           KCOUNT = ZERO
+           DO KINDEX20
+              KCOUNT += ONE
+              IF KCOUNT  == NCOUNT
+
+                  LCOUNT = ZERO
+                  DO LINDEX20
+                     LCOUNT += ONE
+
+                     IF LCOUNT == MCOUNT
+                         B_A_MATRIX_P(NINDEX20,MINDEX20) = SUMP
+                         B_A_MATRIX_M(NINDEX20,MINDEX20) = SUMM
+                      ENDIF
+                  ENDDO LINDEX20
+               ENDIF
+
+           ENDDO KINDEX20
+
+        ENDDO MINDEX20
+     ENDDO NINDEX20
+
+     ENDPROC FORM_A_MATRIX_JI
+#    ------------------------
+
+#bgn_debug
+#    sumap = 0.0
+#    sumam = 0.0
+#    do MINDEX20
+#    do NINDEX20
+#       tmp = B_A_MATRIX_P(NINDEX20,MINDEX20) * B_A_MATRIX_P(NINDEX20,MINDEX20)
+#       sumap += tmp
+#       tmp = B_A_MATRIX_M(NINDEX20,MINDEX20) * B_A_MATRIX_M(NINDEX20,MINDEX20)
+#       sumam += tmp
+#    enddo NINDEX20
+#    enddo MINDEX20
+#    execute print_scalar sumap
+#    execute print_scalar sumam
+#end_debug
+
+
+   PROC REORDER_A_EIGS
+#  -------------------
+     DO MINDEX20
+        DO NINDEX20
+           IF MINDEX20  == NINDEX20
+
+	      TXX(MINDEX20,MINDEX20) = B_A_MATRIX_P(MINDEX20,MINDEX20)
+	      EXECUTE RETURN_SVAL TXX EIG_VALUE
+
+	      AB_DIAGS_P(MINDEX20)    = EIG_VALUE
+
+	      TXX(MINDEX20,MINDEX20) = B_A_MATRIX_M(MINDEX20,MINDEX20)
+	      EXECUTE RETURN_SVAL TXX EIG_VALUE
+
+	      AB_DIAGS_M(MINDEX20)    = EIG_VALUE
+
+           ENDIF
+         ENDDO NINDEX20
+     ENDDO MINDEX20
+
+     EXECUTE PROCESS_EIGS AB_DIAGS_P EIG_VECS_P_R
+     EXECUTE PROCESS_EIGS AB_DIAGS_M EIG_VECS_M_L
+
+     ENDPROC REORDER_A_EIGS
+#    ----------------------
+
+     PROC DIAG_A_MATRIX
+#    ------------------
+
+# A_MATRIX_P and  A_MATRIX_M are very small (maximum order is 
+# is currently set to maximum subspace dimension 20. Both arrays
+# must be static. 
+# RPA A-matrix is (A_M)^(1/2)A_P(A_M)^1/2 where A_M and A_P are
+# small matrices corresponding to the A-B|L> and A+B|R> eigenvalue
+# problems. 
+
+     IF DO_CIS == ONE
+
+        RIGHT = ONE 
+        LEFT  = ZERO 
+        EXECUTE SET_ACES3_VARS RIGHT LEFT
+        EXECUTE XGEEV  B_A_MATRIX_P  EIG_VECS_P_R
+
+        RIGHT = ZERO 
+        LEFT  = TWO 
+        EXECUTE SET_ACES3_VARS LEFT RIGHT 
+        EXECUTE XGEEV  B_A_MATRIX_M  EIG_VECS_M_L
+
+     ELSE
+
+# Save a copy of the two small matrices; This is a lots work to 
+# do a simple thing; time wise these cost nothing.
+
+        DO MINDEX20
+           DO NINDEX20
+              B_A_MATRIX_P_KEEP(MINDEX20,NINDEX20) =  B_A_MATRIX_P(MINDEX20,NINDEX20)
+           ENDDO NINDEX20
+        ENDDO MINDEX20
+
+        DO MINDEX20
+           DO NINDEX20
+              B_A_MATRIX_M_KEEP(MINDEX20,NINDEX20) =  B_A_MATRIX_M(MINDEX20,NINDEX20)
+           ENDDO NINDEX20
+        ENDDO MINDEX20
+
+        RIGHT = ONE 
+        LEFT  = ZERO 
+        EXECUTE SET_ACES3_VARS RIGHT LEFT
+        EXECUTE FORM_RPA_SMALL_MATRIX B_A_MATRIX_M B_A_MATRIX_P
+
+        DO MINDEX20
+           DO NINDEX20
+              EIG_VECS_P_R(MINDEX20,NINDEX20) =  B_A_MATRIX_P(MINDEX20,NINDEX20)
+           ENDDO NINDEX20
+        ENDDO MINDEX20
+
+        DO MINDEX20
+           DO NINDEX20
+              B_A_MATRIX_P(MINDEX20,NINDEX20) =  B_A_MATRIX_M(MINDEX20,NINDEX20)
+           ENDDO NINDEX20
+        ENDDO MINDEX20
+
+        RIGHT = ZERO 
+        LEFT  = TWO 
+        EXECUTE SET_ACES3_VARS LEFT RIGHT 
+        EXECUTE FORM_RPA_SMALL_MATRIX B_A_MATRIX_M_KEEP B_A_MATRIX_P_KEEP
+
+        DO MINDEX20
+           DO NINDEX20
+              EIG_VECS_M_L(MINDEX20,NINDEX20) =  B_A_MATRIX_P_KEEP(MINDEX20,NINDEX20)
+           ENDDO NINDEX20
+        ENDDO MINDEX20
+
+        DO MINDEX20
+           DO NINDEX20
+              B_A_MATRIX_M(MINDEX20,NINDEX20) =  B_A_MATRIX_M_KEEP(MINDEX20,NINDEX20)
+           ENDDO NINDEX20
+        ENDDO MINDEX20
+
+#bgn_debug
+#      execute print_static EIG_VECS_P_R  ITER_COUNT
+#      execute print_static EIG_VECS_M_L  ITER_COUNT
+#end_debug
+     ENDIF 
+
+     ENDPROC DIAG_A_MATRIX
+#    ---------------------
+# 
+# This is a critical step in Davidson algorithm. The new set of vectors are 
+# formed from the eigenvectors of the subspace matrix and the original vectors 
+# that is used to built the small matrix. Prciesely speaking, 
+# A (N,N) = C^(t) H C^(t), the Eigenvectors of A are b(N,N). 
+# the new vectors are fromed by  C_new(m,n) = Sum{i} b(i,k) * C_i(m,n) 
+# (C_new_k= b(1,k) * C1 + b(2,k) * C2 + ....)(k=1,..N))
+#
+
+      PROC FORM_NEW_VECTORS 
+#     ---------------------
+       PARDO A, I 
+
+           NCOUNT = 0.0
+           DO NINDEX20 
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+              MCOUNT = 0.0
+              DO MINDEX20 
+                 MCOUNT += 1.0
+
+                 IF MCOUNT >  ITER_COUNT
+                    EXIT
+                 ENDIF
+
+                 TMNP_R(MINDEX20,NINDEX20) = EIG_VECS_P_R(MINDEX20,NINDEX20) 
+                 TMNM_L(MINDEX20,NINDEX20) = EIG_VECS_M_L(MINDEX20,NINDEX20)
+
+                 GET R1A_MO_P_HIST_R(A,I,MINDEX20)
+                 GET R1A_MO_M_HIST_L(A,I,MINDEX20)
+
+                 T2AP_R(A,I,MINDEX20) = R1A_MO_P_HIST_R(A,I,MINDEX20)
+                 T2AM_L(A,I,MINDEX20) = R1A_MO_M_HIST_L(A,I,MINDEX20)
+
+                 T3AP_R(A,I,NINDEX20) = T2AP_R(A,I,MINDEX20) * TMNP_R(MINDEX20,NINDEX20)
+                 T3AM_L(A,I,NINDEX20) = T2AM_L(A,I,MINDEX20) * TMNM_L(MINDEX20,NINDEX20)
+ 
+                 PUT Y1P_A_R(A,I,NINDEX20) += T3AP_R(A,I,NINDEX20)
+                 PUT Y1M_A_L(A,I,NINDEX20) += T3AM_L(A,I,NINDEX20)
+
+              ENDDO MINDEX20
+
+           ENDDO NINDEX20
+
+       ENDPARDO A, I 
+
+       PARDO B, J
+
+           NCOUNT      = 0.0
+           DO NINDEX20
+              NCOUNT += 1.0
+
+                IF NCOUNT > ITER_COUNT
+                   EXIT
+                ENDIF 
+
+                MCOUNT = 0.0
+                DO MINDEX20
+                   MCOUNT += 1.0
+
+                   IF MCOUNT > ITER_COUNT
+                      EXIT
+                   ENDIF 
+
+                   TMNP_R(MINDEX20,NINDEX20) = EIG_VECS_P_R(MINDEX20,NINDEX20)
+                   TMNM_L(MINDEX20,NINDEX20) = EIG_VECS_M_L(MINDEX20,NINDEX20)
+
+                   GET R1B_MO_P_HIST_R(B,J,MINDEX20)
+                   GET R1B_MO_M_HIST_L(B,J,MINDEX20)
+
+                   T2BP_R(B,J,MINDEX20) = R1B_MO_P_HIST_R(B,J,MINDEX20)
+                   T2BM_L(B,J,MINDEX20) = R1B_MO_M_HIST_L(B,J,MINDEX20)
+
+                   T3BP_R(B,J,NINDEX20) = T2BP_R(B,J,MINDEX20) * TMNP_R(MINDEX20,NINDEX20)
+                   T3BM_L(B,J,NINDEX20) = T2BM_L(B,J,MINDEX20) * TMNM_L(MINDEX20,NINDEX20)
+ 
+                   PUT Y1P_B_R(B,J,NINDEX20) += T3BP_R(B,J,NINDEX20)
+                   PUT Y1M_B_L(B,J,NINDEX20) += T3BM_L(B,J,NINDEX20)
+
+                ENDDO MINDEX20
+
+           ENDDO  NINDEX20
+ 
+       ENDPARDO B, J
+
+       EXECUTE SIP_BARRIER 
+
+#bgn_debug
+#     if rank == 0.0
+#     ncount = 0.0
+#     do mindex20
+#     ncount += 1.0
+#     if ncount > iter_count
+#        exit
+#     endif
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get Y1P_A_R(A,I,MINDEX20)
+#        get Y1M_A_L(A,I,MINDEX20)
+#        tmp   = Y1P_A_R(A,I,MINDEX20) * Y1P_A_R(A,I,MINDEX20)
+#        sumap += tmp
+#        tmp   = Y1M_A_L(A,I,MINDEX20) * Y1M_A_L(A,I,MINDEX20)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get Y1P_B_R(B,J,MINDEX20) 
+#        get Y1M_B_L(B,J,MINDEX20)
+#        tmp = Y1P_B_R(B,J,MINDEX20) * Y1P_B_R(B,J,MINDEX20)
+#        sumbp += tmp
+#        tmp = Y1M_B_L(B,J,MINDEX20) * Y1M_B_L(B,J,MINDEX20)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     enddo mindex20
+#     endif
+#
+#end_debug
+
+      ENDPROC FORM_NEW_VECTORS 
+#     ------------------------
+
+      PROC FORM_NEW_HBAR_Y_VECTORS 
+#     ---------------------------
+       PARDO A, I 
+
+           NCOUNT = ZERO
+           DO NINDEX20 
+              NCOUNT += ONE
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+              MCOUNT = ZERO
+              DO MINDEX20 
+                 MCOUNT += ONE
+
+                 IF MCOUNT >  ITER_COUNT
+                    EXIT
+                 ENDIF
+
+                 TMNP_R(MINDEX20,NINDEX20) = EIG_VECS_P_R(MINDEX20,NINDEX20) 
+                 TMNM_L(MINDEX20,NINDEX20) = EIG_VECS_M_L(MINDEX20,NINDEX20)
+
+                 GET HR1A_MO_P_HIST_R(A,I,MINDEX20)
+                 GET HR1A_MO_M_HIST_L(A,I,MINDEX20)
+
+                 T2AP_R(A,I,MINDEX20) = HR1A_MO_P_HIST_R(A,I,MINDEX20)
+                 T2AM_L(A,I,MINDEX20) = HR1A_MO_M_HIST_L(A,I,MINDEX20)
+
+                 T3AP_R(A,I,NINDEX20) = T2AP_R(A,I,MINDEX20) * TMNP_R(MINDEX20,NINDEX20)
+                 T3AM_L(A,I,NINDEX20) = T2AM_L(A,I,MINDEX20) * TMNM_L(MINDEX20,NINDEX20)
+ 
+                 PUT HY1P_A_R(A,I,NINDEX20) += T3AP_R(A,I,NINDEX20)
+                 PUT HY1M_A_L(A,I,NINDEX20) += T3AM_L(A,I,NINDEX20)
+
+              ENDDO MINDEX20
+
+           ENDDO NINDEX20
+
+       ENDPARDO A, I 
+
+       PARDO B, J
+
+           NCOUNT      = ZERO
+           DO NINDEX20
+              NCOUNT += ONE
+
+                IF NCOUNT > ITER_COUNT
+                   EXIT
+                ENDIF 
+
+                MCOUNT = ZERO
+                DO MINDEX20
+                   MCOUNT += ONE
+
+                   IF MCOUNT > ITER_COUNT
+                      EXIT
+                   ENDIF 
+
+                   TMNP_R(MINDEX20,NINDEX20) = EIG_VECS_P_R(MINDEX20,NINDEX20)
+                   TMNM_L(MINDEX20,NINDEX20) = EIG_VECS_M_L(MINDEX20,NINDEX20)
+
+                   GET HR1B_MO_P_HIST_R(B,J,MINDEX20)
+                   GET HR1B_MO_M_HIST_L(B,J,MINDEX20)
+
+                   T2BP_R(B,J,MINDEX20) = HR1B_MO_P_HIST_R(B,J,MINDEX20)
+                   T2BM_L(B,J,MINDEX20) = HR1B_MO_M_HIST_L(B,J,MINDEX20)
+
+                   T3BP_R(B,J,NINDEX20) = T2BP_R(B,J,MINDEX20) * TMNP_R(MINDEX20,NINDEX20)
+                   T3BM_L(B,J,NINDEX20) = T2BM_L(B,J,MINDEX20) * TMNM_L(MINDEX20,NINDEX20)
+ 
+                   PUT HY1P_B_R(B,J,NINDEX20) += T3BP_R(B,J,NINDEX20)
+                   PUT HY1M_B_L(B,J,NINDEX20) += T3BM_L(B,J,NINDEX20)
+
+                ENDDO MINDEX20
+
+           ENDDO  NINDEX20
+ 
+       ENDPARDO B, J
+
+       EXECUTE SIP_BARRIER 
+
+#bgn_debug
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     ncount = 0.0
+#     do a
+#     do i
+#        do nindex20 
+#        ncount += 1.0
+#        if ncount == iter_count 
+#        get HY1P_A_R(A,I,nindex20)
+#        get HY1M_A_L(A,I,nindex20)
+#        tmp   = HY1P_A_R(A,I,nindex20) * HY1P_A_R(A,I,nindex20)
+#        sumap += tmp
+#        tmp   = HY1M_A_L(A,I,nindex20) * HY1M_A_L(A,I,nindex20)
+#        sumam += tmp
+#        endif 
+#        enddo nindex20
+#     enddo i
+#     enddo a
+#     ncount=0.0
+#     do b
+#     do j
+#        do nindex20
+#        ncount += 1.0
+#        if ncount == iter_count
+#        get HY1P_B_R(B,J,nindex20)
+#        get HY1M_B_L(B,J,nindex20)
+#        tmp = HY1P_B_R(B,J,nindex20) * HY1P_B_R(B,J,nindex20)
+#        sumbp += tmp
+#        tmp = HY1M_B_L(B,J,nindex20) * HY1M_B_L(B,J,nindex20)
+#        sumbm += tmp
+#        endif 
+#        enddo nindex20
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
+#end_debug
+
+     ENDPROC FORM_NEW_HBAR_Y_VECTORS 
+#    -------------------------------
+
+     PROC SELECT_HBAR_Y_VECTOR_TOGO
+#    ------------------------------
+     PARDO A, I
+         GET R1A_MO_P_PICKED_R(A,I)
+         GET R1A_MO_M_PICKED_L(A,I)
+
+         TAP_R(A,I)  = R1A_MO_P_PICKED_R(A,I)
+         TAM_L(A,I)  = R1A_MO_M_PICKED_L(A,I)
+
+         PUT R1A_MO_P_CURRENT_R(A,I)  =  TAP_R(A,I)
+         PUT R1A_MO_M_CURRENT_L(A,I)  =  TAM_L(A,I)
+     ENDPARDO A, I
+
+     PARDO B, J
+         GET R1B_MO_P_PICKED_R(B,J)
+         GET R1B_MO_M_PICKED_L(B,J)
+
+         TBP_R(B,J)  = R1B_MO_P_PICKED_R(B,J)
+         TBM_L(B,J)  = R1B_MO_M_PICKED_L(B,J)
+
+         PUT R1B_MO_P_CURRENT_R(B,J)  =  TBP_R(B,J)
+         PUT R1B_MO_M_CURRENT_L(B,J)  =  TBM_L(B,J)
+     ENDPARDO B, J
+
+# Get vectors corresponding to the maximum overlap and put them
+# in the distributed arrrays labelled as _PICKED_ and return.
+#
+     MCOUNT = 0.0
+     DO MINDEX20 
+        MCOUNT += 1.0
+
+        IF MCOUNT == OVLPAB_P_MAX_R
+           PARDO A, I
+
+               GET HY1P_A_R(A,I,MINDEX20)
+               TAP_R(A,I)  = HY1P_A_R(A,I,MINDEX20)
+               PUT HR1A_MO_P_PICKED_R(A,I)  =  TAP_R(A,I)
+
+           ENDPARDO A, I
+        ENDIF 
+     ENDDO MINDEX20 
+
+     MCOUNT = 0.0
+     DO MINDEX20 
+        MCOUNT += 1.0
+
+        IF MCOUNT == OVLPAB_M_MAX_L 
+
+           PARDO A, I
+               GET HY1M_A_L(A,I,MINDEX20)
+               TAM_L(A,I)  = HY1M_A_L(A,I,MINDEX20)
+
+               PUT HR1A_MO_M_PICKED_L(A,I)  = TAM_L(A,I)
+           ENDPARDO A, I
+
+        ENDIF 
+     ENDDO MINDEX20 
+
+     MCOUNT = 0.0
+     DO MINDEX20 
+        MCOUNT += 1.0
+        IF MCOUNT == OVLPAB_P_MAX_R
+           PARDO B, J
+               GET HY1P_B_R(B,J,MINDEX20)
+               TBP_R(B,J)  = HY1P_B_R(B,J,MINDEX20)
+               PUT HR1B_MO_P_PICKED_R(B,J)  = TBP_R(B,J)
+           ENDPARDO B, J
+
+        ENDIF 
+     ENDDO MINDEX20 
+
+     MCOUNT = 0.0
+     DO MINDEX20 
+        MCOUNT += 1.0
+        IF MCOUNT == OVLPAB_M_MAX_L
+           PARDO B, J
+                GET HY1M_B_L(B,J,MINDEX20)
+                TBM_L(B,J)  = HY1M_B_L(B,J,MINDEX20)
+                PUT HR1B_MO_M_PICKED_L(B,J)  = TBM_L(B,J)
+           ENDPARDO B, J
+        ENDIF 
+
+     ENDDO MINDEX20
+
+     EXECUTE SIP_BARRIER 
+
+#bgn_debug
+#    execute get_my_rank rank
+#     if rank == 0.0
+#     do a
+#     do i
+#        get HR1A_MO_P_PICKED_R(A,I)
+#        get HR1A_MO_M_PICKED_L(A,I)
+#        tmp   = HR1A_MO_P_PICKED_R(A,I) * HR1A_MO_P_PICKED_R(A,I)
+#        sumap += tmp
+#        tmp   = HR1A_MO_M_PICKED_L(A,I) * HR1A_MO_M_PICKED_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get HR1B_MO_P_PICKED_R(B,J)
+#        get HR1B_MO_M_PICKED_L(B,J)
+#        tmp = HR1B_MO_P_PICKED_R(B,J) * HR1B_MO_P_PICKED_R(B,J)
+#        sumbp += tmp
+#        tmp = HR1B_MO_M_PICKED_L(B,J) * HR1B_MO_M_PICKED_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
+#end_debug
+
+     ENDPROC SELECT_HBAR_Y_VECTOR_TOGO
+#    ---------------------------------
+
+     PROC SELECT_VECTOR_TOGO
+#    -----------------------
+
+     IF ITER_COUNT == ONE
+
+       NCOUNT = 0.0
+       DO MINDEX20
+         NCOUNT += ONE
+         IF NCOUNT > ONE
+            EXIT
+         ENDIF 
+
+         PARDO A, I 
+             GET R1A_MO_P_HIST_R(A,I,MINDEX20)
+             GET R1A_MO_M_HIST_L(A,I,MINDEX20)
+
+             TAP_R(A,I) = R1A_MO_P_HIST_R(A,I,MINDEX20)
+             TAM_L(A,I) = R1A_MO_M_HIST_L(A,I,MINDEX20)
+
+             PUT R1A_MO_P_PICKED_R(A,I) = TAP_R(A,I)
+             PUT R1A_MO_M_PICKED_L(A,I) = TAM_L(A,I)
+
+             GET HR1A_MO_P_HIST_R(A,I,MINDEX20)
+             GET HR1A_MO_M_HIST_L(A,I,MINDEX20)
+
+             T1AP_R(A,I) = HR1A_MO_P_HIST_R(A,I,MINDEX20)
+             T1AM_L(A,I) = HR1A_MO_M_HIST_L(A,I,MINDEX20)
+
+             PUT HR1A_MO_P_PICKED_R(A,I) = T1AP_R(A,I)
+             PUT HR1A_MO_M_PICKED_L(A,I) = T1AM_L(A,I)
+
+         ENDPARDO A, I 
+
+         PARDO B, J
+
+            GET R1B_MO_P_HIST_R(B,J,MINDEX20)
+            GET R1B_MO_M_HIST_L(B,J,MINDEX20)
+
+            TBP_R(B,J) = R1B_MO_P_HIST_R(B,J,MINDEX20)
+            TBM_L(B,J) = R1B_MO_M_HIST_L(B,J,MINDEX20)
+
+            PUT R1B_MO_P_PICKED_R(B,J) = TBP_R(B,J)
+            PUT R1B_MO_M_PICKED_L(B,J) = TBM_L(B,J)
+
+            GET HR1B_MO_P_HIST_R(B,J,MINDEX20)
+            GET HR1B_MO_M_HIST_L(B,J,MINDEX20)
+
+            T1BP_R(B,J) = HR1B_MO_P_HIST_R(B,J,MINDEX20)
+            T1BM_L(B,J) = HR1B_MO_M_HIST_L(B,J,MINDEX20)
+
+            PUT HR1B_MO_P_PICKED_R(B,J) = T1BP_R(B,J)
+            PUT HR1B_MO_M_PICKED_L(B,J) = T1BM_L(B,J)
+
+        ENDPARDO B, J
+
+       ENDDO MINDEX20
+
+       EXECUTE SIP_BARRIER 
+
+    ELSE
+        NCOUNT = ZERO 
+        DO NINDEX20
+           NCOUNT += ONE
+                    
+           IF NCOUNT > ONE
+              EXIT
+           ENDIF 
+
+           MCOUNT = ZERO
+           DO MINDEX20
+              MCOUNT += ONE
+              IF MCOUNT > ITER_COUNT 
+                 EXIT
+              ENDIF 
+
+              OVLPA_P_R_INTMD = ZERO
+              OVLPA_M_L_INTMD = ZERO
+              OVLPB_P_R_INTMD = ZERO
+              OVLPB_M_L_INTMD = ZERO
+              OVLPA_P_R       = ZERO
+              OVLPA_M_L       = ZERO
+              OVLPB_P_R       = ZERO
+              OVLPB_M_L       = ZERO
+
+              PARDO A, I
+                  GET  R1A_MO_P_HIST_R(A,I,NINDEX20)
+                  GET  R1A_MO_M_HIST_L(A,I,NINDEX20)
+
+                  GET  Y1P_A_R(A,I,MINDEX20)
+                  GET  Y1M_A_L(A,I,MINDEX20)
+
+                  TAP_R(A,I) = R1A_MO_P_HIST_R(A,I,NINDEX20)
+                  TAM_L(A,I) = R1A_MO_M_HIST_L(A,I,NINDEX20)
+
+                  T1AP_R(A,I) = Y1P_A_R(A,I,MINDEX20)
+                  T1AM_L(A,I) = Y1M_A_L(A,I,MINDEX20)
+
+                  TMP = TAP_R(A,I) * T1AP_R(A,I)
+                  OVLPA_P_R_INTMD += TMP
+
+                  TMP = TAM_L(A,I) * T1AM_L(A,I)
+                  OVLPA_M_L_INTMD += TMP
+
+              ENDPARDO A, I
+
+
+              PARDO B,J 
+                  GET  R1B_MO_P_HIST_R(B,J,NINDEX20)
+                  GET  R1B_MO_M_HIST_L(B,J,NINDEX20)
+
+                  GET  Y1P_B_R(B,J,NINDEX20)
+                  GET  Y1M_B_L(B,J,NINDEX20)
+
+                  TBP_R(B,J) = R1B_MO_P_HIST_R(B,J,NINDEX20)
+                  TBM_L(B,J) = R1B_MO_M_HIST_L(B,J,NINDEX20)
+
+                  T1BP_R(B,J) = Y1P_B_R(B,J,NINDEX20)
+                  T1BM_L(B,J) = Y1M_B_L(B,J,NINDEX20)
+
+                  TMP = TBP_R(B,J) * T1BP_R(B,J)
+                  OVLPB_P_R_INTMD += TMP
+
+                  TMP = TBM_L(B,J) * T1BM_L(B,J)
+                  OVLPB_M_L_INTMD += TMP
+
+              ENDPARDO B, J
+
+              EXECUTE SIP_BARRIER 
+              COLLECTIVE OVLPA_P_R += OVLPA_P_R_INTMD 
+              COLLECTIVE OVLPA_M_L += OVLPA_M_L_INTMD
+              COLLECTIVE OVLPB_P_R += OVLPB_P_R_INTMD 
+              COLLECTIVE OVLPB_M_L += OVLPB_M_L_INTMD
+
+              OVLPAB_P_R  = OVLPA_P_R
+              OVLPAB_P_R += OVLPB_P_R
+              OVLPAB_M_L  = OVLPA_M_L
+              OVLPAB_M_L += OVLPB_M_L
+#bgn_debug
+#     execute print_scalar OVLPAB_P_R
+#     execute print_scalar OVLPAB_M_L
+#end_debug
+
+              KCOUNT = ZERO
+              DO KINDEX20
+                 KCOUNT += ONE
+
+                 IF KCOUNT == MCOUNT
+                   OVLPAB_HISTORY_P_R(MINDEX20) = OVLPAB_P_R
+                   OVLPAB_HISTORY_M_L(MINDEX20) = OVLPAB_M_L
+                  ENDIF
+              ENDDO KINDEX20
+ 
+           ENDDO MINDEX20
+        ENDDO NINDEX20
+
+     ENDIF 
+
+     execute sip_barrier 
+#
+# This SIPs returns the index corresponding to the maximum value 
+# in the first static array. The return scalar gives the pointer
+# to vector that has the maximum overlap with the guess. 
+# 
+
+     OVLPAB_P_MAX_R = 0.0
+     OVLPAB_M_MAX_L = 0.0
+   
+     EXECUTE RETURN_MAX_OVERLAP OVLPAB_HISTORY_P_R OVLPAB_P_MAX_R
+     EXECUTE RETURN_MAX_OVERLAP OVLPAB_HISTORY_M_L OVLPAB_M_MAX_L
+#bgn_debug
+#     execute print_scalar OVLPAB_P_MAX_R
+#     execute print_scalar OVLPAB_M_MAX_L
+#end_debug
+#
+# Get vectors corresponding to the maximum overlap and put them
+# in the distributed arrrays labelled as _PICKED_ and return.
+#
+     MCOUNT = 0.0
+     DO MINDEX20 
+        MCOUNT += 1.0
+
+        IF MCOUNT == OVLPAB_P_MAX_R
+           PARDO A, I
+
+               GET Y1P_A_R(A,I,MINDEX20)
+               TAP_R(A,I)  = Y1P_A_R(A,I,MINDEX20)
+
+               PUT R1A_MO_P_PICKED_R(A,I)  =  TAP_R(A,I)
+           ENDPARDO A, I
+        ENDIF 
+     ENDDO MINDEX20 
+
+     MCOUNT = 0.0
+     DO MINDEX20 
+        MCOUNT += 1.0
+
+        IF MCOUNT == OVLPAB_M_MAX_L 
+
+           PARDO A, I
+
+               GET Y1M_A_L(A,I,MINDEX20)
+               TAM_L(A,I)  = Y1M_A_L(A,I,MINDEX20)
+
+               PUT R1A_MO_M_PICKED_L(A,I)  = TAM_L(A,I)
+           ENDPARDO A, I
+
+        ENDIF 
+     ENDDO MINDEX20 
+
+     MCOUNT = 0.0
+     DO MINDEX20 
+        MCOUNT += 1.0
+        IF MCOUNT == OVLPAB_P_MAX_R
+           PARDO B, J
+
+               GET Y1P_B_R(B,J,MINDEX20)
+               TBP_R(B,J)  = Y1P_B_R(B,J,MINDEX20)
+
+               PUT R1B_MO_P_PICKED_R(B,J)  = TBP_R(B,J)
+           ENDPARDO B, J
+
+        ENDIF 
+     ENDDO MINDEX20 
+
+     MCOUNT = 0.0
+     DO MINDEX20 
+        MCOUNT += 1.0
+        IF MCOUNT == OVLPAB_M_MAX_L
+           PARDO B, J
+                GET Y1M_B_L(B,J,MINDEX20)
+
+                TBM_L(B,J)  = Y1M_B_L(B,J,MINDEX20)
+                PUT R1B_MO_M_PICKED_L(B,J)  = TBM_L(B,J)
+           ENDPARDO B, J
+        ENDIF 
+
+     ENDDO MINDEX20
+
+     EXECUTE SIP_BARRIER 
+
+#bgn_debug
+#     execute get_my_rank rank
+#     if rank == 0.0
+#     do a
+#     do i
+#        get R1A_MO_P_PICKED_R(A,I)
+#        get R1A_MO_M_PICKED_L(A,I)
+#        tmp   = R1A_MO_P_PICKED_R(A,I) * R1A_MO_P_PICKED_R(A,I)
+#        sumap += tmp
+#        tmp   = R1A_MO_M_PICKED_L(A,I) * R1A_MO_M_PICKED_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get R1B_MO_P_PICKED_R(B,J)
+#        get R1B_MO_M_PICKED_L(B,J)
+#        tmp = R1B_MO_P_PICKED_R(B,J) * R1B_MO_P_PICKED_R(B,J)
+#        sumbp += tmp
+#        tmp = R1B_MO_M_PICKED_L(B,J) * R1B_MO_M_PICKED_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
+#end_debug
+
+     ENDPROC SELECT_VECTOR_TOGO
+#    --------------------------
+
+     PROC  FORM_HBAR_Y_VECS 
+#    ----------------------
+
+     PARDO A, I
+         GET R1A_MO_P_PICKED_R(A,I)
+         GET R1A_MO_M_PICKED_L(A,I)
+
+         TAP_R(A,I)  = R1A_MO_P_PICKED_R(A,I)
+         TAM_L(A,I)  = R1A_MO_M_PICKED_L(A,I)
+
+         PUT R1A_MO_P_CURRENT_R(A,I)  =  TAP_R(A,I)
+         PUT R1A_MO_M_CURRENT_L(A,I)  =  TAM_L(A,I)
+     ENDPARDO A, I
+
+     PARDO B, J 
+         GET R1B_MO_P_PICKED_R(B,J)
+         GET R1B_MO_M_PICKED_L(B,J)
+
+         TBP_R(B,J)  = R1B_MO_P_PICKED_R(B,J)
+         TBM_L(B,J)  = R1B_MO_M_PICKED_L(B,J)
+
+         PUT R1B_MO_P_CURRENT_R(B,J)  =  TBP_R(B,J)
+         PUT R1B_MO_M_CURRENT_L(B,J)  =  TBM_L(B,J)
+     ENDPARDO B, J
+
+     EXECUTE SIP_BARRIER 
+
+     CALL DIRECT_AO_HC_MULT_RL
+
+    PARDO A, I
+         GET HR1A_MO_P_CURRENT_R(A,I)
+         GET HR1A_MO_M_CURRENT_L(A,I)
+
+         TAP_R(A,I)  = HR1A_MO_P_CURRENT_R(A,I)
+         TAM_L(A,I)  = HR1A_MO_M_CURRENT_L(A,I)
+
+         PUT HR1A_MO_P_PICKED_R(A,I)  =  TAP_R(A,I)
+         PUT HR1A_MO_M_PICKED_L(A,I)  =  TAM_L(A,I)
+     ENDPARDO A, I
+
+    PARDO B, J
+         GET HR1B_MO_P_CURRENT_R(B,J)
+         GET HR1B_MO_M_CURRENT_L(B,J)
+
+         TBP_R(B,J)  = HR1B_MO_P_CURRENT_R(B,J)
+         TBM_L(B,J)  = HR1B_MO_M_CURRENT_L(B,J)
+
+         PUT HR1B_MO_P_PICKED_R(B,J)  =  TBP_R(B,J)
+         PUT HR1B_MO_M_PICKED_L(B,J)  =  TBM_L(B,J)
+     ENDPARDO B, J
+
+     EXECUTE SIP_BARRIER
+
+     ENDPROC  FORM_HBAR_Y_VECS 
+#    -------------------------
+
+     PROC FORM_RESIDUAL_VECTOR
+#    -------------------------
+# 
+      IF ITER_COUNT == ONE
+
+       IMAX_P = A_VALUE_P
+       IMAX_M = A_VALUE_M
+
+      MCOUNT = 0.0
+      DO MINDEX20
+         MCOUNT += ONE
+
+         IF MCOUNT != ONE
+            EXIT
+         ENDIF 
+
+         PARDO A, I
+
+            GET R1A_MO_P_HIST_R(A,I,MINDEX20)
+            GET HR1A_MO_P_HIST_R(A,I,MINDEX20)
+
+            GET R1A_MO_M_HIST_L(A,I,MINDEX20)
+            GET HR1A_MO_M_HIST_L(A,I,MINDEX20)
+
+            TAIP_R(A,I)  =  R1A_MO_P_HIST_R(A,I,MINDEX20)
+            T1AIP_R(A,I) =  HR1A_MO_P_HIST_R(A,I,MINDEX20)
+
+            TAIM_L(A,I)  =  R1A_MO_M_HIST_L(A,I,MINDEX20)
+            T1AIM_L(A,I) =  HR1A_MO_M_HIST_L(A,I,MINDEX20)
+
+            PUT R1A_MO_P_PICKED_R(A,I)  = TAIP_R(A,I)
+            PUT HR1A_MO_P_PICKED_R(A,I) = T1AIP_R(A,I)
+
+            PUT R1A_MO_M_PICKED_L(A,I)  = TAIM_L(A,I)
+            PUT HR1A_MO_M_PICKED_L(A,I) = T1AIM_L(A,I)
+
+        ENDPARDO A, I
+
+        PARDO B, J
+              GET R1B_MO_P_HIST_R(B,J,MINDEX20)
+              GET HR1B_MO_P_HIST_R(B,J,MINDEX20)
+
+              GET R1B_MO_M_HIST_L(B,J,MINDEX20)
+              GET HR1B_MO_P_HIST_R(B,J,MINDEX20)
+
+              TBJP_R(B,J)  =  R1B_MO_P_HIST_R(B,J,MINDEX20)
+              T1BJP_R(B,J) =  HR1B_MO_P_HIST_R(B,J,MINDEX20)
+
+              TBJM_L(B,J)  =  R1B_MO_M_HIST_L(B,J,MINDEX20)
+              T1BJM_L(B,J) =  HR1B_MO_M_HIST_L(B,J,MINDEX20)
+
+              PUT R1B_MO_P_PICKED_R(B,J)  = TBJP_R(B,J)
+              PUT HR1B_MO_P_PICKED_R(B,J) = T1BJP_R(B,J)
+
+              PUT R1B_MO_M_PICKED_L(B,J)  = TBJM_L(B,J)
+              PUT HR1B_MO_M_PICKED_L(B,J) = T1BJM_L(B,J)
+        ENDPARDO B, J
+
+     ENDDO MINDEX20
+
+     EXECUTE SIP_BARRIER
+
+     ELSE
+         EXECUTE RETURN_SELECTED AB_DIAGS_P  OVLPAB_P_MAX_R
+         EXECUTE RETURN_SELECTED AB_DIAGS_M  OVLPAB_M_MAX_L
+         IF DO_CIS == ZERO 
+            EXECUTE SQUARE_ROOT OVLPAB_P_MAX_R HALF 
+            EXECUTE SQUARE_ROOT OVLPAB_M_MAX_L HALF 
+         ENDIF 
+         IMAX_P = OVLPAB_P_MAX_R
+         IMAX_M = OVLPAB_M_MAX_L
+     ENDIF 
+
+#bgn_debug
+#      execute print_scalar IMAX_P
+#      execute print_scalar IMAX_M
+#end_debug
+
+      OMEGA_P   = IMAX_P
+      OMEGA_M   = IMAX_M
+      MOMEGA_P  = OMEGA_P 
+      MOMEGA_M  = OMEGA_M
+      MOMEGA_P *= -1.0
+      MOMEGA_M *= -1.0
+
+      PARDO A, I
+
+          GET R1A_MO_P_PICKED_R(A,I)
+          GET R1A_MO_M_PICKED_L(A,I)
+
+          GET HR1A_MO_P_PICKED_R(A,I)
+          GET HR1A_MO_M_PICKED_L(A,I)
+
+          TAIP_R(A,I) = R1A_MO_P_PICKED_R(A,I)
+          TAIM_L(A,I) = R1A_MO_M_PICKED_L(A,I)
+
+          TAIP_R(A,I) *= MOMEGA_P
+          TAIM_L(A,I) *= MOMEGA_M
+
+          T1AIP_R(A,I) = HR1A_MO_P_PICKED_R(A,I)
+          T1AIM_L(A,I) = HR1A_MO_M_PICKED_L(A,I)
+
+          IF DO_CIS == ONE
+             T1AIP_R(A,I) += TAIP_R(A,I)
+             T1AIM_L(A,I) += TAIM_L(A,I)
+          ELSE 
+             T1AIP_R(A,I) += TAIM_L(A,I)
+             T1AIM_L(A,I) += TAIP_R(A,I)
+          ENDIF 
+
+          IF DO_CIS == ONE
+             PUT RESIDUEA_P_VEC_R(A,I) = T1AIP_R(A,I) 
+             PUT RESIDUEA_M_VEC_L(A,I) = T1AIM_L(A,I) 
+          ELSE 
+             PUT RESIDUEA_P_VEC_R(A,I) = T1AIP_R(A,I) 
+             PUT RESIDUEA_M_VEC_L(A,I) = T1AIM_L(A,I) 
+          ENDIF 
+
+       ENDPARDO A, I
+
+       PARDO B, J
+
+             GET R1B_MO_P_PICKED_R(B,J)
+             GET R1B_MO_M_PICKED_L(B,J)
+
+             GET HR1B_MO_P_PICKED_R(B,J)
+             GET HR1B_MO_M_PICKED_L(B,J)
+
+             TBJP_R(B,J) = R1B_MO_P_PICKED_R(B,J)
+             TBJM_L(B,J) = R1B_MO_M_PICKED_L(B,J)
+
+             TBJP_R(B,J) *= MOMEGA_P
+             TBJM_L(B,J) *= MOMEGA_M
+
+             T1BJP_R(B,J) = HR1B_MO_P_PICKED_R(B,J)
+             T1BJM_L(B,J) = HR1B_MO_M_PICKED_L(B,J)
+ 
+             IF DO_CIS == ONE
+                T1BJP_R(B,J) += TBJP_R(B,J)
+                T1BJM_L(B,J) += TBJM_L(B,J)
+             ELSE
+                T1BJP_R(B,J) += TBJM_L(B,J)
+                T1BJM_L(B,J) += TBJP_R(B,J)
+             ENDIF 
+
+             IF DO_CIS == ONE
+                PUT RESIDUEB_P_VEC_R(B,J) = T1BJP_R(B,J)
+                PUT RESIDUEB_M_VEC_L(B,J) = T1BJM_L(B,J)
+             ELSE
+                PUT RESIDUEB_P_VEC_R(B,J) = T1BJP_R(B,J)
+                PUT RESIDUEB_M_VEC_L(B,J) = T1BJM_L(B,J)
+             ENDIF 
+
+       ENDPARDO B, J
+
+       EXECUTE SIP_BARRIER 
+
+#bgn_debug
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get RESIDUEA_P_VEC_R(A,I)
+#        get RESIDUEA_M_VEC_L(A,I)
+#        T1AIM_L(A,I) =  RESIDUEA_M_VEC_L(A,I)
+#        tmp   = RESIDUEA_P_VEC_R(A,I) * RESIDUEA_P_VEC_R(A,I)
+#        sumap += tmp
+#        tmp   = RESIDUEA_M_VEC_L(A,I) *  RESIDUEA_M_VEC_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get RESIDUEB_P_VEC_R(B,J)
+#        get RESIDUEB_M_VEC_L(B,J)
+#        tmp = RESIDUEB_P_VEC_R(B,J) *  RESIDUEB_P_VEC_R(B,J)
+#        sumbp += tmp
+#        tmp = RESIDUEB_M_VEC_L(B,J) *  RESIDUEB_M_VEC_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
+#end_debug
+
+      ENDPROC FORM_RESIDUAL_VECTOR
+#     ----------------------------
+
+      PROC FORM_CORRECTION_VECTOR
+#     ---------------------------
+
+       PARDO A, I
+
+             GET RESIDUEA_P_VEC_R(A,I)
+             GET RESIDUEA_M_VEC_L(A,I)
+
+             GET R1DA(A,I)
+
+             TAIP_R(A,I) = RESIDUEA_P_VEC_R(A,I)
+             TAIM_L(A,I) = RESIDUEA_M_VEC_L(A,I)
+
+             T1AI_R(A,I)   =  R1DA(A,I)
+             T1AI_R(A,I)  *=  -1.0
+
+             T1AI_L(A,I)   =  R1DA(A,I)
+             T1AI_L(A,I)  *=  -1.0
+
+             T1AIP_R(A,I) = OMEGA_P
+             T1AIM_L(A,I) = OMEGA_M
+             
+             T1AI_R(A,I) += T1AIP_R(A,I)
+             T1AI_L(A,I) += T1AIM_L(A,I)
+
+             EXECUTE APPLY_DEN2_NOR TAIP_R T1AI_R
+             EXECUTE APPLY_DEN2_NOR TAIM_L T1AI_L
+
+             T2AIP_R(A,I) = TAIP_R(A,I)
+             T2AIM_L(A,I) = TAIM_L(A,I)
+
+             PUT CORR_VECA_INTMD_P_R(A,I) = T2AIP_R(A,I)
+             PUT CORR_VECA_INTMD_M_L(A,I) = T2AIM_L(A,I)
+
+       ENDPARDO A, I
+
+       PARDO B, J
+
+             GET RESIDUEB_P_VEC_R(B,J)
+             GET RESIDUEB_M_VEC_L(B,J)
+
+             GET R1DB(B,J)
+
+             TBJP_R(B,J) = RESIDUEB_P_VEC_R(B,J)
+             TBJM_L(B,J) = RESIDUEB_M_VEC_L(B,J)
+
+             T1BJ_R(B,J)   =  R1DB(B,J)
+             T1BJ_R(B,J)  *=  -1.0
+
+             T1BJ_L(B,J)   =  R1DB(B,J)
+             T1BJ_L(B,J)  *=  -1.0
+
+             T1BJP_R(B,J) = OMEGA_P
+             T1BJM_L(B,J) = OMEGA_M
+              
+             T1BJ_R(B,J) += T1BJP_R(B,J)
+             T1BJ_L(B,J) += T1BJM_L(B,J)
+
+             EXECUTE APPLY_DEN2_NOR TBJP_R T1BJ_R
+             EXECUTE APPLY_DEN2_NOR TBJM_L T1BJ_L
+
+             T2BJP_R(B,J) = TBJP_R(B,J)
+             T2BJM_L(B,J) = TBJM_L(B,J)
+
+             PUT CORR_VECB_INTMD_P_R(B,J) = T2BJP_R(B,J)
+             PUT CORR_VECB_INTMD_M_L(B,J) = T2BJM_L(B,J)
+
+       ENDPARDO B, J
+
+       execute sip_barrier
+#bgn_debug
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        get CORR_VECA_INTMD_P_R(A,I)
+#        get CORR_VECA_INTMD_M_L(A,I)
+#        tmp   = CORR_VECA_INTMD_P_R(A,I) * CORR_VECA_INTMD_P_R(A,I)
+#        sumap += tmp
+#        tmp   = CORR_VECA_INTMD_M_L(A,I) * CORR_VECA_INTMD_M_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get CORR_VECB_INTMD_P_R(B,J)
+#        get CORR_VECB_INTMD_M_L(B,J)
+#        tmp = CORR_VECB_INTMD_P_R(B,J) *  CORR_VECB_INTMD_P_R(B,J)
+#        sumbp += tmp
+#        tmp = CORR_VECB_INTMD_M_L(B,J) *  CORR_VECB_INTMD_M_L(B,J)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
+#end_debug
+
+
+      ENDPROC FORM_CORRECTION_VECTOR
+#     ------------------------------
+
+      PROC FORM_BIORTHOGANAL_VECS
+#     ---------------------------
+
+       MCOUNT = ZERO
+       DO MINDEX20
+
+          MCOUNT += ONE
+          IF MCOUNT > ITER_COUNT
+             EXIT
+          ENDIF 
+
+          PARDO A, I
+
+             GET CORR_VECA_INTMD_P_R(A,I)
+             GET CORR_VECA_INTMD_M_L(A,I)
+
+             TAP_R(A,I) = CORR_VECA_INTMD_P_R(A,I)
+             TAM_L(A,I) = CORR_VECA_INTMD_M_L(A,I)
+
+             GET R1A_MO_P_HIST_R(A,I,MINDEX20)
+             GET R1A_MO_M_HIST_L(A,I,MINDEX20)
+
+             T1AP_R(A,I) = R1A_MO_P_HIST_R(A,I,MINDEX20)
+             T1AM_L(A,I) = R1A_MO_M_HIST_L(A,I,MINDEX20)
+
+             TMP  = TAP_R(A,I) * T1AM_L(A,I)
+             TXX_P(MINDEX20,MINDEX20) = TMP 
+             PUT ORTHO_COEFS_P_RL(MINDEX20,MINDEX20) += TXX_P(MINDEX20,MINDEX20) 
+             TMP =  TAM_L(A,I) * T1AP_R(A,I)
+             TXX_M(MINDEX20,MINDEX20) = TMP
+             PUT ORTHO_COEFS_M_RL(MINDEX20,MINDEX20) += TXX_M(MINDEX20,MINDEX20) 
+          ENDPARDO A, I
+
+          PARDO B, J 
+
+             GET CORR_VECB_INTMD_P_R(B,J)
+             GET CORR_VECB_INTMD_M_L(B,J)
+
+             TBP_R(B,J) = CORR_VECB_INTMD_P_R(B,J)
+             TBM_L(B,J) = CORR_VECB_INTMD_M_L(B,J)
+
+             GET R1B_MO_P_HIST_R(B,J,MINDEX20)
+             GET R1B_MO_M_HIST_L(B,J,MINDEX20)
+
+             T1BP_R(B,J) = R1B_MO_P_HIST_R(B,J,MINDEX20)
+             T1BM_L(B,J) = R1B_MO_M_HIST_L(B,J,MINDEX20)
+
+             TMP  = TBP_R(B,J) * T1BM_L(B,J)
+             TXX_P(MINDEX20,MINDEX20) = TMP
+             PUT ORTHO_COEFS_P_RL(MINDEX20,MINDEX20) += TXX_P(MINDEX20,MINDEX20)
+
+             TMP =  TBM_L(B,J) * T1BP_R(B,J)
+             TXX_M(MINDEX20,MINDEX20) = TMP
+             PUT ORTHO_COEFS_M_RL(MINDEX20,MINDEX20) += TXX_M(MINDEX20,MINDEX20)
+
+          ENDPARDO B, J
+
+       ENDDO MINDEX20
+
+       EXECUTE SIP_BARRIER 
+
+       PARDO A, I
+
+           GET CORR_VECA_INTMD_P_R(A,I)
+           GET CORR_VECA_INTMD_M_L(A,I)
+
+           TAP_R(A,I) = CORR_VECA_INTMD_P_R(A,I)
+           TAM_L(A,I) = CORR_VECA_INTMD_M_L(A,I)
+
+           MCOUNT = ZERO
+           DO MINDEX20
+              MCOUNT += ONE
+              IF MCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+              GET ORTHO_COEFS_P_RL(MINDEX20,MINDEX20)
+              GET ORTHO_COEFS_M_RL(MINDEX20,MINDEX20)
+
+              TNORM_P_R(MINDEX20,MINDEX20) = ORTHO_COEFS_P_RL(MINDEX20,MINDEX20)
+              TNORM_M_L(MINDEX20,MINDEX20) = ORTHO_COEFS_M_RL(MINDEX20,MINDEX20)
+
+              EXECUTE RETURN_SVAL TNORM_P_R RLP_NORM
+              EXECUTE RETURN_SVAL TNORM_M_L RLM_NORM
+
+              GET R1A_MO_P_HIST_R(A,I,MINDEX20)
+              GET R1A_MO_M_HIST_L(A,I,MINDEX20)
+
+              T1AP_R(A,I) = R1A_MO_P_HIST_R(A,I,MINDEX20)
+              T1AM_L(A,I) = R1A_MO_M_HIST_L(A,I,MINDEX20)
+
+              T1AP_R(A,I) *= RLP_NORM
+              T1AM_L(A,I) *= RLM_NORM
+              T1AP_R(A,I) *= -1.0
+              T1AM_L(A,I) *= -1.0
+
+              TAP_R(A,I) += T1AP_R(A,I)
+              TAM_L(A,I) += T1AM_L(A,I)
+
+           ENDDO MINDEX20
+
+           PUT R1A_MO_P_INTMD_R(A,I) = TAP_R(A,I)
+           PUT R1A_MO_M_INTMD_L(A,I) = TAM_L(A,I)
+
+       ENDPARDO A, I
+
+       PARDO B, J
+
+           GET CORR_VECB_INTMD_P_R(B,J)
+           GET CORR_VECB_INTMD_M_L(B,J)
+
+           TBP_R(B,J) = CORR_VECB_INTMD_P_R(B,J)
+           TBM_L(B,J) = CORR_VECB_INTMD_M_L(B,J)
+
+           MCOUNT = ZERO 
+           DO MINDEX20
+              MCOUNT += ONE
+              IF MCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+             GET  ORTHO_COEFS_P_RL(MINDEX20,MINDEX20)
+             GET  ORTHO_COEFS_M_RL(MINDEX20,MINDEX20)
+
+             TNORM_P_R(MINDEX20,MINDEX20) = ORTHO_COEFS_P_RL(MINDEX20,MINDEX20)
+             TNORM_M_L(MINDEX20,MINDEX20) = ORTHO_COEFS_M_RL(MINDEX20,MINDEX20)
+
+             EXECUTE RETURN_SVAL TNORM_P_R RLP_NORM
+             EXECUTE RETURN_SVAL TNORM_M_L RLM_NORM
+
+             GET R1B_MO_P_HIST_R(B,J,MINDEX20)
+             GET R1B_MO_M_HIST_L(B,J,MINDEX20)
+
+             T1BP_R(B,J) = R1B_MO_P_HIST_R(B,J,MINDEX20)
+             T1BM_L(B,J) = R1B_MO_M_HIST_L(B,J,MINDEX20)
+ 
+             T1BP_R(B,J) *= RLP_NORM
+             T1BM_L(B,J) *= RLM_NORM
+             T1BP_R(B,J) *= -1.0
+             T1BM_L(B,J) *= -1.0
+
+             TBP_R(B,J) += T1BP_R(B,J)
+             TBM_L(B,J) += T1BM_L(B,J)
+
+           ENDDO MINDEX20
+
+           PUT R1B_MO_P_INTMD_R(B,J) = TBP_R(B,J)
+           PUT R1B_MO_M_INTMD_L(B,J) = TBM_L(B,J)
+
+       ENDPARDO B, J
+
+       EXECUTE SIP_BARRIER 
+
+#bgn_debug
+#     execute get_my_rank rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     ncount = zero
+#     do mindex20
+#     ncount += one
+#     if ncount > iter_count 
+#        exit
+#     endif
+#     sumap = 0.0
+#     sumam = 0.0
+#     do a
+#     do i
+#        Get R1A_MO_P_INTMD_R(A,I)
+#        get R1A_MO_M_INTMD_L(A,I)
+#        get R1A_MO_P_HIST_R(A,I,MINDEX20)
+#        get R1A_MO_M_HIST_L(A,I,MINDEX20)
+#        tap_r(a,i)=R1a_MO_P_HIST_R(A,I,MINDEX20)
+#        tam_l(a,i)=R1a_MO_M_HIST_L(A,I,MINDEX20)
+#        tmp   = R1A_MO_P_INTMD_R(A,I) * tam_l(a,i)
+#        sumap += tmp
+#        tmp   = R1A_MO_M_INTMD_L(A,I) * tap_r(a,i)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     enddo mindex20
+#     ncount=zero
+#     do mindex20
+#     ncount += one
+#     if ncount > iter_count 
+#        exit
+#     endif
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do b
+#     do j
+#        get R1B_MO_P_INTMD_R(B,J)
+#        get R1B_MO_M_INTMD_L(B,J)
+#        get R1B_MO_P_HIST_R(B,J,MINDEX20)
+#        get R1B_MO_M_HIST_L(B,J,MINDEX20)
+#        tbp_r(b,j)= R1B_MO_P_HIST_R(B,J,MINDEX20)
+#        tbm_l(b,j)= R1B_MO_M_HIST_L(B,J,MINDEX20)
+#        tmp = R1B_MO_P_INTMD_R(B,J) * tbm_l(b,j)
+#        sumbp += tmp
+#        tmp = R1B_MO_M_INTMD_L(B,J) *  tbp_r(b,j)
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     enddo mindex20
+#     endif
+##end_debug
+       ENDPROC FORM_BIORTHOGANAL_VECS
+#      ------------------------------
+
+      PROC FORM_BIORTHOGANAL_VECS_OLD
+#     ------------------------------
+
+       MCOUNT = ZERO
+       DO MINDEX20
+
+          MCOUNT += ONE
+          IF MCOUNT > ITER_COUNT
+             EXIT
+          ENDIF 
+
+          PARDO A, I
+
+             GET CORR_VECA_INTMD_P_R(A,I)
+             GET CORR_VECA_INTMD_M_L(A,I)
+
+             TAP_R(A,I) = CORR_VECA_INTMD_P_R(A,I)
+             TAM_L(A,I) = CORR_VECA_INTMD_M_L(A,I)
+
+             GET R1A_MO_P_HIST_R(A,I,MINDEX20)
+             GET R1A_MO_M_HIST_L(A,I,MINDEX20)
+
+             T1AP_R(A,I) = R1A_MO_P_HIST_R(A,I,MINDEX20)
+             T1AM_L(A,I) = R1A_MO_M_HIST_L(A,I,MINDEX20)
+
+             TMP  = T1AM_L(A,I) * TAP_R(A,I)
+             TXX_P(MINDEX20,MINDEX20) = TMP
+             PUT ORTHO_COEFS_P_RL(MINDEX20,MINDEX20) += TXX_P(MINDEX20,MINDEX20) 
+
+             TMP = T1AP_R(A,I) * TAM_L(A,I)
+             TXX_M(MINDEX20,MINDEX20) = TMP
+             PUT ORTHO_COEFS_M_RL(MINDEX20,MINDEX20) += TXX_M(MINDEX20,MINDEX20) 
+
+          ENDPARDO A, I
+
+          PARDO B, J 
+
+             GET CORR_VECB_INTMD_P_R(B,J)
+             GET CORR_VECB_INTMD_M_L(B,J)
+
+             TBP_R(B,J) = CORR_VECB_INTMD_P_R(B,J)
+             TBM_L(B,J) = CORR_VECB_INTMD_M_L(B,J)
+
+             GET R1B_MO_P_HIST_R(B,J,MINDEX20)
+             GET R1B_MO_M_HIST_L(B,J,MINDEX20)
+
+             T1BP_R(B,J) = R1B_MO_P_HIST_R(B,J,MINDEX20)
+             T1BM_L(B,J) = R1B_MO_M_HIST_L(B,J,MINDEX20)
+
+             TMP  = T1BM_L(B,J) * TBP_R(B,J)
+             TXX_P(MINDEX20,MINDEX20) = TMP
+             PUT ORTHO_COEFS_P_RL(MINDEX20,MINDEX20) += TXX_P(MINDEX20,MINDEX20)
+
+             TMP = T1BP_R(B,J) * TBM_L(B,J)
+             TXX_M(MINDEX20,MINDEX20) = TMP
+             PUT ORTHO_COEFS_M_RL(MINDEX20,MINDEX20) += TXX_M(MINDEX20,MINDEX20)
+
+          ENDPARDO B, J
+
+       ENDDO MINDEX20
+
+       EXECUTE SIP_BARRIER 
+
+       PARDO A, I
+
+           GET CORR_VECA_INTMD_P_R(A,I)
+           GET CORR_VECA_INTMD_M_L(A,I)
+
+           TAP_R(A,I) = CORR_VECA_INTMD_P_R(A,I)
+           TAM_L(A,I) = CORR_VECA_INTMD_M_L(A,I)
+
+           MCOUNT = ZERO
+           DO MINDEX20
+              MCOUNT += ONE
+              IF MCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+              GET  ORTHO_COEFS_P_RL(MINDEX20,MINDEX20)
+              GET  ORTHO_COEFS_M_RL(MINDEX20,MINDEX20)
+
+              TNORM_P_R(MINDEX20,MINDEX20) = ORTHO_COEFS_P_RL(MINDEX20,MINDEX20)
+              TNORM_M_L(MINDEX20,MINDEX20) = ORTHO_COEFS_M_RL(MINDEX20,MINDEX20)
+              EXECUTE RETURN_SVAL TNORM_P_R RLP_NORM
+              EXECUTE RETURN_SVAL TNORM_M_L RLM_NORM
+
+              GET R1A_MO_P_HIST_R(A,I,MINDEX20)
+              GET R1A_MO_M_HIST_L(A,I,MINDEX20)
+
+              T1AP_R(A,I) = R1A_MO_P_HIST_R(A,I,MINDEX20)
+              T1AM_L(A,I) = R1A_MO_M_HIST_L(A,I,MINDEX20)
+
+              T1AP_R(A,I) *= RLM_NORM
+              T1AM_L(A,I) *= RLP_NORM
+              T1AP_R(A,I) *= -1.0
+              T1AM_L(A,I) *= -1.0
+
+              TAP_R(A,I) += T1AM_L(A,I)
+              TAM_L(A,I) += T1AP_R(A,I)
+
+           ENDDO MINDEX20
+
+           PUT R1A_MO_P_INTMD_R(A,I) = TAP_R(A,I)
+           PUT R1A_MO_M_INTMD_L(A,I) = TAM_L(A,I)
+
+       ENDPARDO A, I
+
+       PARDO B, J
+
+           GET CORR_VECB_INTMD_P_R(B,J)
+           GET CORR_VECB_INTMD_M_L(B,J)
+
+           TBP_R(B,J) = CORR_VECB_INTMD_P_R(B,J)
+           TBM_L(B,J) = CORR_VECB_INTMD_M_L(B,J)
+
+           MCOUNT = ZERO 
+           DO MINDEX20
+              MCOUNT += ONE
+              IF MCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+             GET  ORTHO_COEFS_P_RL(MINDEX20,MINDEX20)
+             GET  ORTHO_COEFS_M_RL(MINDEX20,MINDEX20)
+
+             TNORM_P_R(MINDEX20,MINDEX20) = ORTHO_COEFS_P_RL(MINDEX20,MINDEX20)
+             TNORM_M_L(MINDEX20,MINDEX20) = ORTHO_COEFS_M_RL(MINDEX20,MINDEX20)
+
+             EXECUTE RETURN_SVAL TNORM_P_R RLP_NORM
+             EXECUTE RETURN_SVAL TNORM_M_L RLM_NORM
+
+             execute print_scalar RLP_NORM 
+
+             GET R1B_MO_P_HIST_R(B,J,MINDEX20)
+             GET R1B_MO_M_HIST_L(B,J,MINDEX20)
+
+             T1BP_R(B,J) = R1B_MO_P_HIST_R(B,J,MINDEX20)
+             T1BM_L(B,J) = R1B_MO_M_HIST_L(B,J,MINDEX20)
+ 
+             T1BP_R(B,J) *= RLM_NORM
+             T1BM_L(B,J) *= RLP_NORM
+             T1BP_R(B,J) *= -1.0
+             T1BM_L(B,J) *= -1.0
+
+             TBP_R(B,J) += T1BM_L(B,J)
+             TBM_L(B,J) += T1BP_R(B,J)
+
+           ENDDO MINDEX20
+
+           PUT R1B_MO_P_INTMD_R(B,J) = TBP_R(B,J)
+           PUT R1B_MO_M_INTMD_L(B,J) = TBM_L(B,J)
+
+       ENDPARDO B, J
+
+       EXECUTE SIP_BARRIER 
+
+#bgn_debug
+#     execute get_my_rank rank
+#     execute print_scalar rank
+#     if rank == 0.0
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     do a
+#     do i
+#        Get R1A_MO_P_INTMD_R(A,I)
+#        get R1A_MO_M_INTMD_L(A,I)
+#        tmp   = R1A_MO_P_INTMD_R(A,I) * R1A_MO_P_INTMD_R(A,I)
+#        sumap += tmp
+#        tmp   = R1A_MO_M_INTMD_L(A,I) * R1A_MO_M_INTMD_L(A,I)
+#        sumam += tmp
+#     enddo i
+#     enddo a
+#     do b
+#     do j
+#        get R1B_MO_P_INTMD_R(B,J)
+#        get R1B_MO_M_INTMD_L(B,J)
+#        tmp = R1B_MO_P_INTMD_R(B,J) * R1B_MO_P_INTMD_R(B,J)
+#        sumbp += tmp
+#        tmp = R1B_MO_M_INTMD_L(B,J) * R1B_MO_M_INTMD_L(B,J) 
+#        sumbm += tmp
+#     enddo j
+#     enddo b
+#     execute print_scalar  sumap
+#     execute print_scalar  sumam
+#     execute print_scalar  sumbp
+#     execute print_scalar  sumbm
+#     endif
+#end_debug
+       ENDPROC FORM_BIORTHOGANAL_VECS_OLD
+#      ----------------------------------
+
+     PROC RESCALE_NEW_L
+#    ------------------
+
+     NORM_INTMD_P_R_A = 0.0
+     NORM_INTMD_P_R_B = 0.0
+
+     NORMA_P_R_A = 0.0
+     NORMA_P_R_B = 0.0
+
+     NORMA_P_R = 0.0
+
+     PARDO A, I
+
+         GET R1A_MO_P_CURRENT_R(A,I) 
+         GET R1A_MO_M_INTMD_L(A,I) 
+
+         TAIP_R(A,I) = R1A_MO_P_CURRENT_R(A,I)
+         TAIM_L(A,I) = R1A_MO_M_INTMD_L(A,I) 
+         TMP = TAIP_R(A,I) * TAIM_L(A,I)
+         NORM_INTMD_P_R_A += TMP 
+ 
+     ENDPARDO A, I
+
+     PARDO B, J
+
+         GET R1B_MO_P_CURRENT_R(B,J) 
+         GET R1B_MO_M_INTMD_L(B,J) 
+
+         TBJP_R(B,J) = R1B_MO_P_CURRENT_R(B,J)
+         TBJM_L(B,J) = R1B_MO_M_INTMD_L(B,J)
+         TMP = TBJP_R(B,J) * TBJM_L(B,J)  
+         NORM_INTMD_P_R_B += TMP 
+
+     ENDPARDO B, J
+
+     EXECUTE SIP_BARRIER 
+     COLLECTIVE NORMA_P_R_A += NORM_INTMD_P_R_A
+     COLLECTIVE NORMA_P_R_B += NORM_INTMD_P_R_B
+
+     NORMA_P_R  = NORMA_P_R_A
+     NORMA_P_R += NORMA_P_R_B 
+
+#bgn_debug
+#     execute print_scalar NORMA_P_R
+#end_debug
+
+     INV_NORM_PR = ONE/NORMA_P_R
+
+#bgn_debug
+#     execute print_scalar INV_SQRT_NORM_PR
+#end_debug
+
+     PARDO A, I
+
+         GET R1A_MO_M_INTMD_L(A,I)
+         TAIM_L(A,I)  = R1A_MO_M_INTMD_L(A,I)
+         TAIM_L(A,I) *= INV_NORM_PR
+         PUT  R1A_MO_M_CURRENT_L(A,I) = TAIM_L(A,I)
+
+     ENDPARDO A, I
+
+     PARDO B, J
+
+         GET R1B_MO_M_INTMD_L(B,J)
+         TBJM_L(B,J)  = R1B_MO_M_INTMD_L(B,J)
+         TBJM_L(B,J) *= INV_NORM_PR
+         PUT  R1B_MO_M_CURRENT_L(B,J) = TBJM_L(B,J)
+
+     ENDPARDO B, J
+
+     EXECUTE SIP_BARRIER 
+#bgn_debug
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     tmpap = 0
+#     tmpam = 0
+#     tmpbp = 0
+#     tmpbm = 0
+#     pardo a,i
+#        GET R1A_MO_P_CURRENT_R(A,I)
+#        GET R1A_MO_M_CURRENT_L(A,I)
+#        tmp   = R1A_MO_P_CURRENT_R(A,I) * R1A_MO_M_CURRENT_L(A,I)
+#        tmpap += tmp
+#     endpardo a,i
+#     pardo b,j
+#        GET R1B_MO_P_CURRENT_R(B,J)
+#        GET R1B_MO_M_CURRENT_L(B,J)
+#        tmp   = R1B_MO_P_CURRENT_R(B,J) * R1B_MO_M_CURRENT_L(B,J)
+#        tmpbp += tmp
+#     endpardo b,j
+#     execute sip_barrier 
+#     collective sumap+=tmpap
+#     collective sumbp+=tmpbp
+#     if rank == 0.0
+#     execute print_scalar  sumap
+#     execute print_scalar  sumbp
+#     endif
+#end_debug
+
+     ENDPROC RESCALE_NEW_L
+#    ---------------------
+
+     PROC RESCALE_NEW_R
+#    ------------------
+
+     NORM_INTMD_P_R_A = 0.0
+     NORM_INTMD_P_R_B = 0.0
+
+     NORMA_P_R_A = 0.0
+     NORMA_P_R_B = 0.0
+
+     NORMA_P_R = 0.0
+
+     PARDO A, I
+
+         GET R1A_MO_P_INTMD_R(A,I) 
+
+         TAIP_R(A,I) = R1A_MO_P_INTMD_R(A,I)
+         TMP = TAIP_R(A,I) * TAIP_R(A,I)
+         NORM_INTMD_P_R_A += TMP 
+
+     ENDPARDO A, I
+
+     PARDO B, J
+
+         GET R1B_MO_P_INTMD_R(B,J) 
+
+         TBJP_R(B,J) = R1B_MO_P_INTMD_R(B,J)
+         TMP = TBJP_R(B,J) * TBJP_R(B,J)  
+         NORM_INTMD_P_R_B += TMP 
+
+     ENDPARDO B, J
+
+     EXECUTE SIP_BARRIER 
+     COLLECTIVE NORMA_P_R_A += NORM_INTMD_P_R_A
+     COLLECTIVE NORMA_P_R_B += NORM_INTMD_P_R_B
+
+     NORMA_P_R  = NORMA_P_R_A
+     NORMA_P_R += NORMA_P_R_B 
+
+#bgn_debug
+#     execute print_scalar NORMA_P_R
+#end_debug
+
+     EXPONENT = HALF 
+     EXECUTE NORM_FAC NORMA_P_R EXPONENT
+     INV_SQRT_NORM_PR = NORMA_P_R
+
+#bgn_debug
+#     execute print_scalar INV_SQRT_NORM_PR
+#end_debug
+
+     PARDO A, I
+
+         GET R1A_MO_P_INTMD_R(A,I)
+
+         TAIP_R(A,I) = R1A_MO_P_INTMD_R(A,I)
+         TAIP_R(A,I)*= INV_SQRT_NORM_PR
+
+         PUT  R1A_MO_P_CURRENT_R(A,I) = TAIP_R(A,I)
+
+     ENDPARDO A, I
+
+     PARDO B, J
+
+         GET R1B_MO_P_INTMD_R(B,J)
+
+         TBJP_R(B,J) = R1B_MO_P_INTMD_R(B,J)
+         TBJP_R(B,J)*= INV_SQRT_NORM_PR
+
+         PUT  R1B_MO_P_CURRENT_R(B,J) = TBJP_R(B,J)
+
+     ENDPARDO B, J
+     EXECUTE SIP_BARRIER 
+#bgn_debug
+#     sumap = 0.0
+#     sumam = 0.0
+#     sumbp = 0.0
+#     sumbm = 0.0
+#     tmpap = 0
+#     tmpam = 0
+#     tmpbp = 0
+#     tmpbm = 0
+#     pardo a,i
+#        GET R1A_MO_P_CURRENT_R(A,I)
+#        tmp   = R1A_MO_P_CURRENT_R(A,I) * R1A_MO_P_CURRENT_R(A,I)
+#        tmpap += tmp
+#     endpardo a,i
+#     pardo b,j
+#        GET R1B_MO_P_CURRENT_R(B,J)
+#        tmp   = R1B_MO_P_CURRENT_R(B,J) * R1B_MO_P_CURRENT_R(B,J)
+#        tmpbp += tmp
+#     endpardo b,j
+#     execute sip_barrier 
+#     collective sumap+=tmpap
+#     collective sumbp+=tmpbp
+#     if rank == 0.0
+#     execute print_scalar  sumap
+#     execute print_scalar  sumbp
+#     endif
+#end_debug
+
+     ENDPROC RESCALE_NEW_R
+#    ---------------------
+
+      PROC C_CHECK
+#     ----------------
+      DO NINDEX20
+         DO MINDEX20
+            ETEMP_P(NINDEX20,MINDEX20)=ZERO
+            ETEMP_M(NINDEX20,MINDEX20)=ZERO
+         ENDDO MINDEX20 
+      ENDDO NINDEX20 
+ 
+      NCOUNT = ZERO
+      DO NINDEX20
+         NCOUNT += ONE
+         IF NCOUNT > ITER_COUNT
+           EXIT
+        ENDIF
+
+        MCOUNT = ZERO
+        DO MINDEX20
+           MCOUNT += ONE
+
+           IF MCOUNT > ITER_COUNT
+              EXIT
+            ENDIF
+
+            NORM_INTMD_P_R_A = ZERO
+            NORM_INTMD_P_R_B = ZERO
+
+            NORMA_P_R_A = ZERO
+            NORMA_P_R_B = ZERO 
+
+            NORMA_P_R = ZERO
+
+            PARDO A, I
+
+                GET R1A_MO_P_HIST_R(a,i,NINDEX20)
+                GET R1A_MO_M_HIST_L(a,i,MINDEX20)
+
+                TAIP_R(A,I)  = R1A_MO_P_HIST_R(a,i,NINDEX20)
+                TAIM_L(A,I)  = R1A_MO_M_HIST_L(a,i,MINDEX20)
+
+                TMP   = TAIP_R(A,I) * TAIM_L(A,I)
+                NORM_INTMD_P_R_A += TMP
+
+            ENDPARDO A, I
+
+            EXECUTE SIP_BARRIER
+            COLLECTIVE NORMA_P_R_A += NORM_INTMD_P_R_A
+   
+           PARDO B, J
+
+                GET R1B_MO_P_HIST_R(b,j,NINDEX20)
+                GET R1B_MO_M_HIST_L(b,j,MINDEX20)
+
+                TBJP_R(B,J)  = R1B_MO_P_HIST_R(b,j,NINDEX20)
+                TBJM_L(B,J)  = R1B_MO_M_HIST_L(b,j,MINDEX20)
+
+                TMP   = TBJP_R(B,J) * TBJM_L(B,J)
+                NORM_INTMD_P_R_B += TMP
+
+            ENDPARDO B, J
+
+            EXECUTE SIP_BARRIER
+            COLLECTIVE NORMA_P_R_B += NORM_INTMD_P_R_B
+  
+            NORMA_P_R  = NORMA_P_R_A
+            NORMA_P_R += NORMA_P_R_B
+
+            KCOUNT = ZERO
+            DO KINDEX20
+               KCOUNT += ONE
+               LCOUNT = ZERO
+               DO LINDEX20
+                  LCOUNT += ONE
+                  ETEMP_P(MINDEX20,NINDEX20) = NORMA_P_R
+               ENDDO LINDEX20
+            ENDDO KINDEX20
+
+        ENDDO MINDEX20
+      ENDDO NINDEX20
+
+      EXECUTE PRINT_STATIC ETEMP_P ITER_COUNT
+
+      ENDPROC C_CHECK
+#     ----------------
+
+      PROC C_CHECK_OLD
+#     ----------------
+      DO NINDEX20
+         DO MINDEX20
+            ETEMP_P(NINDEX20,MINDEX20)=ZERO
+            ETEMP_M(NINDEX20,MINDEX20)=ZERO
+         ENDDO MINDEX20 
+      ENDDO NINDEX20 
+ 
+      NCOUNT = ZERO
+      DO NINDEX20
+         NCOUNT += ONE
+         IF NCOUNT > ITER_COUNT
+           EXIT
+        ENDIF
+
+        MCOUNT = ZERO
+        DO MINDEX20
+           MCOUNT += ONE
+
+           IF MCOUNT > ITER_COUNT
+              EXIT
+            ENDIF
+
+            NORM_INTMD_P_R_A = ZERO
+            NORM_INTMD_M_L_A = ZERO
+            NORM_INTMD_P_R_B = ZERO
+            NORM_INTMD_M_L_B = ZERO
+
+            NORMA_P_R_A = ZERO
+            NORMA_P_R_B = ZERO 
+            NORMA_M_L_A = ZERO
+            NORMA_M_L_B = ZERO  
+
+            NORMA_P_R = ZERO
+            NORMA_M_L = ZERO
+
+            PARDO A, I
+
+                GET R1A_MO_P_HIST_R(a,i,NINDEX20)
+                GET R1A_MO_P_HIST_R(a,i,MINDEX20)
+
+                GET R1A_MO_M_HIST_L(a,i,NINDEX20)
+                GET R1A_MO_M_HIST_L(a,i,MINDEX20)
+
+                TAIP_R(A,I) = R1A_MO_P_HIST_R(a,i,NINDEX20)
+                T1AIP_R(A,I) = R1A_MO_P_HIST_R(a,i,MINDEX20)
+
+                TMP   = TAIP_R(A,I) * T1AIP_R(a,i)
+                NORM_INTMD_P_R_A += TMP
+
+                TAIM_L(A,I) = R1A_MO_M_HIST_L(a,i,NINDEX20)
+                T1AIM_L(A,I) = R1A_MO_M_HIST_L(a,i,MINDEX20)
+
+                TMP   = TAIM_L(A,I) * T1AIM_L(a,i)
+                NORM_INTMD_M_L_A += TMP
+
+            ENDPARDO A, I
+
+            EXECUTE SIP_BARRIER
+            COLLECTIVE NORMA_P_R_A += NORM_INTMD_P_R_A
+            COLLECTIVE NORMA_M_L_A += NORM_INTMD_M_L_A
+   
+           PARDO B, J
+
+                GET R1B_MO_P_HIST_R(b,j,NINDEX20)
+                GET R1B_MO_P_HIST_R(b,j,MINDEX20)
+
+                GET R1B_MO_M_HIST_L(b,j,NINDEX20)
+                GET R1B_MO_M_HIST_L(b,j,MINDEX20)
+
+                TBJP_R(B,J) = R1B_MO_P_HIST_R(b,j,NINDEX20)
+                T1BJP_R(B,J) = R1B_MO_P_HIST_R(b,j,MINDEX20)
+
+                TMP   = TBJP_R(B,J) * T1BJP_R(B,J)
+                NORM_INTMD_P_R_B += TMP
+
+                TBJM_L(B,J) = R1B_MO_M_HIST_L(b,j,NINDEX20)
+                T1BJM_L(B,J) = R1B_MO_M_HIST_L(b,j,MINDEX20)
+
+                TMP   = TBJM_L(B,J) * T1BJM_L(B,J)
+                NORM_INTMD_M_L_B += TMP
+
+            ENDPARDO B, J
+
+            EXECUTE SIP_BARRIER
+            COLLECTIVE NORMA_P_R_B += NORM_INTMD_P_R_B
+            COLLECTIVE NORMA_M_L_B += NORM_INTMD_M_L_B
+  
+            NORMA_P_R  = NORMA_P_R_A
+            NORMA_P_R += NORMA_P_R_B
+
+            NORMA_M_L  = NORMA_M_L_A
+            NORMA_M_L += NORMA_M_L_B
+
+            KCOUNT = ZERO
+            DO KINDEX20
+               KCOUNT += ONE
+               LCOUNT = ZERO
+               DO LINDEX20
+                  LCOUNT += ONE
+                  ETEMP_P(MINDEX20,NINDEX20) = NORMA_P_R
+                  ETEMP_M(MINDEX20,NINDEX20) = NORMA_M_L
+               ENDDO LINDEX20
+            ENDDO KINDEX20
+
+        ENDDO MINDEX20
+      ENDDO NINDEX20
+
+      EXECUTE PRINT_STATIC ETEMP_P ITER_COUNT
+      EXECUTE PRINT_STATIC ETEMP_M ITER_COUNT
+
+      ENDPROC C_CHECK_OLD
+#     -------------------
+
+     PROC SET_TO_ZERO
+#    ----------------
+
+     DO MINDEX20
+        OVLPAB_HISTORY_P_R(MINDEX20) = 0.0
+        OVLPAB_HISTORY_M_L(MINDEX20) = 0.0
+        DO NINDEX20
+           TS(MINDEX20,NINDEX20) = 0.0
+           B_A_MATRIX_P(MINDEX20,NINDEX20)   = TS(MINDEX20,NINDEX20)
+           B_A_MATRIX_M(MINDEX20,NINDEX20)   = TS(MINDEX20,NINDEX20)
+           PUT ORTHO_COEFS_P_RL(MINDEX20,NINDEX20) = TS(MINDEX20,NINDEX20)
+           PUT ORTHO_COEFS_M_RL(MINDEX20,NINDEX20) = TS(MINDEX20,NINDEX20)
+        ENDDO NINDEX20
+     ENDDO MINDEX20
+
+     DO NINDEX20
+       PARDO A, I
+           TAP_R(A,I) = 0.0
+           TAM_L(A,I) = 0.0
+           PUT Y1P_A_R(A,I,NINDEX20) = TAP_R(A,I)
+           PUT Y1M_A_L(A,I,NINDEX20) = TAM_L(A,I)
+
+           PUT HY1P_A_R(A,I,NINDEX20) = TAP_R(A,I)
+           PUT HY1M_A_L(A,I,NINDEX20) = TAM_L(A,I)
+       ENDPARDO A, I
+       PARDO B, J
+           TBP_R(B,J) = 0.0
+           TBM_L(B,J) = 0.0
+           PUT Y1P_B_R(B,J,NINDEX20) = TBP_R(B,J)
+           PUT Y1M_B_L(B,J,NINDEX20) = TBM_L(B,J)
+
+           PUT HY1P_B_R(B,J,NINDEX20) = TBP_R(B,J)
+           PUT HY1M_B_L(B,J,NINDEX20) = TBM_L(B,J)
+       ENDPARDO  B, J
+     ENDDO NINDEX20
+
+     EXECUTE SIP_BARRIER 
+
+     ENDPROC SET_TO_ZERO
+#    -------------------
+
+     PROC FORM_FOCK_DIAGS
+#    --------------------
+#
+# -----prepare f_ii diagonal = Sdii
+#
+     PARDO i, i1
+      WHERE i==i1
+#
+           tii(i1,i)      = fock_a(i1,i)
+           execute return_diagonal4 tii
+           put DDii(i1,i) = tii(i1,i)
+#
+     ENDPARDO i, i1
+
+# -----prepare f_aa diagonal = DDaa
+
+     PARDO a, a1
+      WHERE a==a1
+
+           taa(a,a1)      = fock_a(a,a1)
+           execute return_diagonal4 taa
+           put DDaa(a,a1) = taa(a,a1)
+#
+     ENDPARDO a, a1
+#
+# -----prepare f_jj diagonal = DDjj
+#
+     PARDO j, j1
+      WHERE j==j1
+#
+        tjj(j1,j)      = fock_b(j1,j)
+        execute return_diagonal4 tjj
+        put DDjj(j1,j) = tjj(j1,j)
+#
+     ENDPARDO j, j1
+
+# -----prepare f_bb diagonal = DDbb
+
+     PARDO b, b1
+      WHERE b==b1
+#
+        tbb(b,b1)      = fock_b(b,b1)
+        execute return_diagonal4 tbb
+        put DDbb(b,b1) = tbb(b,b1)
+#
+     ENDPARDO b, b1
+
+     execute sip_barrier
+#
+# ---------compute T(a,i)=F(a,a)-f(i,i)
+#
+     PARDO a, i
+#
+           tai(a,i) = 0.0
+#
+           do a1
+#
+              get         DDaa(a,a1)
+              tia(i,a1) = 1.0
+              taa(a1,a) = DDaa(a,a1)
+#
+              t2ai(a,i) = tia(i,a1)*taa(a1,a)
+              tai(a,i) += t2ai(a,i)
+#
+           enddo a1
+#
+           do i1
+#
+              get         DDii(i1,i)
+              t2ia(i1,a)= 1.0
+              tii(i,i1) = DDii(i1,i)
+#
+              t2ai(a,i) = tii(i,i1)*t2ia(i1,a)
+              t2ai(a,i)*= -1.0
+              tai(a,i) += t2ai(a,i)
+#
+           enddo i1
+#
+           PUT R1DA(a,i)+=tai(a,i)
+#
+     ENDPARDO a, i
+
+# ---------compute T(b,j)=F(b,b)-f(j,j)
+#
+     PARDO b, j
+#
+           tbj(b,j)=0.0
+#
+           do b1
+#
+              get         DDbb(b,b1)
+              tjb(j,b1) = 1.0
+              tbb(b1,b) = DDbb(b,b1)
+              t2bj(b,j) = tjb(j,b1)*tbb(b1,b)
+              tbj(b,j) += t2bj(b,j)
+#
+           enddo b1
+#
+           do j1
+#
+              get         DDjj(j1,j)
+              t2jb(j1,b)= 1.0
+              tjj(j,j1) = DDjj(j1,j)
+              t2bj(b,j) = tjj(j,j1)*t2jb(j1,b)
+              t2bj(b,j)*= -1.0
+              tbj(b,j) += t2bj(b,j)
+#
+           enddo j1
+#
+           PUT R1DB(b,j)+= tbj(b,j)
+#
+     ENDPARDO b, j
+#
+     execute sip_barrier
+
+     ENDPROC FORM_FOCK_DIAGS
+#    -----------------------
+
+     PROC CONSTRUCT_A_MATRIX
+#    -----------------------
+
+     IF ITER_COUNT == ONE 
+        CALL FORM_A_MATRIX_11
+     ELSE
+        CALL FORM_A_MATRIX_II
+        CALL FORM_A_MATRIX_IJ
+        CALL FORM_A_MATRIX_JI
+     ENDIF
+
+     ENDPROC CONSTRUCT_A_MATRIX
+#    --------------------------
+
+     PROC CREATE_ARRAYS
+#    ------------------
+
+       CREATE R1A_MO_P_START_R
+       CREATE R1A_MO_M_START_L
+       cREATE R1B_MO_P_START_R
+       CREATE R1B_MO_M_START_L
+       CREATE R1A_MO_P_CURRENT_R
+       CREATE R1A_MO_M_CURRENT_L
+       CREATE R1B_MO_P_CURRENT_R
+       CREATE R1B_MO_M_CURRENT_L
+       CREATE R1A_AO_P_CURRENT_R
+       CREATE R1A_AO_M_CURRENT_L
+       CREATE R1B_AO_P_CURRENT_R
+       CREATE R1B_AO_M_CURRENT_L
+       CREATE HR1A_AO_P_CURRENT_R
+       CREATE HR1A_AO_M_CURRENT_L
+       CREATE HR1B_AO_P_CURRENT_R
+       CREATE HR1B_AO_M_CURRENT_L
+       CREATE HR1A_MO_P_CURRENT_R
+       CREATE HR1A_MO_M_CURRENT_L
+       CREATE HR1B_MO_P_CURRENT_R
+       CREATE HR1B_MO_M_CURRENT_L
+       CREATE R1A_MO_P_HIST_R
+       CREATE R1A_MO_M_HIST_L
+       CREATE R1B_MO_P_HIST_R
+       CREATE R1B_MO_M_HIST_L
+       CREATE HR1A_MO_P_HIST_R
+       CREATE HR1A_MO_M_HIST_L
+       CREATE HR1B_MO_P_HIST_R
+       CREATE HR1B_MO_M_HIST_L
+       CREATE R1A_MO_P_PICKED_R
+       CREATE R1A_MO_M_PICKED_L
+       CREATE R1B_MO_P_PICKED_R
+       CREATE R1B_MO_M_PICKED_L
+       CREATE HR1A_MO_P_PICKED_R
+       CREATE HR1A_MO_M_PICKED_L
+       CREATE HR1B_MO_P_PICKED_R
+       CREATE HR1B_MO_M_PICKED_L
+       CREATE RESIDUEA_P_VEC_R
+       CREATE RESIDUEA_M_VEC_L
+       CREATE RESIDUEB_P_VEC_R
+       CREATE RESIDUEB_M_VEC_L
+       CREATE CORR_VECA_INTMD_P_R
+       CREATE CORR_VECA_INTMD_M_L
+       CREATE CORR_VECB_INTMD_P_R
+       CREATE CORR_VECB_INTMD_M_L
+       CREATE ORTHO_COEFS_P_RL
+       CREATE ORTHO_COEFS_M_RL
+       CREATE R1A_MO_P_INTMD_R
+       CREATE R1A_MO_M_INTMD_L
+       CREATE R1B_MO_P_INTMD_R
+       CREATE R1B_MO_M_INTMD_L
+       CREATE Y1P_A_R
+       CREATE Y1M_A_L
+       CREATE Y1P_B_R
+       CREATE Y1M_B_L
+       CREATE HY1P_A_R
+       CREATE HY1M_A_L
+       CREATE HY1P_B_R
+       CREATE HY1M_B_L
+       CREATE DDII
+       CREATE DDJJ
+       CREATE DDAA
+       CREATE DDBB
+       CREATE R1DA
+       CREATE R1DB
+       CREATE INIT_AVEC_R
+       CREATE INIT_AVEC_L
+       CREATE INIT_BVEC_R
+       CREATE INIT_BVEC_L
+       CREATE RPAA_S_VECS_R
+       CREATE RPAA_S_VECS_L
+       CREATE RPAB_S_VECS_R
+       CREATE RPAB_S_VECS_L
+       CREATE RPAA_T_VECS_R
+       CREATE RPAA_T_VECS_L
+       CREATE RPAB_T_VECS_R
+       CREATE RPAB_T_VECS_L
+       CREATE HR1A_AO_P_TMP
+
+       EXECUTE SIP_BARRIER 
+
+       ENDPROC CREATE_ARRAYS
+#      ---------------------
+
+       PROC DELETE_ARRAYS
+#      ------------------
+
+       DELETE R1A_MO_P_START_R
+       DELETE R1A_MO_M_START_L
+       DELETE R1B_MO_P_START_R
+       DELETE R1B_MO_M_START_L
+       DELETE R1A_MO_P_CURRENT_R
+       DELETE R1A_MO_M_CURRENT_L
+       DELETE R1B_MO_P_CURRENT_R
+       DELETE R1B_MO_M_CURRENT_L
+       DELETE R1A_AO_P_CURRENT_R
+       DELETE R1A_AO_M_CURRENT_L
+       DELETE R1B_AO_P_CURRENT_R
+       DELETE R1B_AO_M_CURRENT_L
+       DELETE HR1A_AO_P_CURRENT_R
+       DELETE HR1A_AO_M_CURRENT_L
+       DELETE HR1B_AO_P_CURRENT_R
+       DELETE HR1B_AO_M_CURRENT_L
+       DELETE HR1A_MO_P_CURRENT_R
+       DELETE HR1A_MO_M_CURRENT_L
+       DELETE HR1B_MO_P_CURRENT_R
+       DELETE HR1B_MO_M_CURRENT_L
+       DELETE R1A_MO_P_HIST_R
+       DELETE R1A_MO_M_HIST_L
+       DELETE R1B_MO_P_HIST_R
+       DELETE R1B_MO_M_HIST_L
+       DELETE HR1A_MO_P_HIST_R
+       DELETE HR1A_MO_M_HIST_L
+       DELETE HR1B_MO_P_HIST_R
+       DELETE HR1B_MO_M_HIST_L
+       DELETE R1A_MO_P_PICKED_R
+       DELETE R1A_MO_M_PICKED_L
+       DELETE R1B_MO_P_PICKED_R
+       DELETE R1B_MO_M_PICKED_L
+       DELETE HR1A_MO_P_PICKED_R
+       DELETE HR1A_MO_M_PICKED_L
+       DELETE HR1B_MO_P_PICKED_R
+       DELETE HR1B_MO_M_PICKED_L
+       DELETE RESIDUEA_P_VEC_R
+       DELETE RESIDUEA_M_VEC_L
+       DELETE RESIDUEB_P_VEC_R
+       DELETE RESIDUEB_M_VEC_L
+       DELETE CORR_VECA_INTMD_P_R
+       DELETE CORR_VECA_INTMD_M_L
+       DELETE CORR_VECB_INTMD_P_R
+       DELETE CORR_VECB_INTMD_M_L
+       DELETE ORTHO_COEFS_P_RL
+       DELETE ORTHO_COEFS_M_RL
+       DELETE R1A_MO_P_INTMD_R
+       DELETE R1A_MO_M_INTMD_L
+       DELETE R1B_MO_P_INTMD_R
+       DELETE R1B_MO_M_INTMD_L
+       DELETE Y1P_A_R
+       DELETE Y1M_A_L
+       DELETE Y1P_B_R
+       DELETE Y1M_B_L
+       DELETE HY1P_A_R
+       DELETE HY1M_A_L
+       DELETE HY1P_B_R
+       DELETE HY1M_B_L
+       DELETE RPAA_S_VECS_R
+       DELETE RPAA_S_VECS_L
+       DELETE RPAB_S_VECS_R
+       DELETE RPAB_S_VECS_L
+       DELETE RPAA_T_VECS_R
+       DELETE RPAA_T_VECS_L
+       DELETE RPAB_T_VECS_R
+       DELETE RPAB_T_VECS_L
+       DELETE HR1A_AO_P_TMP
+
+       EXECUTE SIP_BARRIER 
+
+       ENDPROC DELETE_ARRAYS
+#      ---------------------
+
+        PROC CHECK_CONVERGENCE_RPA
+#       --------------------------
+# Checking the norm of the residual vector.
+
+       NORM_INTMD_P_R_A = ZERO
+       NORM_INTMD_M_L_A = ZERO
+       NORM_INTMD_P_R_B = ZERO
+       NORM_INTMD_M_L_B = ZERO
+
+       NORMA_P_R_A = ZERO
+       NORMA_P_R_B = ZERO
+       NORMA_M_L_A = ZERO
+       NORMA_M_L_B = ZERO
+
+       NORMA_P_R = ZERO
+       NORMA_M_L = ZERO
+
+       PARDO A, I
+
+             GET RESIDUEA_P_VEC_R(A,I)
+             GET RESIDUEA_M_VEC_L(A,I)
+
+             TAP_R(A,I) = RESIDUEA_P_VEC_R(A,I)
+             TAM_L(A,I) = RESIDUEA_M_VEC_L(A,I)
+
+             TMP = TAP_R(A,I) * TAP_R(A,I)
+             NORM_INTMD_P_R_A += TMP
+
+             TMP = TAM_L(A,I) * TAM_L(A,I)
+             NORM_INTMD_M_L_A += TMP
+
+       ENDPARDO A, I
+
+       PARDO B, J
+
+             GET RESIDUEB_P_VEC_R(B,J)
+             GET RESIDUEB_M_VEC_L(B,J)
+
+             TBP_R(B,J) = RESIDUEB_P_VEC_R(B,J)
+             TBM_L(B,J) = RESIDUEB_M_VEC_L(B,J)
+
+             TMP = TBP_R(B,J) * TBP_R(B,J)
+             NORM_INTMD_P_R_B += TMP
+
+             TMP = TBM_L(B,J) * TBM_L(B,J)
+             NORM_INTMD_M_L_A += TMP
+
+       ENDPARDO B, J
+
+       EXECUTE SIP_BARRIER 
+
+       COLLECTIVE NORMA_P_R_A += NORM_INTMD_P_R_A
+       COLLECTIVE NORMA_M_L_A += NORM_INTMD_M_L_A
+       COLLECTIVE NORMA_P_R_B += NORM_INTMD_P_R_B
+       COLLECTIVE NORMA_M_L_B += NORM_INTMD_M_L_B
+
+       NORMAB_P  = NORMA_P_R_A
+       NORMAB_P += NORMA_P_R_B
+       NORMAB_M  = NORMA_M_L_A
+       NORMAB_M += NORMA_M_L_B
+
+       EXECUTE SQUARE_ROOT NORMAB_P HALF
+       EXECUTE SQUARE_ROOT NORMAB_M HALF
+       RESIDUAL_NORM_P = NORMAB_P
+       RESIDUAL_NORM_M = NORMAB_M
+
+#bgn_debug
+#       execute print_scalar RESIDUAL_NORM_P
+#       execute print_scalar RESIDUAL_NORM_M
+#endif
+
+        ENDPROC CHECK_CONVERGENCE_RPA
+#       -----------------------------
+
+        PROC CHECK_CONVERGENCE_CIS
+#       --------------------------
+# Checking the norm of the residual vector.
+
+       NORM_INTMD_P_R_A = ZERO
+       NORM_INTMD_P_R_B = ZERO
+
+       NORMA_P_R_A = ZERO
+       NORMA_P_R_B = ZERO
+
+       NORMA_P_R = ZERO
+       NORMA_M_L = ZERO
+
+       PARDO A, I
+
+             GET RESIDUEA_P_VEC_R(A,I)
+
+             TAP_R(A,I) = RESIDUEA_P_VEC_R(A,I)
+
+             TMP = TAP_R(A,I) * TAP_R(A,I)
+             NORM_INTMD_P_R_A += TMP
+
+       ENDPARDO A, I
+
+       PARDO B, J
+
+             GET RESIDUEB_P_VEC_R(B,J)
+
+             TBP_R(B,J) = RESIDUEB_P_VEC_R(B,J)
+
+             TMP = TBP_R(B,J) * TBP_R(B,J)
+             NORM_INTMD_P_R_B += TMP
+
+       ENDPARDO B, J
+
+       EXECUTE SIP_BARRIER 
+
+       COLLECTIVE NORMA_P_R_A += NORM_INTMD_P_R_A
+       COLLECTIVE NORMA_P_R_B += NORM_INTMD_P_R_B
+
+       NORMAB_P  = NORMA_P_R_A
+       NORMAB_P += NORMA_P_R_B
+       
+       EXECUTE SQUARE_ROOT NORMAB_P HALF
+       RESIDUAL_NORM_P = NORMAB_P
+
+#bgn_debug
+#       execute print_scalar RESIDUAL_NORM_P
+#endif 
+
+        ENDPROC CHECK_CONVERGENCE_CIS
+#       ----------------------------
+
+#     BEGIN MAIN PROGRAM
+#     -----------------
+#
+# Read the maximum number of roots and the convergence threshold from
+# input.
+
+       TARGET_ROOTS   = EOM_ROOTS
+       RPA_THRES      = CIS_TOL 
+       RPA_MAXCYC     = EE_MAXCYC
+       RHF_UHF        = REFERENCE 
+       RHF_UHF       += 1.0
+ 
+       MULT  = 0.0
+       ZERO  = 0.0
+       ONE   = 1.0
+       TWO   = 2.0
+       THREE = 3.0
+       HALF  = 0.5
+       MONE  = -1.0
+       NNN   = 999
+   
+       SINGLET = ZERO
+       TRIPLET = ZERO
+       EXACT_HY= ZERO 
+       DO_CIS  = ZERO
+
+       MAX_SUBSP_DIM = RPA_MAXCYC
+
+#bgn_debug
+      EXECUTE  PRINT_SCALAR  RPA_MAXCYC
+      EXECUTE  PRINT_SCALAR  RHF_UHF
+      EXECUTE  PRINT_SCALAR  RPA_THRES
+      EXECUTE  PRINT_SCALAR  DO_CIS
+#end_debug
+#  
+       CALL CREATE_ARRAYS 
+       CALL FORM_FOCK_DIAGS 
+
+       DO SPN_MULT
+
+          COUNT_NO_ROOTS = ZERO
+          MULT  += ONE
+
+          IF MULT  > RHF_UHF
+             EXIT
+          ENDIF
+
+          IF MULT == ONE
+             SINGLET = ONE
+             TRIPLET = ZERO
+          ELSE
+             SINGLET = ZERO
+             TRIPLET = ONE
+          ENDIF
+#bgn_debug
+          execute print_scalar mult
+#end_debug
+
+        DO MAX_NO_ROOTS
+
+          EDIFF           = ZERO 
+          COUNT_NO_ROOTS += ONE
+
+          IF COUNT_NO_ROOTS > TARGET_ROOTS
+             EXIT
+          ENDIF 
+
+          MYROOT = COUNT_NO_ROOTS
+          CALL FORM_INITIAL_GUESS
+          CALL MOVE_GUESS_2CURRENT
+
+          ITER_COUNT = ZERO
+          DO SUBSP_DIM
+
+             CALL SET_TO_ZERO
+
+             ITER_COUNT  += ONE 
+#bgn_debug
+             execute print_scalar iter_count 
+#end_debug
+
+             IF ITER_COUNT > MAX_SUBSP_DIM
+                EXIT
+             ENDIF
+
+# Lets denote the eigenvalue problem we are trying to solve as
+# H C = E C and {c_1, c_2, c_3...} expansion vector for a given
+# root.
+
+             CALL SAVE_C_VECTORS
+#bgn_debug
+#             execute print_scalar nnn
+#             call c_check
+#end_debug
+
+# The vector-matrix product in the following step  is really the time
+# consuming step in this. The Direct AO based alogrithm implemented
+# here is described in several papers: G. B. Bacskay,
+# Chemical Physics,61,385,1981 and J. Olsen and co-workers,
+# Chemical Physics,119,297,1988.
+
+             CALL DIRECT_AO_HC_MULT_RL
+
+             CALL SAVE_HC_VECTORS
+
+#  A(i,j) = <R_i | H | R_j>, where R_i, i=1,2,3... are the sub-space
+# vectors. The diagonalization of the sub-space matrix A gives a
+# set of vectors of the dimension of the sub-space matrix (N=1,2..)
+# that can be used to form a set of N vectors. One of them will be
+# chosen to built the correction vector.
+#
+            CALL CONSTRUCT_A_MATRIX
+#bgn_debug
+#            execute print_static B_A_MATRIX_P ITER_COUNT
+#            execute print_static B_A_MATRIX_M ITER_COUNT
+#end_debug
+
+            CALL DIAG_A_MATRIX
+#bgn_debug
+#            execute print_static B_A_MATRIX_P ITER_COUNT
+#            execute print_static B_A_MATRIX_M ITER_COUNT
+#end_debug
+
+# The FORM_NEW_VECTORS and SELECT_VECTOR_TOGO do two things. The first one
+# will form the set of new vectors using the formula
+# C_k (m,n) = A_k(1,1)*R_1 + A_k(2,1)*R_2 +... Following that We will
+# have C_k  k=1,.., N where N is curent dimension of
+# the sub-space). We select a vector from them based on the criteria
+# on the maximum overlap criteria with the starting guess vector.
+            
+            IF ITER_COUNT != ONE
+
+               CALL REORDER_A_EIGS
+
+               IF EXACT_HY == ONE
+
+                  CALL FORM_NEW_VECTORS
+                  CALL SELECT_VECTOR_TOGO
+                  CALL FORM_HBAR_Y_VECS
+
+               ELSE
+
+                  CALL FORM_NEW_VECTORS
+                  CALL SELECT_VECTOR_TOGO
+                  CALL FORM_NEW_HBAR_Y_VECTORS
+                  CALL SELECT_HBAR_Y_VECTOR_TOGO
+
+               ENDIF 
+            ENDIF 
+
+            CALL FORM_RESIDUAL_VECTOR
+
+            IF DO_CIS == ONE
+               CALL CHECK_CONVERGENCE_CIS
+            ELSE
+               CALL CHECK_CONVERGENCE_RPA
+            ENDIF 
+
+            IF ITER_COUNT > ONE 
+               EDIFF = E_OLD - OMEGA_P
+            ENDIF 
+            E_OLD = OMEGA_P
+            EDIFF *=EDIFF 
+            EXECUTE SQUARE_ROOT EDIFF HALF
+  
+#bgn_debug
+          execute print_scalar RESIDUAL_NORM_P
+          execute print_scalar RESIDUAL_NORM_M
+          execute print_scalar OMEGA_P
+          execute print_scalar EDIFF
+#end_debug
+
+            IF RESIDUAL_NORM_P  < RPA_THRES
+               EXIT
+            ELSE
+               CALL FORM_CORRECTION_VECTOR
+
+               CALL FORM_BIORTHOGANAL_VECS
+    
+               CALL RESCALE_NEW_R
+               CALL RESCALE_NEW_L
+
+            ENDIF 
+
+          ENDDO SUBSP_DIM
+
+          IF ITER_COUNT == MAX_SUBSP_DIM 
+             IF RESIDUAL_NORM_P > RPA_THRES  
+                IF EDIFF < RPA_THRES 
+                   OMEGA_P = OMEGA_P
+                   OMEGA_M = OMEGA_M
+                ELSE 
+                   OMEGA_P = ZERO 
+                   OMEGA_M = ZERO
+                ENDIF 
+             ENDIF 
+          ENDIF 
+
+          IF SINGLET == ONE 
+                MCOUNT = ZERO
+                DO MROOTS
+                   MCOUNT += ONE
+                   IF MCOUNT == COUNT_NO_ROOTS
+                      RPA_S_EES(MROOTS) = OMEGA_P
+
+                   PARDO a, i
+                      GET R1A_MO_P_CURRENT_R(A,I)
+                      GET R1A_MO_M_CURRENT_L(A,I)
+
+                      PUT RPAA_S_VECS_R(A,I,MROOTS) = R1A_MO_P_CURRENT_R(A,I)
+                      PUT RPAA_S_VECS_L(A,I,MROOTS) = R1A_MO_M_CURRENT_L(A,I)
+                   ENDPARDO a, i
+
+                   PARDO b, j
+                      GET R1B_MO_P_CURRENT_R(B,J)
+                      GET R1B_MO_M_CURRENT_L(B,J)
+
+                      PUT RPAB_S_VECS_R(B,J,MROOTS) = R1B_MO_P_CURRENT_R(B,J)
+                      PUT RPAB_S_VECS_L(B,J,MROOTS) = R1B_MO_M_CURRENT_L(B,J)
+                   ENDPARDO b, j
+                   ENDIF
+                ENDDO MROOTS
+             ENDIF
+
+             IF TRIPLET == ONE
+                MCOUNT = ZERO
+                DO MROOTS
+                   MCOUNT += ONE
+                   IF MCOUNT == COUNT_NO_ROOTS
+                      RPA_T_EES(MROOTS) = OMEGA_P
+
+                   PARDO A, I
+                      GET R1A_MO_P_CURRENT_R(A,I)
+                      GET R1A_MO_M_CURRENT_L(A,I)
+
+                      PUT RPAA_T_VECS_R(A,I,MROOTS) = R1A_MO_P_CURRENT_R(A,I)
+                      PUT RPAA_T_VECS_L(A,I,MROOTS) = R1A_MO_M_CURRENT_L(A,I)
+                   ENDPARDO A, I
+
+                   PARDO B, J
+                      GET R1B_MO_P_CURRENT_R(B,J)
+                      GET R1B_MO_M_CURRENT_L(B,J)
+
+                      PUT RPAB_T_VECS_R(B,J,MROOTS) = R1B_MO_P_CURRENT_R(B,J)
+                      PUT RPAB_T_VECS_L(B,J,MROOTS) = R1B_MO_M_CURRENT_L(B,J)
+
+                   ENDPARDO B, J
+                   ENDIF
+                ENDDO MROOTS
+              ENDIF
+
+       ENDDO MAX_NO_ROOTS
+#bgn_debug
+      COUNT_NO_ROOTS -= 1.0
+      IF SINGLET == ONE
+         execute print_static RPA_S_EES COUNT_NO_ROOTS
+         MARKER = 72.0
+         execute print_rel_info MARKER RPA_S_EES
+      ENDIF
+      IF TRIPLET == ONE
+         execute print_static RPA_T_EES COUNT_NO_ROOTS
+         MARKER = 73.0
+         execute print_rel_info MARKER RPA_T_EES
+      ENDIF
+#end_debug
+
+      ENDDO SPN_MULT
+                          ENDSIAL DIRECT_RPA_UHF
+#                         ----------------------
+

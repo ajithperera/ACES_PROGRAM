@@ -1,0 +1,2034 @@
+
+
+                        SIAL GRAMM_SCHMIT_BIORTH
+#                       ------------------------
+      moaindex i = baocc, eaocc
+      moaindex i1= baocc, eaocc
+      moaindex i2= baocc, eaocc
+      moaindex i3= baocc, eaocc
+#
+      moaindex a = bavirt, eavirt
+      moaindex a1= bavirt, eavirt
+      moaindex a2= bavirt, eavirt
+      moaindex a3= bavirt, eavirt
+#
+      moaindex j = baocc, eaocc
+      moaindex j1= baocc, eaocc
+      moaindex j2= baocc, eaocc
+      moaindex j3= baocc, eaocc
+      moaindex k = baocc, eaocc
+      moaindex l = baocc, eaocc
+
+#
+      moaindex b = bavirt, eavirt
+      moaindex d = bavirt, eavirt
+      moaindex c1= bavirt, eavirt
+      moaindex b1= bavirt, eavirt
+      moaindex b2= bavirt, eavirt
+      moaindex b3= bavirt, eavirt
+
+      index   kk1 = 1,1
+      index   target_roots = 1,24
+      index   target_roots1 = 1,24
+      index   TROOTS = 1,24
+
+      distributed  REE (target_roots,kk1)
+      distributed  REE1 (TROOTS,kk1)
+#-----------Lambda amplitudes------------------------------------------------------------
+      distributed A1a(i,a)
+      distributed A1b(j,b)
+      served A2aa(i,a,i1,a1)
+      served A2ab(i,a,j,b)
+      served A2bb(j,b,j1,b1)
+      served Xabjl(a,b,j,i)
+#-----------Cluster amplitudes-----------------------------------------------------------
+      served T2aa(a,i,a1,i1)
+      served T2ab(a,i,b,j)
+      served T2bb(b,j,b1,j1)
+      distributed t1a(a,i)
+      distributed t1b(b,j)
+#-----------Some auxilirary arrays-------------------------------------------------------
+      served EE_EVEC_R_p_a1(a,i,TROOTS)
+      served EE_EVEC_R_p_b1(b,j,TROOTS)
+      served EE_EVEC_R_abi_aaa1(a,i,c1,i1,TROOTS)
+      served EE_EVEC_R_abi_bbb1(b,j,d,j1,TROOTS)
+      served EE_EVEC_R_abi_abb1(a,i,d,j,TROOTS)
+      served EE_EVEC_L_p_a1(a,i,TROOTS)
+      served EE_EVEC_L_p_b1(b,j,TROOTS)
+      served EE_EVEC_L_abi_aaa1(a,i,c1,i1,TROOTS)
+      served EE_EVEC_L_abi_bbb1(b,j,d,j1,TROOTS)
+      served EE_EVEC_L_abi_abb1(a,i,d,j,TROOTS)
+#----------------------------------------------------------------------------------------
+      served EE_EVAL1(kk1,target_roots)
+      served EE_EVEC_R_p_a(a,i,target_roots)
+      served EE_EVEC_R_p_b(b,j,target_roots)
+      served EE_EVEC_R_abi_aaa(a,i,c1,i1,target_roots)
+      served EE_EVEC_R_abi_bbb(b,j,d,j1,target_roots)
+      served EE_EVEC_R_abi_abb(a,i,d,j,target_roots)
+      served EE_EVEC_L_p_a(a,i,target_roots)
+      served EE_EVEC_L_p_b(b,j,target_roots)
+      served EE_EVEC_L_abi_aaa(a,i,c1,i1,target_roots)
+      served EE_EVEC_L_abi_bbb(b,j,d,j1,target_roots)
+      served EE_EVEC_L_abi_abb(a,i,d,j,target_roots)
+#---------------------------------------------------------------|
+      served EE_EVEC_R_aux_p_a(a,i,target_roots)
+      served EE_EVEC_R_aux_p_b(b,j,target_roots)
+      served EE_EVEC_R_aux_abi_aaa(a,i,c1,i1,target_roots)
+      served EE_EVEC_R_aux_abi_bbb(b,j,d,j1,target_roots)
+      served EE_EVEC_R_aux_abi_abb(a,i,d,j,target_roots)
+      served EE_EVEC_L_aux_p_a(a,i,target_roots)
+      served EE_EVEC_L_aux_p_b(b,j,target_roots)
+      served EE_EVEC_L_aux_abi_aaa(a,i,c1,i1,target_roots)
+      served EE_EVEC_L_aux_abi_bbb(b,j,d,j1,target_roots)
+      served EE_EVEC_L_aux_abi_abb(a,i,d,j,target_roots)
+#---------------------------------------------------------------|
+      temp DAV_temp_R_p_a(a,i)
+      temp DAV_temp_L_p_a(a,i)
+      temp DAV_temp_RC_p_a(a,i)
+      temp DAV_temp_LC_p_a(a,i)
+
+      temp DAV_temp_R_p_b(b,j)
+      temp DAV_temp_L_p_b(b,j)
+      temp DAV_temp_RC_p_b(b,j)
+      temp DAV_temp_LC_p_b(b,j)
+
+      temp DAV_temp_R_abi_aaa(a,i1,a1,i)
+      temp DAV_temp_L_abi_aaa(a,i1,a1,i)
+      temp DAV_temp_RC_abi_aaa(a,i1,a1,i)
+      temp DAV_temp_LC_abi_aaa(a,i1,a1,i)
+
+      temp DAV_temp_R_abi_bbb(b,j1,b1,j)
+      temp DAV_temp_L_abi_bbb(b,j1,b1,j)
+      temp DAV_temp_RC_abi_bbb(b,j1,b1,j)
+      temp DAV_temp_LC_abi_bbb(b,j1,b1,j)
+
+      temp DAV_temp_R_abi_abb(a,i,b,j)
+      temp DAV_temp_L_abi_abb(a,i,b,j)
+      temp DAV_temp_RC_abi_abb(a,i,b,j)
+      temp DAV_temp_LC_abi_abb(a,i,b,j)
+
+      temp DAV_temp_R_p_a_targ(a,i,target_roots)
+      temp DAV_temp_R_p_b_targ(b,j,target_roots)
+      temp DAV_temp_L_p_a_targ(a,i,target_roots)
+      temp DAV_temp_L_p_b_targ(b,j,target_roots)
+
+      temp DAV_RX_temp_aaa_targ(a,i1,c1,i,target_roots)
+      temp DAV_LX_temp_aaa_targ(a,i1,c1,i,target_roots)
+      temp DAV_RX_temp_bbb_targ(b,j1,d,j,target_roots)
+      temp DAV_LX_temp_bbb_targ(b,j1,d,j,target_roots)
+      temp DAV_RX_temp_abb_targ(a,i,d,j,target_roots)
+      temp DAV_LX_temp_abb_targ(a,i,d,j,target_roots)
+      temp DAV_RX_temp_baa_targ(b,j,c1,i,target_roots)
+      temp DAV_LX_temp_baa_targ(b,j,c1,i,target_roots)
+      temp tREE (TROOTS,kk1)
+      temp tREE1 (target_roots,kk1)
+
+      scalar cnt
+      scalar cnt1
+      scalar cnt2
+      scalar cnt3
+      scalar cnt4
+      scalar tmpval
+      scalar tmpval_R
+      scalar tmpval_L
+      scalar n_target_roots
+      scalar n_target_roots_ts
+      scalar half 
+      scalar minus
+      scalar tresh_denom 
+      scalar OMEGA 
+
+      scalar VNORM
+      scalar COEF_R
+      scalar COEF_L
+
+      scalar VNORM_a
+      scalar COEF_R_a
+      scalar COEF_L_a
+
+      scalar VNORM_b
+      scalar COEF_R_b
+      scalar COEF_L_b
+
+      scalar VNORM_aaa
+      scalar COEF_R_aaa
+      scalar COEF_L_aaa
+
+      scalar VNORM_bbb
+      scalar COEF_R_bbb
+      scalar COEF_L_bbb
+
+      scalar VNORM_abb
+      scalar COEF_R_abb
+      scalar COEF_L_abb
+
+      scalar VNORM_aux
+      scalar COEF_R_aux
+      scalar COEF_L_aux
+      scalar norm_sqr
+
+      scalar VNORM_g1
+      scalar VNORM_g2
+      scalar VNORM_g3
+      scalar VNORM_g4
+
+      scalar COEF_R_g1
+      scalar COEF_R_g2
+      scalar COEF_R_g3
+      scalar COEF_R_g4
+
+      scalar COEF_L_g1
+      scalar COEF_L_g2
+      scalar COEF_L_g3
+      scalar COEF_L_g4
+#-------------------------------------------------------------
+      scalar F12CALC
+      scalar EAEOMF12CALC
+#-------------------------------------------------------------
+      temp tmp_C_ijab(i,j,a,b)
+      temp tmp_C_iajb(i,a,j,b)
+      served C_ijab(i,j,a,b)
+      served C_iajb(i,a,j,b)
+      served INTERMAUX1(a,b,i,j)
+      served INTERMAUX2(a,i,b,j)
+      served INTERM1(a,b)
+      served INTERM2(a,b)
+      served INTERM3(a,b,i,j)
+      served INTERM4(i,j,a,b) 
+      temp tINTERMAUX1(a,b,i,j)
+      temp tINTERMAUX2(a,b,i,j)
+      temp tINTERMAUX3(a,i,b,j)
+      temp tINTERMAUX4(a,i,b,j)
+      temp tXabjl(a,b,i,j)
+      temp tINTERM1(a,b)
+      temp tINTERM2(a,b)
+      temp tINTERM3(a,b,i,j)
+      temp tINTERM4(i,j,a,b)  
+      served AUXINT1(a,i)
+      served AUXINT2(a,i) 
+      served AUXINT3(a,i)
+      served AUXINT4(a,i)
+      served AUXINT5(a,i)
+      served AUXINT6(a,i)
+      served AUXINT7(a,i)
+      served AUXINT8(a,i)
+      temp tINTERM7(a,i)
+
+      PROC READ_DATA
+#     --------------
+      create t1a
+      create t1b
+      create A1a
+      create A1b
+      create REE 
+      create REE1  
+#-------------------------------------------------------------------
+           execute list_to_blocks               REE1
+           execute list_to_blocks               EE_EVEC_R_p_a1
+           execute list_to_blocks               EE_EVEC_R_p_b1
+           execute list_to_blocks               EE_EVEC_R_abi_aaa1
+           execute list_to_blocks               EE_EVEC_R_abi_abb1
+           execute list_to_blocks               EE_EVEC_R_abi_bbb1
+           execute list_to_blocks               EE_EVEC_L_p_a1
+           execute list_to_blocks               EE_EVEC_L_p_b1
+           execute list_to_blocks               EE_EVEC_L_abi_aaa1
+           execute list_to_blocks               EE_EVEC_L_abi_abb1
+           execute list_to_blocks               EE_EVEC_L_abi_bbb1
+           execute list_to_blocks               t1a
+           execute list_to_blocks               t1b
+           execute list_to_blocks               T2aa
+           execute list_to_blocks               T2ab
+           execute list_to_blocks               T2bb
+           execute list_to_blocks               A1a
+           execute list_to_blocks               A1b
+           execute list_to_blocks               A2aa
+           execute list_to_blocks               A2ab
+           execute list_to_blocks               A2bb
+      execute read_list_to_blocks
+      execute sip_barrier
+      execute server_barrier
+
+#-----------------Zero out target vectors------------------------------
+      DO target_roots 
+
+#-----------------Left vectors-----------------------------------------
+                PARDO a,i
+                DAV_temp_L_p_a(a,i) = 0.0
+                PREPARE EE_EVEC_L_p_a(a,i,target_roots) = DAV_temp_L_p_a(a,i)
+                ENDPARDO a,i
+                execute server_barrier
+
+                PARDO b,j
+                DAV_temp_L_p_b(b,j) = 0.0
+                PREPARE EE_EVEC_L_p_b(b,j,target_roots) = DAV_temp_L_p_b(b,j)
+                ENDPARDO b,j
+                execute server_barrier
+
+                PARDO a, i, a1, i1
+                DAV_temp_L_abi_aaa(a,i,a1,i1) = 0.0
+                PREPARE EE_EVEC_L_abi_aaa(a,i,a1,i1,target_roots) = DAV_temp_L_abi_aaa(a,i,a1,i1)
+                ENDPARDO a, i, a1, i1
+                execute server_barrier
+
+                PARDO b, j, b1, j1
+                DAV_temp_L_abi_bbb(b,j,b1,j1) = 0.0
+                PREPARE EE_EVEC_L_abi_bbb(b,j,b1,j1,target_roots) = DAV_temp_L_abi_bbb(b,j,b1,j1)
+                ENDPARDO b, j, b1, j1
+                execute server_barrier
+
+                PARDO a, i, b, j
+                DAV_temp_L_abi_abb(a,i,b,j) = 0.0
+                PREPARE EE_EVEC_L_abi_abb(a,i,b,j,target_roots) = DAV_temp_L_abi_abb(a,i,b,j)
+                ENDPARDO a, i, b, j
+                execute server_barrier
+
+#-------------------------Right vectors-----------------------------------------
+                PARDO a,i
+                DAV_temp_R_p_a(a,i) = 0.0
+                PREPARE EE_EVEC_R_p_a(a,i,target_roots) = DAV_temp_R_p_a(a,i)
+                ENDPARDO a,i
+                execute server_barrier
+
+                PARDO b,j
+                DAV_temp_R_p_b(b,j) = 0.0
+                PREPARE EE_EVEC_R_p_b(b,j,target_roots) = DAV_temp_R_p_b(b,j)
+                ENDPARDO b,j
+                execute server_barrier
+
+                PARDO a, i, a1, i1
+                DAV_temp_R_abi_aaa(a,i,a1,i1) = 0.0
+                PREPARE EE_EVEC_R_abi_aaa(a,i,a1,i1,target_roots) = DAV_temp_R_abi_aaa(a,i,a1,i1)
+                ENDPARDO a, i, a1, i1
+                execute server_barrier
+
+                PARDO b, j, b1, j1
+                DAV_temp_R_abi_bbb(b,j,b1,j1) = 0.0
+                PREPARE EE_EVEC_R_abi_bbb(b,j,b1,j1,target_roots) = DAV_temp_R_abi_bbb(b,j,b1,j1)
+                ENDPARDO b, j, b1, j1
+                execute server_barrier
+
+                PARDO a, i, b, j
+                DAV_temp_R_abi_abb(a,i,b,j) = 0.0
+                PREPARE EE_EVEC_R_abi_abb(a,i,b,j,target_roots) = DAV_temp_R_abi_abb(a,i,b,j)
+                ENDPARDO a, i, b, j
+                execute server_barrier
+
+
+
+      ENDDO target_roots
+#------Merge triplet and singlet eigenvales and eigenvectors-----------
+
+#-----------singlets--------------------
+    DO kk1
+      cnt = 0.0
+      DO TROOTS
+
+         cnt += 1.0
+         IF cnt > n_target_roots
+         EXIT
+         ENDIF
+
+         cnt1 = 0.0
+
+            DO target_roots 
+            cnt1 += 1.0
+
+              if cnt1 == cnt
+#-------------Eigenvalues-------------------------------------------
+                GET REE1 (TROOTS,kk1) 
+                tREE (TROOTS,kk1) = REE1 (TROOTS,kk1)
+                execute return_sval tREE OMEGA
+                tREE (target_roots,kk1) = OMEGA
+                PUT REE (target_roots,kk1) = tREE (target_roots,kk1)
+                execute sip_barrier
+#-------------Left vectors-------------------------------------------
+                PARDO a,i 
+                REQUEST EE_EVEC_L_p_a1(a,i,TROOTS) a  
+                DAV_temp_L_p_a(a,i) = EE_EVEC_L_p_a1(a,i,TROOTS)
+                PREPARE EE_EVEC_L_p_a(a,i,target_roots) = DAV_temp_L_p_a(a,i) 
+                ENDPARDO a,i
+                execute server_barrier 
+
+                PARDO b,j
+                REQUEST EE_EVEC_L_p_b1(b,j,TROOTS) b
+                DAV_temp_L_p_b(b,j) = EE_EVEC_L_p_b1(b,j,TROOTS)
+                PREPARE EE_EVEC_L_p_b(b,j,target_roots) = DAV_temp_L_p_b(b,j)
+                ENDPARDO b,j
+                execute server_barrier
+
+                PARDO a, i, a1, i1
+                REQUEST EE_EVEC_L_abi_aaa1(a,i,a1,i1,TROOTS) a
+                DAV_temp_L_abi_aaa(a,i,a1,i1) = EE_EVEC_L_abi_aaa1(a,i,a1,i1,TROOTS)
+                PREPARE EE_EVEC_L_abi_aaa(a,i,a1,i1,target_roots) = DAV_temp_L_abi_aaa(a,i,a1,i1) 
+                ENDPARDO a, i, a1, i1
+                execute server_barrier
+          
+                PARDO b, j, b1, j1
+                REQUEST EE_EVEC_L_abi_bbb1(b,j,b1,j1,TROOTS) b
+                DAV_temp_L_abi_bbb(b,j,b1,j1) = EE_EVEC_L_abi_bbb1(b,j,b1,j1,TROOTS)
+                PREPARE EE_EVEC_L_abi_bbb(b,j,b1,j1,target_roots) = DAV_temp_L_abi_bbb(b,j,b1,j1)
+                ENDPARDO b, j, b1, j1
+                execute server_barrier
+
+                PARDO a, i, b, j
+                REQUEST EE_EVEC_L_abi_abb1(a,i,b,j,TROOTS) a
+                DAV_temp_L_abi_abb(a,i,b,j) = EE_EVEC_L_abi_abb1(a,i,b,j,TROOTS)
+                PREPARE EE_EVEC_L_abi_abb(a,i,b,j,target_roots) = DAV_temp_L_abi_abb(a,i,b,j)
+                ENDPARDO a, i, b, j
+                execute server_barrier
+#-------------Right vectors------------------------------------------
+                PARDO a,i
+                REQUEST EE_EVEC_R_p_a1(a,i,TROOTS) a
+                DAV_temp_R_p_a(a,i) = EE_EVEC_R_p_a1(a,i,TROOTS)
+                PREPARE EE_EVEC_R_p_a(a,i,target_roots) = DAV_temp_R_p_a(a,i)
+                ENDPARDO a,i
+                execute server_barrier
+
+                PARDO b,j
+                REQUEST EE_EVEC_R_p_b1(b,j,TROOTS) b
+                DAV_temp_R_p_b(b,j) = EE_EVEC_R_p_b1(b,j,TROOTS)
+                PREPARE EE_EVEC_R_p_b(b,j,target_roots) = DAV_temp_R_p_b(b,j)
+                ENDPARDO b,j
+                execute server_barrier
+
+                PARDO a, i, a1, i1
+                REQUEST EE_EVEC_R_abi_aaa1(a,i,a1,i1,TROOTS) a
+                DAV_temp_R_abi_aaa(a,i,a1,i1) = EE_EVEC_R_abi_aaa1(a,i,a1,i1,TROOTS)
+                PREPARE EE_EVEC_R_abi_aaa(a,i,a1,i1,target_roots) = DAV_temp_R_abi_aaa(a,i,a1,i1)
+                ENDPARDO a, i, a1, i1
+                execute server_barrier
+
+                PARDO b, j, b1, j1
+                REQUEST EE_EVEC_R_abi_bbb1(b,j,b1,j1,TROOTS) b
+                DAV_temp_R_abi_bbb(b,j,b1,j1) = EE_EVEC_R_abi_bbb1(b,j,b1,j1,TROOTS)
+                PREPARE EE_EVEC_R_abi_bbb(b,j,b1,j1,target_roots) = DAV_temp_R_abi_bbb(b,j,b1,j1)
+                ENDPARDO b, j, b1, j1
+                execute server_barrier
+
+                PARDO a, i, b, j
+                REQUEST EE_EVEC_R_abi_abb1(a,i,b,j,TROOTS) a
+                DAV_temp_R_abi_abb(a,i,b,j) = EE_EVEC_R_abi_abb1(a,i,b,j,TROOTS)
+                PREPARE EE_EVEC_R_abi_abb(a,i,b,j,target_roots) = DAV_temp_R_abi_abb(a,i,b,j)
+                ENDPARDO a, i, b, j
+                execute server_barrier
+#--------------------------------------------------------------------
+              endif
+            ENDDO target_roots    
+      ENDDO TROOTS         
+    ENDDO kk1       
+         execute sip_barrier
+#-----------triplets--------------------
+    DO kk1
+      cnt = 0.0
+      DO TROOTS
+         cnt += 1.0
+         cnt1 = 0.0
+         cnt2 = 12.0
+
+
+           DO target_roots
+
+           cnt1 += 1.0
+           cnt2 += 1.0 
+
+           IF cnt1 > n_target_roots
+           EXIT
+           ENDIF
+
+
+           if cnt2 == cnt
+#-------------Eigenvalues-------------------------------------------
+#             GET REE1 (TROOTS,kk1)
+#             tREE (TROOTS,kk1) = REE1 (TROOTS,kk1)
+#             execute return_sval tREE OMEGA
+#-------------Left vectors-------------------------------------------
+
+#-------------Right vectors------------------------------------------
+
+#--------------------------------------------------------------------
+             cnt3 = n_target_roots
+             cnt3 += cnt1
+             cnt4 = 0.0 
+
+               DO target_roots1
+               cnt4 += 1.0
+               if cnt4 == cnt3  
+#-------------Eigenvalues-------------------------------------------
+             GET REE1 (TROOTS,kk1)
+             tREE (TROOTS,kk1) = REE1 (TROOTS,kk1)
+             execute return_sval tREE OMEGA
+
+               tREE (target_roots1,kk1) = OMEGA
+               PUT REE (target_roots1,kk1) = tREE (target_roots1,kk1)
+#-------------Left vectors-------------------------------------------
+                PARDO a,i
+                REQUEST EE_EVEC_L_p_a1(a,i,TROOTS) a
+                DAV_temp_L_p_a(a,i) = EE_EVEC_L_p_a1(a,i,TROOTS)
+                PREPARE EE_EVEC_L_p_a(a,i,target_roots1) = DAV_temp_L_p_a(a,i)
+                ENDPARDO a,i
+                execute server_barrier
+
+                PARDO b,j
+                REQUEST EE_EVEC_L_p_b1(b,j,TROOTS) b
+                DAV_temp_L_p_b(b,j) = EE_EVEC_L_p_b1(b,j,TROOTS)
+                PREPARE EE_EVEC_L_p_b(b,j,target_roots1) = DAV_temp_L_p_b(b,j)
+                ENDPARDO b,j
+                execute server_barrier
+
+                PARDO a, i, a1, i1
+                REQUEST EE_EVEC_L_abi_aaa1(a,i,a1,i1,TROOTS) a
+                DAV_temp_L_abi_aaa(a,i,a1,i1) = EE_EVEC_L_abi_aaa1(a,i,a1,i1,TROOTS)
+                PREPARE EE_EVEC_L_abi_aaa(a,i,a1,i1,target_roots1) = DAV_temp_L_abi_aaa(a,i,a1,i1)
+                ENDPARDO a, i, a1, i1
+                execute server_barrier
+
+                PARDO b, j, b1, j1
+                REQUEST EE_EVEC_L_abi_bbb1(b,j,b1,j1,TROOTS) b
+                DAV_temp_L_abi_bbb(b,j,b1,j1) = EE_EVEC_L_abi_bbb1(b,j,b1,j1,TROOTS)
+                PREPARE EE_EVEC_L_abi_bbb(b,j,b1,j1,target_roots1) = DAV_temp_L_abi_bbb(b,j,b1,j1)
+                ENDPARDO b, j, b1, j1
+                execute server_barrier
+
+                PARDO a, i, b, j
+                REQUEST EE_EVEC_L_abi_abb1(a,i,b,j,TROOTS) a
+                DAV_temp_L_abi_abb(a,i,b,j) = EE_EVEC_L_abi_abb1(a,i,b,j,TROOTS)
+                PREPARE EE_EVEC_L_abi_abb(a,i,b,j,target_roots1) = DAV_temp_L_abi_abb(a,i,b,j)
+                ENDPARDO a, i, b, j
+                execute server_barrier
+#-------------Right vectors------------------------------------------
+                PARDO a,i
+                REQUEST EE_EVEC_R_p_a1(a,i,TROOTS) a
+                DAV_temp_R_p_a(a,i) = EE_EVEC_R_p_a1(a,i,TROOTS)
+                PREPARE EE_EVEC_R_p_a(a,i,target_roots1) = DAV_temp_R_p_a(a,i)
+                ENDPARDO a,i
+                execute server_barrier
+
+                PARDO b,j
+                REQUEST EE_EVEC_R_p_b1(b,j,TROOTS) b
+                DAV_temp_R_p_b(b,j) = EE_EVEC_R_p_b1(b,j,TROOTS)
+                PREPARE EE_EVEC_R_p_b(b,j,target_roots1) = DAV_temp_R_p_b(b,j)
+                ENDPARDO b,j
+                execute server_barrier
+
+                PARDO a, i, a1, i1
+                REQUEST EE_EVEC_R_abi_aaa1(a,i,a1,i1,TROOTS) a
+                DAV_temp_R_abi_aaa(a,i,a1,i1) = EE_EVEC_R_abi_aaa1(a,i,a1,i1,TROOTS)
+                PREPARE EE_EVEC_R_abi_aaa(a,i,a1,i1,target_roots1) = DAV_temp_R_abi_aaa(a,i,a1,i1)
+                ENDPARDO a, i, a1, i1
+                execute server_barrier
+
+                PARDO b, j, b1, j1
+                REQUEST EE_EVEC_R_abi_bbb1(b,j,b1,j1,TROOTS) b
+                DAV_temp_R_abi_bbb(b,j,b1,j1) = EE_EVEC_R_abi_bbb1(b,j,b1,j1,TROOTS)
+                PREPARE EE_EVEC_R_abi_bbb(b,j,b1,j1,target_roots1) = DAV_temp_R_abi_bbb(b,j,b1,j1)
+                ENDPARDO b, j, b1, j1
+                execute server_barrier
+
+                PARDO a, i, b, j
+                REQUEST EE_EVEC_R_abi_abb1(a,i,b,j,TROOTS) a
+                DAV_temp_R_abi_abb(a,i,b,j) = EE_EVEC_R_abi_abb1(a,i,b,j,TROOTS)
+                PREPARE EE_EVEC_R_abi_abb(a,i,b,j,target_roots1) = DAV_temp_R_abi_abb(a,i,b,j)
+                ENDPARDO a, i, b, j
+                execute server_barrier
+#--------------------------------------------------------------------
+               endif
+               ENDDO target_roots1
+           endif   
+           ENDDO target_roots
+      ENDDO TROOTS
+    ENDDO kk1
+         execute sip_barrier
+
+
+     DO kk1
+     DO TROOTS
+     GET REE (TROOTS,kk1)
+     tREE (TROOTS,kk1) = REE (TROOTS,kk1)
+     execute return_sval tREE OMEGA
+     execute print_scalar OMEGA
+     ENDDO TROOTS
+     ENDDO kk1 
+
+
+
+     DO TROOTS
+#                PARDO a,i
+#                REQUEST EE_EVEC_R_p_a(a,i,TROOTS) a
+#                DAV_temp_R_p_a(a,i) = EE_EVEC_R_p_a(a,i,TROOTS)
+#                execute dump_amp DAV_temp_R_p_a
+#                ENDPARDO a,i
+
+#                PARDO a,i
+#                REQUEST EE_EVEC_L_p_a(a,i,TROOTS) a
+#                DAV_temp_R_p_a(a,i) = EE_EVEC_L_p_a(a,i,TROOTS)
+#                execute dump_amp DAV_temp_R_p_a
+#                ENDPARDO a,i
+
+     ENDDO TROOTS
+#----------------------------------------------------------------------
+      ENDPROC READ_DATA
+#     -----------------
+
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+      PROC GSO
+#     --------
+
+#----------------------------------------------------------------------|
+#         Gramm-Schmidt biorthogonalization                            |
+#----------------------------------------------------------------------|
+
+      cnt = 0.0
+#------------Loop over target roots------------------------------------|
+      DO target_roots
+#----------Check if number of target roots is exceeded-----------------|
+      cnt += 1.0
+      IF cnt > n_target_roots_ts
+      EXIT
+      ENDIF
+
+#----------------------------------------------------------------|
+#        Subtraction of projection on the other vectors          |
+#----------------------------------------------------------------|
+
+#-----------Second Loop over target roots-------------------------------|
+      cnt2 = cnt
+      cnt2 -= 1.0
+      cnt3 = 0.0
+      DO target_roots1
+#----------Check if number of roots is exceeded------------------|
+      cnt3 += 1.0
+      IF cnt3 > cnt2
+      EXIT
+      ENDIF
+#---------Norm and Gramm-Schmit coefficients---------------------|
+          VNORM = 0.0
+          COEF_R = 0.0
+          COEF_L = 0.0
+
+          VNORM_a = 0.0
+          COEF_R_a = 0.0
+          COEF_L_a = 0.0
+
+          VNORM_b = 0.0
+          COEF_R_b = 0.0
+          COEF_L_b = 0.0
+
+          VNORM_aaa = 0.0
+          COEF_R_aaa = 0.0
+          COEF_L_aaa = 0.0
+
+          VNORM_bbb = 0.0
+          COEF_R_bbb = 0.0
+          COEF_L_bbb = 0.0
+
+          VNORM_abb = 0.0
+          COEF_R_abb = 0.0
+          COEF_L_abb = 0.0
+
+          VNORM_g1 = 0.0
+          VNORM_g2 = 0.0
+          VNORM_g3 = 0.0
+          VNORM_g4 = 0.0  
+
+          COEF_R_g1 = 0.0
+          COEF_L_g1 = 0.0
+          COEF_R_g2 = 0.0
+          COEF_L_g2 = 0.0
+          COEF_R_g3 = 0.0
+          COEF_L_g3 = 0.0
+          COEF_R_g4 = 0.0
+          COEF_L_g4 = 0.0
+#--------- singles contribution ---------------------------------|
+
+#----------------alpha part--------------------------------------|
+          VNORM_aux = 0.0
+          COEF_R_aux = 0.0
+          COEF_L_aux = 0.0
+
+               PARDO a,i
+                 REQUEST EE_EVEC_R_p_a(a,i,target_roots1) i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots1) i
+                 REQUEST EE_EVEC_R_p_a(a,i,target_roots) i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots) i
+
+                 DAV_temp_R_p_a(a,i) = EE_EVEC_R_p_a(a,i,target_roots1)
+                 DAV_temp_L_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots1)
+             
+                 DAV_temp_RC_p_a(a,i) = EE_EVEC_R_p_a(a,i,target_roots)
+                 DAV_temp_LC_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots)
+
+
+                 tmpval =  DAV_temp_L_p_a(a,i)*DAV_temp_R_p_a(a,i)
+                 tmpval_R = DAV_temp_L_p_a(a,i)*DAV_temp_RC_p_a(a,i)
+                 tmpval_L = DAV_temp_R_p_a(a,i)*DAV_temp_LC_p_a(a,i)
+                 VNORM_aux += tmpval
+                 COEF_R_aux += tmpval_R
+                 COEF_L_aux += tmpval_L
+
+               ENDPARDO a,i
+
+               execute server_barrier
+
+               collective VNORM_a += VNORM_aux
+               collective COEF_R_a += COEF_R_aux
+               collective COEF_L_a += COEF_L_aux
+#----------------beta part---------------------------------------|
+               VNORM_aux = 0.0
+               COEF_R_aux = 0.0
+               COEF_L_aux = 0.0
+
+               PARDO b,j
+                 REQUEST EE_EVEC_R_p_b(b,j,target_roots1) j
+                 REQUEST EE_EVEC_L_p_b(b,j,target_roots1) j
+                 REQUEST EE_EVEC_R_p_b(b,j,target_roots) j
+                 REQUEST EE_EVEC_L_p_b(b,j,target_roots) j
+
+                 DAV_temp_R_p_b(b,j) = EE_EVEC_R_p_b(b,j,target_roots1)
+                 DAV_temp_L_p_b(b,j) = EE_EVEC_L_p_b(b,j,target_roots1)
+                 DAV_temp_RC_p_b(b,j) = EE_EVEC_R_p_b(b,j,target_roots)
+                 DAV_temp_LC_p_b(b,j) = EE_EVEC_L_p_b(b,j,target_roots)
+
+                 tmpval =  DAV_temp_L_p_b(b,j)*DAV_temp_R_p_b(b,j)
+                 tmpval_R = DAV_temp_L_p_b(b,j)*DAV_temp_RC_p_b(b,j)
+                 tmpval_L = DAV_temp_R_p_b(b,j)*DAV_temp_LC_p_b(b,j)
+                 VNORM_aux += tmpval
+                 COEF_R_aux += tmpval_R
+                 COEF_L_aux += tmpval_L
+
+               ENDPARDO b,j
+
+               execute server_barrier
+
+               collective VNORM_b += VNORM_aux
+               collective COEF_R_b += COEF_R_aux
+               collective COEF_L_b += COEF_L_aux
+#----------------alpha-alpha-alpha part------------------------|
+               VNORM_aux = 0.0
+               COEF_R_aux = 0.0
+               COEF_L_aux = 0.0
+
+                   PARDO a,i1,c1,i
+                 REQUEST EE_EVEC_R_abi_aaa(a,i1,c1,i,target_roots1) i
+                 REQUEST EE_EVEC_L_abi_aaa(a,i1,c1,i,target_roots1) i
+                 REQUEST EE_EVEC_R_abi_aaa(a,i1,c1,i,target_roots) i
+                 REQUEST EE_EVEC_L_abi_aaa(a,i1,c1,i,target_roots) i
+
+                 DAV_temp_R_abi_aaa(a,i1,c1,i) = EE_EVEC_R_abi_aaa(a,i1,c1,i,target_roots1)
+                 DAV_temp_L_abi_aaa(a,i1,c1,i) = EE_EVEC_L_abi_aaa(a,i1,c1,i,target_roots1)
+                 DAV_temp_RC_abi_aaa(a,i1,c1,i) = EE_EVEC_R_abi_aaa(a,i1,c1,i,target_roots)
+                 DAV_temp_LC_abi_aaa(a,i1,c1,i) = EE_EVEC_L_abi_aaa(a,i1,c1,i,target_roots)
+
+                 tmpval = DAV_temp_R_abi_aaa(a,i1,c1,i)*DAV_temp_L_abi_aaa(a,i1,c1,i)
+                 tmpval_R = DAV_temp_L_abi_aaa(a,i1,c1,i)*DAV_temp_RC_abi_aaa(a,i1,c1,i)
+                 tmpval_L = DAV_temp_R_abi_aaa(a,i1,c1,i)*DAV_temp_LC_abi_aaa(a,i1,c1,i)
+
+                 VNORM_aux += tmpval
+                 COEF_R_aux += tmpval_R
+                 COEF_L_aux += tmpval_L
+
+                   ENDPARDO a,i1,c1,i
+
+               execute server_barrier
+
+               collective VNORM_aaa += VNORM_aux
+               collective COEF_R_aaa += COEF_R_aux
+               collective COEF_L_aaa += COEF_L_aux
+#----------------beta-beta-beta part---------------------------  |
+               VNORM_aux = 0.0
+               COEF_R_aux = 0.0
+               COEF_L_aux = 0.0
+
+                   PARDO b,j1,d,j
+                 REQUEST EE_EVEC_R_abi_bbb(b,j1,d,j,target_roots1) j
+                 REQUEST EE_EVEC_L_abi_bbb(b,j1,d,j,target_roots1) j
+                 REQUEST EE_EVEC_R_abi_bbb(b,j1,d,j,target_roots) j
+                 REQUEST EE_EVEC_L_abi_bbb(b,j1,d,j,target_roots) j
+
+                 DAV_temp_R_abi_bbb(b,j1,d,j) = EE_EVEC_R_abi_bbb(b,j1,d,j,target_roots1)
+                 DAV_temp_L_abi_bbb(b,j1,d,j) = EE_EVEC_L_abi_bbb(b,j1,d,j,target_roots1)
+                 DAV_temp_RC_abi_bbb(b,j1,d,j) = EE_EVEC_R_abi_bbb(b,j1,d,j,target_roots)
+                 DAV_temp_LC_abi_bbb(b,j1,d,j) = EE_EVEC_L_abi_bbb(b,j1,d,j,target_roots)
+
+                 tmpval = DAV_temp_R_abi_bbb(b,j1,d,j)*DAV_temp_L_abi_bbb(b,j1,d,j)
+                 tmpval_R = DAV_temp_L_abi_bbb(b,j1,d,j)*DAV_temp_RC_abi_bbb(b,j1,d,j)
+                 tmpval_L = DAV_temp_R_abi_bbb(b,j1,d,j)*DAV_temp_LC_abi_bbb(b,j1,d,j)
+
+                 VNORM_aux += tmpval
+                 COEF_R_aux += tmpval_R
+                 COEF_L_aux += tmpval_L
+
+
+                   ENDPARDO b,j1,d,j
+
+               execute server_barrier
+
+               collective VNORM_bbb += VNORM_aux
+               collective COEF_R_bbb += COEF_R_aux
+               collective COEF_L_bbb += COEF_L_aux
+#----------------alpha-beta-beta part--------------------------- |
+               VNORM_aux = 0.0
+               COEF_R_aux = 0.0
+               COEF_L_aux = 0.0
+
+                   PARDO a,i,d,j
+                  REQUEST EE_EVEC_R_abi_abb(a,i,d,j,target_roots1) j
+                  REQUEST EE_EVEC_L_abi_abb(a,i,d,j,target_roots1) j
+                  REQUEST EE_EVEC_R_abi_abb(a,i,d,j,target_roots) j
+                  REQUEST EE_EVEC_L_abi_abb(a,i,d,j,target_roots) j
+
+                  DAV_temp_R_abi_abb(a,i,d,j) = EE_EVEC_R_abi_abb(a,i,d,j,target_roots1)
+                  DAV_temp_L_abi_abb(a,i,d,j) = EE_EVEC_L_abi_abb(a,i,d,j,target_roots1)
+                  DAV_temp_RC_abi_abb(a,i,d,j) = EE_EVEC_R_abi_abb(a,i,d,j,target_roots)
+                  DAV_temp_LC_abi_abb(a,i,d,j) = EE_EVEC_L_abi_abb(a,i,d,j,target_roots)
+
+                 tmpval = DAV_temp_R_abi_abb(a,i,d,j)*DAV_temp_L_abi_abb(a,i,d,j)
+                 tmpval_R = DAV_temp_L_abi_abb(a,i,d,j)*DAV_temp_RC_abi_abb(a,i,d,j)
+                 tmpval_L = DAV_temp_R_abi_abb(a,i,d,j)*DAV_temp_LC_abi_abb(a,i,d,j)
+
+                 VNORM_aux += tmpval
+                 COEF_R_aux += tmpval_R
+                 COEF_L_aux += tmpval_L
+
+                   ENDPARDO a,i,d,j
+
+               execute server_barrier
+
+               collective VNORM_abb += VNORM_aux
+               collective COEF_R_abb += COEF_R_aux
+               collective COEF_L_abb += COEF_L_aux
+
+#---------Contributions from geminal part of vector--------------------- |
+               IF EAEOMF12CALC == 1.0 
+
+#------------Zero out auxiliary intermediates---------
+        PARDO a,i
+        tINTERM7(a,i) = 0.0
+        PREPARE AUXINT1(a,i) = tINTERM7(a,i)
+        ENDPARDO a,i
+        execute server_barrier 
+
+        PARDO a,i
+        tINTERM7(a,i) = 0.0
+        PREPARE AUXINT2(a,i) = tINTERM7(a,i)
+        ENDPARDO a,i
+        execute server_barrier   
+
+        PARDO a,i
+        tINTERM7(a,i) = 0.0
+        PREPARE AUXINT3(a,i) = tINTERM7(a,i)
+        ENDPARDO a,i
+        execute server_barrier
+
+        PARDO a,i
+        tINTERM7(a,i) = 0.0
+        PREPARE AUXINT4(a,i) = tINTERM7(a,i)
+        ENDPARDO a,i
+        execute server_barrier
+
+        PARDO a,i
+        tINTERM7(a,i) = 0.0
+        PREPARE AUXINT5(a,i) = tINTERM7(a,i)
+        ENDPARDO a,i
+        execute server_barrier
+
+        PARDO a,i
+        tINTERM7(a,i) = 0.0
+        PREPARE AUXINT6(a,i) = tINTERM7(a,i)
+        ENDPARDO a,i
+        execute server_barrier
+
+        PARDO a,i
+        tINTERM7(a,i) = 0.0
+        PREPARE AUXINT7(a,i) = tINTERM7(a,i)
+        ENDPARDO a,i
+        execute server_barrier
+
+        PARDO a,i
+        tINTERM7(a,i) = 0.0
+        PREPARE AUXINT8(a,i) = tINTERM7(a,i)
+        ENDPARDO a,i
+        execute server_barrier
+#-------------------------------------------------------------------|
+#     --------Construction of auxiliary intermediates -----         |  
+#-------------------------------------------------------------------|
+        PARDO a,b,i
+                 REQUEST EE_EVEC_R_p_a(a,i,target_roots1) i
+                 DAV_temp_RC_p_a(a,i) = EE_EVEC_R_p_a(a,i,target_roots1)
+                 REQUEST INTERM1(a,b) a
+                 tINTERM1(a,b) = INTERM1(a,b)
+                 tINTERM7(b,i) = DAV_temp_RC_p_a(a,i)*tINTERM1(a,b)
+                 PREPARE AUXINT1(b,i) += tINTERM7(b,i)
+        ENDPARDO a,b,i
+        execute server_barrier  
+
+        PARDO a,b,i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots1) i
+                 DAV_temp_LC_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots1)
+                 REQUEST INTERM1(a,b) a
+                 tINTERM1(a,b) = INTERM1(a,b)  
+                 tINTERM7(b,i) = DAV_temp_LC_p_a(a,i)*tINTERM1(a,b) 
+                 PREPARE AUXINT2(b,i) += tINTERM7(b,i)
+        ENDPARDO a,b,i
+        execute server_barrier
+
+        PARDO a,b,i
+                 REQUEST EE_EVEC_R_p_a(a,i,target_roots1) i
+                 DAV_temp_RC_p_a(a,i) = EE_EVEC_R_p_a(a,i,target_roots1)
+                 REQUEST INTERM2(a,b) a
+                 tINTERM1(a,b) = INTERM2(a,b)
+                 tINTERM7(b,i) = DAV_temp_RC_p_a(a,i)*tINTERM1(a,b)
+                 PREPARE AUXINT3(b,i) += tINTERM7(b,i)
+        ENDPARDO a,b,i
+        execute server_barrier
+
+        PARDO a,b,i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots1) i
+                 DAV_temp_LC_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots1)
+                 REQUEST INTERM2(a,b) a
+                 tINTERM1(a,b) = INTERM2(a,b)
+                 tINTERM7(b,i) = DAV_temp_LC_p_a(a,i)*tINTERM1(a,b)
+                 PREPARE AUXINT4(b,i) += tINTERM7(b,i)
+        ENDPARDO a,b,i
+        execute server_barrier
+#----------------Second set of intermediates------------------------
+        PARDO a,b,i,j 
+                 REQUEST EE_EVEC_R_p_a(b,j,target_roots1) j
+                 DAV_temp_RC_p_a(b,j) = EE_EVEC_R_p_a(b,j,target_roots1)
+                 REQUEST INTERM3(b,a,i,j) i
+                 tINTERM3(b,a,i,j) = INTERM3(b,a,i,j)
+                 tINTERM7(a,i) = tINTERM3(b,a,i,j)*DAV_temp_RC_p_a(b,j)
+                 PREPARE AUXINT5(a,i) += tINTERM7(a,i)
+        ENDPARDO a,b,i,j
+        execute server_barrier 
+ 
+        PARDO a,b,i,j
+                 REQUEST EE_EVEC_L_p_a(b,j,target_roots1) j
+                 DAV_temp_LC_p_a(b,j) = EE_EVEC_L_p_a(b,j,target_roots1)
+                 REQUEST INTERM3(b,a,i,j) i
+                 tINTERM3(b,a,i,j) = INTERM3(b,a,i,j)
+                 tINTERM7(a,i) = tINTERM3(b,a,i,j)*DAV_temp_LC_p_a(b,j)
+                 PREPARE AUXINT6(a,i) += tINTERM7(a,i)
+        ENDPARDO a,b,i,j
+        execute server_barrier  
+
+        PARDO a,b,i,j
+                 REQUEST EE_EVEC_R_p_a(b,j,target_roots1) j
+                 DAV_temp_RC_p_a(b,j) = EE_EVEC_R_p_a(b,j,target_roots1)
+                 REQUEST INTERM4(i,j,b,a) a 
+                 tINTERM4(i,j,b,a) = INTERM4(i,j,b,a)
+                 tINTERM7(a,i) = tINTERM4(i,j,b,a)*DAV_temp_RC_p_a(b,j)
+                 PREPARE AUXINT7(a,i) += tINTERM7(a,i)
+        ENDPARDO a,b,i,j
+        execute server_barrier
+
+        PARDO a,b,i,j
+                 REQUEST EE_EVEC_L_p_a(b,j,target_roots1) j
+                 DAV_temp_LC_p_a(b,j) = EE_EVEC_L_p_a(b,j,target_roots1)
+                 REQUEST INTERM4(i,j,b,a) a
+                 tINTERM4(i,j,b,a) = INTERM4(i,j,b,a)
+                 tINTERM7(a,i) = tINTERM4(i,j,b,a)*DAV_temp_LC_p_a(b,j)
+                 PREPARE AUXINT8(a,i) += tINTERM7(a,i)
+        ENDPARDO a,b,i,j
+        execute server_barrier
+#-------------------------------------------------------------------|
+#-------------------------------------------------------------------|
+
+#--------------Geminal overlap--------------------------------------|
+
+          VNORM_aux = 0.0
+
+               PARDO a,i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots1) i
+                 DAV_temp_L_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots1)
+                 REQUEST AUXINT1(a,i) i
+                 tINTERM7(a,i) = AUXINT1(a,i)
+                 tmpval = tINTERM7(a,i)*DAV_temp_L_p_a(a,i)
+                 tmpval *= 4.0
+                 VNORM_aux += tmpval
+               ENDPARDO a,i
+               
+               execute server_barrier  
+   
+               collective VNORM_g1 += VNORM_aux
+
+#----------------------------------------------------
+          VNORM_aux = 0.0
+
+               PARDO a,i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots1) i
+                 DAV_temp_L_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots1)
+                 REQUEST AUXINT3(a,i) i
+                 tINTERM7(a,i) = AUXINT3(a,i)
+                 tmpval = tINTERM7(a,i)*DAV_temp_L_p_a(a,i)
+                 tmpval *= 4.0
+                 VNORM_aux += tmpval
+               ENDPARDO a,i
+
+               execute server_barrier
+
+               collective VNORM_g2 += VNORM_aux
+#----------------------------------------------------
+           VNORM_aux = 0.0
+
+               PARDO a,i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots1) i
+                 DAV_temp_L_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots1)
+                 REQUEST AUXINT5(a,i) i
+                 tINTERM7(a,i) = AUXINT5(a,i)
+                 tmpval = tINTERM7(a,i)*DAV_temp_L_p_a(a,i)
+                 tmpval *= -2.0
+                 VNORM_aux += tmpval
+               ENDPARDO a,i
+
+               execute server_barrier
+
+               collective VNORM_g3 += VNORM_aux
+#----------------------------------------------------
+           VNORM_aux = 0.0
+
+               PARDO a,i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots1) i
+                 DAV_temp_L_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots1)
+                 REQUEST AUXINT7(a,i) i
+                 tINTERM7(a,i) = AUXINT7(a,i)
+                 tmpval = tINTERM7(a,i)*DAV_temp_L_p_a(a,i)
+                 tmpval *= -2.0
+                 VNORM_aux += tmpval
+               ENDPARDO a,i
+
+               execute server_barrier
+
+               collective VNORM_g4 += VNORM_aux
+
+#--------------------R-coefficients--------------------------------------|
+#--------------------L-coefficients--------------------------------------|
+               COEF_R_aux = 0.0
+               COEF_L_aux = 0.0
+
+               PARDO a,i
+                 REQUEST AUXINT1(a,i) i
+                 REQUEST AUXINT2(a,i) i
+                 REQUEST EE_EVEC_R_p_a(a,i,target_roots) i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots) i
+
+                 DAV_temp_R_p_a(a,i) = AUXINT1(a,i)
+                 DAV_temp_L_p_a(a,i) = AUXINT2(a,i)
+
+                 DAV_temp_RC_p_a(a,i) = EE_EVEC_R_p_a(a,i,target_roots)
+                 DAV_temp_LC_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots)
+
+                 tmpval_R = DAV_temp_L_p_a(a,i)*DAV_temp_RC_p_a(a,i)
+                 tmpval_L = DAV_temp_R_p_a(a,i)*DAV_temp_LC_p_a(a,i)
+                 tmpval_R *= 4.0
+                 tmpval_L *= 4.0 
+                 VNORM_aux += tmpval
+                 COEF_R_aux += tmpval_R
+                 COEF_L_aux += tmpval_L
+
+               ENDPARDO a,i
+
+               execute server_barrier
+
+               collective COEF_R_g1 += COEF_R_aux
+               collective COEF_L_g1 += COEF_L_aux
+#----------------------------------------------------
+               COEF_R_aux = 0.0
+               COEF_L_aux = 0.0
+
+               PARDO a,i
+                 REQUEST AUXINT3(a,i) i
+                 REQUEST AUXINT4(a,i) i
+                 REQUEST EE_EVEC_R_p_a(a,i,target_roots) i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots) i
+
+                 DAV_temp_R_p_a(a,i) = AUXINT3(a,i)
+                 DAV_temp_L_p_a(a,i) = AUXINT4(a,i)
+
+                 DAV_temp_RC_p_a(a,i) = EE_EVEC_R_p_a(a,i,target_roots)
+                 DAV_temp_LC_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots)
+
+                 tmpval_R = DAV_temp_L_p_a(a,i)*DAV_temp_RC_p_a(a,i)
+                 tmpval_L = DAV_temp_R_p_a(a,i)*DAV_temp_LC_p_a(a,i)
+                 tmpval_R *= 4.0
+                 tmpval_L *= 4.0
+                 COEF_R_aux += tmpval_R
+                 COEF_L_aux += tmpval_L
+
+               ENDPARDO a,i
+
+               execute server_barrier
+
+               collective COEF_R_g2 += COEF_R_aux
+               collective COEF_L_g2 += COEF_L_aux
+#----------------------------------------------------
+               COEF_R_aux = 0.0
+               COEF_L_aux = 0.0
+
+               PARDO a,i
+                 REQUEST AUXINT5(a,i) i
+                 REQUEST AUXINT6(a,i) i
+                 REQUEST EE_EVEC_R_p_a(a,i,target_roots) i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots) i
+
+                 DAV_temp_R_p_a(a,i) = AUXINT5(a,i)
+                 DAV_temp_L_p_a(a,i) = AUXINT6(a,i)
+
+                 DAV_temp_RC_p_a(a,i) = EE_EVEC_R_p_a(a,i,target_roots)
+                 DAV_temp_LC_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots)
+
+                 tmpval_R = DAV_temp_L_p_a(a,i)*DAV_temp_RC_p_a(a,i)
+                 tmpval_L = DAV_temp_R_p_a(a,i)*DAV_temp_LC_p_a(a,i)
+                 tmpval_R *= -2.0
+                 tmpval_L *= -2.0
+                 COEF_R_aux += tmpval_R
+                 COEF_L_aux += tmpval_L
+
+               ENDPARDO a,i
+
+               execute server_barrier
+
+               collective COEF_R_g3 += COEF_R_aux
+               collective COEF_L_g3 += COEF_L_aux
+#----------------------------------------------------
+               COEF_R_aux = 0.0
+               COEF_L_aux = 0.0
+
+               PARDO a,i
+                 REQUEST AUXINT7(a,i) i
+                 REQUEST AUXINT8(a,i) i
+                 REQUEST EE_EVEC_R_p_a(a,i,target_roots) i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots) i
+
+                 DAV_temp_R_p_a(a,i) = AUXINT7(a,i)
+                 DAV_temp_L_p_a(a,i) = AUXINT8(a,i)
+
+                 DAV_temp_RC_p_a(a,i) = EE_EVEC_R_p_a(a,i,target_roots)
+                 DAV_temp_LC_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots)
+
+                 tmpval_R = DAV_temp_L_p_a(a,i)*DAV_temp_RC_p_a(a,i)
+                 tmpval_L = DAV_temp_R_p_a(a,i)*DAV_temp_LC_p_a(a,i)
+                 tmpval_R *= -2.0
+                 tmpval_L *= -2.0
+                 COEF_R_aux += tmpval_R
+                 COEF_L_aux += tmpval_L
+
+               ENDPARDO a,i
+
+               execute server_barrier
+
+               collective COEF_R_g4 += COEF_R_aux
+               collective COEF_L_g4 += COEF_L_aux
+#----------------------------------------------------
+               ENDIF 
+#---------------------------------------------------------------------  |
+               COEF_R += COEF_R_a
+               COEF_L += COEF_L_a
+               COEF_R += COEF_R_b
+               COEF_L += COEF_L_b
+               COEF_R += COEF_R_aaa
+               COEF_L += COEF_L_aaa
+               COEF_R += COEF_R_bbb
+               COEF_L += COEF_L_bbb
+               COEF_R += COEF_R_abb
+               COEF_L += COEF_L_abb
+#               COEF_R += COEF_R_g1
+#               COEF_L += COEF_L_g1
+#               COEF_R += COEF_R_g2
+#               COEF_L += COEF_L_g2
+#               COEF_R += COEF_R_g3
+#               COEF_L += COEF_L_g3
+#               COEF_R += COEF_R_g4
+#               COEF_L += COEF_L_g4
+
+               VNORM += VNORM_a
+               VNORM += VNORM_b
+               VNORM += VNORM_aaa
+               VNORM += VNORM_bbb
+               VNORM += VNORM_abb
+#---------------Geminal part-----------------------------             
+#               VNORM += VNORM_g1
+#               VNORM += VNORM_g2
+#               VNORM += VNORM_g3
+#               VNORM += VNORM_g4 
+#--------------------------------------------------------
+               execute print_scalar COEF_R_a
+               execute print_scalar COEF_L_a
+               execute print_scalar COEF_R_b
+               execute print_scalar COEF_L_b
+               execute print_scalar COEF_R_aaa
+               execute print_scalar COEF_L_aaa
+               execute print_scalar COEF_R_bbb
+               execute print_scalar COEF_L_bbb
+               execute print_scalar COEF_R_abb
+               execute print_scalar COEF_L_abb
+
+#-------------------------------------------------------------- |
+               norm_sqr = VNORM
+               norm_sqr *= VNORM
+               half = 0.5
+
+               execute square_root norm_sqr half
+
+               tmpval = 1.0/VNORM
+               COEF_R *= tmpval
+               COEF_L *= tmpval
+
+               execute server_barrier
+#-----------Gramm - Schmit coefficients are done--------------- |
+#-----------Now the subtraction itselfs------------------------ |
+#---------------------------------------------------------------|
+
+#---------------alpha part--------------------------------------|
+                               PARDO a,i
+                 REQUEST EE_EVEC_R_p_a(a,i,target_roots1) i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots1) i
+
+                 DAV_temp_R_p_a(a,i) = EE_EVEC_R_p_a(a,i,target_roots1)
+                 DAV_temp_L_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots1)
+
+                 DAV_temp_R_p_a_targ(a,i,target_roots) = 0.0
+                 DAV_temp_L_p_a_targ(a,i,target_roots) = 0.0
+
+
+                 DAV_temp_R_p_a(a,i) *= COEF_R
+                 DAV_temp_L_p_a(a,i) *= COEF_L
+                 DAV_temp_R_p_a(a,i) *= -1.0
+                 DAV_temp_L_p_a(a,i) *= -1.0
+
+                 execute addrootindex DAV_temp_R_p_a DAV_temp_R_p_a_targ
+                 execute addrootindex DAV_temp_L_p_a DAV_temp_L_p_a_targ
+
+
+                 PREPARE EE_EVEC_R_aux_p_a(a,i,target_roots) = DAV_temp_R_p_a_targ(a,i,target_roots)
+                 PREPARE EE_EVEC_L_aux_p_a(a,i,target_roots) = DAV_temp_L_p_a_targ(a,i,target_roots)
+
+                               ENDPARDO a,i
+
+               execute server_barrier
+
+
+               PARDO a,i
+               REQUEST EE_EVEC_R_aux_p_a(a,i,target_roots) a
+               REQUEST EE_EVEC_L_aux_p_a(a,i,target_roots) a
+               DAV_temp_R_p_a_targ(a,i,target_roots) = EE_EVEC_R_aux_p_a(a,i,target_roots)
+               DAV_temp_L_p_a_targ(a,i,target_roots) = EE_EVEC_L_aux_p_a(a,i,target_roots)
+               PREPARE EE_EVEC_R_p_a(a,i,target_roots) += DAV_temp_R_p_a_targ(a,i,target_roots)
+               PREPARE EE_EVEC_L_p_a(a,i,target_roots) += DAV_temp_L_p_a_targ(a,i,target_roots)
+               ENDPARDO a,i
+
+               execute server_barrier
+#----------------beta part-----------------------------------|
+                               PARDO b,j
+                 REQUEST EE_EVEC_R_p_b(b,j,target_roots1) j
+                 REQUEST EE_EVEC_L_p_b(b,j,target_roots1) j
+
+                 DAV_temp_R_p_b(b,j) = EE_EVEC_R_p_b(b,j,target_roots1)
+                 DAV_temp_L_p_b(b,j) = EE_EVEC_L_p_b(b,j,target_roots1)
+
+
+                 DAV_temp_R_p_b_targ(b,j,target_roots) = 0.0
+                 DAV_temp_L_p_b_targ(b,j,target_roots) = 0.0
+
+                 DAV_temp_R_p_b(b,j) *= COEF_R
+                 DAV_temp_L_p_b(b,j) *= COEF_L
+                 DAV_temp_R_p_b(b,j) *= -1.0
+                 DAV_temp_L_p_b(b,j) *= -1.0
+
+                 execute addrootindex DAV_temp_R_p_b DAV_temp_R_p_b_targ
+                 execute addrootindex DAV_temp_L_p_b DAV_temp_L_p_b_targ
+
+                 PREPARE EE_EVEC_R_aux_p_b(b,j,target_roots) = DAV_temp_R_p_b_targ(b,j,target_roots)
+                 PREPARE EE_EVEC_L_aux_p_b(b,j,target_roots) = DAV_temp_L_p_b_targ(b,j,target_roots)
+                               ENDPARDO b,j
+
+               execute server_barrier
+
+               PARDO b,j
+               REQUEST EE_EVEC_R_aux_p_b(b,j,target_roots) b
+               REQUEST EE_EVEC_L_aux_p_b(b,j,target_roots) b
+               DAV_temp_R_p_b_targ(b,j,target_roots) = EE_EVEC_R_aux_p_b(b,j,target_roots)
+               DAV_temp_L_p_b_targ(b,j,target_roots) = EE_EVEC_L_aux_p_b(b,j,target_roots)
+               PREPARE EE_EVEC_R_p_b(b,j,target_roots) += DAV_temp_R_p_b_targ(b,j,target_roots)
+               PREPARE EE_EVEC_L_p_b(b,j,target_roots) += DAV_temp_L_p_b_targ(b,j,target_roots)
+               ENDPARDO b,j
+
+               execute server_barrier
+
+#----------------alpha-alpha-alpha part------------------------  |
+               PARDO a,i1,c1,i
+               REQUEST EE_EVEC_R_abi_aaa(a,i1,c1,i,target_roots1) i
+               REQUEST EE_EVEC_L_abi_aaa(a,i1,c1,i,target_roots1) i
+
+                 DAV_temp_R_abi_aaa(a,i1,c1,i) = EE_EVEC_R_abi_aaa(a,i1,c1,i,target_roots1)
+                 DAV_temp_L_abi_aaa(a,i1,c1,i) = EE_EVEC_L_abi_aaa(a,i1,c1,i,target_roots1)
+
+                 DAV_RX_temp_aaa_targ(a,i1,c1,i,target_roots) = 0.0
+                 DAV_LX_temp_aaa_targ(a,i1,c1,i,target_roots) = 0.0
+
+                 DAV_temp_R_abi_aaa(a,i1,c1,i) *= COEF_R
+                 DAV_temp_L_abi_aaa(a,i1,c1,i) *= COEF_L
+                 DAV_temp_R_abi_aaa(a,i1,c1,i) *= -1.0
+                 DAV_temp_L_abi_aaa(a,i1,c1,i) *= -1.0
+
+                 execute addrootindex DAV_temp_R_abi_aaa DAV_RX_temp_aaa_targ
+                 execute addrootindex DAV_temp_L_abi_aaa DAV_LX_temp_aaa_targ
+
+     PREPARE EE_EVEC_R_aux_abi_aaa(a,i1,c1,i,target_roots) = DAV_RX_temp_aaa_targ(a,i1,c1,i,target_roots)
+     PREPARE EE_EVEC_L_aux_abi_aaa(a,i1,c1,i,target_roots) = DAV_LX_temp_aaa_targ(a,i1,c1,i,target_roots)
+
+                   ENDPARDO a,i1,c1,i
+
+               execute server_barrier
+
+               PARDO a,i1,c1,i
+               REQUEST EE_EVEC_R_aux_abi_aaa(a,i1,c1,i,target_roots) i
+               REQUEST EE_EVEC_L_aux_abi_aaa(a,i1,c1,i,target_roots) i
+               DAV_RX_temp_aaa_targ(a,i1,c1,i,target_roots) = EE_EVEC_R_aux_abi_aaa(a,i1,c1,i,target_roots)
+               DAV_LX_temp_aaa_targ(a,i1,c1,i,target_roots) = EE_EVEC_L_aux_abi_aaa(a,i1,c1,i,target_roots)
+            PREPARE EE_EVEC_R_abi_aaa(a,i1,c1,i,target_roots) += DAV_RX_temp_aaa_targ(a,i1,c1,i,target_roots)
+            PREPARE EE_EVEC_L_abi_aaa(a,i1,c1,i,target_roots) += DAV_LX_temp_aaa_targ(a,i1,c1,i,target_roots)
+               ENDPARDO a,i1,c1,i
+               execute server_barrier
+#----------------beta-beta-beta part---------------------------  |
+               PARDO b,j1,d,j
+               REQUEST EE_EVEC_R_abi_bbb(b,j1,d,j,target_roots1) j
+               REQUEST EE_EVEC_L_abi_bbb(b,j1,d,j,target_roots1) j
+
+               DAV_temp_R_abi_bbb(b,j1,d,j) = EE_EVEC_R_abi_bbb(b,j1,d,j,target_roots1)
+               DAV_temp_L_abi_bbb(b,j1,d,j) = EE_EVEC_L_abi_bbb(b,j1,d,j,target_roots1)
+
+                 DAV_RX_temp_bbb_targ(b,j1,d,j,target_roots) = 0.0
+                 DAV_LX_temp_bbb_targ(b,j1,d,j,target_roots) = 0.0
+
+                 DAV_temp_R_abi_bbb(b,j1,d,j) *= COEF_R
+                 DAV_temp_L_abi_bbb(b,j1,d,j) *= COEF_L
+                 DAV_temp_R_abi_bbb(b,j1,d,j) *= -1.0
+                 DAV_temp_L_abi_bbb(b,j1,d,j) *= -1.0
+
+                 execute addrootindex DAV_temp_R_abi_bbb DAV_RX_temp_bbb_targ
+                 execute addrootindex DAV_temp_L_abi_bbb DAV_LX_temp_bbb_targ
+
+           PREPARE EE_EVEC_R_aux_abi_bbb(b,j1,d,j,target_roots) = DAV_RX_temp_bbb_targ(b,j1,d,j,target_roots)
+           PREPARE EE_EVEC_L_aux_abi_bbb(b,j1,d,j,target_roots) = DAV_LX_temp_bbb_targ(b,j1,d,j,target_roots)
+
+                   ENDPARDO b,j1,d,j
+
+               execute server_barrier
+
+                 PARDO b,j1,d,j
+                 REQUEST EE_EVEC_R_aux_abi_bbb(b,j1,d,j,target_roots) j
+                 REQUEST EE_EVEC_L_aux_abi_bbb(b,j1,d,j,target_roots) j
+                 DAV_RX_temp_bbb_targ(b,j1,d,j,target_roots) = EE_EVEC_R_aux_abi_bbb(b,j1,d,j,target_roots)
+                 DAV_LX_temp_bbb_targ(b,j1,d,j,target_roots) = EE_EVEC_L_aux_abi_bbb(b,j1,d,j,target_roots)
+               PREPARE EE_EVEC_R_abi_bbb(b,j1,d,j,target_roots) += DAV_RX_temp_bbb_targ(b,j1,d,j,target_roots)
+               PREPARE EE_EVEC_L_abi_bbb(b,j1,d,j,target_roots) += DAV_LX_temp_bbb_targ(b,j1,d,j,target_roots)
+                 ENDPARDO b,j1,d,j
+                 execute server_barrier
+#----------------alpha-beta-beta part--------------------------- |
+                  PARDO a,i,d,j
+
+                  REQUEST EE_EVEC_R_abi_abb(a,i,d,j,target_roots1) j
+                  REQUEST EE_EVEC_L_abi_abb(a,i,d,j,target_roots1) j
+
+                 DAV_temp_R_abi_abb(a,i,d,j) = EE_EVEC_R_abi_abb(a,i,d,j,target_roots1)
+                 DAV_temp_L_abi_abb(a,i,d,j) = EE_EVEC_L_abi_abb(a,i,d,j,target_roots1)
+
+                 DAV_RX_temp_abb_targ(a,i,d,j,target_roots) = 0.0
+                 DAV_LX_temp_abb_targ(a,i,d,j,target_roots) = 0.0
+
+                 DAV_temp_R_abi_abb(a,i,d,j) *= COEF_R
+                 DAV_temp_L_abi_abb(a,i,d,j) *= COEF_L
+                 DAV_temp_R_abi_abb(a,i,d,j) *= -1.0
+                 DAV_temp_L_abi_abb(a,i,d,j) *= -1.0
+
+                 execute addrootindex DAV_temp_R_abi_abb DAV_RX_temp_abb_targ
+                 execute addrootindex DAV_temp_L_abi_abb DAV_LX_temp_abb_targ
+
+          PREPARE EE_EVEC_R_aux_abi_abb(a,i,d,j,target_roots) = DAV_RX_temp_abb_targ(a,i,d,j,target_roots)
+          PREPARE EE_EVEC_L_aux_abi_abb(a,i,d,j,target_roots) = DAV_LX_temp_abb_targ(a,i,d,j,target_roots)
+
+                   ENDPARDO a,i,d,j
+
+               execute server_barrier
+
+                 PARDO a,i,d,j
+                 REQUEST EE_EVEC_R_aux_abi_abb(a,i,d,j,target_roots) j
+                 REQUEST EE_EVEC_L_aux_abi_abb(a,i,d,j,target_roots) j
+                 DAV_RX_temp_abb_targ(a,i,d,j,target_roots) = EE_EVEC_R_aux_abi_abb(a,i,d,j,target_roots)
+                 DAV_LX_temp_abb_targ(a,i,d,j,target_roots) = EE_EVEC_L_aux_abi_abb(a,i,d,j,target_roots)
+                 PREPARE EE_EVEC_R_abi_abb(a,i,d,j,target_roots) += DAV_RX_temp_abb_targ(a,i,d,j,target_roots)
+                 PREPARE EE_EVEC_L_abi_abb(a,i,d,j,target_roots) += DAV_LX_temp_abb_targ(a,i,d,j,target_roots)
+                 ENDPARDO a,i,d,j
+                 execute server_barrier
+#---------------------------------------------------------------|
+      ENDDO target_roots1
+      ENDDO target_roots     
+
+      ENDPROC GSO
+#     -----------
+
+#----------------------------------------------------------------------|
+#            Normalization of obtained vectors                         |
+#----------------------------------------------------------------------|
+      PROC NORMALIZE
+#     --------------
+
+         cnt = 0.0
+#----------Loop over roots--------------------------------------|
+         DO target_roots
+#----------Check if number of roots is exceeded-----------------|
+         cnt += 1.0
+         IF cnt > n_target_roots_ts
+         EXIT
+         ENDIF
+#---------------------------------------------------------------
+         VNORM = 0.0
+         VNORM_a = 0.0
+         VNORM_b = 0.0
+         VNORM_aaa = 0.0
+         VNORM_bbb = 0.0
+         VNORM_abb = 0.0
+         VNORM_g1 = 0.0
+         VNORM_g2 = 0.0
+         VNORM_g3 = 0.0
+         VNORM_g4 = 0.0    
+#-----------------alpha-alpha part------------------------------|
+           VNORM_aux = 0.0
+
+               PARDO a,i
+                 REQUEST EE_EVEC_R_p_a(a,i,target_roots) i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots) i
+
+                 DAV_temp_RC_p_a(a,i) = EE_EVEC_R_p_a(a,i,target_roots)
+                 DAV_temp_LC_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots)
+
+                 tmpval =  DAV_temp_LC_p_a(a,i)*DAV_temp_RC_p_a(a,i)
+                 VNORM_aux += tmpval
+
+               ENDPARDO a,i
+
+               execute server_barrier
+
+               collective VNORM_a += VNORM_aux
+#-------------------beta-beta part------------------------------|
+           VNORM_aux = 0.0
+
+               PARDO b,j
+                 REQUEST EE_EVEC_R_p_b(b,j,target_roots) j
+                 REQUEST EE_EVEC_L_p_b(b,j,target_roots) j
+
+                 DAV_temp_RC_p_b(b,j) = EE_EVEC_R_p_b(b,j,target_roots)
+                 DAV_temp_LC_p_b(b,j) = EE_EVEC_L_p_b(b,j,target_roots)
+
+                 tmpval =  DAV_temp_LC_p_b(b,j)*DAV_temp_RC_p_b(b,j)
+                 VNORM_aux += tmpval
+
+               ENDPARDO b,j
+
+               execute server_barrier
+
+               collective VNORM_b += VNORM_aux
+#-----------------alpha-alpha-alpha part------------------------|
+               VNORM_aux = 0.0
+
+                   PARDO a,i1,c1,i
+                 REQUEST EE_EVEC_R_abi_aaa(a,i1,c1,i,target_roots) i
+                 REQUEST EE_EVEC_L_abi_aaa(a,i1,c1,i,target_roots) i
+
+                 DAV_temp_RC_abi_aaa(a,i1,c1,i) = EE_EVEC_R_abi_aaa(a,i1,c1,i,target_roots)
+                 DAV_temp_LC_abi_aaa(a,i1,c1,i) = EE_EVEC_L_abi_aaa(a,i1,c1,i,target_roots)
+
+                 tmpval = DAV_temp_RC_abi_aaa(a,i1,c1,i)*DAV_temp_LC_abi_aaa(a,i1,c1,i)
+
+                 VNORM_aux += tmpval
+
+                   ENDPARDO a,i1,c1,i
+
+               execute server_barrier
+
+               collective VNORM_aaa += VNORM_aux
+#--------------beta-beta-beta part-------------------------------|
+               VNORM_aux = 0.0
+
+                   PARDO b,j1,d,j
+                 REQUEST EE_EVEC_R_abi_bbb(b,j1,d,j,target_roots) j
+                 REQUEST EE_EVEC_L_abi_bbb(b,j1,d,j,target_roots) j
+
+                 DAV_temp_RC_abi_bbb(b,j1,d,j) = EE_EVEC_R_abi_bbb(b,j1,d,j,target_roots)
+                 DAV_temp_LC_abi_bbb(b,j1,d,j) = EE_EVEC_L_abi_bbb(b,j1,d,j,target_roots)
+
+                 tmpval = DAV_temp_RC_abi_bbb(b,j1,d,j)*DAV_temp_LC_abi_bbb(b,j1,d,j)
+
+                 VNORM_aux += tmpval
+
+                   ENDPARDO b,j1,d,j
+
+               execute server_barrier
+
+               collective VNORM_bbb += VNORM_aux
+#--------------alpha-beta-beta part------------------------------|
+               VNORM_aux = 0.0
+
+                   PARDO a,i,d,j
+                  REQUEST EE_EVEC_R_abi_abb(a,i,d,j,target_roots) j
+                  REQUEST EE_EVEC_L_abi_abb(a,i,d,j,target_roots) j
+
+                  DAV_temp_RC_abi_abb(a,i,d,j) = EE_EVEC_R_abi_abb(a,i,d,j,target_roots)
+                  DAV_temp_LC_abi_abb(a,i,d,j) = EE_EVEC_L_abi_abb(a,i,d,j,target_roots)
+
+                 tmpval = DAV_temp_RC_abi_abb(a,i,d,j)*DAV_temp_LC_abi_abb(a,i,d,j)
+
+                 VNORM_aux += tmpval
+
+                   ENDPARDO a,i,d,j
+
+               execute server_barrier
+
+               collective VNORM_abb += VNORM_aux
+#----------Geminal contribution to the norm-------------------------------|
+               IF EAEOMF12CALC == 1.0 
+#-----------Auxiliary intermediates--------------------------
+        PARDO a,i
+        tINTERM7(a,i) = 0.0
+        PREPARE AUXINT1(a,i) = tINTERM7(a,i)
+        ENDPARDO a,i
+        execute server_barrier
+
+        PARDO a,i
+        tINTERM7(a,i) = 0.0
+        PREPARE AUXINT2(a,i) = tINTERM7(a,i)
+        ENDPARDO a,i
+        execute server_barrier
+
+        PARDO a,i
+        tINTERM7(a,i) = 0.0
+        PREPARE AUXINT3(a,i) = tINTERM7(a,i)
+        ENDPARDO a,i
+        execute server_barrier
+
+        PARDO a,i
+        tINTERM7(a,i) = 0.0
+        PREPARE AUXINT4(a,i) = tINTERM7(a,i)
+        ENDPARDO a,i
+        execute server_barrier
+#-------------------------------------------------------------------|
+#     --------Construction of auxiliary intermediates -----         |  
+#-------------------------------------------------------------------|
+        PARDO a,b,i
+                 REQUEST EE_EVEC_R_p_a(a,i,target_roots) i
+                 DAV_temp_RC_p_a(a,i) = EE_EVEC_R_p_a(a,i,target_roots)
+                 REQUEST INTERM1(a,b) a
+                 tINTERM1(a,b) = INTERM1(a,b)
+                 tINTERM7(b,i) = DAV_temp_RC_p_a(a,i)*tINTERM1(a,b)
+                 PREPARE AUXINT1(b,i) += tINTERM7(b,i)
+        ENDPARDO a,b,i
+        execute server_barrier
+
+        PARDO a,b,i
+                 REQUEST EE_EVEC_R_p_a(a,i,target_roots) i
+                 DAV_temp_RC_p_a(a,i) = EE_EVEC_R_p_a(a,i,target_roots)
+                 REQUEST INTERM2(a,b) a
+                 tINTERM1(a,b) = INTERM2(a,b)
+                 tINTERM7(b,i) = DAV_temp_RC_p_a(a,i)*tINTERM1(a,b)
+                 PREPARE AUXINT2(b,i) += tINTERM7(b,i)
+        ENDPARDO a,b,i
+        execute server_barrier
+
+        PARDO a,b,i,j
+                 REQUEST EE_EVEC_R_p_a(b,j,target_roots) j
+                 DAV_temp_RC_p_a(b,j) = EE_EVEC_R_p_a(b,j,target_roots)
+                 REQUEST INTERM3(b,a,i,j) i
+                 tINTERM3(b,a,i,j) = INTERM3(b,a,i,j)
+                 tINTERM7(a,i) = tINTERM3(b,a,i,j)*DAV_temp_RC_p_a(b,j)
+                 PREPARE AUXINT3(a,i) += tINTERM7(a,i)
+        ENDPARDO a,b,i,j
+        execute server_barrier
+
+        PARDO a,b,i,j
+                 REQUEST EE_EVEC_R_p_a(b,j,target_roots1) j
+                 DAV_temp_RC_p_a(b,j) = EE_EVEC_R_p_a(b,j,target_roots1)
+                 REQUEST INTERM4(i,j,b,a) a
+                 tINTERM4(i,j,b,a) = INTERM4(i,j,b,a)
+                 tINTERM7(a,i) = tINTERM4(i,j,b,a)*DAV_temp_RC_p_a(b,j)
+                 PREPARE AUXINT4(a,i) += tINTERM7(a,i)
+        ENDPARDO a,b,i,j
+        execute server_barrier
+#--------------Geminal overlap------------------------------------
+           VNORM_aux = 0.0
+
+               PARDO a,i
+                 REQUEST AUXINT1(a,i) i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots) i
+
+                 DAV_temp_RC_p_a(a,i) = AUXINT1(a,i)
+                 DAV_temp_LC_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots)
+
+                 tmpval =  DAV_temp_LC_p_a(a,i)*DAV_temp_RC_p_a(a,i)
+                 tmpval *= 4.0
+                 VNORM_aux += tmpval
+               ENDPARDO a,i
+
+               execute server_barrier
+
+               collective VNORM_g1 += VNORM_aux
+#-----------------------------------------------
+           VNORM_aux = 0.0
+
+               PARDO a,i
+                 REQUEST AUXINT2(a,i) i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots) i
+
+                 DAV_temp_RC_p_a(a,i) = AUXINT2(a,i)
+                 DAV_temp_LC_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots)
+
+                 tmpval =  DAV_temp_LC_p_a(a,i)*DAV_temp_RC_p_a(a,i)
+                 tmpval *= 4.0
+                 VNORM_aux += tmpval
+               ENDPARDO a,i
+
+               execute server_barrier
+
+               collective VNORM_g2 += VNORM_aux
+#-----------------------------------------------
+           VNORM_aux = 0.0
+
+               PARDO a,i
+                 REQUEST AUXINT3(a,i) i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots) i
+
+                 DAV_temp_RC_p_a(a,i) = AUXINT3(a,i)
+                 DAV_temp_LC_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots)
+
+                 tmpval =  DAV_temp_LC_p_a(a,i)*DAV_temp_RC_p_a(a,i)
+                 tmpval *= -2.0
+                 VNORM_aux += tmpval
+               ENDPARDO a,i
+
+               execute server_barrier
+
+               collective VNORM_g3 += VNORM_aux
+#-----------------------------------------------
+           VNORM_aux = 0.0
+
+               PARDO a,i
+                 REQUEST AUXINT4(a,i) i
+                 REQUEST EE_EVEC_L_p_a(a,i,target_roots) i
+
+                 DAV_temp_RC_p_a(a,i) = AUXINT4(a,i)
+                 DAV_temp_LC_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots)
+
+                 tmpval =  DAV_temp_LC_p_a(a,i)*DAV_temp_RC_p_a(a,i)
+                 tmpval *= -2.0
+                 VNORM_aux += tmpval
+               ENDPARDO a,i
+
+               execute server_barrier
+
+               collective VNORM_g4 += VNORM_aux
+#-----------------------------------------------
+
+
+
+#-------------------------------------------------------------
+               ENDIF
+#-------------------------------------------------------------------------|
+               VNORM += VNORM_a
+               VNORM += VNORM_b
+               VNORM += VNORM_aaa
+               VNORM += VNORM_bbb
+               VNORM += VNORM_abb
+#               VNORM += VNORM_g1
+#               VNORM += VNORM_g2
+#               VNORM += VNORM_g3
+#               VNORM += VNORM_g4
+
+               execute server_barrier
+#----------Normalization factor--------------------------------------------------|
+               norm_sqr = VNORM
+               norm_sqr *= VNORM
+               half = 0.5
+
+               execute square_root norm_sqr half
+
+               IF norm_sqr > tresh_denom
+
+           minus = 0.0
+
+           tmpval = 1.0/VNORM
+           IF tmpval < 0.0
+           tmpval *= -1.0
+           minus = 1.0
+           ENDIF
+
+
+           half = 0.5
+
+           execute square_root tmpval half
+
+           VNORM =  tmpval
+
+               ENDIF
+#--------Multiplication of vectors by normalization factors----------------------|
+               PARDO a,i
+                REQUEST EE_EVEC_R_p_a(a,i,target_roots) a
+                REQUEST EE_EVEC_L_p_a(a,i,target_roots) a
+
+                 DAV_temp_RC_p_a(a,i) = EE_EVEC_R_p_a(a,i,target_roots)
+                 DAV_temp_LC_p_a(a,i) = EE_EVEC_L_p_a(a,i,target_roots)
+
+                 DAV_temp_RC_p_a(a,i) *= VNORM
+                 DAV_temp_LC_p_a(a,i) *= VNORM
+
+                 DAV_temp_R_p_a_targ(a,i,target_roots) = 0.0
+                 DAV_temp_L_p_a_targ(a,i,target_roots) = 0.0
+
+                 IF minus == 1.0
+                 DAV_temp_LC_p_a(a,i) *= -1.0
+                 ENDIF
+
+                 execute addrootindex DAV_temp_RC_p_a DAV_temp_R_p_a_targ
+                 execute addrootindex DAV_temp_LC_p_a DAV_temp_L_p_a_targ
+
+                 PREPARE EE_EVEC_R_aux_p_a(a,i,target_roots) = DAV_temp_R_p_a_targ(a,i,target_roots)
+                 PREPARE EE_EVEC_L_aux_p_a(a,i,target_roots) = DAV_temp_L_p_a_targ(a,i,target_roots)
+
+               ENDPARDO a,i
+               execute server_barrier
+
+               PARDO a,i
+               REQUEST EE_EVEC_R_aux_p_a(a,i,target_roots) a
+               REQUEST EE_EVEC_L_aux_p_a(a,i,target_roots) a
+               DAV_temp_R_p_a_targ(a,i,target_roots) = EE_EVEC_R_aux_p_a(a,i,target_roots)
+               DAV_temp_L_p_a_targ(a,i,target_roots) = EE_EVEC_L_aux_p_a(a,i,target_roots)
+               PREPARE EE_EVEC_R_p_a(a,i,target_roots) = DAV_temp_R_p_a_targ(a,i,target_roots)
+               PREPARE EE_EVEC_L_p_a(a,i,target_roots) = DAV_temp_L_p_a_targ(a,i,target_roots)
+               ENDPARDO a,i
+
+               execute server_barrier
+#----------------beta part--------------------------------  |
+               PARDO b,j
+               REQUEST EE_EVEC_R_p_b(b,j,target_roots) b
+               REQUEST EE_EVEC_L_p_b(b,j,target_roots) b
+
+               DAV_temp_RC_p_b(b,j) = EE_EVEC_R_p_b(b,j,target_roots)
+               DAV_temp_LC_p_b(b,j) = EE_EVEC_L_p_b(b,j,target_roots)
+
+               DAV_temp_RC_p_b(b,j) *= VNORM
+               DAV_temp_LC_p_b(b,j) *= VNORM
+
+                 DAV_temp_R_p_b_targ(b,j,target_roots) = 0.0
+                 DAV_temp_L_p_b_targ(b,j,target_roots) = 0.0
+
+                 IF minus == 1.0
+                 DAV_temp_LC_p_b(b,j) *= -1.0
+                 ENDIF
+
+                 execute addrootindex DAV_temp_RC_p_b DAV_temp_R_p_b_targ
+                 execute addrootindex DAV_temp_LC_p_b DAV_temp_L_p_b_targ
+
+                 PREPARE EE_EVEC_R_aux_p_b(b,j,target_roots) = DAV_temp_R_p_b_targ(b,j,target_roots)
+                 PREPARE EE_EVEC_L_aux_p_b(b,j,target_roots) = DAV_temp_L_p_b_targ(b,j,target_roots)
+
+               ENDPARDO b,j
+               execute server_barrier
+
+
+               PARDO b,j
+               REQUEST EE_EVEC_R_aux_p_b(b,j,target_roots) b
+               REQUEST EE_EVEC_L_aux_p_b(b,j,target_roots) b
+               DAV_temp_R_p_b_targ(b,j,target_roots) = EE_EVEC_R_aux_p_b(b,j,target_roots)
+               DAV_temp_L_p_b_targ(b,j,target_roots) = EE_EVEC_L_aux_p_b(b,j,target_roots)
+               PREPARE EE_EVEC_R_p_b(b,j,target_roots) = DAV_temp_R_p_b_targ(b,j,target_roots)
+               PREPARE EE_EVEC_L_p_b(b,j,target_roots) = DAV_temp_L_p_b_targ(b,j,target_roots)
+               ENDPARDO b,j
+
+               execute server_barrier
+
+
+#----------------alpha-alpha-alpha part------------------------  |
+
+               PARDO a,i1,c1,i
+               REQUEST EE_EVEC_R_abi_aaa(a,i1,c1,i,target_roots) i
+               REQUEST EE_EVEC_L_abi_aaa(a,i1,c1,i,target_roots) i
+
+                 DAV_temp_RC_abi_aaa(a,i1,c1,i) = EE_EVEC_R_abi_aaa(a,i1,c1,i,target_roots)
+                 DAV_temp_LC_abi_aaa(a,i1,c1,i) = EE_EVEC_L_abi_aaa(a,i1,c1,i,target_roots)
+
+                 DAV_temp_RC_abi_aaa(a,i1,c1,i) *= VNORM
+                 DAV_temp_LC_abi_aaa(a,i1,c1,i) *= VNORM
+
+
+                 DAV_RX_temp_aaa_targ(a,i1,c1,i,target_roots) = 0.0
+                 DAV_LX_temp_aaa_targ(a,i1,c1,i,target_roots) = 0.0
+
+                 IF minus == 1.0
+                 DAV_temp_LC_abi_aaa(a,i1,c1,i) *= -1.0
+                 ENDIF
+
+                 execute addrootindex DAV_temp_RC_abi_aaa DAV_RX_temp_aaa_targ
+                 execute addrootindex DAV_temp_LC_abi_aaa DAV_LX_temp_aaa_targ
+
+         PREPARE EE_EVEC_R_aux_abi_aaa(a,i1,c1,i,target_roots) = DAV_RX_temp_aaa_targ(a,i1,c1,i,target_roots)
+         PREPARE EE_EVEC_L_aux_abi_aaa(a,i1,c1,i,target_roots) = DAV_LX_temp_aaa_targ(a,i1,c1,i,target_roots)
+
+                   ENDPARDO a,i1,c1,i
+                   execute server_barrier
+
+               PARDO a,i1,c1,i
+               REQUEST EE_EVEC_R_aux_abi_aaa(a,i1,c1,i,target_roots) i
+               REQUEST EE_EVEC_L_aux_abi_aaa(a,i1,c1,i,target_roots) i
+               DAV_RX_temp_aaa_targ(a,i1,c1,i,target_roots) = EE_EVEC_R_aux_abi_aaa(a,i1,c1,i,target_roots)
+               DAV_LX_temp_aaa_targ(a,i1,c1,i,target_roots) = EE_EVEC_L_aux_abi_aaa(a,i1,c1,i,target_roots)
+            PREPARE EE_EVEC_R_abi_aaa(a,i1,c1,i,target_roots) = DAV_RX_temp_aaa_targ(a,i1,c1,i,target_roots)
+            PREPARE EE_EVEC_L_abi_aaa(a,i1,c1,i,target_roots) = DAV_LX_temp_aaa_targ(a,i1,c1,i,target_roots)
+               ENDPARDO a,i1,c1,i
+               execute server_barrier
+#----------------beta-beta-beta part---------------------------   |
+               PARDO b,j1,d,j
+               REQUEST EE_EVEC_R_abi_bbb(b,j1,d,j,target_roots) j
+                 REQUEST EE_EVEC_L_abi_bbb(b,j1,d,j,target_roots) j
+
+                 DAV_temp_RC_abi_bbb(b,j1,d,j) = EE_EVEC_R_abi_bbb(b,j1,d,j,target_roots)
+                 DAV_temp_LC_abi_bbb(b,j1,d,j) = EE_EVEC_L_abi_bbb(b,j1,d,j,target_roots)
+
+                 DAV_temp_RC_abi_bbb(b,j1,d,j) *= VNORM
+                 DAV_temp_LC_abi_bbb(b,j1,d,j) *= VNORM
+
+                 DAV_RX_temp_bbb_targ(b,j1,d,j,target_roots) = 0.0
+                 DAV_LX_temp_bbb_targ(b,j1,d,j,target_roots) = 0.0
+
+                 IF minus == 1.0
+                 DAV_temp_LC_abi_bbb(b,j1,d,j) *= -1.0
+                 ENDIF
+
+                 execute addrootindex DAV_temp_RC_abi_bbb DAV_RX_temp_bbb_targ
+                 execute addrootindex DAV_temp_LC_abi_bbb DAV_LX_temp_bbb_targ
+
+           PREPARE EE_EVEC_R_aux_abi_bbb(b,j1,d,j,target_roots) = DAV_RX_temp_bbb_targ(b,j1,d,j,target_roots)
+           PREPARE EE_EVEC_L_aux_abi_bbb(b,j1,d,j,target_roots) = DAV_LX_temp_bbb_targ(b,j1,d,j,target_roots)
+
+                  ENDPARDO b,j1,d,j
+
+                  execute server_barrier
+
+
+
+                 PARDO b,j1,d,j
+                 REQUEST EE_EVEC_R_aux_abi_bbb(b,j1,d,j,target_roots) j
+                 REQUEST EE_EVEC_L_aux_abi_bbb(b,j1,d,j,target_roots) j
+                 DAV_RX_temp_bbb_targ(b,j1,d,j,target_roots) = EE_EVEC_R_aux_abi_bbb(b,j1,d,j,target_roots)
+                 DAV_LX_temp_bbb_targ(b,j1,d,j,target_roots) = EE_EVEC_L_aux_abi_bbb(b,j1,d,j,target_roots)
+               PREPARE EE_EVEC_R_abi_bbb(b,j1,d,j,target_roots) = DAV_RX_temp_bbb_targ(b,j1,d,j,target_roots)
+               PREPARE EE_EVEC_L_abi_bbb(b,j1,d,j,target_roots) = DAV_LX_temp_bbb_targ(b,j1,d,j,target_roots)
+                 ENDPARDO b,j1,d,j
+                 execute server_barrier
+#----------------alpha-beta-beta part---------------------------  |
+                  PARDO a,i,d,j
+                  REQUEST EE_EVEC_R_abi_abb(a,i,d,j,target_roots) j
+                  REQUEST EE_EVEC_L_abi_abb(a,i,d,j,target_roots) j
+
+                  DAV_temp_RC_abi_abb(a,i,d,j) = EE_EVEC_R_abi_abb(a,i,d,j,target_roots)
+                  DAV_temp_LC_abi_abb(a,i,d,j) = EE_EVEC_L_abi_abb(a,i,d,j,target_roots)
+
+                  DAV_temp_RC_abi_abb(a,i,d,j) *= VNORM
+                  DAV_temp_LC_abi_abb(a,i,d,j) *= VNORM
+
+                  DAV_RX_temp_abb_targ(a,i,d,j,target_roots) = 0.0
+                  DAV_LX_temp_abb_targ(a,i,d,j,target_roots) = 0.0
+
+                  IF minus == 1.0
+                  DAV_temp_LC_abi_abb(a,i,d,j) *= -1.0
+                  ENDIF
+
+                 execute addrootindex DAV_temp_RC_abi_abb DAV_RX_temp_abb_targ
+                 execute addrootindex DAV_temp_LC_abi_abb DAV_LX_temp_abb_targ
+
+              PREPARE EE_EVEC_R_aux_abi_abb(a,i,d,j,target_roots) = DAV_RX_temp_abb_targ(a,i,d,j,target_roots)
+              PREPARE EE_EVEC_L_aux_abi_abb(a,i,d,j,target_roots) = DAV_LX_temp_abb_targ(a,i,d,j,target_roots)
+
+                   ENDPARDO a,i,d,j
+
+                 execute server_barrier
+
+
+                 PARDO a,i,d,j
+                 REQUEST EE_EVEC_R_aux_abi_abb(a,i,d,j,target_roots) j
+                 REQUEST EE_EVEC_L_aux_abi_abb(a,i,d,j,target_roots) j
+                 DAV_RX_temp_abb_targ(a,i,d,j,target_roots) = EE_EVEC_R_aux_abi_abb(a,i,d,j,target_roots)
+                 DAV_LX_temp_abb_targ(a,i,d,j,target_roots) = EE_EVEC_L_aux_abi_abb(a,i,d,j,target_roots)
+                 PREPARE EE_EVEC_R_abi_abb(a,i,d,j,target_roots) = DAV_RX_temp_abb_targ(a,i,d,j,target_roots)
+                 PREPARE EE_EVEC_L_abi_abb(a,i,d,j,target_roots) = DAV_LX_temp_abb_targ(a,i,d,j,target_roots)
+                 ENDPARDO a,i,d,j
+                 execute server_barrier
+#---------------------------------------------------------------- |
+
+                  ENDDO target_roots
+
+      ENDPROC NORMALIZE  
+#     -----------------
+
+#-------------------------------------------------------------------|
+      PROC INTERM
+#     -----------
+
+#--------------Preparation of C_ijab and C_iajb------------------------------ 
+      PARDO i,j,a,b
+      tmp_C_ijab(i,j,a,b) = 0.0
+      tmp_C_iajb(i,a,j,b) = 0.0
+      execute f12_c_ijab_coef tmp_C_ijab tmp_C_iajb
+      PREPARE C_ijab(i,j,a,b) = tmp_C_ijab(i,j,a,b)
+      PREPARE C_iajb(i,a,j,b) = tmp_C_iajb(i,a,j,b)
+      ENDPARDO i,j,a,b
+      execute server_barrier
+#----------Auxiliary intermediates-------------------------------------------
+      PARDO i,j,a,b
+      tINTERMAUX1(a,b,i,j) = 0.0       
+      DO k
+      DO d 
+      REQUEST C_ijab(k,i,a,d) i
+      tmp_C_ijab(k,i,a,d) = C_ijab(k,i,a,d)  
+      REQUEST Xabjl(d,b,k,j) j
+      tXabjl(d,b,k,j) = Xabjl(d,b,k,j)
+      tINTERMAUX2(a,b,i,j) = tXabjl(d,b,k,j)*tmp_C_ijab(k,i,a,d)
+      tINTERMAUX1(a,b,i,j) += tINTERMAUX2(a,b,i,j) 
+      ENDDO d
+      ENDDO k    
+
+      PREPARE INTERMAUX1(a,b,i,j) = tINTERMAUX1(a,b,i,j)
+      ENDPARDO i,j,a,b
+      execute server_barrier  
+#-------------------------------------------------------
+      PARDO a,i,b,j 
+      tINTERMAUX3(a,i,b,j) = 0.0
+      DO k
+      DO d
+      REQUEST C_iajb(i,d,k,b) i
+      tmp_C_iajb(i,d,k,b) = C_iajb(i,d,k,b)
+      REQUEST Xabjl(d,a,k,j) j
+      tXabjl(d,a,k,j) = Xabjl(d,a,k,j)
+      tINTERMAUX4(a,i,b,j) = tXabjl(d,a,k,j)*tmp_C_iajb(i,d,k,b)
+      tINTERMAUX3(a,i,b,j) += tINTERMAUX4(a,i,b,j) 
+      ENDDO d
+      ENDDO k
+
+      PREPARE INTERMAUX2(a,i,b,j) = tINTERMAUX3(a,i,b,j) 
+      ENDPARDO a,i,b,j
+      execute server_barrier 
+#----------Intermediates itself------------------------------------|
+      PARDO a,b,i,j
+      DO d
+      REQUEST INTERMAUX1(a,d,i,j) i
+      tINTERMAUX1(a,d,i,j)=INTERMAUX1(a,d,i,j)
+      REQUEST C_ijab(i,j,d,b) i
+      tmp_C_ijab(i,j,d,b) = C_ijab(i,j,d,b)
+      tINTERM1(a,b) = tINTERMAUX1(a,d,i,j)*tmp_C_ijab(i,j,d,b)
+      PREPARE INTERM1(a,b) += tINTERM1(a,b)
+      ENDDO d
+      ENDPARDO a,b,i,j
+      execute server_barrier
+
+      PARDO a,b,i,j
+      DO d
+      REQUEST INTERMAUX2(d,i,a,j) j 
+      tINTERMAUX3(d,i,a,j) = INTERMAUX2(d,i,a,j)
+      REQUEST C_iajb(i,d,j,b) i
+      tmp_C_iajb(i,d,j,b) = C_iajb(i,d,j,b)
+      tINTERM2(a,b) = tINTERMAUX3(d,i,a,j)*tmp_C_iajb(i,d,j,b)
+      PREPARE INTERM2(a,b) += tINTERM2(a,b)
+      ENDDO d 
+      ENDPARDO a,b,i,j
+      execute server_barrier
+#----------------------------------------------------
+      PARDO a,b,i,j
+      DO l
+      DO d 
+      REQUEST INTERMAUX1(a,d,i,l) l
+      tINTERMAUX1(a,d,i,l)=INTERMAUX1(a,d,i,l)
+      REQUEST C_ijab(j,l,d,b) j
+      tmp_C_ijab(j,l,d,b) = C_ijab(j,l,d,b)
+      tINTERM3(a,b,i,j) = tINTERMAUX1(a,d,i,l)*tmp_C_ijab(j,l,d,b)
+      PREPARE INTERM3(a,b,i,j) += tINTERM3(a,b,i,j)
+      ENDDO d 
+      ENDDO l
+      ENDPARDO a,b,i,j
+      execute server_barrier 
+
+      PARDO a,b,i,j
+      DO l
+      DO d
+      REQUEST INTERMAUX2(d,i,a,l) i
+      tINTERMAUX3(d,i,a,l) = INTERMAUX2(d,i,a,l)
+      REQUEST C_iajb(j,d,l,b) j
+      tmp_C_iajb(j,d,l,b) = C_iajb(j,d,l,b)
+      tINTERM4(i,j,a,b) = tINTERMAUX3(d,i,a,l)*tmp_C_iajb(j,d,l,b)
+      PREPARE INTERM4(i,j,a,b) += tINTERM4(i,j,a,b) 
+      ENDDO d 
+      ENDDO l
+      ENDPARDO a,b,i,j
+      execute server_barrier
+#---------------------------------------------------------------------
+
+
+      ENDPROC INTERM
+#     -------------- 
+
+      n_target_roots = EOM_ROOTS  
+      execute print_scalar n_target_roots  
+      n_target_roots_ts = n_target_roots
+      n_target_roots_ts *= 2.0
+      execute eomeaf12info EAEOMF12CALC
+#------------------------------------------------------------------|
+#       READ VECTORS FROM THE DISK                                 | 
+#------------------------------------------------------------------|
+      CALL READ_DATA 
+#------------------------------------------------------------------|
+#       PREPARE GEMINAL OVERLAP INTERMEDIATES                      |
+#------------------------------------------------------------------|
+#      IF EAEOMF12CALC == 1.0
+#      CALL INTERM
+#      ENDIF 
+#------------------------------------------------------------------|
+#      Gramm-Schmit biorthogonalization                            |
+#------------------------------------------------------------------|
+      CALL GSO
+#------------------------------------------------------------------|
+#      Normalization of obtained vectors                           |
+#------------------------------------------------------------------|
+      CALL NORMALIZE 
+
+#---------------------------------------------------------------|
+#  Dump integrals, eigenvectors and eigenvalues to the disc     |
+#---------------------------------------------------------------|
+           execute blocks_to_list               REE
+           execute blocks_to_list               EE_EVEC_R_p_a
+           execute blocks_to_list               EE_EVEC_R_p_b
+           execute blocks_to_list               EE_EVEC_R_abi_aaa
+           execute blocks_to_list               EE_EVEC_R_abi_bbb
+           execute blocks_to_list               EE_EVEC_R_abi_abb
+           execute blocks_to_list               EE_EVEC_L_p_a
+           execute blocks_to_list               EE_EVEC_L_p_b
+           execute blocks_to_list               EE_EVEC_L_abi_aaa
+           execute blocks_to_list               EE_EVEC_L_abi_bbb
+           execute blocks_to_list               EE_EVEC_L_abi_abb
+           execute blocks_to_list               t1a
+           execute blocks_to_list               t1b
+           execute blocks_to_list               T2aa
+           execute blocks_to_list               T2bb
+           execute blocks_to_list               T2ab
+           execute blocks_to_list               A1a
+           execute blocks_to_list               A1b
+           execute blocks_to_list               A2aa
+           execute blocks_to_list               A2bb
+           execute blocks_to_list               A2ab
+
+        execute write_blocks_to_list
+        execute server_barrier
+#-------------------------------------------------------------------------
+
+
+
+
+                        ENDSIAL GRAMM_SCHMIT_BIORTH
+#                       ------------------------
+

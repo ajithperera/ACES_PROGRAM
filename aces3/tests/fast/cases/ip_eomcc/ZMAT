@@ -1,0 +1,43 @@
+H2O(IPS)
+O
+H 1 R
+H 1 R 2 A
+
+R=1.07
+A=106.
+
+*ACES2(BASIS=DZP
+#DKH_ORDER=5
+IP_CALC=IP_EOMCC,IP_SYM=4
+ROOT_SEARCH=MAX_OVERLAP
+SELECT_VECS=FIRST,SUB_SPACE=NEW
+cc_conv=10,scf_conv=10,estate_tol=10
+CALC=CCSD
+#UNCONTRACT=ON)
+
+*SIP
+MAXMEM=2800
+#SIP_MX_OCC_SEG_SIZE=2
+#SIP_MX_VRT_SEG_SIZE=2
+SIAL_PROGRAM = scf_rhf.sio
+SIAL_PROGRAM = nipea_tran_rhf.sio
+SIAL_PROGRAM = nipea_ccsd_rhf.sio 
+SIAL_PROGRAM = nipea_lambda_rhf.sio 
+SIAL_PROGRAM = hbar_rhf.sio
+SIAL_PROGRAM = rip_eomcc_rhf.sio
+SIAL_PROGRAM = lip_eomcc_rhf.sio
+#SIAL_PROGRAM = gs_ortho.sio
+#SIAL_PROGRAM = scf_uhf.sio
+#SIAL_PROGRAM = nipea_tran_uhf.sio
+#SIAL_PROGRAM = nipea_ccsd_uhf.sio 
+#SIAL_PROGRAM = nipea_lambda_uhf.sio 
+#SIAL_PROGRAM = hbar_uhf.sio
+#SIAL_PROGRAM = rip_eomcc_uhf.sio
+#SIAL_PROGRAM = lip_eomcc_uhf.sio
+
+
+
+
+
+
+

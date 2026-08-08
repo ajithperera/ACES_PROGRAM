@@ -1,0 +1,11 @@
+#ifndef _DKHLiMS_PAR_
+#define _DKHLIMS_PAR_
+      parameter (max_centers = 300)
+      parameter (max_shells  = 1000)
+      Parameter (maxbfns     = 5000)
+      Parameter (maxjco      = 10)
+      Parameter (maxang      = 7)
+#endif /* DKHLIMS_PAR_ */
+C
+
+

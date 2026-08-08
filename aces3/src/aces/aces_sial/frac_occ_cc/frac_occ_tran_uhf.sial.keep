@@ -1,0 +1,696 @@
+#  Copyright (c) 2003-2010 University of Florida
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  The GNU General Public License is included in this distribution
+#  in the file COPYRIGHT.
+                           SIAL UHF_TRAN_PQRS
+#                          -------------------
+
+      aoindex mu     = 1, norb
+      aoindex nu     = 1, norb
+      aoindex lambda = 1, norb
+      aoindex sigma  = 1, norb
+#
+      moaindex p = baocc, eavirt
+      moaindex p1= baocc, eavirt
+      moaindex p2= baocc, eavirt
+      moaindex p3= baocc, eavirt
+#
+      mobindex q = bbocc, ebvirt
+      mobindex q1= bbocc, ebvirt
+      mobindex q2= bbocc, ebvirt
+      mobindex q3= bbocc, ebvirt
+# 
+# Declare served arrays 
+# ---------------------
+#
+      served Vxxxp(mu,nu,lambda,p)
+      served Vxpxp(mu,p1,lambda,p)
+      served Vxxpp(mu,nu,p1,p)
+      served Vpxxp(p1,nu,lambda,p)
+      served Vxppp(mu,p,p1,p2)
+      served Vxppp1(mu,p,p1,p2)
+      served VSpppp(p,p1,p2,p3)
+#
+      served Vxxxq(mu,nu,lambda,q)
+      served Vxqxq(mu,q1,lambda,q)
+      served Vxxqq(mu,nu,q,q1)
+      served Vqxxq(q,nu,lambda,q1)
+      served Vxqqq(mu,q,q1,q2)
+      served Vxqqq1(mu,q,q1,q2)
+      served VSqqqq(q,q1,q2,q3)
+
+      served vxxpq(mu,nu,p,q)
+      served Vxpxq(mu,p,nu,q)
+      served Vxpqq(mu,p,q,q1)
+      served Vppqq(p,p1,q,q1)
+
+      served Vpxxq(p,mu,nu,q)
+
+# Declare temporary arrays 
+# ------------------------ 
+#
+      temp Txqxq(mu,q1,lambda,q)
+      temp T1xqxq(mu,q1,lambda,q)
+      temp Txxqq(mu,nu,q,q1)
+      temp T1xxqq(mu,nu,q1,q)
+      temp Tqqxx(q1,nu,lambda,q)
+      temp Tqxxq(q1,nu,lambda,q)
+      temp T1qxxq(q1,nu,lambda,q)
+
+      temp Txqqq(mu,q,q1,q2)
+      temp T1xqqq(mu,q,q1,q2)
+      temp Tqqqq(q,q1,q2,q3)
+      temp T1qqqq(q,q1,q2,q3)
+
+      temp Txpxq(mu,p,nu,q)
+      temp T1xpxq(mu,p,nu,q)
+      temp Txpqq(mu,p,q,q1)
+      temp T1xpqq(mu,p,q,q1)
+      temp Tppqq(p,p1,q,q1)
+      temp T1ppqq(p,p1,q,q1)
+      temp Tppxx(p,p1,mu,nu)
+      temp T1qqq(q3,q,q2,q1)
+
+      temp Txppp(mu,p,p1,p2) 
+      temp T1xppp(mu,p,p1,p2) 
+      temp Tpppp(p,p1,p2,p3) 
+      temp T1pppp(p,p1,p2,p3) 
+#
+      temp Txxpq(mu,nu,p,q) 
+      temp T1xxpq(mu,nu,p,q) 
+      temp T1pxxq(p,mu,nu,q) 
+      temp T1xxxp(mu,nu,lambda,p)
+      temp T1xxxq(mu,nu,lambda,q)
+      temp Txpxp(mu,p,nu,p1)
+      temp T1xpxp(mu,p,nu,p1)
+      temp Txxpp(mu,nu,p1,p) 
+      temp T1xxpp(mu,nu,p1,p) 
+      temp Tpxxp(p1,mu,nu,p) 
+      temp T1pxxp(p1,mu,nu,p) 
+      temp Tpxxq(p,mu,nu,q)
+#
+# Declare integral arrays 
+# ------------------------  
+#
+      served AOINT(mu,nu,lambda,sigma) 
+      local Txxxp(mu,nu,lambda,p)
+      local Txxxq(mu,nu,lambda,q)
+      local L1xxxp(mu,nu,lambda,p) 
+      local L2xxxp(mu,lambda,nu,p) 
+      local L3xxxp(lambda,mu,nu,p) 
+      local L1xxxq(mu,nu,lambda,q) 
+      local L2xxxq(mu,lambda,nu,q) 
+      local L3xxxq(lambda,mu,nu,q) 
+      local Lxpxp(mu,p,nu,p1) 
+      local Lxxpp(mu,nu,p,p1) 
+      local Lpxxp(p,mu,nu,p1) 
+      local Lxqxq(mu,q,nu,q1) 
+      local Lxxqq(mu,nu,q,q1) 
+      local Lqxxq(q,mu,nu,q1) 
+      local Lxpxq(mu,p,nu,q) 
+      local Lpxxq(p,mu,nu,q) 
+      local Lxppp(mu,p,p,p1) 
+      local Lxqqq(mu,q,q,q1)  
+      local Lxpqq(mu,p,q,q1) 
+
+      Distributed Fpqa_mi(i,i1)
+      Distributed Fpqb_mi(j,j1)
+      Distributed Fpqa_me(i,a)
+      Distributed Fpqb_me(j,b)
+      Distributed Fpqa_ae(a,a1)
+      Distributed Fpqb_ae(b,b1)
+#
+      temp txp(mu,p) 
+      temp txq(mu,q) 
+#
+# Define scalars 
+# -------------- 
+#
+      scalar e1 
+      scalar e2 
+      scalar e3 
+      scalar esum  
+#
+#    ------------------------------------------------------------------------
+#
+#    DEINE PROCEDURES  
+#
+#    ------------------------------------------------------------------------
+#
+#    Compute the integrals and store in the served array saoint. 
+#
+     PROC COMP_INTEGRALS 
+#
+#    ------------------------------------------------------------------------
+#
+     PARDO mu, nu, lambda, sigma
+#
+              compute_integrals                    AOINT(mu,nu,lambda,sigma)
+#             prepare saoint(mu,nu,lambda,sigma) = AOINT(mu,nu,lambda,sigma) 
+#
+     ENDPARDO mu, nu, lambda, sigma
+     execute server_barrier 
+#
+#    ------------------------------------------------------------------------
+#
+     ENDPROC COMP_INTEGRALS 
+#
+#    ------------------------------------------------------------------------
+#
+#    ------------------------------------------------------------------------
+#
+#    Perform the first two stages of the transformation in two N5 steps. 
+#
+     PROC TRAN_TRAN2 
+#
+#    ------------------------------------------------------------------------
+#
+     PARDO mu, nu, lambda
+#
+          allocate Txxxp(mu,nu,lambda,*)
+          allocate Txxxq(mu,nu,lambda,*)
+#
+          DO sigma
+#
+             compute_integrals            aoint(mu,nu,lambda,sigma)
+#
+#
+             DO p
+#
+                 T1xxxp(mu,nu,lambda,p)  = aoint(mu,nu,lambda,sigma)*ca(sigma,p)
+                 Txxxp(mu,nu,lambda,p)  += T1xxxp(mu,nu,lambda,p)  
+#
+             ENDDO p   
+#
+             DO q   
+#
+                 T1xxxq(mu,nu,lambda,q)  = aoint(mu,nu,lambda,sigma)*cb(sigma,q)
+                 Txxxq(mu,nu,lambda,q)  += T1xxxq(mu,nu,lambda,q)  
+#
+             ENDDO q
+#
+           ENDDO sigma
+
+           DO p
+              PREPARE Vxxxp(mu,nu,lambda,p)  = Txxxp(mu,nu,lambda,p)
+           ENDDO p
+
+           DO q
+              PREPARE Vxxxq(mu,nu,lambda,q)  = Txxxq(mu,nu,lambda,q)
+           ENDDO q
+
+           deallocate Txxxp(mu,nu,lambda,*)
+           deallocate Txxxq(mu,nu,lambda,*)
+#
+     ENDPARDO mu, nu, lambda 
+     execute server_barrier
+#
+#    ------------------------------------------------------------------------
+#
+     PARDO mu, nu, p
+#
+           allocate L1xxxp(mu,nu,*,p)
+#
+           DO lambda
+#
+              REQUEST Vxxxp(mu,nu,lambda,p) p
+#
+              L1xxxp(mu,nu,lambda,p) = Vxxxp(mu,nu,lambda,p)
+#
+           ENDDO lambda
+#
+           DO p1
+#
+              Txxpp(mu,nu,p1,p) = 0.0
+#
+              DO lambda
+#
+                 T1xxpp(mu,nu,p1,p) = L1xxxp(mu,nu,lambda,p)*ca(lambda,p1)
+                 Txxpp(mu,nu,p1,p) += T1xxpp(mu,nu,p1,p)
+#
+              ENDDO lambda
+#
+              PREPARE Vxxpp(mu,nu,p1,p) = Txxpp(mu,nu,p1,p)
+#
+           ENDDO p1
+#
+           deallocate L1xxxp(mu,nu,*,p)
+           allocate L2xxxp(mu,*,nu,p)
+
+           DO lambda
+              REQUEST Vxxxp(mu,lambda,nu,p) p
+              L2xxxp(mu,lambda,nu,p) = Vxxxp(mu,lambda,nu,p)
+           ENDDO lambda
+
+           DO p1
+              Txpxp(mu,p1,nu,p) = 0.0
+
+              DO lambda
+                 T1xpxp(mu,p1,nu,p) = L2xxxp(mu,lambda,nu,p)*ca(lambda,p1)
+                 Txpxp(mu,p1,nu,p) += T1xpxp(mu,p1,nu,p)
+              ENDDO lambda
+
+              PREPARE Vxpxp(mu,p1,nu,p) = Txpxp(mu,p1,nu,p)
+           ENDDO p1
+
+           deallocate L2xxxp(mu,*,nu,p)
+           allocate L3xxxp(*,mu,nu,p)
+
+           DO lambda
+              REQUEST Vxxxp(lambda,mu,nu,p) p
+              L3xxxp(lambda,mu,nu,p) = Vxxxp(lambda,mu,nu,p)
+           ENDDO lambda
+
+           DO p1
+              Tpxxp(p1,mu,nu,p) = 0.0
+
+              DO lambda
+                 T1pxxp(p1,mu,nu,p) = L3xxxp(lambda,mu,nu,p)*ca(lambda,p1)
+                 Tpxxp(p1,mu,nu,p) += T1pxxp(p1,mu,nu,p)
+              ENDDO lambda
+
+              PREPARE Vpxxp(p1,mu,nu,p) = Tpxxp(p1,mu,nu,p)
+           ENDDO p1
+
+           deallocate L3xxxp(*,mu,nu,p)
+#
+     ENDPARDO mu, nu, p
+#
+#    ------------------------------------------------------------------------
+#
+     PARDO mu, nu, q
+#
+           allocate L1xxxq(mu,nu,*,q)
+#
+           DO lambda
+#
+              REQUEST Vxxxq(mu,nu,lambda,q) q
+#
+              L1xxxq(mu,nu,lambda,q) = Vxxxq(mu,nu,lambda,q)
+#
+           ENDDO lambda
+#
+           DO q1
+#
+              Txxqq(mu,nu,q1,q) = 0.0
+#
+              DO lambda
+#
+                 T1xxqq(mu,nu,q1,q) = L1xxxq(mu,nu,lambda,q)*cb(lambda,q1)
+                 Txxqq(mu,nu,q1,q) += T1xxqq(mu,nu,q1,q)
+#
+              ENDDO lambda
+#
+              PREPARE Vxxqq(mu,nu,q1,q) = Txxqq(mu,nu,q1,q)
+#
+           ENDDO q1
+#
+           DO p
+#
+              Txxpq(mu,nu,p,q) = 0.0
+#
+              DO lambda
+#
+                 T1xxpq(mu,nu,p,q) = L1xxxq(mu,nu,lambda,q)*ca(lambda,p)
+                 Txxpq(mu,nu,p,q) += T1xxpq(mu,nu,p,q)
+#
+              ENDDO lambda
+#
+              PREPARE Vxxpq(mu,nu,p,q) = Txxpq(mu,nu,p,q)
+#
+           ENDDO p
+#
+           deallocate L1xxxq(mu,nu,*,q)
+           allocate L2xxxq(mu,*,nu,q)
+
+           DO lambda
+              REQUEST Vxxxq(mu,lambda,nu,q) q
+              L2xxxq(mu,lambda,nu,q) = Vxxxq(mu,lambda,nu,q)
+           ENDDO lambda
+
+           DO q1
+              Txqxq(mu,q1,nu,q) = 0.0
+
+              DO lambda
+                 T1xqxq(mu,q1,nu,q) = L2xxxq(mu,lambda,nu,q)*cb(lambda,q1)
+                 Txqxq(mu,q1,nu,q) += T1xqxq(mu,q1,nu,q)
+              ENDDO lambda
+
+              PREPARE Vxqxq(mu,q1,nu,q) = Txqxq(mu,q1,nu,q)
+           ENDDO q1
+
+           DO p
+              Txpxq(mu,p,nu,q) = 0.0
+
+              DO lambda
+                 T1xpxq(mu,p,nu,q) = L2xxxq(mu,lambda,nu,q)*ca(lambda,p)
+                 Txpxq(mu,p,nu,q) += T1xpxq(mu,p,nu,q)
+              ENDDO lambda
+
+              PREPARE Vxpxq(mu,p,nu,q) = Txpxq(mu,p,nu,q)
+           ENDDO p
+
+           deallocate L2xxxq(mu,*,nu,q)
+           allocate L3xxxq(*,mu,nu,q)
+
+           DO lambda
+              REQUEST Vxxxq(lambda,mu,nu,q) q
+              L3xxxq(lambda,mu,nu,q) = Vxxxq(lambda,mu,nu,q)
+           ENDDO lambda
+
+           DO q1
+              Tqxxq(q1,mu,nu,q) = 0.0
+
+              DO lambda
+                 T1qxxq(q1,mu,nu,q) = L3xxxq(lambda,mu,nu,q)*cb(lambda,q1)
+                 Tqxxq(q1,mu,nu,q) += T1qxxq(q1,mu,nu,q)
+              ENDDO lambda
+
+              PREPARE Vqxxq(q1,mu,nu,q) = Tqxxq(q1,mu,nu,q)
+           ENDDO q1
+
+           DO p
+              Tpxxq(p,mu,nu,q) = 0.0
+
+              DO lambda
+                 T1pxxq(p,mu,nu,q) = L3xxxq(lambda,mu,nu,q)*ca(lambda,p)
+                 Tpxxq(p,mu,nu,q) += T1pxxq(p,mu,nu,q)
+              ENDDO lambda
+
+              PREPARE Vpxxq(p,mu,nu,q) = Tpxxq(p,mu,nu,q)
+           ENDDO p
+
+           deallocate L3xxxq(*,mu,nu,q)
+#
+     ENDPARDO mu, nu, q
+#
+     execute server_barrier
+#
+#    ------------------------------------------------------------------------
+#
+     ENDPROC TRAN_TRAN2 
+#
+#    ------------------------------------------------------------------------
+#
+#    ------------------------------------------------------------------------
+#
+#    Perform the third N5 stage of the transformation.  
+#
+     PROC TRAN_TRAN3 
+#
+#    ------------------------------------------------------------------------
+#
+     PARDO mu, p, p1
+#
+           allocate Lxpxp(mu,p,*,p1) 
+           allocate Lxxpp(mu,*,p,p1) 
+           allocate Lpxxp(p,mu,*,p1) 
+#
+           DO nu 
+#
+              REQUEST Vxpxp(mu,p,nu,p1) p1 
+              REQUEST Vxxpp(mu,nu,p,p1) p1 
+              REQUEST Vpxxp(p,mu,nu,p1) p1 
+
+              Lxpxp(mu,p,nu,p1) = Vxpxp(mu,p,nu,p1) 
+              Lxxpp(mu,nu,p,p1) = Vxxpp(mu,nu,p,p1) 
+              Lpxxp(p,mu,nu,p1) = Vpxxp(p,mu,nu,p1) 
+#
+           ENDDO nu 
+#
+           DO p2 
+#
+              Txppp(mu,p,p2,p1) = 0.0  
+#
+              DO nu  
+#
+                 T1xppp(mu,p,p2,p1) = Lxpxp(mu,p,nu,p1)*ca(nu,p2)
+                 Txppp(mu,p,p2,p1) += T1xppp(mu,p,p2,p1)  
+#
+              ENDDO nu  
+#
+              PREPARE Vxppp(mu,p,p2,p1) = Txppp(mu,p,p2,p1)
+#
+           ENDDO p2
+#
+           deallocate Lxpxp(mu,p,*,p1) 
+           deallocate Lxxpp(mu,*,p,p1) 
+           deallocate Lpxxp(p,mu,*,p1) 
+#
+     ENDPARDO mu, p, p1
+#
+#    ------------------------------------------------------------------------
+#
+     PARDO mu, q, q1
+#
+           allocate Lxqxq(mu,q,*,q1) 
+           allocate Lxxqq(mu,*,q,q1) 
+           allocate Lqxxq(q,mu,*,q1) 
+#
+           DO nu 
+#
+              REQUEST Vxqxq(mu,q,nu,q1) q1 
+              REQUEST Vxxqq(mu,nu,q,q1) q1 
+              REQUEST Vqxxq(q,mu,nu,q1) q1 
+#
+              Lxqxq(mu,q,nu,q1) = Vxqxq(mu,q,nu,q1) 
+              Lxxqq(mu,nu,q,q1) = Vxxqq(mu,nu,q,q1) 
+              Lqxxq(q,mu,nu,q1) = Vqxxq(q,mu,nu,q1) 
+#
+           ENDDO nu 
+#
+           DO q 
+#
+              Txqqq(mu,q,q2,q1) = 0.0  
+#
+              DO nu  
+#
+                 T1xqqq(mu,q,q2,q1) = Lxqxq(mu,q,nu,q1)*cb(nu,q2)
+                 Txqqq(mu,q,q2,q1) += T1xqqq(mu,q,q2,q1)  
+#
+              ENDDO nu  
+#
+              PREPARE Vxqqq(mu,q,q2,q1) = Txqqq(mu,q,q2,q1)
+#
+           ENDDO q 
+#
+           deallocate Lxqxq(mu,q,*,q1) 
+           deallocate Lxxqq(mu,*,q,q1) 
+           deallocate Lqxxq(q,mu,*,q1) 
+#
+     ENDPARDO mu, q, q1
+#
+#    ------------------------------------------------------------------------
+#
+     PARDO mu, p, q 
+#
+           allocate Lxpxq(mu,p,*,q) 
+           allocate Lpxxq(p,mu,*,q) 
+#
+           DO nu 
+#
+              REQUEST Vxpxq(mu,p,nu,q) q
+              REQUEST Vpxxq(p,mu,nu,q) q
+#
+              Lxpxq(mu,p,nu,q) = Vxpxq(mu,p,nu,q) 
+              Lpxxq(p,mu,nu,q) = Vpxxq(p,mu,nu,q) 
+#
+           ENDDO nu 
+#
+           DO q1  
+#
+              Txpqq(mu,p,q1,q) = 0.0  
+#
+              DO nu  
+#
+                 T1xpqq(mu,p,q1,q) = Lxpxq(mu,p,nu,q)*cb(nu,q1)
+                 Txpqq(mu,p,q1,q) += T1xpqq(mu,p,q1,q)  
+#
+              ENDDO nu  
+#
+              PREPARE Vxpqq(mu,p,q1,q) = Txpqq(mu,p,q1,q)
+#
+           ENDDO q1
+#
+           deallocate Lxpxq(mu,p,*,q) 
+           deallocate Lpxxq(p,mu,*,q) 
+#
+     ENDPARDO mu, p, q
+#
+     execute server_barrier
+#
+     ENDPROC TRAN_TRAN3 
+#    ------------------------------------------------------------------------
+#
+     PROC TRAN_TRAN4 
+#
+#    ------------------------------------------------------------------------
+#
+     PARDO p, p, p1
+#
+           allocate Lxppp(*,p,p2,p1) 
+#
+           DO mu 
+#
+              REQUEST Vxppp(mu,p,p2,p1) p1 
+              REQUEST Vxppp1(mu,p1,p2,p) p
+              Lxppp(mu,p,p2,p1) = Vxppp(mu,p,p2,p1) 
+              Txppp(mu,p,p2,p1) = Vxppp1(mu,p1,p2,p) 
+              Lxppp(mu,p,p2,p1) -= Txppp(mu,p,p2,p1) 
+#
+           ENDDO mu  
+#
+           DO p3
+#
+              Tpppp(p3,p,p2,p1) = 0.0  
+#
+              DO mu  
+#
+                 T1pppp(p3,p,p2,p1) = Lxppp(mu,p,p2,p1)*ca(mu,p3)
+                 Tpppp(p3,p,p2,p1) += T1pppp(p3,p,p2,p1)  
+#
+              ENDDO mu  
+#
+              PREPARE VSpppp(p3,p,p2,p1) = Tpppp(p3,p,p2,p1) 
+#
+           ENDDO p3
+#
+           deallocate Lxppp(*,p,p2,p1) 
+#
+     ENDPARDO p, p, p1
+
+#
+     PARDO q, q1, q2
+#
+           allocate Lxqqq(*,q,q2,q1) 
+#
+           DO mu  
+#
+              REQUEST Vxqqq(mu,q,q2,q1) q1 
+              REQUEST Vxqqq1(mu,q1,q2,q) q 
+              Lxqqq(mu,q,q2,q1)  = Vxqqq(mu,q,q2,q1)
+              Txqqq(mu,q,q2,q1)  = Vxqqq1(mu,q1,q2,q) 
+              Lxqqq(mu,q,q2,q1) -= Txqqq(mu,q,q2,q1) 
+#
+           ENDDO mu  
+#
+           DO q3 
+#
+              Tqqqq(q3,q,q2,q1) = 0.0 
+#
+              DO mu  
+#
+                 T1qqq(q3,q,q2,q1)      = Lxqqq(mu,q,q2,q1)*cb(mu,q3)
+                 Tqqqq(q3,q,q2,q1)      += T1qqqq(q3,q,q2,q1) 
+#
+              ENDDO mu  
+#
+              PREPARE VSqqqq(q3,q,q2,q1) = Tqqqq(q3,q,q2,q1)
+#
+           ENDDO q3
+#
+           deallocate Lxqqq(*,q,q2,q1) 
+#
+     ENDPARDO q, q1, q2
+#
+     PARDO p, q, q1
+#
+           allocate Lxpqq(*,p,q,q1) 
+#
+           DO mu  
+#
+              REQUEST Vxpqq(mu,p,q,q1) q1 
+              Lxpqq(mu,p,q,q1) = Vxpqq(mu,p,q,q1)  
+#
+           ENDDO mu  
+#
+           DO p1 
+#
+              Tppqq(p1,p,q,q1) = 0.0 
+#
+              DO mu  
+#
+                 T1ppqq(p1,p,q,q1) = Lxpqq(mu,p,q,q1)*ca(mu,p1)
+                 Tppqq(p1,p,q,q1) += T1ppqq(p1,p,q,q1)  
+#
+              ENDDO mu  
+#
+              PREPARE Vppqq(p1,p,q,q1) = Tppqq(p1,p,q,q1)
+#
+           ENDDO p1 
+#
+           deallocate Lxpqq(*,p,q,q1) 
+#
+     ENDPARDO p, q, q1
+
+
+#    ------------------------------------------------------------------------
+#
+     ENDPROC TRAN_TRAN4 
+#
+#    ------------------------------------------------------------------------
+#
+#    ------------------------------------------------------------------------ 
+#
+     PROC TRAN_UHF 
+# 
+#        CALL COMP_INTEGRALS # --> compute integrals and put into served array 
+         CALL TRAN_TRAN2     # --> performs the first two stages of the 
+                             #     two-electron integral transformation.  
+         CALL TRAN_TRAN3     # --> performs the third stage   
+                             #     two-electron integral transformation.  
+         CALL TRAN_TRAN4     # --> performs the fourth stage of the  
+                             #     two-electron integral transformation.  
+#
+     ENDPROC TRAN_UHF 
+#
+#    ------------------------------------------------------------------------ 
+#
+#    Main Program 
+#
+#    Read T and lambda expanded from truncated basis. 
+#    ------------------------------------------------ 
+#
+     CALL TRAN_UHF 
+     #execute print_scalar esum 
+#
+# Write transformed two-electron integrals to list. 
+# Note that the Hartree-Fock coefficients are also 
+# written out in case a dropmo gradient is being 
+# performed.  
+# ------------------------------------------------ 
+# 
+      execute server_barrier 
+#
+      execute blocks_to_list VSpppp(p,p2,p1,p3)   
+      execute blocks_to_list VSqqqq(q,q2,q1,q3)   
+      execute blocks_to_list Vppqq(p,p1,q,q1)   
+      execute blocks_to_list                Fpqa_mi
+      execute blocks_to_list                Fpqb_mi
+      execute blocks_to_list                Fpqa_me
+      execute blocks_to_list                Fpqb_me
+      execute blocks_to_list                Fpqa_ae
+      execute blocks_to_list                Fpqb_ae
+      execute write_blocks_to_list
+      execute server_barrier
+# 
+# Done Write transformed two-electron integrals to list 
+# ----------------------------------------------------- 
+# 
+#    ------------------------------------------------------------------------ 
+# 
+#
+                           ENDSIAL UHF_TRAN_PQRS
+#
+#    ------------------------------------------------------------------------ 
+#

@@ -1,0 +1,2824 @@
+#----------------------------------------------------------------------------------------|
+#   The purpose of this code is to calculate spin-orbit splittings of ionized doublet    |
+#         states using EOM-SO-CI method with Pauli-Breit hamiltonian                     |    
+#     Added to ACES3 by Denis Bokhan, Moscow Lomonosov State University,                 |
+#                            Moscow, Russian  Federation                                 |
+#----------------------------------------------------------------------------------------|
+
+                           SIAL EOM_SO_CI_IP
+#--------------Definition of indices------------------------------------------------------
+      aoindex mu     = 1, norb
+      aoindex nu     = 1, norb
+      aoindex lambda = 1, norb
+      aoindex sigma  = 1, norb
+#
+      moaindex i = baocc, eaocc
+      moaindex i1= baocc, eaocc
+      moaindex i2= baocc, eaocc
+      moaindex i3= baocc, eaocc
+#
+      moaindex a = bavirt, eavirt
+      moaindex a1= bavirt, eavirt
+      moaindex a2= bavirt, eavirt
+      moaindex a3= bavirt, eavirt
+#
+      moaindex j = baocc, eaocc
+      moaindex j1= baocc, eaocc
+      moaindex j2= baocc, eaocc
+      moaindex j3= baocc, eaocc
+      moaindex k = baocc, eaocc
+#
+      moaindex b = bavirt, eavirt
+      moaindex b1= bavirt, eavirt
+      moaindex b2= bavirt, eavirt
+      moaindex b3= bavirt, eavirt
+      moaindex d = bavirt, eavirt
+      moaindex c1 = bavirt, eavirt
+#
+      moaindex p = baocc, eavirt
+      moaindex p1= baocc, eavirt
+      moaindex p2= baocc, eavirt
+      moaindex p3= baocc, eavirt
+      moaindex q= baocc, eavirt
+#----------Simple indices---------------------
+      index indone = 1, 1 # Watson
+      index kroot = 1, 12 # Watson
+      index kroot1 = 1, 12
+      index kindex12 =1, 12
+      index soind1 = 1, 50
+      index soind2 = 1, 50
+      index   kk1 = 1,1
+      index   target_roots = 1,12
+#--------------Definition of arrays------------------------------------------------------
+
+#-----------Non-relativistic EOM eigenvalues---------------------------------------------
+      distributed  LIP (kroot,indone)
+      distributed  RIP (kroot,indone)
+#-----------Non-relativistic EOM right eigenvectors--------------------------------------
+      distributed  R1A_VECS (i,kindex12)
+      served       R2AA_VECS (i,a1,i1,kindex12)
+      served       R2AB_VECS (i,b,j,kindex12)
+      distributed  R1A_VECS_IP (i,kroot)
+      served       R2AA_VECS_IP (i,a1,i1,kindex12)
+      served       R2BB_VECS_IP (j,b1,j1,kindex12)
+      served       R2AB_VECS_IP (i,b,j,kindex12)
+#----------------------------------------------------------------------------------------
+
+#-----------Non-relativistic EOM left eigenvectors--------------------------------------
+      distributed  L1A_VECS (i,kroot)
+      distributed  L1B_VECS (j,kroot)
+      served       L2AA_VECS (i,i1,a1,kroot)
+      served       L2AB_VECS (i,j,b,kroot)
+      distributed  L1A_VECS_IP (i,kroot)
+      distributed  L1B_VECS_IP (j,kroot)
+      served       L2AA_VECS_IP (i,i1,a1,kroot)
+      served       L2BB_VECS_IP (j,j1,b1,kroot)
+      served       L2AB_VECS_IP (i,j,b,kroot)
+
+      distributed  L1A_VECS_new (i,kroot)
+      distributed  L1B_VECS_new (j,kroot)
+      served       L2AA_VECS_new (i,i1,a1,kroot)
+      served       L2BB_VECS_new (j,j1,b1,kroot)
+      served       L2AB_VECS_new (i,j,b,kroot)
+#-----------Lambda amplitudes------------------------------------------------------------
+      distributed A1a(i,a)
+      distributed A1b(j,b)
+      served A2aa(i,a,i1,a1)
+      served A2ab(i,a,j,b)
+      served A2bb(j,b,j1,b1)
+#-----------Cluster amplitudes-----------------------------------------------------------
+      served T2aa(a,i,a1,i1)
+      served T2ab(a,i,b,j)
+      served T2bb(b,j,b1,j1)
+      distributed t1a(a,i)
+      distributed t1b(b,j)
+#-----------Some auxilirary arrays-------------------------------------------------------
+      served IP_EVAL1(kk1,target_roots)
+      served IP_EVEC_R_p_a(i,target_roots)
+      served IP_EVEC_R_p_b(j,target_roots)
+      served IP_EVEC_R_abi_aaa(i,c1,i1,target_roots)
+      served IP_EVEC_R_abi_bbb(j,d,j1,target_roots)
+      served IP_EVEC_R_abi_abb(i,d,j,target_roots)
+      served IP_EVEC_L_p_a(i,target_roots)
+      served IP_EVEC_L_p_b(j,target_roots)
+      served IP_EVEC_L_abi_aaa(i,c1,i1,target_roots)
+      served IP_EVEC_L_abi_bbb(j,d,j1,target_roots)
+      served IP_EVEC_L_abi_abb(i,d,j,target_roots)
+
+#----------Spin-orbit integrals and related arrays---------------------------------------
+      distributed SO_x_ao(mu,nu)
+      distributed SO_y_ao(mu,nu)
+      distributed SO_z_ao(mu,nu)
+      distributed SO_x_pmu(mu,p)
+      distributed SO_y_pmu(mu,p)
+      distributed SO_z_pmu(mu,p)
+      distributed SO_x_pq(p,q)
+      distributed SO_y_pq(p,q)
+      distributed SO_z_pq(p,q)
+
+      served V2ixxi_x(i1,nu,lambda,i)
+      served V2ixxi_y(i1,nu,lambda,i)
+      served V2ixxi_z(i1,nu,lambda,i)
+
+      served V2ipxi_x(i2,p,lambda,i)
+      served V2ipxi_y(i2,p,lambda,i)
+      served V2ipxi_z(i2,p,lambda,i)
+
+      served V2iixx_x(i2,i,lambda,sigma)
+      served V2iixx_y(i2,i,lambda,sigma)
+      served V2iixx_z(i2,i,lambda,sigma)
+
+      served V2xiix_x(mu,i,i2,sigma)
+      served V2xiix_y(mu,i,i2,sigma)
+      served V2xiix_z(mu,i,i2,sigma)
+
+      served V2iipx_x(i2,i,p,sigma)
+      served V2iipx_y(i2,i,p,sigma)
+      served V2iipx_z(i2,i,p,sigma)
+
+      served V2piix_x(p,i,i2,sigma)
+      served V2piix_y(p,i,i2,sigma)
+      served V2piix_z(p,i,i2,sigma)
+
+      served V2ipqi_x(i2,p,q,i)
+      served V2ipqi_y(i2,p,q,i)
+      served V2ipqi_z(i2,p,q,i)
+
+      served V2iipq_x(i2,i,p,q)
+      served V2iipq_y(i2,i,p,q)
+      served V2iipq_z(i2,i,p,q)
+
+      served V2piiq_x(p,i,i2,q)
+      served V2piiq_y(p,i,i2,q)
+      served V2piiq_z(p,i,i2,q)
+#----------------------------------------------------------------------------------------
+      distributed HBAR_ia(i,a)
+      distributed HBAR_jb(j,b)
+#-----------SOMF Fock operators----------------------------------------------------------
+      distributed Fso_pq_x(p,q)
+      distributed Fso_pq_y(p,q)
+      distributed Fso_pq_z(p,q)
+
+      distributed Fso_pq_x_aux(p,q)
+      distributed Fso_pq_y_aux(p,q)
+      distributed Fso_pq_z_aux(p,q)
+
+      distributed somfex_x_1(p,q)
+      distributed somfex_y_1(p,q)
+      distributed somfex_z_1(p,q)
+
+      distributed somfex_x_2(p,q)
+      distributed somfex_y_2(p,q)
+      distributed somfex_z_2(p,q)
+
+      distributed somfex_x_3(p,q)
+      distributed somfex_y_3(p,q)
+      distributed somfex_z_3(p,q)
+#---------------SO matrix elements related arrays---------------------------------------- 
+      distributed ILR_ab(a,b,kroot,kroot1)
+      distributed ILR_ij(i,j,kroot,kroot1)
+      distributed ILR_2p_ab(a,b,kroot,kroot1)
+      distributed ILR_2p_ij(i,j,kroot,kroot1)
+      distributed ILR_AB_2p_ab(a,b,kroot,kroot1)
+      distributed ILR_AB_2p_ij(i,j,kroot,kroot1)
+      distributed ILR_AB1_2p_ab(a,b,kroot,kroot1)
+      distributed ILR_AB1_2p_ij(i,j,kroot,kroot1)
+      distributed ILR_AB2_2p_ab(a,b,kroot,kroot1)
+      distributed ILR_AB2_2p_ij(i,j,kroot,kroot1)
+      distributed ILR_AB3_2p_ab(a,b,kroot,kroot1)
+      distributed ILR_AB3_2p_ij(i,j,kroot,kroot1)
+      served LILR_ab(a,b,kroot,indone)
+      served LILR_ij(i,j,kroot,indone)
+      served LILR_2p_ab(a,b,kroot,indone)
+      served LILR_2p_ij(i,j,kroot,indone)
+      served LILR_AB_2p_ab(a,b,kroot,indone)
+      served LILR_AB_2p_ij(i,j,kroot,indone)
+      served LILR_AB1_2p_ab(a,b,kroot,indone)
+      served LILR_AB1_2p_ij(i,j,kroot,indone)
+      served LILR_AB2_2p_ab(a,b,kroot,indone)
+      served LILR_AB2_2p_ij(i,j,kroot,indone)
+      served LILR_AB3_2p_ab(a,b,kroot,indone)
+      served LILR_AB3_2p_ij(i,j,kroot,indone)
+      served ILR_ai(a,i,kroot,kroot1)
+      served ILR_ai1(a,i,kroot,kroot1)
+      served ILR_ai2(a,i,kroot,kroot1)
+      served ILR_ai3(a,i,kroot,kroot1)
+#-----------Temporal arrays--------------------------------------------------------------
+      TEMP  Tee(kroot,indone)
+      TEMP  T1_R1A(i)
+      TEMP  T1_R1B(j)
+      TEMP  L1_R1A(i)
+      TEMP  L1_R1B(j)
+      temp  tT1_R1A(i,kroot)
+      temp  tT1_R1B(i,kroot)
+      temp  tzT1_R1A(i,kroot)
+      temp  tzT1_R1B(i,kroot)
+      temp  tzT1_L1A(i,kroot)
+      temp  tzT1_L1B(j,kroot)
+      temp  tqT1_R1A(i,target_roots)
+      temp  tqT1_R1B(i,target_roots)
+      temp  tqT1_L1A(i,target_roots)
+      temp  tqT1_L1B(i,target_roots)
+      temp  tT1_L1A(i,kroot)
+      temp  tT1_L1B(i,kroot)
+      temp  tTR2AA_VECS (i,a1,i1,kroot)
+      temp  tTL2AA_VECS (i,i1,a1,kroot)
+      temp  tTL2BB_VECS (j,j1,d,kroot)
+      temp  tTL2AB_VECS (i,j,b,kroot)
+      temp  tqTR2AA_VECS (i,a1,i1,target_roots)
+      temp  tqTR2BB_VECS (j,d,j1,target_roots)
+      temp  tqTR2AB_VECS (i,b,j,target_roots)
+      temp  tqTL2AA_VECS (i,a1,i1,target_roots)
+      temp  tqTL2BB_VECS (j,d,j1,target_roots)
+      temp  tqTL2AB_VECS (i,b,j,target_roots)
+      temp  tqTL2AA_VECS1 (i,i1,a1,target_roots)
+      temp  tqTL2AB_VECS1 (i,i1,a1,target_roots) 
+      temp  TR2_VECS (i,a1,i1)
+      temp  TL2_VECS (i,j,b)
+      temp  TL2_VECS1(i,a,j) 
+      temp  tmp_t2(a,j,b,i)
+      temp  tILR_ai(a,i,kroot,kroot1)
+
+      temp troot(kroot,indone)
+      temp tmp_EE_EVAL1(kk1,target_roots)
+      temp tr(kroot)
+      temp tkk(kk1)
+      temp troot1(kroot,indone)
+      temp tover(kroot,kroot1)
+      TEMP Tmp_1SOIX(mu,nu)
+      TEMP Tmp_1SOIY(mu,nu)
+      TEMP Tmp_1SOIZ(mu,nu)
+      temp tTR2BB_VECS (j,d,j1,kroot)
+      temp tTR2AB_VECS (i,b,j,kroot)
+      temp T1_L1A(i)
+      temp T1_L1B(j)
+
+      TEMP Tmp_2SOIX(mu,nu,lambda,sigma)
+      TEMP Tmp_2SOIY(mu,nu,lambda,sigma)
+      TEMP Tmp_2SOIZ(mu,nu,lambda,sigma)
+
+      temp tSO_x_pmu(mu,p)
+      temp tSO_y_pmu(mu,p)
+      temp tSO_z_pmu(mu,p)
+      temp tSO_x_pq(p,q)
+      temp tSO_y_pq(p,q)
+      temp tSO_z_pq(p,q)
+      temp tsox(p,q,i,j)
+      temp txxxi(mu,nu,lambda,i)
+      temp tixxi(i2,nu,lambda,i)
+      temp tipxi(i2,p,lambda,i)
+      temp tipqi(i2,p,q,i)
+      temp txixx(mu,i,lambda,sigma)
+      temp tiixx(i2,i,lambda,sigma)
+      temp txiix(mu,i,i2,sigma)
+      temp tiipx(i2,i,p,sigma)
+      temp tpiix(p,i,i2,sigma)
+      temp tiipq(i2,i,p,q)
+      temp tpiiq(p,i,i2,q)
+      temp tsomf(p,q)
+      temp tILR_ab(a,b,kroot,kroot1)
+      temp tILR_ij(i,j,kroot,kroot1)
+      temp tILR_2p_ab(a,b,kroot,kroot1)
+      temp tILR_2p_ij(i,j,kroot,kroot1)
+      temp tILR_AB_2p_ab(a,b,kroot,kroot1)
+      temp tILR_AB_2p_ij(i,j,kroot,kroot1)
+      temp tILR_AB1_2p_ab(a,b,kroot,kroot1)
+      temp tILR_AB1_2p_ij(i,j,kroot,kroot1)
+      temp tILR_AB2_2p_ab(a,b,kroot,kroot1)
+      temp tILR_AB2_2p_ij(i,j,kroot,kroot1)
+      temp tILR_AB3_2p_ab(a,b,kroot,kroot1)
+      temp tILR_AB3_2p_ij(i,j,kroot,kroot1)
+      temp ttT1_L1A(i,kroot)
+      temp ttT1_R1A(i,kroot)
+      temp rILR_ab(a,b,kroot,indone)
+      temp rILR_ij(i,j,kroot,indone)
+      temp taa(a,b)
+      temp tii(i,j)
+      temp tai(a,i) 
+      temp so_temp(soind1,soind2)
+      temp tL1R1_kl(i,kroot,j,kroot1)
+#-----------local arrays----------------------------------------------------------------
+      local V1_4_x(mu,nu,lambda,i)
+      local V1_4_y(mu,nu,lambda,i)
+      local V1_4_z(mu,nu,lambda,i)
+
+      local V2_4_x(mu,i,lambda,sigma)
+      local V2_4_y(mu,i,lambda,sigma)
+      local V2_4_z(mu,i,lambda,sigma)
+
+
+#-----------auxiliary arrays-------------------------------------------------------------
+      static overvec(kroot,kroot1)
+      static overvec1(kroot,kroot1)
+      static root_ind(kroot,indone)
+      static lroot_ind(kroot,indone)
+      static roots(kroot,indone)
+      static roots_S(kroot,indone)
+      static roots_T(kroot,indone)
+      static so_ci_re(soind1,soind2)
+      static so_ci_im(soind1,soind2)
+      static vecstat(a,i)
+#-----------Scalar variables-------------------------------------------------------------
+      scalar  ZERO
+      scalar  ONE
+      scalar  TWO
+      scalar  half
+      scalar  sqrtwo
+      scalar  rootcount
+      scalar  trp_count
+      scalar  sing_count
+      scalar  etemp
+      scalar  etemp_sq
+      scalar  tresh
+      SCALAR  ASUM
+      SCALAR  BSUM
+      SCALAR  A_SUM
+      SCALAR  B_SUM
+      scalar cnt
+      scalar cnt_s
+      scalar cnt_t
+      scalar rootmax
+      scalar ind
+      scalar sct
+      scalar tct
+      scalar tct1
+      scalar tct2
+      scalar E_ccsd
+      scalar cnt1
+      scalar cnt2
+      scalar so_ci_size
+      scalar cnt1_size
+      scalar cnt2_size
+      scalar mark1
+      scalar mark2
+      scalar mark3
+      scalar mark4
+      scalar mark5
+      scalar tmpval
+      scalar ecorr
+      scalar so_pref
+      scalar auxval
+      scalar tmpval1
+      scalar tmpval2
+      scalar tmpval3
+      scalar tmpval4
+      scalar tmpval5
+      scalar tmpval6
+      scalar tmpval7
+      scalar tmpval8
+      scalar tmpval9
+      scalar tmpval10
+      scalar tmpval11
+      scalar tmpval12
+      scalar tmpval13
+      scalar tmpval14
+      scalar tmpval15
+      scalar tmpval16
+      scalar tmpval17
+      scalar tmpval18
+      scalar tmpval19
+      scalar tmpval20
+      scalar tmpval21
+      scalar tmpval22
+      scalar tmpval23
+      scalar tmpval24
+      scalar tmpval25
+      scalar tmpval26
+      scalar tmpval_re
+      scalar tmpval_im
+
+      scalar LROVER
+      scalar LROVER_aa
+      scalar LROVER_bb
+      scalar LROVER_aaaa
+      scalar LROVER_bbbb
+      scalar LROVER_aabb
+      scalar NORM
+      scalar norm_sqr
+      scalar mind1
+      scalar mind2
+      scalar mind3
+      scalar mind4
+#-----------------------------------------------------------------------------------------|
+#-----------------------------------------------------------------------------------------|
+
+      PROC READ_DATA
+#     -------------- 
+
+      create RIP
+      create LIP
+      create t1a
+      create t1b
+      create A1a
+      create A1b
+      create R1A_VECS
+      create L1A_VECS
+      create HBAR_ia
+      create HBAR_jb
+#----------------Read data from EE-EOM-CCSD----------- 
+           execute list_to_blocks               RIP
+           execute list_to_blocks               IP_EVEC_R_p_a
+           execute list_to_blocks               IP_EVEC_R_abi_aaa
+           execute list_to_blocks               IP_EVEC_R_abi_abb
+           execute list_to_blocks               IP_EVEC_L_p_a
+           execute list_to_blocks               IP_EVEC_L_abi_aaa
+           execute list_to_blocks               IP_EVEC_L_abi_abb
+           execute list_to_blocks               t1a
+           execute list_to_blocks               t1b
+           execute list_to_blocks               T2aa
+           execute list_to_blocks               T2bb
+           execute list_to_blocks               T2ab
+
+      execute read_list_to_blocks
+      execute sip_barrier
+      execute server_barrier
+#---------Preparation on arrays-----------------------------
+        cnt1 = 0.0
+        DO kroot
+        cnt1 += 1.0
+
+        cnt2 = 0.0
+        DO target_roots
+        cnt2 += 1.0
+
+        IF cnt1 == cnt2
+        DO kk1
+#-------------Right vectors---------------------------------
+        PARDO i
+        tzT1_R1A(i,kroot) = 0.0
+        REQUEST IP_EVEC_R_p_a(i,target_roots) i
+        tqT1_R1A(i,target_roots) = IP_EVEC_R_p_a(i,target_roots)
+        T1_R1A(i) = tqT1_R1A(i,target_roots)
+        execute addrootindex T1_R1A tzT1_R1A
+        PUT R1A_VECS(i,kroot) = tzT1_R1A(i,kroot)
+        ENDPARDO i
+        execute sip_barrier
+
+        PARDO i,c1,i1
+        tTR2AA_VECS (i,c1,i1,kroot) = 0.0
+        REQUEST IP_EVEC_R_abi_aaa(i,c1,i1,target_roots) i
+        tqTR2AA_VECS (i,c1,i1,target_roots) = IP_EVEC_R_abi_aaa(i,c1,i1,target_roots)
+        TR2_VECS(i,c1,i1) = tqTR2AA_VECS (i,c1,i1,target_roots)
+        execute addrootindex TR2_VECS tTR2AA_VECS
+        PREPARE R2AA_VECS(i,c1,i1,kroot) = tTR2AA_VECS (i,c1,i1,kroot)
+        ENDPARDO i,c1,i1
+        execute server_barrier
+
+        PARDO i,b,j
+        tTR2AB_VECS (i,b,j,kroot) = 0.0
+        REQUEST IP_EVEC_R_abi_abb(i,b,j,target_roots) j
+        tqTR2AB_VECS(i,b,j,target_roots) = IP_EVEC_R_abi_abb(i,b,j,target_roots)
+        TR2_VECS(i,b,j) = tqTR2AB_VECS(i,b,j,target_roots)
+        execute addrootindex TR2_VECS tTR2AB_VECS
+        PREPARE R2AB_VECS(i,b,j,kroot) = tTR2AB_VECS(i,b,j,kroot)
+        ENDPARDO i,b,j
+        execute server_barrier
+
+
+#-------------Left vectors----------------------------------
+        PARDO i
+        tzT1_L1A(i,kroot) = 0.0
+        REQUEST IP_EVEC_L_p_a(i,target_roots) i
+        tqT1_L1A(i,target_roots) = IP_EVEC_L_p_a(i,target_roots)
+        T1_R1A(i) = tqT1_L1A(i,target_roots)
+        T1_L1A(i) = T1_R1A(i)
+        execute addrootindex T1_L1A tzT1_L1A
+        PUT L1A_VECS(i,kroot) = tzT1_L1A(i,kroot)
+        ENDPARDO i
+        execute sip_barrier
+
+        PARDO i,c1,i1
+        tTL2AA_VECS (i,i1,c1,kroot) = 0.0
+        REQUEST IP_EVEC_L_abi_aaa(i,c1,i1,target_roots) i
+        tqTR2AA_VECS (i,c1,i1,target_roots) = IP_EVEC_L_abi_aaa(i,c1,i1,target_roots)
+        tqTL2AA_VECS1 (i,i1,c1,target_roots) = tqTR2AA_VECS (i,c1,i1,target_roots)
+        TL2_VECS (i,i1,c1) = tqTL2AA_VECS1 (i,i1,c1,target_roots)
+        execute addrootindex TL2_VECS tTL2AA_VECS
+        PREPARE L2AA_VECS(i,i1,c1,kroot) = tTL2AA_VECS (i,i1,c1,kroot)
+        ENDPARDO i,c1,i1
+        execute server_barrier
+
+        PARDO i,b,j
+        tTL2AB_VECS (i,j,b,kroot) = 0.0
+        REQUEST IP_EVEC_L_abi_abb(j,b,i,target_roots) j
+        tqTR2AB_VECS(j,b,i,target_roots) = IP_EVEC_L_abi_abb(j,b,i,target_roots)
+        tqTL2AA_VECS1 (i,j,b,target_roots) = tqTR2AB_VECS(j,b,i,target_roots)
+        TL2_VECS (i,j,b) = tqTL2AA_VECS1 (i,j,b,target_roots)
+        execute addrootindex TL2_VECS tTL2AB_VECS
+        PREPARE L2AB_VECS(i,j,b,kroot) = tTL2AB_VECS(i,j,b,kroot)
+        ENDPARDO i,b,j
+        execute server_barrier
+
+
+#-----------------------------------------------------------
+        ENDDO kk1
+        ENDIF
+        ENDDO target_roots
+        ENDDO kroot
+
+#----------------------------------------------------------
+
+#-----------------------------------------------------------
+      ENDPROC READ_DATA
+#     ------------------
+
+#-----------------------------------------------------------------------------------------|
+##-----------------------------------------------------------------------------------------|
+#
+      PROC RLOVERLAP
+#     --------------
+
+      create L1A_VECS_new
+      create L1B_VECS_new
+
+
+#-------------Step 1 - calculate overlap between left and right EOM vectors---------------|
+      DO kroot
+       DO kroot1
+
+      LROVER = 0.0
+      LROVER_aa = 0.0
+      LROVER_bb = 0.0
+      LROVER_aaaa = 0.0
+      LROVER_bbbb = 0.0
+      LROVER_aabb = 0.0
+
+#------alpha part----------------|
+      tmpval = 0.0
+      PARDO i
+      GET L1A_VECS (i,kroot)
+      L1_R1A(i) = L1A_VECS (i,kroot)
+      GET R1A_VECS (i,kroot1)
+      T1_R1A(i) = R1A_VECS(i,kroot1)
+      etemp = L1_R1A(i)*T1_R1A(i)
+      tmpval += etemp
+      ENDPARDO i
+      execute server_barrier
+
+      collective LROVER_aa += tmpval
+#-------alpha-alpha part---------|
+      tmpval = 0.0
+      PARDO i,b,j
+      REQUEST L2AA_VECS (i,j,b,kroot) i
+      tqTL2AA_VECS1 (i,j,b,kroot)= L2AA_VECS (i,j,b,kroot)
+      tqTR2AB_VECS(i,b,j,kroot) = tqTL2AA_VECS1 (i,j,b,kroot)
+      TL2_VECS1 (i,b,j) = tqTR2AB_VECS(i,b,j,kroot)
+      REQUEST R2AA_VECS (i,b,j,kroot1) i
+      TR2_VECS (i,b,j) = R2AA_VECS (i,b,j,kroot1)
+      etemp = TL2_VECS1 (i,b,j)*TR2_VECS (i,b,j)
+      etemp *= 0.5
+      tmpval += etemp
+      ENDPARDO i,b,j
+      execute server_barrier
+
+      collective LROVER_aaaa += tmpval
+
+      tmpval = 0.0
+      PARDO i,b,j
+      REQUEST L2AB_VECS (i,j,b,kroot) i
+      tqTL2AA_VECS1 (i,j,b,kroot) = L2AB_VECS (i,j,b,kroot)
+      tqTR2AB_VECS(i,b,j,kroot) = tqTL2AA_VECS1 (i,j,b,kroot)
+      TL2_VECS1 (i,b,j) = tqTR2AB_VECS(i,b,j,kroot)
+      REQUEST R2AB_VECS (i,b,j,kroot1) i
+      TR2_VECS (i,b,j) = R2AB_VECS (i,b,j,kroot1)
+      etemp = TL2_VECS1 (i,b,j)*TR2_VECS (i,b,j)
+      tmpval += etemp
+      ENDPARDO i,b,j
+      execute server_barrier
+
+      collective LROVER_aabb += tmpval
+#--------------------------------|
+      LROVER += LROVER_aa
+      LROVER += LROVER_aaaa
+      LROVER += LROVER_aabb
+
+      overvec(kroot,kroot1) = LROVER
+
+      ENDDO kroot1
+      ENDDO kroot
+
+#      execute prsolrover overvec(kroot,kroot1)
+
+#-----Step 2 - reorder left eigenvectors according to overlap with rirgt eigenvectors-----|
+#--------- also multiply left eigenvectors by normalization factors-----------------------|       
+
+      DO kroot
+      DO indone
+      lroot_ind(kroot,indone) = 0.0
+      ENDDO indone
+      ENDDO kroot
+
+      PARDO i
+       DO kroot
+          GET L1A_VECS (i,kroot)
+          tT1_L1A(i,kroot) = L1A_VECS (i,kroot)
+#          execute dump_amp tT1_L1A
+       enddo kroot
+      endpardo i 
+
+#----------Generate root correspondence table-----------------------|        
+
+      execute lrootcorr overvec lroot_ind
+
+#----------Create ordered left eigenvectors arrays-------------------|
+     DO kroot
+     DO indone
+     troot(kroot,indone) = lroot_ind(kroot,indone)
+     execute return_sval troot ind
+     ENDDO indone
+          cnt = 0.0
+          DO kroot1
+          cnt += 1.0
+
+          IF cnt == ind
+          tover(kroot1,kroot) = overvec(kroot1,kroot)
+          execute return_sval tover tmpval
+
+               norm_sqr = tmpval
+               norm_sqr *= tmpval
+               half = 0.5
+               execute square_root norm_sqr half
+
+#               execute print_scalar tmpval
+
+               IF norm_sqr > 0.000001
+               NORM = 1.0/tmpval
+               ENDIF
+
+               IF norm_sqr < 0.000001
+               NORM = 1.0
+               ENDIF
+
+#               execute print_scalar NORM
+#----------------------------------|
+          PARDO i
+          tT1_L1A(i,kroot) = 0.0
+          GET L1A_VECS (i,kroot1)
+          L1_R1A(i) = L1A_VECS (i,kroot1)
+          L1_R1A(i) *= NORM
+          execute addrootindex L1_R1A tT1_L1A
+          PUT L1A_VECS_new (i,kroot) = tT1_L1A(i,kroot)
+          ENDPARDO i
+          execute sip_barrier
+#----------------------------------|
+          PARDO i,j,b
+          tTL2AA_VECS (i,j,b,kroot) = 0.0
+          REQUEST L2AA_VECS (i,j,b,kroot1) i
+          TL2_VECS (i,j,b) = L2AA_VECS (i,j,b,kroot1)
+          TL2_VECS (i,j,b) *= NORM
+          execute addrootindex TL2_VECS tTL2AA_VECS
+          PREPARE L2AA_VECS_new (i,j,b,kroot) = tTL2AA_VECS (i,j,b,kroot)
+          ENDPARDO i,j,b
+          execute server_barrier
+#----------------------------------|
+          PARDO i,j,b
+          tTL2AA_VECS (i,j,b,kroot) = 0.0
+          REQUEST L2AB_VECS (i,j,b,kroot1) i
+          TL2_VECS (i,j,b) = L2AB_VECS (i,j,b,kroot1)
+          TL2_VECS (i,j,b) *= NORM
+          execute addrootindex TL2_VECS tTL2AA_VECS
+          PREPARE L2AB_VECS_new (i,j,b,kroot) = tTL2AA_VECS (i,j,b,kroot)
+          ENDPARDO i,j,b
+          execute server_barrier
+#----------------------------------|
+          ENDIF
+
+          ENDDO kroot1
+          ENDDO kroot
+
+#----------Check of the overlap of new vectors----------------------|
+      DO kroot
+       DO kroot1
+
+      LROVER = 0.0
+      LROVER_aa = 0.0
+      LROVER_bb = 0.0
+      LROVER_aaaa = 0.0
+      LROVER_bbbb = 0.0
+      LROVER_aabb = 0.0
+
+#------alpha part----------------|
+
+      tmpval = 0.0
+      PARDO i
+      GET L1A_VECS_new (i,kroot)
+      L1_R1A(i) = L1A_VECS_new (i,kroot)
+      GET R1A_VECS (i,kroot1)
+      T1_R1A(i) = R1A_VECS(i,kroot1)
+      etemp = L1_R1A(i)*T1_R1A(i)
+      tmpval += etemp
+      ENDPARDO i
+      execute server_barrier
+
+      collective LROVER_aa += tmpval
+
+      tmpval = 0.0
+      PARDO i,b,j
+      REQUEST L2AA_VECS_new (i,j,b,kroot) i
+      TL2_VECS (i,j,b) = L2AA_VECS_new (i,j,b,kroot)
+      TL2_VECS1(i,b,j) = TL2_VECS (i,j,b)
+      REQUEST R2AA_VECS (i,b,j,kroot1) i
+      TR2_VECS (i,b,j) = R2AA_VECS (i,b,j,kroot1)
+      etemp = TL2_VECS1 (i,b,j)*TR2_VECS (i,b,j)
+      etemp *= 0.5
+      tmpval += etemp
+      ENDPARDO i,b,j
+      execute server_barrier
+
+      collective LROVER_aaaa += tmpval
+
+#-------alpha-beta part----------|
+      tmpval = 0.0
+      PARDO i,b,j
+      REQUEST L2AB_VECS_new (i,j,b,kroot) i
+      TL2_VECS (i,j,b) = L2AB_VECS_new (i,j,b,kroot)
+      TL2_VECS1(i,b,j) = TL2_VECS(i,j,b)
+      REQUEST R2AB_VECS (i,b,j,kroot1) i
+      TR2_VECS (i,b,j) = R2AB_VECS (i,b,j,kroot1)
+      etemp = TL2_VECS1 (i,b,j)*TR2_VECS (i,b,j)
+      tmpval += etemp
+      ENDPARDO i,b,j
+      execute server_barrier
+
+      collective LROVER_aabb += tmpval
+#--------------------------------|
+      LROVER += LROVER_aa
+      LROVER += LROVER_aaaa
+      LROVER += LROVER_aabb
+
+#      execute print_scalar LROVER_aa
+#      execute print_scalar LROVER_aaaa
+#      execute print_scalar LROVER_aabb
+
+#      overvec1(kroot,kroot1) = LROVER
+
+      ENDDO kroot1
+      ENDDO kroot
+
+#      execute prsolrover overvec1(kroot,kroot1)
+#-------------------------------------------------------------------|
+#-------------------------------------------------------------------|
+      ENDPROC RLOVERLAP
+#     -----------------
+
+#-------------------------------------------------------------------|
+#-------------------------------------------------------------------|
+
+      PROC NR_EOM_CONTR
+#     -----------------
+
+#-------------------------------------------------|
+      DO soind1
+      DO soind2
+      ZERO = 0.0
+      so_ci_re(soind1,soind2) = ZERO
+      ENDDO soind2
+      ENDDO soind1
+
+      DO soind1
+      DO soind2
+      ZERO = 0.0
+      so_ci_im(soind1,soind2) = ZERO
+      ENDDO soind2
+      ENDDO soind1
+#-------------------------------------------------|
+          DO kroot
+          DO indone
+          GET RIP (kroot,indone)
+          troot(kroot,indone) = RIP (kroot,indone)
+          execute return_sval troot tmpval
+#          execute print_scalar tmpval
+          ENDDO indone
+          ENDDO kroot
+#-------------------------------------------------|
+      so_ci_size = 0.0
+      rootmax = ip_roots 
+      so_ci_size += rootmax
+      so_ci_size += rootmax
+#-------------------------------------------------|
+      mark1 = 1.0
+
+      mark2 = mark1
+      mark2 += rootmax
+
+      mark3 = mark2
+      mark3 += rootmax
+#-------------------------------------------------|
+      sct = 0.0
+      tct = 0.0
+      tct1 = 0.0
+      tct2 = 0.0
+
+      cnt1_size = 0.0
+#-------------------------------------------------|
+      ecorr = totenerg
+      ecorr -= scfeneg
+      execute print_scalar ecorr
+      E_ccsd = ecorr
+#-------------------------------------------------|
+      DO soind1
+      cnt2_size = 0.0
+      cnt1_size += 1.0
+         IF cnt1_size > so_ci_size
+         ENDIF
+
+         DO soind2
+         cnt2_size += 1.0
+         IF cnt2_size > so_ci_size
+         ENDIF
+#-------------------------------------------------|
+          IF cnt1_size >= mark1
+          IF cnt1_size < mark2
+               IF cnt2_size >= mark1
+               IF cnt2_size <  mark2
+                    IF cnt1_size == cnt2_size
+                    sct += 1.0
+                        cnt = 0.0
+                        tmpval = 0.0
+                        DO kroot
+                         DO indone
+                         cnt += 1.0
+                          IF cnt == sct
+                          GET RIP (kroot,indone)
+                          troot(kroot,indone) = RIP (kroot,indone) 
+                          execute return_sval troot tmpval
+                          tmpval += E_ccsd
+#                          execute print_scalar tmpval
+                          ENDIF
+                         ENDDO indone
+                        ENDDO kroot
+
+                    so_ci_re(soind1,soind2) = tmpval
+                    ENDIF
+               ENDIF
+               ENDIF
+          ENDIF
+          ENDIF
+
+#--------------------------------------------------------------------------
+          IF cnt1_size >= mark2
+          IF cnt1_size < mark3
+               IF cnt2_size >= mark2
+               IF cnt2_size <  mark3
+                    IF cnt1_size == cnt2_size
+                    tct += 1.0
+                        cnt = 0.0
+                        tmpval = 0.0
+                        DO kroot
+                         DO indone
+                         cnt += 1.0
+                          IF cnt == tct
+                          GET RIP (kroot,indone)
+                          troot(kroot,indone) = RIP (kroot,indone)
+                          execute return_sval troot tmpval
+                          tmpval += E_ccsd
+#                          execute print_scalar tmpval
+                          ENDIF
+                         ENDDO indone
+                        ENDDO kroot
+
+                    so_ci_re(soind1,soind2) = tmpval
+                    ENDIF
+               ENDIF
+               ENDIF
+          ENDIF
+          ENDIF
+
+
+#-------------------------------------------------|
+         ENDDO soind2
+      ENDDO soind1
+
+      execute server_barrier
+
+
+      ENDPROC NR_EOM_CONTR
+#     ---------------------
+
+#-------------------------------------------------------------------|
+#-------------------------------------------------------------------|
+
+      PROC SO_INT
+#     ----------- 
+
+      create SO_x_ao
+      create SO_y_ao
+      create SO_z_ao
+      create SO_x_pmu
+      create SO_y_pmu
+      create SO_z_pmu
+      create SO_x_pq
+      create SO_y_pq
+      create SO_z_pq
+
+      PARDO mu,p
+      tSO_x_pmu(mu,p) = 0.0
+      PUT SO_x_pmu(mu,p) = tSO_x_pmu(mu,p)
+      ENDPARDO mu,p
+      execute sip_barrier
+
+      PARDO mu,p
+      tSO_y_pmu(mu,p) = 0.0
+      PUT SO_y_pmu(mu,p) = tSO_y_pmu(mu,p)
+      ENDPARDO mu,p
+      execute sip_barrier
+
+      PARDO mu,p
+      tSO_z_pmu(mu,p) = 0.0
+      PUT SO_z_pmu(mu,p) = tSO_z_pmu(mu,p)
+      ENDPARDO mu,p
+      execute sip_barrier
+#--------------------------------------------
+      PARDO p,q
+      tSO_x_pq(p,q) = 0.0
+      PUT SO_x_pq(p,q) = tSO_x_pq(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+
+      PARDO p,q
+      tSO_y_pq(p,q) = 0.0
+      PUT SO_y_pq(p,q) = tSO_y_pq(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+
+      PARDO p,q
+      tSO_z_pq(p,q) = 0.0
+      PUT SO_z_pq(p,q) = tSO_z_pq(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+#---------------------------------------------
+      create Fso_pq_x_aux
+      create Fso_pq_y_aux
+      create Fso_pq_z_aux
+
+      PARDO p,q
+      tSO_x_pq(p,q) = 0.0
+      PUT Fso_pq_x_aux(p,q) = tSO_x_pq(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+
+      PARDO p,q
+      tSO_y_pq(p,q) = 0.0
+      PUT Fso_pq_y_aux(p,q) = tSO_y_pq(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+
+      PARDO p,q
+      tSO_z_pq(p,q) = 0.0
+      PUT Fso_pq_z_aux(p,q) = tSO_z_pq(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+#---------------------------------------------
+
+#--------Step 1 - calculate and transform one-electron spin-orbit integrals-------|
+      PARDO mu,nu
+      Tmp_1SOIX(mu,nu) = 0.0
+      EXECUTE COMPUTE_1SOI_XBATCH Tmp_1SOIX(mu, nu)
+      PUT SO_x_ao(mu,nu) = Tmp_1SOIX(mu,nu)
+      ENDPARDO mu,nu
+      execute sip_barrier
+
+      PARDO mu,nu
+      Tmp_1SOIY(mu,nu) = 0.0
+      EXECUTE COMPUTE_1SOI_YBATCH Tmp_1SOIY(mu, nu)
+      PUT SO_y_ao(mu,nu) = Tmp_1SOIY(mu,nu)
+      ENDPARDO mu,nu
+      execute sip_barrier
+
+      PARDO mu,nu
+      Tmp_1SOIZ(mu,nu) = 0.0
+      EXECUTE COMPUTE_1SOI_ZBATCH Tmp_1SOIZ(mu, nu)
+      PUT SO_z_ao(mu,nu) = Tmp_1SOIZ(mu,nu)
+      ENDPARDO mu,nu
+      execute sip_barrier
+#------------------------------------------ 
+      PARDO mu,nu
+       GET SO_x_ao(mu,nu)
+       Tmp_1SOIX(mu,nu) = SO_x_ao(mu,nu)
+       DO p
+       tSO_x_pmu(mu,p) = Tmp_1SOIX(mu,nu)*ca(nu,p)
+       PUT SO_x_pmu(mu,p) += tSO_x_pmu(mu,p)
+       ENDDO p
+      ENDPARDO mu,nu
+      execute sip_barrier
+
+      PARDO mu,nu
+       GET SO_y_ao(mu,nu)
+       Tmp_1SOIY(mu,nu) = SO_y_ao(mu,nu)
+       DO p
+       tSO_y_pmu(mu,p) = Tmp_1SOIY(mu,nu)*ca(nu,p)
+       PUT SO_y_pmu(mu,p) += tSO_y_pmu(mu,p)
+       ENDDO p
+      ENDPARDO mu,nu
+      execute sip_barrier
+
+      PARDO mu,nu
+       GET SO_z_ao(mu,nu)
+       Tmp_1SOIZ(mu,nu) = SO_z_ao(mu,nu)
+       DO p
+       tSO_z_pmu(mu,p) = Tmp_1SOIZ(mu,nu)*ca(nu,p)
+       PUT SO_z_pmu(mu,p) += tSO_z_pmu(mu,p)
+       ENDDO p
+      ENDPARDO mu,nu
+      execute sip_barrier
+#----------------------------------------------------------|
+#----------------------------------------------------------|
+#     Prefactor of Pauli-Breit Hamiltonian:                |
+#           alpha^2/2 = 1/2c^2                             |
+       so_pref = 0.00002664
+#----------------------------------------------------------|
+
+      PARDO mu,p
+       GET SO_x_pmu(mu,p)
+       tSO_x_pmu(mu,p) = SO_x_pmu(mu,p)
+       DO q
+       tSO_x_pq(q,p) = tSO_x_pmu(mu,p)*ca(mu,q)
+       tSO_x_pq(q,p) *= so_pref
+       PUT SO_x_pq(q,p) += tSO_x_pq(q,p)
+       ENDDO q
+      ENDPARDO mu,p
+      execute sip_barrier
+
+      PARDO mu,p
+       GET SO_y_pmu(mu,p)
+       tSO_y_pmu(mu,p) = SO_y_pmu(mu,p)
+       DO q
+       tSO_y_pq(q,p) = tSO_y_pmu(mu,p)*ca(mu,q)
+       tSO_y_pq(q,p) *= so_pref
+       PUT SO_y_pq(q,p) += tSO_y_pq(q,p)
+       ENDDO q
+      ENDPARDO mu,p
+      execute sip_barrier
+
+      PARDO mu,p
+       GET SO_z_pmu(mu,p)
+       tSO_z_pmu(mu,p) = SO_z_pmu(mu,p)
+       DO q
+       tSO_z_pq(q,p) = tSO_z_pmu(mu,p)*ca(mu,q)
+       tSO_z_pq(q,p) *= so_pref
+       PUT SO_z_pq(q,p) += tSO_z_pq(q,p)
+       ENDDO q
+      ENDPARDO mu,p
+      execute sip_barrier
+
+#=================================================================================|
+#--------Step 2 - calculate and transform two-electron spin-orbit integrals-------|
+#=================================================================================|
+
+
+       PARDO mu, lambda, nu
+
+             allocate V1_4_x(mu,nu,lambda,*)
+#-------------------------------------------------------------------------------|
+# NOTE: Ajith's routines do calculation of 2-e SO integrals, where derivatives  |
+#  are taken like this: ( [d/dx mu] nu |V_so| lambda sigma), i.e. first pair    |
+#                       of indices                                              |  
+#-------------------------------------------------------------------------------|
+
+#-----------------First index transformation------------------------------------|
+#                     x - component                                             |
+#-------------------------------------------------------------------------------|
+
+          DO sigma
+
+             Tmp_2SOIX(lambda,sigma,mu,nu)  = 0.0
+             EXECUTE COMPUTE_2SOI_XBATCH Tmp_2SOIX(lambda,sigma,mu,nu)
+
+
+                   DO i
+                   txxxi(mu,nu,lambda,i) = Tmp_2SOIX(lambda,sigma,mu,nu)*ca(sigma,i)
+                   V1_4_x(mu,nu,lambda,i) += txxxi(mu,nu,lambda,i)
+                   ENDDO i
+
+          ENDDO sigma
+
+#-----------------Second index transformation------------------------------------
+          DO i
+          DO i2
+             tixxi(i2,nu,lambda,i)           = V1_4_x(mu,nu,lambda,i)*ca(mu,i2)
+             PREPARE V2ixxi_x(i2,nu,lambda,i) += tixxi(i2,nu,lambda,i)
+          ENDDO i2
+          ENDDO i
+
+             deallocate V1_4_x(mu,nu,lambda,*)
+
+        ENDPARDO mu, lambda, nu
+#---------------------------------------------------------------------------------
+        execute server_barrier
+
+#---------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------
+
+        PARDO mu, lambda, nu
+
+              allocate V1_4_y(mu,nu,lambda,*)
+
+#-----------------First index transformation------------------------------------|
+#                     y - component                                             |
+#-------------------------------------------------------------------------------|
+
+          DO sigma
+
+             Tmp_2SOIY(lambda,sigma,mu,nu)  = 0.0
+             EXECUTE COMPUTE_2SOI_YBATCH Tmp_2SOIY(lambda,sigma,mu,nu)
+
+                   DO i
+                   txxxi(mu,nu,lambda,i) = Tmp_2SOIY(lambda,sigma,mu,nu)*ca(sigma,i)
+                   V1_4_y(mu,nu,lambda,i) += txxxi(mu,nu,lambda,i)
+                   ENDDO i
+
+          ENDDO sigma
+#-----------------Second index transformation------------------------------------
+              DO i
+              DO i2
+                 tixxi(i2,nu,lambda,i)           = V1_4_y(mu,nu,lambda,i)*ca(mu,i2)
+                 PREPARE V2ixxi_y(i2,nu,lambda,i) += tixxi(i2,nu,lambda,i)
+              ENDDO i2
+              ENDDO i
+
+          deallocate V1_4_y(mu,nu,lambda,*)
+
+          ENDPARDO mu, lambda, nu
+#---------------------------------------------------------------------------------
+          execute server_barrier
+
+#---------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------
+        PARDO mu, lambda, nu
+
+              allocate V1_4_z(mu,nu,lambda,*)
+
+#-----------------First index transformation------------------------------------|
+#                     z - component                                             |
+#-------------------------------------------------------------------------------|
+          DO sigma
+
+             Tmp_2SOIZ(lambda,sigma,mu,nu)  = 0.0
+            EXECUTE COMPUTE_2SOI_ZBATCH Tmp_2SOIZ(lambda,sigma,mu,nu)
+
+                   DO i
+                   txxxi(mu,nu,lambda,i) = Tmp_2SOIZ(lambda,sigma,mu,nu)*ca(sigma,i)
+                   V1_4_z(mu,nu,lambda,i) += txxxi(mu,nu,lambda,i)
+                   ENDDO i
+
+          ENDDO sigma
+#-----------------Second index transformation------------------------------------
+              DO i
+              DO i2
+                 tixxi(i2,nu,lambda,i)           = V1_4_z(mu,nu,lambda,i)*ca(mu,i2)
+                 PREPARE V2ixxi_z(i2,nu,lambda,i) += tixxi(i2,nu,lambda,i)
+              ENDDO i2
+              ENDDO i
+
+              deallocate V1_4_z(mu,nu,lambda,*)
+
+        ENDPARDO mu, lambda, nu
+#---------------------------------------------------------------------------------
+        execute server_barrier
+
+
+#----------Third index transformation---------------------------------------------
+        PARDO i2,nu,lambda,i
+              REQUEST V2ixxi_x(i2,nu,lambda,i) i
+              tixxi(i2,nu,lambda,i) = V2ixxi_x(i2,nu,lambda,i)
+               DO p
+               tipxi(i2,p,lambda,i) = tixxi(i2,nu,lambda,i)*ca(nu,p)
+               PREPARE V2ipxi_x(i2,p,lambda,i) += tipxi(i2,p,lambda,i)
+              ENDDO p
+        ENDPARDO i2,nu,lambda,i
+        execute server_barrier
+#-----------------------------------
+        PARDO i2,nu,lambda,i
+              REQUEST V2ixxi_y(i2,nu,lambda,i) i
+              tixxi(i2,nu,lambda,i) = V2ixxi_y(i2,nu,lambda,i)
+               DO p
+               tipxi(i2,p,lambda,i) = tixxi(i2,nu,lambda,i)*ca(nu,p)
+               PREPARE V2ipxi_y(i2,p,lambda,i) += tipxi(i2,p,lambda,i)
+              ENDDO p
+        ENDPARDO i2,nu,lambda,i
+        execute server_barrier
+#------------------------------------
+        PARDO i2,nu,lambda,i
+              REQUEST V2ixxi_z(i2,nu,lambda,i) i
+              tixxi(i2,nu,lambda,i) = V2ixxi_z(i2,nu,lambda,i)
+               DO p
+               tipxi(i2,p,lambda,i) = tixxi(i2,nu,lambda,i)*ca(nu,p)
+               PREPARE V2ipxi_z(i2,p,lambda,i) += tipxi(i2,p,lambda,i)
+              ENDDO p
+        ENDPARDO i2,nu,lambda,i
+        execute server_barrier
+#----------Fourth index transformation----------------------------------------|
+#  At this point we generate <JQ|h_so(x/y/z)|PI> integrals                    |
+#  Note the h_so = r12 x p2, i.e J index is affected by differential operator |
+#-----------------------------------------------------------------------------|
+        PARDO i2,p,lambda,i
+              REQUEST V2ipxi_x(i2,p,lambda,i) i
+              tipxi(i2,p,lambda,i) = V2ipxi_x(i2,p,lambda,i)
+               DO q
+               tipqi(i2,p,q,i) = tipxi(i2,p,lambda,i)*ca(lambda,q)
+               tipqi(i2,p,q,i) *= so_pref
+               PREPARE V2ipqi_x(i2,p,q,i) += tipqi(i2,p,q,i)
+               ENDDO q
+        ENDPARDO i2,p,lambda,i
+        execute server_barrier
+#-----------------------------------------
+        PARDO i2,p,lambda,i
+              REQUEST V2ipxi_y(i2,p,lambda,i) i
+              tipxi(i2,p,lambda,i) = V2ipxi_y(i2,p,lambda,i)
+               DO q
+               tipqi(i2,p,q,i) = tipxi(i2,p,lambda,i)*ca(lambda,q)
+               tipqi(i2,p,q,i) *= so_pref
+               PREPARE V2ipqi_y(i2,p,q,i) += tipqi(i2,p,q,i)
+               ENDDO q
+        ENDPARDO i2,p,lambda,i
+        execute server_barrier
+#-----------------------------------------
+        PARDO i2,p,lambda,i
+              REQUEST V2ipxi_z(i2,p,lambda,i) i
+              tipxi(i2,p,lambda,i) = V2ipxi_z(i2,p,lambda,i)
+               DO q
+               tipqi(i2,p,q,i) = tipxi(i2,p,lambda,i)*ca(lambda,q)
+               tipqi(i2,p,q,i) *= so_pref
+               PREPARE V2ipqi_z(i2,p,q,i) += tipqi(i2,p,q,i)
+               ENDDO q
+        ENDPARDO i2,p,lambda,i
+        execute server_barrier
+#------------------------------------------------------------------------------
+
+#|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+        PARDO mu, lambda, sigma
+
+              allocate V2_4_x(mu,*,lambda,sigma)
+
+#-----------------First index transformation------------------------------------|
+#                     x - component                                             |
+#-------------------------------------------------------------------------------|
+          DO nu
+
+             Tmp_2SOIX(lambda,sigma,mu,nu)  = 0.0
+             EXECUTE COMPUTE_2SOI_XBATCH Tmp_2SOIX(lambda,sigma,mu,nu)
+
+                   DO i
+                   txixx(mu,i,lambda,sigma) = Tmp_2SOIX(lambda,sigma,mu,nu)*ca(nu,i)
+                   V2_4_x(mu,i,lambda,sigma) += txixx(mu,i,lambda,sigma)
+                   ENDDO i
+
+          ENDDO nu
+#-----------------Second index transformation------------------------------------
+              DO i
+              DO i2
+                 tiixx(i2,i,lambda,sigma)           = V2_4_x(mu,i,lambda,sigma)*ca(mu,i2)
+                 PREPARE V2iixx_x(i2,i,lambda,sigma) += tiixx(i2,i,lambda,sigma)
+              ENDDO i2
+              ENDDO i
+
+              DO i
+              DO i2
+               txiix(mu,i,i2,sigma) = V2_4_x(mu,i,lambda,sigma)*ca(lambda,i2)
+               PREPARE V2xiix_x(mu,i,i2,sigma) += txiix(mu,i,i2,sigma)
+              ENDDO i2
+              ENDDO i
+
+              deallocate V2_4_x(mu,*,lambda,sigma)
+
+        ENDPARDO mu, lambda, sigma
+#---------------------------------------------------------------------------------
+        execute server_barrier
+#---------------------------------------------------------------------------------        
+        PARDO mu, lambda, sigma
+
+              allocate V2_4_y(mu,*,lambda,sigma)
+
+#-----------------First index transformation------------------------------------|
+#                     y - component                                             |
+#-------------------------------------------------------------------------------|
+          DO nu
+
+             Tmp_2SOIY(lambda,sigma,mu,nu)  = 0.0
+             EXECUTE COMPUTE_2SOI_YBATCH Tmp_2SOIY(lambda,sigma,mu,nu)
+
+                   DO i
+                   txixx(mu,i,lambda,sigma) = Tmp_2SOIY(lambda,sigma,mu,nu)*ca(nu,i)
+                   V2_4_y(mu,i,lambda,sigma) += txixx(mu,i,lambda,sigma)
+                   ENDDO i
+
+          ENDDO nu
+#-----------------Second index transformation------------------------------------
+              DO i
+              DO i2
+                 tiixx(i2,i,lambda,sigma)           = V2_4_y(mu,i,lambda,sigma)*ca(mu,i2)
+                 PREPARE V2iixx_y(i2,i,lambda,sigma) += tiixx(i2,i,lambda,sigma)
+              ENDDO i2
+              ENDDO i
+
+              DO i
+              DO i2
+               txiix(mu,i,i2,sigma) = V2_4_y(mu,i,lambda,sigma)*ca(lambda,i2)
+               PREPARE V2xiix_y(mu,i,i2,sigma) += txiix(mu,i,i2,sigma)
+              ENDDO i2
+              ENDDO i
+
+              deallocate V2_4_y(mu,*,lambda,sigma)
+
+        ENDPARDO mu, lambda, sigma
+#---------------------------------------------------------------------------------
+        execute server_barrier
+#---------------------------------------------------------------------------------        
+        PARDO mu, lambda, sigma
+
+              allocate V2_4_z(mu,*,lambda,sigma)
+
+#-----------------First index transformation------------------------------------|
+#                     z - component                                             |
+#-------------------------------------------------------------------------------|
+          DO nu
+
+             Tmp_2SOIZ(lambda,sigma,mu,nu)  = 0.0
+             EXECUTE COMPUTE_2SOI_ZBATCH Tmp_2SOIZ(lambda,sigma,mu,nu)
+
+                   DO i
+                   txixx(mu,i,lambda,sigma) = Tmp_2SOIZ(lambda,sigma,mu,nu)*ca(nu,i)
+                   V2_4_z(mu,i,lambda,sigma) += txixx(mu,i,lambda,sigma)
+                   ENDDO i
+
+          ENDDO nu
+#-----------------Second index transformation------------------------------------
+              DO i
+              DO i2
+                 tiixx(i2,i,lambda,sigma)           = V2_4_z(mu,i,lambda,sigma)*ca(mu,i2)
+                 PREPARE V2iixx_z(i2,i,lambda,sigma) += tiixx(i2,i,lambda,sigma)
+              ENDDO i2
+              ENDDO i
+
+              DO i
+              DO i2
+               txiix(mu,i,i2,sigma) = V2_4_z(mu,i,lambda,sigma)*ca(lambda,i2)
+               PREPARE V2xiix_z(mu,i,i2,sigma) += txiix(mu,i,i2,sigma)
+              ENDDO i2
+              ENDDO i
+
+              deallocate V2_4_z(mu,*,lambda,sigma)
+
+        ENDPARDO mu, lambda, sigma
+#---------------------------------------------------------------------------------
+        execute server_barrier
+
+#----------Third index transformation---------------------------------------------
+        PARDO i2,i,lambda,sigma
+              REQUEST V2iixx_x(i2,i,lambda,sigma) i
+               tiixx(i2,i,lambda,sigma) = V2iixx_x(i2,i,lambda,sigma)
+               DO p
+               tiipx(i2,i,p,sigma) = tiixx(i2,i,lambda,sigma)*ca(lambda,p)
+               PREPARE V2iipx_x(i2,i,p,sigma) += tiipx(i2,i,p,sigma)
+              ENDDO p
+        ENDPARDO i2,i,lambda,sigma
+        execute server_barrier
+
+        PARDO mu,i,i2,sigma
+              REQUEST V2xiix_x(mu,i,i2,sigma) i
+              txiix(mu,i,i2,sigma) = V2xiix_x(mu,i,i2,sigma)
+              DO p
+              tpiix(p,i,i2,sigma) = txiix(mu,i,i2,sigma)*ca(mu,p)
+              PREPARE V2piix_x(p,i,i2,sigma) += tpiix(p,i,i2,sigma)
+              ENDDO p
+        ENDPARDO mu,i,i2,sigma
+        execute server_barrier
+#-------------------------------------------------
+        PARDO i2,i,lambda,sigma
+              REQUEST V2iixx_y(i2,i,lambda,sigma) i
+               tiixx(i2,i,lambda,sigma) = V2iixx_y(i2,i,lambda,sigma)
+               DO p
+               tiipx(i2,i,p,sigma) = tiixx(i2,i,lambda,sigma)*ca(lambda,p)
+               PREPARE V2iipx_y(i2,i,p,sigma) += tiipx(i2,i,p,sigma)
+              ENDDO p
+        ENDPARDO i2,i,lambda,sigma
+        execute server_barrier
+
+        PARDO mu,i,i2,sigma
+              REQUEST V2xiix_y(mu,i,i2,sigma) i
+              txiix(mu,i,i2,sigma) = V2xiix_y(mu,i,i2,sigma)
+              DO p
+              tpiix(p,i,i2,sigma) = txiix(mu,i,i2,sigma)*ca(mu,p)
+              PREPARE V2piix_y(p,i,i2,sigma) += tpiix(p,i,i2,sigma)
+              ENDDO p
+        ENDPARDO mu,i,i2,sigma
+        execute server_barrier
+#-------------------------------------------------
+        PARDO i2,i,lambda,sigma
+              REQUEST V2iixx_z(i2,i,lambda,sigma) i
+               tiixx(i2,i,lambda,sigma) = V2iixx_z(i2,i,lambda,sigma)
+               DO p
+               tiipx(i2,i,p,sigma) = tiixx(i2,i,lambda,sigma)*ca(lambda,p)
+               PREPARE V2iipx_z(i2,i,p,sigma) += tiipx(i2,i,p,sigma)
+              ENDDO p
+        ENDPARDO i2,i,lambda,sigma
+        execute server_barrier
+
+        PARDO mu,i,i2,sigma
+              REQUEST V2xiix_z(mu,i,i2,sigma) i
+              txiix(mu,i,i2,sigma) = V2xiix_z(mu,i,i2,sigma)
+              DO p
+              tpiix(p,i,i2,sigma) = txiix(mu,i,i2,sigma)*ca(mu,p)
+              PREPARE V2piix_z(p,i,i2,sigma) += tpiix(p,i,i2,sigma)
+              ENDDO p
+        ENDPARDO mu,i,i2,sigma
+        execute server_barrier
+#----------Fourth index transformation----------------------------------------|
+#  At this point we generate <IP|h_so(x/y/z)|JQ> and                          |
+#                            <PI|h_so(x/y/z)|JQ> integrals                    |
+#  Note the h_so = r12 x p2, i.e Q index is affected by differential operator |
+#-----------------------------------------------------------------------------|
+        PARDO i2,i,p,sigma
+              REQUEST V2iipx_x(i2,i,p,sigma) i2
+              tiipx(i2,i,p,sigma) = V2iipx_x(i2,i,p,sigma)
+              DO q
+              tiipq(i2,i,p,q) = tiipx(i2,i,p,sigma)*ca(sigma,q)
+              tiipq(i2,i,p,q) *= so_pref
+              PREPARE V2iipq_x(i2,i,p,q) += tiipq(i2,i,p,q)
+              ENDDO q
+        ENDPARDO i2,i,p,sigma
+        execute server_barrier
+
+        PARDO p,i,i2,sigma
+              REQUEST V2piix_x(p,i,i2,sigma) i2
+              tpiix(p,i,i2,sigma) = V2piix_x(p,i,i2,sigma)
+              DO q
+              tpiiq(p,i,i2,q) = tpiix(p,i,i2,sigma)*ca(sigma,q)
+              tpiiq(p,i,i2,q) *= so_pref
+              PREPARE V2piiq_x(p,i,i2,q) += tpiiq(p,i,i2,q)
+              ENDDO q
+        ENDPARDO p,i,i2,sigma
+        execute server_barrier
+#---------------------------------------------------------------
+        PARDO i2,i,p,sigma
+              REQUEST V2iipx_y(i2,i,p,sigma) i2
+              tiipx(i2,i,p,sigma) = V2iipx_y(i2,i,p,sigma)
+              DO q
+              tiipq(i2,i,p,q) = tiipx(i2,i,p,sigma)*ca(sigma,q)
+              tiipq(i2,i,p,q) *= so_pref
+              PREPARE V2iipq_y(i2,i,p,q) += tiipq(i2,i,p,q)
+              ENDDO q
+        ENDPARDO i2,i,p,sigma
+        execute server_barrier
+
+        PARDO p,i,i2,sigma
+              REQUEST V2piix_y(p,i,i2,sigma) i2
+              tpiix(p,i,i2,sigma) = V2piix_y(p,i,i2,sigma)
+              DO q
+              tpiiq(p,i,i2,q) = tpiix(p,i,i2,sigma)*ca(sigma,q)
+              tpiiq(p,i,i2,q) *= so_pref
+              PREPARE V2piiq_y(p,i,i2,q) += tpiiq(p,i,i2,q)
+              ENDDO q
+        ENDPARDO p,i,i2,sigma
+        execute server_barrier
+#---------------------------------------------------------------
+        PARDO i2,i,p,sigma
+              REQUEST V2iipx_z(i2,i,p,sigma) i2
+              tiipx(i2,i,p,sigma) = V2iipx_z(i2,i,p,sigma)
+              DO q
+              tiipq(i2,i,p,q) = tiipx(i2,i,p,sigma)*ca(sigma,q)
+              tiipq(i2,i,p,q) *= so_pref
+              PREPARE V2iipq_z(i2,i,p,q) += tiipq(i2,i,p,q)
+              ENDDO q
+        ENDPARDO i2,i,p,sigma
+        execute server_barrier
+
+        PARDO p,i,i2,sigma
+              REQUEST V2piix_z(p,i,i2,sigma) i2
+              tpiix(p,i,i2,sigma) = V2piix_z(p,i,i2,sigma)
+              DO q
+              tpiiq(p,i,i2,q) = tpiix(p,i,i2,sigma)*ca(sigma,q)
+              tpiiq(p,i,i2,q) *= so_pref
+              PREPARE V2piiq_z(p,i,i2,q) += tpiiq(p,i,i2,q)
+              ENDDO q
+        ENDPARDO p,i,i2,sigma
+        execute server_barrier
+#------------------------------------------------------------------------------|
+#                Construction of the SOMF Fock operators                       |
+#   F_so(pq) = h_so(pq) + sum_{M}(-2<MP|h_so|MQ>+3<PM|h_so|MQ>+3<Mp|h_so|qM>)  |
+#   Additionally, all F_so will be multipled by factor 1/2 due to the          |
+#             definition of second-quantized S(k) operators                    |
+#------------------------------------------------------------------------------|
+      create Fso_pq_x
+      create Fso_pq_y
+      create Fso_pq_z
+      create somfex_x_1
+      create somfex_y_1
+      create somfex_z_1
+      create somfex_x_2
+      create somfex_y_2
+      create somfex_z_2
+      create somfex_x_3
+      create somfex_y_3
+      create somfex_z_3
+#--oopp
+#------------One-particle contributions------------------------------------------
+      PARDO p,q
+      GET SO_x_pq(p,q)
+      tSO_x_pq(p,q) = SO_x_pq(p,q)
+      tSO_x_pq(p,q) *= -0.5
+      PUT Fso_pq_x(p,q) = tSO_x_pq(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+
+      PARDO p,q
+      GET SO_y_pq(p,q)
+      tSO_y_pq(p,q) = SO_y_pq(p,q)
+      tSO_y_pq(p,q) *= -0.5
+      PUT Fso_pq_y(p,q) = tSO_y_pq(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+
+      PARDO p,q
+      GET SO_z_pq(p,q)
+      tSO_z_pq(p,q) = SO_z_pq(p,q)
+      tSO_z_pq(p,q) *= -0.5
+      PUT Fso_pq_z(p,q) = tSO_z_pq(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+
+#------------Two-particle contributions------------------------------------------
+
+#---------- <MP|h_so|MQ> part ------------------------------
+      PARDO p,q,i,j
+      tiipq(i,j,p,q) = 0.0
+      REQUEST V2iipq_x(i,j,p,q) i
+      tiipq(i,j,p,q) = V2iipq_x(i,j,p,q)
+      tSO_x_pq(p,q) = 0.0
+      execute mksomfex tiipq tSO_x_pq
+      tSO_x_pq(p,q) *= 2.0
+      tSO_x_pq(p,q) *= 0.5
+      PUT Fso_pq_x(p,q) += tSO_x_pq(p,q)
+      ENDPARDO p,q,i,j
+      execute sip_barrier
+
+      PARDO p,q,i,j
+      tiipq(i,j,p,q) = 0.0
+      REQUEST V2iipq_y(i,j,p,q) i
+      tiipq(i,j,p,q) = V2iipq_y(i,j,p,q)
+      tSO_y_pq(p,q) = 0.0
+      execute mksomfex tiipq tSO_y_pq
+      tSO_y_pq(p,q) *= 2.0
+      tSO_y_pq(p,q) *= 0.5
+      PUT Fso_pq_y(p,q) += tSO_y_pq(p,q)
+      ENDPARDO p,q,i,j
+      execute sip_barrier
+
+      PARDO p,q,i,j
+      tiipq(i,j,p,q) = 0.0
+      REQUEST V2iipq_z(i,j,p,q) i
+      tiipq(i,j,p,q) = V2iipq_z(i,j,p,q)
+      tSO_z_pq(p,q) = 0.0
+      execute mksomfex tiipq tSO_z_pq
+      tSO_z_pq(p,q) *= 2.0
+      tSO_z_pq(p,q) *= 0.5
+      PUT Fso_pq_z(p,q) += tSO_z_pq(p,q)
+      ENDPARDO p,q,i,j
+      execute sip_barrier
+#---------- <MP|h_so|QM> part ------------------------------
+      PARDO p,q,i,j
+      tiipq(i,j,p,q) = 0.0
+      REQUEST V2ipqi_x(i,q,p,j) i
+      tipqi(i,q,p,j) = V2ipqi_x(i,q,p,j)
+      tiipq(i,j,p,q) = tipqi(i,q,p,j)
+      tSO_x_pq(p,q) = 0.0
+      execute mksomfex tiipq tSO_x_pq
+      tSO_x_pq(p,q) *= -3.0
+      tSO_x_pq(p,q) *= 0.5
+      PUT Fso_pq_x(p,q) += tSO_x_pq(p,q)
+      ENDPARDO p,q,i,j
+      execute sip_barrier
+
+      PARDO p,q,i,j
+      tiipq(i,j,p,q) = 0.0
+      REQUEST V2ipqi_y(i,q,p,j) i
+      tipqi(i,q,p,j) = V2ipqi_y(i,q,p,j)
+      tiipq(i,j,p,q) = tipqi(i,q,p,j)
+      tSO_y_pq(p,q) = 0.0
+      execute mksomfex tiipq tSO_y_pq
+      tSO_y_pq(p,q) *= -3.0
+      tSO_y_pq(p,q) *= 0.5
+      PUT Fso_pq_y(p,q) += tSO_y_pq(p,q)
+      ENDPARDO p,q,i,j
+      execute sip_barrier
+
+      PARDO p,q,i,j
+      tiipq(i,j,p,q) = 0.0
+      REQUEST V2ipqi_z(i,q,p,j) i
+      tipqi(i,q,p,j) = V2ipqi_z(i,q,p,j)
+      tiipq(i,j,p,q) = tipqi(i,q,p,j)
+      tSO_z_pq(p,q) = 0.0
+      execute mksomfex tiipq tSO_z_pq
+      tSO_z_pq(p,q) *= -3.0
+      tSO_z_pq(p,q) *= 0.5
+      PUT Fso_pq_z(p,q) += tSO_z_pq(p,q)
+      ENDPARDO p,q,i,j
+      execute sip_barrier
+#---------- <PM|h_so|MQ> part ------------------------------
+      PARDO p,q,i,j
+      tiipq(i,j,p,q) = 0.0
+      REQUEST V2piiq_x(p,i,j,q) i
+      tpiiq(p,i,j,q) = V2piiq_x(p,i,j,q)
+      tiipq(i,j,p,q) = tpiiq(p,i,j,q)
+      tSO_x_pq(p,q) = 0.0
+      execute mksomfex tiipq tSO_x_pq
+      tSO_x_pq(p,q) *= -3.0
+      tSO_x_pq(p,q) *= 0.5
+      PUT Fso_pq_x(p,q) += tSO_x_pq(p,q)
+      ENDPARDO p,q,i,j
+      execute sip_barrier
+
+      PARDO p,q,i,j
+      tiipq(i,j,p,q) = 0.0
+      REQUEST V2piiq_y(p,i,j,q) i
+      tpiiq(p,i,j,q) = V2piiq_y(p,i,j,q)
+      tiipq(i,j,p,q) = tpiiq(p,i,j,q)
+      tSO_y_pq(p,q) = 0.0
+      execute mksomfex tiipq tSO_y_pq
+      tSO_y_pq(p,q) *= -3.0
+      tSO_y_pq(p,q) *= 0.5
+      PUT Fso_pq_y(p,q) += tSO_y_pq(p,q)
+      ENDPARDO p,q,i,j
+      execute sip_barrier
+
+      PARDO p,q,i,j
+      tiipq(i,j,p,q) = 0.0
+      REQUEST V2piiq_z(p,i,j,q) i
+      tpiiq(p,i,j,q) = V2piiq_z(p,i,j,q)
+      tiipq(i,j,p,q) = tpiiq(p,i,j,q)
+      tSO_z_pq(p,q) = 0.0
+      execute mksomfex tiipq tSO_z_pq
+      tSO_z_pq(p,q) *= -3.0
+      tSO_z_pq(p,q) *= 0.5
+      PUT Fso_pq_z(p,q) += tSO_z_pq(p,q)
+      ENDPARDO p,q,i,j
+      execute sip_barrier
+
+#-----------Test of integrals------------------------------
+
+      PARDO p,q
+      GET Fso_pq_x(p,q)
+      tSO_x_pq(p,q) = Fso_pq_x(p,q)
+#      execute dump_amp tSO_x_pq
+      ENDPARDO p,q
+      execute sip_barrier
+
+      PARDO p,q
+      GET Fso_pq_y(p,q)
+      tSO_y_pq(p,q) = Fso_pq_y(p,q)
+#      execute dump_amp tSO_y_pq
+      ENDPARDO p,q
+      execute sip_barrier
+
+      PARDO p,q
+      GET Fso_pq_z(p,q)
+      tSO_z_pq(p,q) = Fso_pq_z(p,q)
+#      execute dump_amp tSO_z_pq
+      ENDPARDO p,q
+      execute sip_barrier
+#------------Similarity transformation-------------------------------------------
+
+#--------------a,b part-------------------------
+      PARDO a,b,i
+      GET t1a(a,i)
+      GET Fso_pq_x(b,i)
+      tSO_x_pq(a,b) = t1a(a,i)*Fso_pq_x(b,i)
+      tSO_x_pq(a,b) *= -1.0
+      PUT Fso_pq_x_aux(a,b) += tSO_x_pq(a,b)
+      ENDPARDO a,b,i
+      execute sip_barrier
+
+      PARDO a,b,i
+      GET t1a(a,i)
+      GET Fso_pq_y(b,i)
+      tSO_y_pq(a,b) = t1a(a,i)*Fso_pq_y(b,i)
+      tSO_y_pq(a,b) *= -1.0
+      PUT Fso_pq_y_aux(a,b) += tSO_y_pq(a,b)
+      ENDPARDO a,b,i
+      execute sip_barrier
+
+      PARDO a,b,i
+      GET t1a(a,i)
+      GET Fso_pq_z(b,i)
+      tSO_z_pq(a,b) = t1a(a,i)*Fso_pq_z(b,i)
+      tSO_z_pq(a,b) *= -1.0
+      PUT Fso_pq_z_aux(a,b) += tSO_z_pq(a,b)
+      ENDPARDO a,b,i
+      execute sip_barrier
+#--------------i,j part-------------------------
+      PARDO i,j,a
+      GET t1a(a,i)
+      GET Fso_pq_x(j,a)
+      tSO_x_pq(i,j) = t1a(a,i)*Fso_pq_x(j,a)
+      PUT Fso_pq_x_aux(i,j) += tSO_x_pq(i,j)
+      ENDPARDO i,j,a
+      execute sip_barrier
+
+      PARDO i,j,a
+      GET t1a(a,i)
+      GET Fso_pq_y(j,a)
+      tSO_y_pq(i,j) = t1a(a,i)*Fso_pq_y(j,a)
+      PUT Fso_pq_y_aux(i,j) += tSO_y_pq(i,j)
+      ENDPARDO i,j,a
+      execute sip_barrier
+
+      PARDO i,j,a
+      GET t1a(a,i)
+      GET Fso_pq_z(j,a)
+      tSO_z_pq(i,j) = t1a(a,i)*Fso_pq_z(j,a)
+      PUT Fso_pq_z_aux(i,j) += tSO_z_pq(i,j)
+      ENDPARDO i,j,a
+      execute sip_barrier
+#--------------a,i part--------------------------
+
+#-------------------------------------------
+      PARDO i,j,a
+      GET t1a(a,j)
+      GET Fso_pq_x(j,i)
+      tSO_x_pq(a,i) = Fso_pq_x(j,i)*t1a(a,j)
+      tSO_x_pq(a,i) *= -1.0
+      PUT Fso_pq_x_aux(a,i) += tSO_x_pq(a,i)
+      ENDPARDO i,j,a
+      execute sip_barrier
+
+      PARDO i,j,a
+      GET t1a(a,j)
+      GET Fso_pq_y(j,i)
+      tSO_y_pq(a,i) = Fso_pq_y(j,i)*t1a(a,j)
+      tSO_y_pq(a,i) *= -1.0
+      PUT Fso_pq_y_aux(a,i) += tSO_y_pq(a,i)
+      ENDPARDO i,j,a
+      execute sip_barrier
+
+      PARDO i,j,a
+      GET t1a(a,j)
+      GET Fso_pq_z(j,i)
+      tSO_z_pq(a,i) = Fso_pq_z(j,i)*t1a(a,j)
+      tSO_z_pq(a,i) *= -1.0
+      PUT Fso_pq_z_aux(a,i) += tSO_z_pq(a,i)
+      ENDPARDO i,j,a
+      execute sip_barrier
+#-------------------------------------------
+      PARDO a,b,i
+      GET t1a(b,i)
+      GET Fso_pq_x(a,b)
+      tSO_x_pq(a,i) = t1a(b,i)*Fso_pq_x(a,b)
+      PUT Fso_pq_x_aux(a,i) += tSO_x_pq(a,i)
+      ENDPARDO a,b,i
+      execute sip_barrier
+
+      PARDO a,b,i
+      GET t1a(b,i)
+      GET Fso_pq_y(a,b)
+      tSO_y_pq(a,i) = t1a(b,i)*Fso_pq_y(a,b)
+      PUT Fso_pq_y_aux(a,i) += tSO_y_pq(a,i)
+      ENDPARDO a,b,i
+      execute sip_barrier
+
+      PARDO a,b,i
+      GET t1a(b,i)
+      GET Fso_pq_z(a,b)
+      tSO_z_pq(a,i) = t1a(b,i)*Fso_pq_z(a,b)
+      PUT Fso_pq_z_aux(a,i) += tSO_z_pq(a,i)
+      ENDPARDO a,b,i
+      execute sip_barrier
+#-------------------------------------------
+      PARDO a,i,b,j
+      GET Fso_pq_x(j,b)
+      REQUEST T2ab(a,j,b,i) a
+      tmp_t2(a,j,b,i) = T2ab(a,j,b,i)
+      tSO_x_pq(a,i) = tmp_t2(a,j,b,i)*Fso_pq_x(j,b)
+      tSO_x_pq(a,i) *= -1.0
+      PUT Fso_pq_x_aux(a,i) += tSO_x_pq(a,i)
+      ENDPARDO a,i,b,j
+      execute sip_barrier
+
+      PARDO a,i,b,j
+      GET Fso_pq_y(j,b)
+      REQUEST T2ab(a,j,b,i) a
+      tmp_t2(a,j,b,i) = T2ab(a,j,b,i)
+      tSO_y_pq(a,i) = tmp_t2(a,j,b,i)*Fso_pq_y(j,b)
+      tSO_y_pq(a,i) *= -1.0
+      PUT Fso_pq_y_aux(a,i) += tSO_y_pq(a,i)
+      ENDPARDO a,i,b,j
+      execute sip_barrier
+#-------------------------------------------
+      PARDO a,i,b,j
+      GET Fso_pq_z(j,b)
+      REQUEST T2ab(a,i,b,j) a
+      tmp_t2 (a,i,b,j) = T2ab(a,i,b,j)
+      tSO_z_pq(a,i) = tmp_t2 (a,i,b,j)*Fso_pq_z(j,b)
+      tSO_z_pq(a,i) *= -1.0
+      PUT Fso_pq_z_aux(a,i) += tSO_z_pq(a,i)
+      ENDPARDO a,i,b,j
+      execute sip_barrier
+
+      PARDO a,i,b,j
+      GET Fso_pq_z(j,b)
+      REQUEST T2aa(a,i,b,j) a
+      tmp_t2 (a,i,b,j) = T2aa(a,i,b,j)
+      tSO_z_pq(a,i) = tmp_t2 (a,i,b,j)*Fso_pq_z(j,b)
+      PUT Fso_pq_z_aux(a,i) += tSO_z_pq(a,i)
+      ENDPARDO a,i,b,j
+      execute sip_barrier
+#------------Addition of similarity transformed terms---------------------
+
+      PARDO p,q
+      GET Fso_pq_x_aux(p,q)
+      tSO_x_pq(p,q) = Fso_pq_x_aux(p,q)
+      PUT Fso_pq_x(p,q) += tSO_x_pq(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+
+      PARDO p,q
+      GET Fso_pq_y_aux(p,q)
+      tSO_y_pq(p,q) = Fso_pq_y_aux(p,q)
+      PUT Fso_pq_y(p,q) += tSO_y_pq(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+
+      PARDO p,q
+      GET Fso_pq_z_aux(p,q)
+      tSO_z_pq(p,q) = Fso_pq_z_aux(p,q)
+      PUT Fso_pq_z(p,q) += tSO_z_pq(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+
+#-------------------------------------------------------------------------
+
+
+      ENDPROC SO_INT
+#     --------------
+
+#-------------------------------------------------------------------|
+#-------------------------------------------------------------------|
+
+
+      PROC SO_MATR
+#     ------------
+
+#---------------------------------------------------------------------------------|
+#                           Blocks 1 and 4                                        |
+#                  <L(Sz=-1/2)|V_so|R(Sz=-1/2)>                                   |
+#                   <L(Sz=1/2)|V_so|R(Sz=1/2)>                                    |
+#---------------------------------------------------------------------------------|
+
+#---------------------------------------------------------------------------------|
+#              Contributions from singles                                         |
+#---------------------------------------------------------------------------------|
+      create ILR_ab
+      create ILR_ij
+      create ILR_2p_ab
+      create ILR_2p_ij
+      create ILR_AB_2p_ab
+      create ILR_AB_2p_ij
+      create ILR_AB1_2p_ab
+      create ILR_AB1_2p_ij
+      create ILR_AB2_2p_ab
+      create ILR_AB2_2p_ij
+      create ILR_AB3_2p_ab
+      create ILR_AB3_2p_ij
+#------------------Zero out arrays-----------------------------
+      DO kroot
+      DO kroot1
+
+                PARDO a,b
+                tILR_ab(a,b,kroot,kroot1) = 0.0
+                PUT ILR_ab(a,b,kroot,kroot1) = tILR_ab(a,b,kroot,kroot1)
+                ENDPARDO a,b
+                execute sip_barrier
+
+                PARDO i,j
+                tILR_ij(i,j,kroot,kroot1) = 0.0
+                PUT ILR_ij(i,j,kroot,kroot1) = tILR_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j
+                execute sip_barrier
+
+                PARDO a,b
+                tILR_ab(a,b,kroot,kroot1) = 0.0
+                PUT ILR_2p_ab(a,b,kroot,kroot1) = tILR_ab(a,b,kroot,kroot1)
+                ENDPARDO a,b
+                execute sip_barrier
+
+                PARDO i,j
+                tILR_ij(i,j,kroot,kroot1) = 0.0
+                PUT ILR_2p_ij(i,j,kroot,kroot1) = tILR_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j
+                execute sip_barrier
+
+                PARDO a,b
+                tILR_ab(a,b,kroot,kroot1) = 0.0
+                PUT ILR_AB_2p_ab(a,b,kroot,kroot1) = tILR_ab(a,b,kroot,kroot1)
+                ENDPARDO a,b
+                execute sip_barrier
+
+                PARDO i,j
+                tILR_ij(i,j,kroot,kroot1) = 0.0
+                PUT ILR_AB_2p_ij(i,j,kroot,kroot1) = tILR_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j
+                execute sip_barrier
+
+                PARDO a,b
+                tILR_ab(a,b,kroot,kroot1) = 0.0
+                PUT ILR_AB1_2p_ab(a,b,kroot,kroot1) = tILR_ab(a,b,kroot,kroot1)
+                ENDPARDO a,b
+                execute sip_barrier
+
+                PARDO i,j
+                tILR_ij(i,j,kroot,kroot1) = 0.0
+                PUT ILR_AB1_2p_ij(i,j,kroot,kroot1) = tILR_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j
+                execute sip_barrier
+
+                PARDO a,b
+                tILR_ab(a,b,kroot,kroot1) = 0.0
+                PUT ILR_AB2_2p_ab(a,b,kroot,kroot1) = tILR_ab(a,b,kroot,kroot1)
+                ENDPARDO a,b
+                execute sip_barrier
+
+                PARDO i,j
+                tILR_ij(i,j,kroot,kroot1) = 0.0
+                PUT ILR_AB2_2p_ij(i,j,kroot,kroot1) = tILR_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j
+                execute sip_barrier
+
+                PARDO a,b
+                tILR_ab(a,b,kroot,kroot1) = 0.0
+                PUT ILR_AB3_2p_ab(a,b,kroot,kroot1) = tILR_ab(a,b,kroot,kroot1)
+                ENDPARDO a,b
+                execute sip_barrier
+
+                PARDO i,j
+                tILR_ij(i,j,kroot,kroot1) = 0.0
+                PUT ILR_AB3_2p_ij(i,j,kroot,kroot1) = tILR_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j
+                execute sip_barrier
+
+                PARDO a,i
+                tILR_ai(a,i,kroot,kroot1) = 0.0
+                PREPARE ILR_ai(a,i,kroot,kroot1) = tILR_ai(a,i,kroot,kroot1) 
+                ENDPARDO a,i
+                execute server_barrier
+
+                PARDO a,i
+                tILR_ai(a,i,kroot,kroot1) = 0.0
+                PREPARE ILR_ai1(a,i,kroot,kroot1) = tILR_ai(a,i,kroot,kroot1)
+                ENDPARDO a,i
+                execute server_barrier
+
+                PARDO a,i
+                tILR_ai(a,i,kroot,kroot1) = 0.0
+                PREPARE ILR_ai2(a,i,kroot,kroot1) = tILR_ai(a,i,kroot,kroot1)
+                ENDPARDO a,i
+                execute server_barrier
+
+                PARDO a,i
+                tILR_ai(a,i,kroot,kroot1) = 0.0
+                PREPARE ILR_ai3(a,i,kroot,kroot1) = tILR_ai(a,i,kroot,kroot1)
+                ENDPARDO a,i
+                execute server_barrier
+
+
+
+      ENDDO kroot1
+      ENDDO kroot
+
+#---------------------------------------------------------------------------------|
+      cnt = 0.0
+      DO kroot
+        cnt += 1.0
+        IF cnt <= rootmax
+
+             cnt1 = 0.0
+             DO kroot1
+                cnt1 += 1.0
+                IF cnt1 <= rootmax
+#------------------One-particle intermediates-------------------------------------|
+                PARDO i,j
+                ttT1_L1A(i,kroot) = 0.0
+                ttT1_R1A(j,kroot1) = 0.0
+                GET L1A_VECS_new (i,kroot)
+                GET R1A_VECS (j,kroot1)
+                ttT1_L1A(i,kroot) = L1A_VECS_new (i,kroot)
+                ttT1_R1A(j,kroot1) = R1A_VECS (j,kroot1)
+                tL1R1_kl(i,kroot,j,kroot1) = ttT1_L1A(i,kroot)^ttT1_R1A(j,kroot1)
+                tILR_ij(i,j,kroot,kroot1) = tL1R1_kl(i,kroot,j,kroot1)                
+                PUT ILR_ij(i,j,kroot,kroot1) += tILR_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j
+                execute sip_barrier
+#------------------Two-particle intermediates-------------------------------------|
+
+#--------------------alpha-alpha terms--------------------------------------------|
+                PARDO i,j,k,b
+                tILR_2p_ij(i,j,kroot,kroot1) = 0.0
+                REQUEST L2AA_VECS_new (i,k,b,kroot) k
+                REQUEST R2AA_VECS (j,b,k,kroot1) k
+                tTR2AA_VECS (j,b,k,kroot1) =  R2AA_VECS (j,b,k,kroot1)
+                tTL2AA_VECS (i,k,b,kroot) =  L2AA_VECS_new (i,k,b,kroot)
+                tILR_2p_ij(i,j,kroot,kroot1) = tTL2AA_VECS (i,k,b,kroot)*tTR2AA_VECS (j,b,k,kroot1) 
+                PUT ILR_2p_ij(i,j,kroot,kroot1) += tILR_2p_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j,k,b
+                execute sip_barrier
+
+                PARDO i,j,a,b
+                tILR_2p_ab(a,b,kroot,kroot1) = 0.0
+                REQUEST L2AA_VECS_new (i,j,a,kroot) i
+                REQUEST R2AA_VECS (i,b,j,kroot1) i
+                tTR2AA_VECS (i,b,j,kroot1) =  R2AA_VECS (i,b,j,kroot1)
+                tTL2AA_VECS (i,j,a,kroot)  =  L2AA_VECS_new (i,j,a,kroot)
+                tILR_2p_ab(a,b,kroot,kroot1) = tTL2AA_VECS (i,j,a,kroot)*tTR2AA_VECS (i,b,j,kroot1) 
+                PUT ILR_2p_ab(a,b,kroot,kroot1) += tILR_2p_ab(a,b,kroot,kroot1)
+                ENDPARDO i,j,a,b
+                execute sip_barrier
+
+
+#--------------------alpha-beta terms----------------------------------------------|
+
+                PARDO i,j,a,b
+                tILR_AB_2p_ab(a,b,kroot,kroot1) = 0.0
+                REQUEST L2AB_VECS_new (j,i,a,kroot) i
+                REQUEST R2AB_VECS (i,b,j,kroot1) i
+                tTR2AA_VECS (i,b,j,kroot1) =  R2AB_VECS (i,b,j,kroot1)
+                tTL2AA_VECS (i,j,a,kroot) =  L2AB_VECS_new (j,i,a,kroot)
+                tILR_AB_2p_ab(a,b,kroot,kroot1) = tTL2AA_VECS (i,j,a,kroot)*tTR2AA_VECS (i,b,j,kroot1)
+                PUT ILR_AB_2p_ab(a,b,kroot,kroot1) += tILR_AB_2p_ab(a,b,kroot,kroot1)
+                ENDPARDO i,j,a,b
+                execute sip_barrier
+#-----------------------------------------------------------------------------------------------------
+
+                PARDO i,j,k,b
+                tILR_AB_2p_ij(i,j,kroot,kroot1) = 0.0
+                REQUEST L2AB_VECS_new (k,i,b,kroot) k
+                REQUEST R2AB_VECS (j,b,k,kroot1) k
+                tTR2AA_VECS (j,b,k,kroot1) =  R2AB_VECS (j,b,k,kroot1)
+                tTL2AA_VECS (i,k,b,kroot)  =  L2AB_VECS_new (k,i,b,kroot)
+                tILR_AB_2p_ij(i,j,kroot,kroot1) = tTL2AA_VECS (i,k,b,kroot)*tTR2AA_VECS (j,b,k,kroot1)
+                PUT ILR_AB_2p_ij(i,j,kroot,kroot1) += tILR_AB_2p_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j,k,b
+                execute sip_barrier
+
+                PARDO i,j,k,a
+                tILR_AB1_2p_ij(i,j,kroot,kroot1) = 0.0
+                REQUEST L2AB_VECS_new (i,k,a,kroot) k
+                REQUEST R2AB_VECS (k,a,j,kroot1) k
+                tTR2AA_VECS (k,a,j,kroot1) =  R2AB_VECS (k,a,j,kroot1)
+                tTL2AA_VECS (k,i,a,kroot) =  L2AB_VECS_new (i,k,a,kroot)
+                tILR_AB1_2p_ij(i,j,kroot,kroot1) = tTL2AA_VECS (k,i,a,kroot)*tTR2AA_VECS (k,a,j,kroot1)
+                PUT ILR_AB1_2p_ij(i,j,kroot,kroot1) += tILR_AB1_2p_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j,k,a
+                execute sip_barrier
+#-----------------Extra intermediates------------------------------------------------|
+                PARDO i,j,a
+                tILR_ai(a,j,kroot,kroot1) = 0.0
+                GET L1A_VECS_new (i,kroot)
+                ttT1_L1A(i,kroot) = L1A_VECS_new (i,kroot)
+                REQUEST R2AA_VECS (i,a,j,kroot1) i
+                tTR2AA_VECS (i,a,j,kroot1) =  R2AA_VECS (i,a,j,kroot1)
+                tILR_ai(a,j,kroot,kroot1) = tTR2AA_VECS (i,a,j,kroot1)*ttT1_L1A(i,kroot)
+                PREPARE ILR_ai(a,j,kroot,kroot1) += tILR_ai(a,j,kroot,kroot1)
+                ENDPARDO i,j,a 
+                execute server_barrier 
+
+                PARDO i,j,a
+                tILR_ai(a,j,kroot,kroot1) = 0.0
+                GET R1A_VECS (i,kroot1)
+                ttT1_R1A(i,kroot1) = R1A_VECS (i,kroot1)
+                REQUEST L2AA_VECS_new (i,j,a,kroot) i
+                tTL2AA_VECS (i,j,a,kroot) =  L2AA_VECS_new (i,j,a,kroot)
+                tILR_ai(a,j,kroot,kroot1) = tTL2AA_VECS (i,j,a,kroot)*ttT1_R1A(i,kroot1)
+                PREPARE ILR_ai1(a,j,kroot,kroot1) += tILR_ai(a,j,kroot,kroot1)
+                ENDPARDO i,j,a
+                execute server_barrier
+
+                PARDO i,j,a
+                tILR_ai(a,j,kroot,kroot1) = 0.0
+                GET L1A_VECS_new (i,kroot)
+                ttT1_L1A(i,kroot) = L1A_VECS_new (i,kroot)
+                REQUEST R2AB_VECS (i,a,j,kroot1) i
+                tTR2AA_VECS (i,a,j,kroot1) =  R2AB_VECS (i,a,j,kroot1)
+                tILR_ai(a,j,kroot,kroot1) = tTR2AA_VECS (i,a,j,kroot1)*ttT1_L1A(i,kroot)
+                PREPARE ILR_ai2(a,j,kroot,kroot1) += tILR_ai(a,j,kroot,kroot1)
+                ENDPARDO i,j,a
+                execute server_barrier
+
+                PARDO i,j,a
+                tILR_ai(a,j,kroot,kroot1) = 0.0
+                GET R1A_VECS (i,kroot1)
+                ttT1_R1A(i,kroot1) = R1A_VECS (i,kroot1)
+                REQUEST L2AB_VECS_new (j,i,a,kroot) i
+                tTL2AA_VECS (i,j,a,kroot) =  L2AB_VECS_new (j,i,a,kroot)
+                tILR_ai(a,j,kroot,kroot1) = tTL2AA_VECS (i,j,a,kroot)*ttT1_R1A(i,kroot1)
+                PREPARE ILR_ai3(a,j,kroot,kroot1) += tILR_ai(a,j,kroot,kroot1)
+                ENDPARDO i,j,a
+                execute server_barrier
+
+
+
+#----------------Step 2 - calculations of the matrix elements------------------------|
+
+                tmpval =  0.0
+
+                tmpval1 = 0.0
+                tmpval2 = 0.0
+                tmpval3 = 0.0
+                tmpval4 = 0.0
+                tmpval5 = 0.0
+                tmpval6 = 0.0
+                tmpval7 = 0.0
+                tmpval8 = 0.0
+                tmpval9 = 0.0
+                tmpval10 = 0.0
+
+                 auxval = 0.0
+                 PARDO i,j
+                 GET ILR_ij(i,j,kroot,kroot1)
+                 tii(i,j) = ILR_ij(i,j,kroot,kroot1)
+                 GET Fso_pq_z(j,i)
+                 tSO_z_pq(j,i) = Fso_pq_z(j,i)
+                 etemp = tii(i,j)*tSO_z_pq(j,i)
+                 auxval += etemp
+                 ENDPARDO i,j
+                 execute server_barrier
+
+                 collective tmpval1 += auxval
+#----------------------------------------------------------------
+                 auxval = 0.0
+                 PARDO i,j
+                 GET ILR_2p_ij(i,j,kroot,kroot1)
+                 tii(i,j) = ILR_2p_ij(i,j,kroot,kroot1)
+                 GET Fso_pq_z(i,j)
+                 etemp = tii(i,j)*Fso_pq_z(i,j)
+                 etemp *= -1.0
+                 auxval += etemp
+                 ENDPARDO i,j
+                 execute server_barrier
+
+                 collective tmpval2 += auxval
+#----------------------------------------------------------------
+
+
+                 auxval  = 0.0
+                 PARDO a,b
+                 GET ILR_2p_ab(a,b,kroot,kroot1)
+                 taa(a,b) = ILR_2p_ab(a,b,kroot,kroot1)
+                 GET Fso_pq_z(a,b)
+                 etemp = taa(a,b)*Fso_pq_z(a,b)
+                 etemp *= -0.5
+                 auxval += etemp
+                 ENDPARDO a,b
+                 execute server_barrier
+
+                 collective tmpval3 += auxval
+#---------------------------------------------------------
+                 auxval = 0.0
+                 PARDO i,j
+                 GET ILR_AB_2p_ij(i,j,kroot,kroot1)
+                 tii(i,j) = ILR_AB_2p_ij(i,j,kroot,kroot1)
+                 GET Fso_pq_z(i,j)
+                 etemp = tii(i,j)*Fso_pq_z(i,j)
+                 etemp *= -1.0
+                 auxval += etemp
+                 ENDPARDO i,j
+                 execute server_barrier
+
+                 collective tmpval4 += auxval
+
+                 auxval  = 0.0
+                 PARDO a,b
+                 GET ILR_AB_2p_ab(a,b,kroot,kroot1)
+                 taa(a,b) = ILR_AB_2p_ab(a,b,kroot,kroot1)
+                 GET Fso_pq_z(a,b)
+                 etemp = taa(a,b)*Fso_pq_z(a,b)
+                 auxval += etemp
+                 ENDPARDO a,b
+                 execute server_barrier
+
+                 collective tmpval5 += auxval
+ 
+#-------------------------------------------------------------------------------|
+                 auxval = 0.0
+                 PARDO i,j
+                 GET ILR_AB1_2p_ij(i,j,kroot,kroot1)
+                 tii(i,j) = ILR_AB1_2p_ij(i,j,kroot,kroot1)
+                 GET Fso_pq_z(i,j)
+                 etemp = tii(i,j)*Fso_pq_z(i,j)
+                 etemp *= 1.0 
+                 auxval += etemp
+                 ENDPARDO i,j
+                 execute server_barrier
+
+                 collective tmpval6 += auxval
+#--------------------Extra terms-------------------------------------------------|
+                 auxval = 0.0
+                 PARDO i,a
+                 REQUEST ILR_ai(a,i,kroot,kroot1) i
+                 tILR_ai(a,i,kroot,kroot1) = ILR_ai(a,i,kroot,kroot1)
+                 tai(a,i) = tILR_ai(a,i,kroot,kroot1) 
+                 GET Fso_pq_z(i,a)
+                 tSO_z_pq(i,a) = Fso_pq_z(i,a)
+                 etemp = tai(a,i)*tSO_z_pq(i,a)
+                 etemp *= -1.0
+                 auxval += etemp
+                 ENDPARDO i,a
+                 execute server_barrier
+
+                 collective tmpval7 += auxval
+
+
+                 auxval = 0.0
+                 PARDO i,a
+                 REQUEST ILR_ai1(a,i,kroot,kroot1) i
+                 tILR_ai(a,i,kroot,kroot1) = ILR_ai1(a,i,kroot,kroot1)
+                 tai(a,i) = tILR_ai(a,i,kroot,kroot1)
+                 GET Fso_pq_z(i,a)
+                 etemp = tai(a,i)*Fso_pq_z(i,a)
+                 etemp *= 1.0
+                 auxval += etemp
+                 ENDPARDO i,a
+                 execute server_barrier
+
+                 collective tmpval8 += auxval
+
+
+                 auxval = 0.0
+                 PARDO i,a
+                 REQUEST ILR_ai2(a,i,kroot,kroot1) i
+                 tILR_ai(a,i,kroot,kroot1) = ILR_ai2(a,i,kroot,kroot1)
+                 tai(a,i) = tILR_ai(a,i,kroot,kroot1)
+                 GET Fso_pq_z(i,a)
+                 tSO_z_pq(i,a) = Fso_pq_z(i,a)
+                 etemp = tai(a,i)*tSO_z_pq(i,a)
+                 etemp *= 1.0
+                 auxval += etemp
+                 ENDPARDO i,a
+                 execute server_barrier
+
+                 collective tmpval9 += auxval
+
+
+                 auxval = 0.0
+                 PARDO i,a
+                 REQUEST ILR_ai3(a,i,kroot,kroot1) i
+                 tILR_ai(a,i,kroot,kroot1) = ILR_ai3(a,i,kroot,kroot1)
+                 tai(a,i) = tILR_ai(a,i,kroot,kroot1)
+                 GET Fso_pq_z(i,a)
+                 etemp = tai(a,i)*Fso_pq_z(i,a)
+                 etemp *= -1.0
+                 auxval += etemp
+                 ENDPARDO i,a
+                 execute server_barrier
+
+                 collective tmpval10 += auxval
+#--------------------------------------------------------------------------------|
+                 tmpval += tmpval1
+                 tmpval += tmpval2 
+                 tmpval += tmpval3
+                 tmpval += tmpval4
+                 tmpval += tmpval5
+                 tmpval += tmpval6
+                 tmpval += tmpval7
+                 tmpval += tmpval8  
+                 tmpval += tmpval9
+                 tmpval += tmpval10                
+#------Put calculated matrix elements into the EOM-SO-CI matrix matrix-----------|
+       mind1 = mark1
+       mind1 += cnt
+       mind1 -= 1.0
+
+       mind2 = mark1
+       mind2 += cnt1
+       mind2 -= 1.0
+
+
+#------------------------------------------------------------|
+#       p = -ih d/dx, so we need to multiply tmpval by -1.0  |
+#------------------------------------------------------------|
+
+
+#-----------------Block 1 contributions----------------------|
+       cnt1_size = 0.0
+       DO soind1
+       cnt2_size = 0.0
+       cnt1_size += 1.0
+             DO soind2
+             cnt2_size += 1.0
+                IF cnt1_size == mind1
+                  IF cnt2_size == mind2
+                  etemp = tmpval
+                  etemp *= -1.0
+                  so_ci_im(soind1,soind2) = etemp
+                  ENDIF
+                ENDIF
+             ENDDO soind2
+        ENDDO soind1
+
+
+#-----------------Block 2 contributions----------------------|
+       mind3 = mark2
+       mind3 += cnt
+       mind3 -= 1.0
+
+       mind4 = mark2
+       mind4 += cnt1
+       mind4 -= 1.0
+
+       cnt1_size = 0.0
+       DO soind1
+       cnt2_size = 0.0
+       cnt1_size += 1.0
+             DO soind2
+             cnt2_size += 1.0
+                IF cnt1_size == mind3
+                  IF cnt2_size == mind4
+                  etemp = tmpval
+                  so_ci_im(soind1,soind2) = etemp
+                  ENDIF
+                ENDIF
+             ENDDO soind2
+        ENDDO soind1
+
+
+                ENDIF
+             ENDDO kroot1
+        ENDIF
+      ENDDO kroot
+
+#---------------------------------------------------------------------------------|
+#                            Blocks 2 and 3                                       |
+#                  <L(Sz=-1/2)|V_so|R(Sz=1/2)>                                    |
+#                  <L(Sz=1/2)|V_so|R(Sz=-1/2)>                                    |
+#---------------------------------------------------------------------------------|
+
+      DO kroot
+      DO kroot1
+
+                PARDO a,b
+                tILR_ab(a,b,kroot,kroot1) = 0.0
+                PUT ILR_ab(a,b,kroot,kroot1) = tILR_ab(a,b,kroot,kroot1)
+                ENDPARDO a,b
+                execute sip_barrier
+
+                PARDO i,j
+                tILR_ij(i,j,kroot,kroot1) = 0.0
+                PUT ILR_ij(i,j,kroot,kroot1) = tILR_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j
+                execute sip_barrier
+
+                PARDO a,b
+                tILR_ab(a,b,kroot,kroot1) = 0.0
+                PUT ILR_2p_ab(a,b,kroot,kroot1) = tILR_ab(a,b,kroot,kroot1)
+                ENDPARDO a,b
+                execute sip_barrier
+
+                PARDO i,j
+                tILR_ij(i,j,kroot,kroot1) = 0.0
+                PUT ILR_2p_ij(i,j,kroot,kroot1) = tILR_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j
+                execute sip_barrier
+
+                PARDO a,b
+                tILR_ab(a,b,kroot,kroot1) = 0.0
+                PUT ILR_AB_2p_ab(a,b,kroot,kroot1) = tILR_ab(a,b,kroot,kroot1)
+                ENDPARDO a,b
+                execute sip_barrier
+
+                PARDO i,j
+                tILR_ij(i,j,kroot,kroot1) = 0.0
+                PUT ILR_AB_2p_ij(i,j,kroot,kroot1) = tILR_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j
+                execute sip_barrier
+
+                PARDO a,b
+                tILR_ab(a,b,kroot,kroot1) = 0.0
+                PUT ILR_AB1_2p_ab(a,b,kroot,kroot1) = tILR_ab(a,b,kroot,kroot1)
+                ENDPARDO a,b
+                execute sip_barrier
+
+                PARDO i,j
+                tILR_ij(i,j,kroot,kroot1) = 0.0
+                PUT ILR_AB1_2p_ij(i,j,kroot,kroot1) = tILR_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j
+                execute sip_barrier
+
+                PARDO a,b
+                tILR_ab(a,b,kroot,kroot1) = 0.0
+                PUT ILR_AB2_2p_ab(a,b,kroot,kroot1) = tILR_ab(a,b,kroot,kroot1)
+                ENDPARDO a,b
+                execute sip_barrier
+
+                PARDO i,j
+                tILR_ij(i,j,kroot,kroot1) = 0.0
+                PUT ILR_AB2_2p_ij(i,j,kroot,kroot1) = tILR_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j
+                execute sip_barrier
+
+                PARDO a,b
+                tILR_ab(a,b,kroot,kroot1) = 0.0
+                PUT ILR_AB3_2p_ab(a,b,kroot,kroot1) = tILR_ab(a,b,kroot,kroot1)
+                ENDPARDO a,b
+                execute sip_barrier
+
+                PARDO i,j
+                tILR_ij(i,j,kroot,kroot1) = 0.0
+                PUT ILR_AB3_2p_ij(i,j,kroot,kroot1) = tILR_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j
+                execute sip_barrier
+
+                PARDO a,i
+                tILR_ai(a,i,kroot,kroot1) = 0.0
+                PREPARE ILR_ai(a,i,kroot,kroot1) = tILR_ai(a,i,kroot,kroot1)
+                ENDPARDO a,i
+                execute server_barrier
+
+                PARDO a,i
+                tILR_ai(a,i,kroot,kroot1) = 0.0
+                PREPARE ILR_ai1(a,i,kroot,kroot1) = tILR_ai(a,i,kroot,kroot1)
+                ENDPARDO a,i
+                execute server_barrier
+
+
+      ENDDO kroot1
+      ENDDO kroot
+#---------------------------------------------------------------------------------|
+      cnt = 0.0
+      DO kroot
+        cnt += 1.0
+        IF cnt <= rootmax
+
+             cnt1 = 0.0
+             DO kroot1
+                cnt1 += 1.0
+                IF cnt1 <= rootmax
+#------------------One-particle intermediates-------------------------------------|
+                PARDO i,j
+                ttT1_L1A(i,kroot) = 0.0
+                ttT1_R1A(j,kroot1) = 0.0
+                GET L1A_VECS_new (i,kroot)
+                GET R1A_VECS (j,kroot1)
+                ttT1_L1A(i,kroot) = L1A_VECS_new (i,kroot)
+                ttT1_R1A(j,kroot1) = R1A_VECS (j,kroot1)
+                tL1R1_kl(i,kroot,j,kroot1) = ttT1_L1A(i,kroot)^ttT1_R1A(j,kroot1)
+                tILR_ij(i,j,kroot,kroot1) = tL1R1_kl(i,kroot,j,kroot1)
+                PUT ILR_ij(i,j,kroot,kroot1) += tILR_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j
+                execute sip_barrier
+#------------------Two-particle intermediates-------------------------------------|
+                PARDO i,j,k,b
+                tILR_2p_ij(i,j,kroot,kroot1) = 0.0
+                REQUEST L2AB_VECS_new (k,i,b,kroot) k
+                REQUEST R2AA_VECS (j,b,k,kroot1) k
+                tTR2AA_VECS (j,b,k,kroot1) =  R2AA_VECS (j,b,k,kroot1)
+                tTL2AA_VECS (i,k,b,kroot) =  L2AB_VECS_new (k,i,b,kroot)
+                tILR_2p_ij(i,j,kroot,kroot1) = tTL2AA_VECS (i,k,b,kroot)*tTR2AA_VECS (j,b,k,kroot1)
+                PUT ILR_2p_ij(i,j,kroot,kroot1) += tILR_2p_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j,k,b
+                execute sip_barrier
+
+                PARDO i,j,k,b
+                tILR_AB1_2p_ij(i,j,kroot,kroot1) = 0.0
+                REQUEST L2AA_VECS_new (i,k,b,kroot) k
+                REQUEST R2AB_VECS (j,b,k,kroot1) k
+                tTR2AA_VECS (j,b,k,kroot1) =  R2AB_VECS (j,b,k,kroot1)
+                tTL2AA_VECS (i,k,b,kroot) =  L2AA_VECS_new (i,k,b,kroot)   
+                tILR_AB1_2p_ij(i,j,kroot,kroot1) = tTL2AA_VECS (i,k,b,kroot)*tTR2AA_VECS (j,b,k,kroot1)                 
+                PUT ILR_AB1_2p_ij(i,j,kroot,kroot1) += tILR_AB1_2p_ij(i,j,kroot,kroot1)
+                ENDPARDO i,j,k,b
+                execute sip_barrier
+
+#------------------------a,b--------------------------------------------------------
+                PARDO i,j,a,b
+                tILR_AB_2p_ab(a,b,kroot,kroot1) = 0.0
+                REQUEST L2AB_VECS_new (i,j,a,kroot) i
+                REQUEST R2AB_VECS (i,b,j,kroot1) i
+                tTR2AA_VECS (i,b,j,kroot1) =  R2AB_VECS (i,b,j,kroot1)
+                tTL2AA_VECS (j,i,a,kroot) =  L2AB_VECS_new (i,j,a,kroot)
+                tILR_AB_2p_ab(a,b,kroot,kroot1) = tTL2AA_VECS (j,i,a,kroot)*tTR2AA_VECS (i,b,j,kroot1)
+                PUT ILR_AB_2p_ab(a,b,kroot,kroot1) += tILR_AB_2p_ab(a,b,kroot,kroot1)
+                ENDPARDO i,j,a,b
+                execute sip_barrier
+
+#-------------------Extra intermediates-----------------------------------------------|
+
+                PARDO i,j,a
+                tILR_ai(a,i,kroot,kroot1) = 0.0
+                GET L1A_VECS_new (j,kroot)
+                ttT1_L1A(j,kroot) = L1A_VECS_new (j,kroot)
+                REQUEST R2AB_VECS (i,a,j,kroot1) i
+                tTR2AA_VECS (i,a,j,kroot1) =  R2AB_VECS (i,a,j,kroot1)
+                tILR_ai(a,i,kroot,kroot1) = tTR2AA_VECS (i,a,j,kroot1)*ttT1_L1A(j,kroot)
+                PREPARE ILR_ai(a,i,kroot,kroot1) += tILR_ai(a,i,kroot,kroot1)
+                ENDPARDO i,j,a
+                execute server_barrier
+
+                PARDO i,j,a
+                tILR_ai(a,i,kroot,kroot1) = 0.0
+                GET R1A_VECS (j,kroot1)
+                ttT1_R1A(j,kroot1) = R1A_VECS (j,kroot1)
+                REQUEST L2AB_VECS_new (j,i,a,kroot) i
+                tTL2AA_VECS (i,j,a,kroot) =  L2AB_VECS_new (j,i,a,kroot)
+                tILR_ai(a,i,kroot,kroot1) = tTL2AA_VECS (i,j,a,kroot)*ttT1_R1A(j,kroot1)
+                PREPARE ILR_ai1(a,i,kroot,kroot1) += tILR_ai(a,i,kroot,kroot1)
+                ENDPARDO i,j,a
+                execute server_barrier
+
+
+
+
+#----------------Step 2 - calculations of the matrix elements------------------------|
+      tmpval1 = 0.0
+      tmpval2 = 0.0
+      tmpval3 = 0.0
+      tmpval4 = 0.0
+      tmpval5 = 0.0
+      tmpval6 = 0.0
+      tmpval7 = 0.0
+      tmpval8 = 0.0
+      tmpval9 = 0.0
+      tmpval10 = 0.0
+      tmpval11 = 0.0
+      tmpval12 = 0.0
+
+        tmpval_re = 0.0
+        tmpval_im = 0.0
+#------------------------------
+                 auxval = 0.0
+                 PARDO i,j
+                 GET ILR_ij(i,j,kroot,kroot1)
+                 tii(i,j) = ILR_ij(i,j,kroot,kroot1)
+                 GET Fso_pq_x(j,i)
+                 tSO_x_pq(j,i) = Fso_pq_x(j,i)
+                 etemp = tii(i,j)*tSO_x_pq(j,i)
+                 etemp *= -1.0
+                 auxval += etemp
+                 ENDPARDO i,j
+                 execute server_barrier
+
+                 collective tmpval1 += auxval
+
+                 auxval = 0.0
+                 PARDO i,j
+                 GET ILR_ij(i,j,kroot,kroot1)
+                 tii(i,j) = ILR_ij(i,j,kroot,kroot1)
+                 GET Fso_pq_y(j,i)
+                 tSO_y_pq(j,i) = Fso_pq_y(j,i)
+                 etemp = tii(i,j)*tSO_y_pq(j,i)
+                 etemp *= -1.0
+                 auxval += etemp
+                 ENDPARDO i,j
+                 execute server_barrier
+
+                 collective tmpval2 += auxval
+#-------------------------------i,j terms ----------------------------
+                 auxval = 0.0
+                 PARDO i,j
+                 GET ILR_2p_ij(i,j,kroot,kroot1)
+                 tii(i,j) = ILR_2p_ij(i,j,kroot,kroot1)
+                 GET Fso_pq_x(i,j)
+                 etemp = tii(i,j)*Fso_pq_x(i,j)
+                 etemp *= 1.0
+                 auxval += etemp
+                 ENDPARDO i,j
+                 execute server_barrier
+
+                 collective tmpval3 += auxval
+
+                 auxval = 0.0
+                 PARDO i,j
+                 GET ILR_2p_ij(i,j,kroot,kroot1)
+                 tii(i,j) = ILR_2p_ij(i,j,kroot,kroot1)
+                 GET Fso_pq_y(i,j)
+                 etemp = tii(i,j)*Fso_pq_y(i,j)
+                 etemp *= 1.0
+                 auxval += etemp
+                 ENDPARDO i,j
+                 execute server_barrier
+
+                 collective tmpval4 += auxval
+
+                 auxval = 0.0
+                 PARDO i,j
+                 GET ILR_AB1_2p_ij(i,j,kroot,kroot1)
+                 tii(i,j) = ILR_AB1_2p_ij(i,j,kroot,kroot1)
+                 GET Fso_pq_x(i,j)
+                 etemp = tii(i,j)*Fso_pq_x(i,j)
+                 etemp *= 1.0
+                 auxval += etemp
+                 ENDPARDO i,j
+                 execute server_barrier
+
+                 collective tmpval5 += auxval
+
+                 auxval = 0.0
+                 PARDO i,j
+                 GET ILR_AB1_2p_ij(i,j,kroot,kroot1)
+                 tii(i,j) = ILR_AB1_2p_ij(i,j,kroot,kroot1)
+                 GET Fso_pq_y(i,j)
+                 etemp = tii(i,j)*Fso_pq_y(i,j)
+                 etemp *= 1.0
+                 auxval += etemp
+                 ENDPARDO i,j
+                 execute server_barrier
+
+                 collective tmpval6 += auxval
+
+#----------------a,b part-----------------------------------------------
+                 auxval  = 0.0
+                 PARDO a,b
+                 GET ILR_AB_2p_ab(a,b,kroot,kroot1)
+                 taa(a,b) = ILR_AB_2p_ab(a,b,kroot,kroot1)
+                 GET Fso_pq_x(a,b)
+                 etemp = taa(a,b)*Fso_pq_x(a,b)
+                 etemp *= -1.0
+                 auxval += etemp
+                 ENDPARDO a,b
+                 execute server_barrier
+
+                 collective tmpval7 += auxval
+
+                 auxval  = 0.0
+                 PARDO a,b
+                 GET ILR_AB_2p_ab(a,b,kroot,kroot1)
+                 taa(a,b) = ILR_AB_2p_ab(a,b,kroot,kroot1)
+                 GET Fso_pq_y(a,b)
+                 etemp = taa(a,b)*Fso_pq_y(a,b)
+                 etemp *= -1.0
+                 auxval += etemp
+                 ENDPARDO a,b
+                 execute server_barrier
+
+                 collective tmpval8 += auxval
+
+#--------------------Extra terms-------------------------------------------------|
+                 auxval = 0.0
+                 PARDO i,a
+                 REQUEST ILR_ai(a,i,kroot,kroot1) i
+                 tILR_ai(a,i,kroot,kroot1) = ILR_ai(a,i,kroot,kroot1)
+                 tai(a,i) = tILR_ai(a,i,kroot,kroot1)
+                 GET Fso_pq_x(i,a)
+                 tSO_x_pq(i,a) = Fso_pq_x(i,a)
+                 etemp = tai(a,i)*tSO_x_pq(i,a)
+                 etemp *= -1.0
+                 auxval += etemp
+                 ENDPARDO i,a
+                 execute server_barrier
+
+                 collective tmpval9 += auxval
+
+                 auxval = 0.0
+                 PARDO i,a
+                 REQUEST ILR_ai(a,i,kroot,kroot1) i
+                 tILR_ai(a,i,kroot,kroot1) = ILR_ai(a,i,kroot,kroot1)
+                 tai(a,i) = tILR_ai(a,i,kroot,kroot1)
+                 GET Fso_pq_y(i,a)
+                 tSO_y_pq(i,a) = Fso_pq_y(i,a)
+                 etemp = tai(a,i)*tSO_y_pq(i,a)
+                 etemp *= -1.0
+                 auxval += etemp
+                 ENDPARDO i,a
+                 execute server_barrier
+
+                 collective tmpval10 += auxval
+#-----------------------------------------------------
+                 auxval = 0.0
+                 PARDO i,a
+                 REQUEST ILR_ai1(a,i,kroot,kroot1) i
+                 tILR_ai(a,i,kroot,kroot1) = ILR_ai1(a,i,kroot,kroot1)
+                 tai(a,i) = tILR_ai(a,i,kroot,kroot1)
+                 GET Fso_pq_x(i,a)
+                 etemp = tai(a,i)*Fso_pq_x(i,a)
+                 etemp *= 1.0
+                 auxval += etemp
+                 ENDPARDO i,a
+                 execute server_barrier
+
+                 collective tmpval11 += auxval
+
+
+                 auxval = 0.0
+                 PARDO i,a
+                 REQUEST ILR_ai1(a,i,kroot,kroot1) i
+                 tILR_ai(a,i,kroot,kroot1) = ILR_ai1(a,i,kroot,kroot1)
+                 tai(a,i) = tILR_ai(a,i,kroot,kroot1)
+                 GET Fso_pq_y(i,a)
+                 etemp = tai(a,i)*Fso_pq_y(i,a)
+                 etemp *= 1.0
+                 auxval += etemp
+                 ENDPARDO i,a
+                 execute server_barrier
+
+                 collective tmpval12 += auxval
+
+
+#---------Contributions to imaginary parts (Sx - components)-------------|
+      tmpval_im += tmpval1
+      tmpval_im += tmpval3
+      tmpval_im += tmpval5
+      tmpval_im += tmpval7
+      tmpval_im += tmpval9
+      tmpval_im += tmpval11
+#---------Contributions to real parts (Sy - compoenents)-----------------|
+      tmpval_re += tmpval2
+      tmpval_re += tmpval4
+      tmpval_re += tmpval6
+      tmpval_re += tmpval8
+      tmpval_re += tmpval10
+      tmpval_re += tmpval12
+#------------------------------------------------------------------------|
+#------Put calculated matrix elements into the EOM-SO-CI matrix matrix-----------|
+# Note: V_so(x) matrix elements contributes to the imaginary part of matrix,     |
+# while V_so(y) matrix elements contributes to the real part of matrix           |
+#--------------------------------------------------------------------------------|
+
+#-----------------------Block 2--------------------------------------------------|
+
+       mind1 = mark1
+       mind1 += cnt
+       mind1 -= 1.0
+
+       mind2 = mark2
+       mind2 += cnt1
+       mind2 -= 1.0
+
+
+       cnt1_size = 0.0
+       DO soind1
+       cnt2_size = 0.0
+       cnt1_size += 1.0
+             DO soind2
+             cnt2_size += 1.0
+                IF cnt1_size == mind1
+                  IF cnt2_size == mind2
+                  etemp = tmpval_im
+                  etemp *= -1.0
+                  so_ci_im(soind1,soind2) = etemp
+                  etemp = tmpval_re
+                  etemp *= -1.0
+                  so_ci_re(soind1,soind2) = etemp
+                  ENDIF
+                ENDIF
+             ENDDO soind2
+       ENDDO soind1
+#-----------------------Block 3--------------------------------------------------|
+
+       mind3 = mark2
+       mind3 += cnt
+       mind3 -= 1.0
+
+       mind4 = mark1
+       mind4 += cnt1
+       mind4 -= 1.0
+
+       cnt1_size = 0.0
+       DO soind1
+       cnt2_size = 0.0
+       cnt1_size += 1.0
+             DO soind2
+             cnt2_size += 1.0
+                IF cnt1_size == mind3
+                  IF cnt2_size == mind4
+                  etemp = tmpval_im
+                  etemp *= -1.0
+                  so_ci_im(soind1,soind2) = etemp
+                  etemp = tmpval_re
+                  etemp *= 1.0
+                  so_ci_re(soind1,soind2) = etemp
+                  ENDIF
+                ENDIF
+             ENDDO soind2
+       ENDDO soind1
+
+
+#------------------------------------------------------------------------|
+                ENDIF
+             ENDDO kroot1
+        ENDIF
+      ENDDO kroot
+
+
+
+      ENDPROC SO_MATR
+#     --------------
+
+#-----------------------------------------------------------------------------------------|
+#-----------------------------------------------------------------------------------------|
+#                     MAIN  PROGRAM                                                       |
+#-----------------------------------------------------------------------------------------|
+#-----------------------------------------------------------------------------------------|
+      tresh = 0.05
+#---------Step 1 - read eigenvalues and eigenvectors from the disk-------------------------
+      CALL READ_DATA
+#---------Step 2 - Prepare eigenvectors for construction of IP-EOM-SO-CI matrix -----------
+      CALL RLOVERLAP
+#---------Step 3 - add non-relativistic matrix elements to EOM-SO-CI matrix---------------
+      CALL NR_EOM_CONTR
+#---------Step 4 - compute SO integrals and construct SO Fock operator-------------------
+      CALL SO_INT
+#---------Step 5 - add spin-orbit couplings matrix elements to EOM-SO-CI matrix----------
+      CALL SO_MATR
+#---------Step 6 - diagonalize complex EOM-SO-CI matrix----------------------------------
+#--------- and print out relativistic roots to the output file --------------------------
+       execute eom_so_diag_ip so_ci_re so_ci_im            
+
+
+                           ENDSIAL EOM_SO_CI_IP
+#-----------------------------------------------------------------------------------------

@@ -1,0 +1,556 @@
+      SIAL TEST
+      
+      Index ione   =1, 1
+      Index iten   =1, 10
+#
+      aoindex mu     = 1, norb
+      aoindex nu     = 1, norb
+      aoindex lambda = 1, norb
+      aoindex sigma  = 1, norb
+      
+#
+      moaindex i = baocc, eaocc
+      moaindex i1= baocc, eaocc
+      moaindex i2= baocc, eaocc
+      moaindex i3= baocc, eaocc
+#
+      moaindex a = bavirt, eavirt
+      moaindex a1= bavirt, eavirt
+      moaindex a2= bavirt, eavirt
+      moaindex a3= bavirt, eavirt
+#
+      mobindex j = bbocc, ebocc
+      mobindex j1= bbocc, ebocc
+      mobindex j2= bbocc, ebocc
+      mobindex j3= bbocc, ebocc
+#
+      mobindex b = bbvirt, ebvirt
+      mobindex b1= bbvirt, ebvirt
+      mobindex b2= bbvirt, ebvirt
+      mobindex b3= bbvirt, ebvirt
+      moaindex p = baocc, eavirt
+      moaindex p1= baocc, eavirt
+      moaindex p2= baocc, eavirt
+      moaindex p3= baocc, eavirt
+#
+      mobindex q = bbocc, ebvirt
+      mobindex q1= bbocc, ebvirt
+      mobindex q2= bbocc, ebvirt
+      mobindex q3= bbocc, ebvirt
+# -----------------------------
+      Distributed CP(mu,p)
+      Distributed MO_OVRLP(p,q)
+      Distributed MO_OVRLP_OAVB(I, b)
+      Distributed MO_OVRLP_OVAB(i,a)
+      Distributed MO_OVRLP_VAOB(a,j)
+      Distributed MO_OVRLP_VAVB(a,b)
+      Distributed MO_OVRLP_OAOB(i,j)
+      Distributed DDaa(a,a1)
+
+      Temp TOAVB1(I,b)
+      Temp TOAVB2(I,b)
+      Temp TVAOB(A,j)
+      Temp TVAVB1(A,b)
+      Temp TVAVB2(A,b)
+      Temp TOAOB1(I,j)
+      Temp TOAOB2(I,j)
+      Temp TDVAOA(A,I)
+      Temp TDVBOB(b,j)
+      Temp TDVAVA(A,A1)
+      Temp TDVBVB(b,b1)
+      Temp Tmp_pq(p,q)
+      Temp TXP(mu,P)
+      Temp Taa(a,a1)
+      Temp Tee(Iten,Ione)
+
+      Static Saa(a,a1)
+      static Ree(iten,ione)
+      static Iam_zero(iten,ione)
+
+      Static SDaa(a,a1)
+      Scalar check_sum
+      Scalar tmp_sum
+      scalar icount
+      scalar Zero
+      scalar Zeros 
+      scalar Value 
+
+      LOCAL LXXXI(mu,nu,lambda,i)
+      LOCAL L1XXXI(mu,nu,lambda,i)
+      LOCAL LXXXJ(mu,nu,lambda,j)
+      LOCAL L1XXXJ(mu,nu,lambda,j)
+      LOCAL LXIXX(mu,i,lambda,sigma)
+      LOCAL LXJXX(mu,j,lambda,sigma)
+
+      LOCAL L1XIXX(MU,I,NU,LAMBDA)
+      LOCAL L1XJXX(MU,J,NU,LAMBDA)
+      
+      TEMP TXXXI(MU,NU,LAMBDA,I)
+      TEMP TXXXJ(MU,NU,LAMBDA,J)
+      TEMP TXXAI(MU,NU,A,I)
+      TEMP T1XXAI(MU,NU,A,I)
+      TEMP TXIXX(MU,I,NU,SIGMA)
+      TEMP TXJXX(MU,J,NU,SIGMA)
+
+      TEMP TXAXI(MU,A,NU,I)
+      TEMP T1XAXI(MU,A,NU,I)
+      TEMP T1XBXI(MU,B,NU,I)
+      TEMP TXBXI(MU,B,NU,I)
+      TEMP T1XBXJ(MU,B,NU,J)
+      TEMP TXBXJ(MU,B,NU,J)
+      TEMP TXXBJ(MU,NU,B,J)
+      TEMP T1XXBJ(MU,NU,B,J)
+      TEMP TXAXJ(MU,A,NU,J)
+      TEMP T1XAXJ(MU,A,NU,J)
+      TEMP T2XAXI(MU,A,NU,I)
+      TEMP TXIAX(MU,I,A,NU)
+      TEMP T2XXAI(MU,NU,A,I)
+      TEMP T1XIAX(MU,I,A,NU) 
+    
+      SERVED VXXXI(MU,NU,LAMBDA,I)
+      SERVED VXXXJ(MU,NU,LAMBDA,J)
+      SERVED VXIXX(MU,I,LAMBDA,SIGMA)
+      SERVED VXJXX(MU,J,LAMBDA,SIGMA)
+
+      SERVED VXXAI(MU,NU,A,I)
+      SERVED VXAXI(MU,A,NU,I)
+      SERVED VXBXI(MU,B,NU,I) 
+      SERVED VXXBJ(MU,NU,B,J) 
+      SERVED VXBXJ(MU,B,NU,J)
+      SERVED VXAXJ(MU,A,NU,J)
+      SERVED AVXXAI(MU,NU,A,I)
+      SERVED VXIAX(MU,I,A,NU)
+
+      TEMP AOINT(MU,NU,LAMBDA,SIGMA)
+    
+
+# Declare served arrays
+# ---------------------
+      PROC MO_OVERLAP
+#     --------------- 
+
+      CREATE MO_OVRLP
+      CREATE CP
+
+      EXECUTE  SIP_BARRIER  # Watson, added since CP was just created and then used
+
+      PARDO  nu, mu
+            DO p
+               txp (mu,p)  = OED_OVL (mu,nu)*CA (nu,p)
+               PUT CP (mu,p) += txp (mu,p)
+            ENDDO p
+      ENDPARDO  nu, mu
+
+      EXECUTE SIP_BARRIER
+
+       PARDO mu, p
+             GET CP(mu, p)
+          DO q
+#             MO_OVRLP (p,q) = 0.0
+             tmp_pq(p,q)  = CP (mu,p)*CB (mu,q)
+             PUT MO_OVRLP (p,q) += tmp_pq (p,q)
+            ENDDO q
+
+      ENDPARDO mu, p
+      
+      EXECUTE  SIP_BARRIER
+
+#bn_debug
+      check_sum = 0.0
+      do p 
+         do q
+            get  MO_OVRLP (p,q)
+            tmp_sum =  MO_OVRLP (p,q)*MO_OVRLP (p,q)
+            check_sum +=  tmp_sum
+         enddo q
+      enddo p
+      execute print_scalar check_sum
+#en_debug
+
+
+      ENDPROC MO_OVERLAP
+#    -------------------
+      
+      PROC FORM_DELTABLOCKS
+#     ---------------------
+# Form the OAVB, VAOB, VAVB, OAOB blocks of the MO(A,b) overlap
+#
+      CREATE  MO_OVRLP_OAVB
+      CREATE  MO_OVRLP_VAOB
+      CREATE  MO_OVRLP_VAVB
+      CREATE  MO_OVRLP_OAOB
+
+      EXECUTE  SIP_BARRIER # Watson, arrays just created and then used 
+
+      PARDO I, b
+            GET  MO_OVRLP(I, b)
+            TOAVB1(I, b) = MO_OVRLP(I, b)
+            PUT MO_OVRLP_OAVB(I, b) += TOAVB1(I, b)
+            
+      ENDPARDO I, b 
+
+      PARDO A, j
+            GET  MO_OVRLP(A, j)
+            TVAOB(A, j) = MO_OVRLP(A, j)
+            PUT MO_OVRLP_VAOB(A, j) += TVAOB(A, j)
+            
+      ENDPARDO A, j 
+
+      PARDO A, b
+            GET  MO_OVRLP(A, b)
+            TVAVB1(A, b) = MO_OVRLP(A, b)
+            PUT MO_OVRLP_VAVB(A, b) += TVAVB1(A, b)
+      ENDPARDO A, b
+
+      PARDO I, j
+            GET  MO_OVRLP(I, j)
+            TOAOB1(I, j) = MO_OVRLP(I, j)
+            PUT MO_OVRLP_OAOB(I, j) += TOAOB1(I, j)
+      ENDPARDO I, j
+     
+      EXECUTE SIP_BARRIER
+
+      ENDPROC FORM_DELTABLOCKS
+#--------------------------------
+
+      PROC  CHECK_PUTS
+
+      PARDO I, b
+            GET  MO_OVRLP(I, b)
+            GET  MO_OVRLP_OAVB (I,b)
+
+            TOAVB1(I, b) = MO_OVRLP(I, b)
+            TOAVB1(I, b) -= MO_OVRLP_OAVB(I, b)
+
+#            EXECUTE  DUMP_AMP  TOAVB1
+      ENDPARDO I, b
+
+      EXECUTE  SIP_BARRIER # To separate PRINT statements
+
+      PARDO A, j
+            GET  MO_OVRLP(A, j)
+            GET  MO_OVRLP_VAOB(A, j)
+            TVAOB(A, j) = MO_OVRLP(A, j)
+            TVAOB(A, j) -= MO_OVRLP_VAOB(A, j)
+
+#            EXECUTE  DUMP_AMP  TVAOB
+      ENDPARDO A, j
+
+      EXECUTE  SIP_BARRIER # To separate PRINT statements
+
+      PARDO A, b
+            GET  MO_OVRLP(A, b)
+            GET  MO_OVRLP_VAVB(A, b)
+            TVAVB1(A, b) = MO_OVRLP(A, b)
+            TVAVB1(A, b) -= MO_OVRLP_VAVB(A, b)
+
+#            EXECUTE  DUMP_AMP  TVAVB1
+      ENDPARDO A, b
+
+      EXECUTE  SIP_BARRIER # To separate PRINT statements
+
+      PARDO I, j
+            GET  MO_OVRLP(I, j)
+            GET  MO_OVRLP_OAOB(I, j)
+            TOAOB1(I, j) = MO_OVRLP(I, j)
+            TOAOB1(I, j) -= MO_OVRLP_OAOB(I, j)
+
+#            EXECUTE  DUMP_AMP  TOAOB1
+      ENDPARDO I, j
+
+      EXECUTE  SIP_BARRIER # To separate PRINT statements
+
+      ENDPROC  CHECK_PUTS
+#--------------------------------
+
+      PROC CHECK_RETURN_DIAGS 
+#     -----------------------
+
+      CREATE DDaa(a,a1)
+      EXECUTE  SIP_BARRIER 
+      PARDO a, a1
+           Saa(a,a1)      = fock_a(a,a1)
+           execute return_diagonal Saa  Sdaa 
+           execute dump_amp Sdaa
+           taa(a,a1)      = Sdaa(a,a1)
+           put DDaa(a,a1) = taa(a,a1)
+      ENDPARDO a, a1
+      EXECUTE  SIP_BARRIER 
+
+      ENDPROC CHECK_RETURN_DIAGS 
+#     -----------------------
+
+     PROC CHECK_FIND_ZEROS
+#    ---------------------
+      Zero = 0.0
+
+      DO Ione
+         Icount = 0.0
+         DO Iten
+            Icount += 1.0
+            If Icount == 1.0
+               Ree(Iten,ione) = 5.0
+            Endif
+            If Icount == 2.0
+               Ree(Iten,ione) = 4.0
+            Endif
+            If Icount == 3.0
+               Ree(Iten,ione) = 4.0
+            Endif
+            If Icount == 4.0
+               Ree(Iten,ione) = 0.0
+            Endif
+            If Icount == 5.0
+               Ree(Iten,ione) = 0.0
+            Endif
+            If Icount == 6.0
+               Ree(Iten,ione) = 2.0
+            Endif
+            If Icount == 6.0
+               Ree(Iten,ione) = 1.0
+            Endif
+            If Icount == 7.0
+               Ree(Iten,ione) = 0.0
+            Endif
+            If Icount == 8.0
+               Ree(Iten,ione) = 1.0
+            Endif
+            If Icount == 9.0
+               Ree(Iten,ione) = 1.0
+            Endif
+            If Icount == 10.0
+               Ree(Iten,ione) = 1.0
+            Endif
+         ENDDO Iten
+      ENDDO Ione
+
+      Zeros = Zero
+      DO Ione
+         DO iten
+             Tee(Iten,Ione) = Ree(Iten,IOne)
+             execute return_sval Tee Value
+             execute print_scalar value
+             If Value == Zero
+             Zeros += 1.0
+             Endif
+         ENDDO Iten
+     ENDDO Ione
+
+     Execute print_scalar zeros
+
+     EXECUTE  FIND_ZEROS Ree Iam_zero
+
+     DO Ione
+        DO iten
+             Tee(Iten,Ione) = Iam_zero(Iten,Ione)
+             execute return_sval Tee Value
+             execute print_scalar value
+         ENDDO Iten
+     ENDDO Ione
+
+     ENDPROC CHECK_FIND_ZEROS
+#    ---------------------
+
+     PROC CHECK_TRAN 
+#    ---------------
+
+     PARDO MU, NU, LAMBDA, SIGMA
+         ALLOCATE LXXXi(MU,NU,LAMBDA,*)
+         ALLOCATE LXXXj(MU,NU,LAMBDA,*)
+         ALLOCATE LXIXX(MU,*,LAMBDA,SIGMA)
+         ALLOCATE LXJXX(MU,*,LAMBDA,SIGMA)
+
+         COMPUTE_INTEGRALS AOINT(MU,NU,LAMBDA,SIGMA)
+
+         DO I
+          TXXXI(MU,NU,LAMBDA,I)  = AOINT(MU,NU,LAMBDA,SIGMA) * CA(SIGMA,I)
+          LXXXI(MU,NU,LAMBDA,I) += TXXXI(MU,NU,LAMBDA,I)
+         ENDDO I
+
+         DO I
+          TXIXX(MU,I,LAMBDA,SIGMA)  = AOINT(MU,NU,LAMBDA,SIGMA) * CA(NU,I)
+          LXIXX(MU,I,LAMBDA,SIGMA) += TXIXX(MU,I,LAMBDA,SIGMA)
+         ENDDO I
+
+         DO J
+          TXXXJ(MU,NU,LAMBDA,J)  = AOINT(MU,NU,LAMBDA,SIGMA) * CB(SIGMA,J)
+          LXXXj(MU,NU,LAMBDA,J) += TXXXJ(MU,NU,LAMBDA,J)
+         ENDDO J
+
+         DO J
+          TXJXX(MU,J,LAMBDA,SIGMA)  = AOINT(MU,NU,LAMBDA,SIGMA) * CB(NU,J)
+          LXJXX(MU,J,LAMBDA,SIGMA) += TXJXX(MU,J,LAMBDA,SIGMA)
+         ENDDO J
+
+         DO I
+          PREPARE VXXXI(MU,NU,LAMBDA,I) = LXXXI(MU,NU,LAMBDA,I)
+          PREPARE VXIXX(MU,I,LAMBDA,SIGMA) = LXIXX(MU,I,LAMBDA,SIGMA)
+         ENDDO I
+
+         DO J
+          PREPARE VXXXJ(MU,NU,LAMBDA,J) = LXXXJ(MU,NU,LAMBDA,J)
+          PREPARE VXJXX(MU,J,LAMBDA,SIGMA) = LXJXX(MU,J,LAMBDA,SIGMA)
+         ENDDO J
+
+         DEALLOCATE LXXXi(MU,NU,LAMBDA,*)
+         DEALLOCATE LXXXJ(MU,NU,LAMBDA,*)
+         DEALLOCATE LXIXX(MU,*,LAMBDA,SIGMA)
+         DEALLOCATE LXJXX(MU,*,LAMBDA,SIGMA)
+
+     ENDPARDO MU, NU, LAMBDA, SIGMA
+
+     EXECUTE SERVER_BARRIER 
+
+     PARDO MU, NU, I
+         ALLOCATE L1XXXi(MU,NU,*,I)
+         ALLOCATE L1XXXj(MU,NU,*,J)
+         ALLOCATE L1XIXX(MU,I,*,NU)
+         ALLOCATE L1XJXX(MU,J,*,NU)
+
+         DO LAMBDA
+            REQUEST  VXXXI(MU,NU,LAMBDA,I) I
+            L1XXXI(MU,NU,LAMBDA,I) = VXXXI(MU,NU,LAMBDA,I)
+         ENDDO LAMBDA
+
+         DO A
+            TXXAI(MU,NU,A,I) = 0.0
+            DO LAMBDA
+               T1XXAI(MU,NU,A,I) = L1XXXI(MU,NU,LAMBDA,I) * CA(LAMBDA,A)
+               TXXAI(MU,NU,A,I) += T1XXAI(MU,NU,A,I)
+            ENDDO LAMBDA
+            PREPARE VXXAI(MU,NU,A,I) = TXXAI(MU,NU,A,I)
+         ENDDO A
+
+     ENDPARDO MU, NU, I
+
+     PARDO MU, NU, I
+
+         DO LAMBDA
+            REQUEST  VXIXX(MU,I,LAMBDA,NU) I
+            L1XIXX(MU,I,LAMBDA,NU) = VXIXX(MU,I,LAMBDA,NU)
+         ENDDO LAMBDA
+   
+         DO A
+            TXIAX(MU,I,A,NU) = 0.0
+            DO LAMBDA
+               T1XIAX(MU,I,A,NU) = L1XIXX(MU,I,LAMBDA,NU) * CA(LAMBDA,A)
+               TXIAX(MU,I,A,NU) += T1XIAX(MU,I,A,NU)
+            ENDDO LAMBDA
+            PREPARE VXIAX(MU,I,A,NU) = TXIAX(MU,I,A,NU)
+         ENDDO A
+
+     ENDPARDO MU, NU, I
+     EXECUTE SERVER_BARRIER 
+      
+     PARDO MU, NU, A, I
+         REQUEST  VXXAI(MU,NU,A,I) I
+         REQUEST  VXIAX(MU,I,A,NU) NU
+
+         TXXAI(MU,NU,A,I)   = VXXAI(MU,NU,A,I)
+         T1XIAX(MU,I,A,NU)  = VXIAX(MU,I,A,NU)
+         T1XIAX(MU,I,A,NU) *= -1.0
+         T2XXAI(MU,NU,A,I)  = T1XIAX(MU,I,A,NU) 
+         TXXAI(MU,NU,A,I)  += T2XXAI(MU,NU,A,I)
+
+         PREPARE AVXXAI(MU,NU,A,I) = TXXAI(MU,NU,A,I)
+     ENDPARDO MU, NU, A, I
+
+#   <ja|bi> - <ja|ib> + <ij|ab> - <ij|ba> 
+#   <ja|bi> _ <ja|ib> + <ib|aj> - <ij|ba> 
+#  
+#   <ja|bi> - <ja|ib> + <bi|ja> - <ib|ja> 
+
+
+#     PARDO MU, NU, I
+#
+#         DO LAMBDA
+#            REQUEST  VXXXI(MU,LAMBDA,NU,I) I
+#            L1XXXI(MU,LAMBDA,NU,I) = VXXXI(MU,LAMBDA,NU,I)
+#         ENDDO LAMBDA
+#  
+#         DO B
+#            TXBXI(MU,B,NU,I) = 0.0
+#            DO LAMBDA
+#               T1XBXI(MU,B,NU,I) = L1XXXI(MU,LAMBDA,NU,I) * CB(LAMBDA,B)
+#               TXBXI(MU,B,NU,I) += T1XBXI(MU,B,NU,I)
+#            ENDDO LAMBDA
+#            PREPARE VXBXI(MU,B,NU,I) += TXBXI(MU,B,NU,I)
+#         ENDDO B
+#
+#     ENDPARDO MU, NU, I
+#
+#     PARDO MU, NU, J
+#
+#         DO LAMBDA
+#            REQUEST  VXXXJ(MU,NU,LAMBDA,J) J
+#            L1XXXJ(MU,NU,LAMBDA,J) = VXXXJ(MU,NU,LAMBDA,J)
+#         ENDDO LAMBDA
+#
+#         DO B
+#            TXXBJ(MU,NU,B,J) = 0.0
+#            DO LAMBDA
+#               T1XXBJ(MU,NU,B,J) = L1XXXJ(MU,NU,LAMBDA,J) * CB(LAMBDA,B)
+#               TXXBJ(MU,NU,B,J) += T1XXBJ(MU,NU,B,J)
+#            ENDDO LAMBDA
+#            PREPARE VXXBJ(MU,NU,B,J) += TXXBJ(MU,NU,B,J)
+#         ENDDO B
+#
+#     ENDPARDO MU, NU, J
+#
+#     PARDO MU, NU, J
+#
+#         DO LAMBDA
+#            REQUEST  VXXXJ(MU,LAMBDA,NU,J) J
+#            L1XXXJ(MU,LAMBDA,NU,J) = VXXXJ(MU,LAMBDA,NU,J)
+#         ENDDO LAMBDA
+#
+#         DO B
+#            TXBXJ(MU,B,NU,J) = 0.0
+#            DO LAMBDA
+#               T1XBXJ(MU,B,NU,J) = L1XXXJ(MU,LAMBDA,NU,J) * CB(LAMBDA,B)
+#               TXBXJ(MU,B,NU,J) += T1XBXJ(MU,B,NU,J)
+#            ENDDO LAMBDA
+#            PREPARE VXBXJ(MU,B,NU,J) = TXBXJ(MU,B,NU,J)
+#         ENDDO B
+#
+#     ENDPARDO MU, NU, J
+#
+#     PARDO MU, NU, J
+#
+#         DO LAMBDA
+#            REQUEST  VXXXJ(MU,LAMBDA,NU,J) J
+#            L1XXXJ(MU,LAMBDA,NU,J) = VXXXJ(MU,LAMBDA,NU,J)
+#         ENDDO LAMBDA
+#
+#         DO A
+#            TXAXJ(MU,A,NU,J) = 0.0
+#            DO LAMBDA
+#               T1XAXJ(MU,A,NU,J) = L1XXXJ(MU,LAMBDA,NU,J) * CA(LAMBDA,A)
+#               TXAXJ(MU,A,NU,J) += T1XAXJ(MU,A,NU,J)
+#            ENDDO LAMBDA
+#            PREPARE VXAXJ(MU,A,NU,J) = TXAXJ(MU,A,NU,J)
+#         ENDDO A
+#
+#     ENDPARDO MU, NU, J
+#
+#     EXECUTE SERVER_BARRIER
+#
+     ENDPROC CHECK_TRAN 
+#    ------------------
+
+#    MAIN PROGRAM BLOCK
+#    -------------------
+
+      CALL MO_OVERLAP
+      CALL FORM_DELTABLOCKS
+      CALL CHECK_PUTS # Watson routine
+
+#      CALL CHECK_FIND_ZEROS
+#      CALL CHECK_RETURN_DIAGS 
+
+      CALL CHECK_TRAN
+  
+
+      ENDSIAL TEST
+
+

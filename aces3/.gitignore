@@ -1,0 +1,15 @@
+*.a
+*.o
+*.sio
+xaces3
+xaces2
+xa2proc
+xjoda
+Makefile
+*.swp
+*.swo
+autom4te.cache/
+CVS/
+
+tests/fast/JOBARC
+tests/fast/__pycache__/

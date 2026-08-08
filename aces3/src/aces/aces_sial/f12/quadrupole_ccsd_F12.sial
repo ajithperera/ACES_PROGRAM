@@ -1,0 +1,2021 @@
+#--------------------------------------------------------------|
+# This code calculate quadrupole moments for CCSD(F12) method, |
+#                    according to formula:                     |
+#     Qij = <0|(1+Lambda) exp(-T) q exp(T) |0>                 |
+#  Added by Denis Bokhan, Moscow Lomonosov State University,   | 
+#                 Moscow, Russian Federation                   | 
+#--------------------------------------------------------------|
+                       SIAL QUADRUPOLE_CCSD_F12
+#----------------Simple indices--------------------------------|
+      index kkk=1,1
+      index ind1=1,6
+      index jatom=1,natoms
+      index   g=1, 1000000
+      index dipind1 = 1,3
+      index dipind2 = 1,3 
+#--------------------------------------------------------------|
+# Indices for molecular orbitals                               |
+#--------------------------------------------------------------|
+      moaindex i = baocc, eaocc
+      moaindex j = baocc, eaocc
+      moaindex k = baocc, eaocc
+      moaindex l = baocc, eaocc
+      moaindex n = baocc, eaocc
+      moaindex m = baocc, eaocc
+
+      moaindex i1= baocc, eaocc
+      moaindex i2= baocc, eaocc
+      moaindex i3= baocc, eaocc
+
+      moaindex a = bavirt, eavirt
+      moaindex a1= bavirt, eavirt
+      moaindex a2= bavirt, eavirt
+      moaindex a3= bavirt, eavirt
+      moaindex d = bavirt, eavirt
+      moaindex c1 = bavirt, eavirt
+
+      moaindex j1= baocc, eaocc
+      moaindex j2= baocc, eaocc
+      moaindex j3= baocc, eaocc
+
+      moaindex b = bavirt, eavirt
+      moaindex b1= bavirt, eavirt
+      moaindex b2= bavirt, eavirt
+      moaindex b3= bavirt, eavirt
+
+      moaindex p = baocc, eavirt
+      moaindex p1= baocc, eavirt
+      moaindex p2= baocc, eavirt
+      moaindex p3= baocc, eavirt
+
+      moaindex q = baocc, eavirt
+      moaindex q1= baocc, eavirt
+      moaindex q2= baocc, eavirt
+      moaindex q3= baocc, eavirt
+
+      aoindex mu     = 1, norb
+      aoindex nu     = 1, norb
+      aoindex lambda = 1, norb
+      aoindex sigma  = 1, norb
+#---------Cluster amplitudes-------------------------------|
+      distributed t1a_old(a,i)
+      served T2old_aa(a,i,a1,i1)
+      served T2old_ab(a,i,b,j)
+
+      temp tt1a_old(a,i)
+      temp tT2old_aa(a,i,a1,i1)
+      temp tT2old_ab(a,i,b,j)
+#---------Lambda amplitudes--------------------------------|
+      served l1a_old(i,a)
+      served L2old_aa(i,a,i1,a1)
+      served L2old_ab(i,a,j,b)
+
+      temp tl1a_old(i,a)
+      temp tL2old_aa(i,a,i1,a1)
+      temp tL2old_ab(i,a,j,b)
+#-------------------------------------------
+     temp T_x(mu,nu)
+     temp T_y(mu,nu)
+     temp T_z(mu,nu)
+
+     temp T1_x(p,nu)
+     temp T1_y(p,nu)
+     temp T1_z(p,nu)
+
+     temp T2_x(p,q)
+     temp T2_y(p,q)
+     temp T2_z(p,q)
+
+     temp ttx(i,j)
+
+     temp aoint(mu,lambda,nu,sigma)
+     temp aoint1(mu,lambda,nu,sigma)
+     temp aoint2(mu,lambda,nu,sigma)
+#--------One-particle elements of Hbar------
+      distributed dip_ao_x(mu,nu)
+      distributed dip_ao_y(mu,nu)
+      distributed dip_ao_z(mu,nu)
+
+      distributed dip_am_x(p,nu)
+      distributed dip_am_y(p,nu)
+      distributed dip_am_z(p,nu)
+
+      distributed dip_pq_x(p,q)
+      distributed dip_pq_y(p,q)
+      distributed dip_pq_z(p,q)
+
+      served quad_pq_x(p,q)
+      served quad_pq_y(p,q)
+      served quad_pq_z(p,q)
+
+      distributed Uaa(a,a1)
+      distributed Ubb(b,b1)
+      distributed Uii(i1,i)
+      distributed Ujj(j1,j)
+      distributed Uia(i,a)
+      distributed Ujb(j,b)
+#---------Two-particle elements of Hbar-----
+      served Wiiii(i,i1,i2,i3)
+      served Wjjjj(j,j1,j2,j3)
+      served Wiijj(i,i1,j,j1)
+
+      served Waaia(a,a1,i,a2)
+      served Wbbjb(b,b1,j,b2)
+      served Waajb(a,a1,j,b2)
+      served Wbbia(b,b1,i,a2)
+
+      served Wiiia(i1,i,i2,a)
+      served Wjjjb(j1,j,j2,b)
+      served Wiijb(i1,i,j2,b)
+      served Wjjia(j1,j,i2,a)
+
+      served Wiiai(i,i1,a,i2)
+      served Wiibj(i,i1,b,j)
+      served Wjjai(j,j1,a,i)
+      served Wjjbj(j,j1,b,j2)
+
+      served Wiaai(i1,a1,a,i)
+      served Wjbbj(j1,b1,b,j)
+      served Wiabj(i,a,b,j)
+      served Wjbai(j,b,a,i)
+      served Wiibb(i1,i,b,b1)
+      served Wjjaa(j1,j,a,a1)
+      served W1iibb(i1,i,b,b1)
+      served W1jjaa(j1,j,a,a1)
+
+      served Waaai(a,a1,a2,i)
+      served Wbbbj(b,b1,b2,j)
+      served Waabj(a,a1,b,j)
+      served Wbbai(b,b1,a,i)
+
+      served Waiaa(a,a1,i,a2) # HBAR_AIBC_aaaa
+      served Wbjbb(b,b1,j,b2) # HBAR_AIBC_bbbb
+      served Waibb(a,a1,j,b2) # HBAR_AIBC_aabb
+      served Wbjaa(b,b1,i,a2) # HBAR_AIBC_bbaa
+      served auxint2(a,i,p,j)
+      served C_coef(i,j,k,l)
+      served CC2(i,j,k,l)
+      served CC1x(i,j,k,l)
+      served CC1y(i,j,k,l)
+      served CC1z(i,j,k,l)
+      served Cdintermx(i,j,k,l)
+      served Cdintermy(i,j,k,l)
+      served Cdintermz(i,j,k,l)    
+      served cpinterm1(p,a)
+      served cpinterm2(p,a)
+      served cpinterm4(p,a)
+      temp tccusp(i,j,k,l)
+      temp tccusp1(i,j,k,l)
+      temp tccusp2(i,j,k,l)
+      temp tccusp3(i,j,k,l)
+
+      served Waiia(a,i,i1,a1)
+      served Wbjjb(b,j,j1,b1)
+      served Waijb(a,i,j,b)
+      served Wbjia(b,j,i,a)
+      served Hbar_ab_eomea(a,a1)
+      served Hbar_ia_eomea(a,i)
+      served Hbar_ik_aj_eomea(i,k,a,j)
+      served Hbar_ij_ab_eomea(i,j,a,b)
+      served Hbar_ai_jb_eomea(a,i,j,b)
+#-----------Hbar derivatives ------------------------------|
+      distributed Hbar_derv_x_ia(i,a)
+      distributed Hbar_derv_x_ai(a,i)
+      distributed Hbar_derv_x_ab(a,b)
+      distributed Hbar_derv_x_ij(i,j)
+      served Hbar_derv_x_aibj(a,i,b,j)
+
+      distributed Hbar_derv_y_ia(i,a)
+      distributed Hbar_derv_y_ai(a,i)
+      distributed Hbar_derv_y_ab(a,b)
+      distributed Hbar_derv_y_ij(i,j)
+      served Hbar_derv_y_aibj(a,i,b,j)
+
+      distributed Hbar_derv_z_ia(i,a)
+      distributed Hbar_derv_z_ai(a,i)
+      distributed Hbar_derv_z_ab(a,b)
+      distributed Hbar_derv_z_ij(i,j)
+      served Hbar_derv_z_aibj(a,i,b,j)
+
+      temp tHbar_derv_ij(i,j)
+      temp tHbar_derv_ab(a,b)
+      temp tHbar_derv_ia(i,a)
+      temp tHbar_derv_ai(a,i)
+      temp tHbar_derv_aibj(a,i,b,j)
+      temp tHbar_derv_aibj_perm(a,i,b,j)
+      temp t1Hbar_derv_aibj(a,i,b,j) 
+#-----------Molecular integrals----------------------------|
+
+#      served VSpipi(p1,i,p,i1)
+#      served Viaai(i,a1,a,i1)
+#      served Vaaii(a,a1,i,i1)
+#      served Vaaai(a2,a,a1,i)
+#      served VSaaai(a2,a,a1,i)
+#      served Vpiqj(p,i,q,j)
+
+      served VSpipi(p1,i,p,i1)
+      served Viaai(i,a1,a,i1)
+      served Vaaii(a,a1,i,i1)
+      served Vaaai(a2,a,a1,i)
+      served VSaaai(a2,a,a1,i)
+      served Vpiqj(p,i,q,j)
+
+      served VSqjqj(q,j,q1,j1)
+      served VSbbbj(b,b1,b2,j)
+      served Vaabj(a,a1,b,j)
+      served Vbbai(b,b1,a,i)
+      served Vjbii(j,b,i,i1)
+      served Viabj(i,a,b,j)
+      served Vaajj(a,a1,j,j1)
+      served Vbbii(b,b1,i,i1)
+      served Vjbbj(j,b1,b,j1)
+      served Vbbjj(b,b1,j,j1)
+#-----------------------------------------
+
+
+      temp tmp_aaai1(a2,a,a1,i)
+      temp tmp_aaai2(a2,a,a1,i)
+      temp tmp_aaai3(a2,a,a1,i)
+#--------Local arrays------------------------------
+      local MOVAL(p)
+      local MOOVER(p,p1)
+      local MOOVERX(p,p1)
+      local MOOVERY(p,p1)
+      local MOOVERZ(p,p1)
+      local slater_ip(p,i)
+      local slater_sq_ip(p,i)
+      local l3center_imu(mu,q)
+
+      temp tmoval(p)
+      temp tmoval1(p)
+      temp tmoover(p,p1)
+      temp tmpint1(p,p1)
+      temp tmpint2(p,p1)
+      temp tmp3center(mu,nu)
+      temp tmp3grad(mu,nu)
+      temp tmp3center_imu(mu,p)
+      temp tmp3center_pi(p,q)
+
+#--------F12  intermediates--------------------------------|
+       served intl1x(i,a)
+       served intl1y(i,a)
+       served intl1z(i,a)
+       temp tintl1(i,a)
+       served intl2x(i,a,j,b)
+       served intl2y(i,a,j,b)
+       served intl2z(i,a,j,b)
+       temp tintl2(i,a,j,b)
+       temp tintl2_1(i,a,j,b)
+       temp tintl2_2(i,a,j,b)
+       served Xijkl(i,k,j,l)
+       served Bx(i,j,k,l)
+       served By(i,j,k,l)
+       served Bz(i,j,k,l)
+       temp tB1(i,j,k,l)
+       temp tB2(i,j,k,l)
+       temp tB3(i,j,k,l)
+#------------------------------------------------------------|
+      served T1_1(i,a)
+      served T1_2(i,j)
+      served T1_3(a,p)
+      served T2_5(a,i,b,j)
+      served T2_6(a,i,q,j)
+      served T2_7(q,i,a,j)
+      served T2_3(i,j,i1,j1)
+      served T2_3S(i,j,i1,j1)
+      served T2_8(a,i,p,j)
+      served T2_9(a,p,i,j)
+      served T2_89S(a,i,b,j)
+      served T2_1(a,i,b,j)
+      served T2_2(j,k,i,a)
+      served T2_10(i,a,d,b)
+      served T2_11(d,a,j,b)
+      served T2_10_3e(i,a,d,b)
+      served T2_11_3e(d,a,j,b)
+      served Hbar_ijka_F12(i,j,k,a)
+      served Hbar_ijka_F12S(i,j,k,a)
+      served Hbar_abci_F12(a,a1,i,d)
+      served Hbar_abci_F12S(a,a1,i,d)
+      served V0pipi(p,i,q,j)
+      served V0aapi(a,b,p,i)
+      served V0apai(a,p,b,i)
+      served V2ppii(p,q,i,j)
+      served V2piai(p,i,a,j)
+      served V2pipi(p2,i,p1,i1)
+      served V3iiii(i,i1,i2,i3)
+#------------------------------------------------------------|
+#--------------Static arrays---------------------------------|
+      static dipole(ind1,kkk)
+#----------------------------------------------------------|
+#    Scalar variables                                      |
+#----------------------------------------------------------|
+      scalar PTW
+      scalar Ng
+      scalar cnt
+      scalar ind
+      scalar int1_type
+
+      scalar F12CALC
+      scalar F12_GAMMA
+      scalar EAEOMF12CALC
+      scalar printnumber
+      scalar cnt1
+      scalar DIPOLE_x
+      scalar DIPOLE_y
+      scalar DIPOLE_z
+      scalar tmpnuc 
+      scalar dnuc_x
+      scalar dnuc_y
+      scalar dnuc_z
+      scalar tmpval
+      scalar tmp_dip_x
+      scalar tmp_dip_y
+      scalar tmp_dip_z
+      scalar dip_scal_x
+      scalar dip_scal_y
+      scalar dip_scal_z 
+      scalar t3_1_x
+      scalar t3_2_x
+      scalar t3_1_y
+      scalar t3_2_y
+      scalar t3_1_z
+      scalar t3_2_z
+      scalar t3_x
+      scalar t3_y
+      scalar t3_z
+      scalar t4_x
+      scalar t4_y
+      scalar t4_z 
+      scalar tt2_x
+      scalar tt2_y
+      scalar tt2_z 
+      scalar dip_F12_L1_x
+      scalar dip_F12_L1_y
+      scalar dip_F12_L1_z
+      scalar dip_F12_L2_x
+      scalar dip_F12_L2_y
+      scalar dip_F12_L2_z
+      scalar dip_F12_L2_1_x
+      scalar dip_F12_L2_1_y
+      scalar dip_F12_L2_1_z
+      scalar dip_F12_L2_2_x
+      scalar dip_F12_L2_2_y
+      scalar dip_F12_L2_2_z
+      scalar dip_F12_T2_x
+      scalar dip_F12_T2_y
+      scalar dip_F12_T2_z
+      scalar dip_F12_T2_1_x
+      scalar dip_F12_T2_1_y
+      scalar dip_F12_T2_1_z
+      scalar dip_F12_T2_2_x
+      scalar dip_F12_T2_2_y
+      scalar dip_F12_T2_2_z
+      scalar dip_F12_X_x
+      scalar dip_F12_X_y
+      scalar dip_F12_X_z
+      scalar dip_F12_Bz
+      scalar dip_F12_By
+      scalar dip_F12_Bx
+#------------------------------------------------------------
+#------------------------------------------------------------
+      static dip_out(dipind1,dipind2)
+#------------------------------------------------------------
+#------------------------------------------------------------
+
+
+      PROC READ_DATA
+#     -------------
+      create t1a_old
+      create Uaa
+      create Ubb
+      create Uii
+      create Ujj
+      create Uia
+      create Ujb
+      execute sip_barrier
+
+      execute server_barrier
+#----------Integrals----------------------------------------------
+#      execute list_to_blocks                VSpipi
+#      execute list_to_blocks                Vaaii
+#      execute list_to_blocks                Viaai
+#      execute list_to_blocks                Vaaai
+#      execute list_to_blocks                Vpiqj
+
+      execute list_to_blocks                VSpipi(p,i,p1,i1)
+      execute list_to_blocks                Vaaii
+      execute list_to_blocks                Viaai
+      execute list_to_blocks                VSaaai
+      execute list_to_blocks                VSqjqj(q,j,q1,j1)
+      execute list_to_blocks                Vbbjj
+      execute list_to_blocks                Vjbbj
+      execute list_to_blocks                VSbbbj
+      execute list_to_blocks                Vjbii
+      execute list_to_blocks                Vbbai
+      execute list_to_blocks                Vpiqj(p,i,q,j)
+      execute list_to_blocks                Viabj
+      execute list_to_blocks                Vaaai
+      execute list_to_blocks                Vaajj
+      execute list_to_blocks                Vbbii
+
+
+#----------Cluster amplitudes-------------------------------------
+      execute list_to_blocks                t1a_old
+      execute list_to_blocks                T2old_aa
+      execute list_to_blocks                T2old_ab
+#----------Lambda amplitudes--------------------------------------
+      execute list_to_blocks                l1a_old
+      execute list_to_blocks                L2old_aa
+      execute list_to_blocks                L2old_ab
+#----------One-paticle Hbar elements------------------------------
+      execute list_to_blocks                Uaa
+      execute list_to_blocks                Ubb
+      execute list_to_blocks                Uii
+      execute list_to_blocks                Ujj
+      execute list_to_blocks                Uia
+      execute list_to_blocks                Ujb
+#----------Two-particle Hbar elements-----------------------------
+      execute list_to_blocks                Wiiii
+      execute list_to_blocks                Wjjjj
+      execute list_to_blocks                Wiijj
+      execute list_to_blocks                Waiaa # HBAR_AIBC_aaaa
+      execute list_to_blocks                Wbjbb # HBAR_AIBC_bbbb
+      execute list_to_blocks                Waibb # HBAR_AIBC_aabb
+      execute list_to_blocks                Wbjaa # HBAR_AIBC_bbaa
+      execute list_to_blocks                Wiiia # HBAR_JKIA_aaaa
+      execute list_to_blocks                Wjjjb # HBAR_JKIA_bbbb
+      execute list_to_blocks                Wiijb # HBAR_JKIA_aabb
+      execute list_to_blocks                Wjjia # HBAR_JKIA_bbaa
+      execute list_to_blocks                Wiiai # HBAR_IAJK_aaaa
+      execute list_to_blocks                Wiibj # HBAR_IAJK_aabb
+      execute list_to_blocks                Wjjai # HBAR_IAJK_bbaa
+      execute list_to_blocks                Wjjbj # HBAR_IAJK_bbbb
+      execute list_to_blocks                Wiaai # HBAR_AJIB_aaaa
+      execute list_to_blocks                Wjbbj # HBAR_AJIB_bbbb
+      execute list_to_blocks                Wiabj # HBAR_AJIB_aabb
+      execute list_to_blocks                Wjbai # HBAR_AJIB_BBAA
+      execute list_to_blocks                W1iibb # HBAR_AJIB_iibb
+      execute list_to_blocks                W1jjaa # HBAR_AJIB_jjaa
+      execute list_to_blocks                Waaai # HBAR_ABCI_aaaa
+      execute list_to_blocks                Wbbbj # HBAR_ABCI_bbbb
+      execute list_to_blocks                Waabj # HBAR_ABCI_aabb
+      execute list_to_blocks                Wbbai # HBAR_ABCI_bbaa
+      execute list_to_blocks                quad_pq_x
+      execute list_to_blocks                quad_pq_y
+      execute list_to_blocks                quad_pq_z
+#--------------Read F12 - related intermediates-------------------
+                 IF F12CALC == 1.0
+      execute list_to_blocks      T1_1
+      execute list_to_blocks      T1_3
+      execute list_to_blocks      T1_2
+      execute list_to_blocks      T2_1
+      execute list_to_blocks      T2_2
+      execute list_to_blocks      T2_3S
+      execute list_to_blocks      T2_3
+      execute list_to_blocks      T2_5
+      execute list_to_blocks      T2_6
+      execute list_to_blocks      T2_7
+      execute list_to_blocks      Hbar_ijka_F12S
+      execute list_to_blocks      Hbar_ijka_F12
+      execute list_to_blocks      T2_89S
+      execute list_to_blocks      T2_8
+      execute list_to_blocks      T2_9
+      execute list_to_blocks      T2_10
+      execute list_to_blocks      T2_11
+      execute list_to_blocks      T2_10_3e
+      execute list_to_blocks      T2_11_3e
+      execute list_to_blocks      V2piai
+      execute list_to_blocks      V0pipi
+      execute list_to_blocks      V0apai
+      execute list_to_blocks      V0aapi
+      execute list_to_blocks      V2pipi
+      execute list_to_blocks      V3iiii
+#------------Calculated F12 intermediates for properties----------------
+      execute list_to_blocks         intl1x
+      execute list_to_blocks         intl1y
+      execute list_to_blocks         intl1z
+      execute list_to_blocks         intl2x
+      execute list_to_blocks         intl2y
+      execute list_to_blocks         intl2z
+      execute list_to_blocks         Xijkl
+      execute list_to_blocks         Bx
+      execute list_to_blocks         By
+      execute list_to_blocks         Bz
+
+
+                 ENDIF 
+#-----------------------------------------------------------------
+
+
+      execute read_list_to_blocks
+      execute server_barrier
+
+
+
+
+
+     ENDPROC READ_DATA
+#    ----------------
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+#------------------------------------------------------------
+#------------------------------------------------------------
+
+      PROC HBAR_DER
+#     -------------
+
+      create dip_ao_x
+      create dip_ao_y
+      create dip_ao_z
+
+      create dip_am_x
+      create dip_am_y
+      create dip_am_z
+
+      create dip_pq_x
+      create dip_pq_y
+      create dip_pq_z
+
+      execute sip_barrier
+#--------Step 2 - copy quadrupole moment integrals------------------
+      PARDO p,q
+      REQUEST quad_pq_x(p,q) p
+      T2_x(p,q) = quad_pq_x(p,q)
+      PUT dip_pq_x(p,q) = T2_x(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+#--------------------------------
+      PARDO p,q
+      REQUEST quad_pq_y(p,q) p
+      T2_y(p,q) = quad_pq_y(p,q)
+      PUT dip_pq_y(p,q) = T2_y(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+#--------------------------------
+      PARDO p,q
+      REQUEST quad_pq_z(p,q) p
+      T2_z(p,q) = quad_pq_z(p,q)
+      PUT dip_pq_z(p,q) = T2_z(p,q)
+      ENDPARDO p,q
+      execute sip_barrier
+#--------------------------------
+
+
+#--------Step 3 - construction of Hbar derivative matrix elements-------
+
+      create Hbar_derv_x_ia
+      create Hbar_derv_x_ai
+      create Hbar_derv_x_ab
+      create Hbar_derv_x_ij
+
+      create Hbar_derv_y_ia
+      create Hbar_derv_y_ai
+      create Hbar_derv_y_ab
+      create Hbar_derv_y_ij
+
+      create Hbar_derv_z_ia
+      create Hbar_derv_z_ai
+      create Hbar_derv_z_ab
+      create Hbar_derv_z_ij
+#--------------------------------
+
+#----------Hbar_derv_ij elements------------
+
+#-----------------x-component---------------
+      PARDO i,j
+      GET dip_pq_x(i,j)
+      T2_x(i,j) = dip_pq_x(i,j)
+      PUT Hbar_derv_x_ij(i,j) = T2_x(i,j)
+      ENDPARDO i,j
+      execute sip_barrier
+
+      PARDO i,j,a
+      GET dip_pq_x(j,a)
+      T2_x(j,a) = dip_pq_x(j,a)
+      GET t1a_old(a,i)
+      tt1a_old(a,i) = t1a_old(a,i)
+      tHbar_derv_ij(i,j) = tt1a_old(a,i)*T2_x(j,a)
+      PUT Hbar_derv_x_ij(i,j) += tHbar_derv_ij(i,j)
+      ENDPARDO i,j,a
+      execute sip_barrier
+#-----------------y-component---------------
+      PARDO i,j
+      GET dip_pq_y(i,j)
+      T2_y(i,j) = dip_pq_y(i,j)
+      PUT Hbar_derv_y_ij(i,j) = T2_y(i,j)
+      ENDPARDO i,j
+      execute sip_barrier
+
+      PARDO i,j,a
+      GET dip_pq_y(j,a)
+      T2_y(j,a) = dip_pq_y(j,a)
+      GET t1a_old(a,i)
+      tt1a_old(a,i) = t1a_old(a,i)
+      tHbar_derv_ij(i,j) = tt1a_old(a,i)*T2_y(j,a)
+      PUT Hbar_derv_y_ij(i,j) += tHbar_derv_ij(i,j)
+      ENDPARDO i,j,a
+      execute sip_barrier
+#-----------------z-component---------------
+      PARDO i,j
+      GET dip_pq_z(i,j)
+      T2_z(i,j) = dip_pq_z(i,j)
+      PUT Hbar_derv_z_ij(i,j) = T2_z(i,j)
+      ENDPARDO i,j
+      execute sip_barrier
+
+      PARDO i,j,a
+      GET dip_pq_z(j,a)
+      T2_z(j,a) = dip_pq_z(j,a)
+      GET t1a_old(a,i)
+      tt1a_old(a,i) = t1a_old(a,i)
+      tHbar_derv_ij(i,j) = tt1a_old(a,i)*T2_z(j,a)
+      PUT Hbar_derv_z_ij(i,j) += tHbar_derv_ij(i,j)
+      ENDPARDO i,j,a
+      execute sip_barrier
+#-------------------------------------------
+
+#----------Hbar_derv_ab elements------------
+
+#-----------------x-component---------------
+      PARDO a,b
+      GET dip_pq_x(a,b)
+      T2_x(a,b) = dip_pq_x(a,b)
+      PUT Hbar_derv_x_ab(a,b) = T2_x(a,b)
+      ENDPARDO a,b
+      execute sip_barrier
+
+      PARDO a,b,i
+      GET dip_pq_x(i,b)
+      T2_x(i,b) = dip_pq_x(i,b)
+      GET t1a_old(a,i)
+      tt1a_old(a,i) = t1a_old(a,i)
+      tHbar_derv_ab(a,b) = tt1a_old(a,i)*T2_x(i,b)
+      tHbar_derv_ab(a,b) *= -1.0
+      PUT Hbar_derv_x_ab(a,b) += tHbar_derv_ab(a,b)
+      ENDPARDO a,b,i
+      execute sip_barrier
+#-----------------y-component---------------
+      PARDO a,b
+      GET dip_pq_y(a,b)
+      T2_y(a,b) = dip_pq_y(a,b)
+      PUT Hbar_derv_y_ab(a,b) = T2_y(a,b)
+      ENDPARDO a,b
+      execute sip_barrier
+
+      PARDO a,b,i
+      GET dip_pq_y(i,b)
+      T2_y(i,b) = dip_pq_y(i,b)
+      GET t1a_old(a,i)
+      tt1a_old(a,i) = t1a_old(a,i)
+      tHbar_derv_ab(a,b) = tt1a_old(a,i)*T2_y(i,b)
+      tHbar_derv_ab(a,b) *= -1.0
+      PUT Hbar_derv_y_ab(a,b) += tHbar_derv_ab(a,b)
+      ENDPARDO a,b,i
+      execute sip_barrier
+#-----------------z-component---------------
+      PARDO a,b
+      GET dip_pq_z(a,b)
+      T2_z(a,b) = dip_pq_z(a,b)
+      PUT Hbar_derv_z_ab(a,b) = T2_z(a,b)
+      ENDPARDO a,b
+      execute sip_barrier
+
+      PARDO a,b,i
+      GET dip_pq_z(i,b)
+      T2_z(i,b) = dip_pq_z(i,b)
+      GET t1a_old(a,i)
+      tt1a_old(a,i) = t1a_old(a,i)
+      tHbar_derv_ab(a,b) = tt1a_old(a,i)*T2_z(i,b)
+      tHbar_derv_ab(a,b) *= -1.0
+      PUT Hbar_derv_z_ab(a,b) += tHbar_derv_ab(a,b)
+      ENDPARDO a,b,i
+      execute sip_barrier
+
+#----------Hbar_derv_ia elements------------
+
+#-----------------x-component---------------
+      PARDO i,a
+      GET dip_pq_x(i,a)
+      T2_x(i,a) = dip_pq_x(i,a)
+      PUT Hbar_derv_x_ia(i,a) = T2_x(i,a)
+      ENDPARDO i,a
+      execute sip_barrier
+
+      PARDO a,b,i
+      GET Hbar_derv_x_ab(b,a)
+      tHbar_derv_ab(a,b) = Hbar_derv_x_ab(b,a)
+      GET t1a_old(b,i)
+      tt1a_old(b,i) = t1a_old(b,i)
+      tHbar_derv_ia(i,a) = tHbar_derv_ab(a,b)*tt1a_old(b,i)
+      PUT Hbar_derv_x_ia(i,a) += tHbar_derv_ia(i,a)
+      ENDPARDO a,b,i
+      execute sip_barrier
+
+      PARDO i,j,a
+      GET dip_pq_x(i,j)
+      T2_x(i,j) = dip_pq_x(i,j)
+      GET t1a_old(a,j)
+      tt1a_old(a,j) = t1a_old(a,j)
+      tHbar_derv_ia(i,a) = tt1a_old(a,j)*T2_x(i,j)
+      tHbar_derv_ia(i,a) *= -1.0
+      PUT Hbar_derv_x_ia(i,a) += tHbar_derv_ia(i,a)
+      ENDPARDO i,j,a
+      execute sip_barrier
+#--------------------------------------------------------
+      PARDO i,j,a,b
+      GET dip_pq_x(j,b)
+      T2_x(j,b) = dip_pq_x(j,b)
+      REQUEST T2old_ab(a,i,b,j) a
+      tT2old_ab(a,i,b,j) = T2old_ab(a,i,b,j)
+      tHbar_derv_ia(i,a) = tT2old_ab(a,i,b,j)*T2_x(j,b)
+      tHbar_derv_ia(i,a) *= 2.0
+      PUT Hbar_derv_x_ia(i,a) += tHbar_derv_ia(i,a)
+      ENDPARDO i,j,a,b
+      execute sip_barrier
+#------------Permutted term-----------------------------
+      PARDO i,j,a,b
+      GET dip_pq_x(j,b)
+      T2_x(j,b) = dip_pq_x(j,b)
+      REQUEST T2old_ab(a,j,b,i) a
+      tT2old_ab(a,j,b,i) = T2old_ab(a,j,b,i)
+      tHbar_derv_ia(i,a) = tT2old_ab(a,j,b,i)*T2_x(j,b)
+      tHbar_derv_ia(i,a) *= -1.0
+      PUT Hbar_derv_x_ia(i,a) += tHbar_derv_ia(i,a)
+      ENDPARDO i,j,a,b
+      execute sip_barrier
+#-----------------y-component---------------
+      PARDO i,a
+      GET dip_pq_y(i,a)
+      T2_y(i,a) = dip_pq_y(i,a)
+      PUT Hbar_derv_y_ia(i,a) = T2_y(i,a)
+      ENDPARDO i,a
+      execute sip_barrier
+
+      PARDO a,b,i
+      GET Hbar_derv_y_ab(b,a)
+      GET t1a_old(b,i)
+      tt1a_old(b,i) = t1a_old(b,i)
+      tHbar_derv_ia(i,a) = Hbar_derv_y_ab(b,a)*tt1a_old(b,i)
+      PUT Hbar_derv_y_ia(i,a) += tHbar_derv_ia(i,a)
+      ENDPARDO a,b,i
+      execute sip_barrier
+
+      PARDO i,j,a
+      GET dip_pq_y(i,j)
+      T2_y(i,j) = dip_pq_y(i,j)
+      GET t1a_old(a,j)
+      tt1a_old(a,j) = t1a_old(a,j)
+      tHbar_derv_ia(i,a) = tt1a_old(a,j)*T2_y(i,j)
+      tHbar_derv_ia(i,a) *= -1.0
+      PUT Hbar_derv_y_ia(i,a) += tHbar_derv_ia(i,a)
+      ENDPARDO i,j,a
+      execute sip_barrier
+#-------------------------------------------------------
+      PARDO i,j,a,b
+      GET dip_pq_y(j,b)
+      T2_y(j,b) = dip_pq_y(j,b)
+      REQUEST T2old_ab(a,i,b,j) a
+      tT2old_ab(a,i,b,j) = T2old_ab(a,i,b,j)
+      tHbar_derv_ia(i,a) = tT2old_ab(a,i,b,j)*T2_y(j,b)
+      tHbar_derv_ia(i,a) *= 2.0
+      PUT Hbar_derv_y_ia(i,a) += tHbar_derv_ia(i,a)
+      ENDPARDO i,j,a,b
+      execute sip_barrier
+#---------Permuted term---------------------------------
+      PARDO i,j,a,b
+      GET dip_pq_y(j,b)
+      T2_y(j,b) = dip_pq_y(j,b)
+      REQUEST T2old_ab(a,j,b,i) a
+      tT2old_ab(a,j,b,i) = T2old_ab(a,j,b,i)
+      tHbar_derv_ia(i,a) = tT2old_ab(a,j,b,i)*T2_y(j,b)
+      tHbar_derv_ia(i,a) *= -1.0
+      PUT Hbar_derv_y_ia(i,a) += tHbar_derv_ia(i,a)
+      ENDPARDO i,j,a,b
+      execute sip_barrier
+#-----------------z-component---------------
+      PARDO i,a
+      GET dip_pq_z(i,a)
+      T2_z(i,a) = dip_pq_z(i,a)
+      PUT Hbar_derv_z_ia(i,a) = T2_z(i,a)
+      ENDPARDO i,a
+      execute sip_barrier
+
+      PARDO a,b,i
+      GET Hbar_derv_z_ab(b,a)
+      tHbar_derv_ab(a,b) = Hbar_derv_z_ab(b,a)
+      GET t1a_old(b,i)
+      tt1a_old(b,i) = t1a_old(b,i)
+      tHbar_derv_ia(i,a) = tHbar_derv_ab(a,b)*tt1a_old(b,i)
+      PUT Hbar_derv_z_ia(i,a) += tHbar_derv_ia(i,a)
+      ENDPARDO a,b,i
+      execute sip_barrier
+
+      PARDO i,j,a
+      GET dip_pq_z(i,j)
+      T2_z(i,j) = dip_pq_z(i,j)
+      GET t1a_old(a,j)
+      tt1a_old(a,j) = t1a_old(a,j)
+      tHbar_derv_ia(i,a) = tt1a_old(a,j)*T2_z(i,j)
+      tHbar_derv_ia(i,a) *= -1.0
+      PUT Hbar_derv_z_ia(i,a) += tHbar_derv_ia(i,a)
+      ENDPARDO i,j,a
+      execute sip_barrier
+#-------------------------------------------------------
+      PARDO i,j,a,b
+      GET dip_pq_z(j,b)
+      T2_z(j,b) = dip_pq_z(j,b)
+      REQUEST T2old_ab(a,i,b,j) a
+      tT2old_ab(a,i,b,j) = T2old_ab(a,i,b,j)
+      tHbar_derv_ia(i,a) = tT2old_ab(a,i,b,j)*T2_z(j,b)
+      tHbar_derv_ia(i,a) *= 2.0
+      PUT Hbar_derv_z_ia(i,a) += tHbar_derv_ia(i,a)
+      ENDPARDO i,j,a,b
+      execute sip_barrier
+#---------Permuted term---------------------------------
+      PARDO i,j,a,b
+      GET dip_pq_z(j,b)
+      T2_z(j,b) = dip_pq_z(j,b)
+      REQUEST T2old_ab(a,j,b,i) a
+      tT2old_ab(a,j,b,i) = T2old_ab(a,j,b,i)
+      tHbar_derv_ia(i,a) = tT2old_ab(a,j,b,i)*T2_z(j,b)
+      tHbar_derv_ia(i,a) *= -1.0
+      PUT Hbar_derv_z_ia(i,a) += tHbar_derv_ia(i,a)
+      ENDPARDO i,j,a,b
+      execute sip_barrier
+
+#----------Hbar_derv_ai elements------------
+
+#-----------------x-component---------------
+      PARDO i,a
+      GET dip_pq_x(a,i)
+      T2_x(a,i) = dip_pq_x(a,i)
+      PUT Hbar_derv_x_ai(a,i) = T2_x(a,i)
+      ENDPARDO i,a
+      execute sip_barrier
+#-----------------y-component---------------
+      PARDO i,a
+      GET dip_pq_y(a,i)
+      T2_y(a,i) = dip_pq_y(a,i)
+      PUT Hbar_derv_y_ai(a,i) = T2_y(a,i)
+      ENDPARDO i,a
+      execute sip_barrier
+#-----------------z-component---------------
+      PARDO i,a
+      GET dip_pq_z(a,i)
+      T2_z(a,i) = dip_pq_z(a,i)
+      PUT Hbar_derv_z_ai(a,i) = T2_z(a,i)
+      ENDPARDO i,a
+      execute sip_barrier
+#----------Hbar_derv_aibj elements----------
+
+#-----------Zero out arrays-----------------
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      PREPARE Hbar_derv_x_aibj(a,i,b,j) = tHbar_derv_aibj(a,i,b,j)
+      ENDPARDO i,j,a,b 
+      execute server_barrier
+
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      PREPARE Hbar_derv_y_aibj(a,i,b,j) = tHbar_derv_aibj(a,i,b,j)
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      PREPARE Hbar_derv_z_aibj(a,i,b,j) = tHbar_derv_aibj(a,i,b,j)
+      ENDPARDO i,j,a,b
+      execute server_barrier
+#-----------------x-component---------------
+
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      DO k 
+      GET Hbar_derv_x_ij(i,k)
+      tHbar_derv_ij(i,k) = Hbar_derv_x_ij(i,k)
+      REQUEST T2old_ab(a,k,b,j) a 
+      t1Hbar_derv_aibj(a,i,b,j) = T2old_ab(a,k,b,j)*tHbar_derv_ij(i,k)
+      t1Hbar_derv_aibj(a,i,b,j) *= -1.0
+      tHbar_derv_aibj(a,i,b,j) += t1Hbar_derv_aibj(a,i,b,j) 
+      ENDDO k
+      PREPARE Hbar_derv_x_aibj(a,i,b,j) += tHbar_derv_aibj(a,i,b,j) 
+      ENDPARDO i,j,a,b
+      execute server_barrier      
+
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      DO k
+      GET Hbar_derv_x_ij(j,k)
+      tHbar_derv_ij(j,k) = Hbar_derv_x_ij(j,k)
+      REQUEST T2old_ab(a,i,b,k) a
+      t1Hbar_derv_aibj(a,i,b,j) = T2old_ab(a,i,b,k)*tHbar_derv_ij(j,k)
+      t1Hbar_derv_aibj(a,i,b,j) *= -1.0
+      tHbar_derv_aibj(a,i,b,j) += t1Hbar_derv_aibj(a,i,b,j)
+      ENDDO k
+      PREPARE Hbar_derv_x_aibj(a,i,b,j) += tHbar_derv_aibj(a,i,b,j)
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      DO d
+      GET Hbar_derv_x_ab(d,a)
+      tHbar_derv_ab(a,d) = Hbar_derv_x_ab(d,a)
+      REQUEST T2old_ab(d,i,b,j) b
+      t1Hbar_derv_aibj(a,i,b,j) = T2old_ab(d,i,b,j)*tHbar_derv_ab(a,d)
+      tHbar_derv_aibj(a,i,b,j) += t1Hbar_derv_aibj(a,i,b,j)
+      ENDDO d
+      PREPARE Hbar_derv_x_aibj(a,i,b,j) += tHbar_derv_aibj(a,i,b,j)
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      DO d
+      GET Hbar_derv_x_ab(d,b)
+      tHbar_derv_ab(b,d) = Hbar_derv_x_ab(d,b)
+      REQUEST T2old_ab(a,i,d,j) a
+      t1Hbar_derv_aibj(a,i,b,j) = T2old_ab(a,i,d,j)*tHbar_derv_ab(b,d)
+      tHbar_derv_aibj(a,i,b,j) += t1Hbar_derv_aibj(a,i,b,j)
+      ENDDO d
+      PREPARE Hbar_derv_x_aibj(a,i,b,j) += tHbar_derv_aibj(a,i,b,j)
+      ENDPARDO i,j,a,b
+      execute server_barrier
+#-----------------y-component---------------
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      DO k
+      GET Hbar_derv_y_ij(i,k)
+      tHbar_derv_ij(i,k) = Hbar_derv_y_ij(i,k)
+      REQUEST T2old_ab(a,k,b,j) a
+      t1Hbar_derv_aibj(a,i,b,j) = T2old_ab(a,k,b,j)*tHbar_derv_ij(i,k)
+      t1Hbar_derv_aibj(a,i,b,j) *= -1.0
+      tHbar_derv_aibj(a,i,b,j) += t1Hbar_derv_aibj(a,i,b,j)
+      ENDDO k
+      PREPARE Hbar_derv_y_aibj(a,i,b,j) += tHbar_derv_aibj(a,i,b,j)
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      DO k
+      GET Hbar_derv_y_ij(j,k)
+      tHbar_derv_ij(j,k) = Hbar_derv_y_ij(j,k)
+      REQUEST T2old_ab(a,i,b,k) a
+      t1Hbar_derv_aibj(a,i,b,j) = T2old_ab(a,i,b,k)*tHbar_derv_ij(j,k)
+      t1Hbar_derv_aibj(a,i,b,j) *= -1.0
+      tHbar_derv_aibj(a,i,b,j) += t1Hbar_derv_aibj(a,i,b,j)
+      ENDDO k
+      PREPARE Hbar_derv_y_aibj(a,i,b,j) += tHbar_derv_aibj(a,i,b,j)
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      DO d
+      GET Hbar_derv_y_ab(d,a)
+      REQUEST T2old_ab(d,i,b,j) b
+      t1Hbar_derv_aibj(a,i,b,j) = T2old_ab(d,i,b,j)*Hbar_derv_y_ab(d,a)
+      tHbar_derv_aibj(a,i,b,j) += t1Hbar_derv_aibj(a,i,b,j)
+      ENDDO d
+      PREPARE Hbar_derv_y_aibj(a,i,b,j) += tHbar_derv_aibj(a,i,b,j)
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      DO d
+      GET Hbar_derv_y_ab(d,b)
+      REQUEST T2old_ab(a,i,d,j) a
+      t1Hbar_derv_aibj(a,i,b,j) = T2old_ab(a,i,d,j)*Hbar_derv_y_ab(d,b)
+      tHbar_derv_aibj(a,i,b,j) += t1Hbar_derv_aibj(a,i,b,j)
+      ENDDO d
+      PREPARE Hbar_derv_y_aibj(a,i,b,j) += tHbar_derv_aibj(a,i,b,j)
+      ENDPARDO i,j,a,b
+      execute server_barrier
+#-----------------z-component---------------
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      DO k
+      GET Hbar_derv_z_ij(i,k)
+      tHbar_derv_ij(i,k) = Hbar_derv_z_ij(i,k)
+      REQUEST T2old_ab(a,k,b,j) a
+      t1Hbar_derv_aibj(a,i,b,j) = T2old_ab(a,k,b,j)*tHbar_derv_ij(i,k)
+      t1Hbar_derv_aibj(a,i,b,j) *= -1.0
+      tHbar_derv_aibj(a,i,b,j) += t1Hbar_derv_aibj(a,i,b,j)
+      ENDDO k
+      PREPARE Hbar_derv_z_aibj(a,i,b,j) += tHbar_derv_aibj(a,i,b,j)
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      DO k
+      GET Hbar_derv_z_ij(j,k)
+      tHbar_derv_ij(j,k) = Hbar_derv_z_ij(j,k)
+      REQUEST T2old_ab(a,i,b,k) a
+      t1Hbar_derv_aibj(a,i,b,j) = T2old_ab(a,i,b,k)*tHbar_derv_ij(j,k)
+      t1Hbar_derv_aibj(a,i,b,j) *= -1.0
+      tHbar_derv_aibj(a,i,b,j) += t1Hbar_derv_aibj(a,i,b,j)
+      ENDDO k
+      PREPARE Hbar_derv_z_aibj(a,i,b,j) += tHbar_derv_aibj(a,i,b,j)
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      DO d
+      GET Hbar_derv_z_ab(d,a)
+      tHbar_derv_ab(a,d) = Hbar_derv_z_ab(d,a)
+      REQUEST T2old_ab(d,i,b,j) b
+      t1Hbar_derv_aibj(a,i,b,j) = T2old_ab(d,i,b,j)*tHbar_derv_ab(a,d)
+      tHbar_derv_aibj(a,i,b,j) += t1Hbar_derv_aibj(a,i,b,j)
+      ENDDO d
+      PREPARE Hbar_derv_z_aibj(a,i,b,j) += tHbar_derv_aibj(a,i,b,j)
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      PARDO i,j,a,b
+      tHbar_derv_aibj(a,i,b,j) = 0.0
+      DO d
+      GET Hbar_derv_z_ab(d,b)
+      tHbar_derv_ab(b,d) = Hbar_derv_z_ab(d,b)
+      REQUEST T2old_ab(a,i,d,j) a
+      t1Hbar_derv_aibj(a,i,b,j) = T2old_ab(a,i,d,j)*tHbar_derv_ab(b,d)
+      tHbar_derv_aibj(a,i,b,j) += t1Hbar_derv_aibj(a,i,b,j)
+      ENDDO d
+      PREPARE Hbar_derv_z_aibj(a,i,b,j) += tHbar_derv_aibj(a,i,b,j)
+      ENDPARDO i,j,a,b
+      execute server_barrier
+#-------------------------------------------------------------------
+      ENDPROC HBAR_DER
+#     ----------------
+
+#-------------------------------------------------------------------
+#-------------------------------------------------------------------
+      PROC TERM4
+#     ----------
+
+#--------------x-------------------------------
+      tmp_dip_x = 0.0
+      PARDO i,a
+      GET t1a_old(a,i)
+      GET dip_pq_x(a,i) 
+      tmpval = t1a_old(a,i)*dip_pq_x(a,i)
+      tmpval *= 2.0
+      tmp_dip_x += tmpval
+      ENDPARDO i,a
+      execute server_barrier
+  
+      collective t4_x += tmp_dip_x   
+
+#--------------y-------------------------------
+      tmp_dip_y = 0.0  
+      PARDO i,a
+      GET t1a_old(a,i)
+      GET dip_pq_y(a,i)
+      tmpval = t1a_old(a,i)*dip_pq_y(a,i)
+      tmpval *= 2.0
+      tmp_dip_y += tmpval
+      ENDPARDO i,a
+      execute server_barrier
+
+      collective t4_y += tmp_dip_y
+
+#--------------z-------------------------------
+      tmp_dip_z = 0.0
+      PARDO i,a
+      GET t1a_old(a,i)
+      GET dip_pq_z(a,i)
+      tmpval = t1a_old(a,i)*dip_pq_z(a,i)
+      tmpval *= 2.0
+      tmp_dip_z += tmpval
+      ENDPARDO i,a
+      execute server_barrier
+
+      collective t4_z += tmp_dip_z      
+#---------------------------------------------
+
+      ENDPROC TERM4
+#     -------------
+
+#-------------------------------------------------------------------
+#-------------------------------------------------------------------
+
+      PROC TERM3
+#     ----------   
+
+      t3_1_x = 0.0
+      t3_1_y = 0.0
+      t3_1_z = 0.0
+      t3_2_x = 0.0
+      t3_2_y = 0.0
+      t3_2_z = 0.0
+
+#--------------x-------------------------------
+      tmp_dip_x = 0.0
+      PARDO i,j,a,b
+      REQUEST Hbar_derv_x_aibj(a,i,b,j) a      
+      REQUEST L2old_ab(i,a,j,b) a
+      tmpval = L2old_ab(i,a,j,b)*Hbar_derv_x_aibj(a,i,b,j)
+      tmpval *= 2.0
+      tmp_dip_x += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+ 
+      collective t3_1_x += tmp_dip_x
+  
+      tmp_dip_x = 0.0
+      PARDO i,j,a,b
+      REQUEST Hbar_derv_x_aibj(a,j,b,i) a
+      REQUEST L2old_ab(i,a,j,b) a
+      tmpval = L2old_ab(i,a,j,b)*Hbar_derv_x_aibj(a,j,b,i)
+      tmpval *= -1.0
+      tmp_dip_x += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective t3_2_x += tmp_dip_x
+
+#--------------y-------------------------------
+      tmp_dip_y = 0.0
+      PARDO i,j,a,b
+      REQUEST Hbar_derv_y_aibj(a,i,b,j) a
+      REQUEST L2old_ab(i,a,j,b) a
+      tmpval = L2old_ab(i,a,j,b)*Hbar_derv_y_aibj(a,i,b,j)
+      tmpval *= 2.0
+      tmp_dip_y += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective t3_1_y += tmp_dip_y
+
+      tmp_dip_y = 0.0
+      PARDO i,j,a,b
+      REQUEST Hbar_derv_y_aibj(a,j,b,i) a
+      REQUEST L2old_ab(i,a,j,b) a
+      tmpval = L2old_ab(i,a,j,b)*Hbar_derv_y_aibj(a,j,b,i)
+      tmpval *= -1.0
+      tmp_dip_y += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective t3_2_y += tmp_dip_y
+
+#--------------z-------------------------------
+      tmp_dip_z = 0.0
+      PARDO i,j,a,b
+      REQUEST Hbar_derv_z_aibj(a,i,b,j) a
+      REQUEST L2old_ab(i,a,j,b) a
+      tmpval = L2old_ab(i,a,j,b)*Hbar_derv_z_aibj(a,i,b,j)
+      tmpval *= 2.0
+      tmp_dip_z += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective t3_1_z += tmp_dip_z
+
+      tmp_dip_z = 0.0
+      PARDO i,j,a,b
+      REQUEST Hbar_derv_z_aibj(a,j,b,i) a
+      REQUEST L2old_ab(i,a,j,b) a
+      tmpval = L2old_ab(i,a,j,b)*Hbar_derv_z_aibj(a,j,b,i)
+      tmpval *= -1.0
+      tmp_dip_z += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective t3_2_z += tmp_dip_z
+#---------------------------------------------
+      t3_x = 0.0
+      t3_y = 0.0
+      t3_z = 0.0
+
+      t3_x += t3_1_x
+      t3_x += t3_2_x
+      t3_y += t3_1_y
+      t3_y += t3_2_y
+      t3_z += t3_1_z 
+      t3_z += t3_2_z
+#---------------------------------------------
+
+
+      ENDPROC TERM3
+#     -------------
+
+#-------------------------------------------------------------------
+#-------------------------------------------------------------------
+      PROC TERM2
+#     ----------
+      tt2_x = 0.0
+      tt2_y = 0.0
+      tt2_z = 0.0
+#--------------x-------------------------------
+      tmp_dip_x = 0.0
+      PARDO i,a
+      GET Hbar_derv_x_ia(i,a) 
+      REQUEST l1a_old(i,a) i 
+      tmpval = Hbar_derv_x_ia(i,a)*l1a_old(i,a)
+      tmpval *= 2.0
+      tmp_dip_x += tmpval
+      ENDPARDO i,a
+      execute server_barrier
+
+      collective tt2_x += tmp_dip_x
+#--------------y-------------------------------
+      tmp_dip_y = 0.0
+      PARDO i,a
+      GET Hbar_derv_y_ia(i,a)
+      REQUEST l1a_old(i,a) i
+      tmpval = Hbar_derv_y_ia(i,a)*l1a_old(i,a)
+      tmpval *= 2.0
+      tmp_dip_y += tmpval
+      ENDPARDO i,a
+      execute server_barrier
+
+      collective tt2_y += tmp_dip_y
+#--------------z-------------------------------
+      tmp_dip_z = 0.0
+      PARDO i,a
+      GET Hbar_derv_z_ia(i,a)
+      REQUEST l1a_old(i,a) i
+      tmpval = Hbar_derv_z_ia(i,a)*l1a_old(i,a)
+      tmpval *= 2.0
+      tmp_dip_z += tmpval
+      ENDPARDO i,a
+      execute server_barrier
+
+      collective tt2_z += tmp_dip_z
+#----------------------------------------------
+
+      ENDPROC TERM2
+#     -------------
+
+#-------------------------------------------------------------------
+#-------------------------------------------------------------------
+
+      PROC TERM_SCAL
+#     -------------- 
+
+#--------Nuclear dipole moment--------------------
+      tmpnuc = 0.0
+      DO jatom   
+      tmpnuc += 1.0 
+      ENDDO jatom   
+
+      dnuc_x = tmpnuc
+      dnuc_y = tmpnuc
+      dnuc_z = tmpnuc
+
+      tmpval = 10.0
+      execute nuc_dipole_moment tmpval dnuc_x
+      tmpval = 11.0
+      execute nuc_dipole_moment tmpval dnuc_y
+      tmpval = 12.0
+      execute nuc_dipole_moment tmpval dnuc_z 
+
+#-------------------------------------------------
+      dip_scal_x = 0.0
+      dip_scal_y = 0.0
+      dip_scal_z = 0.0
+#--------------x-------------------------------
+      tmp_dip_x = 0.0
+      PARDO i
+      GET dip_pq_x(i,i)
+      ttx(i,i) = dip_pq_x(i,i)
+      execute dipole_scalar ttx tmpval
+      tmpval *= 2.0
+      tmp_dip_x -= tmpval
+      ENDPARDO i
+      execute server_barrier
+
+      collective dip_scal_x += tmp_dip_x 
+ 
+#--------------y-------------------------------
+      tmp_dip_y = 0.0
+      PARDO i,j
+      GET dip_pq_y(i,j)
+      ttx(i,j) = dip_pq_y(i,j) 
+      execute dipole_scalar ttx tmpval
+      tmpval *= 2.0
+      tmp_dip_y -= tmpval
+      ENDPARDO i,j
+      execute server_barrier
+
+      collective dip_scal_y += tmp_dip_y
+
+#--------------z-------------------------------
+      tmp_dip_z = 0.0
+      PARDO i,j
+      GET dip_pq_z(i,j)
+      ttx(i,j) = dip_pq_z(i,j)
+      execute dipole_scalar ttx tmpval
+      tmpval *= 2.0
+      tmp_dip_z -= tmpval
+      ENDPARDO i,j
+      execute server_barrier
+
+      collective dip_scal_z += tmp_dip_z
+
+#----------------------------------------------
+
+      dip_scal_x += dnuc_x
+      dip_scal_y += dnuc_y 
+      dip_scal_z += dnuc_z 
+#----------------------------------------------
+      tmp_dip_x = dip_scal_x
+      tmp_dip_y = dip_scal_y
+      tmp_dip_z = dip_scal_z
+      tmp_dip_x *= 0.5
+      tmp_dip_y *= 0.5
+      tmp_dip_z *= 0.5
+
+      execute print_scalar tmp_dip_x
+      execute print_scalar tmp_dip_y
+      execute print_scalar tmp_dip_z
+
+
+      ENDPROC TERM_SCAL
+#     ----------------- 
+
+
+#-------------------------------------------------------------------
+#-------------------------------------------------------------------
+
+      PROC F12_TERMS
+#     -------------- 
+
+#--------Step 1 - L1 - contributions---------------------------- 
+      dip_F12_L1_x = 0.0
+      dip_F12_L1_y = 0.0
+      dip_F12_L1_z = 0.0
+#--------------x-------------------------------
+      tmp_dip_x = 0.0
+      PARDO i,a
+      REQUEST intl1x(i,a) i
+      REQUEST l1a_old(i,a) i
+      tmpval = intl1x(i,a)*l1a_old(i,a)
+      tmpval *= 2.0
+      tmp_dip_x += tmpval
+      ENDPARDO i,a
+      execute server_barrier
+
+      collective dip_F12_L1_x += tmp_dip_x
+#--------------y-------------------------------
+      tmp_dip_y = 0.0
+      PARDO i,a
+      REQUEST intl1y(i,a) i
+      REQUEST l1a_old(i,a) i
+      tmpval = intl1y(i,a)*l1a_old(i,a)
+      tmpval *= 2.0
+      tmp_dip_y += tmpval
+      ENDPARDO i,a
+      execute server_barrier
+
+      collective dip_F12_L1_y += tmp_dip_y
+#--------------z-------------------------------
+      tmp_dip_z = 0.0
+      PARDO i,a
+      REQUEST intl1z(i,a) i
+      REQUEST l1a_old(i,a) i
+      tmpval = intl1z(i,a)*l1a_old(i,a)
+      tmpval *= 2.0
+      tmp_dip_z += tmpval
+      ENDPARDO i,a
+      execute server_barrier
+
+      collective dip_F12_L1_z += tmp_dip_z
+
+#--------Step 2 - L2 - contributions----------------------------
+
+      dip_F12_L2_1_x = 0.0
+      dip_F12_L2_1_y = 0.0
+      dip_F12_L2_1_z = 0.0
+      dip_F12_L2_2_x = 0.0
+      dip_F12_L2_2_y = 0.0
+      dip_F12_L2_2_z = 0.0
+      dip_F12_L2_x = 0.0
+      dip_F12_L2_y = 0.0
+      dip_F12_L2_z = 0.0
+#--------------x-------------------------------
+      tmp_dip_x = 0.0
+      PARDO i,j,a,b
+      REQUEST intl2x(i,a,j,b) a
+      REQUEST L2old_ab(i,a,j,b) a
+      tmpval = L2old_ab(i,a,j,b)*intl2x(i,a,j,b)
+      tmpval *= 2.0
+      tmp_dip_x += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective dip_F12_L2_1_x += tmp_dip_x
+
+      tmp_dip_x = 0.0
+      PARDO i,j,a,b
+      REQUEST intl2x(j,a,i,b) a
+      REQUEST L2old_ab(i,a,j,b) a
+      tmpval = L2old_ab(i,a,j,b)*intl2x(j,a,i,b)
+      tmpval *= -1.0
+      tmp_dip_x += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective dip_F12_L2_2_x += tmp_dip_x
+#--------------y-------------------------------
+      tmp_dip_y = 0.0
+      PARDO i,j,a,b
+      REQUEST intl2y(i,a,j,b) a
+      REQUEST L2old_ab(i,a,j,b) a
+      tmpval = L2old_ab(i,a,j,b)*intl2y(i,a,j,b)
+      tmpval *= 2.0
+      tmp_dip_y += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective dip_F12_L2_1_y += tmp_dip_y
+
+      tmp_dip_y = 0.0
+      PARDO i,j,a,b
+      REQUEST intl2y(j,a,i,b) a
+      REQUEST L2old_ab(i,a,j,b) a
+      tmpval = L2old_ab(i,a,j,b)*intl2y(j,a,i,b)
+      tmpval *= -1.0
+      tmp_dip_y += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective dip_F12_L2_2_y += tmp_dip_y
+#--------------z-------------------------------
+      tmp_dip_z = 0.0
+      PARDO i,j,a,b
+      REQUEST intl2z(i,a,j,b) a
+      REQUEST L2old_ab(i,a,j,b) a
+      tmpval = L2old_ab(i,a,j,b)*intl2z(i,a,j,b)
+      tmpval *= 2.0
+      tmp_dip_z += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective dip_F12_L2_1_z += tmp_dip_z
+
+      tmp_dip_z = 0.0
+      PARDO i,j,a,b
+      REQUEST intl2z(j,a,i,b) a
+      REQUEST L2old_ab(i,a,j,b) a
+      tmpval = L2old_ab(i,a,j,b)*intl2z(j,a,i,b)
+      tmpval *= -1.0
+      tmp_dip_z += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective dip_F12_L2_2_z += tmp_dip_z
+#--------------------------------------------
+      dip_F12_L2_x += dip_F12_L2_1_x
+      dip_F12_L2_x += dip_F12_L2_2_x  
+      dip_F12_L2_y += dip_F12_L2_1_y
+      dip_F12_L2_y += dip_F12_L2_2_y
+      dip_F12_L2_z += dip_F12_L2_1_z
+      dip_F12_L2_z += dip_F12_L2_2_z 
+
+#--------Step 2 - T2 - contributions----------------------------
+      dip_F12_T2_1_x = 0.0
+      dip_F12_T2_1_y = 0.0
+      dip_F12_T2_1_z = 0.0
+      dip_F12_T2_2_x = 0.0
+      dip_F12_T2_2_y = 0.0
+      dip_F12_T2_2_z = 0.0
+      dip_F12_T2_x = 0.0
+      dip_F12_T2_y = 0.0
+      dip_F12_T2_z = 0.0
+#--------------x-------------------------------
+      tmp_dip_x = 0.0
+      PARDO i,j,a,b
+      REQUEST intl2x(i,a,j,b) a
+      REQUEST T2old_ab(a,i,b,j) a
+      tmpval = T2old_ab(a,i,b,j)*intl2x(i,a,j,b)
+      tmpval *= 2.0
+      tmp_dip_x += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective dip_F12_T2_1_x += tmp_dip_x
+
+      tmp_dip_x = 0.0
+      PARDO i,j,a,b
+      REQUEST intl2x(j,a,i,b) a
+      REQUEST T2old_ab(a,i,b,j) a
+      tmpval = T2old_ab(a,i,b,j)*intl2x(j,a,i,b)
+      tmpval *= -1.0
+      tmp_dip_x += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective dip_F12_T2_2_x += tmp_dip_x
+#--------------y-------------------------------
+      tmp_dip_y = 0.0
+      PARDO i,j,a,b
+      REQUEST intl2y(i,a,j,b) a
+      REQUEST T2old_ab(a,i,b,j) a
+      tmpval = T2old_ab(a,i,b,j)*intl2y(i,a,j,b)
+      tmpval *= 2.0
+      tmp_dip_y += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective dip_F12_T2_1_y += tmp_dip_y
+
+      tmp_dip_y = 0.0
+      PARDO i,j,a,b
+      REQUEST intl2y(j,a,i,b) a
+      REQUEST T2old_ab(a,i,b,j) a
+      tmpval = T2old_ab(a,i,b,j)*intl2y(j,a,i,b)
+      tmpval *= -1.0
+      tmp_dip_y += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective dip_F12_T2_2_y += tmp_dip_y
+#--------------z-------------------------------
+      tmp_dip_z = 0.0
+      PARDO i,j,a,b
+      REQUEST intl2z(i,a,j,b) a
+      REQUEST T2old_ab(a,i,b,j) a
+      tmpval = T2old_ab(a,i,b,j)*intl2z(i,a,j,b)
+      tmpval *= 2.0
+      tmp_dip_z += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective dip_F12_T2_1_z += tmp_dip_z
+
+      tmp_dip_z = 0.0
+      PARDO i,j,a,b
+      REQUEST intl2z(j,a,i,b) a
+      REQUEST T2old_ab(a,i,b,j) a
+      tmpval = T2old_ab(a,i,b,j)*intl2z(j,a,i,b)
+      tmpval *= -1.0
+      tmp_dip_z += tmpval
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      collective dip_F12_T2_2_z += tmp_dip_z
+#--------------------------------------------
+      dip_F12_T2_x += dip_F12_T2_1_x
+      dip_F12_T2_x += dip_F12_T2_2_x
+      dip_F12_T2_y += dip_F12_T2_1_y
+      dip_F12_T2_y += dip_F12_T2_2_y
+      dip_F12_T2_z += dip_F12_T2_1_z
+      dip_F12_T2_z += dip_F12_T2_2_z
+#--------------Make C-coefficients according to cusp conditions-------------------------
+      PARDO i,j,k,l
+      tccusp(i,j,k,l) = 0.0
+      execute f12_c_coef tccusp F12_GAMMA
+      PREPARE C_coef(i,j,k,l) = tccusp(i,j,k,l)
+      ENDPARDO i,j,k,l
+
+      execute server_barrier
+
+#-----------Auxiliary intermediates for X_ijkl contribution ----------------------------
+
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      PREPARE Cdintermx(i,k,j,l) = tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      PREPARE Cdintermy(i,k,j,l) = tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      PREPARE Cdintermz(i,k,j,l) = tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      PREPARE CC1x(i,k,j,l) = tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      PREPARE CC1y(i,k,j,l) = tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      PREPARE CC1z(i,k,j,l) = tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+#--------------------------------------------------------
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      DO n
+      GET dip_pq_x(n,k)
+      REQUEST C_coef(i,n,j,l) i
+      tB1(i,k,j,l) = C_coef(i,n,j,l)*dip_pq_x(n,k)
+      tccusp(i,k,j,l) += tB1(i,k,j,l)
+      ENDDO n       
+      PREPARE Cdintermx(i,k,j,l) += tccusp(i,k,j,l)      
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      DO n
+      GET dip_pq_x(n,l)
+      REQUEST C_coef(i,k,j,n) i
+      tB2(i,k,j,l) = C_coef(i,k,j,n)*dip_pq_x(n,l)
+      tccusp(i,k,j,l) += tB2(i,k,j,l)
+      ENDDO n
+      PREPARE Cdintermx(i,k,j,l) += tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+#----------------------------------------
+
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      DO n
+      GET dip_pq_y(n,k)
+      REQUEST C_coef(i,n,j,l) i
+      tB1(i,k,j,l) = C_coef(i,n,j,l)*dip_pq_y(n,k)
+      tccusp(i,k,j,l) += tB1(i,k,j,l)
+      ENDDO n
+      PREPARE Cdintermy(i,k,j,l) += tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier 
+
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      DO n
+      GET dip_pq_y(n,l)
+      REQUEST C_coef(i,k,j,n) i
+      tB2(i,k,j,l) = C_coef(i,k,j,n)*dip_pq_y(n,l)
+      tccusp(i,k,j,l) += tB2(i,k,j,l)
+      ENDDO n
+      PREPARE Cdintermy(i,k,j,l) += tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+#----------------------------------------
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      DO n
+      GET dip_pq_z(n,k)
+      REQUEST C_coef(i,n,j,l) i
+      tB1(i,k,j,l) = C_coef(i,n,j,l)*dip_pq_z(n,k)
+      tccusp(i,k,j,l) += tB1(i,k,j,l)
+      ENDDO n
+      PREPARE Cdintermz(i,k,j,l) += tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      DO n
+      GET dip_pq_z(n,l)
+      REQUEST C_coef(i,k,j,n) i
+      tB2(i,k,j,l) = C_coef(i,k,j,n)*dip_pq_z(n,l)
+      tccusp(i,k,j,l) += tB2(i,k,j,l)
+      ENDDO n
+      PREPARE Cdintermz(i,k,j,l) += tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+#---------------------------------------------------------
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      DO n
+      DO m
+      REQUEST C_coef(k,n,l,m) k
+      tccusp1(k,n,l,m) = C_coef(k,n,l,m)
+      REQUEST C_coef(k,m,l,n) k
+      tccusp2(k,m,l,n) = C_coef(k,m,l,n)
+      REQUEST Cdintermx(i,n,j,m) i
+      tB1(i,k,j,l) =  tccusp1(k,n,l,m)*Cdintermx(i,n,j,m)
+      tB2(i,k,j,l) =  tccusp2(k,m,l,n)*Cdintermx(i,n,j,m)
+      tB1(i,k,j,l) *= -2.0
+      tccusp(i,k,j,l) += tB1(i,k,j,l)
+      tccusp(i,k,j,l) += tB2(i,k,j,l)
+      ENDDO m
+      ENDDO n
+      PREPARE CC1x(i,k,j,l) += tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier 
+
+#-------------------------------------------------------
+            
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      DO n
+      DO m
+      REQUEST C_coef(k,n,l,m) k
+      tccusp1(k,n,l,m) = C_coef(k,n,l,m)
+      REQUEST Cdintermy(i,n,j,m) i
+      tB1(i,k,j,l) =  tccusp1(k,n,l,m)*Cdintermy(i,n,j,m)
+      tB1(i,k,j,l) *= -2.0
+      tccusp(i,k,j,l) += tB1(i,k,j,l)
+      ENDDO m
+      ENDDO n
+      PREPARE CC1y(i,k,j,l) += tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      DO n
+      DO m
+      REQUEST C_coef(k,m,l,n) k
+      tccusp2(k,m,l,n) = C_coef(k,m,l,n)
+      REQUEST Cdintermy(i,n,j,m) i
+      tB2(i,k,j,l) =  tccusp2(k,m,l,n)*Cdintermy(i,n,j,m)
+      tccusp(i,k,j,l) += tB2(i,k,j,l)
+      ENDDO m
+      ENDDO n
+      PREPARE CC1y(i,k,j,l) += tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+
+#-----------------------------------------------------
+
+     
+#-----------------------------------------------------
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      DO n
+      DO m
+      REQUEST C_coef(k,n,l,m) k
+      tccusp1(k,n,l,m) = C_coef(k,n,l,m)
+      REQUEST C_coef(k,m,l,n) k
+      tccusp2(k,m,l,n) = C_coef(k,m,l,n)
+      REQUEST Cdintermz(i,n,j,m) i
+      tB1(i,k,j,l) =  tccusp1(k,n,l,m)*Cdintermz(i,n,j,m)
+      tB2(i,k,j,l) =  tccusp2(k,m,l,n)*Cdintermz(i,n,j,m)
+      tB1(i,k,j,l) *= -2.0
+      tccusp(i,k,j,l) += tB1(i,k,j,l)
+      tccusp(i,k,j,l) += tB2(i,k,j,l)
+      ENDDO m
+      ENDDO n
+      PREPARE CC1z(i,k,j,l) += tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+#--------------X_ijkl contributions itself---------------------
+
+      dip_F12_X_x = 0.0
+      dip_F12_X_y = 0.0
+      dip_F12_X_z = 0.0
+#--------------x-------------------------------
+      tmp_dip_x = 0.0
+      PARDO i,k,j,l
+      REQUEST CC1x(i,k,j,l) l
+      REQUEST Xijkl(i,k,j,l) l
+      tmpval = CC1x(i,k,j,l)*Xijkl(i,k,j,l)
+      tmp_dip_x += tmpval
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+      collective dip_F12_X_x += tmp_dip_x       
+
+#--------------y-------------------------------
+      tmp_dip_y = 0.0
+      PARDO i,k,j,l
+      REQUEST CC1y(i,k,j,l) l
+      REQUEST Xijkl(i,k,j,l) l
+      tmpval = CC1y(i,k,j,l)*Xijkl(i,k,j,l)
+      tmp_dip_y += tmpval
+      ENDPARDO i,k,j,l
+      execute server_barrier
+       
+      collective dip_F12_X_y += tmp_dip_y
+#--------------z-------------------------------
+      tmp_dip_z = 0.0
+      PARDO i,k,j,l
+      REQUEST CC1z(i,k,j,l) l
+      REQUEST Xijkl(i,k,j,l) l
+      tmpval = CC1z(i,k,j,l)*Xijkl(i,k,j,l)
+      tmp_dip_z += tmpval
+      ENDPARDO i,k,j,l
+      execute server_barrier
+       
+      collective dip_F12_X_z += tmp_dip_z
+
+
+#-----------Auxiliary intermediates for B_ijkl contribution ----------------------------
+
+      PARDO i,k,j,l
+      tccusp(i,k,j,l) = 0.0
+      DO n
+      DO m
+      REQUEST C_coef(k,n,l,m) k
+      tccusp1(k,n,l,m) = C_coef(k,n,l,m)
+      REQUEST C_coef(k,m,l,n) k
+      tccusp2(k,m,l,n) = C_coef(k,m,l,n)
+      REQUEST C_coef(i,n,j,m) i
+      tccusp3(i,n,j,m) = C_coef(i,n,j,m)
+      tB1(i,k,j,l) =  tccusp1(k,n,l,m)*tccusp3(i,n,j,m)
+      tB2(i,k,j,l) =  tccusp2(k,m,l,n)*tccusp3(i,n,j,m)
+      tB1(i,k,j,l) *= 2.0
+      tB2(i,k,j,l) *= -1.0 
+      tccusp(i,k,j,l) += tB1(i,k,j,l)
+      tccusp(i,k,j,l) += tB2(i,k,j,l)
+      ENDDO m
+      ENDDO n
+      PREPARE CC2(i,k,j,l) += tccusp(i,k,j,l)
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+#--------------Contributions itself----------------------
+
+      dip_F12_Bx = 0.0
+      dip_F12_By = 0.0
+      dip_F12_Bz = 0.0
+#--------------x-------------------------------
+      tmp_dip_x = 0.0
+      PARDO i,k,j,l
+      REQUEST CC2(i,k,j,l) l
+      REQUEST Bx(i,k,j,l) l
+      tmpval = Bx(i,k,j,l)*CC2(i,k,j,l)
+      tmp_dip_x += tmpval
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+      collective dip_F12_Bx += tmp_dip_x
+
+#--------------y-------------------------------
+      tmp_dip_y = 0.0
+      PARDO i,k,j,l
+      REQUEST CC2(i,k,j,l) l
+      REQUEST By(i,k,j,l) l
+      tmpval = By(i,k,j,l)*CC2(i,k,j,l)
+      tmp_dip_y += tmpval
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+      collective dip_F12_By += tmp_dip_y
+#--------------z-------------------------------
+      tmp_dip_z = 0.0
+      PARDO i,k,j,l
+      REQUEST CC2(i,k,j,l) l
+      REQUEST Bz(i,k,j,l) l
+      tmpval = Bz(i,k,j,l)*CC2(i,k,j,l)
+      tmp_dip_z += tmpval
+      ENDPARDO i,k,j,l
+      execute server_barrier
+
+      collective dip_F12_Bz += tmp_dip_z
+
+#--------------------------------------------------------
+      ENDPROC F12_TERMS
+#     -----------------  
+
+#---------------------------------------------------------|
+#              Begin main program                         |
+#---------------------------------------------------------|
+
+
+#---------------------------------------------------------|
+#           Check if F12 calculation is requested         |
+#---------------------------------------------------------|
+      F12CALC = 0.0
+      execute f12info F12CALC
+      execute print_scalar F12CALC
+      execute eomeaf12info EAEOMF12CALC
+#---------------------------------------------------------|
+#   Read necessary elements of Hbar, integrals, lambda    |
+#      amplitudes, and amplitude derivatives              |
+#---------------------------------------------------------|
+      CALL READ_DATA
+#---------------------------------------------------------|
+# Construction of  Hbar(i) = exp(-T) * q * exp(T)         |
+#---------------------------------------------------------|
+      CALL HBAR_DER
+#---------------------------------------------------------|
+#  Scalar correlated term: <0|exp(-T)*q*exp(T)|0>         |
+#---------------------------------------------------------|
+      CALL TERM4 
+#---------------------------------------------------------|
+#     L2 term: <0|L2*exp(-T)*q*exp(T)|0>                  |
+#---------------------------------------------------------|     
+      CALL TERM3 
+#---------------------------------------------------------|
+#     L1 term: <0|L1*exp(-T)*q*exp(T)|0>                  |
+#---------------------------------------------------------|   
+      CALL TERM2
+#---------------------------------------------------------|
+#               scalar term: <0|q|0>                      |
+#---------------------------------------------------------|
+      CALL TERM_SCAL 
+#---------------------------------------------------------|
+#      F12 contributions                                  |
+#---------------------------------------------------------|
+      IF F12CALC == 1.0
+      CALL F12_TERMS
+      ENDIF 
+
+#---------------------------------------------------------|
+#           Summing up all contributions                  |
+#---------------------------------------------------------|
+       DIPOLE_x =  dip_scal_x
+       DIPOLE_x -= tt2_x
+       DIPOLE_x -= t3_x 
+       DIPOLE_x -= t4_x
+
+       DIPOLE_y =  dip_scal_y
+       DIPOLE_y -= tt2_y
+       DIPOLE_y -= t3_y
+       DIPOLE_y -= t4_y
+
+       DIPOLE_z =  dip_scal_z
+       DIPOLE_z -= tt2_z
+       DIPOLE_z -= t3_z
+       DIPOLE_z -= t4_z
+
+       IF F12CALC == 1.0
+       DIPOLE_x -= dip_F12_L1_x
+       DIPOLE_y -= dip_F12_L1_y
+       DIPOLE_z -= dip_F12_L1_z
+       DIPOLE_x -= dip_F12_L2_x
+       DIPOLE_y -= dip_F12_L2_y
+       DIPOLE_z -= dip_F12_L2_z
+       DIPOLE_x -= dip_F12_T2_x
+       DIPOLE_y -= dip_F12_T2_y
+       DIPOLE_z -= dip_F12_T2_z
+       DIPOLE_x -= dip_F12_X_x
+       DIPOLE_y -= dip_F12_X_y
+       DIPOLE_z -= dip_F12_X_z
+       DIPOLE_x -= dip_F12_Bx
+       DIPOLE_y -= dip_F12_By
+       DIPOLE_z -= dip_F12_Bz
+       execute print_scalar dip_F12_L1_x
+       execute print_scalar dip_F12_L1_y
+       execute print_scalar dip_F12_L1_z
+       execute print_scalar dip_F12_T2_x
+       execute print_scalar dip_F12_T2_y
+       execute print_scalar dip_F12_T2_z
+       execute print_scalar dip_F12_L2_x
+       execute print_scalar dip_F12_L2_y
+       execute print_scalar dip_F12_L2_z
+       execute print_scalar dip_F12_X_x
+       execute print_scalar dip_F12_X_y
+       execute print_scalar dip_F12_X_z
+       execute print_scalar dip_F12_Bx
+       execute print_scalar dip_F12_By
+       execute print_scalar dip_F12_Bz
+       ENDIF
+
+       DIPOLE_x *= 0.5
+       DIPOLE_y *= 0.5
+       DIPOLE_z *= 0.5
+
+       execute print_scalar DIPOLE_x
+       execute print_scalar DIPOLE_y
+       execute print_scalar DIPOLE_z 
+
+      printnumber = 719.0
+
+      cnt = 0.0
+      DO dipind1
+      cnt += 1.0
+
+      cnt1 = 0.0
+      DO dipind2
+      cnt1 += 1.0
+
+        IF cnt == 1.0
+        IF cnt1 == 1.0
+        dip_out(dipind1,dipind2) = DIPOLE_x
+        ENDIF
+        ENDIF
+
+        IF cnt == 2.0
+        IF cnt1 == 2.0
+        dip_out(dipind1,dipind2) = DIPOLE_y
+        ENDIF
+        ENDIF
+
+        IF cnt == 3.0
+        IF cnt1 == 3.0
+        dip_out(dipind1,dipind2) = DIPOLE_z
+        ENDIF
+        ENDIF
+
+
+        ENDDO dipind2
+        ENDDO dipind1
+
+        execute print_rel_info printnumber dip_out
+
+
+
+                       ENDSIAL QUADRUPOLE_CCSD_F12

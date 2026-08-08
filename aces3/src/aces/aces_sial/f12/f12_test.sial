@@ -1,0 +1,65 @@
+       
+      SIAL F12_test
+#     -------------
+
+      moaindex i = baocc,eaocc
+
+      aoindex mu     = 1, norb
+      aoindex nu     = 1, norb
+      aoindex lambda = 1, norb
+      aoindex sigma  = 1, norb
+
+      temp f12int(mu,nu,lambda,sigma)
+      temp aoint(mu,nu,lambda,sigma) 
+      temp txxxi(mu,nu,lambda,i) 
+
+      local V1_4(mu,nu,lambda,i)
+
+      scalar junk1
+      scalar junk2
+      scalar four 
+      scalar six 
+      scalar five 
+
+      junk1 = 10.0
+      junk2 = 100.0
+      four  = 4.0
+      five  = 5.0
+      six   = 6.0
+    
+      execute sip_test junk1 junk2
+      execute print_scalar junk1
+      execute print_scalar junk2
+     
+      execute f12info junk1 junk2
+      execute print_scalar junk1
+      execute print_scalar junk2
+
+      PARDO mu, lambda, nu
+
+              allocate V1_4(mu,nu,lambda,*)
+#-----------First integral transformation-------------------------------------
+              DO sigma
+
+                 f12int(mu,nu,lambda,sigma)  = 0.0
+                 aoint(mu,nu,lambda,sigma)   = 0.0
+                 execute f12_integrals aoint four
+                 f12int(mu,nu,lambda,sigma) += aoint(mu,nu,lambda,sigma)
+                 execute f12_integrals aoint five
+                 f12int(mu,nu,lambda,sigma) += aoint(mu,nu,lambda,sigma)
+                 execute f12_integrals aoint six
+#                 execute dump_amp aoint
+                 f12int(mu,nu,lambda,sigma) += aoint(mu,nu,lambda,sigma)
+                 f12int(mu,nu,lambda,sigma) *= -0.5
+
+                 DO i
+                    txxxi(mu,nu,lambda,i) = f12int(mu,nu,lambda,sigma)*ca(sigma,i)
+                    V1_4(mu,nu,lambda,i) += txxxi(mu,nu,lambda,i)
+                 ENDDO i
+
+              ENDDO sigma
+
+        ENDPARDO mu, lambda, nu
+
+      ENDSIAL F12_test
+#      ----------------

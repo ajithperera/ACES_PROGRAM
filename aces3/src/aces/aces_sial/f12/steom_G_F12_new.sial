@@ -1,0 +1,2390 @@
+#--------------------------------------------------------------------------|
+# This part of code does construction of matrix elements of doubly         | 
+# transformed effective  hamiltonian  G = {exp(S)}^{-1}*Hbar*exp{S}, which |
+# are necessary for STEOM-EE,STEOM-DIP and STEOM-DEA calculations          |
+#  Added by Denis Bokhan, Moscow Lomonosov State University,               | 
+#                 Moscow, Russian Federation                               | 
+#--------------------------------------------------------------------------|
+
+
+                       SIAL STEOM_G_F12_NEW
+#--------------------------------------------------------------|
+#     Maximal number of target IP and EA roots - 12            |
+#--------------------------------------------------------------|
+      index   root = 1,20
+      index   root1 = 1,20
+      index   root2 = 1,20
+      index   target_roots = 1,20
+      index   Nroots = 1,20
+      index   Mroots = 1,20
+      index   niter =  1,40
+      index   niter_main = 1,40
+      index   auxind1 = 1,800
+      index   auxind2 = 1,800
+      index   ind = 1, 3
+      index   kk1 = 1,1
+      index   kk2 = 1,1
+      index   oact = 1, naoccorb
+      index   vact = 1, navirtorb
+      index   oact1 = 1, naoccorb
+      index   vact1 = 1, navirtorb
+#--------------------------------------------------------------|
+# Indices for molecular orbitals                               |
+#--------------------------------------------------------------|
+      moaindex i = baocc, eaocc
+      moaindex j = baocc, eaocc
+      moaindex k = baocc, eaocc
+      moaindex l = baocc, eaocc
+
+      moaindex i1= baocc, eaocc
+      moaindex i2= baocc, eaocc
+      moaindex i3= baocc, eaocc
+
+      moaindex a = bavirt, eavirt
+      moaindex a1= bavirt, eavirt
+      moaindex a2= bavirt, eavirt
+      moaindex a3= bavirt, eavirt
+      moaindex d = bavirt, eavirt
+      moaindex c1 = bavirt, eavirt
+
+      moaindex j1= baocc, eaocc
+      moaindex j2= baocc, eaocc
+      moaindex j3= baocc, eaocc
+
+      moaindex b = bavirt, eavirt
+      moaindex b1= bavirt, eavirt
+      moaindex b2= bavirt, eavirt
+      moaindex b3= bavirt, eavirt
+
+      moaindex p = baocc, eavirt
+      moaindex p1= baocc, eavirt
+      moaindex p2= baocc, eavirt
+      moaindex p3= baocc, eavirt
+
+      moaindex q = baocc, eavirt
+      moaindex q1= baocc, eavirt
+      moaindex q2= baocc, eavirt
+      moaindex q3= baocc, eavirt
+
+      aoindex mu     = 1, norb
+      aoindex nu     = 1, norb
+      aoindex lambda = 1, norb
+      aoindex sigma  = 1, norb
+
+
+#--------------------------------------------------------------|
+#    Arrays of EOM-CCSD EA and IP vectorswhich will be used to | 
+#    generate S(+) and S(-) amplitudes                         |
+#--------------------------------------------------------------|
+
+      served EA_EVAL(kk1,target_roots)
+      served EA_EVEC_R_p_a(a,target_roots)
+      served EA_EVEC_R_p_b(b,target_roots)
+      served EA_EVEC_R_abi_aaa(a,c1,i,target_roots)
+      served EA_EVEC_R_abi_bbb(b,d,j,target_roots)
+      served EA_EVEC_R_abi_abb(a,d,j,target_roots)
+      served EA_EVEC_R_abi_baa(b,c1,i,target_roots)
+      served EA_EVEC_L_p_a(a,target_roots)
+      served EA_EVEC_L_p_b(b,target_roots)
+      served EA_EVEC_L_abi_aaa(a,c1,i,target_roots)
+      served EA_EVEC_L_abi_bbb(b,d,j,target_roots)
+      served EA_EVEC_L_abi_abb(a,d,j,target_roots)
+      served EA_EVEC_L_abi_baa(b,c1,i,target_roots)
+
+      served IP_EVAL(kk1,target_roots)
+      served IP_EVEC_R_h_a(i,target_roots)
+      served IP_EVEC_R_h_b(j,target_roots)
+      served IP_EVEC_R_ija_aaa(i,k,a,target_roots)
+      served IP_EVEC_R_ija_bbb(j,l,b,target_roots)
+      served IP_EVEC_R_ija_abb(i,l,b,target_roots)
+      served IP_EVEC_R_ija_baa(j,k,a,target_roots)
+      served IP_EVEC_L_h_a(i,target_roots)
+      served IP_EVEC_L_h_b(j,target_roots)
+      served IP_EVEC_L_ija_aaa(i,k,a,target_roots)
+      served IP_EVEC_L_ija_bbb(j,l,b,target_roots)
+      served IP_EVEC_L_ija_abb(i,l,b,target_roots)
+      served IP_EVEC_L_ija_baa(j,k,a,target_roots)
+
+#-----------S(+) and S(-) amplitudes----------------
+      served S_ij_mb(oact,i,j,b)
+      served S_ej_ab(vact,a,b,j)
+      served Sbar_ij_mb(oact,i,j,b)
+      served Sbar_ej_ab(vact,a,b,j)
+
+      temp tmp_S_ij_mb(oact,i,j,b)
+      temp tmp_S_ej_ab(vact,a,b,j)
+      temp tmp_S1_ij_mb(oact,i,j,b)
+      temp tmp_S1_ej_ab(vact,a,b,j)
+      temp tmp_S2_ij_mb(oact,i,j,b)
+      temp tmp_S2_ej_ab(vact,a,b,j)
+      temp tmp_Sbar_ij_mb(oact,i,j,b)
+      temp tmp_Sbar_ej_ab(vact,a,b,j)
+#--------Single-particle intermediates----------------            
+      served X_mi(oact,i)
+      served X_ae(a,vact)
+      served X_ma(oact,a)
+      served X_ie(i,vact)
+
+      temp tmp_X_mi(oact,i)
+      temp tmp_X_ae(a,vact)
+      temp tmp_X_ma(oact,a)
+      temp tmp_X_ie(i,vact)
+
+      temp tmp_R_ija_abb(j,l,b,target_roots) 
+      temp tmp_R_abi_abb(b,c1,i,target_roots)
+      temp tmp_ia(i,a)
+      temp tmp_iijb(k,i,j,a) 
+      temp tmp_bjaa(a,d,i,b)
+      temp tmp_piqj(a,i,b,j)
+#--------Two-particle intermediates--------------------
+      served Y_mi_ld(oact,i,j,b)
+      served Y_ki_md(oact,b,i,j)
+      served Y_ki_le(vact,k,i,j)
+      served Y_dl_ea(vact,d,j,b)
+      served Y_ac_le(vact,k,a,b)
+      served Y_md_ac(oact,d,a,b)
+
+      temp tmp_Y_mi_ld(oact,i,j,b)
+      temp tmp_Y_ki_md(oact,b,i,j)
+      temp tmp_Y_ki_le(vact,k,i,j)
+      temp tmp_Y_dl_ea(vact,d,j,b)
+      temp tmp_Y_ac_le(vact,k,a,b)
+      temp tmp_Y_md_ac(oact,d,a,b)
+
+      served V_mi_lj(oact,i,l,j)
+      served V_ae_bd(vact,a,b,d)
+      served Z_mi_nj(oact,i,oact1,j)
+      served Z_ae_bf(vact,a,vact1,b)
+
+      temp tmp_V_mi_lj(oact,i,l,j)
+      temp tmp_V_ae_bd(vact,a,b,d)
+      temp tmp_Z_mi_nj(oact,i,oact1,j)
+      temp tmp_Z_ae_bf(vact,a,vact1,b) 
+
+#------Two-particle intermediates for STEOM-EE--------
+
+      served Q_ac_mi(oact,i,a,b)
+      served Q_ki_ae(i,j,a,vact)
+      served Q_mi_ae(oact,i,a,vact) 
+
+      temp tmp_Q_ac_mi(oact,i,a,b)
+      temp tmp_Q_ki_ae(i,j,a,vact)
+      temp tmp_Q_mi_ae(oact,i,a,vact)  
+
+      served P_bj_mc(oact,a,j,b)
+      served P_bj_ke(vact,i,j,b)
+      served P_bj_me(oact,vact,j,b)
+
+      served P_bj_ke_F12(vact,i,j,b)
+      served Q_ki_ae_F12(i,j,a,vact)
+      served Y_ki_le_F12(vact,k,i,j)
+      served X_ae_F12(a,vact)
+      served X_ie_F12(i,vact)
+
+      temp tmp_P_bj_mc(oact,a,j,b)
+      temp tmp_P_bj_ke(vact,i,j,b)
+      temp tmp_P_bj_me(oact,vact,j,b)
+
+#---Transformed effective Hamiltonian elements-------- 
+
+      served G_ik(i,k)
+      served G_ac(a,b)
+      served G_ia(i,a)
+
+      served G_ik_ld(i,k,l,d)
+      served G_ac_ld(a,b,l,d)
+      served G_ik_jl(i,k,j,l)
+      served G_ac_bd(a,a1,b,b1)
+      served G_ab_ij(a,b,i,j)
+      served G_ai_bj(a,i,b,j)
+
+      temp tmp_G_ik(i,k)
+      temp tmp_G_ac(a,b)
+      temp tmp_G_ia(i,a)
+      temp tmp_G_ik_ld(i,k,l,d) 
+      temp tmp_G_ac_ld(a,b,l,d)
+      temp tmp_G_ik_jl(i,k,j,l)
+      temp tmp_G_ac_bd(a,a1,b,b1)
+      temp tmp_G_ab_ij(a,b,i,j)
+      temp tmp_G_ai_bj(a,i,b,j)
+      temp tmp1_G_ai_bj(a,i,b,j)
+      temp tmp1_G_ab_ij(a,b,i,j)
+#----------------------------------------------------
+
+#
+#     CCSD amplitudes 
+#     --------------- 
+
+ 
+      distributed t1a(a,i)
+      distributed t1b(b,j)
+      served T2aa(a,i,a1,i1)
+      served T2bb(b,j,b1,j1)
+      served T2ab(a,i,b,j)
+
+      served Tau_aa(a,i,a1,i1)
+      served Tau_bb(b,j,b1,j1)
+      served Tau_ab(a,i,b,j)
+
+
+#     Transformed integrals
+#     --------------------- 
+
+      served VSpipi(p,i,p1,i1)
+      served VSqjqj(q,j,q1,j1)
+      served Vpiqj(p,i,q,j)
+      served VSaaai(a,a1,a2,i)
+      served VSbbbj(b,b1,b2,j)
+      served Vaabj(a,a1,b,j)
+      served Vbbai(b,b1,a,i)
+      served Vjbii(j,b,i,i1)
+      served Viabj(i,a,b,j)
+      served Vaajj(a,a1,j,j1)
+      served Vbbii(b,b1,i,i1)
+      served Viaai(i,a1,a,i1)
+      served Vaaii(a,a1,i,i1)
+      served Vjbbj(j,b1,b,j1)
+      served Vbbjj(b,b1,j,j1)
+#
+#     HBAR 
+#     ---- 
+
+      distributed Uaa(a,a1)
+      distributed Ubb(b,b1)
+      distributed Uii(i1,i)
+      distributed Ujj(j1,j)
+      distributed Uia(i,a)
+      distributed Ujb(j,b)
+#
+      served Wiiii(i,i1,i2,i3)
+      served Wjjjj(j,j1,j2,j3)
+      served Wiijj(i,i1,j,j1)
+#
+      served Waaia(a,a1,i,a2)
+      served Wbbjb(b,b1,j,b2)
+      served Waajb(a,a1,j,b2)
+      served Wbbia(b,b1,i,a2)
+#
+      served Wiiia(i1,i,i2,a)
+      served Wjjjb(j1,j,j2,b)
+      served Wiijb(i1,i,j2,b)
+      served Wjjia(j1,j,i2,a)
+#
+      served Wiiai(i,i1,a,i2)
+      served Wiibj(i,i1,b,j)
+      served Wjjai(j,j1,a,i)
+      served Wjjbj(j,j1,b,j2)
+#
+      served Wiaai(i1,a1,a,i)
+      served Wjbbj(j1,b1,b,j)
+      served Wiabj(i,a,b,j)
+      served Wjbai(j,b,a,i)
+      served Wiibb(i1,i,b,b1)
+      served Wjjaa(j1,j,a,a1)
+#
+      served Waaai(a,a1,a2,i)
+      served Wbbbj(b,b1,b2,j)
+      served Waabj(a,a1,b,j)
+      served Wbbai(b,b1,a,i)
+
+#----------------------------------------------------------
+      served R1a_vecs_ip(i,kk1,Nroots)
+      served R1b_vecs_ip(j,kk1,Nroots)
+      SERVED R2aa_a_Vecs_ip(a,i,kk1,i1,Nroots)
+      SERVED R2bb_b_vecs_ip(b,j,kk1,j1,Nroots)
+      SERVED R2aa_b_vecs_ip(a,i,kk1,j,Nroots)
+      SERVED R2bb_a_vecs_ip(b,j,kk1,i,Nroots)
+
+      served R1a_vecs_ea(a,kk1,MROOTS)
+      served R1b_vecs_ea(b,kk1,MROOTS)
+      Served R2a_aa_vecs_ea(a,kk1,a1,i1,MROOTS)
+      Served R2a_bb_vecs_ea(a,kk1,b,j,MROOTS)
+      Served R2b_bb_vecs_ea(b,kk1,b1,j1,MROOTS)
+      Served R2b_aa_vecs_ea(b,kk1,a,i,MROOTS)
+
+
+
+#----------------------------------------------------------
+## NOT USED ??? 
+#
+      served Waiaa(a,a1,i,a2) # HBAR_AIBC_aaaa
+      served Wbjbb(b,b1,j,b2) # HBAR_AIBC_bbbb
+      served Waibb(a,a1,j,b2) # HBAR_AIBC_aabb
+      served Wbjaa(b,b1,i,a2) # HBAR_AIBC_bbaa
+      served auxint2(a,i,p,j)
+      served C_coef(i,j,k,l)
+
+      served Waiia(a,i,i1,a1)
+      served Wbjjb(b,j,j1,b1)
+      served Waijb(a,i,j,b)
+      served Wbjia(b,j,i,a)
+      served Hbar_ab_eomea(a,a1)
+      served Hbar_ia_eomea(a,i)
+      served Hbar_ik_aj_eomea(i,k,a,j)
+      served Hbar_ij_ab_eomea(i,j,a,b)
+      served Hbar_ai_jb_eomea(a,i,j,b)
+
+      static S_aux_ip(i,target_roots)
+      static S_aux_ea(a,target_roots)   
+      static U_ip_inv(oact,target_roots)
+      static U_ea_inv(vact,target_roots)
+
+      temp temp_S_ip(i,target_roots)
+      temp temp_S_ea(a,target_roots)
+      temp temp_U_ip_inv(oact,target_roots)
+      temp temp_U_ea_inv(vact,target_roots)
+
+      temp tii(i,j)
+      temp taa(a,b)
+      temp tai(a,i)
+      temp tmp_iibb(j,i,a,b)
+      temp tmp_aibj(i,a,b,j)
+      temp tmp_Hbar_ab_eomea(a,a1)
+      temp tmp_Hbar_ia_eomea(a,i)
+      temp tmp_Hbar_ik_aj_eomea(i,k,a,j)
+      temp tmp_Hbar_ij_ab_eomea(i,j,a,b)
+      temp tmp_Hbar_ai_jb_eomea(a,i,j,b)
+
+      temp tIP_EVEC_R_p_a(i,Nroots)
+      temp tR1a_vecs(i,kk1,Nroots)
+      temp qww(i)
+      temp tEA_EVEC_R_p_a(a,Nroots)
+      temp tR1a_vecs1(a,kk1,Nroots) 
+      temp qwv(a)
+      temp tIP_EVEC_R_abi_abb(j,i,a,Nroots) 
+      temp tR2aa_b_vecs(a,i,kk1,j,Nroots) 
+      temp tR2aa_b_vecs1(a,i,kk1,j)
+      temp tR2aa_b_vecs2(j,i,a,kk1) 
+      temp tR2aa_b_vecs3(j,i,a)
+
+      temp tEA_EVEC_R_abi_abb(a,b,j,Nroots) 
+      temp tqR2aa_b_vecs(a,kk1,b,j,Nroots) 
+      temp tqR2aa_b_vecs1(a,kk1,b,j) 
+      temp tqR2aa_b_vecs2(a,b,j,kk1) 
+      temp tqR2aa_b_vecs3(a,b,j)
+
+      scalar F12CALC
+      scalar EAEOMF12CALC  
+      scalar n_act_occ
+      scalar n_act_virt
+      scalar cnt_target_roots 
+      scalar chunk_type
+      scalar RL
+      scalar ip_ind
+      scalar ea_ind
+      scalar cnt_occ
+      scalar cnt_virt
+      scalar cnt_occ1
+      scalar cnt_virt1
+      scalar SOCALC
+#----------------------------------------------------------------|
+#        Read necessary Hbar and EOM vectors                     |
+#----------------------------------------------------------------|        
+      PROC READ_DATA
+#     --------------
+      create t1a
+      create t1b
+      create Uaa
+      create Ubb
+      create Uii
+      create Ujj
+      create Uia
+      create Ujb
+      execute sip_barrier
+
+      execute list_to_blocks                VSpipi(p,i,p1,i1)
+      execute list_to_blocks                Vaaii
+      execute list_to_blocks                Viaai
+      execute list_to_blocks                VSaaai
+      execute list_to_blocks                VSqjqj(q,j,q1,j1)
+      execute list_to_blocks                Vbbjj
+      execute list_to_blocks                Vjbbj
+      execute list_to_blocks                VSbbbj
+      execute list_to_blocks                Vbbii
+      execute list_to_blocks                Vjbii
+      execute list_to_blocks                Vbbai
+      execute list_to_blocks                Vpiqj(p,i,q,j)
+      execute list_to_blocks                Viabj
+      execute list_to_blocks                Vaabj
+      execute list_to_blocks                Vaajj
+
+      execute list_to_blocks                t1a
+      execute list_to_blocks                t1b
+      execute list_to_blocks                T2aa
+      execute list_to_blocks                T2ab
+      execute list_to_blocks                T2bb
+
+      execute list_to_blocks                R1a_vecs_ip
+      execute list_to_blocks                R1b_vecs_ip
+      execute list_to_blocks                R2aa_a_vecs_ip
+      execute list_to_blocks                R2bb_b_vecs_ip
+      execute list_to_blocks                R2aa_b_vecs_ip
+      execute list_to_blocks                R2bb_a_vecs_ip
+
+      execute list_to_blocks                R1a_vecs_ea
+      execute list_to_blocks                R1b_vecs_ea
+      execute list_to_blocks                R2a_aa_vecs_ea
+      execute list_to_blocks                R2b_bb_vecs_ea
+      execute list_to_blocks                R2a_bb_vecs_ea
+      execute list_to_blocks                R2b_aa_vecs_ea
+
+      execute list_to_blocks                Uaa
+      execute list_to_blocks                Ubb
+      execute list_to_blocks                Uii
+      execute list_to_blocks                Ujj
+      execute list_to_blocks                Uia
+      execute list_to_blocks                Ujb
+#
+      execute list_to_blocks                Wiiii
+      execute list_to_blocks                Wjjjj
+      execute list_to_blocks                Wiijj
+
+      execute list_to_blocks                Waiaa # HBAR_AIBC_aaaa
+      execute list_to_blocks                Wbjbb # HBAR_AIBC_bbbb
+      execute list_to_blocks                Waibb # HBAR_AIBC_aabb
+      execute list_to_blocks                Wbjaa # HBAR_AIBC_bbaa
+#
+      execute list_to_blocks                Wiiia # HBAR_JKIA_aaaa
+      execute list_to_blocks                Wjjjb # HBAR_JKIA_bbbb
+      execute list_to_blocks                Wiijb # HBAR_JKIA_aabb
+      execute list_to_blocks                Wjjia # HBAR_JKIA_bbaa
+#
+      execute list_to_blocks                Wiiai # HBAR_IAJK_aaaa
+      execute list_to_blocks                Wiibj # HBAR_IAJK_aabb
+      execute list_to_blocks                Wjjai # HBAR_IAJK_bbaa
+      execute list_to_blocks                Wjjbj # HBAR_IAJK_bbbb
+#
+      execute list_to_blocks                Wiaai # HBAR_AJIB_aaaa
+      execute list_to_blocks                Wjbbj # HBAR_AJIB_bbbb
+      execute list_to_blocks                Wiabj # HBAR_AJIB_aabb
+      execute list_to_blocks                Wjbai # HBAR_AJIB_BBAA
+      execute list_to_blocks                Wiibb # HBAR_AJIB_iibb
+      execute list_to_blocks                Wjjaa # HBAR_AJIB_jjaa
+#
+      execute list_to_blocks                Waaai # HBAR_ABCI_aaaa
+      execute list_to_blocks                Wbbbj # HBAR_ABCI_bbbb
+      execute list_to_blocks                Waabj # HBAR_ABCI_aabb
+      execute list_to_blocks                Wbbai # HBAR_ABCI_bbaa
+
+
+      IF EAEOMF12CALC == 1.0
+      execute list_to_blocks                Hbar_ab_eomea
+      execute list_to_blocks                Hbar_ia_eomea
+      execute list_to_blocks                Hbar_ik_aj_eomea
+      execute list_to_blocks                Hbar_ij_ab_eomea
+      execute list_to_blocks                Hbar_ai_jb_eomea
+      ENDIF
+
+      execute read_list_to_blocks
+      execute server_barrier
+
+#----------Prepare vectors-----------------------------------------|
+         DO Nroots
+          DO kk1
+
+#------------One particle contributions-------------------------------
+          DO i
+          tIP_EVEC_R_p_a(i,Nroots) = 0.0
+          REQUEST R1a_vecs_ip(i,kk1,Nroots) i
+          tR1a_vecs(i,kk1,Nroots) = R1a_vecs_ip(i,kk1,Nroots)
+          qww(i) = tR1a_vecs(i,kk1,Nroots)
+          execute addrootindex qww tIP_EVEC_R_p_a
+          PREPARE IP_EVEC_R_h_a(i,Nroots) = tIP_EVEC_R_p_a(i,Nroots)
+          ENDDO i
+          execute server_barrier
+
+          DO i
+          tIP_EVEC_R_p_a(i,Nroots) = 0.0
+          REQUEST R1b_vecs_ip(i,kk1,Nroots) i
+          tR1a_vecs(i,kk1,Nroots) = R1b_vecs_ip(i,kk1,Nroots)
+          qww(i) = tR1a_vecs(i,kk1,Nroots)
+          execute addrootindex qww tIP_EVEC_R_p_a
+          PREPARE IP_EVEC_R_h_b(i,Nroots) = tIP_EVEC_R_p_a(i,Nroots)
+          ENDDO i
+          execute server_barrier
+
+          DO a
+          tEA_EVEC_R_p_a(a,Nroots) = 0.0
+          REQUEST R1a_vecs_ea(a,kk1,Nroots) a
+          tR1a_vecs1(a,kk1,Nroots) = R1a_vecs_ea(a,kk1,Nroots)
+          qwv(a) = tR1a_vecs1(a,kk1,Nroots)
+          execute addrootindex qwv tEA_EVEC_R_p_a
+          PREPARE EA_EVEC_R_p_a(a,Nroots) = tEA_EVEC_R_p_a(a,Nroots)
+          ENDDO a
+          execute server_barrier
+
+          DO a
+          tEA_EVEC_R_p_a(a,Nroots) = 0.0
+          REQUEST R1b_vecs_ea(a,kk1,Nroots) a
+          tR1a_vecs1(a,kk1,Nroots) = R1b_vecs_ea(a,kk1,Nroots)
+          qwv(a) = tR1a_vecs1(a,kk1,Nroots)
+          execute addrootindex qwv tEA_EVEC_R_p_a
+          PREPARE EA_EVEC_R_p_b(a,Nroots) = tEA_EVEC_R_p_a(a,Nroots)
+          ENDDO a
+          execute server_barrier
+
+#------------Two particle contributions-------------------------------
+
+          PARDO a,i,j
+          tIP_EVEC_R_abi_abb(j,i,a,Nroots) = 0.0
+          REQUEST R2aa_b_vecs_ip(a,i,kk1,j,Nroots) a
+          tR2aa_b_vecs(a,i,kk1,j,Nroots) = R2aa_b_vecs_ip(a,i,kk1,j,Nroots)
+          tR2aa_b_vecs1(a,i,kk1,j) = tR2aa_b_vecs(a,i,kk1,j,Nroots)
+          tR2aa_b_vecs2(j,i,a,kk1) = tR2aa_b_vecs1(a,i,kk1,j)
+          tR2aa_b_vecs3(j,i,a) = tR2aa_b_vecs2(j,i,a,kk1)
+          execute addrootindex tR2aa_b_vecs3 tIP_EVEC_R_abi_abb
+          PREPARE IP_EVEC_R_ija_abb(j,i,a,Nroots) = tIP_EVEC_R_abi_abb(j,i,a,Nroots)
+          ENDPARDO a,i,j
+          execute server_barrier
+
+          PARDO a,b,j
+          tEA_EVEC_R_abi_abb(a,b,j,Nroots) = 0.0
+          REQUEST R2a_bb_vecs_ea(a,kk1,b,j,Nroots) a
+          tqR2aa_b_vecs(a,kk1,b,j,Nroots) = R2a_bb_vecs_ea(a,kk1,b,j,Nroots)
+          tqR2aa_b_vecs1(a,kk1,b,j) = tqR2aa_b_vecs(a,kk1,b,j,Nroots)
+          tqR2aa_b_vecs2(a,b,j,kk1) = tqR2aa_b_vecs1(a,kk1,b,j)
+          tqR2aa_b_vecs3(a,b,j) = tqR2aa_b_vecs2(a,b,j,kk1)
+          execute addrootindex tqR2aa_b_vecs3 tEA_EVEC_R_abi_abb
+          PREPARE EA_EVEC_R_abi_abb(a,b,j,Nroots) = tEA_EVEC_R_abi_abb(a,b,j,Nroots)
+          ENDPARDO a,b,j
+          execute server_barrier
+
+
+
+          ENDDO kk1 
+         ENDDO Nroots
+
+
+
+      ENDPROC READ_DATA
+#     ----------------- 
+
+#------------------------------------------------------------------|
+#       Generate S(+) and S(-) amplitudes                          |
+#------------------------------------------------------------------|
+      PROC MAKE_S_AMPLITUDES
+#     ----------------------
+
+#--------------Initialization of arrays----------------------------|
+
+      DO target_roots
+       DO i
+       temp_S_ip(i,target_roots) = 0.0
+       S_aux_ip(i,target_roots) = temp_S_ip(i,target_roots) 
+       ENDDO i
+      ENDDO target_roots
+
+      execute server_barrier
+
+      DO target_roots
+       DO a
+       temp_S_ea(a,target_roots) = 0.0
+       S_aux_ea(a,target_roots) = temp_S_ea(a,target_roots)
+       ENDDO a
+      ENDDO target_roots
+
+      execute server_barrier
+
+
+      DO target_roots
+       DO oact
+       temp_U_ip_inv(oact,target_roots) = 0.0
+       U_ip_inv(oact,target_roots) = temp_U_ip_inv(oact,target_roots)
+       ENDDO oact
+      ENDDO target_roots
+
+      execute server_barrier
+
+      DO target_roots
+       DO vact
+       temp_U_ea_inv(vact,target_roots) = 0.0
+       U_ea_inv(vact,target_roots) = temp_U_ea_inv(vact,target_roots)
+       ENDDO vact
+      ENDDO target_roots
+
+      execute server_barrier
+
+
+
+#----------Occupied active orbitals-------------------|
+      cnt_target_roots = 0.0
+     
+      DO target_roots
+      cnt_target_roots += 1.0
+      IF cnt_target_roots > n_act_occ
+      EXIT
+      ENDIF 
+
+       DO i
+       REQUEST IP_EVEC_R_h_a(i,target_roots) i
+       temp_S_ip(i,target_roots) = IP_EVEC_R_h_a(i,target_roots)
+       S_aux_ip(i,target_roots) = temp_S_ip(i,target_roots)
+       ENDDO i
+      ENDDO target_roots
+ 
+      execute server_barrier 
+#----------Virtual active orbitals--------------------|
+      cnt_target_roots = 0.0
+
+      DO target_roots
+      cnt_target_roots += 1.0
+      IF cnt_target_roots > n_act_virt
+      EXIT
+      ENDIF
+
+       DO a
+       REQUEST EA_EVEC_R_p_a(a,target_roots) a
+       temp_S_ea(a,target_roots) = EA_EVEC_R_p_a(a,target_roots)
+       S_aux_ea(a,target_roots) = temp_S_ea(a,target_roots)
+       ENDDO a
+      ENDDO target_roots
+
+      execute server_barrier
+#-----------------------------------------------------|
+#   Make [U(+)]^{-1} and [U(-)]^{-1}                  | 
+#-----------------------------------------------------|
+
+           chunk_type = 1.0
+           RL = 1.0
+           execute eomchunk RL chunk_type           
+           execute steom_u_inv S_aux_ip U_ip_inv
+           RL = 2.0
+           execute eomchunk RL chunk_type
+           execute steom_u_inv S_aux_ea U_ea_inv
+
+           execute server_barrier
+#--------------------------------------------------------|
+#          S_ij_mb amplitudes                            |
+#--------------------------------------------------------|            
+
+           PARDO i,j,a
+   
+           cnt_target_roots = 0.0
+           DO target_roots
+           cnt_target_roots += 1.0
+           IF cnt_target_roots > n_act_occ
+           EXIT
+           ENDIF
+
+           REQUEST IP_EVEC_R_ija_abb(i,j,a,target_roots) i      
+           tmp_R_ija_abb(i,j,a,target_roots) = IP_EVEC_R_ija_abb(i,j,a,target_roots)
+
+           DO oact
+           temp_U_ip_inv(oact,target_roots) = U_ip_inv(oact,target_roots)
+           tmp_S_ij_mb(oact,i,j,a) = tmp_R_ija_abb(i,j,a,target_roots)*temp_U_ip_inv(oact,target_roots)
+           tmp_S_ij_mb(oact,i,j,a) *= -1.0
+
+           PREPARE  S_ij_mb(oact,i,j,a) += tmp_S_ij_mb(oact,i,j,a)
+
+           ENDDO oact 
+           ENDDO target_roots 
+           ENDPARDO i,j,a
+
+           execute server_barrier
+
+
+#--------------------------------------------------------|
+#          S_ej_ab amplitudes                            |
+#--------------------------------------------------------|            
+           PARDO a,b,i
+
+           cnt_target_roots = 0.0
+           DO target_roots
+           cnt_target_roots += 1.0
+           IF cnt_target_roots > n_act_virt
+           EXIT
+           ENDIF
+
+           REQUEST EA_EVEC_R_abi_abb(a,b,i,target_roots) a
+           tmp_R_abi_abb(a,b,i,target_roots) = EA_EVEC_R_abi_abb(a,b,i,target_roots)
+
+           DO vact
+           temp_U_ea_inv(vact,target_roots) = U_ea_inv(vact,target_roots)
+           tmp_S_ej_ab(vact,a,b,i) = tmp_R_abi_abb(a,b,i,target_roots)*temp_U_ea_inv(vact,target_roots)
+         
+           PREPARE S_ej_ab(vact,a,b,i) += tmp_S_ej_ab(vact,a,b,i) 
+
+           ENDDO vact
+           ENDDO target_roots
+           ENDPARDO a,b,i
+
+           execute server_barrier
+
+
+#----------------------------------------------------------------------|
+# Sbar_ij_mb = 2*S_ij_mb - S_ji_mb ; Sbar_ej_ab = 2*S_ej_ab - S_ej_ba  |
+#----------------------------------------------------------------------|
+
+         PARDO i,j,a
+         DO oact
+         REQUEST S_ij_mb(oact,i,j,a) i
+         REQUEST S_ij_mb(oact,j,i,a) i
+         tmp_S_ij_mb(oact,i,j,a) = S_ij_mb(oact,i,j,a)
+         tmp_S1_ij_mb(oact,j,i,a) = S_ij_mb(oact,j,i,a)
+         tmp_S2_ij_mb(oact,i,j,a) = tmp_S1_ij_mb(oact,j,i,a)
+         tmp_S_ij_mb(oact,i,j,a) *= 2.0
+         tmp_S2_ij_mb(oact,i,j,a) *= -1.0      
+         tmp_Sbar_ij_mb(oact,i,j,a) = tmp_S_ij_mb(oact,i,j,a)
+         tmp_Sbar_ij_mb(oact,i,j,a) += tmp_S2_ij_mb(oact,i,j,a)
+
+         PREPARE Sbar_ij_mb(oact,i,j,a) += tmp_Sbar_ij_mb(oact,i,j,a) 
+         ENDDO oact
+         ENDPARDO i,j,a
+         execute server_barrier
+
+        PARDO a,b,i
+         DO vact
+         REQUEST S_ej_ab(vact,a,b,i) i
+         REQUEST S_ej_ab(vact,b,a,i) i
+         tmp_S_ej_ab(vact,a,b,i) = S_ej_ab(vact,a,b,i)
+         tmp_S1_ej_ab(vact,b,a,i) = S_ej_ab(vact,b,a,i)
+         tmp_S2_ej_ab(vact,a,b,i) = tmp_S1_ej_ab(vact,b,a,i) 
+         tmp_S_ej_ab(vact,a,b,i) *= 2.0
+         tmp_S2_ej_ab(vact,a,b,i) *= -1.0
+         tmp_Sbar_ej_ab(vact,a,b,i) = tmp_S_ej_ab(vact,a,b,i)
+         tmp_Sbar_ej_ab(vact,a,b,i) += tmp_S2_ej_ab(vact,a,b,i)  
+
+         PREPARE Sbar_ej_ab(vact,a,b,i) += tmp_Sbar_ej_ab(vact,a,b,i)
+
+         ENDDO vact
+         ENDPARDO a,b,i
+         execute server_barrier
+#---------------------------------------------------------|
+
+      ENDPROC MAKE_S_AMPLITUDES
+#     -------------------------
+
+#---------------------------------------------------------|
+#     Generation of single-particle intermediates         |
+#---------------------------------------------------------|
+      PROC MAKE_INTERM_pq
+#     ----------------------
+
+#----------------------------------|
+#     X_mi(m,i)                    |
+#----------------------------------|
+      PARDO i,j,a
+      GET Uia(j,a)
+      tmp_ia(j,a) = Uia(j,a)
+      DO oact
+      REQUEST Sbar_ij_mb(oact,i,j,a) i
+      tmp_Sbar_ij_mb(oact,i,j,a) = Sbar_ij_mb(oact,i,j,a)
+      tmp_X_mi(oact,i) = tmp_Sbar_ij_mb(oact,i,j,a)*tmp_ia(j,a)      
+      PREPARE X_mi(oact,i) += tmp_X_mi(oact,i)
+      ENDDO oact
+      ENDPARDO i,j,a
+      execute server_barrier
+
+      PARDO i,j,k,a
+      REQUEST Wiijb(k,i,j,a) i
+      tmp_iijb(k,i,j,a) = Wiijb(k,i,j,a)  
+      DO oact
+      REQUEST Sbar_ij_mb(oact,k,j,a) j
+      tmp_Sbar_ij_mb(oact,k,j,a) = Sbar_ij_mb(oact,k,j,a)
+      tmp_X_mi(oact,i) = tmp_Sbar_ij_mb(oact,k,j,a)*tmp_iijb(k,i,j,a)
+      tmp_X_mi(oact,i) *= -1.0
+      PREPARE X_mi(oact,i) += tmp_X_mi(oact,i)
+      ENDDO oact
+      ENDPARDO i,j,k,a
+      execute server_barrier
+#----------------------------------|
+#     X_ae(a,e)                    |
+#----------------------------------|
+      PARDO a,b,i
+      GET Uia(i,b)
+      tmp_ia(i,b) = Uia(i,b)
+      DO vact
+      REQUEST Sbar_ej_ab(vact,a,b,i) a
+      tmp_Sbar_ej_ab(vact,a,b,i) = Sbar_ej_ab(vact,a,b,i)
+      tmp_X_ae(a,vact) = tmp_Sbar_ej_ab(vact,a,b,i)*tmp_ia(i,b)
+      PREPARE X_ae(a,vact) += tmp_X_ae(a,vact)
+      ENDDO vact
+      ENDPARDO a,b,i  
+      execute server_barrier
+
+      PARDO a,b,d,i
+      REQUEST Wbjaa(a,d,i,b) a
+      tmp_bjaa(a,d,i,b) = Wbjaa(a,d,i,b) 
+      DO vact
+      REQUEST Sbar_ej_ab(vact,d,b,i) d
+      tmp_Sbar_ej_ab(vact,d,b,i) = Sbar_ej_ab(vact,d,b,i)
+      tmp_X_ae(a,vact) = tmp_Sbar_ej_ab(vact,d,b,i)*tmp_bjaa(a,d,i,b)
+      PREPARE X_ae(a,vact) += tmp_X_ae(a,vact)
+      ENDDO vact
+      ENDPARDO a,b,d,i
+      execute server_barrier
+#-----------F12 contribition to X_ae intermediate----------| 
+
+      IF EAEOMF12CALC == 1.0
+      
+      chunk_type = 1.0
+      RL = 1.0
+      execute eomchunk RL chunk_type
+
+ 
+      PARDO a,b
+      REQUEST Hbar_ab_eomea(b,a) a
+      tmp_Hbar_ab_eomea(b,a) = Hbar_ab_eomea(b,a)
+      tmp_Hbar_ab_eomea(b,a) *= -1.0
+
+      cnt_virt = 0.0
+      DO vact
+      cnt_virt += 1.0
+      tmp_X_ae(a,vact) = 0.0
+
+      IF cnt_virt <= ea_ind
+      execute steom_f12_vact tmp_Hbar_ab_eomea tmp_X_ae 
+      ENDIF 
+
+      PREPARE X_ae_F12(a,vact) += tmp_X_ae(a,vact)
+      ENDDO vact
+      ENDPARDO a,b 
+      execute server_barrier
+
+#---------------------------------------------------------|
+#---------------------------------------------------------|
+
+      PARDO a
+      DO vact
+      REQUEST X_ae_F12(a,vact) a
+      tmp_X_ae(a,vact) = X_ae_F12(a,vact)
+      PREPARE X_ae(a,vact) += tmp_X_ae(a,vact)  
+      ENDDO vact
+      ENDPARDO a
+      execute server_barrier
+
+
+      ENDIF
+#----------------------------------|
+#     X_ma(m,a)                    |
+#----------------------------------|
+      PARDO i,j,a,b
+      REQUEST Vpiqj(a,i,b,j) a
+      tmp_piqj(a,i,b,j) = Vpiqj(a,i,b,j)
+      DO oact
+      REQUEST Sbar_ij_mb(oact,i,j,b) i
+      tmp_Sbar_ij_mb(oact,i,j,b) = Sbar_ij_mb(oact,i,j,b)
+      tmp_X_ma(oact,a) = tmp_Sbar_ij_mb(oact,i,j,b)*tmp_piqj(a,i,b,j)
+      tmp_X_ma(oact,a) *= -1.0
+      PREPARE X_ma(oact,a) += tmp_X_ma(oact,a)
+      ENDDO oact
+      ENDPARDO i,j,a,b
+      execute server_barrier
+#----------------------------------|
+#     X_ie(i,e)                    |
+#----------------------------------|
+      PARDO i,j,a,b
+      REQUEST Vpiqj(a,i,b,j) a
+      tmp_piqj(a,i,b,j) = Vpiqj(a,i,b,j)
+      DO vact
+      REQUEST Sbar_ej_ab(vact,a,b,j) a
+      tmp_Sbar_ej_ab(vact,a,b,j) = Sbar_ej_ab(vact,a,b,j)
+      tmp_X_ie(i,vact) = tmp_Sbar_ej_ab(vact,a,b,j)*tmp_piqj(a,i,b,j)
+      PREPARE X_ie(i,vact) += tmp_X_ie(i,vact)
+      ENDDO vact
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+#-----------F12 contribition to X_ie intermediate----------|
+
+      IF EAEOMF12CALC == 1.0
+
+      chunk_type = 1.0
+      RL = 1.0
+      execute eomchunk RL chunk_type
+
+
+      PARDO i,a
+      REQUEST Hbar_ia_eomea(a,i) i
+      tmp_Hbar_ia_eomea(a,i) = Hbar_ia_eomea(a,i)
+
+      cnt_virt = 0.0
+      DO vact
+      cnt_virt += 1.0
+      tmp_X_ie(i,vact) = 0.0
+
+      IF cnt_virt <= ea_ind
+      execute steom_f12_vact tmp_Hbar_ia_eomea tmp_X_ie
+      ENDIF
+
+      PREPARE X_ie_F12(i,vact) += tmp_X_ie(i,vact)
+      ENDDO vact
+      ENDPARDO i,a
+      execute server_barrier
+#---------------------------------------------------------|
+#---------------------------------------------------------|
+      PARDO i
+      DO vact 
+      REQUEST X_ie_F12(i,vact) i
+      tmp_X_ie(i,vact) = X_ie_F12(i,vact)
+      PREPARE X_ie(i,vact) += tmp_X_ie(i,vact)
+      ENDDO vact
+      ENDPARDO i
+      execute server_barrier
+
+
+      ENDIF
+#----------------------------------|
+      ENDPROC MAKE_INTERM_pq 
+#     -------------------------
+
+#---------------------------------------------------------------|
+#       Generation of two-particle intermediates                |
+#---------------------------------------------------------------|
+      PROC MAKE_INTERM_pqrs
+#     ---------------------
+
+#----------------------------------|
+#     Y_mi_ld(oact,i,j,b)          |
+#----------------------------------|
+      PARDO i,j,k,a,b
+      REQUEST Vpiqj(a,k,b,j) a
+      tmp_piqj(a,k,b,j) = Vpiqj(a,k,b,j)
+      DO oact
+      REQUEST Sbar_ij_mb(oact,i,k,a) i
+      tmp_Sbar_ij_mb(oact,i,k,a) = Sbar_ij_mb(oact,i,k,a) 
+      tmp_Y_mi_ld(oact,i,j,b) = tmp_Sbar_ij_mb(oact,i,k,a)*tmp_piqj(a,k,b,j)
+      PREPARE Y_mi_ld(oact,i,j,b) += tmp_Y_mi_ld(oact,i,j,b)
+      ENDDO oact
+      ENDPARDO i,j,k,a,b
+      execute server_barrier
+
+      PARDO i,j,k,a,b
+      REQUEST Vpiqj(a,j,b,k) a
+      tmp_piqj(a,j,b,k) = Vpiqj(a,j,b,k)
+      DO oact
+      REQUEST S_ij_mb(oact,i,k,a) i
+      tmp_S_ij_mb(oact,i,k,a) = S_ij_mb(oact,i,k,a)
+      tmp_Y_mi_ld(oact,i,j,b) = tmp_S_ij_mb(oact,i,k,a)*tmp_piqj(a,j,b,k)
+      tmp_Y_mi_ld(oact,i,j,b) *= -1.0
+      PREPARE Y_mi_ld(oact,i,j,b) += tmp_Y_mi_ld(oact,i,j,b)
+      ENDDO oact
+      ENDPARDO i,j,k,a,b
+      execute server_barrier
+#----------------------------------|
+#     Y_ki_md(oact,b,i,j)          |
+#----------------------------------|
+      PARDO i,j,k,a,b
+      REQUEST Vpiqj(a,j,b,k) a
+      tmp_piqj(a,j,b,k) = Vpiqj(a,j,b,k)
+      DO oact
+      REQUEST S_ij_mb(oact,k,i,a) i
+      tmp_S_ij_mb(oact,k,i,a) = S_ij_mb(oact,k,i,a)
+      tmp_Y_ki_md(oact,b,i,j) = tmp_S_ij_mb(oact,k,i,a)*tmp_piqj(a,j,b,k)
+      tmp_Y_ki_md(oact,b,i,j) *= -1.0
+      PREPARE Y_ki_md(oact,b,i,j) += tmp_Y_ki_md(oact,b,i,j)
+      ENDDO oact
+      ENDPARDO i,j,k,a,b
+      execute server_barrier
+
+#----------------------------------|
+#     Y_ki_le(vact,k,i,j)          |
+#----------------------------------|
+      PARDO i,j,k,a,b 
+      REQUEST Vpiqj(a,k,b,j) a
+      tmp_piqj(a,k,b,j) = Vpiqj(a,k,b,j) 
+      DO vact
+      REQUEST S_ej_ab(vact,a,b,i) a
+      tmp_S_ej_ab(vact,a,b,i) = S_ej_ab(vact,a,b,i)
+      tmp_Y_ki_le(vact,k,i,j) = tmp_S_ej_ab(vact,a,b,i)*tmp_piqj(a,k,b,j)
+      PREPARE Y_ki_le(vact,k,i,j) += tmp_Y_ki_le(vact,k,i,j) 
+      ENDDO vact 
+      ENDPARDO i,j,k,a,b
+      execute server_barrier
+#-----------F12 contribition to Y_ki_le intermediate----------|
+      IF EAEOMF12CALC == 1.0
+
+      chunk_type = 1.0
+      RL = 2.0
+      execute eomchunk RL chunk_type
+
+
+      PARDO i,j,k,a
+      REQUEST Hbar_ik_aj_eomea(i,j,a,k) i 
+      tmp_Hbar_ik_aj_eomea(i,j,a,k) = Hbar_ik_aj_eomea(i,j,a,k)
+ 
+      cnt_virt = 0.0
+      DO vact
+      cnt_virt += 1.0
+      tmp_Y_ki_le(vact,k,i,j) = 0.0
+
+      IF cnt_virt <= ea_ind
+      execute steom_f12_vact tmp_Hbar_ik_aj_eomea tmp_Y_ki_le
+      ENDIF       
+
+      PREPARE Y_ki_le_F12(vact,k,i,j) += tmp_Y_ki_le(vact,k,i,j)
+      ENDDO vact
+      ENDPARDO i,j,k,a
+      execute server_barrier
+#---------------------------------------------------------|
+#---------------------------------------------------------|
+      PARDO i,j,k
+      DO vact
+      REQUEST Y_ki_le_F12(vact,k,i,j) k
+      tmp_Y_ki_le(vact,k,i,j) = Y_ki_le_F12(vact,k,i,j)
+      PREPARE Y_ki_le(vact,k,i,j) += tmp_Y_ki_le(vact,k,i,j)
+      ENDDO vact
+      ENDPARDO i,j,k
+      execute server_barrier
+
+
+      ENDIF
+
+#----------------------------------|
+#     Y_dl_ea(vact,d,j,b)          |
+#----------------------------------|
+      PARDO a,b,d,i,j
+      REQUEST Vpiqj(a,i,b,j) a
+      tmp_piqj(a,i,b,j) = Vpiqj(a,i,b,j)
+      DO vact
+      REQUEST Sbar_ej_ab(vact,d,a,i) a
+      tmp_Sbar_ej_ab(vact,d,a,i) = Sbar_ej_ab(vact,d,a,i)
+      tmp_Y_dl_ea(vact,d,j,b) = tmp_Sbar_ej_ab(vact,d,a,i)*tmp_piqj(a,i,b,j)
+      PREPARE Y_dl_ea(vact,d,j,b) += tmp_Y_dl_ea(vact,d,j,b)
+      ENDDO vact
+      ENDPARDO a,b,d,i,j
+      execute server_barrier
+
+      PARDO a,b,d,i,j
+      REQUEST Vpiqj(a,j,b,i) a
+      tmp_piqj(a,j,b,i) = Vpiqj(a,j,b,i)
+      DO vact
+      REQUEST S_ej_ab(vact,d,a,i) a
+      tmp_S_ej_ab(vact,d,a,i) = S_ej_ab(vact,d,a,i)
+      tmp_Y_dl_ea(vact,d,j,b) = tmp_S_ej_ab(vact,d,a,i)*tmp_piqj(a,j,b,i)
+      tmp_Y_dl_ea(vact,d,j,b) *= -1.0
+      PREPARE Y_dl_ea(vact,d,j,b) += tmp_Y_dl_ea(vact,d,j,b)
+      ENDDO vact
+      ENDPARDO a,b,d,i,j
+      execute server_barrier
+#----------------------------------|
+#     Y_ac_le(vact,k,a,b)          |
+#----------------------------------|
+      PARDO a,b,d,i,j
+      REQUEST Vpiqj(d,j,b,i) d
+      tmp_piqj(d,j,b,i) = Vpiqj(d,j,b,i)
+      DO vact
+      REQUEST S_ej_ab(vact,d,a,i) d
+      tmp_S_ej_ab(vact,d,a,i) = S_ej_ab(vact,d,a,i)
+      tmp_Y_ac_le(vact,j,a,b) = tmp_S_ej_ab(vact,d,a,i)*tmp_piqj(d,j,b,i)
+      tmp_Y_ac_le(vact,j,a,b) *= -1.0
+      PREPARE Y_ac_le(vact,j,a,b) += tmp_Y_ac_le(vact,j,a,b)
+      ENDDO vact
+      ENDPARDO a,b,d,i,j
+      execute server_barrier
+#----------------------------------|
+#     Y_md_ac(oact,d,a,b)          |
+#----------------------------------|
+      PARDO a,b,d,i,j
+      REQUEST Vpiqj(d,j,b,i) d
+      tmp_piqj(d,j,b,i) = Vpiqj(d,j,b,i)
+      DO oact
+      REQUEST S_ij_mb(oact,j,i,a) i
+      tmp_S_ij_mb(oact,j,i,a) = S_ij_mb(oact,j,i,a)
+      tmp_Y_md_ac(oact,d,a,b) = tmp_S_ij_mb(oact,j,i,a)*tmp_piqj(d,j,b,i)
+      PREPARE Y_md_ac(oact,d,a,b) += tmp_Y_md_ac(oact,d,a,b)
+      ENDDO oact
+      ENDPARDO a,b,d,i,j
+      execute server_barrier
+
+#----------------------------------|
+#     V_mi_lj(oact,i,l,j)          |
+#----------------------------------|
+      PARDO i,l,j,a
+      GET Uia(j,a)
+      tmp_ia(j,a) = Uia(j,a)
+      DO oact
+      REQUEST S_ij_mb(oact,i,l,a) i
+      tmp_S_ij_mb(oact,i,l,a) = S_ij_mb(oact,i,l,a)
+      tmp_V_mi_lj(oact,i,l,j) = tmp_S_ij_mb(oact,i,l,a)*tmp_ia(j,a)
+      PREPARE V_mi_lj(oact,i,l,j) += tmp_V_mi_lj(oact,i,l,j)
+      ENDDO oact
+      ENDPARDO i,l,j,a
+      execute server_barrier
+
+      PARDO i,l,j,k,a
+      REQUEST Wiijb(j,l,k,a) j
+      tmp_iijb(j,l,k,a) = Wiijb(j,l,k,a) 
+      DO oact
+      REQUEST Sbar_ij_mb(oact,i,k,a) i
+      tmp_Sbar_ij_mb(oact,i,k,a) = Sbar_ij_mb(oact,i,k,a)
+      tmp_V_mi_lj(oact,i,l,j) = tmp_Sbar_ij_mb(oact,i,k,a)*tmp_iijb(j,l,k,a)
+      PREPARE V_mi_lj(oact,i,l,j) += tmp_V_mi_lj(oact,i,l,j)
+      ENDDO oact 
+      ENDPARDO i,l,j,k,a
+      execute server_barrier
+
+      PARDO i,l,j,k,a
+      REQUEST Wiijb(k,l,j,a) k
+      tmp_iijb(k,l,j,a) = Wiijb(k,l,j,a)
+      DO oact
+      REQUEST S_ij_mb(oact,i,k,a) i
+      tmp_S_ij_mb(oact,i,k,a) = S_ij_mb(oact,i,k,a)
+      tmp_V_mi_lj(oact,i,l,j) = tmp_S_ij_mb(oact,i,k,a)*tmp_iijb(k,l,j,a)
+      tmp_V_mi_lj(oact,i,l,j) *= -1.0
+      PREPARE V_mi_lj(oact,i,l,j) += tmp_V_mi_lj(oact,i,l,j)
+      ENDDO oact
+      ENDPARDO i,l,j,k,a
+      execute server_barrier
+
+      PARDO i,l,j,k,a
+      REQUEST Wiijb(k,i,j,a) k
+      tmp_iijb(k,i,j,a) = Wiijb(k,i,j,a)
+      DO oact
+      REQUEST S_ij_mb(oact,k,l,a) k
+      tmp_S_ij_mb(oact,k,l,a) = S_ij_mb(oact,k,l,a)
+      tmp_V_mi_lj(oact,i,l,j) = tmp_S_ij_mb(oact,k,l,a)*tmp_iijb(k,i,j,a)
+      tmp_V_mi_lj(oact,i,l,j) *= -1.0
+      PREPARE V_mi_lj(oact,i,l,j) += tmp_V_mi_lj(oact,i,l,j)
+      ENDDO oact
+      ENDPARDO i,l,j,k,a
+      execute server_barrier
+
+#----------------------------------|
+#     V_ae_bd(vact,a,b,d)          |
+#----------------------------------|
+      PARDO a,b,d,i
+      GET Uia(i,d)
+      tmp_ia(i,d) = Uia(i,d)
+      DO vact
+      REQUEST S_ej_ab(vact,a,b,i) a
+      tmp_S_ej_ab(vact,a,b,i) = S_ej_ab(vact,a,b,i)      
+      tmp_V_ae_bd(vact,a,b,d) = tmp_S_ej_ab(vact,a,b,i)*tmp_ia(i,d) 
+      tmp_V_ae_bd(vact,a,b,d) *= -1.0
+      PREPARE V_ae_bd(vact,a,b,d) += tmp_V_ae_bd(vact,a,b,d)
+      ENDDO vact
+      ENDPARDO a,b,d,i
+      execute server_barrier
+
+      PARDO a,b,d,i,a1
+      REQUEST Wbjaa(b,d,i,a1) a1
+      tmp_bjaa(b,d,i,a1) = Wbjaa(b,d,i,a1)
+      DO vact
+      REQUEST Sbar_ej_ab(vact,a,a1,i) a
+      tmp_Sbar_ej_ab(vact,a,a1,i) = Sbar_ej_ab(vact,a,a1,i)
+      tmp_V_ae_bd(vact,a,b,d) = tmp_Sbar_ej_ab(vact,a,a1,i)*tmp_bjaa(b,d,i,a1)
+      PREPARE V_ae_bd(vact,a,b,d) += tmp_V_ae_bd(vact,a,b,d)
+      ENDDO vact
+      ENDPARDO a,b,d,i,a1
+      execute server_barrier 
+
+      PARDO a,b,d,i,a1
+      REQUEST Wbjaa(b,a1,i,d) a1
+      tmp_bjaa(b,a1,i,d) = Wbjaa(b,a1,i,d)
+      DO vact
+      REQUEST S_ej_ab(vact,a,a1,i) a
+      tmp_S_ej_ab(vact,a,a1,i) = S_ej_ab(vact,a,a1,i)
+      tmp_V_ae_bd(vact,a,b,d) = tmp_S_ej_ab(vact,a,a1,i)*tmp_bjaa(b,a1,i,d)
+      tmp_V_ae_bd(vact,a,b,d) *= -1.0
+      PREPARE V_ae_bd(vact,a,b,d) += tmp_V_ae_bd(vact,a,b,d)
+      ENDDO vact
+      ENDPARDO a,b,d,i,a1
+      execute server_barrier
+
+      PARDO a,b,d,i,a1
+      REQUEST Wbjaa(a,a1,i,d) a1
+      tmp_bjaa(a,a1,i,d) = Wbjaa(a,a1,i,d)
+      DO vact
+      REQUEST S_ej_ab(vact,a1,b,i) a1
+      tmp_S_ej_ab(vact,a1,b,i) = S_ej_ab(vact,a1,b,i)
+      tmp_V_ae_bd(vact,a,b,d) = tmp_S_ej_ab(vact,a1,b,i)*tmp_bjaa(a,a1,i,d)
+      tmp_V_ae_bd(vact,a,b,d) *= -1.0
+      PREPARE V_ae_bd(vact,a,b,d) += tmp_V_ae_bd(vact,a,b,d) 
+      ENDDO vact
+      ENDPARDO a,b,d,i,a1
+      execute server_barrier
+
+#----------------------------------|
+#     Z_mi_nj(oact,i,oact1,j)      |
+#----------------------------------|
+
+      PARDO i,j,a
+      DO oact
+      REQUEST S_ij_mb(oact,i,j,a) a
+      tmp_S_ij_mb(oact,i,j,a) = S_ij_mb(oact,i,j,a)       
+      DO oact1
+      REQUEST X_ma(oact1,a) a
+      tmp_X_ma(oact1,a) = X_ma(oact1,a)
+      tmp_Z_mi_nj(oact,i,oact1,j) = tmp_S_ij_mb(oact,i,j,a)*tmp_X_ma(oact1,a)
+      PREPARE Z_mi_nj(oact,i,oact1,j) += tmp_Z_mi_nj(oact,i,oact1,j)
+      ENDDO oact1
+      ENDDO oact
+      ENDPARDO i,j,a
+      execute server_barrier
+
+      PARDO i,j,a
+      DO oact
+      REQUEST X_ma(oact,a) a
+      tmp_X_ma(oact,a) = X_ma(oact,a)
+      DO oact1
+      REQUEST S_ij_mb(oact1,j,i,a) a
+      tmp_S_ij_mb(oact1,j,i,a) = S_ij_mb(oact1,j,i,a)
+      tmp_Z_mi_nj(oact,i,oact1,j) = tmp_S_ij_mb(oact1,j,i,a)*tmp_X_ma(oact,a)
+      PREPARE Z_mi_nj(oact,i,oact1,j) += tmp_Z_mi_nj(oact,i,oact1,j)
+      ENDDO oact1
+      ENDDO oact
+      ENDPARDO i,j,a
+      execute server_barrier
+
+      PARDO i,j,a,k      
+      DO oact
+      REQUEST S_ij_mb(oact,i,k,a) a
+      tmp_S_ij_mb(oact,i,k,a) = S_ij_mb(oact,i,k,a)
+      DO oact1 
+      REQUEST Y_ki_md(oact1,a,j,k) k
+      tmp_Y_ki_md(oact1,a,j,k) = Y_ki_md(oact1,a,j,k)
+      tmp_Z_mi_nj(oact,i,oact1,j) = tmp_Y_ki_md(oact1,a,j,k)*tmp_S_ij_mb(oact,i,k,a)
+      tmp_Z_mi_nj(oact,i,oact1,j) *= -1.0
+      PREPARE Z_mi_nj(oact,i,oact1,j) += tmp_Z_mi_nj(oact,i,oact1,j)
+      ENDDO oact1
+      ENDDO oact
+      ENDPARDO i,j,a,k
+      execute server_barrier
+
+      PARDO i,j,a,k
+      DO oact
+      REQUEST S_ij_mb(oact,k,j,a) a
+      tmp_S_ij_mb(oact,k,j,a) = S_ij_mb(oact,k,j,a)
+      DO oact1
+      REQUEST Y_ki_md(oact1,a,i,k) k
+      tmp_Y_ki_md(oact1,a,i,k) = Y_ki_md(oact1,a,i,k)
+      tmp_Z_mi_nj(oact,i,oact1,j) = tmp_Y_ki_md(oact1,a,i,k)*tmp_S_ij_mb(oact,k,j,a)
+      tmp_Z_mi_nj(oact,i,oact1,j) *= -1.0
+      PREPARE Z_mi_nj(oact,i,oact1,j) += tmp_Z_mi_nj(oact,i,oact1,j)
+      ENDDO oact1
+      ENDDO oact
+      ENDPARDO i,j,a,k
+      execute server_barrier 
+
+      PARDO i,j,a,k
+      DO oact
+      REQUEST Sbar_ij_mb(oact,i,k,a) a
+      tmp_Sbar_ij_mb(oact,i,k,a) = Sbar_ij_mb(oact,i,k,a)
+      DO oact1
+      REQUEST Y_mi_ld(oact1,j,k,a) a
+      tmp_Y_mi_ld(oact1,j,k,a) = Y_mi_ld(oact1,j,k,a)     
+      tmp_Z_mi_nj(oact,i,oact1,j) = tmp_Y_mi_ld(oact1,j,k,a)*tmp_Sbar_ij_mb(oact,i,k,a)
+      PREPARE Z_mi_nj(oact,i,oact1,j) += tmp_Z_mi_nj(oact,i,oact1,j)
+      ENDDO oact1
+      ENDDO oact
+      ENDPARDO i,j,a,k
+      execute server_barrier
+ 
+#----------------------------------|
+#     Z_ae_bf(vact,a,vact1,b)      |
+#----------------------------------|
+
+      PARDO a,b,k
+      DO vact
+      REQUEST S_ej_ab(vact,a,b,k) a
+      tmp_S_ej_ab(vact,a,b,k) = S_ej_ab(vact,a,b,k)
+      DO vact1
+      REQUEST X_ie(k,vact1) k
+      tmp_X_ie(k,vact1) = X_ie(k,vact1)
+      tmp_Z_ae_bf(vact,a,vact1,b) = tmp_S_ej_ab(vact,a,b,k)*tmp_X_ie(k,vact1)
+      tmp_Z_ae_bf(vact,a,vact1,b) *= -1.0
+      PREPARE Z_ae_bf(vact,a,vact1,b) += tmp_Z_ae_bf(vact,a,vact1,b)
+      ENDDO vact1
+      ENDDO vact
+      ENDPARDO a,b,k
+      execute server_barrier
+
+
+      PARDO a,b,k
+      DO vact
+      REQUEST X_ie(k,vact) k
+      tmp_X_ie(k,vact) = X_ie(k,vact)
+      DO vact1
+      REQUEST S_ej_ab(vact1,b,a,k) a
+      tmp_S_ej_ab(vact1,b,a,k) = S_ej_ab(vact1,b,a,k)  
+      tmp_Z_ae_bf(vact,a,vact1,b) = tmp_S_ej_ab(vact1,b,a,k)*tmp_X_ie(k,vact)
+      tmp_Z_ae_bf(vact,a,vact1,b) *= -1.0
+      PREPARE Z_ae_bf(vact,a,vact1,b) += tmp_Z_ae_bf(vact,a,vact1,b)
+      ENDDO vact1
+      ENDDO vact
+      ENDPARDO a,b,k
+      execute server_barrier
+
+      PARDO a,b,d,k
+      DO vact
+      REQUEST S_ej_ab(vact,a,d,k) a
+      tmp_S_ej_ab(vact,a,d,k) = S_ej_ab(vact,a,d,k)      
+      DO vact1
+      REQUEST Y_ac_le(vact1,k,b,d) k
+      tmp_Y_ac_le(vact1,k,b,d) = Y_ac_le(vact1,k,b,d)
+      tmp_Z_ae_bf(vact,a,vact1,b) = tmp_S_ej_ab(vact,a,d,k)*tmp_Y_ac_le(vact1,k,b,d)
+      tmp_Z_ae_bf(vact,a,vact1,b) *= -1.0
+      PREPARE Z_ae_bf(vact,a,vact1,b) += tmp_Z_ae_bf(vact,a,vact1,b)
+      ENDDO vact1
+      ENDDO vact
+      ENDPARDO a,b,d,k
+      execute server_barrier
+
+      PARDO a,b,d,k
+      DO vact
+      REQUEST S_ej_ab(vact,d,b,k) b
+      tmp_S_ej_ab(vact,d,b,k) = S_ej_ab(vact,d,b,k)
+      DO vact1
+      REQUEST Y_ac_le(vact1,k,a,d) k
+      tmp_Y_ac_le(vact1,k,a,d) = Y_ac_le(vact1,k,a,d)
+      tmp_Z_ae_bf(vact,a,vact1,b) = tmp_Y_ac_le(vact1,k,a,d)*tmp_S_ej_ab(vact,d,b,k)
+      tmp_Z_ae_bf(vact,a,vact1,b) *= -1.0
+      PREPARE Z_ae_bf(vact,a,vact1,b) += tmp_Z_ae_bf(vact,a,vact1,b)
+      ENDDO vact1
+      ENDDO vact
+      ENDPARDO a,b,d,k
+      execute server_barrier
+
+
+      PARDO a,b,d,k
+      DO vact
+      REQUEST Sbar_ej_ab(vact,a,d,k) a
+      tmp_Sbar_ej_ab(vact,a,d,k) = Sbar_ej_ab(vact,a,d,k) 
+      DO vact1
+      REQUEST Y_dl_ea(vact1,b,k,d) b
+      tmp_Y_dl_ea(vact1,b,k,d) = Y_dl_ea(vact1,b,k,d) 
+      tmp_Z_ae_bf(vact,a,vact1,b) =  tmp_Y_dl_ea(vact1,b,k,d)*tmp_Sbar_ej_ab(vact,a,d,k)
+      PREPARE Z_ae_bf(vact,a,vact1,b) += tmp_Z_ae_bf(vact,a,vact1,b)
+      ENDDO vact1
+      ENDDO vact
+      ENDPARDO a,b,d,k
+      execute server_barrier
+
+#----------------------------------|
+#      Q_ac_mi(oact,i,a,b)         |
+#----------------------------------|
+
+      PARDO a,b,i,k
+      DO oact
+      REQUEST S_ij_mb(oact,i,k,a) a
+      tmp_S_ij_mb(oact,i,k,a) = S_ij_mb(oact,i,k,a)
+      GET Uia(k,b)
+      tmp_ia(k,b) = Uia(k,b)
+      tmp_Q_ac_mi(oact,i,a,b) = tmp_S_ij_mb(oact,i,k,a)*tmp_ia(k,b)
+      tmp_Q_ac_mi(oact,i,a,b) *= -1.0
+      PREPARE Q_ac_mi(oact,i,a,b) += tmp_Q_ac_mi(oact,i,a,b)
+      ENDDO oact
+      ENDPARDO a,b,i,k
+      execute server_barrier
+
+      PARDO a,b,i,k,d
+      DO oact
+      REQUEST Sbar_ij_mb(oact,i,k,d) d
+      tmp_Sbar_ij_mb(oact,i,k,d) = Sbar_ij_mb(oact,i,k,d)
+      REQUEST Wbjaa(a,b,k,d) a
+      tmp_bjaa(a,b,k,d) = Wbjaa(a,b,k,d)
+      tmp_Q_ac_mi(oact,i,a,b) = tmp_Sbar_ij_mb(oact,i,k,d)*tmp_bjaa(a,b,k,d)
+      PREPARE Q_ac_mi(oact,i,a,b) += tmp_Q_ac_mi(oact,i,a,b)
+      ENDDO oact
+      ENDPARDO a,b,i,k,d
+      execute server_barrier
+
+      PARDO a,b,i,k,d
+      DO oact
+      REQUEST S_ij_mb(oact,i,k,d) d
+      tmp_S_ij_mb(oact,i,k,d) = S_ij_mb(oact,i,k,d) 
+      REQUEST Wbjaa(a,d,k,b) a
+      tmp_bjaa(a,d,k,b) = Wbjaa(a,d,k,b)
+      tmp_Q_ac_mi(oact,i,a,b) = tmp_S_ij_mb(oact,i,k,d)*tmp_bjaa(a,d,k,b)
+      tmp_Q_ac_mi(oact,i,a,b) *= -1.0
+      PREPARE Q_ac_mi(oact,i,a,b) += tmp_Q_ac_mi(oact,i,a,b)
+      ENDDO oact
+      ENDPARDO a,b,i,k,d
+      execute server_barrier
+
+      PARDO a,b,i,k,l
+      DO oact
+      REQUEST S_ij_mb(oact,k,l,a) a
+      tmp_S_ij_mb(oact,k,l,a) = S_ij_mb(oact,k,l,a)
+      REQUEST Wiijb(k,i,l,b) i
+      tmp_iijb(k,i,l,b) = Wiijb(k,i,l,b)
+      tmp_Q_ac_mi(oact,i,a,b) = tmp_S_ij_mb(oact,k,l,a)*tmp_iijb(k,i,l,b)
+      PREPARE Q_ac_mi(oact,i,a,b) += tmp_Q_ac_mi(oact,i,a,b)
+      ENDDO oact
+      ENDPARDO a,b,i,k,l
+      execute server_barrier
+
+#----------------------------------|
+#      Q_ki_ae(i,j,a,vact)         |
+#----------------------------------|
+
+      PARDO a,i,j,b
+      DO vact
+      REQUEST S_ej_ab(vact,a,b,i) a
+      tmp_S_ej_ab(vact,a,b,i) = S_ej_ab(vact,a,b,i)
+      GET Uia(j,b)
+      tmp_ia(j,b) = Uia(j,b)
+      tmp_Q_ki_ae(i,j,a,vact) = tmp_S_ej_ab(vact,a,b,i)*tmp_ia(j,b)
+      PREPARE Q_ki_ae(i,j,a,vact) += tmp_Q_ki_ae(i,j,a,vact)
+      ENDDO vact
+      ENDPARDO a,i,j,b
+      execute server_barrier
+
+      PARDO a,i,j,b,k
+      DO vact
+      REQUEST Sbar_ej_ab(vact,a,b,k) a
+      tmp_Sbar_ej_ab(vact,a,b,k) = Sbar_ej_ab(vact,a,b,k)
+      REQUEST Wiijb(j,i,k,b) i
+      tmp_iijb(j,i,k,b) = Wiijb(j,i,k,b)
+      tmp_Q_ki_ae(i,j,a,vact) = tmp_Sbar_ej_ab(vact,a,b,k)*tmp_iijb(j,i,k,b)
+      PREPARE Q_ki_ae(i,j,a,vact) += tmp_Q_ki_ae(i,j,a,vact)
+      ENDDO vact
+      ENDPARDO a,i,j,b,k
+      execute server_barrier
+
+      PARDO a,i,j,b,k
+      DO vact
+      REQUEST S_ej_ab(vact,a,b,k) a
+      tmp_S_ej_ab(vact,a,b,k) = S_ej_ab(vact,a,b,k)
+      REQUEST Wiijb(k,i,j,b) i
+      tmp_iijb(k,i,j,b) = Wiijb(k,i,j,b)
+      tmp_Q_ki_ae(i,j,a,vact) = tmp_S_ej_ab(vact,a,b,k)*tmp_iijb(k,i,j,b)
+      tmp_Q_ki_ae(i,j,a,vact) *= -1.0
+      PREPARE Q_ki_ae(i,j,a,vact) += tmp_Q_ki_ae(i,j,a,vact)
+      ENDDO vact
+      ENDPARDO a,i,j,b,k
+      execute server_barrier
+      
+      PARDO a,b,d,i,j
+      DO vact
+      REQUEST S_ej_ab(vact,d,b,i) i
+      tmp_S_ej_ab(vact,d,b,i) = S_ej_ab(vact,d,b,i)
+      REQUEST Wbjaa(a,d,j,b) a
+      tmp_bjaa(a,d,j,b) = Wbjaa(a,d,j,b)
+      tmp_Q_ki_ae(i,j,a,vact) = tmp_S_ej_ab(vact,d,b,i)*tmp_bjaa(a,d,j,b)
+      PREPARE Q_ki_ae(i,j,a,vact) += tmp_Q_ki_ae(i,j,a,vact)
+      ENDDO vact
+      ENDPARDO a,b,d,i,j
+      execute server_barrier
+#-----------F12 contribition to Q_ki_ae intermediate----------|
+
+      IF EAEOMF12CALC == 1.0
+
+      chunk_type = 1.0
+      RL = 3.0
+      execute eomchunk RL chunk_type
+
+      PARDO i,j,a,b
+      REQUEST Hbar_ij_ab_eomea(i,j,b,a) i
+      tmp_Hbar_ij_ab_eomea(i,j,b,a) = Hbar_ij_ab_eomea(i,j,b,a) 
+
+      cnt_virt = 0.0
+      DO vact
+      cnt_virt += 1.0
+      tmp_Q_ki_ae(i,j,a,vact) = 0.0
+      IF cnt_virt <= ea_ind
+      execute steom_f12_vact tmp_Hbar_ij_ab_eomea tmp_Q_ki_ae  
+      ENDIF 
+
+      PREPARE Q_ki_ae_F12(i,j,a,vact) += tmp_Q_ki_ae(i,j,a,vact) 
+      ENDDO vact
+      ENDPARDO i,j,a,b
+      execute server_barrier 
+#---------------------------------------------------------|
+#---------------------------------------------------------|
+      PARDO i,j,a
+      DO vact
+      REQUEST Q_ki_ae_F12(i,j,a,vact) i
+      tmp_Q_ki_ae(i,j,a,vact) = Q_ki_ae_F12(i,j,a,vact)
+      PREPARE Q_ki_ae(i,j,a,vact) += tmp_Q_ki_ae(i,j,a,vact)
+      ENDDO vact
+      ENDPARDO i,j,a
+      execute server_barrier
+
+
+      ENDIF
+
+
+#----------------------------------|
+#      Q_mi_ae(oact,i,a,vact)      |
+#----------------------------------|
+
+      PARDO a,i,b
+      DO oact
+      REQUEST X_ma(oact,b) b
+      tmp_X_ma(oact,b) = X_ma(oact,b) 
+      DO vact
+      REQUEST S_ej_ab(vact,a,b,i) i
+      tmp_S_ej_ab(vact,a,b,i) = S_ej_ab(vact,a,b,i)
+      tmp_Q_mi_ae(oact,i,a,vact) = tmp_S_ej_ab(vact,a,b,i)*tmp_X_ma(oact,b)
+      PREPARE Q_mi_ae(oact,i,a,vact) += tmp_Q_mi_ae(oact,i,a,vact)
+      ENDDO vact
+      ENDDO oact
+      ENDPARDO a,i,b
+      execute server_barrier
+
+      PARDO a,i,k
+      DO oact
+      REQUEST S_ij_mb(oact,i,k,a) a
+      tmp_S_ij_mb(oact,i,k,a) = S_ij_mb(oact,i,k,a)
+      DO vact
+      REQUEST X_ie(k,vact) k 
+      tmp_X_ie(k,vact) = X_ie(k,vact)    
+      tmp_Q_mi_ae(oact,i,a,vact) = tmp_S_ij_mb(oact,i,k,a)*tmp_X_ie(k,vact)
+      tmp_Q_mi_ae(oact,i,a,vact) *= -1.0
+      PREPARE Q_mi_ae(oact,i,a,vact) += tmp_Q_mi_ae(oact,i,a,vact)
+      ENDDO vact
+      ENDDO oact
+      ENDPARDO a,i,k
+      execute server_barrier
+
+      PARDO i,a,k,d
+      DO oact
+      REQUEST Y_ki_md(oact,d,i,k)  d
+      tmp_Y_ki_md(oact,d,i,k) = Y_ki_md(oact,d,i,k)
+      DO vact
+      REQUEST S_ej_ab(vact,a,d,k) a
+      tmp_S_ej_ab(vact,a,d,k) = S_ej_ab(vact,a,d,k)
+      tmp_Q_mi_ae(oact,i,a,vact) = tmp_Y_ki_md(oact,d,i,k)*tmp_S_ej_ab(vact,a,d,k)
+      tmp_Q_mi_ae(oact,i,a,vact) *= -1.0
+      PREPARE Q_mi_ae(oact,i,a,vact) += tmp_Q_mi_ae(oact,i,a,vact)
+      ENDDO vact
+      ENDDO oact
+      ENDPARDO i,a,k,d
+      execute server_barrier
+
+      PARDO i,a,k,l
+      DO oact
+      REQUEST S_ij_mb(oact,l,k,a) a
+      tmp_S_ij_mb(oact,l,k,a) = S_ij_mb(oact,l,k,a)      
+      DO vact
+      REQUEST Y_ki_le(vact,k,i,l) k 
+      tmp_Y_ki_le(vact,k,i,l) = Y_ki_le(vact,k,i,l)
+      tmp_Q_mi_ae(oact,i,a,vact) = tmp_S_ij_mb(oact,l,k,a)*tmp_Y_ki_le(vact,k,i,l) 
+      PREPARE Q_mi_ae(oact,i,a,vact) += tmp_Q_mi_ae(oact,i,a,vact)
+      ENDDO vact
+      ENDDO oact
+      ENDPARDO i,a,k,l
+      execute server_barrier
+
+      PARDO i,a,k,d
+      DO oact
+      REQUEST Y_mi_ld(oact,i,k,d) i  
+      tmp_Y_mi_ld(oact,i,k,d) = Y_mi_ld(oact,i,k,d)
+      DO vact
+      REQUEST Sbar_ej_ab(vact,a,d,k) a
+      tmp_Sbar_ej_ab(vact,a,d,k) = Sbar_ej_ab(vact,a,d,k)
+      tmp_Q_mi_ae(oact,i,a,vact) = tmp_Sbar_ej_ab(vact,a,d,k)*tmp_Y_mi_ld(oact,i,k,d)
+      PREPARE Q_mi_ae(oact,i,a,vact) += tmp_Q_mi_ae(oact,i,a,vact)
+      ENDDO vact
+      ENDDO oact
+      ENDPARDO i,a,k,d
+      execute server_barrier
+
+#----------------------------------|
+#      P_bj_mc(oact,a,j,b)         |
+#----------------------------------|
+
+      PARDO a,k,b,j
+      DO oact
+      REQUEST S_ij_mb(oact,k,j,b) b
+      tmp_S_ij_mb(oact,k,j,b) = S_ij_mb(oact,k,j,b)
+      GET Uia(k,a)
+      tmp_ia(k,a) = Uia(k,a)
+      tmp_P_bj_mc(oact,a,j,b) = tmp_S_ij_mb(oact,k,j,b)*tmp_ia(k,a)
+      tmp_P_bj_mc(oact,a,j,b) *= -1.0      
+      PREPARE P_bj_mc(oact,a,j,b) += tmp_P_bj_mc(oact,a,j,b)
+      ENDDO oact
+      ENDPARDO a,k,b,j
+      execute server_barrier
+
+      PARDO a,k,l,b,j
+      DO oact
+      REQUEST S_ij_mb(oact,k,l,b) b
+      tmp_S_ij_mb(oact,k,l,b) = S_ij_mb(oact,k,l,b)
+      REQUEST Wiijb(l,j,k,a) a
+      tmp_iijb(l,j,k,a) = Wiijb(l,j,k,a)
+      tmp_P_bj_mc(oact,a,j,b) = tmp_S_ij_mb(oact,k,l,b)*tmp_iijb(l,j,k,a)
+      PREPARE P_bj_mc(oact,a,j,b) += tmp_P_bj_mc(oact,a,j,b)
+      ENDDO oact
+      ENDPARDO a,k,l,b,j
+      execute server_barrier 
+
+      PARDO a,k,d,b,j
+      DO oact
+      REQUEST S_ij_mb(oact,k,j,d) d
+      tmp_S_ij_mb(oact,k,j,d) = S_ij_mb(oact,k,j,d)
+      REQUEST Wbjaa(b,d,k,a) a
+      tmp_bjaa(b,d,k,a) = Wbjaa(b,d,k,a)
+      tmp_P_bj_mc(oact,a,j,b) = tmp_S_ij_mb(oact,k,j,d)*tmp_bjaa(b,d,k,a)
+      tmp_P_bj_mc(oact,a,j,b) *= -1.0
+      PREPARE P_bj_mc(oact,a,j,b) += tmp_P_bj_mc(oact,a,j,b)
+      ENDDO oact
+      ENDPARDO a,k,d,b,j
+      execute server_barrier
+
+#----------------------------------|
+#      P_bj_ke(vact,i,j,b)         |
+#----------------------------------|
+
+      PARDO i,j,a,b
+      GET Uia(i,a)
+      tmp_ia(i,a) = Uia(i,a)
+      DO vact
+      REQUEST S_ej_ab(vact,a,b,j) a
+      tmp_S_ej_ab(vact,a,b,j) = S_ej_ab(vact,a,b,j) 
+      tmp_P_bj_ke(vact,i,j,b) = tmp_S_ej_ab(vact,a,b,j)*tmp_ia(i,a)
+      PREPARE P_bj_ke(vact,i,j,b) += tmp_P_bj_ke(vact,i,j,b)
+      ENDDO vact 
+      ENDPARDO i,j,a,b
+      execute server_barrier
+
+      PARDO i,j,a,b,k
+      DO vact
+      REQUEST S_ej_ab(vact,a,b,k) a
+      tmp_S_ej_ab(vact,a,b,k) = S_ej_ab(vact,a,b,k)
+      REQUEST Wiijb(k,j,i,a) a
+      tmp_iijb(k,j,i,a) = Wiijb(k,j,i,a)
+      tmp_P_bj_ke(vact,i,j,b) = tmp_S_ej_ab(vact,a,b,k)*tmp_iijb(k,j,i,a)
+      tmp_P_bj_ke(vact,i,j,b) *= -1.0
+      PREPARE P_bj_ke(vact,i,j,b) += tmp_P_bj_ke(vact,i,j,b)
+      ENDDO vact
+      ENDPARDO i,j,a,b,k
+      execute server_barrier
+
+      PARDO i,j,a,b,d
+      DO vact
+      REQUEST S_ej_ab(vact,a,d,j) a
+      tmp_S_ej_ab(vact,a,d,j) = S_ej_ab(vact,a,d,j)
+      REQUEST Wbjaa(b,d,i,a) a
+      tmp_bjaa(b,d,i,a) = Wbjaa(b,d,i,a)
+      tmp_P_bj_ke(vact,i,j,b) = tmp_S_ej_ab(vact,a,d,j)*tmp_bjaa(b,d,i,a)
+      PREPARE P_bj_ke(vact,i,j,b) += tmp_P_bj_ke(vact,i,j,b)
+      ENDDO vact
+      ENDPARDO i,j,a,b,d
+      execute server_barrier 
+#-----------F12 contribition to P_bj_ke intermediate----------|
+
+      IF EAEOMF12CALC == 1.0
+
+      chunk_type = 1.0
+      RL = 4.0
+      execute eomchunk RL chunk_type
+
+      PARDO i,j,a,b
+      REQUEST Hbar_ai_jb_eomea(a,i,j,b) a
+      tmp_Hbar_ai_jb_eomea(a,i,j,b) = Hbar_ai_jb_eomea(a,i,j,b)
+
+      cnt_virt = 0.0
+      DO vact
+      cnt_virt += 1.0
+      tmp_P_bj_ke(vact,i,j,b) = 0.0
+
+      IF cnt_virt <= ea_ind
+      execute steom_f12_vact tmp_Hbar_ai_jb_eomea tmp_P_bj_ke
+      ENDIF
+      
+      PREPARE P_bj_ke_F12(vact,i,j,b) += tmp_P_bj_ke(vact,i,j,b)
+      ENDDO vact
+      ENDPARDO i,j,a,b
+      execute server_barrier
+#---------------------------------------------------------|
+#---------------------------------------------------------|
+      PARDO i,j,b
+      DO vact
+      REQUEST P_bj_ke_F12(vact,i,j,b) b
+      tmp_P_bj_ke(vact,i,j,b) = P_bj_ke_F12(vact,i,j,b)
+      PREPARE P_bj_ke(vact,i,j,b) += tmp_P_bj_ke(vact,i,j,b)
+      ENDDO vact
+      ENDPARDO i,j,b
+      execute server_barrier      
+
+
+
+      ENDIF
+
+#----------------------------------|
+#      P_bj_me(oact,vact,j,b)      |
+#----------------------------------|
+
+       PARDO a,b,j
+       DO oact
+       REQUEST X_ma(oact,a) a
+       tmp_X_ma(oact,a) = X_ma(oact,a)
+       DO vact
+       REQUEST S_ej_ab(vact,a,b,j) a
+       tmp_S_ej_ab(vact,a,b,j) = S_ej_ab(vact,a,b,j)
+       tmp_P_bj_me(oact,vact,j,b) = tmp_S_ej_ab(vact,a,b,j)*tmp_X_ma(oact,a)
+       PREPARE P_bj_me(oact,vact,j,b) += tmp_P_bj_me(oact,vact,j,b)
+       ENDDO vact
+       ENDDO oact
+       ENDPARDO a,b,j
+       execute server_barrier
+
+       PARDO k,b,j
+       DO oact
+       REQUEST S_ij_mb(oact,k,j,b) b
+       tmp_S_ij_mb(oact,k,j,b) = S_ij_mb(oact,k,j,b)
+       DO vact
+       REQUEST X_ie(k,vact) k
+       tmp_X_ie(k,vact) = X_ie(k,vact)
+       tmp_P_bj_me(oact,vact,j,b) = tmp_S_ij_mb(oact,k,j,b)*tmp_X_ie(k,vact)
+       tmp_P_bj_me(oact,vact,j,b) *= -1.0
+       PREPARE P_bj_me(oact,vact,j,b) += tmp_P_bj_me(oact,vact,j,b) 
+       ENDDO vact
+       ENDDO oact
+       ENDPARDO k,b,j
+       execute server_barrier
+       
+       PARDO k,d,b,j
+       DO oact
+       REQUEST Y_ki_md(oact,d,j,k) k
+       tmp_Y_ki_md(oact,d,j,k) = Y_ki_md(oact,d,j,k)
+       DO vact
+       REQUEST S_ej_ab(vact,d,b,k) k
+       tmp_S_ej_ab(vact,d,b,k) = S_ej_ab(vact,d,b,k)
+       tmp_P_bj_me(oact,vact,j,b) = tmp_S_ej_ab(vact,d,b,k)*tmp_Y_ki_md(oact,d,j,k)
+       tmp_P_bj_me(oact,vact,j,b) *= -1.0
+       PREPARE P_bj_me(oact,vact,j,b) += tmp_P_bj_me(oact,vact,j,b)
+       ENDDO vact
+       ENDDO oact
+       ENDPARDO k,d,b,j
+       execute server_barrier
+
+       PARDO k,l,b,j
+       DO oact
+       REQUEST S_ij_mb(oact,k,l,b) b
+       tmp_S_ij_mb(oact,k,l,b) = S_ij_mb(oact,k,l,b)
+       DO vact
+       REQUEST Y_ki_le(vact,k,j,l) k
+       tmp_Y_ki_le(vact,k,j,l) = Y_ki_le(vact,k,j,l)      
+       tmp_P_bj_me(oact,vact,j,b) = tmp_Y_ki_le(vact,k,j,l)*tmp_S_ij_mb(oact,k,l,b)
+       PREPARE P_bj_me(oact,vact,j,b) += tmp_P_bj_me(oact,vact,j,b)
+       ENDDO vact
+       ENDDO oact
+       ENDPARDO k,l,b,j
+       execute server_barrier
+
+#----------------------------------
+
+      ENDPROC MAKE_INTERM_pqrs
+#     -------------------------
+
+#---------------------------------------------------------------|
+#        Preparation of Gbar elemennts                          |
+#---------------------------------------------------------------|
+
+      PROC MAKE_Gbar
+#     ---------------------
+
+
+#-------------G_ki----------------------------------------------|
+
+#----- RL = 1.0 - one active occupied index---------------------|
+
+      chunk_type = 1.0
+      RL = 1.0
+      execute eomchunk RL chunk_type
+
+      
+      PARDO i,j
+      GET Uii(j,i)
+      tii(j,i) = Uii(j,i)
+      tmp_G_ik(i,j) = tii(j,i)
+      cnt_occ = 0.0
+      DO oact
+      cnt_occ += 1.0
+      IF cnt_occ < ip_ind
+      ELSE
+      REQUEST X_mi(oact,i) i 
+      tmp_X_mi(oact,i) = X_mi(oact,i)
+      execute steom_gbar tmp_X_mi tmp_G_ik
+      ENDIF
+      ENDDO oact
+      PREPARE G_ik(i,j) += tmp_G_ik(i,j) 
+      ENDPARDO i,j
+      execute server_barrier 
+
+#-------------G_ac----------------------------------------------|
+
+      chunk_type = 1.0
+      RL = 2.0
+      execute eomchunk RL chunk_type
+
+      PARDO a,b
+      GET   Uaa(a,b)
+      tmp_G_ac(a,b) = Uaa(a,b)
+      cnt_virt = 0.0
+      DO vact
+      cnt_virt += 1.0
+      IF cnt_virt > ea_ind
+      EXIT
+      ENDIF
+      REQUEST X_ae(a,vact) a
+      tmp_X_ae(a,vact) = X_ae(a,vact)
+      execute steom_gbar tmp_X_ae tmp_G_ac
+      ENDDO vact
+      PREPARE G_ac(a,b) += tmp_G_ac(a,b)
+      ENDPARDO a,b
+      execute server_barrier
+
+#-------------G_ia----------------------------------------------|
+
+      chunk_type = 1.0
+      RL = 3.0
+      execute eomchunk RL chunk_type
+
+      PARDO i,a
+      GET Uia(i,a)
+      tmp_G_ia(i,a) = Uia(i,a)
+      cnt_occ = 0.0
+      DO oact
+      cnt_occ += 1.0
+      IF cnt_occ < ip_ind     
+      ELSE
+      REQUEST X_ma(oact,a) a
+      tmp_X_ma(oact,a) = X_ma(oact,a)     
+      execute steom_gbar tmp_X_ma tmp_G_ia
+      ENDIF
+      ENDDO oact
+      PREPARE G_ia(i,a) += tmp_G_ia(i,a)
+      ENDPARDO i,a
+      execute server_barrier
+      
+      chunk_type = 1.0
+      RL = 4.0
+      execute eomchunk RL chunk_type
+
+      PARDO i,a
+      tmp_G_ia(i,a) = 0.0
+      cnt_virt = 0.0
+      DO vact
+      cnt_virt += 1.0
+      IF cnt_virt > ea_ind
+      EXIT
+      ENDIF
+      REQUEST X_ie(i,vact) i
+      tmp_X_ie(i,vact) = X_ie(i,vact)
+      execute steom_gbar tmp_X_ie tmp_G_ia
+      ENDDO vact
+      PREPARE G_ia(i,a) += tmp_G_ia(i,a)
+      ENDPARDO i,a
+      execute server_barrier
+
+
+#---------------G_ik_ld-----------------------------------------|
+
+      chunk_type = 1.0
+      RL = 5.0
+      execute eomchunk RL chunk_type
+
+      PARDO i,k,l,d
+      REQUEST Wiijb(k,i,l,d) i
+      tmp_iijb(k,i,l,d) = Wiijb(k,i,l,d)
+      tmp_G_ik_ld(i,k,l,d) = tmp_iijb(k,i,l,d)
+      cnt_occ = 0.0
+      DO oact
+      cnt_occ += 1.0
+      IF cnt_occ < ip_ind
+      ELSE
+      REQUEST Y_mi_ld(oact,i,l,d) i 
+      tmp_Y_mi_ld(oact,i,l,d) = Y_mi_ld(oact,i,l,d) 
+      execute steom_gbar tmp_Y_mi_ld tmp_G_ik_ld
+      ENDIF
+      ENDDO oact
+      PREPARE G_ik_ld(i,k,l,d) += tmp_G_ik_ld(i,k,l,d)
+      ENDPARDO i,k,l,d
+      execute server_barrier
+
+      chunk_type = 1.0
+      RL = 6.0
+      execute eomchunk RL chunk_type
+
+      PARDO i,k,l,d
+      tmp_G_ik_ld(i,k,l,d) = 0.0
+      cnt_occ = 0.0
+      DO oact
+      cnt_occ += 1.0
+      IF cnt_occ < ip_ind
+      ELSE
+      REQUEST Y_ki_md(oact,d,i,k) k
+      tmp_Y_ki_md(oact,d,i,k) = Y_ki_md(oact,d,i,k)
+      execute steom_gbar tmp_Y_ki_md tmp_G_ik_ld
+      ENDIF
+      ENDDO oact
+      PREPARE G_ik_ld(i,k,l,d) += tmp_G_ik_ld(i,k,l,d)
+      ENDPARDO i,k,l,d
+      execute server_barrier
+
+      chunk_type = 1.0
+      RL = 7.0
+      execute eomchunk RL chunk_type
+
+      PARDO i,k,l,d
+      tmp_G_ik_ld(i,k,l,d) = 0.0 
+      cnt_virt = 0.0
+      DO vact
+      cnt_virt += 1.0
+      IF cnt_virt > ea_ind
+      EXIT
+      ENDIF
+      REQUEST Y_ki_le(vact,l,i,k) k 
+      tmp_Y_ki_le(vact,l,i,k) = Y_ki_le(vact,l,i,k)
+      execute steom_gbar tmp_Y_ki_le tmp_G_ik_ld
+      ENDDO vact
+      PREPARE G_ik_ld(i,k,l,d) += tmp_G_ik_ld(i,k,l,d)
+      ENDPARDO i,k,l,d
+      execute server_barrier
+
+#---------------G_ac_ld-----------------------------------------|
+#      chunk_type = 1.0
+#      RL = 8.0
+#      execute eomchunk RL chunk_type
+
+#      PARDO a,b,l,d
+#      REQUEST Wbjaa(a,b,l,d) a
+#      tmp_G_ac_ld(a,b,l,d) = Wbjaa(a,b,l,d) 
+#      cnt_virt = 0.0
+#      DO vact
+#      cnt_virt += 1.0
+#      IF cnt_virt > ea_ind
+#      EXIT
+#      ENDIF
+#      REQUEST Y_dl_ea(vact,a,l,d) d 
+#      tmp_Y_dl_ea(vact,a,l,d) = Y_dl_ea(vact,a,l,d)
+#      execute steom_gbar tmp_Y_dl_ea tmp_G_ac_ld
+#      ENDDO vact
+#      PREPARE G_ac_ld(a,b,l,d) += tmp_G_ac_ld(a,b,l,d)
+#      ENDPARDO a,b,l,d
+#      execute server_barrier      
+
+#      chunk_type = 1.0
+#      RL = 9.0
+#      execute eomchunk RL chunk_type
+
+#      PARDO a,b,l,d
+#      tmp_G_ac_ld(a,b,l,d) = 0.0
+#      cnt_virt = 0.0
+#      DO vact
+#      cnt_virt += 1.0
+#      IF cnt_virt > ea_ind
+#      EXIT
+#      ENDIF
+#      REQUEST Y_ac_le(vact,l,a,b) a 
+#      tmp_Y_ac_le(vact,l,a,b) = Y_ac_le(vact,l,a,b) 
+#      execute steom_gbar tmp_Y_ac_le tmp_G_ac_ld
+#      ENDDO vact
+#      PREPARE G_ac_ld(a,b,l,d) += tmp_G_ac_ld(a,b,l,d)
+#      ENDPARDO a,b,l,d
+#      execute server_barrier
+
+#      chunk_type = 1.0
+#      RL = 10.0
+#      execute eomchunk RL chunk_type
+
+#      PARDO a,b,l,d
+#      tmp_G_ac_ld(a,b,l,d) = 0.0
+#      cnt_occ = 0.0
+#      DO oact
+#      cnt_occ += 1.0
+#      IF cnt_occ < ip_ind
+#      ELSE
+#      REQUEST Y_md_ac(oact,d,a,b) a
+#      tmp_Y_md_ac(oact,d,a,b) = Y_md_ac(oact,d,a,b)
+#      execute steom_gbar tmp_Y_md_ac tmp_G_ac_ld
+#      ENDIF
+#      ENDDO oact
+#      PREPARE G_ac_ld(a,b,l,d) += tmp_G_ac_ld(a,b,l,d)
+#      ENDPARDO a,b,l,d
+#      execute server_barrier 
+#---------------G_ik_jl-----------------------------------------|      
+
+      chunk_type = 1.0
+      RL = 11.0
+      execute eomchunk RL chunk_type
+
+      PARDO i,j,k,l
+      REQUEST  Wiijj(k,i,l,j) i
+      tmp_G_ik_jl(k,i,l,j) = Wiijj(k,i,l,j)
+      cnt_occ = 0.0
+      DO oact
+      cnt_occ += 1.0
+      IF cnt_occ < ip_ind
+      ELSE
+      REQUEST V_mi_lj(oact,i,j,l) i 
+      tmp_V_mi_lj(oact,i,j,l) = V_mi_lj(oact,i,j,l)
+      execute steom_gbar tmp_V_mi_lj tmp_G_ik_jl
+      ENDIF
+      ENDDO oact
+      PREPARE G_ik_jl(k,i,l,j) += tmp_G_ik_jl(k,i,l,j)
+      ENDPARDO i,j,k,l
+      execute server_barrier
+
+      chunk_type = 1.0
+      RL = 12.0
+      execute eomchunk RL chunk_type
+
+      PARDO i,j,k,l
+      tmp_G_ik_jl(k,i,l,j) = 0.0
+      cnt_occ = 0.0
+      DO oact
+      cnt_occ += 1.0
+      IF cnt_occ < ip_ind
+      ELSE
+      REQUEST V_mi_lj(oact,j,i,k) i 
+      tmp_V_mi_lj(oact,j,i,k) = V_mi_lj(oact,j,i,k)
+      execute steom_gbar tmp_V_mi_lj tmp_G_ik_jl
+      ENDIF
+      ENDDO oact
+      PREPARE G_ik_jl(k,i,l,j) += tmp_G_ik_jl(k,i,l,j)
+      ENDPARDO i,j,k,l
+      execute server_barrier
+
+      chunk_type = 1.0
+      RL = 13.0
+      execute eomchunk RL chunk_type
+
+      PARDO i,j,k,l
+      tmp_G_ik_jl(k,i,l,j) = 0.0
+      cnt_occ = 0.0
+      DO oact
+      cnt_occ += 1.0
+      IF cnt_occ < ip_ind
+      ELSE
+      cnt_occ1 = 0.0
+      DO oact1
+      cnt_occ1 += 1.0
+      IF cnt_occ1 < ip_ind
+      ELSE
+      REQUEST Z_mi_nj(oact,i,oact1,j) j
+      tmp_Z_mi_nj(oact,i,oact1,j) = Z_mi_nj(oact,i,oact1,j)
+      execute steom_gbar tmp_Z_mi_nj tmp_G_ik_jl
+      ENDIF
+      ENDDO oact1
+      ENDIF
+      ENDDO oact
+      PREPARE G_ik_jl(k,i,l,j) += tmp_G_ik_jl(k,i,l,j)
+      ENDPARDO i,j,k,l
+      execute server_barrier
+
+#---------------G_ac_bd-----------------------------------------|
+
+#      chunk_type = 1.0
+#      RL = 14.0
+#      execute eomchunk RL chunk_type
+
+#      PARDO a,a1,b,b1
+#      tmp_G_ac_bd(a,a1,b,b1) = 0.0
+#      cnt_virt = 0.0
+#      DO vact
+#      cnt_virt += 1.0
+#      IF cnt_virt > ea_ind
+#      EXIT
+#      ENDIF
+#      REQUEST V_ae_bd(vact,a,b,b1) a
+#      tmp_V_ae_bd(vact,a,b,b1) = V_ae_bd(vact,a,b,b1)
+#      execute steom_gbar tmp_V_ae_bd tmp_G_ac_bd
+#      ENDDO vact
+#      PREPARE G_ac_bd(a,a1,b,b1) += tmp_G_ac_bd(a,a1,b,b1)
+#      ENDPARDO a,a1,b,b1
+#      execute server_barrier
+
+#      chunk_type = 1.0
+#      RL = 15.0
+#      execute eomchunk RL chunk_type
+
+#      PARDO a,a1,b,b1
+#      tmp_G_ac_bd(a,a1,b,b1) = 0.0
+#      cnt_virt = 0.0
+#      DO vact
+#      cnt_virt += 1.0
+#      IF cnt_virt > ea_ind
+#      EXIT
+#      ENDIF
+#      REQUEST V_ae_bd(vact,b,a,a1) a
+#      tmp_V_ae_bd(vact,b,a,a1) = V_ae_bd(vact,b,a,a1)
+#      execute steom_gbar tmp_V_ae_bd tmp_G_ac_bd
+#      ENDDO vact
+#      PREPARE G_ac_bd(a,a1,b,b1) += tmp_G_ac_bd(a,a1,b,b1)
+#      ENDPARDO a,a1,b,b1
+#      execute server_barrier
+
+
+#      chunk_type = 1.0
+#      RL = 16.0
+#      execute eomchunk RL chunk_type
+
+#      PARDO a,a1,b,b1
+#      tmp_G_ac_bd(a,a1,b,b1) = 0.0
+#      cnt_virt = 0.0
+#      DO vact
+#      cnt_virt += 1.0
+#      IF cnt_virt > ea_ind
+#      EXIT
+#      ENDIF
+#      cnt_virt1 = 0.0 
+#      DO vact1
+#      cnt_virt1 += 1.0
+#      IF cnt_virt1 > ea_ind
+#      EXIT
+#      ENDIF
+#      REQUEST Z_ae_bf(vact,a,vact1,b) a
+#      tmp_Z_ae_bf(vact,a,vact1,b) =  Z_ae_bf(vact,a,vact1,b)
+#      execute steom_gbar tmp_Z_ae_bf tmp_G_ac_bd
+#      ENDDO vact1
+#      ENDDO vact
+#      PREPARE G_ac_bd(a,a1,b,b1) += tmp_G_ac_bd(a,a1,b,b1)
+#      ENDPARDO a,a1,b,b1
+#      execute server_barrier
+#---------------G_ab_ij-----------------------------------------|
+
+      chunk_type = 1.0
+      RL = 17.0
+      execute eomchunk RL chunk_type
+
+      PARDO a,b,i,j
+      REQUEST Wiibb(j,i,a,b) j
+      tmp_iibb(j,i,a,b) = Wiibb(j,i,a,b)
+      tmp_iibb(j,i,a,b) *= -1.0
+      tmp_G_ab_ij(a,b,i,j) = tmp_iibb(j,i,a,b)
+      cnt_virt = 0.0
+      DO vact
+      cnt_virt += 1.0
+      IF cnt_virt > ea_ind
+      EXIT
+      ENDIF
+      REQUEST Q_ki_ae(i,j,a,vact) i 
+      tmp_Q_ki_ae(i,j,a,vact) = Q_ki_ae(i,j,a,vact)   
+      execute steom_gbar tmp_Q_ki_ae tmp_G_ab_ij
+      ENDDO vact
+      PREPARE G_ab_ij(a,b,i,j) += tmp_G_ab_ij(a,b,i,j)
+      ENDPARDO a,b,i,j
+      execute server_barrier 
+
+      chunk_type = 1.0
+      RL = 18.0
+      execute eomchunk RL chunk_type
+
+      PARDO a,b,i,j
+      tmp_G_ab_ij(a,b,i,j) = 0.0
+      cnt_occ = 0.0
+      DO oact
+      cnt_occ += 1.0
+      IF cnt_occ < ip_ind
+      ELSE
+      REQUEST Q_ac_mi(oact,i,a,b) a
+      tmp_Q_ac_mi(oact,i,a,b) = Q_ac_mi(oact,i,a,b)      
+      execute steom_gbar tmp_Q_ac_mi tmp_G_ab_ij
+      ENDIF
+      ENDDO oact
+      PREPARE G_ab_ij(a,b,i,j) += tmp_G_ab_ij(a,b,i,j)
+      ENDPARDO a,b,i,j
+      execute server_barrier
+
+      chunk_type = 1.0
+      RL = 19.0
+      execute eomchunk RL chunk_type
+
+      PARDO a,b,i,j
+      tmp_G_ab_ij(a,b,i,j) = 0.0
+      cnt_occ = 0.0
+      DO oact
+      cnt_occ += 1.0
+      IF cnt_occ < ip_ind
+      ELSE
+      cnt_virt = 0.0
+      DO vact
+      cnt_virt += 1.0
+      IF cnt_virt > ea_ind
+      EXIT
+      ENDIF
+      REQUEST Q_mi_ae(oact,i,a,vact) a
+      tmp_Q_mi_ae(oact,i,a,vact) = Q_mi_ae(oact,i,a,vact)
+      execute steom_gbar tmp_Q_mi_ae tmp_G_ab_ij
+      ENDDO vact 
+      ENDIF
+      ENDDO oact
+      PREPARE G_ab_ij(a,b,i,j) += tmp_G_ab_ij(a,b,i,j)
+      ENDPARDO a,b,i,j
+      execute server_barrier
+#---------------G_ai_bj-----------------------------------------|      
+
+      chunk_type = 1.0
+      RL = 20.0
+      execute eomchunk RL chunk_type
+
+      PARDO a,i,b,j
+      REQUEST Wiabj(j,b,a,i) i
+      tmp_aibj(j,b,a,i) = Wiabj(j,b,a,i) 
+      tmp1_G_ai_bj(b,j,a,i) = tmp_aibj(j,b,a,i)
+      tmp_G_ai_bj(b,j,a,i) = 0.0
+      cnt_virt = 0.0
+      DO vact
+      cnt_virt += 1.0
+      IF cnt_virt > ea_ind
+      EXIT
+      ENDIF
+      REQUEST P_bj_ke(vact,j,i,a) i
+      tmp_P_bj_ke(vact,j,i,a) = P_bj_ke(vact,j,i,a) 
+      execute steom_gbar tmp_P_bj_ke tmp_G_ai_bj
+      ENDDO vact
+      tmp_G_ai_bj(b,j,a,i) += tmp1_G_ai_bj(b,j,a,i)
+      PREPARE G_ai_bj(b,j,a,i) += tmp_G_ai_bj(b,j,a,i)
+      ENDPARDO a,i,b,j
+      execute server_barrier           
+
+      chunk_type = 1.0
+      RL = 21.0
+      execute eomchunk RL chunk_type
+
+      PARDO a,i,b,j
+      tmp_G_ai_bj(b,j,a,i) = 0.0
+      cnt_occ = 0.0
+      DO oact
+      cnt_occ += 1.0
+      IF cnt_occ < ip_ind
+      ELSE
+      REQUEST P_bj_mc(oact,b,i,a) a
+      tmp_P_bj_mc(oact,b,i,a) = P_bj_mc(oact,b,i,a)
+      execute steom_gbar tmp_P_bj_mc tmp_G_ai_bj
+      ENDIF
+      ENDDO oact
+      PREPARE G_ai_bj(b,j,a,i) += tmp_G_ai_bj(b,j,a,i)
+      ENDPARDO a,i,b,j
+      execute server_barrier      
+
+
+      chunk_type = 1.0
+      RL = 22.0
+      execute eomchunk RL chunk_type
+
+      PARDO a,i,b,j
+      tmp_G_ai_bj(b,j,a,i) = 0.0
+      cnt_occ = 0.0
+      DO oact
+      cnt_occ += 1.0
+      IF cnt_occ < ip_ind
+      ELSE
+      cnt_virt = 0.0
+      DO vact
+      cnt_virt += 1.0
+      IF cnt_virt > ea_ind
+      EXIT
+      ENDIF
+      REQUEST P_bj_me(oact,vact,i,a) a
+      tmp_P_bj_me(oact,vact,i,a) = P_bj_me(oact,vact,i,a)
+      execute steom_gbar tmp_P_bj_me tmp_G_ai_bj
+      ENDDO vact
+      ENDIF
+      ENDDO oact
+      PREPARE G_ai_bj(b,j,a,i) += tmp_G_ai_bj(b,j,a,i)
+      ENDPARDO a,i,b,j
+      execute server_barrier
+#---------------------------------------------------------------|
+
+#         PARDO a,i,b,j
+#         REQUEST G_ai_bj(a,i,b,j) a
+#         tmp_G_ai_bj(a,i,b,j) = G_ai_bj(a,i,b,j)
+#         execute dump_amp tmp_G_ai_bj
+#         ENDPARDO a,i,b,j
+#         execute server_barrier
+
+
+
+      ENDPROC MAKE_Gbar
+#     ---------------------
+
+#---------------------------------------------------------------|
+#          Dump Gbar elements to the disk                       |
+#---------------------------------------------------------------|
+
+      PROC DUMP_GBAR
+#     --------------   
+            IF SOCALC == 1.0
+            execute blocks_to_list     t1a
+            execute blocks_to_list     t1b
+            execute blocks_to_list     T2aa
+            execute blocks_to_list     T2ab
+            execute blocks_to_list     T2bb
+            ENDIF
+
+#            execute blocks_to_list     S_ij_mb
+#            execute blocks_to_list     S_ej_ab
+#            execute blocks_to_list     Sbar_ij_mb
+#            execute blocks_to_list     Sbar_ej_ab
+
+
+            execute blocks_to_list      G_ik
+            execute blocks_to_list      G_ac
+            execute blocks_to_list      G_ia 
+            execute blocks_to_list      G_ik_ld
+#            execute blocks_to_list      G_ac_ld
+            execute blocks_to_list      G_ik_jl
+#            execute blocks_to_list      G_ac_bd
+            execute blocks_to_list      G_ab_ij
+            execute blocks_to_list      G_ai_bj(a,i,b,j)
+
+            execute write_blocks_to_list
+            execute server_barrier
+
+      ENDPROC DUMP_GBAR
+#     ------------------
+
+#===============================================================|
+#                    Main program                               |
+#===============================================================|
+
+     F12CALC = 0.0
+     execute f12info F12CALC
+     execute print_scalar F12CALC
+            IF EA_ROOTS !=0.0
+             IF STGF12 != 0.0
+              EAEOMF12CALC = 1.0
+              execute print_scalar EAEOMF12CALC
+             ENDIF
+            ENDIF
+
+      SOCALC = 0.0
+      execute so_info SOCALC
+      execute print_scalar SOCALC
+
+#---------Read integrals and Hbar-------------------------------|
+      CALL READ_DATA
+#---------------------------------------------------------------|
+
+
+#---------------------------------------------------------------|
+#   Get number of active occupied and virtual orbitals          |
+#---------------------------------------------------------------|
+        execute eomearoots n_act_virt
+        execute eomiproots n_act_occ
+
+        execute print_scalar n_act_virt
+        execute print_scalar n_act_occ
+
+      ip_ind = 0.0
+      DO oact
+      ip_ind += 1.0
+      ENDDO oact
+      execute print_scalar ip_ind
+
+      ip_ind -= n_act_occ
+      ip_ind += 1.0
+      execute print_scalar ip_ind
+
+      ea_ind = 0.0
+      ea_ind += n_act_virt
+      execute print_scalar ea_ind
+#---------------------------------------------------------------|
+#   Genration of S(+) and S(-) amplitudes                       |
+#---------------------------------------------------------------|
+      CALL MAKE_S_AMPLITUDES
+#---------------------------------------------------------------|
+#       Generation of single-particle intermediates             |
+#---------------------------------------------------------------|
+      CALL MAKE_INTERM_pq
+#---------------------------------------------------------------|
+#       Generation of two-particle intermediates                |
+#---------------------------------------------------------------|
+      CALL MAKE_INTERM_pqrs 
+#---------------------------------------------------------------|
+#        Preparation of Gbar elemennts                          |
+#---------------------------------------------------------------|
+      CALL MAKE_Gbar
+#---------------------------------------------------------------|
+#        Dump Gbar elements to the disk                         |
+#---------------------------------------------------------------|
+      CALL DUMP_GBAR
+#----------------------------------------------------------------
+                      ENDSIAL STEOM_G_F12_NEW 
+

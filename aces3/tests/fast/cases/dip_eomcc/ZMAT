@@ -1,0 +1,31 @@
+CH2;Singlet
+C
+C  1 cc2
+x  2 xxc3   1 xxcc3
+H  2 hc4    3 hcxx4   1 dih4
+x  1 xxc3   2 xxcc3   3 dih5
+H  1 hc4    5 hcxx4   2 dih4
+
+cc2  =       1.2063209161
+xxc3 =       1.000000
+xxcc3=       90.000
+hc4  =       1.0580298746
+hcxx4=       90.000
+dih4 =       180.000
+dih5 =       0.000
+
+*ACES2(CALC=CCSD,SPHERICAL=ON
+BASIS=CC-PVDZ
+REF=UHF
+cc_conv=8,scf_conv=8,estate_tol=8)
+
+*SIP
+MAXMEM=2000
+SIAL_PROGRAM = scf_aguess.sio
+SIAL_PROGRAM = scf_uhf_finish_aguess.sio
+SIAL_PROGRAM = cis_uhf.sio
+SIAL_PROGRAM = tran_uhf_dip.sio
+SIAL_PROGRAM = ccsd_uhf_dip.sio
+SIAL_PROGRAM = eom_dip_singlets.sio
+
+

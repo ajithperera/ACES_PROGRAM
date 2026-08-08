@@ -1,0 +1,20 @@
+H2O EA-EOMCC small test
+H
+O 1 R
+H 2 R 1 A
+
+R=0.957
+A=104.5
+
+*ACES2(BASIS=DZP,CALC=CCSD,SCF_CONV=8,CC_CONV=8,
+EA_CALC=EA_EOMCC,EA_SYM=1,UNITS=ANGSTROM,SYMMETRY=NONE)
+
+*SIP
+MAXMEM=1500
+SIAL_PROGRAM = scf_rhf.sio
+SIAL_PROGRAM = nipea_tran_rhf.sio
+SIAL_PROGRAM = nipea_ccsd_rhf.sio
+SIAL_PROGRAM = nipea_lambda_rhf.sio
+SIAL_PROGRAM = hbar_rhf.sio
+SIAL_PROGRAM = rea_eomcc_rhf.sio
+SIAL_PROGRAM = lea_eomcc_rhf.sio

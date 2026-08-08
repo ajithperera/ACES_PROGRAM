@@ -1,0 +1,20 @@
+H2O CCSD RHF geometry optimization
+H
+O 1 R*
+H 2 R* 1 A*
+
+R=0.957
+A=104.5
+
+*ACES2(CALC=CCSD,BASIS=DZP,REF=RHF,SYMMETRY=NONE
+SCF_CONV=10,CC_CONV=10
+GEOM_OPT=PARTIAL)
+
+*SIP
+MAXMEM=2800
+SIAL_PROGRAM=scf_rhf.sio
+SIAL_PROGRAM=tran_rhf_ao_sv1.sio
+SIAL_PROGRAM=ccsd_rhf_ao_sv1_diis5.sio
+SIAL_PROGRAM=lambda_rhf.sio
+SIAL_PROGRAM=one_grad_rhf_ao_sv1.sio
+SIAL_PROGRAM=two_grad_rhf_ao_sv1.sio

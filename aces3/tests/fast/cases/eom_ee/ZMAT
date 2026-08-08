@@ -1,0 +1,32 @@
+H20:Test calculation H2O mole.
+NE   0.0   0.0   0.0 
+
+*ACES2(BASIS=D-AUG-CC-PVDZ,CALC=CCSD,SCF_CONV=7,CC_CONV=7,CC_MAXCYC=100,
+EXCITE=EOMEE,EE_SYM=3/3,UNITS=ANGSTROM,
+ESTATE_TOL=5,REFERENCE=UHF)
+
+*SIP
+MAXMEM=2000
+#SIAL_PROGRAM = scf_uhf.sio
+#SIAL_PROGRAM=F12_2el_tran_rhf.sio
+#SIAL_PROGRAM=F12_multiint_ccsd.sio
+#SIAL_PROGRAM=interm_F12_ccsd.sio
+#SIAL_PROGRAM=tran_rhf_ao_sv1.sio
+#SIAL_PROGRAM=ccsd_rhf_ao_sv1_diis5_F12.sio
+#SIAL_PROGRAM=hbar_uhf_ao_ipeomcc_F12.sio
+#SIAL_PROGRAM=lambda_rhf_F12.sio
+#SIAL_PROGRAM=cis_rhf_so.sio
+#SIAL_PROGRAM=reom_uhf_so.sio
+#SIAL_PROGRAM=leom_uhf_so.sio
+#SIAL_PROGRAM=GS.sio
+#SIAL_PROGRAM=eom_so_ci.sio
+SIAL_PROGRAM = scf_rhf.sio
+SIAL_PROGRAM = cis_uhf_new.sio
+SIAL_PROGRAM = etran_rhf.sio
+SIAL_PROGRAM = eccsd_rhf.sio
+SIAL_PROGRAM = elambda_rhf.sio
+SIAL_PROGRAM = reom_rhf.sio
+
+
+
+

@@ -1,0 +1,412 @@
+C  Copyright (c) 2003-2010 University of Florida
+C
+C  This program is free software; you can redistribute it and/or modify
+C  it under the terms of the GNU General Public License as published by
+C  the Free Software Foundation; either version 2 of the License, or
+C  (at your option) any later version.
+
+C  This program is distributed in the hope that it will be useful,
+C  but WITHOUT ANY WARRANTY; without even the implied warranty of
+C  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+C  GNU General Public License for more details.
+
+C  The GNU General Public License is included in this distribution
+C  in the file COPYRIGHT.
+      subroutine Strip_zero_vecs(array_table, narray_table, 
+     *                      index_table,
+     *                      nindex_table, segment_table, nsegment_table,
+     *                      block_map_table, nblock_map_table,
+     *                      scalar_table, nscalar_table, 
+     *                      address_table, op)
+c--------------------------------------------------------------------------
+
+      implicit none
+      include 'interpreter.h'
+      include 'int_gen_parms.h'
+      include 'mpif.h'
+      include 'trace.h'
+      include 'parallel_info.h'
+#ifdef ALTIX
+      include 'sheap.h'
+#endif
+
+      integer narray_table, nindex_table, nsegment_table, 
+     *        nblock_map_table
+      integer op(loptable_entry)
+      integer array_table(larray_table_entry, narray_table)
+      integer index_table(lindex_table_entry, nindex_table)
+      integer segment_table(lsegment_table_entry, nsegment_table)
+      integer block_map_table(lblock_map_entry, nblock_map_table)
+      integer nscalar_table
+      double precision scalar_table(nscalar_table)
+      integer*8 address_table(narray_table)
+      integer*8 indblk, get_block_index
+      integer block, blkndx, seg
+      integer find_current_block
+
+      integer i, j, ii, source, target, company, comm, ierr
+      integer source_type, target_type
+      integer nindex_source, nindex_target, stack
+      integer*8 isource, itarget 
+      integer*8 addr, get_index_from_base
+      integer n(mx_array_index),ind(mx_array_index)
+      integer ind_in(mx_array_index)
+      integer ind_in0_bgn(mx_array_index),ind_in1_bgn(mx_array_index)
+      integer ind_in0_end(mx_array_index),ind_in1_end(mx_array_index)
+      integer Ibgn,Jbgn,Kbgn,Lbgn,Mbgn,Nbgn,Pbgn
+      integer Iend,Jend,Kend,Lend,Mend,Nend,Pend
+      integer msg(len_sip_server_message)
+      integer status(MPI_STATUS_SIZE) 
+
+      double precision x(1)
+#ifdef ALTIX
+      pointer (dptr, x)
+#else
+      common x
+#endif
+
+#ifdef ALTIX
+      dptr = dshptr
+#endif
+c--------------------------------------------------------------------------
+c   Locate the data for both arrays.  
+c--------------------------------------------------------------------------
+
+      source = op(c_result_array)
+      target = op(c_op1_array)
+
+c---------------------------------------------------------------------------
+c   Look up source's address.
+c---------------------------------------------------------------------------
+
+      block  = find_current_block(source, array_table(1,source),
+     *                            index_table, nindex_table,
+     *                            segment_table, nsegment_table,
+     *                            block_map_table, blkndx)
+      stack = array_table(c_array_stack,source)
+      isource = get_block_index(source, block, stack, blkndx, x, .true.) 
+
+c---------------------------------------------------------------------------
+c   Look up target's address.
+c---------------------------------------------------------------------------
+
+      block  = find_current_block(target, array_table(1,target),
+     *                            index_table, nindex_table,
+     *                            segment_table, nsegment_table,
+     *                            block_map_table, blkndx)
+      stack = array_table(c_array_stack,target)
+      itarget = get_block_index(target, block, stack, blkndx, x, .true.) 
+
+c--------------------------------------------------------------------------
+c   Check the dimensions of both arrays both arrays.  
+c--------------------------------------------------------------------------
+      
+      source_type = array_table(c_array_type, source)
+      target_type = array_table(c_array_type, target)
+
+      if (.NOT.(source_type .eq. distributed_array  .or. source_type 
+     &                   .eq. static_array)) then
+         Write(6,"(a,a)") "@-Strip_zero_vecs: Array must be",
+     &                    " distributed or static"
+         call abort_job()
+      endif
+
+      nindex_source = array_table(c_nindex, source)
+      nindex_target = array_table(c_nindex, target)
+
+#ifdef _DEBUG_LVL0
+      if (me.eq.0) then
+      Write(6,*)
+      Write(6,"(2a,2i4)") "@-Entry:Copy_alpha_to_beta The array 1 and 2",
+     +                    " dimensions: ",
+     +                      nindex_source,  nindex_target 
+      endif 
+#endif
+
+      If (source_type .eq. distributed_array) then
+
+c-------------------------------------------------------------------------
+c   Get segment ranges of the array source.
+c-------------------------------------------------------------------------
+
+         do i = 1, nindex_source 
+            ind(i) = array_table(c_index_array1+i-1,source)
+            n(i)   = index_table(c_index_size, ind(i)) 
+            seg    = index_table(c_current_seg,ind(i)) 
+
+            call get_index_segment(ind(i), seg, segment_table,
+     *                             nsegment_table, index_table,
+     *                             nindex_table, ind_in0_bgn(i), 
+     *                             ind_in0_end(i))
+         enddo
+
+         If (nindex_source .EQ. 3) Then
+
+             Ibgn = ind_in0_bgn(1)
+             Jbgn = ind_in0_bgn(2)
+             Kbgn = ind_in0_bgn(3)
+             Iend = ind_in0_end(1)
+             Jend = ind_in0_end(2)
+             Kend = ind_in0_end(3)
+
+             Call Strip_3D(x(isource),Ibgn,Jbgn,Kbgn,Iend,Jend,Kend)
+ 
+         
+         Else if (nindex_source .EQ. 5) then
+
+             Ibgn = ind_in0_bgn(1)
+             Jbgn = ind_in0_bgn(2)
+             Kbgn = ind_in0_bgn(3)
+             Lbgn = ind_in0_bgn(4)
+             Mbgn = ind_in0_bgn(5)
+             Iend = ind_in0_end(1)
+             Jend = ind_in0_end(2)
+             Kend = ind_in0_end(3)
+             Lend = ind_in0_end(4)
+             Mend = ind_in0_end(5)
+   
+             Call Strip_5D(x(isource),Ibgn,Jbgn,Kbgn,Lbgn,Mbgn,
+     +                    Iend,Jend,Kend,Lend,Mend)
+
+          Endif  
+
+      Else if (source_type .eq. static_array) then
+
+         If (nindex_source .EQ. 2) Then
+             Do i = 1, nindex_source
+                ind_in(i) = array_table(c_index_array1+i-1,source)
+             Enddo 
+             Ibgn = 1
+             Jbgn = 1
+             Iend = index_table(c_index_size, ind_in(1))
+             Jend = index_table(c_index_size, ind_in(2))
+             isource  = get_index_from_base(address_table(source), x, 2)
+
+             Call Strip_2S(x(isource),Ibgn,Jbgn,Iend,Jend)
+
+          Endif 
+      Endif 
+
+      Return
+      End
+
+      Subroutine Strip_3D(A,Ibgn,Jbgn,Kbgn,Iend,Jend,Kend)
+
+      implicit none
+      include 'parallel_info.h'
+      include 'int_gen_parms.h'
+
+      Integer I,J,K,K1
+      Integer Ibgn,Jbgn,Kbgn,Iend,Jend,Kend
+      Integer Mbgn,Nbgn,Pbgn,Mend,Nend,Pend
+
+      Double Precision A(Ibgn:Iend,Jbgn:Jend,Kbgn:Kend)
+      Double Precision Sum,Threshold
+      Integer Iam_zero(12),Nroots,K_max 
+
+      Nroots     = Eom_roots 
+      Threshold  = Eom_tol 
+      K_max      = 12
+
+      Call Zero(Iam_zero,12)
+
+      If (Nroots .Gt. 12) Then
+         Write(6,"(a)") " The current maximum number of roots that", 
+     +                  " can be proccessed is 12."
+         Call abort_job()
+      Endif 
+
+      DO K =Kbgn, Kend
+
+         Sum = 0.0D0
+         DO J =Jbgn, Jend
+         DO I =Ibgn, Iend
+            Sum  = Dabs(A(I,J,K)) + sum 
+         ENDDO
+         ENDDO
+
+         If (Sum .Lt. Threshold) Iam_zero(k) = 1
+
+      ENDDO
+
+      DO K =Kbgn, Kend
+
+         If (Iam_zero(k) .EQ. 1) Then
+
+            DO K1 =k+1, K_max 
+               If (Iam_zero(K1) .EQ. 1) Then
+                  Go to 10
+               Else
+                  DO J =Jbgn, Jend
+                  DO I =Ibgn, Iend
+                     A(I,J,K) = A(I,J,K1)
+                  ENDDO 
+                  ENDDO
+                  Go to 20
+               Endif 
+
+ 10         Continue 
+            ENDDO
+
+         ENDIF 
+ 20      Continue 
+      ENDDO
+
+      Return
+      End
+
+      Subroutine Strip_5D(A,Ibgn,Jbgn,Kbgn,Lbgn,Mbgn,Iend,Jend,
+     +                    Kend,Lend,Mend)
+
+      implicit none
+      include 'parallel_info.h'
+      include 'int_gen_parms.h'
+
+      Integer I,J,K,L,M,K1
+      Integer Ibgn,Jbgn,Kbgn,Lbgn,MBgn
+      Integer Iend,Jend,Kend,Lend,Mend
+
+      Double Precision A(Ibgn:Iend,Jbgn:Jend,Kbgn:Kend,
+     +                   Lbgn:Lend,Mbgn:Mend)
+      Double Precision Sum,Threshold
+      Integer Iam_zero(12),Nroots,K_max 
+
+      Nroots     = Eom_roots 
+      Threshold  = Eom_tol 
+      K_max      = 12
+
+      Call Zero(Iam_zero,12)
+
+      If (Nroots .Gt. 12) Then
+         Write(6,"(a)") " The current maximum number of roots that", 
+     +                  " can be proccessed is 12."
+         Call abort_job()
+      Endif 
+
+      DO M =Mbgn, Mend
+
+         Sum = 0.0D0
+         DO L =Lbgn, Lend
+         DO K =Kbgn, Kend
+         DO J =Jbgn, Jend
+         DO I =Ibgn, Iend
+            Sum  = Dabs(A(I,J,K,L,M)) + sum 
+         ENDDO
+         ENDDO
+         ENDDO
+         ENDDO
+
+         If (Sum .Lt. Threshold) Iam_zero(k) = 1
+
+      ENDDO
+
+      DO M =Mbgn, Mend
+
+         If (Iam_zero(M) .EQ. 1) Then
+
+            DO K1 =M+1, K_max 
+               If (Iam_zero(K1) .EQ. 1) Then
+                  Go to 10
+               Else
+                  DO L =Lbgn, Lend
+                  DO K =Kbgn, Kend
+                  DO J =Jbgn, Jend
+                  DO I =Ibgn, Iend
+                     A(I,J,K,L,M) = A(I,J,K,L,K1)
+                  ENDDO
+                  ENDDO
+                  ENDDO
+                  ENDDO
+                  Go to 20
+               Endif 
+
+ 10         Continue 
+            ENDDO
+
+         ENDIF 
+
+ 20      Continue 
+
+      ENDDO
+
+      Return
+      End
+
+      Subroutine Strip_2S(A,Ibgn,Jbgn,Iend,Jend)
+
+      implicit none
+      include 'parallel_info.h'
+      include 'int_gen_parms.h'
+
+      Integer I,J,K1
+      Integer Ibgn,Jbgn,Iend,Jend
+
+      Double Precision A(Ibgn:Iend,Jbgn:Jend)
+      Double Precision Sum,Threshold
+      Integer Iam_zero(12),Nroots,K_max 
+
+      Nroots     = Eom_roots 
+      Threshold  = Eom_tol 
+      K_max      = 12
+
+      Call Zero(Iam_zero,K_max)
+
+      If (Nroots .Gt. 12) Then
+         Write(6,"(3a)") "@-Strip_zero_vecs: The current maximum",
+     +                  " number of roots that", 
+     +                  " can be proccessed is 12."
+         Call abort_job()
+      Endif 
+
+C#ifdef _DEBUG_LVL0
+      If (me .eq. 0) then
+      Write(6,"(a,i5,F15.6)") "@-Entry Nroots, Threshold: ",
+     +                         Nroots,Threshold
+      Write(6,"(a)") "At entry to Strip_2S array elements"
+      Write(6,"(5(1x,F15.6))") ((A(i,j),i=ibgn,iend), j=jbgn,jend)
+      Endif 
+C#endif 
+
+      DO J =Jbgn, Jend
+
+         DO I =Ibgn, Iend
+            Sum  = Dabs(A(I,J))
+            If (Sum .Lt. Threshold) Iam_zero(I) = 1
+         ENDDO
+      ENDDO 
+C#ifdef _DEBUG_LVL0
+      If (me .eq. 0) then
+      Write(6,"(a)") "I am zero array"
+      Write(6,"(10(1x,I3))") (Iam_zero(I),i=1,K_max)
+      Endif 
+C#endif 
+
+      DO J =Jbgn, Jend
+         Do I = Ibgn, Iend
+
+            If (Iam_zero(I) .EQ. 1) Then
+
+               DO K1 =I+1, K_max 
+                  If (Iam_zero(K1) .EQ. 1) Then
+                     Go to 10
+                  Else
+                    A(I,J)  = A(K1,J)
+                    A(K1,J) = 0
+                    Go to 20
+                  Endif 
+ 10            Continue 
+               ENDDO
+            Endif 
+
+ 20         Continue 
+         ENDDO
+      ENDDO
+C#ifdef _DEBUG_LVL0
+      If (me .eq. 0) then
+      Write(6,"(a)") "At exit to Strip_2S array elements"
+      Write(6,"(5(1x,F15.6))") ((A(i,j),i=ibgn,iend), j=jbgn,jend)
+      Endif 
+C#endif 
+
+      Return
+      End

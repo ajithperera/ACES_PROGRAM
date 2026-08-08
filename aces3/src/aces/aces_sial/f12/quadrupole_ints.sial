@@ -1,0 +1,704 @@
+#----------------------------------------------------------------------------------------|
+# The purpose of this part is to  generate necessary set of quadrupole moment integrals  |
+#     Added to ACES3 by Denis Bokhan, Moscow Lomonosov State University,                 |
+#                            Moscow, Russian  Federation                                 |
+#----------------------------------------------------------------------------------------|
+
+                           SIAL QUADRUPOLE_INTS
+#--------------Definition of indices-----------------------------------------------------
+      aoindex mu     = 1, norb
+      aoindex nu     = 1, norb
+      moaindex    i  = baocc, eaocc
+      moaindex    j  = baocc, eaocc
+      moaindex    j1  = baocc, eaocc
+      moaindex    j2  = baocc, eaocc
+      moaindex    j3  = baocc, eaocc
+      moaindex    k  = baocc, eaocc
+      moaindex    l  = baocc, eaocc
+      moaindex    m  = baocc, eaocc
+      moaindex   i1  = baocc, eaocc
+      moaindex   i2  = baocc, eaocc
+      moaindex   i3  = baocc, eaocc
+      moaindex    p  = baocc, eavirt
+      moaindex    q  = baocc, eavirt
+      moaindex   p1  = baocc, eavirt
+      moaindex   p2  = baocc, eavirt
+      moaindex   q1  = baocc, eavirt
+      moaindex   q2  = baocc, eavirt
+      moaindex   a   = bavirt, eavirt
+      moaindex   a1  = bavirt, eavirt
+      moaindex   a2  = bavirt, eavirt
+      moaindex   a3  = bavirt, eavirt
+      moaindex   b   = bavirt, eavirt
+      moaindex   b1   = bavirt, eavirt
+      moaindex   b2   = bavirt, eavirt
+      moaindex   d   = bavirt, eavirt
+      moaindex    n  = baocc, eaocc
+      moaindex   i4  = baocc, eaocc
+
+      index   g   =1, 1000000
+      index k4=1,4
+#--------------Definition of arrays------------------------------------------------------
+
+#-----------Molecular integrals----------------------------|
+#      served VSpipi(p1,i,p,i1)
+#      served Viaai(i,a1,a,i1)
+#      served Vaaii(a,a1,i,i1)
+#      served Vaaai(a2,a,a1,i)
+#      served VSaaai(a2,a,a1,i)
+#      served Vpiqj(p,i,q,j)
+
+      served VSpipi(p1,i,p,i1)
+      served Viaai(i,a1,a,i1)
+      served Vaaii(a,a1,i,i1)
+      served Vaaai(a2,a,a1,i)
+      served VSaaai(a2,a,a1,i)
+      served Vpiqj(p,i,q,j)
+
+      served VSqjqj(q,j,q1,j1)
+      served VSbbbj(b,b1,b2,j)
+      served Vaabj(a,a1,b,j)
+      served Vbbai(b,b1,a,i)
+      served Vjbii(j,b,i,i1)
+      served Viabj(i,a,b,j)
+      served Vaajj(a,a1,j,j1)
+      served Vbbii(b,b1,i,i1)
+      served Vjbbj(j,b1,b,j1)
+      served Vbbjj(b,b1,j,j1)
+#-----------------------------------------
+
+
+      
+#---------Cluster amplitudes-------------------------------|
+      distributed t1a_old(a,i)
+      served T2old_aa(a,i,a1,i1)
+      served T2old_ab(a,i,b,j)
+
+      temp tt1a_old(a,i)
+      temp tT2old_aa(a,i,a1,i1)
+      temp tT2old_ab(a,i,b,j)
+#---------Lambda amplitudes--------------------------------|
+      distributed l1a_old(i,a)
+      served L2old_aa(i,a,i1,a1)
+      served L2old_ab(i,a,j,b)
+
+      temp tl1a_old(i,a)
+      temp tL2old_aa(i,a,i1,a1)
+      temp tL2old_ab(i,a,j,b)
+#--------One-particle elements of Hbar------
+      distributed Ubb(b,b1)
+      distributed Uaa(b,b1)
+      distributed Uii(i1,i)
+      distributed Ujj(j1,j)
+      distributed Uia(i,a)
+      distributed Ujb(j,b)
+
+      temp T_x(mu,nu)
+      temp T_y(mu,nu)
+      temp T_z(mu,nu)
+
+      temp T1_x(p,nu)
+      temp T1_y(p,nu)
+      temp T1_z(p,nu)
+
+      temp T2_x(p,q)
+      temp T2_y(p,q)
+      temp T2_z(p,q)
+      temp ttx(i,j)
+
+      temp tmoval(p)
+      temp tmoval1(p)
+      temp tmoover(p,p1)
+      temp tmpint1(p,p1)
+      temp tmpint2(p,p1)
+      temp tmp3center(mu,nu)
+      temp tmp3grad(mu,nu)
+      temp tmp3center_imu(mu,p)
+      temp tmp3center_pi(p,q)
+
+
+      served quad_pq_x(p,q)
+      served quad_pq_y(p,q) 
+      served quad_pq_z(p,q) 
+#---------Two-particle elements of Hbar-----
+      served Wiiii(i,i1,i2,i3)
+      served Wjjjj(j,j1,j2,j3)
+      served Wiijj(i,i1,j,j1)
+
+      served Waaia(a,a1,i,a2)
+      served Wbbjb(b,b1,j,b2)
+      served Waajb(a,a1,j,b2)
+      served Wbbia(b,b1,i,a2)
+
+      served Wiiia(i1,i,i2,a)
+      served Wjjjb(j1,j,j2,b)
+      served Wiijb(i1,i,j2,b)
+      served Wjjia(j1,j,i2,a)
+
+      served Wiiai(i,i1,a,i2)
+      served Wiibj(i,i1,b,j)
+      served Wjjai(j,j1,a,i)
+      served Wjjbj(j,j1,b,j2)
+
+      served Wiaai(i1,a1,a,i)
+      served Wjbbj(j1,b1,b,j)
+      served Wiabj(i,a,b,j)
+      served Wjbai(j,b,a,i)
+      served Wiibb(i1,i,b,b1)
+      served Wjjaa(j1,j,a,a1)
+      served W1iibb(i1,i,b,b1)
+      served W1jjaa(j1,j,a,a1)
+
+      served Waaai(a,a1,a2,i)
+      served Wbbbj(b,b1,b2,j)
+      served Waabj(a,a1,b,j)
+      served Wbbai(b,b1,a,i)
+
+      served Waiaa(a,a1,i,a2) # HBAR_AIBC_aaaa
+      served Wbjbb(b,b1,j,b2) # HBAR_AIBC_bbbb
+      served Waibb(a,a1,j,b2) # HBAR_AIBC_aabb
+      served Wbjaa(b,b1,i,a2) # HBAR_AIBC_bbaa
+      served auxint1x(i,a,l,j)
+      served auxint1y(i,a,l,j)
+      served auxint1z(i,a,l,j)
+      served auxint2x(i,a,j,b)
+      served auxint2y(i,a,j,b)
+      served auxint2z(i,a,j,b)
+      served auxint3x(i,j,m,n)
+      served auxint3y(i,j,m,n)
+      served auxint3z(i,j,m,n)
+      served auxint4x(i,a,j,b)
+      served auxint4y(i,a,j,b)
+      served auxint4z(i,a,j,b)
+      served C_coef(i,j,k,l)
+      served CC2(i,j,k,l)
+      served CC1(i,j,k,l)
+      served cpinterm1(p,a)
+      served cpinterm2(p,a)
+      served cpinterm4(p,a)  
+
+      temp tccusp(i,j,k,l)
+      temp t1ccusp(i,j,k,l)
+      temp tauxint1(i,a,l,j)
+      temp tauxint2(i,a,j,b)
+      temp tauxint3(i,a,l,j)
+      temp tauxint4(i,a,j,b)
+      temp taux(i,j,k,l)
+
+      served Waiia(a,i,i1,a1)
+      served Wbjjb(b,j,j1,b1)
+      served Waijb(a,i,j,b)
+      served Wbjia(b,j,i,a)
+      served Hbar_ab_eomea(a,a1)
+      served Hbar_ia_eomea(a,i)
+      served Hbar_ik_aj_eomea(i,k,a,j)
+      served Hbar_ij_ab_eomea(i,j,a,b)
+      served Hbar_ai_jb_eomea(a,i,j,b)
+
+
+
+#---------------F12 intermediates------------------------------------
+      served T1_1(i,a)
+      served T1_2(i,j)
+      served T1_3(a,p)
+      served T2_5(a,i,b,j)
+      served T2_6(a,i,q,j)
+      served T2_7(q,i,a,j)
+      served T2_3(i,j,i1,j1)
+      served T2_3S(i,j,i1,j1)
+      served T2_8(a,i,p,j)
+      served T2_9(a,p,i,j)
+      served T2_89S(a,i,b,j)
+      served T2_1(a,i,b,j)
+      served T2_2(j,k,i,a)
+      served T2_10(i,a,d,b)
+      served T2_11(d,a,j,b)
+      served T2_10_3e(i,a,d,b)
+      served T2_11_3e(d,a,j,b)
+      served Hbar_ijka_F12(i,j,k,a)
+      served Hbar_ijka_F12S(i,j,k,a)
+      served Hbar_abci_F12(a,a1,i,d)
+      served Hbar_abci_F12S(a,a1,i,d)
+      served V0pipi(p,i,q,j)
+      served V0aapi(a,b,p,i)
+      served V0apai(a,p,b,i)
+      served V2ppii(p,q,i,j)
+      served V2piai(p,i,a,j)
+      served V2pipi(p2,i,p1,i1)
+      served V3iiii(i,i1,i2,i3)
+      temp tv2pipi1(p2,i,p1,i1)
+      temp tv2pipi2(p2,i,p1,i1)
+
+#--------Local arrays------------------------------
+       local MOVAL(p)
+       local MOOVER(p,p1)
+       local MOOVERX(p,p1)
+       local MOOVERY(p,p1)
+       local MOOVERZ(p,p1)
+       local inv_r12_ip(p,i)
+       local slater_ip(p,i)
+       local slater_sq_ip(p,i)
+       local l3center_imu(mu,q)
+       local overint1(p,q)
+       local overint2(i,p)
+       local overint3(i,i1)
+       local overint4(p,i)
+       local overint5(p,q)
+       temp tslat1(p,q)
+       temp tslat2(p,q)  
+#--------Scalar variables----------------------------
+
+      scalar PTW
+      scalar Ng
+      scalar cnt
+      scalar ind
+      scalar int1_type
+      scalar F12_GAMMA
+
+      
+      scalar F12CALC
+      scalar EAEOMF12CALC
+      scalar printnumber
+
+
+#----------------------------------------------------------
+#----------------------------------------------------------
+     PROC READ_DATA 
+#    --------------
+
+      create t1a_old
+      create l1a_old
+      create Uaa
+      create Ubb
+      create Uii
+      create Ujj
+      create Uia
+      create Ujb
+      execute sip_barrier
+
+      execute server_barrier
+
+#----------Integrals----------------------------------------------
+#      execute list_to_blocks                VSpipi
+#      execute list_to_blocks                Vaaii
+#      execute list_to_blocks                Viaai
+#      execute list_to_blocks                Vaaai
+#      execute list_to_blocks                Vpiqj
+
+      execute list_to_blocks                VSpipi(p,i,p1,i1)
+      execute list_to_blocks                Vaaii
+      execute list_to_blocks                Viaai
+      execute list_to_blocks                VSaaai
+      execute list_to_blocks                VSqjqj(q,j,q1,j1)
+      execute list_to_blocks                Vbbjj
+      execute list_to_blocks                Vjbbj
+      execute list_to_blocks                VSbbbj
+      execute list_to_blocks                Vjbii
+      execute list_to_blocks                Vbbai
+      execute list_to_blocks                Vpiqj(p,i,q,j)
+      execute list_to_blocks                Viabj
+      execute list_to_blocks                Vaaai
+      execute list_to_blocks                Vaajj
+      execute list_to_blocks                Vbbii
+
+#----------Cluster amplitudes-------------------------------------
+      execute list_to_blocks                t1a_old
+      execute list_to_blocks                T2old_aa
+      execute list_to_blocks                T2old_ab
+#----------Lambda amplitudes--------------------------------------
+      execute list_to_blocks                l1a_old
+      execute list_to_blocks                L2old_aa
+      execute list_to_blocks                L2old_ab
+#----------One-paticle Hbar elements------------------------------
+      execute list_to_blocks                Uaa
+      execute list_to_blocks                Ubb
+      execute list_to_blocks                Uii
+      execute list_to_blocks                Ujj
+      execute list_to_blocks                Uia
+      execute list_to_blocks                Ujb
+#----------Two-particle Hbar elements-----------------------------
+      execute list_to_blocks                Wiiii
+      execute list_to_blocks                Wjjjj
+      execute list_to_blocks                Wiijj
+      execute list_to_blocks                Waiaa # HBAR_AIBC_aaaa
+      execute list_to_blocks                Wbjbb # HBAR_AIBC_bbbb
+      execute list_to_blocks                Waibb # HBAR_AIBC_aabb
+      execute list_to_blocks                Wbjaa # HBAR_AIBC_bbaa
+      execute list_to_blocks                Wiiia # HBAR_JKIA_aaaa
+      execute list_to_blocks                Wjjjb # HBAR_JKIA_bbbb
+      execute list_to_blocks                Wiijb # HBAR_JKIA_aabb
+      execute list_to_blocks                Wjjia # HBAR_JKIA_bbaa
+      execute list_to_blocks                Wiiai # HBAR_IAJK_aaaa
+      execute list_to_blocks                Wiibj # HBAR_IAJK_aabb
+      execute list_to_blocks                Wjjai # HBAR_IAJK_bbaa
+      execute list_to_blocks                Wjjbj # HBAR_IAJK_bbbb
+      execute list_to_blocks                Wiaai # HBAR_AJIB_aaaa
+      execute list_to_blocks                Wjbbj # HBAR_AJIB_bbbb
+      execute list_to_blocks                Wiabj # HBAR_AJIB_aabb
+      execute list_to_blocks                Wjbai # HBAR_AJIB_BBAA
+      execute list_to_blocks                W1iibb # HBAR_AJIB_iibb
+      execute list_to_blocks                W1jjaa # HBAR_AJIB_jjaa
+      execute list_to_blocks                Waaai # HBAR_ABCI_aaaa
+      execute list_to_blocks                Wbbbj # HBAR_ABCI_bbbb
+      execute list_to_blocks                Waabj # HBAR_ABCI_aabb
+      execute list_to_blocks                Wbbai # HBAR_ABCI_bbaa
+      IF F12CALC == 1.0
+      execute list_to_blocks                Hbar_ab_eomea
+      execute list_to_blocks                Hbar_ia_eomea
+      execute list_to_blocks                Hbar_ik_aj_eomea
+      execute list_to_blocks                Hbar_ij_ab_eomea
+      execute list_to_blocks                Hbar_ai_jb_eomea
+      ENDIF
+#----------------F12-related intermediates-----------------------------
+      IF F12CALC == 1.0  
+      execute list_to_blocks      T1_1
+      execute list_to_blocks      T1_3
+      execute list_to_blocks      T1_2
+      execute list_to_blocks      T2_1
+      execute list_to_blocks      T2_2
+      execute list_to_blocks      T2_3S
+      execute list_to_blocks      T2_3
+      execute list_to_blocks      T2_5
+      execute list_to_blocks      T2_6
+      execute list_to_blocks      T2_7
+      execute list_to_blocks      Hbar_ijka_F12S
+      execute list_to_blocks      Hbar_ijka_F12
+      execute list_to_blocks      T2_89S
+      execute list_to_blocks      T2_8
+      execute list_to_blocks      T2_9
+      execute list_to_blocks      T2_10
+      execute list_to_blocks      T2_11
+      execute list_to_blocks      T2_10_3e
+      execute list_to_blocks      T2_11_3e
+      execute list_to_blocks      V2piai
+      execute list_to_blocks      V0pipi
+      execute list_to_blocks      V0apai
+      execute list_to_blocks      V0aapi
+      execute list_to_blocks      V2pipi
+      execute list_to_blocks      V3iiii
+      ENDIF      
+
+      execute read_list_to_blocks
+      execute server_barrier
+
+#---------------------------------------------------------------------------
+
+     ENDPROC READ_DATA
+#    -----------------
+
+#----------------------------------------------------------
+#----------------------------------------------------------
+
+
+#----------------------------------------------------------
+#----------------------------------------------------------
+
+     PROC NUMINT
+#    -----------
+
+#---------Zero out integral arrays----------------
+     PARDO p,q
+     T2_x(p,q) = 0.0
+     PREPARE quad_pq_x(p,q) = T2_x(p,q)
+     ENDPARDO p,q
+     execute server_barrier
+
+     PARDO p,q
+     T2_y(p,q) = 0.0
+     PREPARE quad_pq_y(p,q) = T2_y(p,q)
+     ENDPARDO p,q
+     execute server_barrier
+
+     PARDO p,q
+     T2_z(p,q) = 0.0
+     PREPARE quad_pq_z(p,q) = T2_z(p,q)
+     ENDPARDO p,q
+     execute server_barrier       
+
+#-----------Step 1 - definition of the number of grid points--------------------------
+            Ng = 0.0
+            cnt = 0.0
+            execute get_grid_size Ng
+#---------Loop over the grid points---------------------------------------------------
+            DO g
+            cnt += 1.0
+#--------Check if g is exceeded the number of grid points------
+            IF cnt > Ng
+            EXIT
+            ENDIF
+#----------Define to which worker belongs current point g--------------------------------
+            execute grid_point_range cnt ind
+#-----If g belongs to current worker - then do calculation-------------------------------           
+            IF ind == 1.0
+#----------Get the weight of current point g---------------------------------------------
+            execute grid_point_weight cnt PTW
+#========================================================================================
+#========================================================================================
+#-----------Generation of values of molecular orbitals on the grid-----------------------
+                              allocate MOVAL(*)
+
+                               DO p
+#-----------------------------Molecular orbitals---------------------------------------   
+                               MOVAL(p) = 0.0
+                               tmoval(p) = 0.0
+                               execute F12_2center_moobj tmoval cnt
+                               MOVAL(p) = tmoval(p)
+                               ENDDO p
+#=====================================================================================
+#=====================================================================================
+                               allocate MOOVER(*,*)
+                               allocate MOOVERX(*,*)
+                               allocate MOOVERY(*,*)
+                               allocate MOOVERZ(*,*)
+
+#------------Preparation of MO overlap arrays-----------------------------------------
+                               DO p
+                               DO p1
+                               tmoval(p) = MOVAL(p)
+                               tmoval1(p1) =  MOVAL(p1)
+                               tmoover(p,p1) = tmoval(p)^tmoval1(p1)
+                               tmoover(p,p1) *= PTW
+                               MOOVER(p,p1) = tmoover(p,p1)
+                               ENDDO p1
+                               ENDDO p
+#---Preparation of MO overlap arrays, multiplied by x (component of quadrupole moment)----
+                               DO p
+                               DO p1 
+                               tmoover(p,p1) = MOOVER(p,p1)
+                               execute overquadx tmoover cnt
+                               MOOVERX(p,p1) = tmoover(p,p1)
+                               ENDDO p1
+                               ENDDO p
+#---Preparation of MO overlap arrays, multiplied by y (component of quadrupole moment)----
+                               DO p
+                               DO p1
+                               tmoover(p,p1) = MOOVER(p,p1)
+                               execute overquady tmoover cnt
+                               MOOVERY(p,p1) = tmoover(p,p1)
+                               ENDDO p1
+                               ENDDO p
+#---Preparation of MO overlap arrays, multiplied by z (component of quadrupole moment)----
+                               DO p
+                               DO p1
+                               tmoover(p,p1) = MOOVER(p,p1)
+                               execute overquadz tmoover cnt
+                               MOOVERZ(p,p1) = tmoover(p,p1)
+                               ENDDO p1
+                               ENDDO p
+
+
+#=====================================================================================
+#=====================================================================================
+#=====================================================================================
+                       allocate inv_r12_ip(*,*)
+
+
+                       int1_type = 1.0
+                       execute int1_setup cnt int1_type
+
+                               DO mu
+                                 allocate l3center_imu(mu,*)
+                                DO nu
+                                          tmp3center(mu,nu) = 0.0
+                                          execute f12_1el_gen tmp3center(mu,nu)
+                                   DO i
+                                   tmp3center_imu(mu,i) = tmp3center(mu,nu)*ca(nu,i)
+                                   l3center_imu(mu,i) += tmp3center_imu(mu,i)
+                                   ENDDO i
+
+                                ENDDO nu
+
+                                   DO i
+                                   DO p
+                                   tmp3center_pi(p,i) = l3center_imu(mu,i)*ca(mu,p)
+                                   inv_r12_ip(p,i) += tmp3center_pi(p,i)
+                                   ENDDO p
+                                   ENDDO i
+
+                                   deallocate l3center_imu(mu,*)
+                               ENDDO mu
+
+
+
+#=====================================================================================
+#                Calculation of quadrupole moment integrals                          |
+#=====================================================================================
+
+
+#----------------------------------xx-component------------------------------------------
+                               DO p
+                               DO p1
+                               tmoover(p,p1) = MOOVERX(p,p1)
+                               PREPARE quad_pq_x(p,p1) += tmoover(p,p1)
+                               ENDDO p1
+                               ENDDO p
+#----------------------------------yy-component------------------------------------------
+                               DO p
+                               DO p1
+                               tmoover(p,p1) = MOOVERY(p,p1)
+                               PREPARE quad_pq_y(p,p1) += tmoover(p,p1)
+                               ENDDO p1
+                               ENDDO p
+#----------------------------------zz-component-----------------------------------------
+                               DO p
+                               DO p1
+                               tmoover(p,p1) = MOOVERZ(p,p1)
+                               PREPARE quad_pq_z(p,p1) += tmoover(p,p1)
+                               ENDDO p1
+                               ENDDO p
+#----------------------------------------------------------------------------------------
+                              deallocate inv_r12_ip(*,*)
+                              deallocate MOOVERX(*,*)
+                              deallocate MOOVERY(*,*)
+                              deallocate MOOVERZ(*,*)
+                              deallocate MOOVER(*,*) 
+                              deallocate MOVAL(*)
+#----------------------------------------------------------------------------------------
+            ENDIF
+            ENDDO g
+            execute server_barrier
+#
+
+     ENDPROC NUMINT
+#    --------------
+
+#----------------------------------------------------------
+#----------------------------------------------------------
+
+
+#----------------------------------------------------------
+#----------------------------------------------------------
+
+       PROC WRITE_DATA
+#      --------------- 
+
+#----------Integrals----------------------------------------------
+#      execute blocks_to_list                VSpipi
+#      execute blocks_to_list                Vaaii
+#      execute blocks_to_list                Viaai
+#      execute blocks_to_list                Vaaai
+#      execute blocks_to_list                Vpiqj
+
+      execute blocks_to_list                VSpipi(p,i,p1,i1)
+      execute blocks_to_list                Vaaii
+      execute blocks_to_list                Viaai
+      execute blocks_to_list                VSaaai
+      execute blocks_to_list                VSqjqj(q,j,q1,j1)
+      execute blocks_to_list                Vbbjj
+      execute blocks_to_list                Vjbbj
+      execute blocks_to_list                VSbbbj
+      execute blocks_to_list                Vjbii
+      execute blocks_to_list                Vbbai
+      execute blocks_to_list                Vpiqj(p,i,q,j)
+      execute blocks_to_list                Viabj
+      execute blocks_to_list                Vaaai
+      execute blocks_to_list                Vaajj
+      execute blocks_to_list                Vbbii
+
+
+#----------Cluster amplitudes-------------------------------------
+      execute blocks_to_list                t1a_old
+      execute blocks_to_list                T2old_aa
+      execute blocks_to_list                T2old_ab
+#----------Lambda amplitudes--------------------------------------
+      execute blocks_to_list                l1a_old
+      execute blocks_to_list                L2old_aa
+      execute blocks_to_list                L2old_ab
+#----------One-paticle Hbar elements------------------------------
+      execute blocks_to_list                Uaa
+      execute blocks_to_list                Ubb
+      execute blocks_to_list                Uii
+      execute blocks_to_list                Ujj
+      execute blocks_to_list                Uia
+      execute blocks_to_list                Ujb
+#----------Two-particle Hbar elements-----------------------------
+      execute blocks_to_list                Wiiii
+      execute blocks_to_list                Wjjjj
+      execute blocks_to_list                Wiijj
+      execute blocks_to_list                Waiaa # HBAR_AIBC_aaaa
+      execute blocks_to_list                Wbjbb # HBAR_AIBC_bbbb
+      execute blocks_to_list                Waibb # HBAR_AIBC_aabb
+      execute blocks_to_list                Wbjaa # HBAR_AIBC_bbaa
+      execute blocks_to_list                Wiiia # HBAR_JKIA_aaaa
+      execute blocks_to_list                Wjjjb # HBAR_JKIA_bbbb
+      execute blocks_to_list                Wiijb # HBAR_JKIA_aabb
+      execute blocks_to_list                Wjjia # HBAR_JKIA_bbaa
+      execute blocks_to_list                Wiiai # HBAR_IAJK_aaaa
+      execute blocks_to_list                Wiibj # HBAR_IAJK_aabb
+      execute blocks_to_list                Wjjai # HBAR_IAJK_bbaa
+      execute blocks_to_list                Wjjbj # HBAR_IAJK_bbbb
+      execute blocks_to_list                Wiaai # HBAR_AJIB_aaaa
+      execute blocks_to_list                Wjbbj # HBAR_AJIB_bbbb
+      execute blocks_to_list                Wiabj # HBAR_AJIB_aabb
+      execute blocks_to_list                Wjbai # HBAR_AJIB_BBAA
+      execute blocks_to_list                W1iibb # HBAR_AJIB_iibb
+      execute blocks_to_list                W1jjaa # HBAR_AJIB_jjaa
+      execute blocks_to_list                Waaai # HBAR_ABCI_aaaa
+      execute blocks_to_list                Wbbbj # HBAR_ABCI_bbbb
+      execute blocks_to_list                Waabj # HBAR_ABCI_aabb
+      execute blocks_to_list                Wbbai # HBAR_ABCI_bbaa
+      execute blocks_to_list      quad_pq_x(p,q)
+      execute blocks_to_list      quad_pq_y(p,q)
+      execute blocks_to_list      quad_pq_z(p,q)
+#----------F12 contributions to the elements of Hbar------------------
+      IF F12CALC == 1.0
+      execute blocks_to_list      T1_1(i,a)
+      execute blocks_to_list      T1_3(a,p)
+      execute blocks_to_list      T1_2(i,j)
+      execute blocks_to_list      T2_1(a,i,b,j)
+      execute blocks_to_list      T2_2(j,k,i,a)
+      execute blocks_to_list      T2_3S(i,j,i1,j1)
+      execute blocks_to_list      T2_3(i,j,i1,j1)
+      execute blocks_to_list      T2_5(a,i,b,j)
+      execute blocks_to_list      T2_6(a,i,q,j)
+      execute blocks_to_list      T2_7(q,i,a,j)
+      execute blocks_to_list      Hbar_ijka_F12S(i,j,k,a)
+      execute blocks_to_list      Hbar_ijka_F12(i,j,k,a)
+      execute blocks_to_list      T2_89S(a,i,b,j)
+      execute blocks_to_list      T2_8(a,i,p,j)
+      execute blocks_to_list      T2_9(a,p,i,j)
+      execute blocks_to_list      T2_10(i,a,d,b)
+      execute blocks_to_list      T2_11(d,a,j,b)
+      execute blocks_to_list      T2_10_3e(i,a,d,b)
+      execute blocks_to_list      T2_11_3e(d,a,j,b)
+      execute blocks_to_list      V2piai(p,i,a,j)
+      execute blocks_to_list      V0pipi(p,i,q,j)
+      execute blocks_to_list      V0apai(a,p,b,i)
+      execute blocks_to_list      V0aapi(a,b,p,i)
+      execute blocks_to_list      V2pipi(p2,i,p1,i1)
+      execute blocks_to_list      V3iiii(i,i1,i2,i3)
+      ENDIF
+
+      execute write_blocks_to_list
+      execute sip_barrier
+      execute server_barrier 
+
+       ENDPROC WRITE_DATA
+#      ------------------
+
+#---------------------------------------------------------|
+#              Begin main program                         |
+#---------------------------------------------------------|
+      F12CALC = 0.0
+      execute f12info F12CALC
+      execute print_scalar F12CALC
+      execute eomeaf12info EAEOMF12CALC
+
+#---------------------------------------------------------|
+#   Read necessary elements of Hbar, integrals, lambda    |
+#      amplitudes, and cluster amplitudes                 |
+#---------------------------------------------------------|
+      CALL READ_DATA
+#---------------------------------------------------------|
+#   Calculation of necessary 2e and 3e integrals          |
+#               on the grid                               |
+#---------------------------------------------------------|
+      CALL NUMINT 
+#---------------------------------------------------------|
+#  Write calculated intermediates and necessary           |
+#  integrals, lambda and cluster amplitudes to the disc   |                                   |
+#---------------------------------------------------------|
+      CALL WRITE_DATA
+#---------------------------------------------------------|
+
+                           ENDSIAL QUADRUPOLE_INTS

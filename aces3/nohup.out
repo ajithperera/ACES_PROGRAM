@@ -1,0 +1,862 @@
+gmake[1]: Entering directory `/ufrc/bartlett/perera/acesiii/src'
+gmake[2]: Entering directory `/ufrc/bartlett/perera/acesiii/src/aces'
+gmake[3]: Entering directory `/ufrc/bartlett/perera/acesiii/src/aces/aces_library'
+gmake[4]: Entering directory `/ufrc/bartlett/perera/acesiii/src/aces/aces_library/a2driver'
+gmake[5]: Entering directory `/ufrc/bartlett/perera/acesiii/src/aces/aces_library/a2driver/geopt'
+rm -f make.out make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  mtran2.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  jsd1.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  idnmat.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  modfy_hessian.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  eval_qstlst_path_xyz.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  retrieve.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  init_ric_heap.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  geomout.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  domorsezmt.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  setup.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  modmatmul.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  chkint.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  get_covalradii.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  folowdflt.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  morsea.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  perpop.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  stptr.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  sortxyz.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  gather.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  hessout.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  domorsexyz_ric.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  itoa.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  tkstep.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  convq.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  check_pm_pair.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  vib1.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  mtransp.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  gen_approx_freq.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  minv.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  unitry.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  rotcon.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  gentranmat.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  app_cart_constrains.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  gen_new_ric.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  getptspqr.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  angmag.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  polyprt.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  reflect.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  compkmat.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  dbond.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  newraph.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  proces_redintrnls.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  angs2bohr.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  geopt.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  powel.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  setd2xyz.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  stdort.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  analyze.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  deang.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  tstops.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  project_fc.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  get_mopac_hess.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  inertia.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  eval_qstlst_path_ric.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  gschmidt.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  built_bndcrd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  procestep.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  convhess.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  xtrace.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  adm.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  genrep.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  vadd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  what2follow.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  image.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  flowevfts.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  delta.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  subgroup.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  frmlst.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  msp_psb.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  mknddo.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  geticfcm.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  expnd4.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  rm_backup.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  assign_xyz_labels.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  readgh.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  hupdate.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  genrst.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  archive.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  dihs.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  assign_angles.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  compare.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  post_opt_update.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  symunq.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  symdrv.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  qstlst_or_evec.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  projdpd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  evec_shift.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  assign_cnnectvitis.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  scopy.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  sortc.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  bohr2angs.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  aces2_joda_main.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  mxm.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  forceout.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  symunqonly.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  alongx.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  gen_rednintrnls.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  previb.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  read_cntvtes.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  ssum.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  nmr1.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  output.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  some_string_func.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  anlyshes.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  symmetry_auto.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  jfc1.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  cshiftpri.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  initp.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  projpld.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  stripdum.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  expnd2.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  dosyop.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  gen_curr_coords.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  curve.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  gtflgs.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  jso1.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  savori.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  xgemm.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  twidle.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  itndf.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  cart2int_hess.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  ishell.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  vstat.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  dumpcord.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  procestep_xyz.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  filter.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  swpord.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  siaz.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  transp.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  write_warn_log.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  izero.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  check4_180.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  polyprt0.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  makgen.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  identfy_fragments.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  iorgrp.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  frag__loop_through.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  bltaotoso.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  calmoi.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  flowqsdmin.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  nrtsrv.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  scatter.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  flowevfmin.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  symmet2.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  trnops.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  summary.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  assign_dihls.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  gen_rics.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  blkcpy.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  rotm.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  ifindne.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  bfgs.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  gendih.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  set_2unit_matrix.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  is_connected.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  piksr3.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  piksr2.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  build_cmatrix.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  eval_qstlst_path_udi.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  setxyz.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  getlambda.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  remove_360.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  eval_qstlst_path.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  chkeck.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  cmp_angle.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  fetchz.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  irreps.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  xdot.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  symmetry.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  compare2.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  built_dihangcrd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  built_angcrd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  f_remove.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  sitgrp.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  built_langcrd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  assign_bonds.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  read_ric_constrains.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  nucrep.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  projec_ifc.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  projfcm.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  trust_update.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  fixori.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  dcheck.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  buildb.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  cnvrt2rad.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  idntfy_constraints.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  frag__init.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  entry.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  idntfy_symeqv_atms.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  squez4.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  built_bgmtrx.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  grpops.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  read_cart_constrains.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  frag__work.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  comvec.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  folowtangent.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  perpop2.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  qsdminorts.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  dfiles.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  vminus.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  qsdline.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  xcopy.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  assign_labels.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  outerp.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  chrtab.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  vecprd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  flushs.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  resolve.F 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  c_free.c 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  aces_malloc.c 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  coarse_backup.c 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  f_remove_core.c 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  c_system.c 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  coarse_restore.c 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  c_adr.c 1>>make.out 2>>make.err
+ar rv libgeopt.a savori.o buildb.o ifindne.o xdot.o proces_redintrnls.o procestep.o izero.o swpord.o siaz.o built_bgmtrx.o gen_curr_coords.o nrtsrv.o gendih.o tstops.o summary.o fixori.o bfgs.o set_2unit_matrix.o piksr3.o sortxyz.o eval_qstlst_path_udi.o folowdflt.o remove_360.o fetchz.o gtflgs.o compare2.o getlambda.o built_angcrd.o gschmidt.o sitgrp.o assign_bonds.o nmr1.o jsd1.o rotcon.o some_string_func.o eval_qstlst_path_xyz.o init_ric_heap.o domorsezmt.o idnmat.o qsdline.o morsea.o perpop.o stptr.o dbond.o convq.o check_pm_pair.o vib1.o rotm.o resolve.o powel.o write_warn_log.o frag__loop_through.o angmag.o reflect.o twidle.o geopt.o deang.o idntfy_symeqv_atms.o get_mopac_hess.o eval_qstlst_path_ric.o dihs.o cart2int_hess.o f_remove.o image.o qstlst_or_evec.o evec_shift.o assign_cnnectvitis.o scopy.o sortc.o cnvrt2rad.o alongx.o forceout.o symunqonly.o grpops.o ssum.o calmoi.o mknddo.o symmetry_auto.o built_langcrd.o expnd2.o dosyop.o gen_new_ric.o chkint.o iorgrp.o ishell.o vstat.o assign_xyz_labels.o procestep_xyz.o anlyshes.o check4_180.o polyprt0.o identfy_fragments.o unitry.o projdpd.o scatter.o symmetry.o trnops.o assign_dihls.o blkcpy.o outerp.o build_cmatrix.o what2follow.o cmp_angle.o irreps.o setup.o built_dihangcrd.o xtrace.o read_ric_constrains.o nucrep.o projec_ifc.o trust_update.o gen_approx_freq.o idntfy_constraints.o frag__init.o entry.o qsdminorts.o chkeck.o assign_angles.o modfy_hessian.o eval_qstlst_path.o setd2xyz.o geomout.o modmatmul.o get_covalradii.o bohr2angs.o curve.o hupdate.o gather.o domorsexyz_ric.o itoa.o tkstep.o angs2bohr.o flushs.o mtransp.o gentranmat.o getptspqr.o polyprt.o genrst.o compkmat.o msp_psb.o stdort.o filter.o dumpcord.o project_fc.o inertia.o flowevfts.o minv.o convhess.o genrep.o vadd.o makgen.o read_cart_constrains.o bltaotoso.o transp.o dfiles.o vminus.o setxyz.o vecprd.o expnd4.o built_bndcrd.o itndf.o flowqsdmin.o subgroup.o gen_rics.o flowevfmin.o geticfcm.o rm_backup.o assign_labels.o symmet2.o archive.o compare.o symdrv.o xgemm.o cshiftpri.o initp.o projfcm.o mxm.o mtran2.o gen_rednintrnls.o read_cntvtes.o newraph.o output.o jfc1.o hessout.o app_cart_constrains.o aces2_joda_main.o piksr2.o retrieve.o projpld.o stripdum.o squez4.o previb.o frag__work.o comvec.o folowtangent.o perpop2.o xcopy.o jso1.o chrtab.o is_connected.o frmlst.o delta.o dcheck.o analyze.o readgh.o adm.o post_opt_update.o symunq.o  c_free.o aces_malloc.o coarse_backup.o f_remove_core.o c_system.o coarse_restore.o c_adr.o 
+ar: creating libgeopt.a
+a - savori.o
+a - buildb.o
+a - ifindne.o
+a - xdot.o
+a - proces_redintrnls.o
+a - procestep.o
+a - izero.o
+a - swpord.o
+a - siaz.o
+a - built_bgmtrx.o
+a - gen_curr_coords.o
+a - nrtsrv.o
+a - gendih.o
+a - tstops.o
+a - summary.o
+a - fixori.o
+a - bfgs.o
+a - set_2unit_matrix.o
+a - piksr3.o
+a - sortxyz.o
+a - eval_qstlst_path_udi.o
+a - folowdflt.o
+a - remove_360.o
+a - fetchz.o
+a - gtflgs.o
+a - compare2.o
+a - getlambda.o
+a - built_angcrd.o
+a - gschmidt.o
+a - sitgrp.o
+a - assign_bonds.o
+a - nmr1.o
+a - jsd1.o
+a - rotcon.o
+a - some_string_func.o
+a - eval_qstlst_path_xyz.o
+a - init_ric_heap.o
+a - domorsezmt.o
+a - idnmat.o
+a - qsdline.o
+a - morsea.o
+a - perpop.o
+a - stptr.o
+a - dbond.o
+a - convq.o
+a - check_pm_pair.o
+a - vib1.o
+a - rotm.o
+a - resolve.o
+a - powel.o
+a - write_warn_log.o
+a - frag__loop_through.o
+a - angmag.o
+a - reflect.o
+a - twidle.o
+a - geopt.o
+a - deang.o
+a - idntfy_symeqv_atms.o
+a - get_mopac_hess.o
+a - eval_qstlst_path_ric.o
+a - dihs.o
+a - cart2int_hess.o
+a - f_remove.o
+a - image.o
+a - qstlst_or_evec.o
+a - evec_shift.o
+a - assign_cnnectvitis.o
+a - scopy.o
+a - sortc.o
+a - cnvrt2rad.o
+a - alongx.o
+a - forceout.o
+a - symunqonly.o
+a - grpops.o
+a - ssum.o
+a - calmoi.o
+a - mknddo.o
+a - symmetry_auto.o
+a - built_langcrd.o
+a - expnd2.o
+a - dosyop.o
+a - gen_new_ric.o
+a - chkint.o
+a - iorgrp.o
+a - ishell.o
+a - vstat.o
+a - assign_xyz_labels.o
+a - procestep_xyz.o
+a - anlyshes.o
+a - check4_180.o
+a - polyprt0.o
+a - identfy_fragments.o
+a - unitry.o
+a - projdpd.o
+a - scatter.o
+a - symmetry.o
+a - trnops.o
+a - assign_dihls.o
+a - blkcpy.o
+a - outerp.o
+a - build_cmatrix.o
+a - what2follow.o
+a - cmp_angle.o
+a - irreps.o
+a - setup.o
+a - built_dihangcrd.o
+a - xtrace.o
+a - read_ric_constrains.o
+a - nucrep.o
+a - projec_ifc.o
+a - trust_update.o
+a - gen_approx_freq.o
+a - idntfy_constraints.o
+a - frag__init.o
+a - entry.o
+a - qsdminorts.o
+a - chkeck.o
+a - assign_angles.o
+a - modfy_hessian.o
+a - eval_qstlst_path.o
+a - setd2xyz.o
+a - geomout.o
+a - modmatmul.o
+a - get_covalradii.o
+a - bohr2angs.o
+a - curve.o
+a - hupdate.o
+a - gather.o
+a - domorsexyz_ric.o
+a - itoa.o
+a - tkstep.o
+a - angs2bohr.o
+a - flushs.o
+a - mtransp.o
+a - gentranmat.o
+a - getptspqr.o
+a - polyprt.o
+a - genrst.o
+a - compkmat.o
+a - msp_psb.o
+a - stdort.o
+a - filter.o
+a - dumpcord.o
+a - project_fc.o
+a - inertia.o
+a - flowevfts.o
+a - minv.o
+a - convhess.o
+a - genrep.o
+a - vadd.o
+a - makgen.o
+a - read_cart_constrains.o
+a - bltaotoso.o
+a - transp.o
+a - dfiles.o
+a - vminus.o
+a - setxyz.o
+a - vecprd.o
+a - expnd4.o
+a - built_bndcrd.o
+a - itndf.o
+a - flowqsdmin.o
+a - subgroup.o
+a - gen_rics.o
+a - flowevfmin.o
+a - geticfcm.o
+a - rm_backup.o
+a - assign_labels.o
+a - symmet2.o
+a - archive.o
+a - compare.o
+a - symdrv.o
+a - xgemm.o
+a - cshiftpri.o
+a - initp.o
+a - projfcm.o
+a - mxm.o
+a - mtran2.o
+a - gen_rednintrnls.o
+a - read_cntvtes.o
+a - newraph.o
+a - output.o
+a - jfc1.o
+a - hessout.o
+a - app_cart_constrains.o
+a - aces2_joda_main.o
+a - piksr2.o
+a - retrieve.o
+a - projpld.o
+a - stripdum.o
+a - squez4.o
+a - previb.o
+a - frag__work.o
+a - comvec.o
+a - folowtangent.o
+a - perpop2.o
+a - xcopy.o
+a - jso1.o
+a - chrtab.o
+a - is_connected.o
+a - frmlst.o
+a - delta.o
+a - dcheck.o
+a - analyze.o
+a - readgh.o
+a - adm.o
+a - post_opt_update.o
+a - symunq.o
+a - c_free.o
+a - aces_malloc.o
+a - coarse_backup.o
+a - f_remove_core.o
+a - c_system.o
+a - coarse_restore.o
+a - c_adr.o
+cp libgeopt.a ../../../../../lib/libgeopt.a
+rm -f make.out make.err
+gmake[5]: Leaving directory `/ufrc/bartlett/perera/acesiii/src/aces/aces_library/a2driver/geopt'
+gmake[5]: Entering directory `/ufrc/bartlett/perera/acesiii/src/aces/aces_library/a2driver/aces2'
+rm -f make.out make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  linblnk.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  jobarc_query.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  dgetrec.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  parse_int.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  f_strpbrk.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  getxyz.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  symeqv.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  aces_ja_fin.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  figio.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  gfname.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  f_getarg.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  parse_set_iarr.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  gen_cart_coord.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  aces_init_rte.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  joda_main.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  prep_dline_2.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  putrec.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  fnblnk.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  eig.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  rdbas.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  joda_post_processing.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  aces_ja_init.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  iputrec.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  dputrec.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  pertable.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  putcrec.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  shellinf.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  wrpbas.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  igetrec.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  parsez.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  parse_irp_iarr.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  aces3_gtflgs.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  gmetry.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  read_zmat_internal_coords.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  getrec.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  getcrec.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  xtor.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  mkvmol.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  debug_zmat.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  rd_intcoord.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  normal.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  atoi.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  vec.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  usqush.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  errex.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  angle.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  rdcchr.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  cdiv.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  trmblk.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  corchr.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  dacosx.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  qsame.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  com_shift.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  iszeq.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  geopt.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  zero.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  aces_exit.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  atomnumb.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  sqush.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  leq.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  dist.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  cross.f 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  f_strpbrk_core.c 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  c_exit.c 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  c_memmove.c 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  asv_ctl.c 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  icopy.c 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  c_strncasecmp.c 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  c_memset.c 1>>make.out 2>>make.err
+ar rv libaces2.a parse_int.o getxyz.o gfname.o f_getarg.o parse_set_iarr.o gen_cart_coord.o aces_ja_fin.o fnblnk.o aces_ja_init.o jobarc_query.o iputrec.o dputrec.o igetrec.o putcrec.o wrpbas.o aces_init_rte.o joda_main.o read_zmat_internal_coords.o getcrec.o figio.o mkvmol.o debug_zmat.o putrec.o f_strpbrk.o symeqv.o pertable.o linblnk.o prep_dline_2.o parse_irp_iarr.o shellinf.o rdbas.o rd_intcoord.o joda_post_processing.o getrec.o parsez.o eig.o aces3_gtflgs.o gmetry.o dgetrec.o xtor.o normal.o atoi.o vec.o usqush.o errex.o angle.o rdcchr.o cdiv.o trmblk.o corchr.o dacosx.o qsame.o com_shift.o iszeq.o geopt.o zero.o aces_exit.o atomnumb.o sqush.o leq.o dist.o cross.o f_strpbrk_core.o c_exit.o c_memmove.o asv_ctl.o icopy.o c_strncasecmp.o c_memset.o
+ar: creating libaces2.a
+a - parse_int.o
+a - getxyz.o
+a - gfname.o
+a - f_getarg.o
+a - parse_set_iarr.o
+a - gen_cart_coord.o
+a - aces_ja_fin.o
+a - fnblnk.o
+a - aces_ja_init.o
+a - jobarc_query.o
+a - iputrec.o
+a - dputrec.o
+a - igetrec.o
+a - putcrec.o
+a - wrpbas.o
+a - aces_init_rte.o
+a - joda_main.o
+a - read_zmat_internal_coords.o
+a - getcrec.o
+a - figio.o
+a - mkvmol.o
+a - debug_zmat.o
+a - putrec.o
+a - f_strpbrk.o
+a - symeqv.o
+a - pertable.o
+a - linblnk.o
+a - prep_dline_2.o
+a - parse_irp_iarr.o
+a - shellinf.o
+a - rdbas.o
+a - rd_intcoord.o
+a - joda_post_processing.o
+a - getrec.o
+a - parsez.o
+a - eig.o
+a - aces3_gtflgs.o
+a - gmetry.o
+a - dgetrec.o
+a - xtor.o
+a - normal.o
+a - atoi.o
+a - vec.o
+a - usqush.o
+a - errex.o
+a - angle.o
+a - rdcchr.o
+a - cdiv.o
+a - trmblk.o
+a - corchr.o
+a - dacosx.o
+a - qsame.o
+a - com_shift.o
+a - iszeq.o
+a - geopt.o
+a - zero.o
+a - aces_exit.o
+a - atomnumb.o
+a - sqush.o
+a - leq.o
+a - dist.o
+a - cross.o
+a - f_strpbrk_core.o
+a - c_exit.o
+a - c_memmove.o
+a - asv_ctl.o
+a - icopy.o
+a - c_strncasecmp.o
+a - c_memset.o
+cp libaces2.a ../../../../../lib/libaces2.a
+gmake[5]: Leaving directory `/ufrc/bartlett/perera/acesiii/src/aces/aces_library/a2driver/aces2'
+gmake[5]: Entering directory `/ufrc/bartlett/perera/acesiii/src/aces/aces_library/a2driver/symcor'
+rm -f make.out make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  setfcm.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  doener.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  init_fd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  sort2.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  aces_ja_truncate.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  symcor.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  setgrd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  upd_fd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  setpts.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  paces_batch_stat.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  isrcheq.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  isrchne.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  prtcoord.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  collect.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  grad2fcm.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  trndip.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  dograd.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  trnfcm.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  q2qprime.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  trngrd.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  rotm.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  getgrd.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  schmidt.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  assirr.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  gschmidt.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  ener2grd.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  traprj.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  ener2fcm.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  prdegen.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  piksr3.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  symadq.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  chrtable.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  rotprj.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  vibinf.f 1>>make.out 2>>make.err
+ar rv libsymcor.a doener.o isrchne.o aces_ja_truncate.o sort2.o trndip.o symcor.o paces_batch_stat.o collect.o grad2fcm.o setpts.o setfcm.o upd_fd.o isrcheq.o setgrd.o prtcoord.o init_fd.o dograd.o trnfcm.o q2qprime.o trngrd.o rotm.o getgrd.o schmidt.o assirr.o gschmidt.o ener2grd.o traprj.o ener2fcm.o prdegen.o piksr3.o symadq.o chrtable.o rotprj.o vibinf.o  
+ar: creating libsymcor.a
+a - doener.o
+a - isrchne.o
+a - aces_ja_truncate.o
+a - sort2.o
+a - trndip.o
+a - symcor.o
+a - paces_batch_stat.o
+a - collect.o
+a - grad2fcm.o
+a - setpts.o
+a - setfcm.o
+a - upd_fd.o
+a - isrcheq.o
+a - setgrd.o
+a - prtcoord.o
+a - init_fd.o
+a - dograd.o
+a - trnfcm.o
+a - q2qprime.o
+a - trngrd.o
+a - rotm.o
+a - getgrd.o
+a - schmidt.o
+a - assirr.o
+a - gschmidt.o
+a - ener2grd.o
+a - traprj.o
+a - ener2fcm.o
+a - prdegen.o
+a - piksr3.o
+a - symadq.o
+a - chrtable.o
+a - rotprj.o
+a - vibinf.o
+cp libsymcor.a ../../../../../lib/libsymcor.a
+rm -f make.out make.err
+gmake[5]: Leaving directory `/ufrc/bartlett/perera/acesiii/src/aces/aces_library/a2driver/symcor'
+gmake[4]: Leaving directory `/ufrc/bartlett/perera/acesiii/src/aces/aces_library/a2driver'
+gmake[4]: Entering directory `/ufrc/bartlett/perera/acesiii/src/aces/aces_library/special_directory'
+gmake[5]: Entering directory `/ufrc/bartlett/perera/acesiii/src/aces/aces_library/special_directory/ecp'
+rm -f make.out make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  screen_ang_typ2.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  a3_ecpgrd_int.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecp_int_typ1.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  prepareecp.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  dfactorial.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  rdecp.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  symeqv.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecppar.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  chrges.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  wrecp.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecp_rad_int_typ1.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  a3_ecp_grdint_driver.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  set_rst.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  make_res.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  qcomp_38D_odd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecp_grdint.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecp_init.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  binomial_coefs.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  get_shell_den.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  mat_reorder.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecp_int_typ2.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  a3_ecp_basis_init.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  factorialo.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecp_grdint_4prim.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  bess.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  make_bc_pq_xyz.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecp_rad_int_typ2.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  a3_ecp_grdint_main.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  gpwm.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  screen_ang_typ1.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  get_center.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecp_int_4shell.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecp_ang_int2.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  a3_ecp_set4_grdint.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  write_ecpgrdint_2disk.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  qcomp.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  sps.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecp_ang_int_typ1.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  qcomp_38D.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecp_int.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  oedecp__xyz_to_ry_ab.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  a3_ecp_int_driver.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecpmain.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  qpasy.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  radint_recur.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  qcomp_sps.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  factorial.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  make_ftab.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  set_lmn.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecp_molread.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecp_ang_int_typ2.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  atgrep.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecp_int_4prim.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  a3_ecp_main.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  oedecp__xyz_to_ry_matrix.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecpdef.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  make_bc_cacb_xyz.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  make_ztab.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ang_int.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  a3_ecp_basis_init_4grd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  ecpget.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  make_xyz.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  iattop.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  insmem.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  wisch.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  iblank.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  lstr.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  getstr.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  rdebbs.f 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  set_gradpoints.f 1>>make.out 2>>make.err
+mpicc -c -DMPIF2C -DC_SUFFIX  -DMPI2 -DCB_SUFFIX -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../../a2driver/aces2/include -I$MPIHOME/include  dzero.c 1>>make.out 2>>make.err
+ar rv libecplib.a chrges.o prepareecp.o dfactorial.o qcomp.o write_ecpgrdint_2disk.o ecp_rad_int_typ1.o make_res.o ecp_grdint.o ecp_init.o binomial_coefs.o make_bc_cacb_xyz.o wrecp.o a3_ecpgrd_int.o screen_ang_typ1.o make_bc_pq_xyz.o ecp_rad_int_typ2.o rdecp.o ecp_int_4shell.o ecp_ang_int2.o ecp_int_typ1.o sps.o radint_recur.o screen_ang_typ2.o oedecp__xyz_to_ry_ab.o ang_int.o set_rst.o make_ftab.o ecpget.o gpwm.o set_lmn.o symeqv.o a3_ecp_grdint_driver.o factorialo.o qpasy.o qcomp_38D_odd.o ecp_int.o get_shell_den.o mat_reorder.o ecp_int_typ2.o a3_ecp_basis_init.o factorial.o ecp_grdint_4prim.o bess.o get_center.o a3_ecp_set4_grdint.o ecp_ang_int_typ1.o qcomp_sps.o qcomp_38D.o a3_ecp_grdint_main.o a3_ecp_int_driver.o ecpmain.o oedecp__xyz_to_ry_matrix.o ecp_molread.o ecp_ang_int_typ2.o atgrep.o ecp_int_4prim.o ecppar.o a3_ecp_main.o ecpdef.o make_ztab.o a3_ecp_basis_init_4grd.o make_xyz.o iattop.o insmem.o wisch.o iblank.o lstr.o getstr.o rdebbs.o set_gradpoints.o dzero.o
+ar: creating libecplib.a
+a - chrges.o
+a - prepareecp.o
+a - dfactorial.o
+a - qcomp.o
+a - write_ecpgrdint_2disk.o
+a - ecp_rad_int_typ1.o
+a - make_res.o
+a - ecp_grdint.o
+a - ecp_init.o
+a - binomial_coefs.o
+a - make_bc_cacb_xyz.o
+a - wrecp.o
+a - a3_ecpgrd_int.o
+a - screen_ang_typ1.o
+a - make_bc_pq_xyz.o
+a - ecp_rad_int_typ2.o
+a - rdecp.o
+a - ecp_int_4shell.o
+a - ecp_ang_int2.o
+a - ecp_int_typ1.o
+a - sps.o
+a - radint_recur.o
+a - screen_ang_typ2.o
+a - oedecp__xyz_to_ry_ab.o
+a - ang_int.o
+a - set_rst.o
+a - make_ftab.o
+a - ecpget.o
+a - gpwm.o
+a - set_lmn.o
+a - symeqv.o
+a - a3_ecp_grdint_driver.o
+a - factorialo.o
+a - qpasy.o
+a - qcomp_38D_odd.o
+a - ecp_int.o
+a - get_shell_den.o
+a - mat_reorder.o
+a - ecp_int_typ2.o
+a - a3_ecp_basis_init.o
+a - factorial.o
+a - ecp_grdint_4prim.o
+a - bess.o
+a - get_center.o
+a - a3_ecp_set4_grdint.o
+a - ecp_ang_int_typ1.o
+a - qcomp_sps.o
+a - qcomp_38D.o
+a - a3_ecp_grdint_main.o
+a - a3_ecp_int_driver.o
+a - ecpmain.o
+a - oedecp__xyz_to_ry_matrix.o
+a - ecp_molread.o
+a - ecp_ang_int_typ2.o
+a - atgrep.o
+a - ecp_int_4prim.o
+a - ecppar.o
+a - a3_ecp_main.o
+a - ecpdef.o
+a - make_ztab.o
+a - a3_ecp_basis_init_4grd.o
+a - make_xyz.o
+a - iattop.o
+a - insmem.o
+a - wisch.o
+a - iblank.o
+a - lstr.o
+a - getstr.o
+a - rdebbs.o
+a - set_gradpoints.o
+a - dzero.o
+cp libecplib.a ../../../../../lib/libecp.a
+rm -f make.out make.err
+gmake[5]: Leaving directory `/ufrc/bartlett/perera/acesiii/src/aces/aces_library/special_directory/ecp'
+gmake[5]: Entering directory `/ufrc/bartlett/perera/acesiii/src/aces/aces_library/special_directory/erd_F12'
+rm -f make.out make.err
+mpif77 -c  -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  module.F90 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__atom_int2d_to_e000_f12.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__k12_int2d_to_0000.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__set_k12_abcd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__memory_derv_csgto_k12.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__k12_int2d_to_e0c0.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__gener_f12_batch.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__2d_abcd_integrals_k12.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__csgto_yukawa.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__memory_eri_derv_k12_batch.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd_k12_pcgto_block.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__k12_int2d_to_abcd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__k12_int2d_to_a000.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__e0f0_pcgto_block_yukawa.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__e0f0_def_blocks_yukawa.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__csgto_f12.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__2d_atom_pq_integrals_yukawa.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__k12_int2d_to_e000.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__int2d_to_e000_yukawa.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__rys_x_roots_weights_yukawa.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__gener_k12_batch.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__int2d_to_e0f0_yukawa.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__int2d_to_e0f0_f12.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__int2d_to_e000_f12.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__2d_k12_abcd_integrals.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__e0f0_pcgto_block_f12.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__k12_int2d_to_ab00.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__atom_int2d_to_e0f0_yukawa.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__k12_csgto.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__atom_int2d_to_e000_yukawa.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__k12_def_blocks.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__k12_int2d_to_abc0.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__k12_int2d_to_e0cd.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__atom_int2d_to_e0f0_f12.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__gener_yukawa_batch.F 1>>make.out 2>>make.err
+mpif77 -c -D__fortran -D__fortran77 -DMPIF2C -Zp8 -zero -traceback -DMPI2 -shared-intel -O2 -msse3 -axcore-avx2,core-avx-i -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  erd__rys_roots_weights_yukawa.F 1>>make.out 2>>make.err
+mpif77 -c  -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  root7.F90 1>>make.out 2>>make.err
+mpif77 -c  -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  root3.F90 1>>make.out 2>>make.err
+mpif77 -c  -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  root10.F90 1>>make.out 2>>make.err
+mpif77 -c  -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  root9.F90 1>>make.out 2>>make.err
+mpif77 -c  -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  root5.F90 1>>make.out 2>>make.err
+mpif77 -c  -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  root13.F90 1>>make.out 2>>make.err
+mpif77 -c  -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  root2.F90 1>>make.out 2>>make.err
+mpif77 -c  -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  root1.F90 1>>make.out 2>>make.err
+mpif77 -c  -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  root6.F90 1>>make.out 2>>make.err
+mpif77 -c  -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  root8.F90 1>>make.out 2>>make.err
+mpif77 -c  -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  root11.F90 1>>make.out 2>>make.err
+mpif77 -c  -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  root4.F90 1>>make.out 2>>make.err
+mpif77 -c  -I../../../../sia/include -I../aces2/include -I$MPIHOME/include  root14.F90 1>>make.out 2>>make.err

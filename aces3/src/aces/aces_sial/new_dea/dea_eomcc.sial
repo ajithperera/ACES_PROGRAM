@@ -1,0 +1,5770 @@
+#  Copyright (c) 2003-2010 University of Florida  
+#
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  The GNU General Public License is included in this distribution
+#  in the file COPYRIGHT.
+#
+                        SIAL DEA_EOMCCSD
+#                       ---------------
+
+      index kiter    = 1, cc_iter
+      index Ione     = 1, 1
+      index Spn_mult = 1, 2
+
+      Index Ndim     = 1, 20
+      Index Nroots   = 1, 12
+      Index Mroots   = 1, 12
+      Index Subsp_dim= 1, 20
+      Index Nindex50 = 1, 20
+      Index Mindex50 = 1, 20
+      Index Kindex50 = 1, 20
+      Index Lindex50 = 1, 20
+      Index Eom_cycle= 1,150
+#
+      aoindex mu     = 1, norb
+      aoindex nu     = 1, norb
+      aoindex lambda = 1, norb
+      aoindex sigma  = 1, norb
+#
+      moaindex i = baocc, eaocc
+      moaindex i1= baocc, eaocc
+      moaindex i2= baocc, eaocc
+      moaindex i3= baocc, eaocc
+      moaindex k = baocc, eaocc
+
+#
+      moaindex a = bavirt, eavirt
+      moaindex a1= bavirt, eavirt
+      moaindex a2= bavirt, eavirt
+      moaindex a3= bavirt, eavirt
+#
+      moaindex j = baocc, eaocc
+      moaindex j1= baocc, eaocc
+      moaindex j2= baocc, eaocc
+      moaindex j3= baocc, eaocc
+#
+      moaindex b = bavirt, eavirt
+      moaindex b1= bavirt, eavirt
+      moaindex b2= bavirt, eavirt
+      moaindex b3= bavirt, eavirt
+#
+      moaindex p = baocc, eavirt
+      moaindex p1= baocc, eavirt
+      moaindex p2= baocc, eavirt
+      moaindex p3= baocc, eavirt
+#
+      moaindex q = baocc, eavirt
+      moaindex q1= baocc, eavirt
+      moaindex q2= baocc, eavirt
+      moaindex q3= baocc, eavirt
+
+#     CCSD amplitudes
+#     ---------------
+#
+      distributed t1a(a,i)
+      distributed t1b(b,j)
+      served T2aa(a,i,a1,i1)
+      served T2bb(b,j,b1,j1)
+      served T2ab(a,i,b,j)
+#
+#     Transformed integrals
+#     ---------------------
+#
+      served VSpipi(p,i,p1,i1)
+      served VSqjqj(q,j,q1,j1)
+      served Vpiqj(p,i,q,j)
+      served VSaaai(a,a1,a2,i)
+      served VSbbbj(b,b1,b2,j)
+      served Vaabj(a,a1,b,j)
+      served Vbbai(b,b1,a,i)
+      served Vjbii(j,b,i,i1)
+      served Viabj(i,a,b,j)
+      served Vaajj(a,a1,j,j1)
+      served Vbbii(b,b1,i,i1)
+      served Viaai(i,a1,a,i1)
+      served Vaaii(a,a1,i,i1)
+      served Vjbbj(j,b1,b,j1)
+      served Vbbjj(b,b1,j,j1)
+      served Vxxxa(mu,nu,lambda,a)
+      served Vxxaa(mu,nu,a,a1)
+      served Vxaaa(mu,a2,a1,a)
+      served Vxbxa(mu,b,lambda,a)
+#
+#     HBAR
+#     ----
+#
+      distributed HBAR_AA(a,a1)
+      distributed HBAR_BB(b,b1)
+      distributed HBAR_II(i1,i)
+      distributed HBAR_JJ(j1,j)
+      distributed HBAR_IA(i,a1)
+      distributed HBAR_JB(j,b1)
+
+      distributed DDaa(a,a1)
+      distributed DDii(i,i1)
+      distributed DDia(i,a1)
+      distributed DDbb(b,b1)
+      distributed DDjj(j,j1)
+
+      distributed D1_AB(a,b1)
+      Served D2_ABAA(a,b,i1,a1)
+      Served D2_ABBB(a,b,j1,b1)
+
+      served HBAR_aaaa(a,a1,a2,a3)
+      served HBAR_bbbb(b,b1,b2,b3)
+      served HBAR_aabb(a,a1,b,b1)
+#
+      served HBAR_iiii(i,i1,i2,i3)
+      served HBAR_jjjj(j,j1,j2,j3)
+      served HBAR_iijj(i,i1,j,j1)
+#
+      served HBAR_AIBC_aaaa(a,a1,i,a2)
+      served HBAR_AIBC_bbbb(b,b1,j,b2)
+      served HBAR_AIBC_aabb(a,a1,j,b2)
+      served HBAR_AIBC_bbaa(b,b1,i,a2)
+#
+      served HBAR_JKIA_aaaa(i1,i,i2,a1)
+      served HBAR_JKIA_bbbb(j1,j,j2,b1)
+      served HBAR_JKIA_aabb(i1,i,j2,b1)
+      served HBAR_JKIA_bbaa(j1,j,i2,a1)
+#
+      served HBAR_IAJK_aaaa(i,i1,a,i2)
+      served HBAR_IAJK_aabb(i,i1,b,j)
+      served HBAR_IAJK_bbaa(j,j1,a,i)
+      served HBAR_IAJK_bbbb(j,j1,b,j2)
+#
+      served HBAR_AJIB_aaaa(i1,a1,a,i)
+      served HBAR_AJIB_bbbb(j1,b1,b,j)
+      served HBAR_AJIB_aabb(i,a,b,j)
+      served HBAR_AJIB_BBAA(j,b,a,i)
+      served HBAR_AJIB_iibb(i1,i,b,b1)
+      served HBAR_AJIB_jjaa(j1,j,a,a1)
+#
+      served HBAR_ABCI_aaaa(a,a1,a2,i)
+      served HBAR_ABCI_bbbb(b,b1,b2,j)
+      served HBAR_ABCI_aabb(a,a1,b,j)
+      served HBAR_ABCI_bbaa(b,b1,a,i)
+#---------------------------------------------------------------|
+      served Hbar_ab_eomea(a,a1)
+      served Hbar_ia_eomea(a,i)
+      served Hbar_ik_aj_eomea(i,k,a,j)
+      served Hbar_ij_ab_eomea(i,j,a,b)
+      served Hbar_ai_jb_eomea(a,i,j,b)
+#---------------------------------------------------------------|
+      Served Tau_ab(a,i,b,j)
+      Served Tau_aa(a,i,a1,i1)
+#
+      Distributed R1_AB(a,b1)
+      Distributed R1_AB_guess(a,b1)
+      Distributed R1_AB_INTMD(a,b1)
+      Distributed R1_AB_HIST(a,b,subsp_dim)
+      Distributed Y1_AB(a,b,subsp_dim)
+      Distributed Y1_AB_TRUNCT(a,b,subsp_dim)
+      Distributed HY1_AB(a,b,subsp_dim)
+      Distributed Y1_AB_picked(a,b1)
+      Distributed HY1_AB_picked(a,b1)
+      Distributed RES1_AB(a,b1)
+      Distributed HR1_AB(a,b1)
+      Distributed AOHR1_AB(a,b1)
+      Distributed HR1_AB_ASYM(a,b1)
+      Distributed CORR_VEC_AB(a,b1)
+      Distributed HR1_AB_HIST(a,b,subsp_dim)
+      Distributed Xbi(b,i)
+      Distributed Xaj(a,j)
+      Distributed INITIAL_R1_AB(a,b1)
+      
+      SERVED HR2_ABAA(a,b,i1,a1)
+      SERVED HR2_ABBB(a,b,j1,b1)
+      SERVED R2_ABAA(a,b,i1,a1)
+      SERVED R2_ABBB(a,b,j1,b1)
+      SERVED R2_ABAA_HIST(a,b,i1,a,subsp_dim)
+      SERVED R2_ABBB_HIST(a,b,j1,b,subsp_dim)
+      SERVED HR2_ABAA_HIST(a,b,i1,a,subsp_dim)
+      SERVED HR2_ABBB_HIST(a,b,j1,b,subsp_dim)
+      SERVED Y2_ABAA(a,b,i1,a,subsp_dim)
+      SERVED Y2_ABBB(a,b,j1,a,subsp_dim)
+      SERVED Y2_ABAA_TRUNCT(a,b,i1,a,subsp_dim)
+      SERVED Y2_ABBB_TRUNCT(a,b,j1,a,subsp_dim)
+      SERVED HY2_ABAA(a,b,i1,a,subsp_dim)
+      SERVED HY2_ABBB(a,b,j1,a,subsp_dim)
+      SERVED Y2_ABAA_picked(a,b,i1,a1)
+      SERVED Y2_ABBB_picked(a,b,i1,a1)
+      SERVED HY2_ABAA_picked(a,b,i1,a1)
+      SERVED HY2_ABBB_picked(a,b,j1,b1)
+      SERVED RES2_ABAA(a,b,i1,a1)
+      SERVED RES2_ABBB(a,b,j1,b1)
+      SERVED CORR_VEC_ABAA(a,b,i1,a1)
+      SERVED CORR_VEC_ABBB(a,b,j1,b1)
+      SERVED R2_ABAA_INTMD(a,b,i1,a1)
+      SERVED R2_ABBB_INTMD(a,b,j1,b1)
+
+      Distributed ORTHO_COEF(NINDEX50,MINDEX50)
+      Distributed DEA_ENER_S(MROOTS,IONE)
+      Distributed DEA_ENER_T(MROOTS,IONE)
+      Distributed TAO_AB(mu,lambda)
+      Distributed T1AO_AB(lambda,b)
+      Distributed T2AO_AB(lambda,Sigma)
+      Distributed TTTax(a,mu)
+      Distributed Nij(i,j)
+      Distributed Nai_ab(a,j)
+
+      Served TAO_aa(lambda,i,sigma,i1)
+      Served TAO_bb(lambda,j,sigma,j1)
+      Served T1AO_aa(lambda,i,a,i1)
+      Served T1AO_bb(lambda,j,b,j1)
+      Served T2AO_aa(lambda,i,sigma,i1)
+      Served T2AO_bb(lambda,j,sigma,j1)
+      Served T2AO_xbia(lambda,b,i,a1)
+      Served T2AO_abix(a,b,i,lambda)
+      Served T2AO_axjb(a,lambda,j,b1)
+      Served T2AO_abjx(a,b,j,lambda)
+      Served T2AO_axia(a,lambda,i,a1)
+
+      Served T2AO_xxia(mu,nu,i,a1)
+      Served T2AO_axix(a,mu,i,nu)
+      Served T2AO_xbix(mu,b,i,nu)
+      Served T2AO_axjx(a,mu,j,nu)
+      Served T2AO_xbjx(mu,b,j,nu)
+      Served T2AO_xxjb(mu,nu,j,b1)
+
+      Served T2IAO_xxia(lambda,sigma,i,a1)
+      Served T2IAO_axix(a,sigma,i,lambda)
+      Served T2IAO_xbix(lambda,b,i,sigma)
+      Served T2IAO_axjx(a,lambda,j,sigma)
+      Served T2IAO_xbjx(sigma,b,j,lambda)
+      Served T2IAO_xxjb(sigma,lambda,j,b1)
+
+      Served tttaxia(a,nu,i,a)
+      Served tttabix(a,b,i,nu)
+      Served tttaxjb(a,nu,j,b1)
+      Served tttxbjb(mu,b,j,b1)
+   
+
+      Served Nijia(i,j,i1,a)
+      Served Nai_abia1(a,j,i,a1)
+      Served Nai_abia2(a,j,i,a1)
+
+      Served Nibii(i,b,i1,i2)
+      Served Najii(a,j,i,i1)
+      Served Nai_abii1(a,b,i,i1)
+      Served Nai_abii2(a,b,i,i1)
+      Served Nai_ibia1(i,b,i1,a1)
+      Served Nai_ibia2(i,b,i1,a1)
+ 
+#     Temporary arrays
+#     ---------------
+#
+      Temp Tee(mroots,ione)
+      Temp Tab(a,b1)
+      Temp Tba(b,a)
+      Temp T1ba(b,a)
+      Temp T1ab(a,b1)
+
+      Temp Tmpaj(a,j)
+      Temp Tmpbi(b,i)
+      Temp Tji(j,i)
+      Temp Tpp(p,p1)
+      Temp tij(i,j)
+      distributed Nai_ba(b,i)
+      temp tai_ab(a,j)
+      temp tai_ba(b,i)
+
+      Temp Tabia(a,b,i1,a1)
+      Temp T1abia(a,b,i1,a1)
+      Temp T2abia(a,b,i1,a1)
+      Temp Tabjb(a,b,j1,b1) 
+      Temp Tiijj(i,i2,j,j2)
+      Temp T22ia(j2,i2)
+      Temp T1abjb(a,b,j1,b1)
+      Temp T2abjb(a,b,j1,b1)
+      Temp Taabb(a,a2,b,b2)
+      Temp Taxia(a,nu,i,a)
+      Temp Taxib(a,nu,i,b)
+      Temp T1axia(a,nu,i,a)
+      Temp T2axia(a,nu,i,a)
+      Temp Tmpijib(i2,j1,i,b1) 
+      Temp Tmpib(i,b1) 
+      Temp Tmpja(j,a1)
+      Temp tijia(i,j,i1,a1)
+      Temp tajii(a,j,i,i1)
+      Temp tai_abia(a,j,i,a1)
+      Temp tai_abii(a,b,i,i1)
+      Temp tai_ibia(i,b,i1,a1)
+      Temp tab2ia(a,b,i1,a1)
+      Temp tibii(i,b,i2,i1)
+      Temp t1ibii(i,b,i2,i1)
+      Temp taibj(a,i,b,j)
+      Temp taiai(a,i,a1,i)
+      Temp t1aiai(a,i,a1,i)
+      Temp t2aiai(a,i,a1,i)
+
+      Temp Tqppq(q1,p1,p,q)
+      Temp T1qppq(q1,p1,p,q)
+      Temp Tpqpq(p,q,p1,q1)
+      Temp T1pqpq(p,q,p1,q1)
+      Temp Tpppp(p,p1,p2,p3)
+      Temp T1pppp(p,p1,p2,p3)
+      Temp T2pppp(p,p1,p2,p3)
+      Temp T3pppp(p,p1,p2,p3)
+      Temp T4pppp(p,p1,p2,p3)
+      Temp Tqqqq(q,q1,q2,q3)
+      Temp T1qqqq(q,q1,q2,q3)
+      Temp T2qqqq(q,q1,q2,q3)
+      Temp T3qqqq(q,q1,q2,q3)
+      Temp T4qqqq(q,q1,q2,q3)
+      Temp Tmpaabi(a2,a3,b,i) 
+      Temp Tmpabai(a,b,a1,i)
+      Temp tppqq(p,p1,q,q1)
+      Temp T1ppqq(p,p1,q,q1)
+      Temp T2ppqq(p,p1,q,q1)
+      Temp T3ppqq(p,p1,q,q1)
+      Temp T2qqpp(q,q1,p,p1)
+      Temp T3qqpp(q,q1,p,p1)
+#
+      Temp TiN(i,NROOTS)
+      Temp TjN(j,NROOTS)
+      Temp Tii(i,i1)
+      Temp Tjj(j,j1)
+
+      Temp Tax(a,mu)
+      Temp T1ax(a,mu)
+      Temp Txxxx(mu,nu,lambda,sigma)
+      Temp Txbxa(mu,b,lambda,a)
+      Temp Yab(mu,nu)
+      Temp T1xx(mu,lambda)
+      Temp Zaa(lambda,i,a1,i1)
+      Temp Zbb(lambda,j,b,j1)
+      Temp Zab(lambda,b)
+      Temp Txb(lambda,b)
+      Temp ZZaa(lambda,i,sigma,i1)
+      Temp ZZ1aa(lambda,i,sigma,i1)
+      Temp ZZbb(lambda,j,sigma,j1)
+      Temp ZZ1bb(lambda,j,sigma,j1)
+      Temp ZZab(lambda,sigma)
+      Temp tmpaaii(a,a1,i,i1)
+      Temp tmpajii1(a,j,i,i1)
+      Temp tmpabia(a1,b1,i,a)
+      temp tmpabjb(a,b,j,b1)
+      Temp tmpijia(i,j,i1,a)
+      Temp tmpabaj(a2,b,a,j)
+      Temp tmpibai(i1,b,a,i)
+      Temp Tmpabij(a,b,i,j)
+      Temp tmpabbi(a,b,b1,i)
+
+      Temp Zxbia(lambda,b,i,a1)
+      Temp Zaxia(a,lambda,i,a1)
+      Temp Txbia(lambda,b,i,a1)
+      Temp Zaxjb(a,lambda,j,b1)
+      Temp Taxjb(a,lambda,j,b1)
+      Temp Zabjx(a,b,j,lambda)
+      Temp Tabjx(a,b,j,lambda)
+      Temp ZZaxjx(a,lambda,j,sigma)
+      Temp Taxjx(a,sigma,j,lambda)
+      Temp ZZxbjx(sigma,b,j,lambda)
+      Temp Txbjx(sigma,b,j,lambda)
+      Temp ZZxxjb(sigma,lambda,j,b1)
+      Temp Txxjb(sigma,lambda,j,b1)
+      Temp T1axjx(a,mu,j,nu)
+      Temp Z1axjx(a,mu,j,nu)
+      Temp T1xbjx(mu,b,j,nu)
+      Temp Z1xbjx(mu,b,j,nu)
+      Temp T1xxjb(mu,nu,j,b1)
+      Temp Z1xxjb(mu,nu,j,b1)
+      Temp T1axjb(a,nu,j,b1)
+      Temp Txbjb(mu,b,j,b1)
+      Temp T1xbjb(mu,b,j,b1)
+      Temp T1axib(a,nu,i,b)
+      Temp T1abix(a,b,i,nu)
+      Temp tmpiaaj(i,a1,a,j)
+      Temp tmpbiai(b,i,a,i1)
+      Temp tmpiaja(i,a,j,a1)
+      Temp tmpaaai(a1,a2,a,i1)
+      Temp tmpabib(a2,b1,i1,b)
+      Temp tmpaaia(a2,a1,i1,a)
+      Temp tmpbiaa(b,i,a1,a2)
+      Temp tmpbiii(b,i,i1,i2)
+      Temp t3abia(a,b,i,a1)
+      Temp t4abia(a,b,i,a1)
+   
+      Temp Zabix(a,b,i,lambda)
+      Temp Tabix(a,b,i,lambda)
+
+      Temp Zxxia(lambda,sigma,i,a1)
+      Temp Txxia(lambda,sigma,i,a1)
+
+      Temp ZZxxia(lambda,sigma,i,a1)
+      Temp ZZaxix(a,sigma,i,lambda)
+      Temp Taxix(a,sigma,i,lambda)
+
+      Temp ZZxbix(lambda,b,i,sigma)
+      Temp Txbix(lambda,b,i,sigma)
+
+      Temp Ixxxx(lambda,mu,sigma,nu)
+      Temp I1xxxx(lambda,mu,sigma,nu)
+      Temp T1xxia(mu,nu,i,a1)
+      Temp Z1xxia(mu,nu,i,a1)
+      Temp T1axix(a,mu,i,nu)
+      Temp Z1axix(a,mu,i,nu)
+
+      Temp T1xbix(mu,b,i,nu)
+      Temp T2xbix(mu,b,i,nu)
+      Temp Z1xbix(mu,b,i,nu)
+
+
+      Temp Tip(i,nroots)
+      Temp Tjp(j,nroots)
+
+      Temp TS(MINDEX50,NINDEX50)
+      Temp Tabs(a,b1,MINDEX50)
+      Temp T1abs(a,b1,NINDEX50)
+      Temp Tabias(a,b,i1,a,subsp_dim)
+      Temp T1abias(a,b,i1,a,subsp_dim)
+      Temp Tabjbs(a,b,j1,b,subsp_dim)
+      Temp T1abjbs(a,b,j1,b,subsp_dim)
+      
+      Temp Aoint(mu,nu,lambda,sigma)
+      Temp Txxxa(mu,nu,lambda,a)
+      Temp Txxaa(mu,nu,a,a1)
+      Temp Txaaa(mu,a2,a1,a)
+      Temp Taaaa(a3,a2,a1,a)     
+
+      Temp Taa(a,a1)
+      Temp T1aa(a,a1)
+      Temp T22aa(a,b)
+      Temp Tbb(b,b1)
+      Temp T1bb(b,b1)
+      Temp T2ab1(a,b)
+      Temp Txx(NINDEX50,NINDEX50)
+      Temp Taajj(a,a1,j,j1)
+      Temp Tbbii(b,b1,i,i1)
+      temp Tai(a,i)
+      temp T1ai(a,i)
+      temp Tbj(b,j)
+      temp ttax(b,b1)
+      temp tHbar_ab_eomea(b,b1)
+
+#     Static arrays
+#     -------------
+#
+      Static IP_INIT_HAA(i,i1)
+      Static IP_INIT_HBB(j,j1)
+      Static VEC_AA(i,Ndim)
+      Static VEC_BB(j,Ndim)
+      Static RVEC_AA_INTMD(i,Nroots)
+      Static RVEC_BB_INTMD(j,Nroots)
+      Static A_MATRIX(mindex50,nindex50)
+      Static A_DIAGS(MINDEX50)
+      Static PSEUDO_ROOTS(NROOTS,IONE)
+      Static DVECTORS(mindex50,nindex50)
+      Static OVERLAP_R(Nindex50)
+      Static Sii(i,i1)
+      Static Sdii(i,i1)
+      Static Saa(a,a1)
+      Static Sdaa(a,a1)
+      Static Sjj(j,j1)
+      Static Sdjj(j,j1)
+      Static Sbb(b,b1)
+      Static Sdbb(b,b1)
+      Static ETEMP(mindex50,nindex50)
+      Static DEA_S(MROOTS,IONE)
+      Static DEA_T(MROOTS,IONE)
+      Static DUMMY(Ione,Ione)
+      Static INIT_RVEC_AB(a,b1)
+
+#     Scalar arrays
+#     -------------
+#     
+      Scalar ROOT_COUNT
+      Scalar TARGET_ROOTS
+      Scalar EOM_THRES
+      Scalar MYROOT 
+      Scalar COUNTER 
+      Scalar tmp
+      Scalar tmpa
+      Scalar tmpb
+      Scalar suma
+      Scalar sumb 
+      Scalar sumab
+      Scalar Sumaaa
+      Scalar Sumbbb
+      Scalar Sumaab
+      Scalar Sumbba
+      Scalar MAX_SUBSP_DIM
+      Scalar Iter_count 
+      Scalar Count 
+      Scalar Ncount 
+      Scalar Mcount 
+      Scalar Kcount 
+      Scalar Lcount 
+      Scalar HC_A
+      Scalar HC_B
+      Scalar HC_AAA
+      Scalar HC_BBB
+      Scalar HC_AAB
+      Scalar HC_BBA
+      Scalar SUMAA_A
+      Scalar SUMBB_B
+      Scalar SUMAA_B
+      Scalar SUMBB_A
+      Scalar SUM_R 
+      Scalar C_A
+      Scalar C_B
+      Scalar C_AAA
+      Scalar C_BBB
+      Scalar C_AAB
+      Scalar C_BBA
+      Scalar A_VALUE 
+      Scalar CY_A
+      Scalar CY_B
+      Scalar CY_AB
+      Scalar IMAX
+      Scalar Omega 
+      Scalar Omegam
+      Scalar Eig_value 
+      Scalar NORM_PREV_C
+      Scalar EXPONENT 
+      Scalar FACT
+      Scalar INV_SQRT_NORM_ORTGC
+      Scalar NORM_NEW_ORTGC
+      Scalar INV_SQRT_NORM_R
+      Scalar NORM_R 
+      Scalar NORM_GHG
+      Scalar NORM_OF_CORRECTION
+      Scalar RANK
+      Scalar RESIDUAL_NORM 
+      Scalar SQRT_OVERLAP 
+      Scalar OMEGA0
+      Scalar OMEGA0M
+      Scalar HALF
+      Scalar PRINT_FLAG
+      Scalar ONE
+      Scalar ZERO 
+      Scalar WARNING 
+      Scalar EOM_DENOM
+      Scalar EOM_MAXCYC
+      Scalar MULT
+      Scalar SINGLET 
+      Scalar TRIPLET 
+      Scalar NO_AO_LADDER 
+      Scalar EXACT_HY
+      Scalar E_OLD
+      Scalar EDIFF
+      Scalar NINETEEN
+      Scalar TWELVE
+      Scalar THREE
+      Scalar TEN
+      Scalar ELV
+      Scalar TWL
+      Scalar NREDUCE
+      Scalar NFULL
+      Scalar THRTEN
+      Scalar TRNC_COUNT
+      Scalar MAX_OVLP
+      Scalar MIN_ENEG
+      Scalar CURRENT
+      Scalar MONE
+      Scalar LOCK
+      Scalar LOCK_THRES
+      Scalar IMAX_KEEP
+      Scalar SBSP_COUNT
+      Scalar FIRST_VEC
+      Scalar PREVS_VEC
+      Scalar LEFT 
+      Scalar RIGHT 
+      Scalar FORT
+      Scalar FIFT 
+      Scalar FOLLOW 
+      Scalar OMEGA_KEEP
+      Scalar FRESH_SBSP
+      Scalar VERY_SMALL
+      Scalar IDEGEN
+      Scalar DIFF
+      Scalar OMEGA_00
+      Scalar TWEN 
+      scalar EAEOMF12CALC
+      scalar F12CALC
+
+# -----------------------------------------------------------
+
+      PROC READ_DATA
+#     --------------
+#
+      create t1a
+      create t1b
+      create HBAR_AA
+      create HBAR_BB
+      create HBAR_II
+      create HBAR_JJ
+      create HBAR_IA
+      create HBAR_JB
+
+      execute sip_barrier
+      execute list_to_blocks                VSpipi(p,i,p1,i1)
+      execute list_to_blocks                Vaaii
+      execute list_to_blocks                Viaai
+      execute list_to_blocks                VSaaai
+      execute list_to_blocks                VSqjqj(q,j,q1,j1)
+      execute list_to_blocks                Vbbjj
+      execute list_to_blocks                Vjbbj
+      execute list_to_blocks                VSbbbj
+      execute list_to_blocks                Vbbii
+      execute list_to_blocks                Vjbii
+      execute list_to_blocks                Vbbai
+      execute list_to_blocks                Vpiqj(p,i,q,j)
+      execute list_to_blocks                Vaajj
+      execute list_to_blocks                Viabj
+      execute list_to_blocks                Vaabj
+#
+      execute list_to_blocks                t1a
+      execute list_to_blocks                t1b
+      execute list_to_blocks                T2aa
+      execute list_to_blocks                T2ab
+      execute list_to_blocks                T2bb
+#
+      execute list_to_blocks                HBAR_AA
+      execute list_to_blocks                HBAR_BB
+      execute list_to_blocks                HBAR_II
+      execute list_to_blocks                HBAR_JJ
+      execute list_to_blocks                HBAR_IA
+      execute list_to_blocks                HBAR_JB
+#
+      execute list_to_blocks                HBAR_IIII
+      execute list_to_blocks                HBAR_JJJJ
+      execute list_to_blocks                HBAR_IIJJ
+#
+      execute list_to_blocks                HBAR_AIBC_aaaa
+      execute list_to_blocks                HBAR_AIBC_bbbb
+      execute list_to_blocks                HBAR_AIBC_aabb
+      execute list_to_blocks                HBAR_AIBC_bbaa
+#
+      execute list_to_blocks                HBAR_JKIA_aaaa
+      execute list_to_blocks                HBAR_JKIA_bbbb
+      execute list_to_blocks                HBAR_JKIA_aabb
+      execute list_to_blocks                HBAR_JKIA_bbaa
+#
+      execute list_to_blocks                HBAR_IAJK_aaaa
+      execute list_to_blocks                HBAR_IAJK_aabb
+      execute list_to_blocks                HBAR_IAJK_bbaa
+      execute list_to_blocks                HBAR_IAJK_bbbb
+#
+      execute list_to_blocks                HBAR_AJIB_aaaa
+      execute list_to_blocks                HBAR_AJIB_bbbb
+      execute list_to_blocks                HBAR_AJIB_aabb
+      execute list_to_blocks                HBAR_AJIB_BBAA
+      execute list_to_blocks                HBAR_AJIB_iibb
+      execute list_to_blocks                HBAR_AJIB_jjaa
+#
+      execute list_to_blocks                HBAR_ABCI_aaaa
+      execute list_to_blocks                HBAR_ABCI_bbbb
+      execute list_to_blocks                HBAR_ABCI_aabb
+      execute list_to_blocks                HBAR_ABCI_bbaa
+#-------------------------------------------------------------
+      IF EAEOMF12CALC == 1.0
+      execute list_to_blocks                Hbar_ab_eomea
+      execute list_to_blocks                Hbar_ia_eomea
+      execute list_to_blocks                Hbar_ik_aj_eomea
+      execute list_to_blocks                Hbar_ij_ab_eomea
+      execute list_to_blocks                Hbar_ai_jb_eomea
+      ENDIF
+#-------------------------------------------------------------
+      execute server_barrier
+      execute read_list_to_blocks
+      execute server_barrier
+#
+      ENDPROC READ_DATA
+#     -----------------
+
+      PROC CREATE_ARRAYS
+#     --------------------
+
+      CREATE R1_AB
+      CREATE HR1_AB_ASYM
+      CREATE HR1_AB
+      CREATE AOHR1_AB
+      CREATE DDII
+      CREATE DDJJ
+      CREATE DDAA
+      CREATE DDBB
+      CREATE D1_AB
+      CREATE R1_AB_HIST
+      CREATE HR1_AB_HIST
+      CREATE Y1_AB
+      CREATE HY1_AB
+      CREATE Y1_AB_PICKED
+      CREATE HY1_AB_PICKED
+      CREATE RES1_AB
+      CREATE XBI
+      CREATE XAJ
+      CREATE CORR_VEC_AB
+      CREATE ORTHO_COEF
+      CREATE R1_AB_INTMD
+      CREATE DEA_ENER_S
+      CREATE DEA_ENER_T
+      CREATE TAO_AB
+      CREATE T1AO_AB
+      CREATE T2AO_AB
+      CREATE TTTAX
+      CREATE NAI_AB
+      CREATE NAI_BA
+      CREATE NIJ
+      CREATE Y1_AB_TRUNCT
+      CREATE INITIAL_R1_AB
+
+      EXECUTE SIP_BARRIER 
+
+      ENDPROC CREATE_ARRAYS
+#     --------------------
+
+      PROC PREP_DEA_GUESS
+#     -------------------
+
+      DO NROOTS
+         PARDO a, b1
+             INIT_RVEC_AB(a,b1) = 0.0
+         ENDPARDO a, b1
+      ENDDO NROOTS
+
+      IF TRIPLET == ONE
+          MYROOT *= -1.0
+      ENDIF
+
+      EXECUTE FORM_DEA_GUESS INIT_RVEC_AB MYROOT
+
+#bgn_debug
+#      execute print_scalar myroot 
+#end_debug
+
+      PARDO a, b1
+          Tab(a,b1) = INIT_RVEC_AB(a,b1)
+          PUT R1_AB_INTMD(a,b1) =  Tab(a,b1)
+      ENDPARDO a, b1
+
+      EXECUTE SIP_BARRIER
+
+#bgn_debug
+#      tmpa = 0.0
+#      pardo a, b1
+#         get R1_ab_intmd(a,b1)
+#         Tab(a,b1) = R1_ab_intmd(a,b1)
+#         tmp  =  Tab(a,b1) * T1ab(a,b1)
+#         tmpa += tmp
+#      endpardo a, b1
+#      execute sip_barrier
+#      collective suma+=tmpa
+#      execute print_scalar suma
+#end_debug
+#
+      
+      PARDO a, b, i1, a1
+         Tabia(a,b,i1,a1) = 0.0
+         PREPARE R2_ABAA(a,b,i1,a1) = Tabia(a,b,i1,a1)
+      ENDPARDO a, b, i1, a1
+
+      PARDO a, b, j1, b1
+         Tabjb(a,b,j1,b1) = 0.0
+         PREPARE R2_ABBB(a,b,j1,b1) = Tabjb(a,b,j1,b1)
+      ENDPARDO a, b, j1, b1
+
+      EXECUTE SERVER_BARRIER 
+ 
+      SUMA = 0.0
+      TMPA = 0.0
+      PARDO a, b1
+
+            GET  R1_AB_intmd(a,b1) 
+            Tab(a,b1) = R1_AB_intmd(a,b1)
+            TMP   = Tab(a,b1) * Tab(a,b1)
+            TMPA += TMP
+      ENDPARDO a, b1
+
+      EXECUTE SIP_BARRIER 
+      COLLECTIVE  SUMA += TMPA
+
+      SUMAB  = SUMA
+
+      EXPONENT = 0.5
+      EXECUTE NORM_FAC SUMAB EXPONENT
+      INV_SQRT_NORM_R = SUMAB 
+      NORM_R = SUMAB 
+
+      PARDO a, b1
+            GET  R1_AB_intmd(a,b1)
+            Tab(a,b1)  = R1_AB_intmd(a,b1)
+            Tab(a,b1) *= INV_SQRT_NORM_R
+            PUT R1_AB(a,b1)  = Tab(a,b1) 
+      ENDPARDO a, b1
+
+      EXECUTE SIP_BARRIER 
+
+#bgn_debug
+#      tmpa=0.0
+#      suma=0.0
+#      pardo a,b1
+#         get r1_ab(a,b1) 
+#         Tmp = r1_ab(a,b1) * r1_ab(a,b1)
+#         tmpa += tmp
+#      endpardo a,b1
+#      execute server_barrier 
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#end_debug
+
+      ENDPROC PREP_DEA_GUESS
+#     ----------------------
+
+      PROC FORM_23P1H_DIAG
+#     --------------------
+
+     PARDO a, a1
+
+            GET              HBAR_aa(a1,a)
+            Saa(a1,a)      = HBAR_aa(a1,a)
+            execute return_diagonal Saa Sdaa
+            taa(a1,a)      = Sdaa(a1,a)
+            put DDaa(a1,a) = taa(a1,a)
+
+     ENDPARDO a, a1
+
+     PARDO b, b1
+
+            GET              HBAR_bb(b1,b)
+            Sbb(b1,b)      = HBAR_aa(b1,b)
+            execute return_diagonal Sbb Sdbb
+            tbb(b1,b)      = Sdbb(b1,b)
+            put DDbb(b1,b) = tbb(b1,b)
+
+     ENDPARDO b, b1
+
+     execute sip_barrier
+
+     PARDO b, a
+#
+            taa(a,b)=0.0
+#
+            do a2
+#
+               get          DDaa(a,a2)
+               t1aa(a2,b) = 1.0
+#
+               t22aa(a,b) = DDaa(a,a2)*t1aa(a2,b)
+               taa(a,b)  += t22aa(a,b)
+#
+            enddo a2
+#
+           do b2
+#
+               get           DDaa(b,b2)
+               t22aa(b2,a) = 1.0
+#
+               t1aa(a,b)   = DDaa(b,b2)*t22aa(b2,a)
+               taa(a,b)   += t1aa(a,b)
+#
+            enddo b2
+#
+            do a2
+            do b2
+#
+               request             HBAR_aabb(a,a2,b,b2) b2
+               Taabb(a,a2,b,b2)  = HBAR_aabb(a,a2,b,b2)
+               execute return_diagonal4 Taabb
+               t22aa(b2,a2)      = 1.0
+               t1aa(a,b)         = Taabb(a,a2,b,b2)*t22aa(b2,a2)
+               taa(a,b)         += t1aa(a,b)
+#
+           enddo b2
+           enddo a2
+#
+            PUT D1_AB(a,b) = taa(a,b)
+     ENDPARDO b, a
+
+     PARDO a, b, a1, i
+            tabia(a,b,i,a1) = 0.0
+
+            DO i1
+               GET                 HBAR_ii(i1,i)
+               tpp(i1,i)         = HBAR_ii(i1,i)
+               execute return_diagonal4 tpp
+               t2abia(a,b,i1,a1) = -1.0
+               t1abia(a,b,i,a1)  = t2abia(a,b,i1,a1)*tpp(i1,i)
+               tabia(a,b,i,a1)  += t1abia(a,b,i,a1)
+            ENDDO i1
+
+            DO a2
+               GET                 HBAR_aa(a1,a2)
+               tpp(a1,a2)        = HBAR_aa(a1,a2)
+               execute return_diagonal4 tpp
+               t2abia(a,b,i,a2) = 1.0
+               t1abia(a,b,i,a1) = t2abia(a,b,i,a2)*tpp(a1,a2)
+               tabia(a,b,i,a1) += t1abia(a,b,i,a1)
+            ENDDO a2
+
+
+            DO a2
+               GET                HBAR_aa(a,a2)
+               tpp(a,a2)        = HBAR_aa(a,a2)
+               execute return_diagonal4 tpp
+               t2abia(a2,b,i,a1) = 1.0
+               t1abia(a,b,i,a1) = t2abia(a2,b,i,a1)*tpp(a,a2)
+               tabia(a,b,i,a1) += t1abia(a,b,i,a1)
+            ENDDO a2
+
+            DO a2
+               GET                HBAR_aa(b,a2)
+               tpp(b,a2)        = HBAR_aa(b,a2)
+               execute return_diagonal4 tpp
+               t2abia(a,a2,i,a1) = 1.0
+               t1abia(a,b,i,a1) = t2abia(a,a2,i,a1)*tpp(b,a2)
+               tabia(a,b,i,a1) += t1abia(a,b,i,a1)
+            ENDDO a2
+
+           DO a2
+               where a  == a2
+            DO a3
+               where b  == a3
+               REQUEST             HBAR_aabb(a,a2,b,a3) a
+               tpppp(a,a2,b,a3)  = HBAR_aabb(a,a2,b,a3)
+               execute return_diagonal4 tpppp
+               t2abia(a2,a3,i,a1) = 1.0
+               t1abia(a,b,i,a1) = tpppp(a,a2,b,a3)*t2abia(a2,a3,i,a1)
+               tabia(a,b,i,a1) += t1abia(a,b,i,a1)
+            ENDDO a3
+            ENDDO a2
+
+            DO a2
+               where b  == a2
+            DO a3
+               where a1 == a3
+               REQUEST             HBAR_aabb(a1,a3,b,a2) b
+               tpppp(a1,a3,b,a2) = HBAR_aabb(a1,a3,b,a2)
+               execute return_diagonal4 tpppp
+               t2abia(a,a2,i,a3) = 1.0
+               t1abia(a,b,i,a1)  = t2abia(a,a2,i,a3)*tpppp(a1,a3,b,a2)
+               tabia(a,b,i,a1)  += t1abia(a,b,i,a1)
+            ENDDO a3
+            ENDDO a2
+
+            DO a2
+               where a == a2
+            DO a3
+               where a1 == a3
+               REQUEST              HBAR_aabb(a,a2,a1,a3) a
+               tpppp(a,a2,a1,a3)  = HBAR_aabb(a,a2,a1,a3)
+               execute return_diagonal4 tpppp
+               t2pppp(i,a3,b,a2)  = 1.0
+               t1pppp(a,b,a1,i)   = tpppp(a,a2,a1,a3)*t2pppp(i,a3,b,a2)
+               t1abia(a,b,i,a1)   = t1pppp(a,b,a1,i)
+               tabia(a,b,i,a1)   += t1abia(a,b,i,a1)
+            ENDDO a3
+            ENDDO a2
+
+            PREPARE D2_ABAA(a,b,i,a1) += tabia(a,b,i,a1)
+            PREPARE D2_ABBB(a,b,i,a1) += tabia(a,b,i,a1)
+      ENDPARDO a, b, a1, i 
+
+      PARDO a, b1, a1, i1
+          t1pppp(a,b1,i1,a1)  = 1.0
+          DO b
+             where b == b1
+          DO i
+             where i == i1
+             REQUEST                  HBAR_ajib_iibb(i1,i,b,b1) b
+             tpppp(i1,i,b,b1)       = HBAR_ajib_iibb(i1,i,b,b1)
+             execute return_diagonal4 tpppp
+
+            t1abia(a,b,i,a1)              = t1pppp(a,b1,i1,a1)*tpppp(i1,i,b,b1)
+
+            PREPARE D2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+            PREPARE D2_ABBB(a,b,i,a1) += t1abia(a,b,i,a1)
+          ENDDO i
+          ENDDO b
+    ENDPARDO a, b1, a1,i1
+
+    execute server_barrier
+
+    ENDPROC FORM_23P1H_DIAG
+#   -----------------------
+
+    PROC FORM_13P1H_DIAG
+#   -------------------
+
+     PARDO a, a1
+
+            GET              HBAR_aa(a1,a)
+            Saa(a1,a)      = HBAR_aa(a1,a)
+            execute return_diagonal Saa Sdaa
+            taa(a1,a)      = Sdaa(a1,a)
+            put DDaa(a1,a) = taa(a1,a)
+
+     ENDPARDO a, a1
+
+     PARDO b, b1
+
+            GET              HBAR_bb(b1,b)
+            Sbb(b1,b)      = HBAR_aa(b1,b)
+            execute return_diagonal Sbb Sdbb
+            tbb(b1,b)      = Sdbb(b1,b)
+            put DDbb(b1,b) = tbb(b1,b)
+
+     ENDPARDO b, b1
+
+     execute sip_barrier
+
+     PARDO b, a
+#
+            taa(a,b)=0.0
+#
+            do a2
+#
+               get          DDaa(a,a2)
+               t1aa(a2,b) = 1.0
+#
+               t22aa(a,b) = DDaa(a,a2)*t1aa(a2,b)
+               taa(a,b)  += t22aa(a,b)
+#
+            enddo a2
+#
+           do b2
+#
+               get           DDaa(b,b2)
+               t22aa(b2,a) = 1.0
+#
+               t1aa(a,b)   = DDaa(b,b2)*t22aa(b2,a)
+               taa(a,b)   += t1aa(a,b)
+#
+            enddo b2
+
+            PUT D1_AB(a,b) = taa(a,b)
+     ENDPARDO b, a
+
+     PARDO a, b, a1, i
+            tabia(a,b,i,a1) = 0.0
+
+            DO i1
+               GET                 HBAR_ii(i1,i)
+               tpp(i1,i)         = HBAR_ii(i1,i)
+               execute return_diagonal4 tpp
+               t2abia(a,b,i1,a1) = -1.0
+               t1abia(a,b,i,a1)  = t2abia(a,b,i1,a1)*tpp(i1,i)
+               tabia(a,b,i,a1)  += t1abia(a,b,i,a1)
+            ENDDO i1
+
+            DO a2
+               GET                 HBAR_aa(a1,a2)
+               tpp(a1,a2)        = HBAR_aa(a1,a2)
+               execute return_diagonal4 tpp
+               t2abia(a,b,i,a2) = 1.0
+               t1abia(a,b,i,a1) = t2abia(a,b,i,a2)*tpp(a1,a2)
+               tabia(a,b,i,a1) += t1abia(a,b,i,a1)
+            ENDDO a2
+
+
+            DO a2
+               GET                HBAR_aa(a,a2)
+               tpp(a,a2)        = HBAR_aa(a,a2)
+               execute return_diagonal4 tpp
+               t2abia(a2,b,i,a1) = 1.0
+               t1abia(a,b,i,a1) = t2abia(a2,b,i,a1)*tpp(a,a2)
+               tabia(a,b,i,a1) += t1abia(a,b,i,a1)
+            ENDDO a2
+
+            DO a2
+               GET                HBAR_aa(b,a2)
+               tpp(b,a2)        = HBAR_aa(b,a2)
+               execute return_diagonal4 tpp
+               t2abia(a,a2,i,a1) = 1.0
+               t1abia(a,b,i,a1) = t2abia(a,a2,i,a1)*tpp(b,a2)
+               tabia(a,b,i,a1) += t1abia(a,b,i,a1)
+            ENDDO a2
+
+            PREPARE D2_ABAA(a,b,i,a1) += tabia(a,b,i,a1)
+            PREPARE D2_ABBB(a,b,i,a1) += tabia(a,b,i,a1)
+
+    ENDPARDO a, b, a1,i
+
+    execute server_barrier
+
+#bgn_debug
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b1
+#            get d1_ab(a,b1)
+#            tmp = d1_ab(a,b1) *  d1_ab(a,b1)
+#            tmpa+= tmp
+#      endpardo a, b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#     suma =0.0
+#      pardo a,b,i1,a1
+#            request d2_abaa(a,b,i1,a1) a1
+#            tmp = d2_abaa(a,b,i1,a1) * d2_abaa(a,b,i1,a1)
+#            tmpa+= tmp
+#      endpardo a,b,i1,a1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo a,b,j1,b1
+#            request d2_abbb(a,b,j1,b1) b1
+#            tmp = d2_abbb(a,b,j1,b1) * d2_abbb(a,b,j1,b1)
+#            tmpa+= tmp
+#      endpardo a,b,j1,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#end_debug
+
+    ENDPROC FORM_13P1H_DIAG
+#   -----------------------
+
+    PROC THREE_BODY_INTMD
+#   ---------------------
+# Three body intermediate X(a,m) = R(Ef)*Hbar(An,Ef) + R(Ae,{fn,FN})*V(m{Nn},e{Ff})# - R(Eb,{fn,FN})*V(M{Nn},E{Ff}) - R(Ce,{fn,FN})*V(m{Nn},e{Ef})
+#
+     PARDO a1, b1, a, j
+
+            REQUEST       HBAR_AIBC_aabb(a,a1,j,b1) j
+            GET           R1_AB(a1,b1)
+            tmpaj(a,j)  = HBAR_AIBC_aabb(a,a1,j,b1)*R1_AB(a1,b1)
+            PUT Xaj(a,j) += tmpaj(a,j)
+
+     ENDPARDO a1, b1, a, j
+
+     PARDO a, b1, i1, a1
+
+            REQUEST R2_ABAA(a,b1,i1,a1) a1
+
+            DO j
+               REQUEST        Vpiqj(a1,i1,b1,j) j
+               tmpaj(a,j)   = R2_ABAA(a,b1,i1,a1)*Vpiqj(a1,i1,b1,j)
+               PUT Xaj(a,j) += tmpaj(a,j)
+            ENDDO j
+
+     ENDPARDO a, b1, i1, a1
+
+     PARDO a, b, b1, j1
+
+            REQUEST R2_ABBB(b,a,j1,b1) b1
+
+            DO j
+               REQUEST         VSqjqj(b,j,b1,j1) j1
+               tmpaj(a,j)   =  R2_ABBB(b,a,j1,b1)*VSqjqj(b,j,b1,j1)
+               tmpaj(a,j)  *=  0.5
+               PUT Xaj(a,j) += tmpaj(a,j)
+            ENDDO j
+
+     ENDPARDO a, b, b1, j1
+
+     PARDO b, i, b1, a1
+
+            REQUEST      HBAR_AIBC_bbaa(b,b1,i,a1) a1
+            GET          R1_AB(a1,b1)
+            tmpbi(b,i)  = HBAR_AIBC_bbaa(b,b1,i,a1)*R1_AB(a1,b1)
+            PUT Xbi(b,i) += tmpbi(b,i)
+
+     ENDPARDO b, i, b1, a1
+
+     PARDO a1, b, b1, j1
+
+             REQUEST R2_ABBB(b,a1,j1,b1) b1
+
+             DO i
+                REQUEST      Vpiqj(a1,i,b1,j1) j1
+                Tmpbi(b,i) = R2_ABBB(b,a1,j1,b1)*Vpiqj(a1,i,b1,j1)
+                PUT Xbi(b,i) += tmpbi(b,i)
+             ENDDO i
+
+     ENDPARDO a1, b, b1, j1
+
+     PARDO a1, b, a2, i1
+
+           REQUEST R2_ABAA(a1,b,i1,a2) a2
+
+            DO i
+               REQUEST       VSpipi(a1,i,a2,i1) i1
+               tmpbi(b,i) =  R2_ABAA(a1,b,i1,a2)*VSpipi(a1,i,a2,i1)
+               tmpbi(b,i) *=  0.5
+               PUT Xbi(b,i) += tmpbi(b,i)
+            ENDDO i
+     ENDPARDO a1, b, a2, i1
+
+     execute sip_barrier 
+
+    ENDPROC THREE_BODY_INTMD
+#   ------------------------
+
+    PROC AOLADDER_R1_AB
+#   -------------------
+#
+#    Form Half back transformed cluster arrays
+#    -----------------------------------------
+#
+     PARDO b, lambda
+
+         Zab(lambda,b) = 0.0
+#
+             do a
+#
+             get             R1_AB(a,b)
+#
+             Txb(lambda,b) = R1_AB(a,b)*ca(lambda,a)
+             Zab(lambda,b) += Txb(lambda,b)
+#
+             enddo a
+#
+          PUT T1AO_ab(lambda,b) = Zab(lambda,b)
+#
+     ENDPARDO b, lambda
+#
+     execute sip_barrier
+#
+     PARDO lambda, sigma
+#
+       ZZab(lambda,sigma)  = 0.0
+
+       PUT T2AO_ab(lambda,sigma) = ZZab(lambda,sigma)
+#
+           DO b
+              get                 T1AO_ab(lambda,b)
+              T1xx(lambda,sigma) = T1AO_ab(lambda,b)*ca(sigma,b)
+              ZZab(lambda,sigma) += T1xx(lambda,sigma)
+           ENDDO b
+#
+       PUT TAO_ab(lambda,sigma) = ZZab(lambda,sigma)
+#
+     ENDPARDO lambda, sigma
+
+     execute sip_barrier
+#
+#     Contract AOINT with half back transformed Amplitudes
+#    ----------------------------------------------------
+#
+     PARDO mu, nu, lambda, sigma
+#
+           compute_integrals           aoint(lambda,mu,sigma,nu)
+           txxxx(lambda,mu,sigma,nu) = aoint(lambda,mu,sigma,nu)
+#
+           get                       TAO_ab(lambda,sigma)
+           Yab(mu,nu)              = txxxx(lambda,mu,sigma,nu)*TAO_ab(lambda,sigma)
+           put T2AO_ab(mu,nu) += Yab(mu,nu)
+#
+     ENDPARDO mu, nu, lambda, sigma
+#
+     execute sip_barrier
+#
+#    Perform final transformation
+#    ----------------------------
+
+     PARDO a, nu
+#
+       Tax(a,nu) = 0.0
+#
+          do mu
+#
+              get T2AO_ab(mu,nu)
+              T1ax(a,nu) = T2AO_ab(mu,nu)*ca(mu,a)
+              Tax(a,nu)+=T1ax(a,nu)
+#
+          enddo mu
+#
+       put tttax(a,nu) = Tax(a,nu)
+#
+     ENDPARDO a, nu
+#
+     execute sip_barrier
+#
+     PARDO a, b, mu
+#
+              get tttax(a,mu)
+              tab(a,b)=tttax(a,mu)*ca(mu,b)
+              put AOHR1_AB(a,b)+=tab(a,b)
+     ENDPARDO a, b, mu
+#
+     execute sip_barrier
+
+     Pardo a, b
+         Get AOHR1_AB(a,b) 
+         Tab(a,b)  = AOHR1_AB(a,b)
+         Tab(a,b) *= 0.5
+         Put HR1_AB(a,b) += Tab(a,b)
+
+         Get AOHR1_AB(b,a) 
+         Tab(b,a)  = AOHR1_AB(b,a)
+         T1ab(a,b) = Tab(b,a)
+         T1ab(a,b) *= 0.5
+         Put HR1_AB(a,b) += T1ab(a,b) 
+
+     Endpardo a, b
+
+     execute sip_barrier
+
+    ENDPROC AOLADDER_R1_AB
+#   ----------------------
+
+    PROC AOLADDER_R2_ABAA
+#   ---------------------
+
+#    Form Half back transformed cluster arrays: Compute S(Ef,KC)*V(Ab,Ef)
+#    ----------------------------------------
+#
+# DO S(E,f,K,C) -> S(lambda,sigma,K,C)
+# First  S(lambda,sigma,A,A)
+#
+#
+     PARDO b, lambda, i, a1
+#
+         Zxbia(lambda,b,i,a1) = 0.0
+#
+             do a
+#
+             REQUEST                R2_ABAA(a,b,i,a1) a1
+             Txbia(lambda,b,i,a1) = R2_ABAA(a,b,i,a1)*ca(lambda,a)
+             Zxbia(lambda,b,i,a1) += Txbia(lambda,b,i,a1)
+
+             enddo a
+#
+          PREPARE T2AO_xbia(lambda,b,i,a1)= Zxbia(lambda,b,i,a1)
+#
+     ENDPARDO b, lambda, i, a1
+
+     PARDO a, lambda, i, a1
+#
+         Zaxia(a,lambda,i,a1) = 0.0
+#
+             do b
+#
+             REQUEST                R2_ABAA(a,b,i,a1) a1
+             Taxia(a,lambda,i,a1) = R2_ABAA(a,b,i,a1)*ca(lambda,b)
+             Zaxia(a,lambda,i,a1) += Taxia(a,lambda,i,a1)
+
+             enddo b
+#
+          PREPARE T2AO_axia(a,lambda,i,a1)= Zaxia(a,lambda,i,a1)
+#
+     ENDPARDO a, lambda, i, a1
+
+     PARDO b, lambda, i, a
+#
+         Zabix(a,b,i,lambda) = 0.0
+
+#
+             do a1
+#
+             REQUEST               R2_ABAA(a,b,i,a1) a1
+             Tabix(a,b,i,lambda) = R2_ABAA(a,b,i,a1)*ca(lambda,a1)
+             Zabix(a,b,i,lambda) += Tabix(a,b,i,lambda)
+
+             enddo a1
+#
+          PREPARE T2AO_abix(a,b,i,lambda) = Zabix(a,b,i,lambda)
+#
+     ENDPARDO b, lambda, i, a
+
+     execute server_barrier
+#
+     PARDO lambda, sigma, i, a1
+#
+       ZZxxia(lambda,sigma,i,a1) = 0.0
+#
+           DO b
+
+              REQUEST                      T2AO_xbia(lambda,b,i,a1) a1
+              Txxia(lambda,sigma,i,a1)   = T2AO_xbia(lambda,b,i,a1)*ca(sigma,b)
+              ZZxxia(lambda,sigma,i,a1) += Txxia(lambda,sigma,i,a1)
+
+           ENDDO b
+
+       PREPARE T2IAO_xxia(lambda,sigma,i,a1) = ZZxxia(lambda,sigma,i,a1)
+#
+     ENDPARDO lambda, sigma, i, a1
+
+
+     PARDO lambda, sigma, i, a
+#
+       ZZaxix(a,sigma,i,lambda) = 0.0
+#
+           DO b
+
+              REQUEST                     T2AO_abix(a,b,i,lambda) lambda
+              Taxix(a,sigma,i,lambda)  =  T2AO_abix(a,b,i,lambda)*ca(sigma,b)
+              ZZaxix(a,sigma,i,lambda) += Taxix(a,sigma,i,lambda)
+
+           ENDDO b
+
+       PREPARE T2IAO_axix(a,sigma,i,lambda) = ZZaxix(a,sigma,i,lambda)
+#
+     ENDPARDO lambda, sigma, i, a
+
+#
+# Now S(lambda,sigma,A,B)
+#
+     PARDO lambda, sigma, i, b
+#
+       ZZxbix(lambda,b,i,sigma) = 0.0
+#
+           DO a
+
+              REQUEST                     T2AO_xbia(lambda,b,i,a) a
+              Txbix(lambda,b,i,sigma)   = T2AO_xbia(lambda,b,i,a)*Ca(sigma,a)
+              ZZxbix(lambda,b,i,sigma) += Txbix(lambda,b,i,sigma)
+
+              REQUEST                     T2AO_abix(a,b,i,sigma) sigma
+              Txbix(lambda,b,i,sigma)   = T2AO_abix(a,b,i,sigma)*Ca(lambda,a)
+              ZZxbix(lambda,b,i,sigma) += Txbix(lambda,b,i,sigma) 
+
+           ENDDO a
+#
+       PREPARE T2IAO_xbix(lambda,b,i,sigma) = ZZxbix(lambda,b,i,sigma)
+
+     ENDPARDO lambda, sigma, i, b
+#
+     execute server_barrier
+
+# Contract AOINT with half back transformed Amplitudes
+# Form S(lamda,sigma,i,a)W(mu,nu,lambda,sigma) = Taa(mu,nu)
+# Form S(lamda,sigma,i,b)W(mu,nu,lambda,sigma) = Tab(mu,nu)
+#    ----------------------------------------------------
+#
+     PARDO mu, nu, lambda, sigma
+#
+           compute_integrals            aoint(lambda,mu,sigma,nu)
+           Ixxxx(lambda,mu,sigma,nu)   = aoint(lambda,mu,sigma,nu)
+           I1xxxx(lambda,sigma,mu,nu)  = Ixxxx(lambda,mu,sigma,nu)
+#
+           DO i
+              DO a1
+                 REQUEST                         T2IAO_xxia(lambda,sigma,i,a1) a1
+                 T1xxia(mu,nu,i,a1)            = T2IAO_xxia(lambda,sigma,i,a1)*I1xxxx(lambda,sigma,mu,nu)
+                 Z1xxia(mu,nu,i,a1)            = T1xxia(mu,nu,i,a1)
+                 PREPARE T2AO_xxia(mu,nu,i,a1) += Z1xxia(mu,nu,i,a1)
+              ENDDO a1
+           ENDDO i
+
+           DO i
+              DO a
+                 REQUEST                        T2IAO_axix(a,lambda,i,sigma) sigma
+                 T1axix(a,mu,i,nu)            = T2IAO_axix(a,lambda,i,sigma)*I1xxxx(lambda,sigma,mu,nu)
+                 Z1axix(a,mu,i,nu)            = T1axix(a,mu,i,nu)
+                 PREPARE T2AO_axix(a,mu,i,nu) += Z1axix(a,mu,i,nu)
+              ENDDO a
+           ENDDO i
+
+           DO i
+              DO b
+                 REQUEST                        T2IAO_xbix(lambda,b,i,sigma) b
+                 T1xbix(mu,b,i,nu)            = T2IAO_xbix(lambda,b,i,sigma)*I1xxxx(lambda,sigma,mu,nu)
+                 Z1xbix(mu,b,i,nu)            = T1xbix(mu,b,i,nu)
+                 PREPARE T2AO_xbix(mu,b,i,nu) += Z1xbix(mu,b,i,nu)
+              ENDDO b
+           ENDDO i
+
+     ENDPARDO mu, nu, lambda, sigma
+#
+     execute server_barrier
+#
+#
+# Perform final transformation: T(mu,nu,i,a) -> T(a,b,i,a) and
+# T(mu,nu,i,b)  -> T(a,b,i,a)
+#
+     PARDO a, nu, i, a1
+#
+       Taxia(a,nu,i,a1) = 0.0
+#
+          do mu
+#
+              REQUEST              T2AO_xxia(mu,nu,i,a1) a1
+              T1axia(a,nu,i,a1) =  T2AO_xxia(mu,nu,i,a1)*Ca(mu,a)
+              Taxia(a,nu,i,a1)  += T1axia(a,nu,i,a1)
+          enddo mu
+#
+       PREPARE tttaxia(a,nu,i,a1) = Taxia(a,nu,i,a1)
+#
+     ENDPARDO a, nu, i, a1
+
+     PARDO a, mu, i, a1
+#
+       Taxia(a,mu,i,a1) = 0.0
+#
+          do nu
+#
+              REQUEST              T2AO_axix(a,mu,i,nu) nu
+              T1axia(a,mu,i,a1) =  T2AO_axix(a,mu,i,nu)*Ca(nu,a1)
+              Taxia(a,mu,i,a1)  += T1axia(a,mu,i,a1)
+          enddo nu
+#
+       PREPARE tttaxia(a,mu,i,a1) += Taxia(a,mu,i,a1)
+#
+     ENDPARDO a, mu, i, a1
+#
+     PARDO a, nu, i, b
+#
+          Tabix(a,b,i,nu) = 0.0
+#
+          do mu
+#
+              REQUEST             T2AO_xbix(mu,b,i,nu) nu
+
+              T1xbix(mu,b,i,nu) = T2AO_xbix(mu,b,i,nu)
+              T1abix(a,b,i,nu)  = T1xbix(mu,b,i,nu)*Ca(mu,a)
+              Tabix(a,b,i,nu)  += T1abix(a,b,i,nu)
+          enddo mu
+#
+       PREPARE tttabix(a,b,i,nu) = Tabix(a,b,i,nu)
+
+     ENDPARDO a, nu, i, b
+
+     execute server_barrier
+#
+     PARDO a, a1, b, i
+
+             Tabia(a,b,i,a1)  = 0.0
+
+             DO mu
+
+                REQUEST             Tttaxia(a,mu,i,a1) a1
+                T1abia(a,b,i,a1)  = Tttaxia(a,mu,i,a1)*ca(mu,b)
+                Tabia(a,b,i,a1)  += T1abia(a,b,i,a1)
+
+             ENDDO mu
+
+             PREPARE HR2_ABAA(a,b,i,a1) += Tabia(a,b,i,a1)
+             
+     ENDPARDO a, a1, b, i
+
+     PARDO a, b, a1, i
+
+            Tabia(a,b,i,a1) = 0.0
+
+             DO mu
+                REQUEST             tttabix(a,b,i,mu) mu
+                T1abia(a,b,i,a1)  = tttabix(a,b,i,mu)*ca(mu,a1)
+                Tabia(a,b,i,a1)  += T1abia(a,b,i,a1)
+             ENDDO mu
+
+             Tabia(a,b,i,a1)  *= 0.5
+             PREPARE HR2_ABAA(a,b,i,a1) += Tabia(a,b,i,a1)
+
+     ENDPARDO a, b, a1, i
+
+     execute server_barrier
+#
+     ENDPROC AOLADDER_R2_ABAA
+#    ------------------------
+#
+     PROC HBARDIR_R1
+#    ---------------
+#
+     PARDO i, j
+#
+        tij(i,j)=0.0
+        put Nij(i,j)=tij(i,j)
+#
+     ENDPARDO i, j
+#
+     PARDO a, j
+#
+        tai_ab(a,j)=0.0
+        put Nai_ab(a,j)=tai_ab(a,j)
+#
+     ENDPARDO a, j
+#
+     PARDO b, i
+#
+        tai_ba(b,i)=0.0
+        put Nai_ba(b,i)=tai_ba(b,i)
+#
+     ENDPARDO b, i
+#
+     execute sip_barrier
+#
+     PARDO a, b
+#
+        get R1_AB(a,b)
+#
+           do i
+           do j
+              request         Vpiqj(a,i,b,j) j
+              tij(i,j)      = Vpiqj(a,i,b,j)*R1_AB(a,b)
+              put Nij(i,j) += tij(i,j)
+           enddo j
+           enddo i
+#
+     ENDPARDO a, b
+#
+     PARDO i, a, b, b1
+#
+        request            Vbbai(b,b1,a,i) i
+        get                R1_AB(a,b1)
+#
+        tai_ba(b,i)     =  Vbbai(b,b1,a,i)*R1_AB(a,b1)
+        put Nai_ba(b,i) += tai_ba(b,i)
+#
+     ENDPARDO i, a, b, b1
+#
+     PARDO j, b, a, a1
+#
+        request            Vaabj(a,a1,b,j) j
+        get                R1_AB(a1,b)
+#
+        tai_ab(a,j)      = Vaabj(a,a1,b,j)*R1_AB(a1,b)
+        Put Nai_ab(a,j) +=  tai_ab(a,j)
+
+     ENDPARDO j, b, a, a1
+
+     execute sip_barrier
+
+     PARDO a, b
+        DO i 
+           Get Nai_ba(b,i) 
+           Get T1a(a,i)
+            
+           Tab(a,b) = Nai_ba(b,i) * T1a(a,i)
+           Tab(a,b) *= -1.0
+           Put AOHR1_AB(a,b) += Tab(a,b)
+        ENDDO i
+
+        DO j 
+           Get Nai_ab(a,j)
+           Get T1b(b,j)
+     
+           Tab(a,b) = Nai_ab(a,j) * T1b(b,j)
+           Tab(a,b) *= -1.0
+           Put AOHR1_AB(a,b) += Tab(a,b) 
+        ENDDO j
+
+        DO i
+        DO j
+           Get Nij(i,j)
+           Request Tau_ab(a,i,b,j) j
+           Taibj(a,i,b,j) = Tau_ab(a,i,b,j)
+
+            Tab(a,b)  = Tau_ab(a,i,b,j) * Nij(i,j)
+            Put AOHR1_AB(a,b) += Tab(a,b) 
+        ENDDO j
+        ENDDO i
+             
+     ENDPARDO a, b
+     execute sip_barrier
+#
+     ENDPROC HBARDIR_R1
+#    -----------------
+
+     PROC HBARDIR_R2
+#     -------------
+# Form S(e,f,k,c)*V(am,ef) + S(e,f,k,c)V(mn,ef)
+#
+     PARDO i, j, i1, a
+#
+        tijia(i,j,i1,a)=0.0
+        PREPARE Nijia(i,j,i1,a)=tijia(i,j,i1,a)
+#
+     ENDPARDO i, j, i1, a
+#
+     PARDO i, i1, i2, b
+#
+        tibii(i,b,i1,i2)=0.0
+        PREPARE Nibii(i,b,i1,i2)=tibii(i,b,i1,i2)
+#
+     ENDPARDO i, i1, i2, b
+
+     PARDO a, i, j, i1
+#
+        tajii(a,j,i,i1) = 0.0
+        PREPARE Najii(a,j,i,i1) = tajii(a,j,i,i1)
+#
+     ENDPARDO a, i, j, i1
+#
+     PARDO a, j, i, a1
+#
+        tai_abia(a,j,i,a1)=0.0
+        PREPARE Nai_abia1(a,j,i,a1)=tai_abia(a,j,i,a1)
+        PREPARE Nai_abia2(a,j,i,a1)=tai_abia(a,j,i,a1)
+#
+     ENDPARDO a, j, i, a1
+#
+     PARDO a, b, i, i1
+#
+        tai_abii(a,b,i,i1)=0.0
+        PREPARE Nai_abii1(a,b,i,i1)=tai_abii(a,b,i,i1)
+        PREPARE Nai_abii2(a,b,i,i1)=tai_abii(a,b,i,i1)
+#
+     ENDPARDO a, b, i, i1
+
+     PARDO b, i, i1, a
+#
+        tai_ibia(i,b,i1,a)=0.0
+        PREPARE Nai_ibia1(i,b,i1,a)=tai_ibia(i,b,i1,a)
+        PREPARE Nai_ibia2(i,b,i1,a)=tai_ibia(i,b,i1,a)
+#
+     ENDPARDO b, i, i1, a
+     execute server_barrier
+#
+# AA(1): S(a1,b,i,a2)*V(a2,a1,i1,i2)
+#
+     PARDO a1, b, i, a2
+#
+        REQUEST R2_ABAA(a1,b,i,a2) a2
+#
+           do i1
+           do i2
+              REQUEST                      VSpipi(a1,i1,a2,i2) i2
+              tmpaaii(a1,a2,i1,i2)       = VSpipi(a1,i1,a2,i2)
+              tibii(i1,b,i,i2)           = tmpaaii(a1,a2,i1,i2) * R2_ABAA(a1,b,i,a2)
+              PREPARE Nibii(i1,b,i,i2)   += tibii(i1,b,i,i2)
+           enddo i2
+           enddo i1
+#
+     ENDPARDO a1, b, i, a2
+
+#
+# AB(2): S(a,b,i1,a)*V(a,b,i,j)
+#
+     PARDO a, b, i1, a1
+#
+        REQUEST R2_ABAA(a,b,i1,a1) a1
+#
+           do i
+           do j
+              REQUEST                      Vpiqj(a,i,b,j) j
+              tmpabij(a,b,i,j)           = Vpiqj(a,i,b,j)
+              tijia(i,j,i1,a1)           = tmpabij(a,b,i,j)*R2_ABAA(a,b,i1,a1)
+              PREPARE Nijia(i,j,i1,a1)  += tijia(i,j,i1,a1)
+           enddo j
+           enddo i
+#
+     ENDPARDO a, b, i1, a1
+#
+# AB(3) S(a,b1,i,a1)*V(a1,i1,b1,j);
+
+     PARDO i1, a1, b1, j
+#
+        REQUEST Vpiqj(a1,i1,b1,j) j
+        tmpabij(a1,b1,i1,j)      = Vpiqj(a1,i1,b1,j)
+
+        DO i
+        DO a
+           REQUEST                    R2_ABAA(a,b1,i,a1) a1
+           tmpabia(a1,b1,i,a)       = R2_ABAA(a,b1,i,a1)
+           tmpijia(i1,j,i,a)        = tmpabij(a1,b1,i1,j)*tmpabia(a1,b1,i,a)
+           tajii(a,j,i,i1)          = tmpijia(i1,j,i,a)
+           PREPARE Najii(a,j,i,i1) += tajii(a,j,i,i1)
+        ENDDO a
+        ENDDO i
+
+     ENDPARDO i1, a1, b1, j
+#
+# AB(1) S(a2,b,i,a1)V(a2,b,a,j)
+#
+     PARDO j, b, a, a2
+#
+        request Vaabj(a2,a,b,j) j
+        tmpabaj(a2,b,a,j)           = Vaabj(a2,a,b,j)
+
+        DO i
+        DO a1
+           REQUEST                        R2_ABAA(a2,b,i,a1) a1
+           tmpiaaj(i,a1,a,j)            = R2_ABAA(a2,b,i,a1)*tmpabaj(a2,b,a,j)
+           tai_abia(a,j,i,a1)           = tmpiaaj(i,a1,a,j)
+           PREPARE Nai_abia1(a,j,i,a1) += tai_abia(a,j,i,a1)
+        ENDDO a1
+        ENDDO i
+#
+     ENDPARDO j, b, a, a2
+#
+#AB(2) S(a,b,i,a2)V(a2,a1,b,j)
+
+     PARDO j, b, a1, a2
+#
+        request Vaabj(a2,a1,b,j) j
+        tmpabaj(a2,b,a1,j)           = Vaabj(a2,a1,b,j)
+
+        DO i
+        DO a
+           REQUEST                        R2_ABAA(a,b,i,a2) a2
+           tmpabia(a2,b,i,a)            = R2_ABAA(a,b,i,a2)
+           tmpiaaj(i,a,a1,j)            = tmpabia(a2,b,i,a)*tmpabaj(a2,b,a1,j)
+           tai_abia(a,j,i,a1)           = tmpiaaj(i,a,a1,j)
+           PREPARE Nai_abia2(a,j,i,a1) += tai_abia(a,j,i,a1)
+        ENDDO a
+        ENDDO i
+#
+     ENDPARDO j, b, a1, a2
+#
+# AB(3) S(a,b1,i,a1)V(b1,b,a1,i)
+#
+     PARDO b1, b, a1, i1
+#
+        REQUEST Vbbai(b1,b,a1,i1) i1
+
+        DO i
+        DO a
+           REQUEST                         R2_ABAA(a,b1,i,a1) a1
+           tai_abii(a,b,i,i1)            = R2_ABAA(a,b1,i,a1)*Vbbai(b1,b,a1,i1)
+           PREPARE Nai_abii1(a,b,i,i1)  += tai_abii(a,b,i,i1)
+        ENDDO a
+        ENDDO i
+#
+     ENDPARDO b1, b, a1, i1
+#
+# AA(4) S(a1,b,i,a2)V(a1,a,a2,i1)
+#
+     PARDO a1, a2, a, i1
+
+        REQUEST VSaaai(a1,a,a2,i1) i1
+        tmpaaai(a1,a2,a,i1)           = VSaaai(a1,a,a2,i1)
+        DO i
+        Do b
+           REQUEST                         R2_ABAA(a1,b,i,a2) a2
+           tmpbiaa(b,i,a1,a2)            = R2_ABAA(a1,b,i,a2)
+           tmpbiai(b,i,a,i1)             = tmpbiaa(b,i,a1,a2)*tmpaaai(a1,a2,a,i1)
+           tai_abii(a,b,i,i1)            = tmpbiai(b,i,a,i1)
+           PREPARE Nai_abii2(a,b,i,i1)  += tai_abii(a,b,i,i1)
+        ENDDO b
+        ENDDO i
+
+     ENDPARDO a1, a2, a, i1
+#
+# AB(5) S(a2,b1,i,a1)V(a2,b1,i1,b)
+#
+     PARDO b1, b, a2, i1
+
+        REQUEST Vbbai(b1,b,a2,i1) i1
+
+        DO i
+        DO a1
+           REQUEST                          R2_ABAA(a2,b1,i,a1) a1
+           tmpabib(a2,b1,i1,b)            = Vbbai(b1,b,a2,i1)
+           tai_ibia(i1,b,i,a1)            = R2_ABAA(a2,b1,i,a1)*tmpabib(a2,b1,i1,b)
+           PREPARE Nai_ibia1(i1,b,i,a1)  += tai_ibia(i1,b,i,a1)
+        ENDDO a1
+        ENDDO i
+
+     ENDPARDO b1, b, a2, i1
+#
+# AA(6) S(a1,b,i,a2)V(a1,a2,i1,a)
+#
+     PARDO a1, a, a2, i1
+
+        REQUEST VSaaai(a1,a,a2,i1) i1
+
+        DO i
+        DO b
+           REQUEST                         R2_ABAA(a1,b,i,a2) a2
+           tmpaaia(a2,a1,i1,a)           = VSaaai(a1,a,a2,i1)
+           tai_ibia(i1,b,i,a)            = R2_ABAA(a1,b,i,a2)*tmpaaia(a2,a1,i1,a)
+           PREPARE Nai_ibia2(i1,b,i,a)  += tai_ibia(i1,b,i,a)
+        ENDDO b
+        ENDDO i
+
+     ENDPARDO  a1, a, a2, i1
+
+     Execute server_barrier 
+
+     PARDO a, b, a1, i
+        T2abia(a1,b,i,a) = 0.0
+        DO i1
+        DO j
+           REQUEST Nijia(i1,j,i,a) a
+           REQUEST Tau_ab(a1,i1,b,j) j
+           Tijia(i1,j,i,a) = Nijia(i1,j,i,a)
+           Taibj(a1,i1,b,j)= Tau_ab(a1,i1,b,j)
+
+           T1abia(a1,b,i,a) = Taibj(a1,i1,b,j) * Tijia(i1,j,i,a)
+           PREPARE HR2_ABAA(a1,b,i,a) += T1abia(a1,b,i,a)
+           T2abia(a1,b,i,a) += T1abia(a1,b,i,a)
+        ENDDO j
+        ENDDO i1
+#
+## The first factor (0.5) looks OK. But I am not 100% sure why 0.25. However,
+## 0.25 (instead of 0.5) is needed to match with HBAR_ABCD route.
+#
+        DO i1
+        DO i2
+           REQUEST Nibii(i1,b,i,i2) i2
+           REQUEST Nibii(i2,b,i,i1) i1
+           REQUEST Tau_aa(a1,i1,a,i2) i2
+
+           Tibii(i1,b,i,i2)  = Nibii(i1,b,i,i2)
+           T1ibii(i1,b,i,i2) = Nibii(i2,b,i,i1)
+           Tibii(i1,b,i,i2) -= T1ibii(i1,b,i,i2)
+           Tibii(i1,b,i,i2) *= 0.5
+
+           Taiai(a1,i1,a,i2) = Tau_aa(a1,i1,a,i2)
+
+           T1abia(a1,b,i,a)  = Taiai(a1,i1,a,i2) *  Tibii(i1,b,i,i2) 
+           T1abia(a1,b,i,a) *= 0.25
+
+           PREPARE HR2_ABAA(a1,b,i,a) += T1abia(a1,b,i,a)
+        ENDDO i2
+        ENDDO i1
+
+        DO i1
+        DO j
+           REQUEST Najii(a1,j,i,i1) i
+           REQUEST Tau_ab(a,i1,b,j) j
+           Tajii(a1,j,i,i1) = Najii(a1,j,i,i1)
+           Taibj(a,i1,b,j)  = Tau_ab(a,i1,b,j)
+
+           T1abia(a1,b,i,a)  = Tajii(a1,j,i,i1) *  Taibj(a,i1,b,j)
+           PREPARE HR2_ABAA(a1,b,i,a) += T1abia(a1,b,i,a)
+        ENDDO j
+        ENDDO i1
+
+        DO j
+           GET T1b(b,j)
+           REQUEST Nai_abia1(a1,j,i,a) a
+
+           Tai_abia(a1,j,i,a) = Nai_abia1(a1,j,i,a)
+           Tbj(b,j)           = T1b(b,j)
+           T1abia(a1,b,i,a)   = Tbj(b,j) *  Tai_abia(a1,j,i,a)
+           T1abia(a1,b,i,a)  *= -1.0
+           PREPARE HR2_ABAA(a1,b,i,a) += T1abia(a1,b,i,a)
+
+           REQUEST Nai_abia2(a1,j,i,a) a
+           Tai_abia(a1,j,i,a) = Nai_abia2(a1,j,i,a)
+           T1abia(a1,b,i,a)   = Tbj(b,j) *  Tai_abia(a1,j,i,a)
+           T1abia(a1,b,i,a)  *= -1.0
+           PREPARE HR2_ABAA(a1,b,i,a) += T1abia(a1,b,i,a)
+
+        ENDDO j
+
+        DO i1
+           GET T1a(a1,i1)
+           GET T1a(a,i1)
+           REQUEST Nai_abii1(a,b,i,i1) i1
+
+           Tai_abii(a,b,i,i1) =  Nai_abii1(a,b,i,i1)
+           Tai(a1,i1)         =  T1a(a1,i1)
+           T1ai(a,i1)         =  T1a(a,i1)
+
+           T1abia(a,b,i,a1)  = Tai(a1,i1) * Tai_abii(a,b,i,i1)
+           T1abia(a,b,i,a1) *= -1.0
+           PREPARE HR2_ABAA(a,b,i,a1) += T1abia(a,b,i,a1)
+
+           REQUEST Nai_abii2(a,b,i,i1) i1
+           Tai_abii(a,b,i,i1) = Nai_abii2(a,b,i,i1)
+           T1abia(a,b,i,a1)   = Tai(a1,i1) * Tai_abii(a,b,i,i1)
+           T1abia(a,b,i,a1)  *= -0.5
+           PREPARE HR2_ABAA(a,b,i,a1) += T1abia(a,b,i,a1)
+        
+           REQUEST Nai_ibia1(i1,b,i,a1) a1
+           Tai_ibia(i1,b,i,a1) = Nai_ibia1(i1,b,i,a1)
+           T1abia(a,b,i,a1)    = T1ai(a,i1) * Tai_ibia(i1,b,i,a1)
+           T1abia(a,b,i,a1)   *= -1.0
+           PREPARE HR2_ABAA(a,b,i,a1) += T1abia(a,b,i,a1)
+
+           REQUEST  Nai_ibia2(i1,b,i,a1) a1
+           Tai_ibia(i1,b,i,a1) = Nai_ibia2(i1,b,i,a1)
+           T1abia(a,b,i,a1)    = T1ai(a,i1) * Tai_ibia(i1,b,i,a1)
+           T1abia(a,b,i,a1)   *= 0.5
+           PREPARE HR2_ABAA(a,b,i,a1) +=  T1abia(a,b,i,a1)
+        ENDDO i1
+           
+     ENDPARDO a, b, a1, i
+
+     EXECUTE SERVER_BARRIER 
+
+     ENDPROC HBARDIR_R2
+#    ------------------
+      PROC FORM_R1AB
+#     --------------
+
+# 1/2 r^{ef} Hbar^{ab}_{ef}
+
+      IF NO_AO_LADDER == ONE 
+
+      PARDO a, b, a1, b1
+            REQUEST          HBAR_aabb(a,a1,b,b1) a
+            GET              R1_AB(a1,b1)
+            tab(a,b)       = HBAR_aabb(a,a1,b,b1)*R1_AB(a1,b1)
+            tab(a,b)      *= 0.5
+            PUT HR1_AB(a,b) += tab(a,b)
+      ENDPARDO a, b, a1, b1
+
+      PARDO a, b, a1, b1
+            REQUEST          HBAR_aabb(b,b1,a,a1) a
+            GET              R1_AB(b1,a1)
+            tab(a,b)       = HBAR_aabb(b,b1,a,a1)*R1_AB(b1,a1)
+            tab(a,b)      *= 0.5
+            PUT HR1_AB(a,b) += tab(a,b)
+      ENDPARDO a, b, a1, b1
+
+      ENDIF 
+
+      PARDO a, b, b1
+
+          GET                   R1_AB(a,b1)
+          GET                   HBAR_bb(b,b1)
+          tab(a,b)            = R1_AB(a,b1)*HBAR_bb(b,b1)
+         PUT HR1_AB(a,b) += tab(a,b)
+
+      ENDPARDO a, b, b1
+
+      PARDO a, b, a1
+
+         GET              R1_AB(a1,b)
+         GET              HBAR_aa(a,a1)
+         tab(a,b)       = R1_AB(a1,b)*HBAR_aa(a,a1)
+         PUT HR1_AB(a,b) += tab(a,b)
+
+      ENDPARDO a, b, a1
+#
+      PARDO a, b1, a1, i1
+
+            REQUEST             R2_ABAA(a,b1,i1,a1) a1
+
+            DO b
+               REQUEST          HBAR_AIBC_bbaa(b,b1,i1,a1) i1
+               tab(a,b)       = R2_ABAA(a,b1,i1,a1)*HBAR_AIBC_bbaa(b,b1,i1,a1)
+               PUT HR1_AB(a,b) += tab(a,b)
+           ENDDO b
+
+    ENDPARDO a, b1, a1, i1
+
+    PARDO b1, a, b2, j1
+
+            REQUEST             R2_ABBB(b1,a,j1,b2) b2
+
+            DO b
+               REQUEST          HBAR_AIBC_bbbb(b,b1,j1,b2) j1
+               tab(a,b)       = R2_ABBB(b1,a,j1,b2)*HBAR_AIBC_bbbb(b,b1,j1,b2)
+               tab(a,b)      *= 0.5
+               PUT HR1_AB(a,b) += tab(a,b)
+            ENDDO b
+
+     ENDPARDO  b1, a, b2, j1
+
+
+     PARDO b, a1, a2, i1
+
+            REQUEST             R2_ABAA(a1,b,i1,a2) a2
+
+            DO a
+               REQUEST          HBAR_AIBC_aaaa(a,a1,i1,a2) i1
+               tab(a,b)       = R2_ABAA(a1,b,i1,a2)*HBAR_AIBC_aaaa(a,a1,i1,a2)
+               tab(a,b)      *= 0.5
+               PUT HR1_AB(a,b) += tab(a,b)
+            ENDDO a
+
+     ENDPARDO  b, a1, a2 i1
+
+     PARDO a1, b, b1, j1
+
+            REQUEST             R2_ABBB(b,a1,j1,b1) b1
+
+            DO a
+               REQUesT          HBAR_AIBC_aabb(a,a1,j1,b1) j1
+               tab(a,b)       = R2_ABBB(b,a1,j1,b1)*HBAR_AIBC_aabb(a,a1,j1,b1)
+               PUT HR1_AB(a,b) += tab(a,b)
+            ENDDO a
+
+     ENDPARDO a1, b, b1, j1
+
+     PARDO a, b, i1, a1
+
+            REQUEST          R2_ABAA(a,b,i1,a1) a1
+            GET              HBAR_ia(i1,a1)
+            tab(a,b)       = R2_ABAA(a,b,i1,a1)*HBAR_ia(i1,a1)
+            PUT HR1_AB(a,b) += tab(a,b)
+
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+
+            REQUEST          R2_ABBB(b,a,j1,b1) b1
+            GET              HBAR_jb(j1, b1)
+            tab(a,b)       = R2_ABBB(b,a,j1,b1)*HBAR_jb(j1, b1)
+            PUT HR1_AB(a,b) += tab(a,b)
+
+     ENDPARDO a, b, j1, b1
+
+     execute sip_barrier 
+     
+     ENDPROC FORM_R1AB
+#    -----------------
+
+     PROC FORM_R2AB
+#    --------------
+
+#
+# P(a/bc) S(a,e)*Hbar(bc,ei)
+#
+      PARDO b, a1, b1, i
+            REQUEST  HBAR_ABCI_bbaa(b,b1,a1,i) i
+
+            DO a
+               GET                          R1_AB(a,b1)
+               t1abia(a,b,i,a1)           = R1_AB(a,b1)*HBAR_ABCI_bbaa(b,b1,a1,i)
+               PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+            ENDDO a
+
+      ENDPARDO b, a1, b1, i
+
+      PARDO b, a, b1, i
+            REQUEST HBAR_ABCI_bbaa(b,b1,a,i) i
+
+            DO a1
+               GET                          R1_AB(a1,b1)
+               t1abia(a,b,i,a1)           = R1_AB(a1,b1)*HBAR_ABCI_bbaa(b,b1,a,i)
+               t1abia(a,b,i,a1)          *= -1.0
+               PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+            ENDDO a1
+      ENDPARDO b, a, b1, i
+#
+      PARDO a, a1, a2, i
+            REQUEST HBAR_ABCI_aaaa(a,a2,a1,i) i
+
+            DO b
+               GET                          R1_AB(a2,b)
+               t1abia(a,b,i,a1)           = R1_AB(a2,b)*HBAR_ABCI_aaaa(a,a2,a1,i)
+               PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+             ENDDO b
+
+      ENDPARDO a, a1, a2, i
+#
+# To debug ladder term, use precomputed Hbar(ef,ab).
+#
+# P(a/b,c)  S(e,f,i,c)*Hbar(ef,ab)
+#
+     IF NO_AO_LADDER == ONE 
+
+     PARDO a2, b1, a, b
+           REQUEST                            Hbar_aabb(a,a2,b,b1) b1
+
+           DO i
+              DO a1
+                 REQUEST                      R2_ABAA(a2,b1,i,a1) a1
+                 t1abia(a,b,i,a1)           = Hbar_aabb(a,a2,b,b1)*R2_ABAA(a2,b1,i,a1)
+                 PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+               ENDDO a1
+           ENDDO i
+
+    ENDPARDO a2, b1, a, b
+#
+    PARDO a1, a2, a3, a
+
+           REQUEST              Hbar_aabb(a,a2,a1,a3) a1
+           REQUEST              Hbar_aabb(a,a3,a1,a2) a1
+           tpppp(a2,a3,a,a1)  = Hbar_aabb(a,a2,a1,a3)
+           t1pppp(a2,a3,a,a1) = Hbar_aabb(a,a3,a1,a2)
+           tpppp(a2,a3,a,a1) -= t1pppp(a2,a3,a,a1)
+           tpppp(a2,a3,a,a1) *= 0.5
+
+           DO i
+              DO b
+                 REQUEST                      R2_ABAA(a2,b,i,a3) a3
+                 tmpaabi(a2,a3,b,i)         = R2_ABAA(a2,b,i,a3)
+                 t1abia(a,b,i,a1)           = tpppp(a2,a3,a,a1)*tmpaabi(a2,a3,b,i)
+                  PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+               ENDDO b
+           eNDDO i
+
+    ENDPARDO a1, a2, a3, a
+#
+    PARDO a2, b1, a1, b
+           REQUEST                            Hbar_aabb(a1,a2,b,b1) b1
+
+           DO i
+              DO a
+                 REQUEST                      R2_ABAA(a,b1,i,a2) a2
+                 t1abia(a,b,i,a1)           = Hbar_aabb(a1,a2,b,b1)*R2_ABAA(a,b1,i,a2)
+                 PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+               ENDDO a
+           ENDDO i
+
+    ENDPARDO a2, b1, a1, b
+
+    ENDIF 
+#
+# P(a/bc) S(e,b,c,i)*Hbar(e,a)
+#
+     PARDO a, b, a2, i
+           REQUEST R2_ABAA(a,b,i,a2) a
+
+           DO a1
+              GET                          HBAR_aa(a1,a2)
+              t1abia(a,b,i,a1)           = R2_ABAA(a,b,i,a2)*HBAR_aa(a1,a2)
+              PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+           ENDDO a1
+
+     ENDPARDO a, b, a2, i
+
+     PARDO a2, b, a1, i
+           REQUEST                         R2_ABAA(a2,b,i,a1) a1
+
+           DO a
+              GET                          HBAR_AA(a,a2)
+              t1abia(a,b,i,a1)           = R2_ABAA(a2,b,i,a1)*HBAR_AA(a,a2)
+              PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+           ENDDO a
+
+     ENDPARDO a2, b, a1, i
+
+     PARDO a, b1, a1, i
+           REQUEST                         R2_ABAA(a,b1,i,a1) a1
+
+           DO b
+              GET                          HBAR_BB(b,b1)
+              t1abia(a,b,i,a1)           = R2_ABAA(a,b1,i,a1)*HBAR_BB(b,b1)
+              PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+           ENDDO b
+     ENDPARDO a, b1, a1, i
+
+#
+# S(a,b,m,c)*Hbar(m,i)
+#
+     PARDO a, b, i1, a1
+           REQUEST               R2_ABAA(a,b,i1,a1) a1
+
+           DO i
+              GET                 HBAR_II(i1,i)
+              t1abia(a,b,i,a1) =  R2_ABAA(a,b,i1,a1)*HBAR_II(i1,i)
+              t1abia(a,b,i,a1) *= -1.0
+              PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+           ENDDO i
+
+     ENDPARDO a, b, i1, a1
+#
+#
+# P(a/b;b/c) S(a,e,m,c)*Hbar(bm,ei)
+#
+# All 5 terms sign is changed from - to + account for Hbar.
+#
+     PARDO a, b, a2, i1
+           REQUEST                 R2_ABAA(a,b,i1,a2) a2
+
+           DO a1
+              DO i
+                 REQUEST            HBAR_AJIB_aaaa(i1,a2,a1,i) i
+                 tmpabai(a,b,a1,i) = R2_ABAA(a,b,i1,a2)*HBAR_AJIB_aaaa(i1,a2,a1,i)
+                 t1abia(a,b,i,a1)  = tmpabai(a,b,a1,i)
+                 PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+               ENDDO i
+           ENDDO a1
+     ENDPARDO a, b, a2, i1
+#
+     PARDO a1, b, a2, i1
+           REQUEST                 R2_ABAA(a1,b,i1,a2) a2
+
+           DO a
+              DO i
+                 REQUEST            HBAR_AJIB_aaaa(i1,a2,a,i) i
+                 tmpabai(a1,b,a,i) = R2_ABAA(a1,b,i1,a2)*HBAR_AJIB_aaaa(i1,a2,a,i)
+                 t1abia(a,b,i,a1)  = tmpabai(a1,b,a,i)
+                 t1abia(a,b,i,a1) *= -1.0
+                 PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+               ENDDO i
+           ENDDO a
+     ENDPARDO a1, b, a2, i1
+     PARDO a, b, j1, b1
+           REQUEST                R2_ABBB(b,a,j1,b1) b1
+
+           DO a1
+              DO i
+                  REQUEST             HBAR_AJIB_bbaa(j1,b1,a1,i) i
+                  tmpabai(a,b,a1,i) = R2_ABBB(b,a,j1,b1)*HBAR_AJIB_bbaa(j1,b1,a1,i)
+                  t1abia(a,b,i,a1)  = tmpabai(a,b,a1,i)
+                  PREPARE  HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+              ENDDO i
+           ENDDO a1
+
+     ENDPARDO a, b, j1, b1
+
+     PARDO a1, b, j1, b1
+           REQUEST                R2_ABBB(b,a1,j1,b1) b1
+
+           DO a
+              DO i
+                  REQUEST             HBAR_AJIB_bbaa(j1,b1,a,i) i
+                  tmpabai(a,b,a1,i) = R2_ABBB(b,a1,j1,b1)*HBAR_AJIB_bbaa(j1,b1,a,i)
+                  t1abia(a,b,i,a1)  = tmpabai(a,b,a1,i)
+                  t1abia(a,b,i,a1) *= -1.0
+                  PREPARE  HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+              ENDDO i
+           ENDDO a
+
+     ENDPARDO a1, b, j1, b1
+
+    PARDO a, b1, a1, i1
+          REQUEST R2_ABAA(a,b1,i1,a1) a
+          DO b
+          DO i
+             REQUEST HBAR_ajib_iibb(i1,i,b,b1) b
+             t1abia(a,b,i,a1) = R2_ABAA(a,b1,i1,a1)*HBAR_ajib_iibb(i1,i,b,b1)
+            # note sign change due to HBAR  t1abia(a,b,i,a1)*= -1.0
+             PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+          ENDDO i
+          ENDDO b
+    ENDPARDO a, b1, a1,i1
+#
+# Three body terms computed via XAJ intermediate: R(a,b,i,c) =
+# Xaj(a,j)*T2(bc,ij) + Xbi(b,i1)*2(ac,i,i1)
+#
+      PARDO a1, b, j1, i
+
+            REQUEST T2ab(a1,i,b,j1) j1
+
+            DO a
+               GET                          Xaj(a,j1)
+               t1abia(a,b,i,a1)           = T2ab(a1,i,b,j1)*Xaj(a,j1)
+               t1abia(a,b,i,a1)          *= -1.0
+               PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+            ENDDO a
+
+      ENDPARDO a1, b, j1, i
+#
+      PARDO a, b, j1, i
+
+            REQUEST T2ab(a,i,b,j1) j1
+
+            DO a1
+               GET                          Xaj(a1,j1)
+               t1abia(a,b,i,a1)           = T2ab(a,i,b,j1)*Xaj(a1,j1)
+               PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+            ENDDO a1
+
+      ENDPARDO a, b, j1, i
+
+      PARDO a, a1, i, i2
+
+            REQUEST T2aa(a,i2,a1,i) i
+
+            DO b
+               GET                          Xbi(b,i2)
+               t1abia(a,b,i,a1)           = T2aa(a,i2,a1,i)*Xbi(b,i2)
+               t1abia(a,b,i,a1)          *= -1.0
+               PREPARE HR2_ABAA(a,b,i,a1) += t1abia(a,b,i,a1)
+            ENDDO b
+
+      ENDPARDO a, a1, i, i2
+
+     execute server_barrier 
+
+     ENDPROC FORM_R2AB
+#    -----------------
+
+     PROC ADD_F12
+#    ------------
+
+      PARDO a, b, b1
+
+          GET     R1_AB(a,b1)
+          REQUEST Hbar_ab_eomea(b1,b) b
+          tHbar_ab_eomea(b,b1) = Hbar_ab_eomea(b1,b)
+          tHbar_ab_eomea(b,b1) *= -1.0
+          tab(a,b)            = R1_AB(a,b1)*tHbar_ab_eomea(b,b1) 
+          PUT HR1_AB(a,b) += tab(a,b)
+
+      ENDPARDO a, b, b1
+
+      PARDO a, b, a1
+
+         GET     R1_AB(a1,b)
+         REQUEST Hbar_ab_eomea(a1,a) a
+         tHbar_ab_eomea(a,a1) = Hbar_ab_eomea(a1,a)
+         tHbar_ab_eomea(a,a1) *= -1.0
+
+         tab(a,b)       = R1_AB(a1,b)*tHbar_ab_eomea(a,a1)
+         PUT HR1_AB(a,b) += tab(a,b)
+
+      ENDPARDO a, b, a1
+
+     ENDPROC ADD_F12
+#    ------------
+
+      PROC INIT_AOL_ARRAYS
+#     --------------------
+      PARDO mu, nu
+          T1xx(mu,nu) = 0.0
+          PUT T2AO_ab(mu,nu) = T1xx(mu,nu)
+      ENDPARDO mu, nu
+
+      PARDO mu, nu
+          Do i 
+          DO a
+             Z1xxia(mu,nu,i,a) = 0.0
+             Z1axix(a,mu,i,nu) = 0.0
+             PREPARE T2AO_xxia(mu,nu,i,a) = Z1xxia(mu,nu,i,a) 
+             PREPARE T2AO_axix(a,mu,i,nu) = Z1axix(a,mu,i,nu)
+           ENDDO a
+
+           DO b
+              Z1xbix(mu,b,i,nu) = 0.0
+              PREPARE T2AO_xbix(mu,b,i,nu) = Z1xbix(mu,b,i,nu) 
+           ENDDO b
+           ENDDO i
+      ENDPARDO mu, nu
+      EXECUTE SERVER_BARRIER 
+
+      ENDPROC INIT_AOL_ARRAYS
+#     --------------------
+           
+      PROC HR_MULT
+#     ------------
+
+# Zero out HR arrays
+# ------------------
+#   
+      PARDO a, b1
+          tab(a,b1)      = 0.0
+          PUT HR1_AB(a,b1)   = tab(a,b1)
+          PUT AOHR1_AB(a,b1) = tab(a,b1)
+      ENDPARDO a, b1
+
+      PARDO b, i
+          tmpbi(b,i) = 0.0
+          PUT Xbi(b,i) = tmpbi(b,i)
+      ENDPARDO b, i
+
+      PARDO a, j
+          tmpaj(a,j) = 0.0
+          PUT Xaj(a,j) = tmpaj(a,j)
+      ENDPARDO a, j
+
+      PARDO a, b, i1, a1
+          tabia(a,b,i1,a1)       = 0.0
+          PREPARE HR2_ABAA(a,b,i1,a1) = tabia(a,b,i1,a1)
+      ENDPARDO a, b, i1, a1
+
+      PARDO a, b, j1, b1
+          tabjb(a,b,j1,b1)       = 0.0
+          PREPARE HR2_ABBB(a,b,j1,b1) = tabjb(a,b,j1,b1)
+      ENDPARDO a, b, j1, b1
+
+      execute server_barrier 
+
+      CALL THREE_BODY_INTMD
+      CALL FORM_R1AB
+      CALL FORM_R2AB
+      IF EAEOMF12CALC == ONE
+         CALL ADD_F12
+      ENDIF 
+
+      IF NO_AO_LADDER == ZERO
+         CALL INIT_AOL_ARRAYS 
+         CALL HBARDIR_R1
+         CALL HBARDIR_R2 
+         CALL AOLADDER_R1_AB
+         CALL AOLADDER_R2_ABAA
+      ENDIF 
+
+      ENDPROC HR_MULT
+#     ---------------
+
+      PROC FORM_ABBB
+#      --------------
+
+      IF SINGLET == ONE
+
+         PARDO a, b, j1, b1
+             REQUEST HR2_ABAA(a,b,j1,b1) b1
+             Tabia(a,b,j1,b1) = HR2_ABAA(a,b,j1,b1)
+             PREPARE HR2_ABBB(a,b,j1,b1) = Tabia(a,b,j1,b1)
+         ENDPARDO a, b, j1, b1
+               
+      ENDIF 
+
+      IF TRIPLET == ONE
+
+         PARDO a, b1
+
+             GET HR1_AB(a,b1) 
+             tab(a,b1) = HR1_AB(a,b1)
+
+             If a < b1
+                t1ab(b1,a)  = tab(a,b1)
+                t1ab(b1,a) *= -1.0
+                PUT HR1_AB_ASYM(a,b1) = tab(a,b1)
+                PUT HR1_AB_ASYM(b1,a) = t1ab(b1,a)
+             Endif
+
+             If a == b1
+                execute symm_force_ij tab 
+                PUT HR1_AB_ASYM(a,b1) = tab(a,b1)
+             Endif 
+           
+         ENDPARDO a, b1
+
+         EXECUTE SIP_BARRIER 
+
+         PARDO a, b1
+
+             GET HR1_AB_ASYM(a,b1) 
+             tab(a,b1) = HR1_AB_ASYM(a,b1)
+             PUT HR1_AB(a,b1)  = tab(a,b1)
+
+         ENDPARDO a, b1
+
+         PARDO a, b, j1, b1
+             REQUEST HR2_ABAA(a,b,j1,b1) b1
+             Tabia(a,b,j1,b1) = HR2_ABAA(a,b,j1,b1)
+             Tabia(a,b,j1,b1)*= -1.0
+             PREPARE HR2_ABBB(a,b,j1,b1) = Tabia(a,b,j1,b1)
+         ENDPARDO a, b, j1, b1
+
+      ENDIF
+      EXECUTE SERVER_BARRIER 
+
+#bgn_debug
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b1
+#            get hr1_ab(a,b1)
+#            tmp = hr1_ab(a,b1) * hr1_ab(a,b1)
+#            tmpa+= tmp
+#      endpardo a,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,i1,a1
+#            request hr2_abaa(a,b,i1,a1) a1
+#            tmp = hr2_abaa(a,b,i1,a1) * hr2_abaa(a,b,i1,a1)
+#            tmpa+= tmp
+#      endpardo a,b,i1,a1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa=0.0
+#      suma=0.0
+#      pardo a,b,j1,b1
+#            request hr2_abbb(a,b,j1,b1) b1
+#            tmp = hr2_abbb(a,b,j1,b1) * hr2_abbb(a,b,j1,b1)
+#            tmpa+= tmp
+#      endpardo a,b,j1,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#end_debug
+              
+      ENDPROC FORM_ABBB
+#     -----------------
+
+      PROC sAVE_C_VECTORS 
+#     ------------------
+
+      NCOUNT = 0.0
+      DO NINDEX50
+         NCOUNT += 1.0
+         
+         IF NCOUNT == ITER_COUNT
+
+            PARDO a, b1
+                  GET R1_AB(a,b1) 
+                  Tab(a,b1) = R1_AB(a,b1)
+                  PUT R1_AB_HIST(a,b1,NINDEX50) = Tab(a,b1)
+            ENDPARDO a, b1
+
+            PARDO a, b, i1, a1
+
+                REQUEST R2_ABAA(a,b,i1,a1) a1
+                Tabia(a,b,i1,a1) =  R2_ABAA(a,b,i1,a1)
+                PREPARE R2_ABAA_HIST(a,b,i1,a1,NINDEX50) = Tabia(a,b,i1,a1)
+
+            ENDPARDO a, b, i1, a1
+
+            PARDO a, b, j1, b1
+
+                REQUEST R2_ABBB(a,b,j1,b1) b1
+                Tabjb(a,b,j1,b1) = R2_ABBB(a,b,j1,b1)
+                PREPARE R2_ABBB_HIST(a,b,j1,b1,NINDEX50) =  Tabjb(a,b,j1,b1)
+
+            ENDPARDO a, b, j1, b1
+
+         ENDIF 
+
+      ENDDO NINDEX50 
+
+      EXECUTE SERVER_BARRIER 
+
+      ENDPROC SAVE_C_VECTORS 
+#     ---------------------
+
+      PROC SAVE_HC_VECTORS
+#     --------------------
+
+      NCOUNT = 0.0
+      DO NINDEX50
+         NCOUNT += 1.0
+
+         IF NCOUNT == ITER_COUNT
+
+            PARDO a, b1
+                  GET HR1_AB(a,b1)
+                  Tab(a,b1) = HR1_AB(a,b1)
+                  PUT HR1_AB_HIST(a,b1,NINDEX50) = Tab(a,b1)
+            ENDPARDO a, b1
+
+            PARDO a, b, i1, a1
+
+                REQUEST HR2_ABAA(a,b,i1,a1) a1
+                Tabia(a,b,i1,a1) =  HR2_ABAA(a,b,i1,a1)
+                PREPARE HR2_ABAA_HIST(a,b,i1,a1,NINDEX50) = Tabia(a,b,i1,a1)
+
+            ENDPARDO a, b, i1, a1
+
+            PARDO a, b, j1, b1
+
+                REQUEST HR2_ABBB(a,b,j1,b1) b1
+                Tabjb(a,b,j1,b1) = HR2_ABBB(a,b,j1,b1)
+                PREPARE HR2_ABBB_HIST(a,b,j1,b1,NINDEX50) =  Tabjb(a,b,j1,b1)
+
+            ENDPARDO a, b, j1, b1
+
+         ENDIF
+
+      ENDDO NINDEX50
+
+      EXECUTE SERVER_BARRIER
+
+     ENDPROC SAVE_HC_VECTORS
+#    -----------------------
+
+     PROC FORM_A_MATRIX_11
+#    ----------------------
+
+     SUMA   = 0.0
+     SUMB   = 0.0
+     HC_A   = 0.0
+     HC_B   = 0.0
+
+     IF ITER_COUNT == 1.0
+
+# Build A(1,1) for the first iteraion
+
+        NCOUNT = 0.0
+        DO NINDEX50 
+           NCOUNT += 1.0
+           IF NCOUNT == ITER_COUNT
+
+              MCOUNT = 0.0
+              DO MINDEX50 
+                 MCOUNT += 1.0
+                 IF MCOUNT == ITER_COUNT 
+
+                    PARDO a, b1
+
+                          GET HR1_AB_HIST(a,b1,NINDEX50)
+                          GET R1_AB_HIST(a,b1,MINDEX50) 
+
+                          Tab(a,b1)   = HR1_AB_HIST(a,b1,NINDEX50)
+                          T1ab(a,b1)  = R1_AB_HIST(a,b1,MINDEX50)
+
+                          TMP   = Tab(a,b1) * T1ab(a,b1)
+                          SUMA += TMP
+
+                    ENDPARDO a, b1
+
+                    EXECUTE SERVER_BARRIER 
+                    COLLECTIVE HC_A += SUMA
+
+                 ENDIF
+
+              ENDDO MINDEX50 
+           ENDIF
+
+        ENDDO NINDEX50
+
+      ENDIF 
+#
+# In iteration one there are no contributions from R1AAA, R1BBB.. since
+# those are zero at the start. Note that HR1AAA are non-zero but the 
+# overlap is still zero.
+         
+     A_VALUE  = HC_A
+#bgn_debug
+#     execute print_scalar A_value 
+#end_debug
+
+     NCOUNT = 0.0
+     MCOUNT = 0.0
+
+     DO NINDEX50
+         NCOUNT += 1.0
+         IF NCOUNT == 1.0
+
+            DO MINDEX50 
+               MCOUNT += 1.0
+               IF MCOUNT == 1.0
+  
+                   A_MATRIX(MINDEX50,NINDEX50) = A_VALUE
+
+                ENDIF 
+             ENDDO MINDEX50
+         ENDIF
+     ENDDO NINDEX50
+
+     EXECUTE SIP_BARRIER 
+
+     ENDPROC FORM_A_MATRIX_11
+#    -------------------------
+
+     PROC FORM_A_MATRIX_IJ
+#    ----------------------
+
+# Built A_kj where k=1, ..j-1, <C_k | (HC_k)_j>
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT > ITER_COUNT
+           EXIT
+        ENDIF
+        
+              MCOUNT = 0.0
+              DO MINDEX50  
+                 MCOUNT += 1.0
+ 
+                 IF MCOUNT > NCOUNT
+                    EXIT
+                 ENDIF 
+
+                 IF MCOUNT == ITER_COUNT 
+                    IF NCOUNT == ITER_COUNT
+                       EXIT
+                    ENDIF 
+                 ENDIF 
+
+                    SUMA   = 0.0
+                    SUMAAA = 0.0
+                    SUMBBB = 0.0
+                    HC_A   = 0.0
+                    HC_AAA = 0.0
+                    HC_BBB = 0.0
+
+                     PARDO a, b1
+
+                            GET HR1_AB_HIST(a,b1,NINDEX50)
+                            GET R1_AB_HIST(a,b1,MINDEX50)
+
+                            Tab(a,b1)   = HR1_AB_HIST(a,b1,NINDEX50)
+                            T1ab(a,b1)  = R1_AB_HIST(a,b1,MINDEX50)
+
+                            TMP   = Tab(a,b1) * T1ab(a,b1)
+                            SUMA += TMP
+
+                     ENDPARDO a, b1
+
+                     PARDO a, b, i1, a1
+
+                           REQUEST HR2_ABAA_HIST(a,b,i1,a1,NINDEX50) a
+                           REQUEST R2_ABAA_HIST(a,b,i1,a1,MINDEX50) a
+
+                           Tabia(a,b,i1,a1)  = HR2_ABAA_HIST(a,b,i1,a1,NINDEX50)
+                           T1abia(a,b,i1,a1) = R2_ABAA_HIST(a,b,i1,a1,MINDEX50)
+
+                           TMP     =  Tabia(a,b,i1,a1) * T1abia(a,b,i1,a1)
+                           SUMAAA += TMP
+                
+                     ENDPARDO a, b, i1, a1
+
+                     PARDO a, b, j1, b1
+
+                           REQUEST HR2_ABBB_HIST(a,b,j1,b1,NINDEX50) b
+                           REQUEST R2_ABBB_HIST(a,b,j1,b1,MINDEX50)  b
+
+                           Tabjb(a,b,j1,b1)  = HR2_ABBB_HIST(a,b,j1,b1,NINDEX50)
+                           T1abjb(a,b,j1,b1) = R2_ABBB_HIST(a,b,j1,b1,MINDEX50)
+                        
+                           TMP     = Tabjb(a,b,j1,b1) * T1abjb(a,b,j1,b1) 
+                           SUMBBB += TMP
+
+                     ENDPARDO a, b, j1, b1
+
+                     EXECUTE SERVER_BARRIER
+                     COLLECTIVE HC_A   += SUMA
+                     COLLECTIVE HC_AAA += SUMAAA
+                     COLLECTIVE HC_BBB += SUMBBB
+
+                     A_VALUE  = HC_A
+                     A_VALUE += HC_AAA
+                     A_VALUE += HC_BBB
+ 
+                     KCOUNT = 0.0
+                     DO KINDEX50
+                         KCOUNT += 1.0
+                         IF KCOUNT  == NCOUNT
+
+                            LCOUNT = 0.0
+                            DO LINDEX50
+                               LCOUNT += 1.0
+                               IF LCOUNT == MCOUNT
+
+                                  A_MATRIX(MINDEX50,NINDEX50) = A_VALUE
+
+                               ENDIF
+                            ENDDO LINDEX50
+                         ENDIF
+                     ENDDO KINDEX50
+
+#                 ENDIF 
+              ENDDO MINDEX50
+#        ENDIF
+     ENDDO NINDEX50
+
+     EXECUTE SIP_BARRIER 
+
+     ENDPROC  FORM_A_MATRIX_IJ
+#    -------------------------
+
+     PROC FORM_A_MATRIX_JI
+#    ----------------------
+
+# Built A_jk where k=1, ..j-1, <(HC_k)_j | C_k>
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT > ITER_COUNT
+           EXIT
+        ENDIF
+        
+              MCOUNT = 0.0
+              DO MINDEX50  
+                 MCOUNT += 1.0
+ 
+                 IF MCOUNT >= NCOUNT
+                    EXIT
+                 ENDIF 
+
+                 IF MCOUNT == ITER_COUNT 
+                    IF NCOUNT == ITER_COUNT
+                       EXIT
+                    ENDIF 
+                 ENDIF 
+
+                    SUMA   = 0.0
+                    SUMAAA = 0.0
+                    SUMBBB = 0.0
+                    HC_A   = 0.0
+                    HC_AAA = 0.0
+                    HC_BBB = 0.0
+
+                     PARDO a, b1
+
+                            GET HR1_AB_HIST(a,b1,MINDEX50)
+                            GET R1_AB_HIST(a,b1,NINDEX50)
+
+                            Tab(a,b1)   = HR1_AB_HIST(a,b1,MINDEX50)
+                            T1ab(a,b1)  = R1_AB_HIST(a,b1,NINDEX50)
+
+                            TMP   = Tab(a,b1) * T1ab(a,b1)
+                            SUMA += TMP
+
+                     ENDPARDO a, b1
+
+                     PARDO a, b, i1, a1
+
+                           REQUEST HR2_ABAA_HIST(a,b,i1,a1,MINDEX50) a
+                           REQUEST R2_ABAA_HIST(a,b,i1,a1,NINDEX50)  a
+
+                           Tabia(a,b,i1,a1)  = HR2_ABAA_HIST(a,b,i1,a1,MINDEX50)
+                           T1abia(a,b,i1,a1) = R2_ABAA_HIST(a,b,i1,a1,NINDEX50)
+
+                           TMP     = Tabia(a,b,i1,a1) * T1abia(a,b,i1,a1)
+                           SUMAAA += TMP
+                
+                     ENDPARDO a, b, i1, a1
+
+                     PARDO a, b, j1, b1
+
+                           REQUEST HR2_ABBB_HIST(a,b,j1,b1,MINDEX50) b
+                           REQUEST R2_ABBB_HIST(a,b,j1,b1,NINDEX50)  b
+
+                           Tabjb(a,b,j1,b1)  = HR2_ABBB_HIST(a,b,j1,b1,MINDEX50)
+                           T1abjb(a,b,j1,b1) = R2_ABBB_HIST(a,b,j1,b1,NINDEX50)
+                        
+                           TMP     = Tabjb(a,b,j1,b1) * T1abjb(a,b,j1,b1)
+                           SUMBBB += TMP
+
+                     ENDPARDO a, b, j1, b1
+
+                     EXECUTE SERVER_BARRIER
+                     COLLECTIVE HC_A   += SUMA
+                     COLLECTIVE HC_AAA += SUMAAA
+                     COLLECTIVE HC_BBB += SUMBBB
+
+                     A_VALUE  = HC_A
+                     A_VALUE += HC_AAA
+                     A_VALUE += HC_BBB
+ 
+                     KCOUNT = 0.0
+                     DO KINDEX50
+                         KCOUNT += 1.0
+                         IF KCOUNT  == NCOUNT
+
+                            LCOUNT = 0.0
+                            DO LINDEX50
+                               LCOUNT += 1.0
+                               IF LCOUNT == MCOUNT
+
+                                  A_MATRIX(NINDEX50,MINDEX50) = A_VALUE
+
+                               ENDIF
+                            ENDDO LINDEX50
+                         ENDIF
+                     ENDDO KINDEX50
+
+#                 ENDIF 
+              ENDDO MINDEX50
+#        ENDIF
+     ENDDO NINDEX50
+
+     EXECUTE SIP_BARRIER 
+
+     ENDPROC  FORM_A_MATRIX_JI
+#    -------------------------
+
+     PROC  FORM_A_MATRIX_II
+#    ----------------------
+
+     SUMA   = 0.0
+     SUMAAA = 0.0
+     SUMBBB = 0.0
+     HC_A   = 0.0
+     HC_AAA = 0.0
+     HC_BBB = 0.0
+
+     MCOUNT = 0.0
+     DO MINDEX50
+        MCOUNT += 1.0
+        IF MCOUNT == ITER_COUNT
+
+              NCOUNT = 0.0
+              DO NINDEX50
+                 NCOUNT += 1.0
+                 IF NCOUNT == MCOUNT
+
+                    PARDO a, b1
+
+                            GET HR1_AB_HIST(a,b1,MINDEX50)
+                            GET R1_AB_HIST(a,b1,NINDEX50)
+
+                            Tab(a,b1)   = HR1_AB_HIST(a,b1,MINDEX50)
+                            T1ab(a,b1)  = R1_AB_HIST(a,b1,NINDEX50)
+
+                            TMP   = Tab(a,b1) * T1ab(a,b1)
+                            SUMA += TMP
+
+                     ENDPARDO a, b1
+
+                     PARDO a, b, i1, a1
+
+                           REQUEST HR2_ABAA_HIST(a,b,i1,a1,MINDEX50) a
+                           REQUEST R2_ABAA_HIST(a,b,i1,a1,NINDEX50)  a
+
+                           Tabia(a,b,i1,a1)  = HR2_ABAA_HIST(a,b,i1,a1,MINDEX50)
+                           T1abia(a,b,i1,a1) = R2_ABAA_HIST(a,b,i1,a1,NINDEX50)
+
+                           TMP     = Tabia(a,b,i1,a1) * T1abia(a,b,i1,a1)
+                           SUMAAA += TMP
+
+                     ENDPARDO a, b, i1, a1
+
+                     PARDO a, b, j1, b1
+
+                           REQUEST HR2_ABBB_HIST(a,b,j1,b1,MINDEX50) b
+                           REQUEST R2_ABBB_HIST(a,b,j1,b1,NINDEX50)  b
+
+                           Tabjb(a,b,j1,b1)  = HR2_ABBB_HIST(a,b,j1,b1,MINDEX50)
+                           T1abjb(a,b,j1,b1) = R2_ABBB_HIST(a,b,j1,b1,NINDEX50)
+
+                           TMP     = Tabjb(a,b,j1,b1) * T1abjb(a,b,j1,b1)
+                           SUMBBB += TMP
+
+                     ENDPARDO a, b, j1, b1
+ 
+                   EXECUTE SERVER_BARRIER
+                   COLLECTIVE HC_A   += SUMA
+                   COLLECTIVE HC_AAA += SUMAAA
+                   COLLECTIVE HC_BBB += SUMBBB
+
+                   A_VALUE  = HC_A
+                   A_VALUE += HC_AAA
+                   A_VALUE += HC_BBB
+
+                   KCOUNT = 0.0
+                     DO KINDEX50
+                         KCOUNT += 1.0
+                         IF KCOUNT  == NCOUNT
+
+                            LCOUNT = 0.0
+                            DO LINDEX50
+                               LCOUNT += 1.0
+                               IF LCOUNT == MCOUNT
+
+                                  A_MATRIX(NINDEX50,MINDEX50) = A_VALUE
+
+                               ENDIF
+                            ENDDO LINDEX50
+                         ENDIF
+                     ENDDO KINDEX50
+                ENDIF 
+              ENDDO NINDEX50 
+       ENDIF 
+
+     ENDDO MINDEX50
+
+     EXECUTE SIP_BARRIER 
+
+     ENDPROC  FORM_A_MATRIX_II
+#    -------------------------
+
+     PROC FORM_NEWVECS_ITR1
+#    ----------------------
+
+     OMEGA0   = A_VALUE 
+     OMEGA0M  = A_VALUE 
+     OMEGA0M *= -1.0
+     E_OLD    = OMEGA0 
+
+     IF ROOT_COUNT > ONE
+        DIFF  = OMEGA0
+        DIFF -= OMEGA_00
+        IF DIFF < VERY_SMALL
+           IDEGEN = ONE
+        ENDIF
+        OMEGA_00 = OMEGA0
+     ELSE
+        OMEGA_00 = OMEGA0
+     ENDIF
+
+#bgn_debug
+#     execute print_scalar OMEGA0M
+#     execute print_scalar IDEGEN 
+#end_debug
+
+# First the residual vector for iteration 1
+     
+     PARDO a, b1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > 1.0
+                 EXIT
+              ENDIF
+
+              GET HR1_AB_HIST(a,b1,NINDEX50)
+              GET R1_AB_HIST(a,b1,NINDEX50)
+
+              Tab(a,b1)   = HR1_AB_HIST(a,b1,NINDEX50)
+              T1ab(a,b1)  = R1_AB_HIST(a,b1,NINDEX50)
+              T1ab(a,b1) *= OMEGA0M
+              Tab(a,b1)  += T1ab(a,b1)
+ 
+              PUT RES1_AB(a,b1) = Tab(a,b1)
+
+           ENDDO NINDEX50
+     ENDPARDO a, b1
+
+# R2aa_a_HIST, R2bb_b_HIST, R2bb_a_HIST and R2aa_b_HIST is zero.
+
+     PARDO a, b, i1, a1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > 1.0
+                 EXIT
+              ENDIF 
+
+              REQUEST HR2_ABAA_HIST(a,b,i1,a1,NINDEX50) a
+
+              Tabia(a,b,i1,a1)  = HR2_ABAA_HIST(a,b,i1,a1,NINDEX50)
+              PREPARE RES2_ABAA(a,b,i1,a1) = Tabia(a,b,i1,a1)
+
+           ENDDO NINDEX50
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0  
+                             
+              IF NCOUNT > 1.0
+                 EXIT
+              ENDIF 
+
+              REQUEST HR2_ABBB_HIST(a,b,j1,b1,NINDEX50) b
+
+              Tabia(a,b,j1,b1)  = HR2_ABBB_HIST(a,b,j1,b1,NINDEX50)
+              PREPARE RES2_ABBB(a,b,j1,b1) = Tabia(a,b,j1,b1)
+
+           ENDDO NINDEX50
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SERVER_BARRIER 
+
+#bgn_debug
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b1
+#            get res1_ab(a,b1)
+#            tmp = res1_ab(a,b1) * res1_ab(a,b1)
+#            tmpa+= tmp
+#      endpardo a,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#end_debug
+
+# Now the correction vector for iteration 1
+
+     PARDO a, b1
+           GET RES1_AB(a,b1)
+           GET D1_AB(a,b1)
+
+           Tab(a,b1)   = D1_AB(a,b1)
+           T1ab(a,b1)  = RES1_AB(a,b1)
+
+           Tab(a,b1)  *= -1.0
+           T2ab1(a,b1) = OMEGA0
+           Tab(a,b1)  += T2ab1(a,b1)
+
+           EXECUTE APPLY_DEN2_NOR  T1ab Tab
+
+           PUT CORR_VEC_AB(a,b1) =  T1ab(a,b1)
+     ENDPARDO a, b1
+
+    PARDO a, b, i1, a1
+         REQUEST RES2_ABAA(a,b,i1,a1) a1
+         REQUEST D2_ABAA(a,b,i1,a1) a1
+
+         Tabia(a,b,i1,a1)  = D2_ABAA(a,b,i1,a1)
+         T1abia(a,b,i1,a1) = RES2_ABAA(a,b,i1,a1)
+
+         Tabia(a,b,i1,a1) *= -1.0
+         T2abia(a,b,i1,a1) = OMEGA0
+         Tabia(a,b,i1,a1)  += T2abia(a,b,i1,a1)
+
+         EXECUTE APPLY_DEN4 T1abia Tabia
+             
+         PREPARE CORR_VEC_ABAA(a,b,i1,a1) = T1abia(a,b,i1,a1)
+
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+         REQUEST RES2_ABBB(a,b,j1,b1) b1
+         REQUEST  D2_ABBB(a,b,j1,b1) b1
+
+         Tabjb(a,b,j1,b1)  = D2_ABBB(a,b,j1,b1)
+         T1abjb(a,b,j1,b1) =  RES2_ABBB(a,b,j1,b1)
+
+         Tabjb(a,b,j1,b1)  *= -1.0
+         T2abjb(a,b,j1,b1)  = OMEGA0
+         Tabjb(a,b,j1,b1)  += T2abjb(a,b,j1,b1)
+
+         EXECUTE APPLY_DEN4 T1abjb Tabjb
+
+         PREPARE CORR_VEC_ABBB(a,b,j1,b1) = T1abjb(a,b,j1,b1)
+
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SERVER_BARRIER
+#bgn_debug
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b1
+#            get corr_vec_ab(a,b1)
+#            tmp =corr_vec_ab(a,b1) * corr_vec_ab(a,b1)
+#            tmpa+= tmp
+#      endpardo a,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#end_debug
+
+# Orthognalize to the Guess vector; first get the norm.
+
+     SUMA   = 0.0
+     HC_A   = 0.0
+
+     PARDO a, b1
+           GET CORR_VEC_AB(a,b1)
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > 1.0
+                 EXIT
+              ENDIF
+
+              GET R1_AB_HIST(a,b1,NINDEX50)
+
+              Tab(a,b1)   = CORR_VEC_AB(a,b1) 
+              T1ab(a,b1)  = R1_AB_HIST(a,b1,NINDEX50)
+              TMP   = Tab(a,b1) * T1ab(a,b1) 
+              SUMA += TMP
+
+           ENDDO NINDEX50
+     ENDPARDO a, b1
+
+     EXECUTE SIP_BARRIER
+     COLLECTIVE  HC_A += SUMA
+#
+# There are no contribution from the doubles since the starting doubles
+# are zero.
+
+     NORM_GHG  = HC_A
+#
+# Orthogonalization  (i.e. <G|HG> = 0.0) (G=Guess vectors)
+#
+     PARDO a, b1
+
+           GET CORR_VEC_AB(a,b1)
+           Tab(a,b1) = 0.0
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > 1.0
+                 EXIT
+              ENDIF
+
+              GET R1_AB_HIST(a,b1,NINDEX50)
+
+              Tab(a,b1)   = CORR_VEC_AB(a,b1) 
+              T1ab(a,b1)  = R1_AB_HIST(a,b1,NINDEX50)
+              T1ab(a,b1) *= NORM_GHG
+              T1ab(a,b1) *= -1.0
+              Tab(a,b1)  += T1ab(a,b1)
+
+           ENDDO NINDEX50
+
+          PUT R1_AB_intmd(a,b1) = Tab(a,b1)
+     ENDPARDO a, b1
+
+# R2aa_a_HIST, R2bb_b_HIST, R2bb_a_HIST and R2aa_b_HIST is zero.
+
+     PARDO a, b, i1, a1
+
+           REQUEST CORR_VEC_ABAA(a,b,i1,a1) a1
+
+           Tabia(a,b,i1,a1)  = CORR_VEC_ABAA(a,b,i1,a1)
+           PREPARE R2_ABAA_intmd(a,b,i1,a1) = Tabia(a,b,i1,a1)
+
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+
+           REQUEST CORR_VEC_ABBB(a,b,j1,b1) b1
+
+           Tabjb(a,b,j1,b1)  = CORR_VEC_ABBB(a,b,j1,b1)
+           PREPARE R2_ABBB_intmd(a,b,j1,b1) = Tabjb(a,b,j1,b1)
+
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SERVER_BARRIER 
+
+# Final normalization 
+
+     SUMA    = 0.0
+     SUMAA_A = 0.0
+     SUMBB_B = 0.0
+     HC_A    = 0.0
+     HC_AAA  = 0.0
+     HC_BBB  = 0.0
+
+     PARDO a, b1
+
+            GET  R1_AB_intmd(a,b1)
+            Tab(a,b1) = R1_AB_intmd(a,b1)
+            TMP   = Tab(a,b1) * Tab(a,b1)
+            HC_A += TMP
+
+      ENDPARDO a, b1
+
+      PARDO a, b, i1, a1
+
+              REQUEST R2_ABAA_intmd(a,b,i1,a1) a1
+              Tabia(a,b,i1,a1) = R2_ABAA_intmd(a,b,i1,a1)
+
+              TMP   = Tabia(a,b,i1,a1) * Tabia(a,b,i1,a1)
+              HC_AAA += TMP
+
+      ENDPARDO a, b, i1, a1
+
+      PARDO a, b, j1, b1
+
+              REQUEST R2_ABBB_intmd(a,b,j1,b1) b1
+              Tabjb(a,b,j1,b1) = R2_ABBB_intmd(a,b,j1,b1)
+
+              TMP   = Tabjb(a,b,j1,b1) * Tabjb(a,b,j1,b1)
+              HC_BBB +=  TMP
+              
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SIP_BARRIER
+     COLLECTIVE  SUMA    += HC_A
+     COLLECTIVE  SUMAA_A += HC_AAA
+     COLLECTIVE  SUMBB_B += HC_BBB
+
+     SUM_R  = SUMA
+     SUM_R += SUMAA_A
+     SUM_R += SUMBB_B
+
+     EXPONENT = 0.5
+     EXECUTE NORM_FAC SUM_R EXPONENT
+     INV_SQRT_NORM_R = SUM_R
+
+#bgn_debug
+#     execute print_scalar SUM_R
+#end_debug
+
+     PARDO a, b1
+
+            GET  R1_AB_intmd(a,b1)
+            Tab(a,b1) = R1_AB_intmd(a,b1)
+            Tab(a,b1) *= INV_SQRT_NORM_R
+            PUT R1_AB(a,b1) = Tab(a,b1) 
+
+      ENDPARDO a, b1
+
+      PARDO a, b, i1, a1
+
+              REQUEST R2_ABAA_intmd(a,b,i1,a1) a1
+              Tabia(a,b,i1,a1)  = R2_ABAA_intmd(a,b,i1,a1)
+              Tabia(a,b,i1,a1) *= INV_SQRT_NORM_R
+              PREPARE R2_ABAA(a,b,i1,a1) = Tabia(a,b,i1,a1) 
+
+      ENDPARDO a, b, i1, a1
+
+      PARDO a, b, j1, b1
+
+              REQUEST R2_ABBB_intmd(a,b,j1,b1) b1
+              Tabjb(a,b,j1,b1)  = R2_ABBB_intmd(a,b,j1,b1)
+              Tabjb(a,b,j1,b1) *= INV_SQRT_NORM_R
+              PREPARE R2_ABBB(a,b,j1,b1) = Tabjb(a,b,j1,b1)
+              
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SERVER_BARRIER
+
+#bgn_debug
+#     tmpa=0.0
+#     suma=0.0
+#     pardo a,b1
+#         get r1_AB(a,b1)
+#         tmp = r1_AB(a,b1) * r1_AB(a,b1)
+#         tmpa += tmp
+#      endpardo a,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab=suma 
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,i1,a1
+#           request R2_ABAA(a,b,i1,a1) a1
+#           tmp =  R2_ABAA(a,b,i1,a1) * R2_ABAA(a,b,i1,a1)
+#           tmpa += tmp
+#      endpardo a,b,i1,a1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab += suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,j1,b1
+#            request  R2_ABBB(a,b,j1,b1) b1
+#            tmp = R2_ABBB(a,b,j1,b1) * R2_ABBB(a,b,j1,b1)
+#            tmpa+= tmp
+#      endpardo a,b,j1,b1
+#      execute server_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab += suma
+#      execute print_scalar sumab
+#end_debug
+
+     ENDPROC FORM_NEWVECS_ITR1
+#    -------------------------
+
+     PROC FORM_NEWVECS
+#    ------------------
+     PARDO a, b1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT 
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET R1_AB_HIST(a,b1,MINDEX50)
+                       Tabs(a,b1,MINDEX50)  = R1_AB_HIST(a,b1,MINDEX50)
+                       T1abs(a,b1,NINDEX50) = Tabs(a,b1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1_AB(a,b1,NINDEX50) += T1abs(a,b1,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST R2_ABAA_HIST(a,b,i1,a1,MINDEX50)  a
+
+                       Tabias(a,b,i1,a1,MINDEX50) = R2_ABAA_HIST(a,b,i1,a1,MINDEX50)
+                       T1abias(a,b,i1,a1,NINDEX50) = Tabias(a,b,i1,a1,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE Y2_ABAA(a,b,i1,a1,NINDEX50) += T1abias(a,b,i1,a1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0  
+                             
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+                   MCOUNT = 0.0
+                   DO MINDEX50
+                      MCOUNT += 1.0
+
+                      IF MCOUNT > ITER_COUNT
+                         EXIT
+                      ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST R2_ABBB_HIST(a,b,j1,b1,MINDEX50)  j1
+
+                       Tabjbs(a,b,j1,b1,MINDEX50) = R2_ABBB_HIST(a,b,j1,b1,MINDEX50)
+                       T1abjbs(a,b,j1,b1,NINDEX50) = Tabjbs(a,b,j1,b1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE Y2_ABBB(a,b,j1,b1,NINDEX50) += T1abjbs(a,b,j1,b1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SERVER_BARRIER 
+
+     ENDPROC FORM_NEWVECS
+#    ---------------------
+
+     PROC FORM_NEW_HBAR_Y_VECS
+#    -------------------------
+     PARDO a, b1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT 
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET HR1_AB_HIST(a,b1,MINDEX50)
+                       Tabs(a,b1,MINDEX50)  = HR1_AB_HIST(a,b1,MINDEX50)
+                       T1abs(a,b1,NINDEX50) = Tabs(a,b1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT HY1_AB(a,b1,NINDEX50) += T1abs(a,b1,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST HR2_ABAA_HIST(a,b,i1,a1,MINDEX50)  a
+
+                       Tabias(a,b,i1,a1,MINDEX50) = HR2_ABAA_HIST(a,b,i1,a1,MINDEX50)
+                       T1abias(a,b,i1,a1,NINDEX50) = Tabias(a,b,i1,a1,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE HY2_ABAA(a,b,i1,a1,NINDEX50) += T1abias(a,b,i1,a1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0  
+                             
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+                   MCOUNT = 0.0
+                   DO MINDEX50
+                      MCOUNT += 1.0
+
+                      IF MCOUNT > ITER_COUNT
+                         EXIT
+                      ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST HR2_ABBB_HIST(a,b,j1,b1,MINDEX50)  j1
+
+                       Tabjbs(a,b,j1,b1,MINDEX50) = HR2_ABBB_HIST(a,b,j1,b1,MINDEX50)
+                       T1abjbs(a,b,j1,b1,NINDEX50) = Tabjbs(a,b,j1,b1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE HY2_ABBB(a,b,j1,b1,NINDEX50) += T1abjbs(a,b,j1,b1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SERVER_BARRIER 
+
+     ENDPROC FORM_NEW_HBAR_Y_VECS
+#    ----------------------------
+
+     PROC KEEP_GUESS_VECS
+#    --------------------
+      PARDO a, b 
+          GET R1_AB(a,b)
+          Tab(a,b) = R1_AB(a,b)
+          PUT INITIAL_R1_AB(a,b) = Tab(a,b)
+      ENDPARDO a, b
+
+     EXECUTE SIP_BARRIER
+
+     ENDPROC KEEP_GUESS_VECS
+#    -----------------------
+
+     PROC SELECT_VECS_MAX_OVLP1
+#    --------------------------
+
+     MCOUNT = 0.0
+     DO MINDEX50
+        MCOUNT += 1.0
+        IF MCOUNT >  ITER_COUNT
+           EXIT
+        ENDIF
+
+        SUMA   = 0.0
+        CY_A   = 0.0
+
+        PARDO a, b
+
+            GET INITIAL_R1_AB(a,b)
+            GET Y1_AB(a,b,MINDEX50)
+
+            Tab(a,b)  = INITIAL_R1_AB(a,b)
+            T1ab(a,b) = Y1_AB(a,b,MINDEX50)
+
+            TMP   = Tab(a,b) * T1ab(a,b)
+            SUMA +=  TMP
+
+        ENDPARDO a, b
+
+        EXECUTE SIP_BARRIER
+        COLLECTIVE CY_A += SUMA
+
+        CY_AB  = CY_A
+
+        KCOUNT = 0.0
+        DO KINDEX50
+           KCOUNT += 1.0
+
+           IF KCOUNT == MCOUNT
+              OVERLAP_R(MINDEX50) = CY_AB
+           ENDIF
+        ENDDO KINDEX50
+
+     ENDDO MINDEX50
+
+     EXECUTE SIP_BARRIER
+
+     IF LOCK != ONE
+        EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
+        IMAX_KEEP = IMAX
+      ELSE
+        EXECUTE SET_ACES3_VARS OMEGA THRTEN
+        EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+        EXECUTE SET_ACES3_VARS IMAX MONE
+        IMAX_KEEP = IMAX
+      ENDIF
+#bgn_debug
+#     execute print_scalar imax
+#end_debug
+
+     ENDPROC SELECT_VECS_MAX_OVLP1
+#    -----------------------------
+
+     PROC SELECT_VECS_MAX_OVLP2
+#    --------------------------
+
+     IF PREVS_VEC == ONE
+        FOLLOW = ITER_COUNT
+        FOLLOW -= ONE
+     ENDIF
+
+#bgn_debug
+     execute print_scalar follow
+#end_debug
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+
+        IF NCOUNT != FOLLOW
+           EXIT
+        ENDIF
+
+        MCOUNT = 0.0
+        DO MINDEX50
+           MCOUNT += 1.0
+           IF MCOUNT >  ITER_COUNT
+              EXIT
+           ENDIF
+
+     	         SUMA   = 0.0
+                 CY_A   = 0.0
+
+                 PARDO a, b1
+
+                       GET R1_AB_HIST(a,b1,NINDEX50)
+                       GET Y1_AB(a,b1,MINDEX50)
+
+                       Tab(a,b1)  = R1_AB_HIST(a,b1,NINDEX50) 
+                       T1ab(a,b1) = Y1_AB(a,b1,MINDEX50) 
+               
+                       TMP   = Tab(a,b1) * T1ab(a,b1)
+                       SUMA +=  TMP
+                       
+                  ENDPARDO a, b1
+
+                  EXECUTE SIP_BARRIER
+                  COLLECTIVE CY_A += SUMA
+                       
+                  CY_AB  = CY_A
+
+                  KCOUNT = 0.0 
+                  DO KINDEX50 
+                     KCOUNT += 1.0
+
+                     IF KCOUNT == MCOUNT 
+                        OVERLAP_R(MINDEX50) = CY_AB
+                     ENDIF 
+
+                  ENDDO KINDEX50 
+
+           ENDDO  MINDEX50
+
+#        ENDIF
+
+     ENDDO NINDEX50
+
+     EXECUTE SIP_BARRIER 
+
+     IF LOCK != ONE
+        EXECUTE RETURN_MAX_OVERLAP OVERLAP_R IMAX
+        IMAX_KEEP = IMAX
+      ELSE
+        EXECUTE SET_ACES3_VARS OMEGA THRTEN
+        EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+        EXECUTE SET_ACES3_VARS IMAX MONE
+        IMAX_KEEP = IMAX
+      ENDIF
+
+#bgn_debug
+#     execute print_scalar imax 
+#end_debug
+
+     ENDPROC SELECT_VECS_MAX_OVLP2
+#    -----------------------------
+
+     PROC SELECT_VECS_MIN_ENEG
+#    -------------------------
+
+     IF ROOT_COUNT == ONE
+
+# Always pick the closest eigenvalue to the starting eigenvalue
+
+        EXECUTE FIND_NEAR A_DIAGS A_DIAGS
+        EXECUTE SET_ACES3_VARS IMAX MONE
+        IMAX_KEEP = IMAX
+        IF IMAX_KEEP ==  ZERO
+           IMAX = ONE
+        ENDIF
+
+      ELSE
+
+# Find the root from the subspace that is not too close to the
+# roots that have already been found.
+
+        IF LOCK != ONE
+           EXECUTE FIND_MIN_ENEG A_DIAGS PSEUDO_ROOTS
+           EXECUTE SET_ACES3_VARS IMAX MONE
+           IMAX_KEEP = IMAX
+        ELSE
+           EXECUTE SET_ACES3_VARS OMEGA THRTEN
+           EXECUTE FIND_NEAR A_DIAGS PSEUDO_ROOTS
+           EXECUTE SET_ACES3_VARS IMAX MONE
+        ENDIF 
+      ENDIF
+
+#bgn_debug
+     execute print_scalar imax
+#end_debug
+
+     ENDPROC SELECT_VECS_MIN_ENEG
+#    ----------------------------
+
+     PROC FORM_SELECTED_Y
+#    --------------------
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO a, b1
+ 
+                 GET Y1_AB(a,b1,NINDEX50) 
+                 Tab(a,b1) = Y1_AB(a,b1,NINDEX50)
+                 PUT Y1_AB_PICKED(a,b1) = Tab(a,b1)
+
+           ENDPARDO a, b1
+        ENDIF 
+     ENDDO NINDEX50
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO a, b, i1, a1
+
+                 REQUEST Y2_ABAA(a,b,i1,a1,NINDEX50) a
+                 Tabia(a,b,i1,a1) = Y2_ABAA(a,b,i1,a1,NINDEX50) 
+                 PREPARE Y2_ABAA_picked(a,b,i1,a1) = Tabia(a,b,i1,a1)
+
+           ENDPARDO a, b, i1, a1
+
+        ENDIF 
+     ENDDO NINDEX50
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO a, b, j1, b1
+
+                 REQUEST Y2_ABBB(a,b,j1,b1,NINDEX50) j1
+                 Tabjb(a,b,j1,b1) = Y2_ABBB(a,b,j1,b1,NINDEX50)
+                 PREPARE Y2_ABBB_picked(a,b,j1,b1) = Tabjb(a,b,j1,b1)
+
+           ENDPARDO a, b, j1, b1
+
+        ENDIF 
+     ENDDO NINDEX50
+
+     EXECUTE SERVER_BARRIER
+
+#bgn_debug
+#      sumab=0.0
+#      tmpa=0.0
+#      tmpb=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo a,b1
+#         get y1_ab_picked(a,b1)
+#         tmp = y1_ab_picked(a,b1) * y1_ab_picked(a,b)
+#         tmpa += tmp
+#      endpardo a,b1
+#      execute sip_barrier
+#      collective sumb +=tmpb
+#      execute print_scalar suma
+#      sumab  = suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,i1,a1
+#            request Y2_abaa_picked(a,b,i1,a1) a1
+#            tmp = Y2_abaa_picked(a,b,i1,a1) * Y2_abaa_picked(a,b,i1,a1)
+#            tmpa += tmp
+#      endpardo a,b,i1,a1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab  += suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,j1,b1
+#            request Y2_abbb_picked(a,b,j1,b1) b1
+#            tmp = Y2_abbb_picked(a,b,j1,b1) * Y2_abbb_picked(a,b,j1,b1)
+#            tmpa+= tmp
+#      endpardo a,b,j1,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab  += suma
+#      execute print_scalar suma
+#      execute print_scalar sumab
+#end_debug
+  
+     ENDPROC FORM_SELECTED_Y
+#    -----------------------
+
+     PROC SELECT_HBAR_Y_VEC_TOGO
+#    ---------------------------
+     PARDO a, b1
+         GET Y1_AB_PICKED(a,b1)
+         Tab(a,b1) = Y1_AB_PICKED(a,b1)
+         PUT R1_AB(a,b1) =  Tab(a,b1)
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+         REQUEST Y2_ABAA_picked(a,b,i1,a1)  a1
+         Tabia(a,b,i1,a1) = Y2_ABAA_picked(a,b,i1,a1)
+         PREPARE R2_ABAA(a,b,i1,a1) = Tabia(a,b,i1,a1)
+     ENDPARDO a, b, i1, a1
+
+     PARdO a, b, j1, b1
+         REQUEST Y2_ABBB_picked(a,b,j1,b1) b1
+         Tabjb(a,b,j1,b1) = Y2_ABBB_picked(a,b,j1,b1)
+         PREPARE R2_ABBB(a,b,j1,b1) = Tabjb(a,b,j1,b1)
+     ENDPARDO a, b, j1, b1
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO a, b1
+
+                 GET HY1_AB(a,b1,NINDEX50)
+                 Tab(a,b1) = HY1_AB(a,b1,NINDEX50)
+                 PUT HY1_AB_PICKED(a,b1) = Tab(a,b1)
+
+           ENDPARDO a, b1
+        ENDIF
+     ENDDO NINDEX50
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO a, b, i1, a1
+
+                 REQUEST HY2_ABAA(a,b,i1,a1,NINDEX50) a
+                 Tabia(a,b,i1,a1) = HY2_ABAA(a,b,i1,a1,NINDEX50)
+                 PREPARE HY2_ABAA_picked(a,b,i1,a1) = Tabia(a,b,i1,a1)
+
+           ENDPARDO a, b, i1, a1
+
+        ENDIF
+     ENDDO NINDEX50
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT == IMAX
+
+           PARDO a, b, j1, b1
+
+                 REQUEST HY2_ABBB(a,b,j1,b1,NINDEX50) j1
+                 Tabjb(a,b,j1,b1) = HY2_ABBB(a,b,j1,b1,NINDEX50)
+                 PREPARE HY2_ABBB_picked(a,b,j1,b1) = Tabjb(a,b,j1,b1)
+
+           ENDPARDO a, b, j1, b1
+
+        ENDIF
+     ENDDO NINDEX50
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC SELECT_HBAR_Y_VEC_TOGO
+#    ------------------------------
+
+     PROC FORM_HBAR_Y_VECS
+#    ---------------------
+
+      PARDO a, b1
+         GET Y1_AB_PICKED(a,b1)
+         Tab(a,b1) = Y1_AB_PICKED(a,b1)
+         PUT R1_AB(a,b1) =  Tab(a,b1)
+      ENDPARDO a, b1
+
+      PARDO a, b, i1, a1
+         REQUEST Y2_ABAA_picked(a,b,i1,a1)  a1
+         Tabia(a,b,i1,a1) = Y2_ABAA_picked(a,b,i1,a1) 
+         PREPARE R2_ABAA(a,b,i1,a1) = Tabia(a,b,i1,a1)
+      ENDPARDO a, b, i1, a1
+
+      PARdO a, b, j1, b1
+         REQUEST Y2_ABBB_picked(a,b,j1,b1) b1
+         Tabjb(a,b,j1,b1) = Y2_ABBB_picked(a,b,j1,b1)
+         PREPARE R2_ABBB(a,b,j1,b1) = Tabjb(a,b,j1,b1)
+      ENDPARDO a, b, j1, b1
+
+      EXECUTE SERVER_BARRIER 
+
+      CALL HR_MULT
+      CALL FORM_ABBB
+
+      PARDO a, b1
+            GET HR1_AB(a,b1)
+            Tab(a,b1) = HR1_AB(a,b1)
+            PUT HY1_AB_picked(a,b1) =  Tab(a,b1)
+      ENDPARDO a, b1
+
+      PARDO a, b, i1, a1
+         REQUEST HR2_ABAA(a,b,i1,a1) a1 
+         Tabia(a,b,i1,a1) = HR2_ABAA(a,b,i1,a1)
+         PREPARE HY2_ABAA_picked(a,b,i1,a1) = Tabia(a,b,i1,a1)
+      ENDPARDO a, b, i1, a1
+
+      PARDO a, b, j1, b1
+         REQUEST HR2_ABBB(a,b,j1,b1) b1
+         Tabjb(a,b,j1,b1) =  HR2_ABBB(a,b,j1,b1)
+         PREPARE HY2_ABBB_picked(a,b,j1,b1) = Tabjb(a,b,j1,b1)
+      ENDPARDO a, b, j1, b1
+
+      EXECUTE SERVER_BARRIER 
+
+#bgn_debug
+#      sumab=0.0
+#      tmpa=0.0
+#      tmpb=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo a,b1
+#         get hy1_ab_picked(a,b1)
+#         tmp = hy1_ab_picked(a,b1) * hy1_ab_picked(a,b1)
+#         tmpa += tmp
+#      endpardo a,b1
+#      execute sip_barrier
+#      collective sumb +=tmpb
+#      execute print_scalar suma
+#      sumab  = suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,i1,a1
+#            request hY2_abaa_picked(a,b,i1,a1) a1
+#            tmp = HY2_abaa_picked(a,b,i1,a1) * HY2_abaa_picked(a,b,i1,a1)
+#            tmpa += tmp
+#      endpardo a,b,i1,a1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab  += suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,j1,b1
+#            get HY2_abbb_picked(a,b,j1,b1)
+#            tmp = HY2_abbb_picked(a,b,j1,b1) * HY2_abbb_picked(a,b,j1,b1)
+#            tmpa+= tmp
+#      endpardo a,b,j1,b
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab  += suma
+#      execute print_scalar suma
+#      execute print_scalar sumab
+#end_debug
+  
+     ENDPROC FORM_HBAR_Y_VECS
+#    ------------------------
+
+     PROC FORM_RESIDUAL_VEC
+#    ----------------------
+
+      EXECUTE RETURN_SELECTED A_DIAGS IMAX 
+      OMEGA   = IMAX
+      OMEGAM  = OMEGA
+      OMEGAM *= -1.0
+#bgn_debug
+#     execute print_scalar OMEGAM
+#end_debug
+
+     PARDO a, b1
+           GET HY1_AB_picked(a,b1)
+           GET Y1_AB_picked(a,b1)
+
+           Tab(a,b1)   = HY1_AB_picked(a,b1)
+           T1ab(a,b1)  = Y1_AB_picked(a,b1)
+           T1ab(a,b1) *= Omegam
+           Tab(a,b1)  +=  T1ab(a,b1) 
+           PUT RES1_AB(a,b1) =  Tab(a,b1)
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+
+         REQUEST HY2_ABAA_picked(a,b,i1,a1) a1
+         REQUEST Y2_ABAA_picked(a,b,i1,a1)  a1
+         Tabia(a,b,i1,a1)   = HY2_ABAA_picked(a,b,i1,a1)
+         T1abia(a,b,i1,a1)  = Y2_ABAA_picked(a,b,i1,a1)
+         T1abia(a,b,i1,a1) *= Omegam
+         Tabia(a,b,i1,a1)  += T1abia(a,b,i1,a1)
+         PREPARE RES2_ABAA(a,b,i1,a1) = Tabia(a,b,i1,a1)
+
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+
+         REQUEST HY2_ABBB_picked(a,b,j1,b1) b1
+         REQUEST Y2_ABBB_picked(a,b,j1,b1)  b1
+         Tabjb(a,b,j1,b1)   = HY2_ABBB_picked(a,b,j1,b1)
+         T1abjb(a,b,j1,b1)  = Y2_ABBB_picked(a,b,j1,b1)
+         T1abjb(a,b,j1,b1) *= Omegam
+         Tabjb(a,b,j1,b1)  += T1abjb(a,b,j1,b1)
+         PREPARE RES2_ABBB(a,b,j1,b1) = Tabjb(a,b,j1,b1)
+
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SERVER_BARRIER
+#bgn_debug
+#      tmpa=0.0
+#      suma=0.0
+#      pardo a,b1
+#         get RES1_ab(a,b1)
+#         tmp = RES1_ab(a,b1) * RES1_ab(a,b1)
+#         tmpa += tmp
+#      endpardo a, b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,i1,a1
+#            request RES2_abaa(a,b,i1,a1)
+#            tmp = RES2_abaa(a,b,i1,a1) * RES2_abaa(a,b,i1,a1)
+#            tmpa += tmp
+#      endpardo a,b,i1,a1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo b,j,j1, a
+#            request RES2_abbb(a,b,j1,b1)
+#            tmp = RES2_abbb(a,b,j1,b1) * RES2_abbb(a,b,j1,b1)
+#            tmpa+= tmp
+#      endpardo b,j,j1, a
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#end_debug
+  
+     ENDPROC FORM_RESIDUAL_VEC
+#    -----------------------
+
+     PROC CHECK_CONVERGENCE
+#    -----------------------
+     SUMA   = 0.0
+     SUMAAA = 0.0
+     SUMBBB = 0.0
+     HC_A   = 0.0
+     HC_AAA = 0.0
+     HC_BBB = 0.0
+
+     PARDO a, b1
+
+           GET RES1_AB(a,b1)
+
+           Tab(a,b1)   = RES1_AB(a,b1)
+
+           TMP   = Tab(a,b1) * Tab(a,b1)
+           SUMA += TMP
+
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+
+           REQUEST RES2_ABAA(a,b,i1,a1) a1
+
+           Tabia(a,b,i1,a1)  = RES2_ABAA(a,b,i1,a1)
+
+           TMP     = Tabia(a,b,i1,a1) * Tabia(a,b,i1,a1)
+           SUMAAA += TMP
+                
+     ENDPARDO a, b, i1, a1
+   
+     PARDO a, b, j1, b1
+           REQUEST RES2_ABBB(a,b,j1,b1) b1
+
+           Tabjb(a,b,j1,b1)  = RES2_ABBB(a,b,j1,b1)
+                     
+           TMP     = Tabjb(a,b,j1,b1) * Tabjb(a,b,j1,b1)
+           SUMBBB += TMP
+
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SERVER_BARRIER
+     COLLECTIVE HC_A   += SUMA
+     COLLECTIVE HC_AAA += SUMAAA
+     COLLECTIVE HC_BBB += SUMBBB
+
+     A_VALUE  = HC_A
+     A_VALUE += HC_AAA
+     A_VALUE += HC_BBB
+
+     EXECUTE SIP_BARRIER
+
+     HALF = 0.5
+     EXECUTE SQUARE_ROOT A_VALUE HALF
+     RESIDUAL_NORM = A_VALUE
+
+     ENDPROC CHECK_CONVERGENCE
+#    -------------------------
+
+     PROC FORM_CORRECTION_VEC
+#    ------------------------
+
+#bgn_debug
+#     execute print_scalar OMEGA
+#end_debug
+
+     PARDO a, b1
+           GET RES1_AB(a,b1)
+           GET D1_AB(a,b1)
+
+           Tab(a,b1)   = D1_AB(a,b1)
+           T1ab(a,b1)  = RES1_AB(a,b1)
+
+           Tab(a,b1)  *= -1.0
+           T2ab1(a,b1)  = Omega
+           Tab(a,b1)  += T2ab1(a,b1)
+
+           EXECUTE APPLY_DEN2_NOR  T1ab Tab
+
+           PUT CORR_VEC_AB(a,b1) =  T1ab(a,b1)
+
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+         REQUEST RES2_ABAA(a,b,i1,a1) a1
+         REQUEST D2_ABAA(a,b,i1,a1) a1
+
+         Tabia(a,b,i1,a1)  = D2_ABAA(a,b,i1,a1)
+         T1abia(a,b,i1,a1) = RES2_ABAA(a,b,i1,a1)
+
+         Tabia(a,b,i1,a1) *= -1.0
+         T2abia(a,b,i1,a1) = Omega
+         Tabia(a,b,i1,a1)  += T2abia(a,b,i1,a1)
+
+         EXECUTE APPLY_DEN4 T1abia Tabia
+             
+         PREPARE CORR_VEC_ABAA(a,b,i1,a1) = T1abia(a,b,i1,a1)
+
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+
+         REQUEST RES2_ABBB(a,b,j1,b1) b1
+         REQUEST D2_ABBB(a,b,j1,b1) b1
+
+         Tabjb(a,b,j1,b1)  = D2_ABBB(a,b,j1,b1)
+         T1abjb(a,b,j1,b1) = RES2_ABBB(a,b,j1,b1)
+
+         Tabjb(a,b,j1,b1)  *= -1.0
+         T2abjb(a,b,j1,b1)  = Omega
+         Tabjb(a,b,j1,b1)  += T2abjb(a,b,j1,b1)
+
+         EXECUTE APPLY_DEN4 T1abjb Tabjb
+
+         PREPARE CORR_VEC_ABBB(a,b,j1,b1) = T1abjb(a,b,j1,b1)
+
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SERVER_BARRIER
+
+#bgn_debug
+#      tmpa=0.0
+#      suma=0.0
+#      pardo a,b1
+#         get CORR_VEC_ab(a,b1)
+#         tmp =  CORR_VEC_ab(a,b1) *  CORR_VEC_ab(a,b1)
+#         tmpa += tmp
+#      endpardo a,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,i1,a1
+#            request CORR_VEC_abaa(a,b,i1,a1) a1
+#            tmp =  CORR_VEC_abaa(a,b,i1,a1) *  CORR_VEC_abaa(a,b,i1,a1)
+#            tmpa += tmp
+#      endpardo a,b,i1,a1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,j1,b1
+#            request CORR_VEC_abbb(a,b,j1,b1) b1
+#            tmp = CORR_VEC_abbb(a,b,j1,b1) * CORR_VEC_abbb(a,b,j1,b1)
+#            tmpa+= tmp
+#      endpardo a,b,j1,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#end_debug
+     ENDPROC FORM_CORRECTION_VEC
+#     ---------------------------
+
+     PROC MAKE_ORTHO_COEFS
+#    ---------------------
+
+     DO MINDEX50
+        DO NINDEX50
+           TS(MINDEX50,NINDEX50) = 0.0
+           PUT ORTHO_COEF(MINDEX50,NINDEX50) = TS(MINDEX50,NINDEX50)
+        ENDDO NINDEX50
+     ENDDO MINDEX50
+
+     EXECUTE SIP_BARRIER 
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+
+        IF NCOUNT > ITER_COUNT
+           EXIT
+        ENDIF  
+
+           PARDO a, b1
+
+                 GET R1_AB_HIST(a,b1,NINDEX50)
+                 GET CORR_VEC_AB(a,b1)
+                 
+                 Tab(a,b1)  = R1_AB_HIST(a,b1,NINDEX50)
+                 T1ab(a,b1) = CORR_VEC_AB(a,b1)
+                 TMP          = Tab(a,b1) * T1ab(a,b1)
+
+                 Txx(NINDEX50,NINDEX50)         = TMP
+                 PUT ORTHO_COEF(NINDEX50,NINDEX50) += Txx(NINDEX50,NINDEX50) 
+                 
+           ENDPARDO a, b1
+
+           PARDO a, b, i1, a1
+
+                 REQUEST R2_ABAA_HIST(a,b,i1,a1,NINDEX50) a
+                 REQUEST CORR_VEC_ABAA(a,b,i1,a1) a1
+
+                 Tabia(a,b,i1,a1)  = R2_ABAA_HIST(a,b,i1,a1,NINDEX50)
+                 T1abia(a,b,i1,a1) = CORR_VEC_ABAA(a,b,i1,a1)
+
+                 TMP     = Tabia(a,b,i1,a1) * T1abia(a,b,i1,a1)
+
+                 Txx(NINDEX50,NINDEX50)         = TMP
+                 PUT ORTHO_COEF(NINDEX50,NINDEX50) += Txx(NINDEX50,NINDEX50) 
+
+           ENDPARDO a, b, i1, a1
+
+           PARDO a, b, j1, b1
+
+                 REQUEST R2_ABBB_HIST(a,b,j1,b1,NINDEX50) j1
+                 REQUEST CORR_VEC_ABBB(a,b,j1,b1) b1
+
+                 Tabjb(a,b,j1,b1)  = R2_ABBB_HIST(a,b,j1,b1,NINDEX50)
+                 T1abjb(a,b,j1,b1) = CORR_VEC_ABBB(a,b,j1,b1)
+                        
+                 TMP     = Tabjb(a,b,j1,b1) * T1abjb(a,b,j1,b1) 
+
+                 Txx(NINDEX50,NINDEX50)         = TMP
+                 PUT ORTHO_COEF(NINDEX50,NINDEX50) += Txx(NINDEX50,NINDEX50) 
+
+           ENDPARDO a, b, j1, b1
+
+     ENDDO NINDEX50
+
+     EXECUTE SIP_BARRIER
+#bgn_debug
+#     do NINDEX50
+#     do MINDEX50
+#        GET ORTHO_COEF(NINDEX50,MINDEX50)
+#        ETEMP(NINDEX50,MINDEX50) = ORTHO_COEF(NINDEX50,MINDEX50)
+#     enddo MINDEX50
+#     enddo NINDEX50
+#     execute print_static ETEMP ITER_COUNT 
+##end_debug
+
+     ENDPROC MAKE_ORTHO_COEFS
+#    ------------------------
+
+     PROC GRAM_SCHMIDT
+#    ----------------
+     MCOUNT = 0.0
+     SUMA   = 0.0
+     SUMAAA = 0.0
+     SUMBBB = 0.0
+     C_A    = 0.0
+     C_AAA  = 0.0
+     C_BBB  = 0.0
+
+     PARDO a, b1
+           GET CORR_VEC_AB(a,b1)
+           Tab(a,b1)   = CORR_VEC_AB(a,b1)
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+   
+              IF NCOUNT > ITER_COUNT
+                 EXIT
+              ENDIF 
+
+              GET R1_AB_HIST(a,b1,NINDEX50)
+              GET ORTHO_COEF(NINDEX50,NINDEX50)
+
+              T1ab(a,b1)  = R1_AB_HIST(a,b1,NINDEX50)
+              Txx(NINDEX50,NINDEX50) = ORTHO_COEF(NINDEX50,NINDEX50)
+
+              EXECUTE RETURN_SVAL Txx FACT
+
+              T1ab(a,b1) *= FACT
+              T1ab(a,b1) *= -1.0
+              Tab(a,b1)  += T1ab(a,b1)
+
+           ENDDO NINDEX50
+
+           PUT R1_AB_INTMD(a,b1) = Tab(a,b1)
+
+           TMP    = Tab(a,b1) * Tab(a,b1)
+           SUMA  += TMP
+                 
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+          REQUEST CORR_VEC_ABAA(a,b,i1,a1) a1
+          Tabia(a,b,i1,a1)  = CORR_VEC_ABAA(a,b,i1,a1)
+
+          NCOUNT = 0.0
+          DO NINDEX50
+             NCOUNT += 1.0
+             IF NCOUNT > ITER_COUNT
+                EXIT
+             ENDIF 
+
+             REQUEST R2_ABAA_HIST(a,b,i1,a1,NINDEX50) i1
+             GET ORTHO_COEF(NINDEX50,NINDEX50)
+
+             T1abia(a,b,i1,a1) = R2_ABAA_HIST(a,b,i1,a1,NINDEX50)
+             Txx(NINDEX50,NINDEX50) = ORTHO_COEF(NINDEX50,NINDEX50) 
+                 
+             EXECUTE RETURN_SVAL Txx FACT
+
+             T1abia(a,b,i1,a1)  *= FACT
+             T1abia(a,b,i1,a1)  *= -1.0
+             Tabia(a,b,i1,a1)   += T1abia(a,b,i1,a1)
+
+           ENDDO NINDEX50
+
+           PREPARE R2_ABAA_intmd(a,b,i1,a1) = Tabia(a,b,i1,a1)
+
+           TMP  =  Tabia(a,b,i1,a1) * Tabia(a,b,i1,a1)
+           SUMAAA  += TMP
+
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+
+           REQUEST CORR_VEC_ABBB(a,b,j1,b1) b1
+           Tabjb(a,b,j1,b1)  = CORR_VEC_ABBB(a,b,j1,b1)
+
+           NCOUNT = 0.0
+           DO NINDEX50
+
+             NCOUNT += 1.0
+             IF NCOUNT > ITER_COUNT
+                EXIT
+             ENDIF 
+
+             REQUEST R2_ABBB_HIST(a,b,j1,b1,NINDEX50) j1
+             GET ORTHO_COEF(NINDEX50,NINDEX50)
+
+             T1abjb(a,b,j1,b1) = R2_ABBB_HIST(a,b,j1,b1,NINDEX50)
+             Txx(NINDEX50,NINDEX50) = ORTHO_COEF(NINDEX50,NINDEX50) 
+
+             EXECUTE RETURN_SVAL Txx FACT
+                 
+             T1abjb(a,b,j1,b1) *= FACT
+             T1abjb(a,b,j1,b1) *= -1.0
+             Tabjb(a,b,j1,b1)  += T1abjb(a,b,j1,b1)
+
+           ENDDO NINDEX50
+                
+          PREPARE R2_ABBB_intmd(a,b,j1,b1) = Tabjb(a,b,j1,b1)
+
+          TMP = Tabjb(a,b,j1,b1) * Tabjb(a,b,j1,b1)
+          SUMBBB += TMP
+                 
+     ENDPARDO a, b, j1,  b1
+
+     EXECUTE SERVER_BARRIER 
+     COLLECTIVE   C_A   += SUMA 
+     COLLECTIVE   C_AAA += SUMAAA
+     COLLECTIVE   C_BBB += SUMBBB
+
+     EXECUTE SIP_BARRIER 
+
+     NORM_NEW_ORTGC  = C_A
+     NORM_NEW_ORTGC += C_AAA
+     NORM_NEW_ORTGC += C_BBB
+
+     EXPONENT = 0.5
+     EXECUTE NORM_FAC NORM_NEW_ORTGC EXPONENT
+     INV_SQRT_NORM_ORTGC  = NORM_NEW_ORTGC
+     SQRT_OVERLAP         = EXPONENT
+#bgn_debug
+#     execute print_scalar INV_SQRT_NORM_ORTGC
+#     execute print_scalar SQRT_OVERLAP 
+#end_debug
+
+     ENDPROC GRAM_SCHMIDT
+#    --------------------
+
+     PROC DRIVE_ORTHO
+#    ----------------
+    
+     CALL MAKE_ORTHO_COEFS
+     CALL GRAM_SCHMIDT 
+
+     ENDPROC DRIVE_ORTHO
+#    -------------------
+
+     PROC RESCALE_NEW_C
+#    ------------------
+     SUMA    = 0.0
+     SUMAA_A = 0.0
+     SUMBB_B = 0.0
+     HC_A    = 0.0
+     HC_AAA  = 0.0
+     HC_BBB  = 0.0
+
+     PARDO a, b1
+
+            GET  R1_AB_intmd(a,b1)
+            Tab(a,b1) = R1_AB_intmd(a,b1)
+            TMP   = Tab(a,b1) * Tab(a,b1)
+            HC_A += TMP
+
+      ENDPARDO a, b1
+
+      PARDO a, b, i1, a1
+
+              REQUEST R2_ABAA_intmd(a,b,i1,a1) a1
+              Tabia(a,b,i1,a1) = R2_ABAA_intmd(a,b,i1,a1)
+
+              TMP   = Tabia(a,b,i1,a1) * Tabia(a,b,i1,a1)
+              HC_AAA += TMP
+
+      ENDPARDO a, b, i1, a1
+
+      PARDO a, b, j1, b1
+
+              REQUEST R2_ABBB_intmd(a,b,j1,b1) b1
+              Tabjb(a,b,j1,b1) = R2_ABBB_intmd(a,b,j1,b1)
+
+              TMP   = Tabjb(a,b,j1,b1) * Tabjb(a,b,j1,b1)
+              HC_BBB +=  TMP
+              
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SIP_BARRIER
+     COLLECTIVE  SUMA    += HC_A
+     COLLECTIVE  SUMAA_A += HC_AAA
+     COLLECTIVE  SUMBB_B += HC_BBB
+
+     SUM_R  = SUMA
+     SUM_R += SUMAA_A
+     SUM_R += SUMBB_B
+#bgn_debug
+#     execute print_scalar SUM_R
+#end_debug
+
+     EXPONENT = 0.5
+     EXECUTE NORM_FAC SUM_R EXPONENT
+     INV_SQRT_NORM_ORTGC  = SUM_R
+     SQRT_OVERLAP         = EXPONENT
+     
+     EXECUTE SIP_BARRIER 
+#bgn_debug
+#     execute print_scalar INV_SQRT_NORM_ORTGC
+#     execute print_scalar SQRT_OVERLAP 
+#end_debug
+
+     PARDO a, b1
+           GET R1_AB_intmd(a,b1)
+
+           Tab(a,b1)  = R1_AB_intmd(a,b1)
+           Tab(a,b1) *= INV_SQRT_NORM_ORTGC
+
+           PUT R1_AB(a,b1) =  Tab(a,b1)
+     ENDPARDO a, b1
+
+    PARDO a, b, i1, a1
+         
+         REQUEST R2_ABAA_intmd(a,b,i1,a1) a1
+
+         Tabia(a,b,i1,a1)  = R2_ABAA_intmd(a,b,i1,a1)
+         Tabia(a,b,i1,a1) *= INV_SQRT_NORM_ORTGC
+
+         PREPARE R2_ABAA(a,b,i1,a1) = Tabia(a,b,i1,a1)
+
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+
+         REQUEST R2_ABBB_intmd(a,b,j1,b1) b1
+
+         Tabjb(a,b,j1,b1)  = R2_ABBB_intmd(a,b,j1,b1)
+         Tabjb(a,b,j1,b1) *= INV_SQRT_NORM_ORTGC
+
+         PREPARE R2_ABBB(a,b,j1,b1) = Tabjb(a,b,j1,b1) 
+
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SERVER_BARRIER
+
+#bgn_debug
+#      sumab=0.0
+#      tmpa=0.0
+#      tmpb=0.0
+#      suma=0.0
+#      sumb=0.0
+#      pardo a,b1
+#         get r1_ab(a,b1)
+#         tmp = r1_ab(a,b1) * r1_ab(a,b1)
+#         tmpa += tmp
+#      endpardo a,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab  = suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,i1,a1
+#            get R2_abaa(a,b,i1,a1) 
+#            tmp = R2_abaa(a,b,i1,a1) * R2_abaa(a,b,i1,a1)
+#            tmpa += tmp
+#      endpardo a,b,i1,a1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab += suma
+#      tmpa =0.0
+#      suma =0.0
+#      pardo a,b,j1,b1
+#            get R2_abbb(a,b,j1,b1) 
+#            tmp = R2_abbb(a,b,j1,b1) * R2_abbb(a,b,j1,b1)
+#            tmpa+= tmp
+#      endpardo a,b,j1,b1
+#      execute sip_barrier
+#      collective suma +=tmpa
+#      execute print_scalar suma
+#      sumab += suma
+#      execute print_scalar sumab
+#end_debug
+     ENDPROC RESCALE_NEW_C
+#    ---------------------
+
+     PROC SET_TO_ZERO
+#    ----------------
+
+     DO MINDEX50
+        OVERLAP_R(MINDEX50)  = 0.0
+        DO NINDEX50
+           A_MATRIX(MINDEX50,NINDEX50)   = 0.0
+        ENDDO NINDEX50
+     ENDDO MINDEX50
+#
+     DO NINDEX50 
+
+     PARDO a, b1
+           tab(a,b1)      = 0.0
+           PUT Y1_AB(a,b1,NINDEX50)  = tab(a,b1)
+           PUT HY1_AB(a,b1,NINDEX50) = tab(a,b1)
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+         tabia(a,b,i1,a1) = 0.0
+         PREPARE Y2_ABAA(a,b,i1,a1,NINDEX50)  = tabia(a,b,i1,a1)
+         PREPARE HY2_ABAA(a,b,i1,a1,NINDEX50) = tabia(a,b,i1,a1)
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+         tabjb(a,b,j1,b1)       = 0.0
+         PREPARE Y2_ABBB(a,b,j1,b1,NINDEX50)  = tabjb(a,b,j1,b1)
+         PREPARE HY2_ABBB(a,b,j1,b1,NINDEX50) = tabjb(a,b,j1,b1)
+     ENDPARDO a, b, j1, b1
+
+     ENDDO NINDEX50 
+
+     PARDO a, b1
+         tab(a,b1) = 0.0
+         PUT R1_AB_intmd(a,b1) = tab(a,b1)
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+         tabia(a,b,i1,a1) = 0.0
+         PREPARE R2_ABAA_intmd(a,b,i1,a1) = tabia(a,b,i1,a1)
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+         tabjb(a,b,j1,b1) = 0.0
+         PREPARE R2_ABBB_intmd(a,b,j1,b1) = tabjb(a,b,j1,b1)
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE  SERVER_BARRIER 
+
+     ENDPROC SET_TO_ZERO
+#    -------------------
+
+     PROC REORDER_A_EIGS
+#    -------------------
+     
+     DO MINDEX50
+        DO NINDEX50
+           IF MINDEX50  == NINDEX50
+              TXX(MINDEX50,MINDEX50) = A_MATRIX(MINDEX50,MINDEX50)
+              EXECUTE RETURN_SVAL TXX EIG_VALUE 
+              A_DIAGS(MINDEX50)      = EIG_VALUE 
+           ENDIF
+         ENDDO NINDEX50
+     ENDDO MINDEX50
+
+     EXECUTE PROCESS_EIGS A_DIAGS DVECTORS 
+     
+     ENDPROC REORDER_A_EIGS
+#    ----------------------
+
+     PROC C_CHECK
+#    -----------
+     DO KINDEX50
+        DO LINDEX50
+           ETEMP(KINDEX50,LINDEX50) = 0.0
+       ENDDO LINDEX50
+     ENDDO KINDEX50
+
+     NCOUNT = 0.0
+     DO NINDEX50
+        NCOUNT += 1.0
+        IF NCOUNT > ITER_COUNT
+           EXIT
+        ENDIF
+        
+              MCOUNT = 0.0
+              DO MINDEX50  
+                 MCOUNT += 1.0
+ 
+                 IF MCOUNT > ITER_COUNT
+                    EXIT
+                 ENDIF 
+
+                    SUMA   = 0.0
+                    SUMAAA = 0.0
+                    SUMBBB = 0.0
+                    HC_A   = 0.0
+                    HC_AAA = 0.0
+                    HC_BBB = 0.0
+
+                     PARDO a, b1
+
+                            GET R1_AB_HIST(a,b1,NINDEX50)
+                            GET R1_AB_HIST(a,b1,MINDEX50)
+
+                            Tab(a,b1)   = R1_AB_HIST(a,b1,NINDEX50)
+                            T1ab(a,b1)  = R1_AB_HIST(a,b1,MINDEX50)
+
+                            TMP   = Tab(a,b1) * T1ab(a,b1)
+                            SUMA += TMP
+
+                     ENDPARDO a, b1
+
+                     PARDO a, b, i1, a1
+
+                           REQUEST R2_ABAA_HIST(a,b,i1,a1,NINDEX50) a
+                           REQUEST R2_ABAA_HIST(a,b,i1,a1,MINDEX50) a
+
+                           Tabia(a,b,i1,a1)  = R2_ABAA_HIST(a,b,i1,a1,NINDEX50)
+                           T1abia(a,b,i1,a1) = R2_ABAA_HIST(a,b,i1,a1,MINDEX50)
+
+                           TMP     = Tabia(a,b,i1,a1) * T1abia(a,b,i1,a1)
+                           SUMAAA += TMP
+                
+                     ENDPARDO a, b, i1, a1
+
+                     PARDO a, b, j1, b1
+                           REQUEST R2_ABBB_HIST(a,b,j1,b1,NINDEX50) b
+                           REQUEST R2_ABBB_HIST(a,b,j1,b1,MINDEX50)  b
+
+                           Tabjb(a,b,j1,b1)  = R2_ABBB_HIST(a,b,j1,b1,NINDEX50)
+                           T1abjb(a,b,j1,b1) = R2_ABBB_HIST(a,b,j1,b1,MINDEX50)
+                        
+                           TMP     = Tabjb(a,b,j1,b1) * T1abjb(a,b,j1,b1)
+                           SUMBBB += TMP
+
+                     ENDPARDO a, b, j1, b1
+      
+                     EXECUTE SERVER_BARRIER
+                     COLLECTIVE HC_A   += SUMA
+                     COLLECTIVE HC_AAA += SUMAAA
+                     COLLECTIVE HC_BBB += SUMBBB
+
+                     A_VALUE  = HC_A
+                     A_VALUE += HC_AAA
+                     A_VALUE += HC_BBB
+ 
+                     KCOUNT = 0.0
+                     DO KINDEX50
+                         KCOUNT += 1.0
+                            LCOUNT = 0.0
+                            DO LINDEX50
+                               LCOUNT += 1.0
+                                  ETEMP(MINDEX50,NINDEX50) = A_VALUE
+                            ENDDO LINDEX50
+                     ENDDO KINDEX50
+
+#                 ENDIF 
+              ENDDO MINDEX50
+#        ENDIF
+     ENDDO NINDEX50
+
+#bgn_debug
+     execute print_static etemp  iter_count 
+#end_debug
+
+     ENDPROC C_CHECK
+#    ---------------
+
+     PROC HBAR_ABCD
+#   --------------- 
+
+     PARDO mu, nu, lambda, sigma
+            compute_integrals aoint(mu,nu,lambda,sigma)
+            DO a
+               txxxa(mu,nu,lambda,a) = aoint(mu,nu,lambda,sigma)*ca(sigma,a)
+               PREPARE Vxxxa(mu,nu,lambda,a) +=  txxxa(mu,nu,lambda,a)
+            ENDDO a
+      ENDPARDO mu, nu, lambda, sigma
+      execute server_barrier
+
+      PARDO mu, nu, lambda, a
+            REQUEST Vxxxa(mu,nu,lambda,a) a
+            DO a1
+               txxaa(mu,nu,a1,a) = Vxxxa(mu,nu,lambda,a)*ca(lambda,a1)
+               PREPARE Vxxaa(mu,nu,a1,a) += txxaa(mu,nu,a1,a)
+            ENDDO a1
+      ENDPARDO mu, nu, lambda, a
+      execute server_barrier
+      destroy Vxxxa
+
+      PARDO mu, nu, a1, a
+            REQUEST Vxxaa(mu,nu,a1,a) a
+            DO a2
+               txaaa(mu,a2,a1,a) = Vxxaa(mu,nu,a1,a)*ca(nu,a2)
+               PREPARE Vxaaa(mu,a2,a1,a) += txaaa(mu,a2,a1,a)
+            ENDDO a2
+      ENDPARDO mu, nu, a1, a
+      execute server_barrier
+      destroy Vxxaa
+
+      PARDO mu, a2, a1, a
+            REQUEST Vxaaa(mu,a2,a1,a) a
+            DO a3
+               taaaa(a3,a2,a1,a) = Vxaaa(mu,a2,a1,a)*ca(mu,a3)
+               PREPARE HBAR_aabb(a3,a2,a1,a) += taaaa(a3,a2,a1,a)
+            ENDDO a3
+      ENDPARDO mu, a2, a1, a
+      execute server_barrier
+      destroy Vxaaa
+#
+#     (alpha,alpha,beta,beta) spin component.
+#     ---------------------------------------
+#
+      PARDO a, b2, a1, b3
+#
+            tppqq(a,a1,b2,b3) = 0.0
+#
+            DO j
+#
+               REQUEST              Vaabj(a1,a,b3,j) j
+               GET                  t1b(b2,j)
+#
+               t1ppqq(a,a1,b2,b3) = Vaabj(a1,a,b3,j)*t1b(b2,j)
+               tppqq(a,a1,b2,b3) -= t1ppqq(a,a1,b2,b3)
+#
+            ENDDO j
+#
+            DO i
+#
+               REQUEST              Vbbai(b3,b2,a1,i) i
+               GET                  t1a(a,i)
+#
+               t1ppqq(a,a1,b2,b3) = Vbbai(b3,b2,a1,i)*t1a(a,i)
+               tppqq(a,a1,b2,b3) -= t1ppqq(a,a1,b2,b3)
+#
+            ENDDO i
+#
+            DO i
+            DO j1
+#
+               REQUEST               T2ab(a,i,b2,j1) j1
+               REQUEST               Vpiqj(a1,i,b3,j1) j1
+               GET                   t1a(a,i)
+               GET                   t1b(b2,j1)
+#
+               t1ppqq(a,i,b2,j1)    = T2ab(a,i,b2,j1)
+               t2ppqq(a,i,b2,j1)   = t1a(a,i)^t1b(b2,j1)
+               t1ppqq(a,i,b2,j1)   += t2ppqq(a,i,b2,j1)
+#
+               t3ppqq(a,a1,b2,b3)  = t1ppqq(a,i,b2,j1)*Vpiqj(a1,i,b3,j1)
+               tppqq(a,a1,b2,b3)  += t3ppqq(a,a1,b2,b3)
+#
+            ENDDO j1
+            ENDDO i
+#
+            PREPARE HBAR_aabb(a,a1,b2,b3) += tppqq(a,a1,b2,b3)
+      ENDPARDO a, b2, a1, b3
+#
+#     done (alpha,alpha,beta,beta) spin component.
+#     --------------------------------------------
+#
+     EXECUTE SERVER_BARRIER 
+
+     ENDPROC HBAR_ABCD
+#    -----------------
+
+     PROC FORM_TAU
+#    -------------
+
+     PARDO a, i, b, j
+         GET T1a(a,i)
+         GET T1b(b,j)
+         REQUEST T2ab(a,i,b,j) j
+         Taibj(a,i,b,j)  = T1a(a,i)^T1b(b,j)
+         Taibj(a,i,b,j) += T2ab(a,i,b,j)
+
+         PREPARE Tau_ab(a,i,b,j) = Taibj(a,i,b,j)
+     ENDPARDO a, i, b, j
+    
+     PARDO a, i, a1, i1
+         GET T1a(a,i)
+         GET T1a(a1,i1)
+         GET T1a(a,i1)
+         GET T1a(a1,i)
+         REQUEST T2aa(a,i,a1,i1) i1
+
+         Tai(a,i)   = T1a(a,i)
+         T1ai(a,i1) = T1a(a,i1)
+         T1aiai(a,i,a1,i1) = Tai(a,i)^T1a(a1,i1)
+         T2aiai(a,i,a1,i1) = T1ai(a,i1)^T1a(a1,i)
+         T1aiai(a,i,a1,i1)-= T2aiai(a,i,a1,i1)
+
+         T1aiai(a,i,a1,i1) += T2aa(a,i,a1,i1)
+         PREPARE Tau_aa(a,i,a1,i1) = T1aiai(a,i,a1,i1)
+
+     ENDPARDO a, i, a1, i1
+     EXECUTE SERVER_BARRIER 
+
+     ENDPROC FORM_TAU
+#    ----------------
+
+     PROC INIT_TO_ZERO
+#    -----------------
+
+     NCOUNT = ZERO
+     DO NINDEX50
+
+     NCOUNT +=1.0
+
+     IF NCOUNT <= NREDUCE
+     PARDO a, b1
+           tab(a,b1)      = 0.0
+           PUT Y1_AB_TRUNCT(a,b1,NINDEX50)  = tab(a,b1)
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+         tabia(a,b,i1,a1) = 0.0
+         PREPARE Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50)  = tabia(a,b,i1,a1)
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+         tabjb(a,b,j1,b1)       = 0.0
+         PREPARE Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50)  = tabjb(a,b,j1,b1)
+     ENDPARDO a, b, j1, b1
+     ENDIF 
+
+     ENDDO NINDEX50
+
+     EXECUTE  SERVER_BARRIER
+
+     ENDPROC INIT_TO_ZERO
+#    --------------------
+
+     PROC TRANSFORM_C
+#    ----------------
+
+     PARDO a, b1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET R1_AB_HIST(a,b1,MINDEX50)
+                       Tabs(a,b1,MINDEX50)  = R1_AB_HIST(a,b1,MINDEX50)
+                       T1abs(a,b1,NINDEX50) = Tabs(a,b1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1_AB_TRUNCT(a,b1,NINDEX50) += T1abs(a,b1,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST R2_ABAA_HIST(a,b,i1,a1,MINDEX50)  a
+
+                       Tabias(a,b,i1,a1,MINDEX50) = R2_ABAA_HIST(a,b,i1,a1,MINDEX50)
+                       T1abias(a,b,i1,a1,NINDEX50) = Tabias(a,b,i1,a1,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50) += T1abias(a,b,i1,a1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                   MCOUNT = 0.0
+                   DO MINDEX50
+                      MCOUNT += 1.0
+
+                      IF MCOUNT > ITER_COUNT
+                         EXIT
+                      ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST R2_ABBB_HIST(a,b,j1,b1,MINDEX50)  j1
+
+                       Tabjbs(a,b,j1,b1,MINDEX50) = R2_ABBB_HIST(a,b,j1,b1,MINDEX50)
+                       T1abjbs(a,b,j1,b1,NINDEX50) = Tabjbs(a,b,j1,b1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50) += T1abjbs(a,b,j1,b1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC TRANSFORM_C
+#    -------------------
+
+     PROC TRANSFORM_HC
+#    -----------------
+
+     PARDO a, b1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE 
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+                       GET HR1_AB_HIST(a,b1,MINDEX50)
+                       Tabs(a,b1,MINDEX50)  = HR1_AB_HIST(a,b1,MINDEX50)
+                       T1abs(a,b1,NINDEX50) = Tabs(a,b1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PUT Y1_AB_TRUNCT(a,b1,NINDEX50) += T1abs(a,b1,NINDEX50)
+
+                 ENDDO  MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                 MCOUNT = 0.0
+                 DO MINDEX50
+                    MCOUNT += 1.0
+
+                    IF MCOUNT > ITER_COUNT
+                       EXIT
+                    ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST HR2_ABAA_HIST(a,b,i1,a1,MINDEX50)  a
+
+                       Tabias(a,b,i1,a1,MINDEX50) = HR2_ABAA_HIST(a,b,i1,a1,MINDEX50)
+                       T1abias(a,b,i1,a1,NINDEX50) = Tabias(a,b,i1,a1,MINDEX50) * TS(MINDEX50,NINDEX50)
+
+                       PREPARE Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50) += T1abias(a,b,i1,a1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+
+           NCOUNT = 0.0
+           DO NINDEX50
+              NCOUNT += 1.0
+
+              IF NCOUNT > NREDUCE
+                 EXIT
+              ENDIF
+
+                   MCOUNT = 0.0
+                   DO MINDEX50
+                      MCOUNT += 1.0
+
+                      IF MCOUNT > ITER_COUNT
+                         EXIT
+                      ENDIF
+
+                       TS(MINDEX50,NINDEX50) = DVECTORS(MINDEX50,NINDEX50)
+
+                       REQUEST HR2_ABBB_HIST(a,b,j1,b1,MINDEX50)  j1
+
+                       Tabjbs(a,b,j1,b1,MINDEX50) = HR2_ABBB_HIST(a,b,j1,b1,MINDEX50)
+                       T1abjbs(a,b,j1,b1,NINDEX50) = Tabjbs(a,b,j1,b1,MINDEX50) * TS(MINDEX50,NINDEX50)
+                       PREPARE Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50) += T1abjbs(a,b,j1,b1,NINDEX50)
+                 ENDDO MINDEX50
+           ENDDO NINDEX50
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC TRANSFORM_HC
+#    --------------------
+
+     PROC COPY_NORM_C
+#    ----------------
+
+     NCOUNT = 0.0
+     DO NINDEX50
+
+     NCOUNT += 1.0
+     IF NCOUNT <= NREDUCE
+
+     SUMA    = 0.0
+     SUMAA_A = 0.0
+     SUMBB_B = 0.0
+     HC_A    = 0.0
+     HC_AAA  = 0.0
+     HC_BBB  = 0.0
+
+     PARDO a, b1
+         GET  Y1_AB_TRUNCT(a,b1,NINDEX50)
+         Tab(a,b1) = Y1_AB_TRUNCT(a,b1,NINDEX50)
+         TMP   = Tab(a,b1) * Tab(a,b1)
+         HC_A += TMP
+      ENDPARDO a, b1
+
+      PARDO a, b, i1, a1
+          REQUEST Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50) a1
+          Tabia(a,b,i1,a1) = Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50)
+          TMP   = Tabia(a,b,i1,a1) * Tabia(a,b,i1,a1)
+           HC_AAA += TMP
+      ENDPARDO a, b, i1, a1
+
+      PARDO a, b, j1, b1
+          REQUEST Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50) b1
+          Tabjb(a,b,j1,b1) = Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50)
+          TMP   = Tabjb(a,b,j1,b1) * Tabjb(a,b,j1,b1)
+          HC_BBB +=  TMP
+     ENDPARDO a, b, j1, b1
+
+     EXECUTE SIP_BARRIER
+     COLLECTIVE  SUMA    += HC_A
+     COLLECTIVE  SUMAA_A += HC_AAA
+     COLLECTIVE  SUMBB_B += HC_BBB
+
+     SUM_R  = SUMA
+     SUM_R += SUMAA_A
+     SUM_R += SUMBB_B
+
+     EXPONENT = 0.5
+     EXECUTE NORM_FAC SUM_R EXPONENT
+     INV_SQRT_NORM_ORTGC  = SUM_R
+     SQRT_OVERLAP         = EXPONENT
+
+     EXECUTE SIP_BARRIER
+
+     PARDO a, b1
+         GET Y1_AB_TRUNCT(a,b1,NINDEX50)
+         Tab(a,b1)  = Y1_AB_TRUNCT(a,b1,NINDEX50)
+         Tab(a,b1) *= INV_SQRT_NORM_ORTGC
+         PUT R1_AB_HIST(a,b1,NINDEX50) =  Tab(a,b1)
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+         REQUEST Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50) a1
+         Tabia(a,b,i1,a1)  = Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50)
+         Tabia(a,b,i1,a1) *= INV_SQRT_NORM_ORTGC
+         PREPARE R2_ABAA_HIST(a,b,i1,a1,NINDEX50) = Tabia(a,b,i1,a1)
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+         REQUEST Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50) b1
+         Tabjb(a,b,j1,b1)  = Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50)
+         Tabjb(a,b,j1,b1) *= INV_SQRT_NORM_ORTGC
+         PREPARE R2_ABBB_HIST(a,b,j1,b1,NINDEX50) = Tabjb(a,b,j1,b1)
+     ENDPARDO a, b, j1, b1
+     ENDIF 
+
+     ENDDO NINDEX50 
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC COPY_NORM_C
+#    -------------------
+
+     PROC COPY_HC
+#    ------------
+
+     NCOUNT = 0.0
+     DO NINDEX50
+
+     NCOUNT += 1.0
+     IF NCOUNT <= NREDUCE
+     PARDO a, b1
+         GET Y1_AB_TRUNCT(a,b1,NINDEX50)
+         Tab(a,b1)  = Y1_AB_TRUNCT(a,b1,NINDEX50)
+         PUT HR1_AB_HIST(a,b1,NINDEX50) =  Tab(a,b1)
+     ENDPARDO a, b1
+
+     PARDO a, b, i1, a1
+         REQUEST Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50) a1
+         Tabia(a,b,i1,a1)  = Y2_ABAA_TRUNCT(a,b,i1,a1,NINDEX50)
+         PREPARE HR2_ABAA_HIST(a,b,i1,a1,NINDEX50) = Tabia(a,b,i1,a1)
+     ENDPARDO a, b, i1, a1
+
+     PARDO a, b, j1, b1
+         REQUEST Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50) b1
+         Tabjb(a,b,j1,b1)  = Y2_ABBB_TRUNCT(a,b,j1,b1,NINDEX50)
+         PREPARE HR2_ABBB_HIST(a,b,j1,b1,NINDEX50) = Tabjb(a,b,j1,b1)
+     ENDPARDO a, b, j1, b1
+     ENDIF
+
+     ENDDO NINDEX50
+
+     EXECUTE SERVER_BARRIER
+
+     ENDPROC COPY_HC
+#    ---------------
+
+     PROC SET_EOM_INCLUDE
+#    --------------------
+
+     EXECUTE SET_ACES3_VARS ITER_COUNT FORT
+     EXECUTE SET_ACES3_VARS ROOT_COUNT FIFT
+
+     ENDPROC SET_EOM_INCLUDE
+#    -----------------------
+
+    PROC INIT_AUX_STATIC_ARRAYS
+#    ---------------------------
+
+      DO MINDEX50
+      DO NINDEX50
+         DVECTORS(NINDEX50,MINDEX50) = ZERO
+      ENDDO NINDEX50
+      ENDDO MINDEX50
+
+      DO NINDEX50
+        OVERLAP_R(NINDEX50) = ZERO
+        A_DIAGS(NINDEX50)   = ZERO
+      ENDDO NINDEX50
+
+      DO IONE
+      DO MROOTS
+         PSEUDO_ROOTS(MROOTS,IONE) = ZERO
+         DUMMY(IONE,IONE)            = ZERO
+         DEA_ENER_T(MROOTS,IONE)     = ZERO
+         DEA_ENER_S(MROOTS,IONE)     = ZERO
+      ENDDO MROOTS
+      ENDDO IONE
+
+      EXECUTE SIP_BARRIER
+
+     ENDPROC INIT_AUX_STATIC_ARRAYS
+#    ------------------------------
+
+     PROC TRUNCATE
+#    -------------
+# Reduce the subspace dimension.
+
+     EXECUTE SERVER_BARRIER 
+     IF EOM_MAXCYC < TWELVE
+        NREDUCE  = EOM_MAXCYC
+        NREDUCE -= THREE
+     ELSE
+        NREDUCE = TWELVE
+     ENDIF
+     NFULL  = ITER_COUNT
+
+     EXECUTE SET_ACES3_VARS NREDUCE TEN
+     EXECUTE SET_ACES3_VARS NFULL   ELV
+     EXECUTE SET_ACES3_VARS OMEGA   TWL
+
+     EXECUTE TRUNCATE_EOM_SUBSPACE A_DIAGS DVECTORS
+#bgn_debug
+#     execute print_static A_DIAGS NREDUCE
+#     execute print_static DVECTORS NFULL
+#end_debug
+
+     IF TRIPLET == ONE 
+        CALL INIT_TO_ZERO
+     ELSE 
+        IF TRNC_COUNT > ONE
+           CALL INIT_TO_ZERO
+        ENDIF 
+     ENDIF
+     CALL TRANSFORM_C
+     CALL COPY_NORM_C
+     CALL INIT_TO_ZERO
+     CALL TRANSFORM_HC
+     CALL COPY_HC
+
+     ENDPROC TRUNCATE
+#    ----------------
+
+    PROC ORTHO_NEW_ROOT
+#   -------------------
+# If we wants to use the exsisting sub-space for the next root, we
+# need to orthogonalize the new guess vector to the exsisting subspace.
+# Lets use the exsisting arrays and the Schmidt routines.
+
+    PARDO a, b
+        GET R1_AB(a,b)
+        Tab(a,b) = R1_AB(a,b)
+        PUT CORR_VEC_AB(a,b) = Tab(a,b)
+    ENDPARDO a, b
+
+    PARDO a, b, i1, a1
+        Tabia(a,b,i1,a1) = 0.0
+        PREPARE CORR_VEC_ABAA(a,b,i1,a1) = Tabia(a,b,i1,a1)
+    ENDPARDO a, b, i1, a1
+
+    PARDO a, b, j1, b1
+        Tabjb(a,b,j1,b1) = 0.0
+        PREPARE CORR_VEC_ABBB(a,b,j1,b1) = Tabjb(a,b,j1,b1)
+    ENDPARDO a, b, j1, b1
+
+    EXECUTE SERVER_BARRIER 
+
+    CALL DRIVE_ORTHO
+
+    CALL RESCALE_NEW_C
+
+    ENDPROC ORTHO_NEW_ROOT
+#   ----------------------
+
+
+#     BEGIN MAIN PROGRAM
+#     ------------------
+# Read data from BLOCK_DATA -> to be partially replaced
+# -----------------------------------------------------
+
+#-----------------------------------------------------|
+#       Check if F12 calculation is requested         |
+#-----------------------------------------------------|
+
+    F12CALC = 0.0
+     IF STGF12 != 0.0
+        F12CALC = 1.0
+     ENDIF
+#bgn_debug
+     execute print_scalar F12CALC
+#end_debug
+
+    IF EA_ROOTS !=0.0
+       IF STGF12 != 0.0
+          EAEOMF12CALC = 1.0
+#bgn_debug
+      execute print_scalar EAEOMF12CALC
+#end_debug
+       ENDIF
+    ENDIF
+#bgn_debug
+    execute print_scalar EAEOMF12CALC
+#end_debug
+
+#-----------------------------------------------------|
+     ZERO     = 0.0
+     ONE      = 1.0
+     HALF     = 0.5
+     TEN      = 10.0
+     ELV      = 11.0
+     TWELVE   = 12.0
+     THRTEN   = 13.0
+     TWL      = TWELVE
+     NINETEEN = 19.0
+     MONE     = -1.0
+     THREE    = 3.0
+     FORT     = 14.0
+     FIFT     = 15.0
+
+     TARGET_ROOTS = EA_ROOTS
+     EOM_THRES    = EOM_TOL
+     EOM_DENOM    = EE_DENOM
+     EOM_MAXCYC   = EE_MAXCYC
+     EXACT_HY     = ZERO 
+     NO_AO_LADDER = ZERO
+     IF ROOT_SEARCH == ZERO
+        MAX_OVLP  = ONE
+        MIN_ENEG  = ZERO
+     ELSE
+        MAX_OVLP  = ZERO
+        MIN_ENEG  = ONE
+     ENDIF
+     LOCK_THRES   = 0.001
+     IF WHAT_TOFOLLOW == ZERO
+        FIRST_VEC = ONE
+        PREVS_VEC = ZERO
+     ELSE
+        FIRST_VEC = ZERO
+        PREVS_VEC = ONE
+     ENDIF
+     LEFT         = ZERO
+     RIGHT        = ZERO
+     FRESH_SBSP   = SUB_SPACE
+     VERY_SMALL   = EOM_THRES
+#
+     CALL READ_DATA
+     CALL CREATE_ARRAYS 
+     CALL INIT_AUX_STATIC_ARRAYS
+
+     EXECUTE SET_ACES3_VARS RIGHT LEFT 
+
+     IF NO_AO_LADDER == ONE
+        CALL HBAR_ABCD 
+     ELSE 
+        CALL FORM_TAU
+     ENDIF 
+
+# The default denominator is 1-particle part and can be switched to Hbar
+
+     CALL FORM_13P1H_DIAG
+     IF EOM_DENOM == ONE
+        CALL FORM_23P1H_DIAG
+     ENDIF
+
+# The default iteration number is 30. Increase if desired.
+
+     MAX_SUBSP_DIM  = EOM_MAXCYC
+
+#bgn_debug
+#         execute print_scalar eom_thres 
+#         execute print_scalar eom_denom
+#         execute print_scalar eom_maxcyc
+#end_debug
+
+      MULT = ZERO 
+      DO SPN_MULT
+
+        MULT  += ONE
+
+        IF MULT == ONE
+           SINGLET = ONE
+           TRIPLET = ZERO
+        ELSE
+           SINGLET = ZERO
+           TRIPLET = ONE
+        ENDIF
+
+        ROOT_COUNT = ZERO 
+        ITER_COUNT = ZERO
+        TRNC_COUNT = ZERO
+
+        DO NROOTS
+
+           ROOT_COUNT += ONE
+           IF ROOT_COUNT > TARGET_ROOTS
+              EXIT
+           ENDIF
+#bgn_debug
+        execute print_scalar SINGLET 
+        execute print_scalar TRIPLET 
+        execute print_scalar ROOT_COUNT
+#end_debug
+
+           MYROOT = ROOT_COUNT 
+           CALL PREP_DEA_GUESS 
+
+           CALL KEEP_GUESS_VECS
+
+           LOCK       = ZERO
+           IDEGEN     = ZERO 
+           IF FRESH_SBSP != ONE
+              IF ROOT_COUNT != ONE
+                 CALL ORTHO_NEW_ROOT
+#bgn_debug
+#            call c_check 
+#end_debug
+                 E_OLD      = OMEGA
+              ENDIF
+           ENDIF
+
+           IF FRESH_SBSP == ONE
+              ITER_COUNT = ZERO
+           ELSE
+
+# The following logic handles a very rare occurence when the
+# previous subspace of the order 20 (maximum) is used for the
+# next root.
+
+             IF ITER_COUNT == TWEN
+                ITER_COUNT = ZERO
+             ENDIF
+           ENDIF
+
+           SBSP_COUNT = ZERO
+
+           DO EOM_CYCLE
+
+              CALL SET_TO_ZERO
+
+              ITER_COUNT += ONE
+              SBSP_COUNT += ONE
+
+              CALL SET_EOM_INCLUDE
+#bgn_debug
+        execute print_scalar ITER_COUNT
+        execute print_scalar SBSP_COUNT
+#end_debug
+              IF SBSP_COUNT > MAX_SUBSP_DIM 
+                 EXIT
+              ENDIF 
+
+              CALL SAVE_C_VECTORS 
+#bgn_debug
+#            call c_check 
+#end_debug
+              CALL HR_MULT
+              CALL FORM_ABBB
+    
+              CALL SAVE_HC_VECTORS 
+
+              IF ITER_COUNT == 1.0
+                 CALL FORM_A_MATRIX_11
+              ELSE
+                CALL FORM_A_MATRIX_IJ
+                CALL FORM_A_MATRIX_JI
+                CALL FORM_A_MATRIX_II
+              ENDIF 
+#bgn_debug
+#            execute print_static A_MATRIX ITER_COUNT 
+#end_debug
+            EXECUTE XGEEV A_MATRIX DVECTORS 
+#bgn_debug
+#            execute print_static A_MATRIX ITER_COUNT 
+#end_debug
+             IF ITER_COUNT != 1.0
+                CALL REORDER_A_EIGS
+             ENDIF 
+#
+# The eigen vectors are normalized and ordered in descending order of the
+# eigenvalues. The corresponding eigenvalues are in the diagonal. 
+#
+             IF ITER_COUNT == 1.0
+                CALL FORM_NEWVECS_ITR1
+             ELSE
+
+                IF EXACT_HY == ONE
+                   CALL FORM_NEWVECS 
+
+                   IF MAX_OVLP == ONE
+                      IF FIRST_VEC == ONE
+                         CALL SELECT_VECS_MAX_OVLP1
+                      ENDIF
+                      IF PREVS_VEC == ONE
+                         CALL SELECT_VECS_MAX_OVLP2
+                      ENDIF
+                   ENDIF
+
+                   IF MIN_ENEG == ONE
+                      CALL SELECT_VECS_MIN_ENEG
+                   ENDIF
+
+                   CALL FORM_SELECTED_Y
+                   CALL FORM_HBAR_Y_VECS
+                ELSE
+                   CALL FORM_NEWVECS
+
+                   IF MAX_OVLP == ONE
+                      IF FIRST_VEC == ONE
+                         CALL SELECT_VECS_MAX_OVLP1
+                      ENDIF
+                      IF PREVS_VEC == ONE
+                         CALL SELECT_VECS_MAX_OVLP2
+                      ENDIF
+                   ENDIF
+                   IF MIN_ENEG == ONE
+                      CALL SELECT_VECS_MIN_ENEG
+                   ENDIF
+
+                    CALL FORM_SELECTED_Y
+                    CALL FORM_NEW_HBAR_Y_VECS
+                    CALL SELECT_HBAR_Y_VEC_TOGO
+                ENDIF 
+
+                CALL FORM_RESIDUAL_VEC
+
+                CALL CHECK_CONVERGENCE
+                IF ITER_COUNT > ONE
+                   EDIFF = E_OLD - OMEGA
+                ENDIF
+                E_OLD = OMEGA
+                EDIFF *=EDIFF
+                EXECUTE SQUARE_ROOT EDIFF HALF
+#bgn_debug
+      execute print_scalar RESIDUAL_NORM
+      execute print_scalar OMEGA
+      execute print_scalar EDIFF 
+#end_debug
+               IF LOCK == ZERO
+               IF EDIFF < LOCK_THRES
+                  IF IDEGEN == ONE
+                     LOCK = ZERO
+                  ELSE
+                     LOCK = ONE
+                  ENDIF
+               ENDIF
+               ENDIF 
+
+               IF RESIDUAL_NORM  < EOM_THRES
+                  EXIT
+               ELSE
+                  CALL FORM_CORRECTION_VEC
+                  CALL DRIVE_ORTHO
+                  CALL RESCALE_NEW_C
+               ENDIF 
+
+# The subspace truncation. When the iteration count goes above
+# 19 and still have not converged, then select 12 vectors closest
+# to the eigenvalue of interest and start Davidson procedure
+# from iteration 13 again.
+
+              IF ITER_COUNT > NINETEEN
+
+                 TRNC_COUNT += ONE
+                 CALL TRUNCATE
+                 ITER_COUNT  = TWL
+
+              ENDIF
+
+             ENDIF 
+
+           ENDDO EOM_CYCLE
+
+           EXECUTE SERVER_BARRIER 
+#bgn_debug
+#      execute print_scalar OMEGA 
+#end_debug
+           SBSP_COUNT += MONE 
+           IF SBSP_COUNT == MAX_SUBSP_DIM
+              IF RESIDUAL_NORM  > EOM_THRES
+#
+# The root under consideration could not be locates in 50 cycles.
+# Lets set energy to zero and inform the user whart that means
+#
+           DO IONE
+            DO MROOTS
+               MCOUNT += ONE
+               IF MCOUNT == ROOT_COUNT
+                  PSEUDO_ROOTS(MROOTS,IONE) = OMEGA
+               ENDIF
+            ENDDO MROOTS
+            ENDDO IONE
+
+            IF FRESH_SBSP != ONE
+              CALL SAVE_C_VECTORS
+              OMEGA_KEEP= OMEGA
+            ENDIF
+            OMEGA = 0.0
+
+            ENDIF 
+          ENDIF 
+
+          IF SINGLET == ONE
+             DO IONE
+             MCOUNT = 0.0
+             DO MROOTS
+                MCOUNT += 1.0
+                IF MCOUNT == ROOT_COUNT
+                   DEA_S(MROOTS,IONE) = OMEGA
+                   TEE(MROOTS,IONE)   = DEA_S(MROOTS,IONE)
+                   IF OMEGA != ZERO
+                     PSEUDO_ROOTS(MROOTS,IONE) = OMEGA
+                   ENDIF
+                   PUT DEA_ENER_S(MROOTS,IONE) = TEE(MROOTS,IONE)
+                ENDIF
+             ENDDO MROOTS
+             ENDDO IONE
+          ENDIF 
+           
+          IF TRIPLET == ONE
+             DO IONE
+             MCOUNT = 0.0
+             DO MROOTS
+                MCOUNT += 1.0
+                IF MCOUNT == ROOT_COUNT
+                   DEA_T(MROOTS,IONE) = OMEGA
+                   TEE(MROOTS,IONE)   = DEA_T(MROOTS,IONE)
+                   IF OMEGA != ZERO
+                     PSEUDO_ROOTS(MROOTS,IONE) = OMEGA
+                   ENDIF
+                   PUT DEA_ENER_T(MROOTS,IONE) = TEE(MROOTS,IONE)
+                ENDIF 
+             ENDDO MROOTS
+             ENDDO IONE
+          ENDIF 
+          IF FRESH_SBSP != ONE
+             OMEGA = OMEGA_KEEP
+          ENDIF
+
+         ENDDO NROOTS 
+         EXECUTE SERVER_BARRIER 
+#bgn_debug
+      ROOT_COUNT -= 1.0
+      IF SINGLET == ONE
+      execute print_static DEA_S ROOT_COUNT 
+      ENDIF 
+      IF TRIPLET == ONE
+      execute print_static DEA_T ROOT_COUNT 
+      ENDIF 
+#end_debug
+      ENDDO SPN_MULT
+
+      PRINT_FLAG = 41.0
+      EXECUTE PRINT_REL_INFO PRINT_FLAG DEA_S
+      PRINT_FLAG = 42.0
+      EXECUTE PRINT_REL_INFO PRINT_FLAG DEA_T
+      WARNING    = 911.0
+      EXECUTE PRINT_REL_INFO WARNING DUMMY
+
+                           ENDSIAL DEA_EOMCCSD
+#                          -------------------
+
+
