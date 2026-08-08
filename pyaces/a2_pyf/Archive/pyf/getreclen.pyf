@@ -1,0 +1,14 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module getreclen ! in 
+    interface  ! in :getreclen
+        subroutine getrelen(name,length) ! in :getreclen:getreclen.F
+            character*8 :: name
+            integer*8 :: length
+        end subroutine getrelen
+    end interface 
+end python module getreclen
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

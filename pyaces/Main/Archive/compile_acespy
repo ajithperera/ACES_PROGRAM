@@ -1,0 +1,4 @@
+python -m numpy.f2py --fcompiler=intelem -c -m aces2py aces2.pyf init.F aces2_main.so liba2_pyf.so librunaces2.so libints.so libpost_ints.so libjoda.so libsymcor.so libscf.so libintgrt.so libtran.so libproc.so libcc.so liblambda.so libtrp.so libpropints.so libprops.so libee.so libblockdave.so libdens.so libaux.so libhbar.so liblhbar.so libderints.so libbcktrn.so libanti.so liblsccresp.so libmpistubs.so libtools.so libpccd.so libcc.so libmpistubs.so liblibr_extn.so libecplib.so libsbtools.so liblibr2.so liblibrt3.so liblibr.so libacescore.so libacesutil.so liblb.so libtools.so libloo.so
+
+
+

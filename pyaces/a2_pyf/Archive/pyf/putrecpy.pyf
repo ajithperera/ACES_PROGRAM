@@ -1,0 +1,15 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module putrecpy ! in 
+    interface  ! in :putrecpy
+        subroutine putrecpy(name,length,source) ! in :putrecpy:putrecpy.F
+            character*8 :: name
+            integer*8, optional,check(len(source)>=length),depend(source) :: length=len(source)
+            double precision dimension(length) :: source
+        end subroutine putrecpy
+    end interface 
+end python module putrecpy
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

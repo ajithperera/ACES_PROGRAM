@@ -1,0 +1,15 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module iputrecpy ! in 
+    interface  ! in :iputrecpy
+        subroutine iputrecpy(name,length,isource) ! in :iputrecpy:iputrecpy.F
+            character*8 :: name
+            integer*8, optional,check(len(isource)>=length),depend(isource) :: length=len(isource)
+            integer*8 dimension(length) :: isource
+        end subroutine iputrecpy
+    end interface 
+end python module iputrecpy
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

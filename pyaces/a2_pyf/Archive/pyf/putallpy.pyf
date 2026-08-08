@@ -1,0 +1,16 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module putallpy ! in 
+    interface  ! in :putallpy
+        subroutine putallpy(source,ndim,irrep,right_index) ! in :putallpy:putallpy.F
+            double precision dimension(ndim) :: source
+            integer*8, optional,check(len(source)>=ndim),depend(source) :: ndim=len(source)
+            integer*8 :: irrep
+            integer*8 :: right_index
+        end subroutine putallpy
+    end interface 
+end python module putallpy
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

@@ -1,0 +1,13 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module run ! in 
+    interface  ! in :run
+        subroutine run(string_bn) ! in :run:run.F
+            character*(*) :: string_bn
+        end subroutine run
+    end interface 
+end python module run
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

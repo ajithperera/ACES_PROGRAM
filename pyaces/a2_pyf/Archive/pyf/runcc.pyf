@@ -1,0 +1,37 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module runcc ! in 
+    interface  ! in :runcc
+        subroutine runcc ! in :runcc:runcc.F
+            integer dimension(1) :: icore
+            integer*8 :: i0
+            integer*8 :: icrsiz
+            integer*8 dimension(100) :: iflags
+            integer*8 dimension(500) :: iflags2
+            integer*8 :: iintln
+            integer*8 :: ifltln
+            integer*8 :: iintfp
+            integer*8 :: ialone
+            integer*8 :: ibitwd
+            character dimension(1000,8),intent(c) :: marker
+            integer*8 dimension(1000) :: rloc
+            integer*8 dimension(1000) :: rsize
+            integer*8 :: nrecs
+            integer*8 :: irecwd
+            integer*8 :: irecln
+            logical :: bjaup
+            logical :: bjamod
+            common icore
+            common /istart/ i0,icrsiz
+            common /flags/ iflags
+            common /flags2/ iflags2
+            common /machsp/ iintln,ifltln,iintfp,ialone,ibitwd
+            common /jobarc/ marker,rloc,rsize,nrecs,irecwd,irecln
+            common /ja_flags/ bjaup,bjamod
+        end subroutine runcc
+    end interface 
+end python module runcc
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

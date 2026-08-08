@@ -1,0 +1,19 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module putlstpy ! in 
+    interface  ! in :putlstpy
+        subroutine putlstpy(source,column_index,no_columns,ndim,irrep,left_index,right_index) ! in :putlstpy:putlstpy.F
+            double precision dimension(ndim) :: source
+            integer*8 :: column_index
+            integer*8 :: no_columns
+            integer*8, optional,check(len(source)>=ndim),depend(source) :: ndim=len(source)
+            integer*8 :: irrep
+            integer*8 :: left_index
+            integer*8 :: right_index
+        end subroutine putlstpy
+    end interface 
+end python module putlstpy
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

@@ -1,0 +1,15 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module dgetrecpy ! in 
+    interface  ! in :dgetrecpy
+        subroutine dgetrecpy(name,length,dest) ! in :dgetrecpy:dgetrecpy.F
+            character*8 :: name
+            integer*8, optional,check(len(dest)>=length),depend(dest) :: length=len(dest)
+            double precision dimension(length) :: dest
+        end subroutine dgetrecpy
+    end interface 
+end python module dgetrecpy
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

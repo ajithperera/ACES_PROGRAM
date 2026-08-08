@@ -1,0 +1,29 @@
+Creating the shared object(.so) library:
+----------------------------------------
+Fxx directory contains F77, F90 and few C files, for the most part matches with
+the ACES II distribution. The key-diffrence is that they are no longe executable.
+They all are now libraries. For book keeping purpoes the ACESII structue remains
+intact, and we need to buils shared libriaries conrrespondig to subroutins in
+each subdiectory. We use the same ACESII makefile structue (GNUmakefile, GNUmakefile.src
+and the top level ACESII_SOURCE_DIR/makefile). 
+
+Use clean.py if you need to delete all the old links to GNUmakefle and GNUmakefile.src
+(only needed in a new machine or if old links are broken)
+
+For Intel commpilers the compiler flags to buld a shared library:
+
+ifort -traceback -shared -fPIC -O2 -Zp8 -zero -i8 -o XXX.so and build the archive 
+files. 
+
+Steps:
+module load intel/verison python/3.11
+From toplevel (home/Fxx directoy)
+python clean.py (if needed)
+gmake clean
+gmake 
+Each subdirectory contains shared library archive with *,a wrong extension.
+Then use makelibso.py (python makelibso.py) to rename all the XXX.a files to XXX.so
+
+Left to do: Eliminate intermediate XXX.a files. 
+
+

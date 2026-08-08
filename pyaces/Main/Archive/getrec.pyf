@@ -1,0 +1,33 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module getrec ! in 
+    interface  ! in :getrec
+        subroutine getrec(flag,file,name,length,dest) ! in :getrec:getrec.F
+            integer*8 :: flag
+            character*6 :: file
+            character*8 :: name
+            integer*8, optional,check(len(dest)>=length),depend(dest) :: length=len(dest)
+            double precision dimension(length) :: dest
+            integer*8 :: iintln
+            integer*8 :: ifltln
+            integer*8 :: iintfp
+            integer*8 :: ialone
+            integer*8 :: ibitwd
+            character dimension(1000,8),intent(c) :: marker
+            integer*8 dimension(1000) :: rloc
+            integer*8 dimension(1000) :: rsize
+            integer*8 :: nrecs
+            integer*8 :: irecwd
+            integer*8 :: irecln
+            logical :: bjaup
+            logical :: bjamod
+            common /machsp/ iintln,ifltln,iintfp,ialone,ibitwd
+            common /jobarc/ marker,rloc,rsize,nrecs,irecwd,irecln
+            common /ja_flags/ bjaup,bjamod
+        end subroutine getrec
+    end interface 
+end python module getrec
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/
