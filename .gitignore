@@ -11,3 +11,5 @@ Makefile
 autom4te.cache/
 CVS/
 
+tests/fast/JOBARC
+tests/fast/__pycache__/
