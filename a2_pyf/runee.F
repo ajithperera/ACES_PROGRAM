@@ -12,10 +12,9 @@
 
       Call Joda_()
       Call Aces_ja_fin()
-      Call Ints_()
-
       Call aces_init(icore,i0,icrsiz, iuhf, .true.)
 
+      Call Ints_(Icore(i0),Icrsiz,Iuhf)
       Call V2ja(icore(i0),Icrsiz,Iuhf)
       Call Vscf(Icore(i0),Icrsiz,Iuhf)
       Call aces_init_chemsys()
@@ -27,8 +26,11 @@
       Call Vlambda(icore(i0),Icrsiz,Iuhf)
       Call Vee(icore(i0),Icrsiz,Iuhf)
 
-      Call aces_fin
-      Call C_free(Icore)
+C Do not call aces_fin (use might be intending to run something
+C else after external manupilations).
+
+CSSS      Call aces_fin
+CSSS      Call C_free(Icore)
  
       Return
       End

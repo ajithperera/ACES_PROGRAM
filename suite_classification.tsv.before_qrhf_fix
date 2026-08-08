@@ -1,0 +1,126 @@
+name	category	reason	entrypoint	iuhf	record	ref_value
+001a	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-7.558595973500E+01
+001b	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-7.558595900540E+01
+001c	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-1.499458196980E+02
+001d	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients); VIB=FINDIF (Hessian/gradient path)		0	TOTENERG	-7.558449570650E+01
+001e	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients); VIB=FINDIF (Hessian/gradient path)		0	TOTENERG	-1.499458197500E+02
+001f	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients); VIB=FINDIF (Hessian/gradient path)		0	TOTENERG	-7.558462426600E+01
+001g	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients); VIB=FINDIF (Hessian/gradient path)		0	TOTENERG	-1.499458198070E+02
+002a	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.557741282990E+01
+002b	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.558302573080E+01
+004a	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients); VIB=EXACT (Hessian/gradient path)		0	SCFENEG	-0.760236149977E+02
+004b	EXCLUDED	VIB=EXACT (Hessian/gradient path)		1	SCFENEG	-0.555774128375E+02
+004c	EXCLUDED	VIB=EXACT (Hessian/gradient path)		1	SCFENEG	-0.555830257372E+02
+010a	SCF	CALC=SCF	Runscf	0	TOTENERG	-7.557008845940E+01
+010b	SCF	CALC=SCF	Runscf	1	TOTENERG	-7.557008845940E+01
+010c	SCF	CALC=SCF	Runscf	1	TOTENERG	-5.557741710460E+01
+011	CC	CALC=CCSDT-3	Runcc	1	TOTENERG	-7.583188939070E+01
+012a	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-7.626350037740E+01
+012b	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.573673464840E+01
+012c	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.577409984000E+01
+013a	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-7.627254832660E+01
+013b	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.575627852320E+01
+013c	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.579193582720E+01
+014a	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-7.627609383090E+01
+014a.apt	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-7.627328464510E+01
+014b	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.575921644410E+01
+014b.apt	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.575680619690E+01
+014c	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.575921814870E+01
+014c.apt	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.575680634780E+01
+015a	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-1.477117789120E+02
+015b	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-1.477117789140E+02
+015c	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-1.276720488480E+02
+015d	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-1.477117789120E+02
+015e	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-1.477117789140E+02
+015f	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-1.276720488480E+02
+020	CC	CALC=CCSD(TQ)	Runcc	0	TOTENERG	-7.627396912090E+01
+021	CC	CALC=CCSDT	Runcc	0	TOTENERG	-7.627365941870E+01
+022	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.627235464170E+01
+022a	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.625706706060E+01
+022b	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.625713390230E+01
+022c	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.626025819440E+01
+023	CC	CALC=MBPT(4)	Runcc	1	TOTENERG	-5.575743308530E+01
+023a	CC	CALC=SDQ-MBPT(4)	Runcc	1	TOTENERG	-5.575500714330E+01
+024	CC	CALC=CCSDT-1	Runcc	0	TOTENERG	-7.627542356790E+01
+025	CC	CALC=UCC(4)	Runcc	0	TOTENERG	-7.627563996560E+01
+026	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.627254545750E+01
+026a	SCF	CALC=SCF	Runscf	0	TOTENERG	-7.604628370760E+01
+028	CC	CALC=CCSD	Runcc	1	TOTENERG	-0.389791214488E+02
+029	CC	CALC=CCSD	Runcc	1	TOTENERG	-0.389635102170E+02
+031	SCF	CALC=SCF	Runscf	0	TOTENERG	-7.604729908850E+01
+032	CC	CALC=CCSD	Runcc	1	TOTENERG	-0.389625753410E+02
+033	SCF	CALC=SCF	Runscf	0	TOTENERG	-7.606633894610E+01
+035.ccsd	EOM	CALC=CCSD EXCITE=EOMEE ESTATE_PROP=EXPECTATION	Runee	0	TOTENERG	-7.627250892780E+01
+036	CC	CALC=MBPT(2)	Runcc	0	TOTENERG	-1.092658706670E+02
+037	CC	CALC=MBPT(2)	Runcc	0	TOTENERG	-7.626350041240E+01
+042	CC	CALC=CCSD	Runcc	1	TOTENERG	-1.619739782150E+02
+044	CC	CALC=CCSD	Runcc	0	TOTENERG	-1.430587767000E+01
+045.tdhf	SCF	CALC=SCF	Runscf	0	TOTENERG	-1.089703096310E+02
+046	CC	CALC=CCSD	Runcc	1	TOTENERG	-7.627251109240E+01
+047d	EXCLUDED	VIB=FINDIF (Hessian/gradient path)		0	TOTENERG	-1.881904125600E+02
+053	EOM	CALC=CCSD EXCITE=EOMEE ESTATE_PROP=EXPECTATION	Runee	1	TOTENERG	-5.574837040090E+01
+054a	EOM	CALC=CCSD EXCITE=EOMEE ESTATE_PROP=EXPECTATION	Runee	0	TOTENERG	-7.627250892780E+01
+054b	EOM	CALC=CCSD EXCITE=EOMEE ESTATE_PROP=EXPECTATION	Runee	1	TOTENERG	-5.574837040090E+01
+057	EOM	CALC=CCSD EXCITE=EOMEE ESTATE_PROP=EXPECTATION	Runee	0	TOTENERG	-1.134507819810E+02
+063	EOM	CALC=SCF EXCITE=TDA ESTATE_PROP=EXPECTATION	Runee	0	TOTENERG	-1.134403371330E+02
+064	EOM	CALC=SCF EXCITE=TDA ESTATE_PROP=	Runee	0	TOTENERG	-1.093152220440E+02
+065	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-1.084765190360E+02
+074	EXCLUDED	VIB=FINDIF (Hessian/gradient path)		0	SCFENEG	-0.760236063946E+02
+078	CC	CALC=CCSD	Runcc	0	TOTENERG	-2.796269751240E+02
+083	CC	CALC=CCSD(T)	Runcc	1	TOTENERG	-1.001536027730E+02
+103.ks	SCF	CALC=SCF	Runscf	0	TOTENERG	-7.473262543670E+01
+104.ks	SCF	CALC=SCF	Runscf	0	TOTENERG	-7.698740074120E+01
+105.ks	SCF	CALC=SCF	Runscf	0	TOTENERG	-5.610011648550E+01
+109	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.626976984660E+01
+110	EOM	CALC=CCSD EXCITE=EOMEE ESTATE_PROP=EXPECTATION	Runee	0	TOTENERG	-7.627250892780E+01
+116a	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.632195661350E+01
+116b	CC	CALC=CCSD	Runcc	1	TOTENERG	-5.579160823390E+01
+116c	CC	CALC=CCSD	Runcc	1	TOTENERG	-5.579155039900E+01
+117a	CC	CALC=MBPT(2)	Runcc	0	TOTENERG	-7.570070948730E+01
+117b	CC	CALC=MBPT(2)	Runcc	1	TOTENERG	-7.570070948730E+01
+117c	CC	CALC=MBPT(2)	Runcc	1	TOTENERG	-7.570070948730E+01
+118a	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-7.627254832660E+01
+118b	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.575627852320E+01
+118c	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.575624009370E+01
+120a	EXCLUDED	GEOM=RIC (optimization needs gradients)		0	TOTENERG	-7.604693469490E+01
+120b	EXCLUDED	GEOM=RIC (optimization needs gradients)		0	TOTENERG	-1.298198167420E+02
+120c	EXCLUDED	GEOM=RIC (optimization needs gradients)		0	TOTENERG	-7.604693469490E+01
+120d	EXCLUDED	GEOM=RIC (optimization needs gradients)		0	TOTENERG	-7.804832596110E+01
+121a	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-7.558595973500E+01
+121b	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-7.558595973500E+01
+121c	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.519610539970E+01
+124a.fno	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.624960116420E+01
+124b.fno	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.624526403250E+01
+124c.fno	CC	CALC=CCSD(T)	Runcc	1	TOTENERG	-7.625182088660E+01
+124d.fno	CC	CALC=CCSD(T)	Runcc	1	TOTENERG	-7.605521876870E+01
+124e.fno	CC	CALC=CCSD(T)	Runcc	1	TOTENERG	-7.625182088420E+01
+124f.fno	CC	CALC=CCSD	Runcc	1	TOTENERG	-5.572623519630E+01
+124g.fno	CC	CALC=CCSD(T)	Runcc	1	TOTENERG	-5.572809242210E+01
+124h.fno	CC	CALC=CCSD	Runcc	0	TOTENERG	-1.003487752650E+02
+124i.fno	CC	CALC=CCSD	Runcc	0	TOTENERG	-1.003356802410E+02
+125a	SCF	CALC=SCF	Runscf	0	TOTENERG	-7.557008845940E+01
+125b	SCF	CALC=SCF	Runscf	1	TOTENERG	-5.523988225260E+01
+126a	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-9.320043524890E+01
+126b	EXCLUDED	VIB=FINDIF (Hessian/gradient path)		0	TOTENERG	-9.320043500960E+01
+126c	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-9.311534420310E+01
+126d	EXCLUDED	VIB=FINDIF (Hessian/gradient path)		1	TOTENERG	-9.311534220490E+01
+126e	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-9.320951360700E+01
+126f	EXCLUDED	VIB=FINDIF (Hessian/gradient path)		0	TOTENERG	-9.320951335390E+01
+126g	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-9.313248467460E+01
+126h	EXCLUDED	VIB=FINDIF (Hessian/gradient path)		1	TOTENERG	-9.313248275960E+01
+153.eomgrad	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-0.762725089278E+02
+s_001h	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-7.558462426600E+01
+s_034	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-9.224604267850E+01
+s_038	SCRIPT	chained multi-job case, out of scope for pass 1			SCFENEG	-0.760458665073E+02
+s_039	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-7.564631778020E+01
+s_040	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-7.601074649130E+01
+s_075a	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-7.623053628170E+01
+s_075b	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-7.626985514330E+01
+s_075c	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-7.626985514330E+01
+s_108	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-7.596092321080E+01
+s_119a	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-0.100247877712E+03
+s_119b	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-2.231161391850E+02
+s_119c	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-5.572668511700E+01
+s_119d	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-5.575627852340E+01
+s_119e	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-5.575624009370E+01
+s_122a.bw	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-3.900457634500E+01

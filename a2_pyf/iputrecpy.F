@@ -10,7 +10,7 @@
 
       Flag = 20
       File = "JOBARC"
-      Call A2_putrec(Name,Length,Isource)
+      Call A2_putrec(Flag,File,Name,Length,Isource)
      
       Return
       End

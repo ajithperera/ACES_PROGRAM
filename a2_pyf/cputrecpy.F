@@ -12,7 +12,7 @@ Cf2py intent (inout) Source
 
       Flag = 20
       File = "JOBARC"
-      Call A2_putcrec(Name,Length,Source)
+      Call A2_putcrec(Flag,File,Name,Length,Source)
      
       Return
       End

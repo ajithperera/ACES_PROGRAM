@@ -50,8 +50,11 @@
          Call Hbar_(icore(i0),Icrsiz,Iuhf)
       Endif 
 
-      Call aces_fin
-      Call C_free(Icore)
+C Do not call aces_fin (use might be intending to run something
+C else after external manupilations).
+
+CSSS      Call aces_fin
+CSSS      Call C_free(Icore)
 
       Return
       End

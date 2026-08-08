@@ -143,10 +143,6 @@ python module aces2py ! in
             integer*8, intent(inout) :: length
         end subroutine getrelen
 
-        subroutine run(string_bn) ! in :run:run.F
-            character*(*) :: string_bn
-        end subroutine run
-
         subroutine get1ehpy(name,dest,ndim) ! in :get1ehp:get1ehpy.F
             character*80 :: name
             double precision dimension(ndim*ndim),depend(ndim) :: dest
@@ -170,14 +166,16 @@ python module aces2py ! in
         end subroutine runcc
         subroutine runhbar     ! in :runhbar:runhbar.F
         end subroutine runhbar
-        subroutine rungrads    ! in :rungrads:rungrads.F
-        end subroutine rungrads
-        subroutine run1props   ! in :run1props:run1props.F
-        end subroutine run1props
         subroutine runprops    ! in :runprops:runprops.F
         end subroutine runprops
         subroutine runpccd     ! in :runpccd:runpccd.F
         end subroutine runprops
+        subroutine runee       ! in :runee:runee.F
+        end subroutine runee
+        subroutine acesjafin   ! in :acesjafin:acesjafin.F
+        end subroutine acesjafin
+        subroutine acesjainit  ! in :acesjainit:acesjainit.F
+        end subroutine acesjainit
     end interface
 
 end python module aces2py

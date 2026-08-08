@@ -21,13 +21,9 @@
          Call Runcc(Iuhf)
       Elseif(String(1:2) .Eq. "ee") Then
          Call Runee(Iuhf)
-      Elseif(String(1:6) .Eq. "1props") Then
-         Call Run1props(Iuhf)
       Elseif(String(1:4) .Eq. "hbar") Then
          Call Runhbar(Iuhf)
-      Elseif(String(1:5) .Eq. "grads") Then
-         Call Rungrads(Iuhf)
-      Endif 
+      Endif
 
       Return
       End

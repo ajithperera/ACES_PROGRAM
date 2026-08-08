@@ -2,15 +2,15 @@
 
       Implicit None
 
-      include "machsp.com"
-      include "jobarc.com"
-      include "icore.com"
-      include "istart.com"
-      include "flags.com"
-      include "flags2.com"
-      include "lists.com"
-      include "filspc.com"
-      include "auxcache.com"
+      #include "machsp.com"
+      #include "jobarc.com"
+      #include "icore.com"
+      #include "istart.com"
+      #include "flags.com"
+      #include "flags2.com"
+      #include "lists.com"
+      #include "filspc.com"
+      #include "auxcache.com"
 
 CSSS      Write(6,"(a)") "Entering aces2_main"
 
