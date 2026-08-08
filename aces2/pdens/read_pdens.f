@@ -1,0 +1,40 @@
+
+
+
+
+
+
+
+
+
+
+
+C         
+      SUBROUTINE READ_PDENS(DOO,DVV,DVO,DOV,LENOO,LENVV,LENVO,
+     &                      ISPIN)
+C
+C Reads ground state density from disk.  
+C
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+      DIMENSION DOO(*),DVV(*),DVO(*),DOV(*)
+      COMMON /MACHSP/ IINTLN,IFLTLN,IINTFP,IALONE,IBITWD
+      DATA ONE,ONEM,HALF,HALFM/1.0D0,-1.0D0,0.5D0,-0.5D0/
+C
+C OCC-OCC
+C
+      CALL GETLST (DOO,1,1,1,ISPIN,160)
+C
+C VRT-VRT
+C
+      CALL GETLST (DVV,1,1,1,2+ISPIN,160)
+C
+C VRT-OCC
+C
+      CALL GETLST (DVO,1,1,1,4+ISPIN,160)
+C
+C OCC-VRT
+C
+      CALL GETLST (DOV,1,1,1,6+ISPIN,160)
+C
+      RETURN
+      END

@@ -1,0 +1,17 @@
+STABILITY TEST + FOLLOW + PERFORM broken symmetry Dropped MO CCSD[T] calculation
+H
+F 1 R
+
+R=1.4
+
+*ACES2
+BASIS=DZP,SPHERICAL=ON
+REF=UHF,HFSTABILITY=FOLLOW,DROPMO=1,CALC=CCSD(T)
+
+Comments
+This would be a way to easily generate the UHF-CCSD[T] surface.
+Regular UHF calculations would not break the symmetry of the alpha-beta orbs.
+Following the instability generates the desired UHF solution.
+The integrals will be transformed twice. Once without dropmo to find the
+instability. The second time for the correlated calculation.
+

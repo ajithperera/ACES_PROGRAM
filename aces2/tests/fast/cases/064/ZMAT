@@ -1,0 +1,10 @@
+N2 neutral Molecule core-excitation spectrum
+N
+N 1 R
+
+R = 1.0975
+
+*ACES2
+BASIS=PBS,SPHERICAL=ON
+EXCITE=TDA,EE_SYM=4-4-4-4-4-4-4-0/4-4-4-4-4-4-4-0,EE_SEARCH=CORE,EOM_PRJCT=1
+

@@ -1,0 +1,1335 @@
+
+
+
+
+
+
+
+
+
+
+
+      subroutine initpack
+
+c This program initializes parameters from the INTPACK namelist.
+
+
+
+
+
+
+
+
+c Macros beginning with M_ are machine dependant macros.
+c Macros beginning with B_ are blas/lapack routines.
+
+c  M_REAL         set to either "real" or "double precision" depending on
+c                 whether single or double precision math is done on this
+c                 machine
+
+c  M_IMPLICITNONE set iff the fortran compiler supports "implicit none"
+c  M_TRACEBACK    set to the call which gets a traceback if supported by
+c                 the compiler
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+cYAU - ACES3 stuff . . . we hope - #include <aces.par>
+
+
+
+
+
+
+c These are parameters containing various file numbers for IO purposes.
+
+c Standard input/output.
+      integer stdout,stdin
+      parameter (stdin=5)
+      parameter (stdout=6)
+
+c MOL file, vmol input created by joda
+      integer molio
+      character *(*) molfil
+      parameter (molio=3)
+      parameter (molfil='MOL')
+
+c ZMAT file
+      integer zio
+      character *(*) zfil
+      parameter (zio=4)
+      parameter (zfil='ZMAT')
+
+c POLYRATE file
+      integer polyio
+      character *(*) polyfil
+      parameter (polyio=7)
+      parameter (polyfil='POLYRATE')
+
+c IIII integral file, created by vmol
+      integer iiiiio
+      character *(*) iiiifil
+      parameter (iiiiio=10)
+      parameter (iiiifil='IIII')
+
+c IJIJ integral file, created by vmol
+      integer ijijio
+      character *(*) ijijfil
+      parameter (ijijio=21)
+      parameter (ijijfil='IJIJ')
+
+c IIJJ integral file, created by vmol
+      integer iijjio
+      character *(*) iijjfil
+      parameter (iijjio=22)
+      parameter (iijjfil='IIJJ')
+
+c IJKL integral file, created by vmol
+      integer ijklio
+      character *(*) ijklfil
+      parameter (ijklio=23)
+      parameter (ijklfil='IJKL')
+
+c VPOUT integral file, created by vprops
+      integer vpoutio
+      character *(*) vpoutfil
+      parameter (vpoutio=30)
+      parameter (vpoutfil='VPOUT')
+
+c---------------------------------------
+c Files for storing lists
+c MOINTS file
+      integer mointsio
+      character *(*) mointsfil0
+      parameter (mointsio=50)
+      parameter (mointsfil0='MOINTS')
+
+c GAMLAM file
+      integer gamlamio
+      character *(*) gamlamfil0
+      parameter (gamlamio=51)
+      parameter (gamlamfil0='GAMLAM')
+
+c MOABCD file
+      integer moabcdio
+      character *(*) moabcdfil0
+      parameter (moabcdio=52)
+      parameter (moabcdfil0='MOABCD')
+
+c DERINT file
+      integer derintio
+      character *(*) derintfil0
+      parameter (derintio=53)
+      parameter (derintfil0='DERINT')
+
+c DERGAM file
+      integer dergamio
+      character *(*) dergamfil0
+      parameter (dergamio=54)
+      parameter (dergamfil0='DERGAM')
+
+c LIST6 file
+      integer list6io
+      character *(*) list6fil0
+      parameter (list6io=55)
+      parameter (list6fil0='LIST6')
+
+c LIST7 file
+      integer list7io
+      character *(*) list7fil0
+      parameter (list7io=56)
+      parameter (list7fil0='LIST7')
+c---------------------------------------
+
+c NEWMOS file
+      integer newmosio
+      character *(*) newmosfil0
+      parameter (newmosio=71)
+      parameter (newmosfil0='NEWMOS')
+
+c JOBARC file
+      integer jobarcio
+      character *(*) jobarcfil0
+      parameter (jobarcio=75)
+      parameter (jobarcfil0='JOBARC')
+
+c JAINDX file
+      integer jaindxio
+      character *(*) jaindxfil0
+      parameter (jaindxio=75)
+      parameter (jaindxfil0='JAINDX')
+
+c FRQARC file
+      integer frqio
+      character *(*) frqfil
+      parameter (frqio=78)
+      parameter (frqfil='FRQARC')
+
+c Joda finished file
+      integer doneio
+      character *(*) donefil
+      parameter (doneio=80)
+      parameter (donefil='JODADONE')
+
+c NUCDIP file
+      integer nucdio
+      character *(*) nucdfil
+      parameter (nucdio=81)
+      parameter (nucdfil='NUCDIP')
+
+c------------------------------------------------------------------
+c Module:  intgrt
+c------------------------------------------------------------------
+
+c The list of grids to use, one for each radial point in a numerical
+c integration.
+      integer radgio
+      character *(*) radgfil
+      parameter (radgio=40)
+      parameter (radgfil='RADGRD')
+
+c File for plot points
+      integer pltgio
+      character *(*) pltgfil
+      parameter (pltgio=41)
+      parameter (pltgfil='PLTGRD')
+
+c Cartesian coordinates for plot grid points
+      integer pgrdptio
+      character *(*) pgrdptfil
+      parameter (pgrdptio=44)
+      parameter (pgrdptfil='PGRDPTS')
+
+c HF electron density
+      integer pdensio
+      character *(*) pdensfil
+      parameter (pdensio=44)
+      parameter (pdensfil='PDENSITY')
+
+c HF kinetic energy
+      integer pekinio
+      character *(*) pekinfil
+      parameter (pekinio=44)
+      parameter (pekinfil='PKINETIC')
+
+c HF nuclear-electron attraction energy
+      integer penatrio
+      character *(*) penatrfil
+      parameter (penatrio=44)
+      parameter (penatrfil='PNATR')
+
+c LDA exchange energy
+      integer pdldaxio
+      character *(*) pdldaxfil
+      parameter (pdldaxio=44)
+      parameter (pdldaxfil='PXLDAX')
+
+c Becke exchange energy
+      integer pdbeckeio
+      character *(*) pdbeckefil
+      parameter (pdbeckeio=44)
+      parameter (pdbeckefil='PBECKE')
+
+c LDA energy
+      integer pdldaio
+      character *(*) pdldafil
+      parameter (pdldaio=44)
+      parameter (pdldafil='PLDA')
+
+c LYP correlation energy
+      integer pdlypio
+      character *(*) pdlypfil
+      parameter (pdlypio=44)
+      parameter (pdlypfil='PLYP')
+
+c Thomas Fermi kinetic energy 
+      integer pdtfkeio
+      character *(*) pdtfkefil
+      parameter (pdtfkeio=44)
+      parameter (pdtfkefil='PTFKE')
+
+c Weizsacker kinetic energy 
+      integer pdwkeio
+      character *(*) pdwkefil
+      parameter (pdwkeio=44)
+      parameter (pdwkefil='PWKE')
+
+c Projected Fock potential
+      integer pdfockio
+      character *(*) pdfockfil
+      parameter (pdfockio=44)
+      parameter (pdfockfil='PFOCKP')
+
+c Projected Brueckner potential
+      integer pdbrknrio
+      character *(*) pdbrknrfil
+      parameter (pdbrknrio=44)
+      parameter (pdbrknrfil='PBRKNRP')
+
+c Coulomb energy 
+      integer pcoulio
+      character *(*) pcoulfil
+      parameter (pcoulio=44)
+      parameter (pcoulfil='PCOUL')
+
+c Coulomb potential
+      integer pcpotio
+      character *(*) pcpotfil
+      parameter (pcpotio=44)
+      parameter (pcpotfil='PCPOT')
+
+c Exchange energy 
+      integer pexchio
+      character *(*) pexchfil
+      parameter (pexchio=44)
+      parameter (pexchfil='PEXCH')
+
+c Exchange potential
+      integer pepotio
+      character *(*) pepotfil
+      parameter (pepotio=44)
+      parameter (pepotfil='PEPOT')
+
+c Exchange DFT potential
+      integer pexdftio
+      character *(*) pexdftfil
+      parameter (pexdftio=44)
+      parameter (pexdftfil='PEXDFT')
+
+c Correlated electron density
+      integer cdensio
+      character *(*) cdensfil
+      parameter (cdensio=45)
+      parameter (cdensfil='CDENSITY')
+
+c Correlated kinetic energy
+      integer cekinio
+      character *(*) cekinfil
+      parameter (cekinio=45)
+      parameter (cekinfil='CKINETIC')
+
+c Correlated nuclear-electron attraction energy
+      integer cenatrio
+      character *(*) cenatrfil
+      parameter (cenatrio=45)
+      parameter (cenatrfil='CNATR')
+
+c Thomas Fermi kinetic energy (correlated density)
+      integer cdtfkeio
+      character *(*) cdtfkefil
+      parameter (cdtfkeio=45)
+      parameter (cdtfkefil='CTFKE')
+
+c Weizsacker kinetic energy (correlated density)
+      integer cdwkeio
+      character *(*) cdwkefil
+      parameter (cdwkeio=45)
+      parameter (cdwkefil='CWKE')
+
+c Coulomb energy (correlated density)
+      integer ccoulio
+      character *(*) ccoulfil
+      parameter (ccoulio=45)
+      parameter (ccoulfil='CCOUL')
+
+c Coulomb potential(correlated density)
+      integer ccpotio
+      character *(*) ccpotfil
+      parameter (ccpotio=45)
+      parameter (ccpotfil='CCPOT')
+
+c Exchange energy (correlated density)
+      integer cexchio
+      character *(*) cexchfil
+      parameter (cexchio=45)
+      parameter (cexchfil='CEXCH')
+
+c Exchange potential(correlated density)
+      integer cepotio
+      character *(*) cepotfil
+      parameter (cepotio=45)
+      parameter (cepotfil='CEPOT')
+
+c Exchange DFT potential
+      integer cexdftio
+      character *(*) cexdftfil
+      parameter (cexdftio=45)
+      parameter (cexdftfil='CEXDFT')
+
+c LDA exchange energy (correlated density)
+      integer cdldaxio
+      character *(*) cdldaxfil
+      parameter (cdldaxio=45)
+      parameter (cdldaxfil='CXLDAX')
+
+c Becke exchange energy (correlated density)
+      integer cdbeckeio
+      character *(*) cdbeckefil
+      parameter (cdbeckeio=45)
+      parameter (cdbeckefil='CBECKE')
+
+c LDA energy (correlated density)
+      integer cdldaio
+      character *(*) cdldafil
+      parameter (cdldaio=45)
+      parameter (cdldafil='CLDA')
+
+c LYP correlation energy (correlated density)
+      integer cdlypio
+      character *(*) cdlypfil
+      parameter (cdlypio=45)
+      parameter (cdlypfil='CLYP')
+
+c Coupled-cluster energy
+      integer eccradio
+      character *(*) eccradfil
+      parameter (eccradio=45)
+      parameter (eccradfil='ECCRAD')
+
+      character *(80) mointsfil, gamlamfil, moabcdfil,
+     &    derintfil, dergamfil, list6fil, list7fil,
+     &    newmosfil, jobarcfil, jaindxfil
+      common /filenames/  mointsfil, gamlamfil, moabcdfil,
+     &    derintfil, dergamfil, list6fil, list7fil,
+     &    newmosfil, jobarcfil, jaindxfil
+
+c------------------------------------------------------------------
+
+
+
+
+
+
+c This file contains a number of physical constants and conversion
+c factors.  Physical constants are all stored in a variable named
+c CONST_name where 'name' is the name of the physical constant.
+c 
+c Conversion factors are stored in variables named CONV_unit1_unit2
+c where 'unit1' and 'unit2' are the names of two physical units.  To
+c get from unit1 to unit2, multiply by this factor.
+c 
+c Example: To convert 20.4 meters/s to miles/hour in a perl script,
+c          include the following line at the top of the script:
+c              require "Constants.pl";
+c          and then, at the point in the script where the conversion
+c          is required, the following returns the desired value:
+c              20.4 * $CONV_m_mile / $CONV_s_hr
+c 
+c          To do the same thing in either a C or Fortran program, include
+c          the file "Constants.h" or "Constants.f" as appropriate and
+c          at the point where the conversion is required, the following
+c          returns the desired value:
+c              20.4 * CONV_m_mile / CONV_s_hr
+c 
+c This file was generated automatically on 6/4/96.
+c 
+c Do not edit this file.  If you wish to add or change a conversion
+c factor or constant, edit the file GenerateConstants.pl and rerun it.
+
+
+
+
+
+c Physical Constants
+c ====================
+c 
+c e       = e
+c pi      = pi
+c c       = speed of light in a vacuum     m s-1
+c g       = gravitational acceleration     m s-2
+c G       = gravitational constant         N m+2 kg-2
+c me      = mass of an electron            kg
+c mn      = mass of a neutron              kg
+c mp      = mass of a proton               kg
+c mmu     = mass of a mu particle          kg
+c u       = atomic mass unit               kg
+c ec      = elementary charge              C
+c h       = planck's' constant              J s
+c hbar    = h/2 pi                         J s
+c k       = boltmann's' constant            J K-1
+c u0      = permeability of vacuum         N A-2
+c e0      = permittivity of vacuum         C+2 N-1 m-2
+c re      = classical electron radius      m
+c alpha   = fine structure constant   
+c a0      = bohr radius                    m
+c RH      = quantum hole resistance        ohm
+c Rh      = Rydberg constant               m-1
+c phi0    = magnetic flux quantum (h/2 ec) m+2 kg s-2 A-1
+c uB      = Bohr magneton                  m+2 A
+c ue      = electron magnetic moment       m+2 A
+c un      = neutron magnetic moment        m+2 A
+c uN      = nuclear magneton               m+2 A
+c up      = proton magnetic moment         m+2 A
+c umu     = mu particle magnetic moment    m+2 A
+c lambdac = compton electron wavelength    m
+c lambdacp= compton proton wavelength      m
+c sigma   = Stefan-Boltmann constant       W m-2 K-4
+c NA      = avogadro's' number              mole-1
+c Vm      = ideal gas volume at STP        m+3 mole-1
+c R       = gas constant                   J K-1 mole-1
+c F       = faradays constant              C mole-1
+c ea      = atomic unit of energy          J
+
+
+
+
+
+
+
+
+c TIME (s)
+c ====================
+c 
+c s      = second
+c min    = minute
+c hr     = hour
+c day    = day
+c week   = week
+c yr     = calendar year (365 days)
+c yrleap = calendar year (leap year)
+c 
+c yrave  = average year (calendar year averaged over 4 years)
+c yrside = year (sidereal)
+c yrtrop = year (tropical)
+c monave = month (averaged over 4 calendar years)
+c daysid = sidereal day
+c 
+c shake  = shake
+
+
+
+
+
+
+c LENGTH (m)
+c ====================
+c 
+c METRIC
+c km     = kilometer
+c m      = meter (SI)
+c cm     = cm
+c mm     = mm
+c um     = micrometer
+c nm     = nanometer
+c pm     = picometer
+c micron = micron
+c mmicr  = millimicron
+c fermi  = fermi
+c 
+c ATOMIC
+c a      = angstrom
+c a0     = bohr radius
+c 
+c AMERICAN/BRITISH
+c hand   = hand
+c ell    = ell
+c in     = inch
+c ft     = foot
+c yd     = yard
+c mile   = mile
+c mileu  = mile (US survey)
+c mil    = mil
+c rod    = rod
+c fur    = furlong
+c chaing = chain (Gunter's')
+c chainr = chain (Ramsden's')
+c leag   = league
+c cable  = cable length (U.S.)
+c calib  = caliber
+c cubit  = cubit
+c ftu    = foot (US survey)
+c barley = barleycorn (Brit)
+c x      = x-unit
+c span   = span
+c nail   = nail (Brit)
+c 
+c NAUTICAL
+c milen  = mile (nautical)
+c leagn  = league (nautical)
+c fathom = fathom
+c degn   = nautical degree
+c circn  = nautical circle
+c cablen = cable length (international)
+c 
+c ASTRONOMICAL
+c ly     = light year
+c au     = astronomical unit
+c pc     = parsec
+c ls     = light second
+c lm     = light minute
+c 
+c MISC
+c bolt   = bolt (of cloth)
+
+
+
+
+
+
+c MASS (kg)
+c ====================
+c 
+c METRIC
+c g      = gram
+c kg     = kilogram (SI unit of mass)
+c ktonm  = kiloton (metric)
+c tonne  = tonne
+c tonm   = ton (metric)
+c 100wtm = hundredweight (metric)
+c caratm = carat (metric)
+c ng     = nanogram
+c pg     = picogram
+c mg     = milligram
+c ug     = microgram
+c 
+c ATOMIC
+c amu    = atomic mass units
+c 
+c AVOIRDUPOIS (US)
+c 100wt  = hundredweight (short)
+c 100wtl = hundredweight (long)
+c cental = cental
+c dram   = dram (solid)
+c geelb  = geepound
+c lb     = pound
+c oz     = ounce (avoirdupois)
+c slug   = slug
+c stone  = stone
+c ton    = ton (short)
+c tonl   = ton (long)
+c 
+c TROY
+c ozt    = ounce (Troy or apothecary)
+c penny  = pennyweight
+c scruple= scruple
+c grain  = grain
+c lbt    = pound (Troy)
+c dramt  = dram (Troy or apothecary)
+
+
+
+
+
+
+c ELECTRIC CURRENT (A)
+c ====================
+c 
+c abA    = abampere
+c A      = ampere
+c Aint   = ampere (international)
+c Aus    = ampere (U.S.)
+c biot   = biot
+c gilb   = gilbert
+
+
+
+
+
+
+c TEMPERATURE INTERVAL (K)
+c ====================
+c 
+c degc   = celcius degree
+c degf   = farenheit degree
+c degr   = rankine degree
+c K      = kelvin degree
+
+
+
+
+
+
+c LUMINOUS INTENSITY
+c ====================
+c 
+c cd     = candela
+c hef    = hefner unit
+c lumPsr = lumen per steradian
+
+
+
+
+
+
+c ANGLES (rad)
+c ====================
+c 
+c amin   = minutes of an angle
+c as     = seconds of an angle
+c circum = circumference
+c deg    = degrees
+c gon    = gon (grade)
+c quad   = quadrant
+c rad    = radians
+c rev    = revolution
+
+
+
+
+
+
+c SOLID ANGLES (sr)
+c ====================
+c 
+c sphere = sphere
+c sr     = steradians
+c sqdeg  = square degree
+c sphra  = spherical right angle
+
+
+
+
+
+
+c AREA (m2)
+c ====================
+c 
+c METRIC
+c cm2    = square cm
+c km2    = square kilometer
+c m2     = square meter
+c are    = are
+c circmm = circular millimeter
+c hect   = hectare
+c mm2    = square millimeter
+c barn   = barn
+c 
+c US
+c acre   = acre
+c ft2    = square ft
+c in2    = square inch
+c mile2  = square mile
+c yd2    = square yd
+c acreus = acre (US survey)
+c chaig2 = square chain (Gunter's')
+c chair2 = square chain (Ramsden's')
+c chaiu2 = square chain (US survey)
+c circin = circular inch
+c circmil= circular mil
+c ftu2   = square foot (US survey)
+c linkg2 = square link (Gunter's')
+c linkr2 = square link (Ramsden's')
+c mil2   = square mil
+c mileu2 = square mile (US survey)
+c rod2   = square rod
+c town   = township (US)
+c darcy  = darcy
+
+
+
+
+
+
+c VOLUME (l)
+c ====================
+c 
+c METRIC
+c cc     = cubic centimeter
+c cl     = centiliter
+c cm3    = cubic centimeter
+c cupm   = cup (metric)
+c dm3    = cubic decimeter
+c km3    = cubic kilometer
+c l      = liter
+c litero = old (1901-1964) value of liter
+c m3     = cubic meter
+c ml     = milliliter
+c mm3    = cubic millimeter
+c 
+c US/British
+c acreft = acre-foot
+c acrein = acre-inch
+c bag    = bag (Brit)
+c bbl    = barrel (petroleum)
+c bblbb  = barrel (Brit, beer)
+c bblbw  = barrel (Brit, wine)
+c bbluc  = barrel (US, cranb)
+c bblud  = barrel (US, dry)
+c bblul  = barrel (US, liquid)
+c board  = board foot
+c boardf = board foot
+c bu     = bushel (US)
+c bub    = bushel (Brit)
+c buck   = bucket (Brit)
+c cord   = cord
+c cordft = cord-foot
+c cup    = cup
+c dra    = dram (US, liquid)
+c drach  = drachm (Brit, liquid)
+c firkb  = firkin (Brit)
+c firku  = firkin (US)
+c floz   = ounce (US, liquid)
+c ft3    = cubic foot
+c gal    = gallon (US, liquid)
+c galb   = gallon (Brit)
+c gald   = gallon (US, dry)
+c gill   = gill (US)
+c gillb  = gill (Brit)
+c in3    = cubic inch
+c mile3  = cubic mile
+c minim  = minim (US)
+c minimb = minim (Brit)
+c ozbf   = ounce (Brit, liquid)
+c peck   = peck (US)
+c peckb  = peck (Brit)
+c pt     = pint (US, liquid)
+c ptb    = pint (Brit)
+c ptd    = pint (US, dry)
+c qt     = quart (US, liquid)
+c qtb    = quart (Brit)
+c qtd    = quart (US, dry)
+c regton = register ton
+c scrup  = scruple (Brit, liquid)
+c seam   = seam (Brit)
+c yd3    = cubic yard
+
+
+
+
+
+
+c FREQUENCY (Hz)
+c ====================
+c 
+c Hz     = hertz
+c pS     = per seconds (s-1)
+
+
+
+
+
+
+c FORCE (N)
+c ====================
+c 
+c dyn    = dyne
+c kgf    = kg-force
+c N      = newton
+c lbal   = poundal
+c lbf    = pound-force
+c mgf    = mg-force
+
+
+
+
+
+
+c PRESSURE (Pa)
+c ====================
+c 
+c atm      = atmosphere
+c atmt     = atmosphere (tech)
+c bar      = bar
+c barye    = barye
+c cmh2o    = cm of water
+c cmhg     = cm of mercury
+c dynPcm2  = dyne per square cm
+c fth2o    = foot of water
+c gPcm2    = gram-force per square cm
+c inh2o    = inch of water
+c inhg     = inch of mercury
+c kgPcm2   = kg-force per square cm
+c kgPm2    = kg-force per square m
+c kgPmm2   = kg-force per square mm
+c kPa      = kilopascal
+c lbalPft2 = poundal per square foot
+c lbPft2   = pound-force per square foot
+c lbPin2   = pound-force per square inch
+c mbar     = millibar
+c megaPa   = megapascal
+c mh2o     = meter of water
+c mmh2o    = mm of water
+c mmhg     = mm of mercury
+c NPcm2    = newton per square cm
+c NPm2     = newton per square m
+c NPmm2    = newton per square mm
+c Pa       = pascal (N m-2) (SI)
+c psf      = pound-force per square foot
+c psi      = pound-force per square inche
+c t        = torr
+c tonlPft2 = ton-force (long) per square foot
+c tonlPin2 = ton-force (long) per square inch
+c tonmPin2 = ton-force (metric) per square inch
+c tonmPm2  = ton-force (metric) per square meter
+c tonsPft2 = ton-force (short) per square foot
+c tonsPin2 = ton-force (short) per square inch
+
+
+
+
+
+
+c ENERGY, WORK, QUANTITY OF HEAT (J)
+c ====================
+c 
+c cal      = calorie (thermochemical)
+c kcal     = kilocalorie (thermochemical)
+c ea       = hartree
+c erg      = erg (g cm+2 s-2)
+c ev       = electron volt
+c hz       = energy measured as hertz
+c J        = joule (N m) (SI)
+c Nm       = newton-meter
+c megaJ    = megajoule
+c kcalPmol = kcal/mole
+c kJPmol   = kjoule/mole
+c wn       = cm-1
+c ryd      = rydberg
+c btu      = British thermal unit
+c ft3atm   = cubic foot-atmosphere
+c ft3lbPin2= cubic foot-pount-force/square inche
+c ftlbal   = foot-poundal
+c ftlb     = foot-pound-force
+c hphr     = horsepower-hour
+c hphrm    = horsepower-hour (metric)
+c kgm      = kilogram-force-meter
+c gcm      = gram-force-cm
+c kWhr     = kilowatt-hour
+c gWhr     = gigawatt-hour
+c latm     = liter-atmosphere
+c lbar     = liter-bar
+c Whr      = watt-hour
+c Ws       = watt-sec
+c dyncm    = dyne-cm
+c chu      = centigrade heat unit
+c btu39    = btu (39 deg F, 4 deg C)
+c but60    = btu (60 deg F, 15.6 deg C)
+c btuave   = btu (mean)
+c btuth    = btu (thermochemical)
+c calor    = calorie
+c kcalor   = kilocalorie
+c cal15    = calorie (15 deg C)
+c cal20    = calorie (20 deg C)
+c calave   = calorie (mean)
+c calth    = calorie (thermochemical)
+c ccatm    = cubic centimeter-atmosphere
+
+
+
+
+
+
+c POWER, RADIANT FLUX (W)
+c ====================
+c 
+c btuPhr  = btu per hour
+c btuPmin = btu per minute
+c btuPs   = btu per sec
+c calPmin = calorie per minute
+c calPs   = calorie per second
+c ergPs   = erg per second
+c ftlbPhr = foot-pound-force per hour
+c ftlbPmin= foot-pound-force per minute
+c ftlbPs  = foot-pound-force per second
+c hp      = horsepower
+c hpb     = horsepower (boiler)
+c hpe     = horsepower (electric)
+c hpm     = horsepower (metric)
+c hpw     = horsepower (water)
+c JPhr    = joule per hour
+c JPmin   = joule per minute
+c JPs     = joule per second
+c kcalPhr = kilocalories per hour
+c kcalPmin= kilocalories per minute
+c kcalPs  = kilocalories per second
+c kgmPhr  = kilogram-force-meter per hr
+c kgmPmin = kilogram-force-meter per minute
+c kgmPs   = kilogram-force-meter per second
+c W       = watt
+c kW      = kilowatt
+c Wave    = watt (int. mean)
+c Wu      = watt (int. US)
+
+
+
+
+
+
+c QUANTITY OF ELECTRICITY, ELECTRIC CHARGE (C)
+c ====================
+c 
+c abC    = abcoulomb
+c As     = ampere-second
+c Ahr    = ampere-hour
+c C      = coulomb
+c frank  = franklin
+
+
+
+
+
+
+c ELECTRIC POTENTIAL, POTENTIAL DIFFERENCE, ELECTROMOTIVE FORCE (V)
+c ====================
+c 
+c abV    = abvolt
+c kV     = kilovolt
+c V      = volt
+c Vave   = volt (int. mean)
+c Vus    = volt (int. US)
+
+
+
+
+
+
+c CAPACITANCE (F)
+c ====================
+c 
+c abF    = abfarad
+c F      = farad
+c Fave   = farad (int. mean)
+c Fus    = farad (int. US)
+c uF     = microfarad
+
+
+
+
+
+
+c ELECTRICAL RESISTANCE
+c ====================
+c 
+c abO    = abohm
+c O      = ohm
+c Oave   = ohm (int. mean)
+c Ous    = ohm (int. US)
+
+
+
+
+
+
+c CAPACITANCE (S)
+c ====================
+c 
+c S      = siemens
+c mhO    = mho (omh-1)
+c abmhO  = abmho
+
+
+
+
+
+
+c MAGNETIC FLUX (Wb)
+c ====================
+c 
+c max   = maxwell
+c pole  = unit pole
+c Vs    = volt-sond
+c Wb    = weber
+
+
+
+
+
+
+c MAGNETIC FLUX DENSITY (T)
+c ====================
+c 
+c T        = tesla
+c WbPm2    = weber per square meter
+
+
+
+
+
+
+c INDUCTANCE (H)
+c ====================
+c 
+c abH    = abhenry
+c H      = henry
+c Have   = henry (int. mean)
+c Hus    = henry (int. US)
+
+
+
+
+
+
+c ILLUMINANCE (lx)
+c ====================
+c 
+c lx     = lux
+c lmPcm2 = lumen per square cm
+c lmPm2  = lumen per square meter
+c lmPft2 = lumen per square foot
+c ph     = phot
+
+
+
+
+
+
+c ACTIVITY (Bq)
+c ====================
+c 
+c Bq     = becquerel
+c cur    = curie
+
+
+
+
+
+
+c ABSORBED DOSE (Gy)
+c ====================
+c 
+c Gy     = gray
+c JPkg   = joule per kg
+
+
+
+
+
+
+c SOUND INTENSITY
+c ====================
+c 
+c db     = decibel
+c neper  = neper
+
+
+
+
+
+
+      double precision
+     &    zero,one,two,three,four,five,six,seven,eight,nine,ten
+
+      parameter (zero =0.0d0)
+      parameter (one  =1.0d0)
+      parameter (two  =2.0d0)
+      parameter (three=3.0d0)
+      parameter (four =4.0d0)
+      parameter (five =5.0d0)
+      parameter (six  =6.0d0)
+      parameter (seven=7.0d0)
+      parameter (eight=8.0d0)
+      parameter (nine =9.0d0)
+      parameter (ten  =1.0d1)
+
+      double precision
+     &    half,third,fourth,fifth,sixth
+
+      parameter (half  =one/two)
+      parameter (third =one/three)
+      parameter (fourth=one/four)
+      parameter (fifth =one/five)
+      parameter (sixth =one/six)
+
+      double precision
+     &    pi
+
+      parameter (pi    =3.14159265358979d0)
+
+c Hopefully we can get away from storing a bunch of strings
+
+c Abelian groups
+
+c The following constants are generated in a3const.F.
+
+      double precision
+     &    CONST_nan
+
+      common /const/ CONST_nan
+
+
+
+
+c This contains flags that are set in the INTGRT namelist.  See the
+c file initintgrt.F for a description of each of them.
+c
+c The following are exceptions:
+c    int_ks           : .true. if we are doing Kohn-Sham
+c    int_ks_finaliter : .true. if this is the final iteration of KS
+c    int_ks_exch      : which potential to use to calculate exchange
+c    int_ks_corr      : which potential to use to calculate correlation
+c    int_kspot        : which hybrid functional to use to calculate potential
+c                       (if equal to fun_special, use int_ks_exch and
+c                       int_ks_corr)
+c    int_dft_fun      : which functional to use with any SCF density
+c                       Added and modified by Stan Ivanov
+c                       (if fun_special the functional is user-defined
+c                        if fun_hyb_name then use hybrid functional) 
+c    int_printlev     : 0 if we are doing a dft calculation, 1 if we
+c                       are doing the final iteration of a KS calculation,
+c                       2 if we are doing a KS iteration.
+c These are set in the calling routines, NOT in the namelist.
+c                     : Additions by S. Ivanov
+c     num_acc_ks      : .true.  if numerical accelerator is used for KS 
+c                        Default is .true.
+c     ks_exact_ex     : .true. if exact LOCAL exchange is used for KS
+c                        Deafult is .false.
+c     int_tdks        : .true. if time-dependent KS calculation is
+c                        requested
+c                        Default is .false.
+c     int_ks_scf      : .true. if the actual KS SCF energy is being
+c                        calculated and printed out. Default is .false.
+c
+      integer int_numradpts,int_radtyp,int_partpoly,int_radscal,
+     &    int_parttyp,int_fuzzyiter,int_defenegrid,int_defenetype,
+     &    int_defpotgrid,int_defpottype,int_kspot,
+     &    int_ks_exch,int_ks_corr,int_dft_fun,
+
+     &    int_printlev,
+     &    int_printscf,int_printint,int_printsize,int_printatom,
+     &    int_printmos,int_printocc,
+     &    potradpts, numauxbas,int_ksmem,int_overlp
+
+      logical int_ks,num_acc_ks,ks_exact_ex,int_tdks,int_ks_scf,
+     &        int_ks_finaliter
+
+      double precision
+     &    int_radlimit,coef_pot_nonlocal
+
+      common /intgrtflags/  int_numradpts,int_radtyp,int_partpoly,
+     &    int_radscal,int_parttyp,int_fuzzyiter,int_defenegrid,
+     &    int_defenetype,int_defpotgrid,int_defpottype,int_kspot,
+     &    int_ks_exch,int_ks_corr,int_dft_fun,
+
+     &    int_printlev,
+     &    int_printscf,int_printint,int_printsize,int_printatom,
+     &    int_ks_finaliter,int_printmos,int_printocc,
+     &    potradpts, numauxbas,int_ksmem,int_overlp
+c
+
+c  prakash added int_ksmem to the common block
+      common /intgrtflagsd/ int_radlimit,coef_pot_nonlocal
+      common /intgrtflagsl/ int_ks,num_acc_ks,ks_exact_ex,int_tdks,
+     &                      int_ks_scf
+
+      save /intgrtflags/
+      save /intgrtflagsl/
+      save /intgrtflagsd/
+
+c The following are parameters used in the namelist
+
+      integer int_prt_never,int_prt_dft,int_prt_ks,int_prt_always
+      parameter (int_prt_never   =1)
+      parameter (int_prt_dft     =2)
+      parameter (int_prt_ks      =3)
+      parameter (int_prt_always  =4)
+
+      integer int_radtyp_handy,int_radtyp_gl
+      parameter (int_radtyp_handy=1)
+      parameter (int_radtyp_gl   =2)
+
+      integer int_partpoly_equal,int_partpoly_bsrad,
+     &    int_partpoly_dynamic
+      parameter (int_partpoly_equal  =1)
+      parameter (int_partpoly_bsrad  =2)
+      parameter (int_partpoly_dynamic=3)
+
+      integer int_radscal_none,int_radscal_slater
+      parameter (int_radscal_none  =1)
+      parameter (int_radscal_slater=2)
+
+      integer int_parttyp_rigid,int_parttyp_fuzzy
+      parameter (int_parttyp_rigid=1)
+      parameter (int_parttyp_fuzzy=2)
+
+      integer int_gridtype_leb
+      parameter (int_gridtype_leb=1)
+
+
+
+      integer err
+
+      character*20 list(10)
+      logical printdef
+
+      printdef=.true.
+
+      call callstack_push('INITPACK')
+      call nl_init('INTPACK',err,printdef)
+
+c Namelist entries:
+c --------------------------------------------------------------------------
+c PRINT_NL   : whether to print the values read in the namelist
+c              Default: true
+c --------------------------------------------------------------------------
+c Integration flags
+c
+c NUMRADPTS  : the number of radial points to use in the integration around
+c              each atomic center (default: 50)
+c RADTYP     : the type of radial integration available are:
+c                Handy           : (default)
+c                Gauss-Legendre  :
+c PARTPOLY   : partition polyhedra
+c                equal     : equally regardless of atomic center
+c                bsrad     : by Bragg-Slater radii (default)
+c                dynamic   : dynamic (minimum in density) sizing
+c RADSCAL    : how to do radial scaling
+c                none      : no radial scaling
+c                slater    : use Slater's rules for radial scaling (default)
+c PARTTYP    : type of partitioning
+c                rigid     : rigid partitioning
+c                fuzzy     : fuzzy partitioning (default)
+c FUZZYITER  : the number of iterations to use in fuzzy partitioning
+c              (default: 4)
+c RADLIMIT   : the length of the radial integration (default 3.00)
+c
+c ANGLGRID    : the angular grid to use by default at each radial point
+c               (default: 4)
+c GRIDTYPE    : the angular grid type to use by default at each radial point
+c                lebedev    : default
+c OVERIND     : the number of basis functions in each integral
+c                default: 3
+c --------------------------------------------------------------------------
+
+      call nl_int('numradpts',50,int_numradpts)
+
+      list(1)='Handy'
+      list(2)='Gauss-Legendre'
+      call nl_ele('radtyp',list,2,int_radtyp_handy,int_radtyp)
+
+      list(1)='equal'
+      list(2)='bsrad'
+      list(3)='dynamic'
+      call nl_ele('partpoly',list,3,int_partpoly_bsrad,int_partpoly)
+
+      list(1)='none'
+      list(2)='Slater'
+      call nl_ele('radscal',list,2,int_radscal_slater,int_radscal)
+
+      list(1)='rigid'
+      list(2)='fuzzy'
+      call nl_ele('parttyp',list,2,int_parttyp_fuzzy,int_parttyp)
+
+      call nl_int('fuzzyiter',4,int_fuzzyiter)
+
+      call nl_real('radlimit',three,int_radlimit)
+
+      call nl_int('anglgrid',4,int_defanglgrid)
+
+      call nl_int('overind',3, int_overlp)
+
+      list(1)='lebedev'
+      call nl_ele('gridtype',list,1,int_gridtype_leb,int_defgridtype)
+
+      call nl_term
+      call callstack_pop
+      return
+      end

@@ -1,0 +1,28 @@
+
+
+
+
+
+
+
+
+
+
+
+      SUBROUTINE EXTRACT_BLOCK(W2T2FULL,W2T2SUB,NROW,NCOL,NBLOCK,IBEGN)
+     +                          
+
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+      DIMENSION W2T2FULL(NROW,NCOL), W2T2SUB(NROW,NBLOCK)
+
+      DATA IONE /1/
+
+      IOFF = IONE 
+      DO I = IBEGN, NCOL
+         CALL DCOPY(NROW,W2T2FULL(1,I),1,W2T2SUB(1,IOFF),1)
+         IOFF = IOFF + 1
+      ENDDO 
+
+
+      RETURN 
+      END

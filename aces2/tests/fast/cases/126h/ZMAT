@@ -1,0 +1,18 @@
+HCN. CCSD/DZP TS frequencies.
+H
+C 1 RHC
+X 2 RX 1 AX
+N 2 RCN 3 AX 1 DIH
+
+RHC =  1.1841057362
+RCN =  1.2054811460
+DIH = 72.3333388668
+RX  =  1.0
+AX  = 90.0
+
+*ACES2
+!restart
+basis=DZP,spherical
+ref=uhf,calc=CCSD
+vib=findif
+

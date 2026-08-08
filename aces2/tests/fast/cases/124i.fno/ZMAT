@@ -1,0 +1,13 @@
+Hydrogen Fluoride FNO Symmetry Cutoff
+F
+H 1 HF
+
+HF=0.9
+
+*ACES2(PRINT=1,BASIS=CC-PVTZ,CALC=CCSD,REFERENCE=RHF
+SPHERICAL=OFF,TRUNC_ORBS=FNO,FNO_KEEP=60)
+
+*fno_gen
+keep_sym=12-5-5-3
+*end
+

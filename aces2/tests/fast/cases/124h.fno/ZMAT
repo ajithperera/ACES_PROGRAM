@@ -1,0 +1,13 @@
+Hydrogen Fluoride FNO Occupation Cutoff
+F
+H 1 HF
+
+HF=0.9
+
+*ACES2(PRINT=1,BASIS=CC-PVTZ,CALC=CCSD,REFERENCE=RHF,
+TRUNC_ORBS=FNO,SPHERICAL=OFF,FNO_KEEP=60)
+
+*fno_gen
+keep_thresh=.000026124
+*end
+

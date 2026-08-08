@@ -1,0 +1,18 @@
+FULLY NUMERICAL VIBRATIONAL FREQUENCIES H2O2/3-21G*
+H
+O 1 ROH
+O 2 ROO 1 A
+H 3 ROH 2 A 1 D180
+
+ROH=0.9703228355
+ROO=1.4729781236
+A=99.4630789224
+D180=180.0
+
+*ACES2
+!restart
+BASIS=3-21G*
+vib=findif,GRAD_CALC=NUMERICAL,SPHERICAL=OFF
+
+this tests 2nd-order findiff grids with an inversion center in vibfreqs
+

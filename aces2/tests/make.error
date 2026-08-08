@@ -1,0 +1,2 @@
+ar: creating libtests.a
+ar: *.o: No such file or directory

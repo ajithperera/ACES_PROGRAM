@@ -1,0 +1,20 @@
+ROHF direct SCF gradient
+H
+N 1 R*
+H 2 R* 1 A*
+
+R=1.00
+A=120.
+
+*ACES2
+!restart
+!sym
+basis=3-21G*
+mult=2,SPHERICAL=OFF
+ref=rohf,fock=ao,direct,integrals=gamess
+
+*GAMESS
+SCHWRZ=T
+FDIFF=T
+MEMORY=1000000
+

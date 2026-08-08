@@ -1,0 +1,12 @@
+ANALYTICAL GEOMETRY OPTIMIZATION H2O/3-21G*
+O
+H 1 R*
+H 1 R* 2 A* # swap atoms 1 and 2
+
+R=1.07
+A=106.
+
+*ACES2
+# include restarts
+BASIS=3-21G*,SPHERICAL=OFF
+

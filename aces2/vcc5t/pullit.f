@@ -1,0 +1,17 @@
+
+
+
+
+
+
+
+
+
+
+
+      SUBROUTINE PULLIT(A,LEN,IUNIT,IREC)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+      DIMENSION A(LEN)
+      READ(IUNIT,REC=IREC) A
+      RETURN
+      END

@@ -1,0 +1,15 @@
+NUMERICAL GEOMETRY OPTIMIZATION H2O/3-21G*
+H
+O 1 R*
+H 2 R* 1 A*
+
+R=0.94
+A=106.
+
+*ACES2
+!restart
+BASIS=3-21G*
+GRAD_CALC=NUMERICAL,SPHERICAL=OFF
+
+this tests 1st-order findiff grids without an inversion center in geomopts
+

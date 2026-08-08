@@ -1,0 +1,18 @@
+HCN. CCSD/DZP min frequencies.
+H
+C 1 RHC
+X 2 RX 1 AX
+N 2 RCN 3 AX 1 DIH
+
+RHC =   1.0765352552
+RCN =   1.1709908614
+DIH = 180.0
+RX  =   1.0
+AX  =  90.0
+
+*ACES2
+!restart
+basis=DZP,spherical
+calc=CCSD
+vib=findif
+

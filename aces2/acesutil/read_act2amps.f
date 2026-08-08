@@ -1,0 +1,69 @@
+
+
+
+
+
+
+
+
+
+
+
+      SUBROUTINE READ_ACT2AMPS(IUNIT, ILIST, ISPIN, ACT, ACTISFULL)
+
+      IMPLICIT INTEGER (A-Z)
+      LOGICAL ACTISFULL
+      CHARACTER*4 ACT
+
+
+      PARAMETER (MAX_ACT_SPACE = 50)
+
+
+
+      DOUBLE PRECISION T1AS(MAX_ACT_SPACE**2), T2AS(MAX_ACT_SPACE**4)
+C
+      DIMENSION I1(MAX_ACT_SPACE**2), A1(MAX_ACT_SPACE**2),
+     &          I2(MAX_ACT_SPACE**4), A2(MAX_ACT_SPACE**4),
+     &          J2(MAX_ACT_SPACE**4), B2(MAX_ACT_SPACE**4)
+      DIMENSION IR1(MAX_ACT_SPACE**2), AR1(MAX_ACT_SPACE**2),
+     &          IR2(MAX_ACT_SPACE**4), JR2(MAX_ACT_SPACE**4),
+     &          AR2(MAX_ACT_SPACE**4), BR2(MAX_ACT_SPACE**4)
+C
+      COMMON /T1ASPACE/ I1, IR1, A1, AR1, T1AS, NT1SIZE
+      COMMON /T2ASPACE/ I2, IR2, J2, JR2, A2, AR2, B2, BR2, T2AS,
+     &                  NT2SIZE
+    
+
+
+      READ(IUNIT,*) NT2SIZE
+    
+      IF (MAX_ACT_SPACE**4 .LT. NT2SIZE) THEN
+        Write(6,"(1x,a,a)")"The current MAX_ACT_SPACE value of 100 is"
+     &                    ," too small." 
+        CALL ERREX
+      ENDIF
+
+      DO I = 1, NT2SIZE
+          READ(IUNIT,99) I2(I),IR2(I),J2(I),JR2(I),A2(I),AR2(I),
+     &                     B2(I),BR2(I),T2AS(I)
+      ENDDO
+
+ 99   FORMAT(3X, I4, 3X, I1,3X, I4, 3X, I1, 3X, I4, 3X, I1, 3X, 
+     &       I4, 3X, I1, 3X, F15.12)
+
+      IF(ISPIN.EQ.1)THEN
+        NT2_INT_SIZ=ISYMSZ(ISPIN,ISPIN+2)
+      ELSEIF(ISPIN.EQ.2)THEN
+        NT2_INT_SIZ=ISYMSZ(ISPIN,ISPIN+2)
+      ELSEIF(ISPIN.EQ.3)THEN
+        NT2_INT_SIZ=ISYMSZ(13,14)
+      ENDIF
+      ACTISFULL = .FALSE. 
+C
+      IF (NT2_INT_SIZ .EQ. NT2SIZE) THEN
+         ACTISFULL = .TRUE.
+         IF (ACT .EQ. "READ") CALL PUTALL(T2AS,NT2SIZ,1,ILIST)
+      ENDIF
+
+      RETURN
+      END

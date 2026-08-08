@@ -1,0 +1,7 @@
+ld: warning: alignment 8 of symbol `machsp_' in /home/perera/Develop/lib/libacescore.a(aces_com_machsp.o) is smaller than 32 in a2mix.o
+ld: warning: alignment 8 of symbol `machsp_' in /home/perera/Develop/lib/libacescore.a(aces_com_machsp.o) is smaller than 32 in /home/perera/Develop/lib/libacescore.a(aces_init.o)
+ld: warning: alignment 8 of symbol `machsp_' in /home/perera/Develop/lib/libacescore.a(aces_com_machsp.o) is smaller than 32 in /home/perera/Develop/lib/libacescore.a(aces_init_rte.o)
+ld: warning: alignment 8 of symbol `machsp_' in /home/perera/Develop/lib/libacescore.a(aces_com_machsp.o) is smaller than 32 in /home/perera/Develop/lib/libacescore.a(aces_io_init.o)
+ld: warning: alignment 8 of symbol `machsp_' in /home/perera/Develop/lib/libacescore.a(aces_com_machsp.o) is smaller than 32 in /home/perera/Develop/lib/libacescore.a(aces_cache_init.o)
+ld: a2mix.o: in function `cor_potns_.t1868p.t1869p.t1870p.t1871p.t1872p.t1873p.t1874p.t1875p.t1876p.t1877p.t1878p.t1879p.t1880p.t1881p.t1882p.t1883p.t1884p.t1885p.t1886p.t1887p.t1888p.t1889p.t1890p.t1891p.t1892p.t1893p.t1894p.t1895p.t1896p.t1897p.t1898p.t1899p.t1900p.t1901p.t1902p.t1903p.t1904p.t1905p.t1906p.t1907p.t1908p.t1909p.t1910p.t1911p.t1912p.t1913p.t1914p.t1915p.t1916p.t1917p.t1918p':
+/home/perera/Develop/ACESII_build/a2mix/a2mix.f:(.text+0x7c93): undefined reference to `cor_potns_'
