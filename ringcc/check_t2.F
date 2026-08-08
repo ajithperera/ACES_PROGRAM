@@ -43,14 +43,16 @@ C      enddo
 
       Irrepx = 1
       Length_61=IDSYMSZ(IRREPX,ISYTYP(1,61),ISYTYP(2,61))
-      Length_62=IDSYMSZ(IRREPX,ISYTYP(1,62),ISYTYP(2,62))
+      IF (UHF) Length_62=IDSYMSZ(IRREPX,ISYTYP(1,62),ISYTYP(2,62))
       Length_63=IDSYMSZ(IRREPX,ISYTYP(1,63),ISYTYP(2,63))
 
       Write(6,*)
       Call Getall(Work, Length_61, Irrepx, 61)
       Call checksum("T2-AAAA :",Work,Length_61)
+      IF (UHF) THEN
       Call Getall(Work, Length_62, Irrepx, 62)
       Call checksum("T2-BBBB :",Work,Length_62)
+      ENDIF
       Call Getall(Work, Length_63, Irrepx, 63)
       Call checksum("T2-ABAB :",Work,Length_63)
 
