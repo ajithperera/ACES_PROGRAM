@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Classify the ACES II fast test suite (~/Develop/ACESII_build/tests/fast) for
+"""Classify the ACES II fast test suite (ACES_PROGRAM/aces2/tests/fast) for
 pyaces compatibility. pyaces currently exposes: Runints, Runscf, Runcc, Runhbar,
 Runpccd, Runprops, Runee -- no gradient/Vdens path (rungrads/run1props excluded
 from the pyaces build), so any case requiring an analytic/numerical gradient or
@@ -10,7 +10,7 @@ import os
 import re
 import sys
 
-SUITE = os.path.expanduser("~/Develop/ACESII_build/tests/fast")
+SUITE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "aces2", "tests", "fast")
 CASES = os.path.join(SUITE, "cases")
 TEST_RESULTS = os.path.join(SUITE, "test_results")
 
@@ -165,10 +165,8 @@ def main():
         print(f"  {k}: {v}")
     print()
 
-    out_path = os.path.join(os.path.dirname(SUITE), "..", "..", "acespy_build",
+    out_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              "suite_classification.tsv")
-    out_path = os.path.abspath(os.path.join("/blue/ufhpc/perera/acespy_build",
-                                             "suite_classification.tsv"))
     with open(out_path, "w") as f:
         f.write("name\tcategory\treason\tentrypoint\tiuhf\trecord\tref_value\n")
         for r in rows:

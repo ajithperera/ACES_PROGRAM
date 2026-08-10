@@ -1,15 +1,17 @@
 #!/bin/bash
 set -e
 
-SHIM=/tmp/claude-11138/-home-perera/e5b737e2-0fde-4c73-986c-761c6577ed12/scratchpad/compat_bin
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+SHIM=$SCRIPT_DIR/tools/compat_bin
 export PATH=$SHIM:$PATH
 module purge
 module load intel/2025.1.0 openmpi/5.0.7 python/3.12
 
-WORK=/blue/ufhpc/perera/acespy_build
+WORK=$SCRIPT_DIR
 MAIN=$WORK/Main
 PYF=$WORK/a2_pyf
-ACES=/blue/ufhpc/perera/acesii_build_pic
+ACES=$SCRIPT_DIR/../aces2
 NUMPY_INC=$(python3 -c "import numpy; print(numpy.get_include())")
 PY_INC=$(python3 -c "import sysconfig; print(sysconfig.get_path('include'))")
 F2PY_SRC=/apps/python/3.12/lib/python3.12/site-packages/numpy/f2py/src
@@ -74,11 +76,67 @@ done
 ifort $FFLAGS -c gen/aces2py-f2pywrappers.f -o build/aces2py-f2pywrappers.o
 
 echo "=== step 4: link ==="
-LIBDIRS=$(cat /tmp/claude-11138/-home-perera/e5b737e2-0fde-4c73-986c-761c6577ed12/scratchpad/aces2_libdirs.txt | sed 's/^/-L/' | tr '\n' ' ')
-LIBNAMES=$(cat /tmp/claude-11138/-home-perera/e5b737e2-0fde-4c73-986c-761c6577ed12/scratchpad/aces2_libnames.txt | sed 's/^/-l/' | tr '\n' ' ')
+# Generated fresh every build (not cached) so this can never point at a
+# stale/dead location -- ACES is always this same build's own aces2 tree.
+LIBDIRS=$(find $ACES -maxdepth 2 -iname "*.a" | xargs -n1 dirname | sort -u | sed 's/^/-L/' | tr '\n' ' ')
+LIBNAMES=$(find $ACES -maxdepth 2 -iname "*.a" | xargs -n1 basename | sed -E 's/^lib(.*)\.a$/\1/' | sort -u | sed 's/^/-l/' | tr '\n' ' ')
+
+# 12 aces2 modules (intprc, vmol, joda, vcc, vscf, vtran, hbar, lambda, vee,
+# pccd, props, vmol2ja) each have their own Fortran PROGRAM entry (MAIN__) --
+# needed for their standalone xJODA/xVSCF/etc executables (which the classic
+# ACES II driver/test suite depends on), but fatal ("multiple definition of
+# MAIN__") once more than one is pulled into this single shared library.
+# Rather than patching aces2's own sources (that tree must stay untouched --
+# it's also the classic-driver suite's shared source of truth), localize the
+# MAIN__ symbol on disposable copies of just these 12 archives so it no
+# longer collides at link time. aces2's own installed .a files are never
+# modified.
+MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vtran intprc"
+
+# aces2's ~150 modules are historically full of same-named "generic" utility
+# routines (independently written per-module, never meant to share a link
+# unit -- the classic driver never links more than one module together, so
+# these never collided there). aces2py.so links dozens of them into ONE
+# process, so any such collision becomes real. Found empirically, one at a
+# time, same as every other instance of this bug class in this project:
+# lambda/finish.f's own SUBROUTINE FINISH(ICYCLE,pCCD) (2 args, unrelated to
+# CC convergence) silently wins over vcc/finish.f's SUBROUTINE
+# FINISH(ICYCLE,pCCD,pCCDS,pCCDTS[,PCCDTSD]) (5 args at vcc's call site --
+# arity mismatch is itself benign/pre-existing, PCCDTSD is unused) when both
+# libvcc.a and liblambda.a are linked together -- silently drops vcc's own
+# "write the converged TOTENERG to JOBARC" step, leaving Runcc's reported
+# energy stuck at the pre-convergence value mbptout.f wrote early on.
+# "module:symbol" pairs to localize (module's OWN copy is neutralized so the
+# OTHER module's same-named symbol wins the link) -- extend this list as new
+# collisions are found instead of touching aces2's own sources. molcas also
+# defines its own unrelated finish_ (no MAIN__ of its own, so it's not in
+# MAIN_COLLISION_MODULES otherwise) -- same collision class, 3rd copy found.
+EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_"
+EXTRA_LOCALIZE_MODULES="molcas"
+
+PATCHED_LIBDIR=$WORK/build/patched_libs
+mkdir -p $PATCHED_LIBDIR
+for mod in $MAIN_COLLISION_MODULES $EXTRA_LOCALIZE_MODULES; do
+    src_a=$ACES/lib/lib${mod}.a
+    [ -f "$src_a" ] || { echo "expected $src_a not found" >&2; exit 1; }
+    workdir=$(mktemp -d)
+    (cd $workdir && ar x $src_a)
+    for o in $workdir/*.o; do
+        nm "$o" 2>/dev/null | grep -q " T MAIN__$" && objcopy --localize-symbol=MAIN__ "$o"
+        for pair in $EXTRA_LOCALIZE_SYMBOLS; do
+            pmod=${pair%%:*}
+            psym=${pair#*:}
+            [ "$pmod" = "$mod" ] || continue
+            nm "$o" 2>/dev/null | grep -q " T ${psym}\$" && objcopy --localize-symbol=${psym} "$o"
+        done
+    done
+    (cd $workdir && ar rcs $PATCHED_LIBDIR/lib${mod}.a *.o)
+    rm -rf $workdir
+done
 
 ifx -shared -nofor-main -o build/aces2py.cpython-312-x86_64-linux-gnu.so \
     build/*.o \
+    -L$PATCHED_LIBDIR \
     $LIBDIRS \
     -Wl,--start-group $LIBNAMES -Wl,--end-group \
     -L$MKL -Wl,--start-group -lmkl_intel_ilp64 -lmkl_lapack95_ilp64 -lmkl_sequential -lmkl_core -Wl,--end-group \

@@ -33,10 +33,11 @@ import traceback
 WORKDIR, ENTRYPOINT, IUHF, RECORD = sys.argv[1:5]
 IUHF = int(IUHF)
 
-STANDALONE_BIN = "/home/perera/Develop/bin"
+REPO_DIR = os.path.dirname(os.path.abspath(__file__))
+STANDALONE_BIN = os.path.join(os.path.dirname(REPO_DIR), "aces2", "bin")
 
 os.chdir(WORKDIR)
-sys.path.insert(0, "/blue/ufhpc/perera/acespy_build/Main/build")
+sys.path.insert(0, os.path.join(REPO_DIR, "Main", "build"))
 
 try:
     import aces2py

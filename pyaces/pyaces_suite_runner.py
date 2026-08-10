@@ -13,11 +13,12 @@ import time
 
 ACES_DIAG_RE = re.compile(r"@[A-Z][A-Z0-9_]*:")
 
-BASE = "/blue/ufhpc/perera/acespy_build"
+BASE = os.path.dirname(os.path.abspath(__file__))
+ACES2_TESTS = os.path.join(os.path.dirname(BASE), "aces2", "tests", "fast")
 CLASSIFICATION = os.path.join(BASE, "suite_classification.tsv")
-SUITE_CASES = os.path.expanduser("~/Develop/ACESII_build/tests/fast/cases")
-GENBAS = os.path.expanduser("~/Develop/ACESII_build/tests/fast/GENBAS")
-RUN_DIR = "/blue/ufhpc/perera/pyaces_suite_test"
+SUITE_CASES = os.path.join(ACES2_TESTS, "cases")
+GENBAS = os.path.join(ACES2_TESTS, "GENBAS")
+RUN_DIR = "/blue/ufhpc/perera/aces_program_pyaces_suite_test"
 RUNNER = os.path.join(BASE, "pyaces_run_case.py")
 TOLERANCE = 1e-6
 
