@@ -111,8 +111,60 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 # collisions are found instead of touching aces2's own sources. molcas also
 # defines its own unrelated finish_ (no MAIN__ of its own, so it's not in
 # MAIN_COLLISION_MODULES otherwise) -- same collision class, 3rd copy found.
-EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_"
-EXTRA_LOCALIZE_MODULES="molcas"
+# joda/gschmidt.f is a 4th instance: 6 modules (libr, vcceh, joda, vea, vee,
+# a vee/librv.skip backup) each define their own GSCHMIDT with DIFFERENT
+# argument counts (vee's own davidtda.f callers pass 6 args matching vee's/
+# vcceh's/vea's own 6-arg signature; joda's is a 5-arg version missing the
+# leading VEC arg entirely -- a straight argument shift, exactly the shape
+# that corrupts an address into an integer slot and segfaults, matching the
+# observed vee_->drvtda_->davidtda_->gschmidt_ SIGSEGV backtrace). Confirmed
+# via `grep -rl "call gschmidt"` that joda's OWN code never calls its own
+# gschmidt (dead/unused there) -- zero risk to localize. libr/vcceh/vea DO
+# have real internal callers of their own gschmidt (libr/david1.f,
+# vcceh/{blcklineq,truncate}.f, vea/truncate.f) -- do NOT blindly localize
+# those without confirming they aren't also needed by some other pyaces
+# entry point first.
+# libr's own copy (7-arg, extra TOL) turned out to be the actual winner
+# once joda's was suppressed (confirmed via nm -S size-matching against the
+# linked .so: 0x159 bytes matches libr/gschmidt.o exactly, not vee's
+# 0x17b). libr/david1.f calls its own gschmidt internally and IS present in
+# the linked .so (nm shows david1_ defined) -- but nothing in pyaces's own
+# exposed entry points (Runints/Runscf/Runcc/Runhbar/Runpccd/Runprops/
+# Runee) calls david1_ itself, so it's a harmless bystander pulled in by
+# something else in libr's archive, not a live call path -- verified safe
+# by re-running the FULL suite after this change (no regressions). vcceh's
+# and vea's own copies were never confirmed to be the actual winner at any
+# point (sizes 0x17b/0x183 never matched the linked symbol), only localized
+# preventatively since they're same-collision-class candidates too.
+# 5th instance, same collision class again: MODF, called next inside vee_
+# itself (vee.f:406/410/481/485, CALL MODF(ICORE,MAXCOR,IUHF,ITYPE), 4 args)
+# after gschmidt_ was fixed and the crash moved past davidtda_. 8 modules
+# define their own MODF -- lambda's has a genuinely different (longer)
+# signature (extra IRREPT,IRREPF args, an arity mismatch matching the
+# FINISH bug's shape); fsip/vcceh/hcmult/vea/lcct all share vee's own
+# identical 4-arg shape but are still each a DIFFERENT module's own
+# implementation, not guaranteed semantically identical just because the
+# call shape matches. None of fsip/hcmult/lcct's own internal callers
+# (fs01_/hcmult_driver_/lcc_) are even present in the linked .so (checked
+# via nm -- not reachable from anything pyaces's SOURCES actually needs),
+# so localizing their MODF copies is safe the same way libr's gschmidt was.
+# 6th instance: EXPDEN, next in the chain after MODF (vee_->doeomee_david_->
+# nextdav_->tdens_->expden_, crashing inside a memset -- an out-of-bounds
+# write, matching a wrong-copy/wrong-array-size symptom again). props's own
+# copy has a COMPLETELY different signature/purpose (DTRUNC,DFULL,NORB,...
+# vs vee's/vcceh's identical DOO,DVV,DVO,DOV,F,NMO,IRREPX,ISPIN,REFCONT).
+# CAVEAT, unlike every other localize above: props_ (props's own real
+# entry point, needed by Runprops) IS reachable in the linked .so, and
+# props.f DOES call its own expden internally -- so this collision may
+# ALREADY silently affect Runprops today, independent of anything this
+# session touched. Localizing props's copy here fixes vee/Runee (verified
+# below) but does NOT independently verify Runprops's own correctness --
+# if Runprops is ever exercised, re-check whether props's expden needs its
+# OWN dedicated fix (can't have both vee's and props's own copies win
+# simultaneously with a single flat symbol table; a real per-entry-point
+# link would be needed to fully separate them, not attempted here).
+EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_"
+EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct"
 
 PATCHED_LIBDIR=$WORK/build/patched_libs
 mkdir -p $PATCHED_LIBDIR
