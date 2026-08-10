@@ -1,4 +1,4 @@
-      SUBROUTINE TRPS3(
+      SUBROUTINE TRPS3_VCC5T(
      1                 EVAL,SCR1,SCR2,SCR3,
      1                 OOOV,
      1                 T2BAB,T2BAAI,T2BAAJ,T2BBBI,T2BBBJ,
