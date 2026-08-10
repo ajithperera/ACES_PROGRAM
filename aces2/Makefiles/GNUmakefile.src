@@ -104,6 +104,56 @@ endif
 # -O2 -- MODMATMUL is a small utility routine, not a hot loop.
 ifeq (${CURR},libr)
    modmatmul.o: compile_f += -O0
+   dodiis.o: compile_f += -O0
+endif
+
+# 2026-08-09, libr only: found while chasing why all 6 remaining 124*.fno
+# (FNO virtual-space truncation) fast-suite cases plateaued at a ~5.7e-6
+# CCSD residual and never converged, on the modern ifx-built xaces2, while
+# BOTH an independent classic-toolchain build (/apps/shared/bartlett/
+# ACESII-2.14.0, ifort-era) and a from-scratch checksum-diff of intermediate
+# quantities pointed at the symmetry-expansion routines (SYMEXP family) as
+# the point of divergence. Compiling all 6 symexp*.o at -O0 (no other
+# change) made every previously-plateauing 124*.fno case converge cleanly
+# and match archive TOTENERG to full precision -- same ifx -O2
+# miscompilation bug class as mkerdoed.F/mkvmol.f/oed__*_prepare_ctr.f/
+# modmatmul.o above (5th confirmed instance in this codebase). Not yet
+# narrowed to which specific symexp*.f file(s) trigger it individually --
+# all 6 pinned at -O0 together as the safe, verified-working set. Rest of
+# libr stays at production -O2.
+ifeq (${CURR},libr)
+   symexp.o: compile_f += -O0
+   symexp2.o: compile_f += -O0
+   symexp3.o: compile_f += -O0
+   symexp4.o: compile_f += -O0
+   symexp5.o: compile_f += -O0
+   symexp6.o: compile_f += -O0
+endif
+
+# 2026-08-09, same ifx -O2 SYMEXP miscompilation as libr's own block above --
+# these are per-module LOCAL copies of the same symmetry-expansion routine
+# (legacy pattern in this codebase, matches TSPABCI/CHECK_T2/INCOR elsewhere
+# already documented as multiply-duplicated-per-module), not aliases of
+# libr's copy, so each needs its own override. Applied proactively to every
+# other copy found in the tree (excluding disabled .skip module dirs) rather
+# than waiting for each to surface as its own bug report.
+ifeq (${CURR},lcct)
+   symexp5.o: compile_f += -O0
+endif
+ifeq (${CURR},librt3)
+   symexpt3.o: compile_f += -O0
+endif
+ifeq (${CURR},pccd)
+   pccd_symexp.o: compile_f += -O0
+endif
+ifeq (${CURR},vcc5t)
+   symexpt3.o: compile_f += -O0
+endif
+ifeq (${CURR},vcceh)
+   symexp5.o: compile_f += -O0
+endif
+ifeq (${CURR},vee)
+   symexp5.o: compile_f += -O0
 endif
 
 
