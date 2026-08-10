@@ -1,5 +1,0 @@
-ld: warning: alignment 8 of symbol `machsp_' in /home/perera/Develop/lib/libacescore.a(aces_com_machsp.o) is smaller than 32 in /home/perera/Develop/lib/libacescore.a(aces_init.o)
-ld: ./libaux.a(pccd_runchg.o): in function `resetfno_.t111p.t112p.t113p.t3v':
-/home/perera/Develop/ACESII_build/aux/pccd_runchg.f:(.text+0xea7): undefined reference to `resetfno_'
-ld: ./libaux.a(pccd_runchg.o): in function `resetfno_.t224p.t225p.t226p.t3v':
-/home/perera/Develop/ACESII_build/aux/pccd_runchg.f:(.text+0xf97): undefined reference to `resetfno_'

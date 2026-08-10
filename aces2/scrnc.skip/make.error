@@ -1,6 +1,0 @@
-ifx: command line warning #10157: ignoring option '-W'; argument is of wrong type
-ifx: remark #10440: Note that use of a debug option without any optimization-level option will turnoff most compiler optimizations similar to use of '-O0'
-scrnc_jj_cc_lrspn.f(109): error #6321: An unterminated block exists.
-      Do Irrep = 1, Nirrep
-^
-compilation aborted for scrnc_jj_cc_lrspn.f (code 1)

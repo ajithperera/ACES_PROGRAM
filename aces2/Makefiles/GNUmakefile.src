@@ -30,15 +30,18 @@ MKL_GRP:= -Bstatic -lmkl_intel_ilp64 -lmkl_lapack95_ilp64 -lmkl_sequential -lmkl
 F9XFLAGS_EXTRA += -fPIC
 CFLAGS_EXTRA += -fPIC
 
-# 2026-08-04: this tree (acesii_build_pic) is pyaces's OWN independent -fPIC
-# build, kept deliberately separate from ~/Develop/ACESII_build (the production
-# ACES II tree) -- do not point install paths or extra lib search paths at the
-# other tree; each must build+install fully standalone so neither can clobber
-# or silently depend on the other's binaries/libraries.
-LDFLAGS_NUMLIBS:= -L/apps/compilers/intel/2025/1.0.166/mkl/lib/intel64  -Wl,--start-group $(MKL_GRP) -Wl,--end-group -pthread -L/blue/ufhpc/perera/acesii_build_pic/lib -llb -llinpack
+# 2026-08-04, inherited from acesii_build_pic's own GNUmakefile.src via the
+# subtree merge: that comment (and these paths) were self-referential for
+# THAT tree ("this tree is pyaces's OWN independent -fPIC build ... each
+# must build+install fully standalone"). Copied verbatim here they instead
+# pointed ACES_PROGRAM/aces2 AT acesii_build_pic's install dirs, making this
+# tree parasitic on the other one instead of standalone. 2026-08-10: repointed
+# at this tree's own aces2/bin, aces2/lib so ACES_PROGRAM builds+installs
+# fully within itself -- do not point these back at acesii_build_pic again.
+LDFLAGS_NUMLIBS:= -L$(MKLROOT)/lib/intel64  -Wl,--start-group $(MKL_GRP) -Wl,--end-group -pthread -L/home/perera/Develop/ACES_PROGRAM/aces2/lib -llb -llinpack
 
-DIR_INSTBIN := /blue/ufhpc/perera/acesii_build_pic/bin
-DIR_INSTLIB := /blue/ufhpc/perera/acesii_build_pic/lib
+DIR_INSTBIN := /home/perera/Develop/ACES_PROGRAM/aces2/bin
+DIR_INSTLIB := /home/perera/Develop/ACES_PROGRAM/aces2/lib
 DIR_SRCLIB  := ${DIR_INSTLIB}
 
 ###################################
