@@ -468,6 +468,40 @@ C     all alpha case.
 C
       IF(IUHF.EQ.0 .OR. ISKP14) GOTO 1000
 C
+C     2026-08-09: T32ABCI14 (called below via TRPS14_TRP, in the
+C     EXTRNL_CCSD branch) does a read-modify-write accumulation into
+C     lists 127/128 (GAMMA(AI,BC) AAAA/BBBB), but nothing on this
+C     T3_ITER/T3_FINALIZE code path ever creates/zeroes those lists --
+C     unlike trp/trps.f's OWN driver, which does this exact
+C     SET_EXTRNL_CC_LISTS+ZEROLIST sequence (see its EXTRNL_CCSD
+C     branch) before ever reaching the same TRPS14 call. This is a
+C     SEPARATE driver (T3_ITER/T3_FINALIZE, not TRPS.f) added later and
+C     never given the equivalent setup step. Confirmed via case
+C     124d.fno/124e.fno (UHF CCSD(T)+FNO, "@GETLST: Assertion failed.
+C     List (2,127) does not exist.") and cross-checked against an
+C     independent classic-toolchain build (/apps/shared/bartlett/
+C     ACESII-2.14.0), which converges cleanly on the identical ZMAT --
+C     confirms this is a real, fixable bug, not a missing capability.
+      IF (EXTRNL_CCSD .AND. .NOT.(INT1.AND.INT2)) THEN
+         LISGV1 = 127
+         LISGV2 = 128
+         LISGV3 = 129
+         LISGV4 = 130
+         LISGO1 = 107
+         LISGO2 = 108
+         LISGO3 = 109
+         LISGO4 = 110
+         CALL SET_EXTRNL_CC_LISTS(ICORE,MAXCOR,IUHF,0)
+         CALL ZEROLIST(ICORE,MAXCOR,107)
+         CALL ZEROLIST(ICORE,MAXCOR,108)
+         CALL ZEROLIST(ICORE,MAXCOR,109)
+         CALL ZEROLIST(ICORE,MAXCOR,110)
+         CALL ZEROLIST(ICORE,MAXCOR,127)
+         CALL ZEROLIST(ICORE,MAXCOR,128)
+         CALL ZEROLIST(ICORE,MAXCOR,129)
+         CALL ZEROLIST(ICORE,MAXCOR,130)
+      ENDIF
+C
       DO  110 ISPIN=1,2
       NO = NOCCO(ISPIN)
       NV = NVRTO(ISPIN)
@@ -513,7 +547,7 @@ cYAU      WRITE(6,2001) MAXCOR,NALLOC,NFREE
         CALL INSMEM('TRPS',I130,MAXCOR)
       ENDIF
       call wallclock(in_year,in_mon,in_mday,in_hour,in_min,in_sec)
-      CALL TRPS14(ICORE(I010),ICORE(I020),ICORE(I025),ICORE(I030),
+      CALL TRPS14_TRP(ICORE(I010),ICORE(I020),ICORE(I025),ICORE(I030),
      1            ICORE(I040),
      1            ICORE(I050),ICORE(I060),
      1            ICORE(I070),ICORE(I080),
@@ -813,12 +847,12 @@ C     If this is a gradient calculation, dump diagonal parts of density
 C     to lists.
 C
       IF(IDRLVL.GT.0)THEN
-        CALL DMPDEN(DOOA,DOOB,DVVA,DVVB,ICORE,
+        CALL DMPDEN_TRP(DOOA,DOOB,DVVA,DVVB,ICORE,
      &              NOCCO(1),NOCCO(2),NVRTO(1),NVRTO(2),IUHF,IINTFP)
       ENDIF
 
       IF(ICLLVL.EQ.11.OR.ICLLVL.EQ.21.OR.ICLLVL.EQ.22)THEN
-        CALL CCENRG(ICORE,IUHF,ECCTOT,NONHF)
+        CALL CCENRG_TRP(ICORE,IUHF,ECCTOT,NONHF)
       ENDIF
 C
 C     Summarize results.

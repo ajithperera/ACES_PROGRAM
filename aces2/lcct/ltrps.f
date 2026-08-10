@@ -538,7 +538,7 @@ C
 C Set W intermediate list numbers
 C
       Print*, "Entering initrp"
-      CALL INITRP
+      CALL INITRP_TRP
 C
 C     Transpose records of LWIC17 and LWIC27 (the latter only if it is
 C     not the same list).
@@ -618,7 +618,7 @@ cYAU      WRITE(6,2001) MAXCOR,NALLOC,NFREE
                CALL INSMEM('LTRPS',I130,MAXCOR)
             ENDIF
       call wallclock(in_year,in_mon,in_mday,in_hour,in_min,in_sec)
-      CALL TRPS14(ICORE(I010),ICORE(I020),ICORE(I025),ICORE(I030),
+      CALL TRPS14_TRP(ICORE(I010),ICORE(I020),ICORE(I025),ICORE(I030),
      1            ICORE(I040),
      1         ICORE(I050),ICORE(I060),
      1         ICORE(I070),ICORE(I080),
@@ -961,7 +961,7 @@ C If this is a gradient calculation, dump diagonal parts of density
 C to lists.
 C
          IF (IDRLVL.GT.0.AND.T3GRAD)THEN
-            CALL DMPDEN(DOOA,DOOB,DVVA,DVVB,ICORE,
+            CALL DMPDEN_TRP(DOOA,DOOB,DVVA,DVVB,ICORE,
      &         NOCCO(1),NOCCO(2),NVRTO(1),NVRTO(2),IUHF,IINTFP)
          ENDIF
 C
@@ -970,7 +970,7 @@ C CCSD/QCISD energy. Note F*T1 contribution must be included
 C if reference is non-Hartree-Fock.
 C
          IF(ICLLVL.EQ.11.OR.ICLLVL.EQ.21.OR.ICLLVL.EQ.22)THEN
-            CALL CCENRG(ICORE,IUHF,ECCTOT,NONHF)
+            CALL CCENRG_TRP(ICORE,IUHF,ECCTOT,NONHF)
          ENDIF
 C
 C Summarize results.

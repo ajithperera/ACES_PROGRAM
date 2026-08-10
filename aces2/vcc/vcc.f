@@ -227,6 +227,24 @@ C
       CHARACTER*4 ACT
       DIMENSION ECORR(3)
       INTEGER ICORE(ICRSIZ),ICRSIZ,IUHF,I0
+C The pyaces conversion turned this routine's own ICORE from a blank-
+C common-backed array (matching every OTHER legacy module) into a dummy
+C argument, aliased by the caller to start partway into the real heap.
+C I0 above is a LOCAL convention (=1) relative to THAT aliased array,
+C correct for every "CALL X(ICORE(I0),...)" site in this file since
+C Fortran composes the real address automatically for array-reference
+C arguments. INCOR is the one exception: it takes I0 as a bare NUMBER
+C and (via ACES_AUXCACHE_LDBLK) indexes the true, unaliased, global
+C blank common directly -- so it needs the real /ISTART/ I0, not this
+C routine's local ICORE(I0)-relative "1". Declared under renamed local
+C variables (I0/ICRSIZ are already taken) purely to reach that value.
+C INCOR/LDBLK also ADVANCE I0 as they cache lists (reserving that
+C region so later writes don't clobber it) -- in the original PROGRAM
+C VCC this was automatic (I0 and /ISTART/'s I0 were the same variable).
+C Here they are not, so the delta ISTART_I0 moves by is replayed onto
+C this routine's own local I0 after every CALL INCOR below.
+      INTEGER ISTART_I0,ISTART_ICRSIZ,ISTART_I0_SAV
+      COMMON /ISTART/ ISTART_I0,ISTART_ICRSIZ
       COMMON /INFO/ NOCCO(2),NVRTO(2)
       COMMON /FLAGS/  IFLAGS(100)
       COMMON /FLAGS2/ IFLAGS2(500)
@@ -460,8 +478,6 @@ C The default of this is set to 1.0
          METHOD=10
       ENDIF 
       CALL GETREC(0,"JOBARC","EXTRNLCC",LENGTH_EXTREC,1)
-      WRITE(6,*) '@VCC-DEBUG: LENGTH_EXTREC=',LENGTH_EXTREC,
-     &           ' METHOD=',METHOD
 C
 C This is an additional argument for GENINT. This is false except
 c when Hbar(mb,ej) is constructed for linear CCSD. 05//2014, Ajith
@@ -671,7 +687,9 @@ C
             CALL SETLST(ICORE(I0),MAXCOR,IUHF)
             CALL INITIN(ICORE(I0),MAXCOR,IUHF)
             CALL INITSN(ICORE(I0),MAXCOR,IUHF)
-            CALL INCOR(I0,ICRSIZ,IUHF)
+            ISTART_I0_SAV = ISTART_I0
+            CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+            I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
             MAXCOR = ICRSIZ
             CALL RNABIJ(ICORE(I0),MAXCOR,IUHF,'T')
             CALL GENINT(ICORE(I0),MAXCOR,IUHF,2,DO_HBAR_4LCCSD)
@@ -810,7 +828,9 @@ C
             CALL SETLST(ICORE(I0),MAXCOR,IUHF)
             CALL INITIN(ICORE(I0),MAXCOR,IUHF)
             CALL INITSN(ICORE(I0),MAXCOR,IUHF)
-            CALL INCOR(I0,ICRSIZ,IUHF)
+            ISTART_I0_SAV = ISTART_I0
+            CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+            I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
             MAXCOR = ICRSIZ
             CALL RNABIJ(ICORE(I0),MAXCOR,IUHF,'T')
             CALL GENINT(ICORE(I0),MAXCOR,IUHF,2,DO_HBAR_4LCCSD)
@@ -894,7 +914,9 @@ C Ajith Perera, 02/2017.
             CALL SETLST(ICORE(I0),MAXCOR,IUHF)
             CALL INITIN(ICORE(I0),MAXCOR,IUHF)
             CALL INITSN(ICORE(I0),MAXCOR,IUHF)
-            CALL INCOR(I0,ICRSIZ,IUHF)
+            ISTART_I0_SAV = ISTART_I0
+            CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+            I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
             MAXCOR = ICRSIZ
             CALL RNABIJ(ICORE(I0),MAXCOR,IUHF,'T')
             CALL GENINT(ICORE(I0),MAXCOR,IUHF,2,DO_HBAR_4LCCSD)
@@ -945,7 +967,9 @@ C BY CALLING BRUECKIT
                       CALL SETLST(ICORE(I0),MAXCOR,IUHF)
                       CALL INITIN(ICORE(I0),MAXCOR,IUHF)
                       CALL INITSN(ICORE(I0),MAXCOR,IUHF)
-                      CALL INCOR(I0,ICRSIZ,IUHF)
+                      ISTART_I0_SAV = ISTART_I0
+                      CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+                      I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
                       MAXCOR = ICRSIZ
 CSSS                      CALL DRMOVE(ICORE(I0),MAXCOR,IUHF,0,.FALSE.)
                       CALL RNABIJ(ICORE(I0),MAXCOR,IUHF,'T')
@@ -962,7 +986,9 @@ CSSS                      CALL DRMOVE(ICORE(I0),MAXCOR,IUHF,0,.FALSE.)
 C
 C FOR GRADIENT CALCULATION, INITIALIZE ``GAMLAM-LISTS'' HERE
 C
-            CALL INCOR(I0,ICRSIZ,IUHF)
+            ISTART_I0_SAV = ISTART_I0
+            CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+            I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
             MAXCOR = ICRSIZ
 C
             IF (GRAD.AND.METHOD.GT.1) THEN
@@ -983,7 +1009,9 @@ C HF CASES
 C
          ELSE IF (MBPT3) THEN
             CALL SETLST(ICORE(I0),MAXCOR,IUHF)
-            CALL INCOR(I0,ICRSIZ,IUHF)
+            ISTART_I0_SAV = ISTART_I0
+            CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+            I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
             MAXCOR = ICRSIZ
             CALL RNABIJ(ICORE(I0),MAXCOR,IUHF,'T')
             CALL INMBPT(ICORE(I0),MAXCOR,IUHF)
@@ -998,7 +1026,9 @@ C
 C FOURTH-ORDER LOGIC.  COMPUTE D3 AND D4 ON FIRST PASS, THEN GET QUADS.
 C
             CALL SETLST(ICORE(I0),MAXCOR,IUHF)
-            CALL INCOR(I0,ICRSIZ,IUHF)
+            ISTART_I0_SAV = ISTART_I0
+            CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+            I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
             MAXCOR=ICRSIZ
             CALL RNABIJ(ICORE(I0),MAXCOR,IUHF,'T')
             CALL INMBPT(ICORE(I0),MAXCOR,IUHF)
@@ -1109,20 +1139,14 @@ C
 C Start the T2 lists by adding <ab||ij>, This is actually a 
 C contribution to T2.
 C
-      WRITE(6,*) '@VCC-TRACE: pre-RNABIJ isytyp(61)=',ISYTYP(1,61),
-     &   ISYTYP(2,61),' NO_REDUNDANT=',NO_REDUNDANT
       IF (.NOT. NO_REDUNDANT) CALL RNABIJ(ICORE(I0),MAXCOR,
      &                                    IUHF,'T')
-      WRITE(6,*) '@VCC-TRACE: post-RNABIJ isytyp(61)=',ISYTYP(1,61),
-     &   ISYTYP(2,61)
 C
 C GENERATE W LISTS FOR INTERMEDIATES IF THIS IS NOT MBPT(3) OR LCCD.
 C
 C      IF(METHOD.NE.2.AND.METHOD.NE.5)THEN
          CALL SETLST(ICORE(I0),MAXCOR,IUHF)
 C      ENDIF
-      WRITE(6,*) '@VCC-TRACE: post-SETLST isytyp(61)=',ISYTYP(1,61),
-     &   ISYTYP(2,61)
 C**********************************************************************
 C
 C START OF CC LOOP
@@ -1131,16 +1155,12 @@ C
       IF (MOD(IFLAGS(21),2).EQ.0) THEN
          CALL DRRLE(ICORE(I0),MAXCOR,IUHF,RLECYC,.FALSE.)
       END IF
-      WRITE(6,*) '@VCC-TRACE: post-DRRLE isytyp(61)=',ISYTYP(1,61),
-     &   ISYTYP(2,61)
       IF (IFLAGS(21).EQ.1) THEN
          CALL DIISLST(1,IUHF,METHOD.GE.6.AND.METHOD.NE.8)
       END IF
-      WRITE(6,*) '@VCC-TRACE: post-DIISLST isytyp(61)=',ISYTYP(1,61),
-     &   ISYTYP(2,61)
-      CALL INCOR(I0,ICRSIZ,IUHF)
-      WRITE(6,*) '@VCC-TRACE: post-INCOR isytyp(61)=',ISYTYP(1,61),
-     &   ISYTYP(2,61)
+      ISTART_I0_SAV = ISTART_I0
+      CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+      I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
       MAXCOR = ICRSIZ
 
       icycle = 1
@@ -1157,13 +1177,9 @@ C
 C Start the T2 lists by adding <ab||ij>, This is actually a
 C contribution to T2.
 C
-      WRITE(6,*) '@VCC-TRACE: pre-INITIN(main) isytyp(61)=',
-     &   ISYTYP(1,61),ISYTYP(2,61)
       CALL INITIN(ICORE(I0),MAXCOR,IUHF)
-      WRITE(6,*) '@VCC-TRACE: post-INITIN(main) isytyp(61)=',
-     &   ISYTYP(1,61),ISYTYP(2,61)
 
-       call Check_T2_VCC(icore(i0),Maxcor,Iuhf)
+       call check_t2(icore(i0),Maxcor,Iuhf) 
       IF (METHOD.GE.6.AND.METHOD.NE.8) THEN
 C
 C Zero out the T1 lists for all cycles.
@@ -1211,7 +1227,7 @@ C
       Write(6,"(a,2l)") " Flags singles and non-hf:",SING1,NONHF
       Call checkintms(icore(i0),maxcor,Iuhf,1)
       write(6,"(a)") " The T1/T2 residuals" 
-      call Check_T2_VCC(icore(i0),Maxcor,Iuhf) 
+      call check_t2(icore(i0),Maxcor,Iuhf) 
 C
       CALL GENINT(ICORE(I0),MAXCOR,IUHF,INTTYP,DO_HBAR_4LCCSD)
 C
@@ -1220,31 +1236,27 @@ C
 C Evaluate P(ab)Sum_e T(ij,ae){F(b,e)-1/2 sum_m T(m,b)F(m,e)}
 C contribution to T2 and Sum_e T(i,e)F(a,e) contribution to T1.
 C
-       call PROBE_T1_90('PRE-FEA-A90/3','PRE-FEA-B90/4',Iuhf)
       CALL FEACONT(ICORE(I0),MAXCOR,IUHF)
-       call Check_T2_VCC(icore(i0),Maxcor,Iuhf)
-       call PROBE_T1_90('PST-FEA-A90/3','PST-FEA-B90/4',Iuhf)
+       call check_t2(icore(i0),Maxcor,Iuhf)
 C
 C Evaluate -P(ij)Sum_e T(im,ab){F(mj)-1/2 sum_m T(j,e)F(m,e)}
 C contribution to T2 and Sum_e T(m,a)F(m,i) contribution to T1.
 C
       CALL FMICONT(ICORE(I0),MAXCOR,IUHF)
-       call Check_T2_VCC(icore(i0),Maxcor,Iuhf)
-       call PROBE_T1_90('PST-FMI-A90/3','PST-FMI-B90/4',Iuhf)
+       call check_t2(icore(i0),Maxcor,Iuhf)
 C
       IF ((METHOD.GT.9.AND.SING1).OR.(METHOD.EQ.6.AND.SING1)) THEN
 
-C Evaluate Sum_e T(im,ae)F(m,e) contribution to T1.
+C Evaluate Sum_e T(im,ae)F(m,e) contribution to T1. 
 C
        CALL FMECONT(ICORE(I0),MAXCOR,IUHF,1)
        IF (IUHF.NE.0) CALL FMECONT(ICORE(I0),MAXCOR,
      &                                  IUHF,2)
 C
-       call Check_T2_VCC(icore(i0),Maxcor,Iuhf)
-       call PROBE_T1_90('PST-FME-A90/3','PST-FME-B90/4',Iuhf)
-C
+       call check_t2(icore(i0),Maxcor,Iuhf)
+C 
 C Evaluate -P(ab)Sum_m T(m,a)<mb||ij> contribution to T2.
-C
+C 
          CALL T1INT2A(ICORE(I0),MAXCOR,IUHF)
 C
 C Evaluate +P(ij)Sum_m T(i,e)<ab||ej> contribution to T2.
@@ -1257,8 +1269,7 @@ C
          IF (IUHF.NE.0) CALL T1INT1(ICORE(I0),MAXCOR,
      &                             IUHF,2)
 C
-       call Check_T2_VCC(icore(i0),Maxcor,Iuhf)
-       call PROBE_T1_90('PST-T1I-A90/3','PST-T1I-B90/4',Iuhf)
+       call check_t2(icore(i0),Maxcor,Iuhf)
       END IF
 C 
       IF (UCC) THEN
@@ -1275,9 +1286,8 @@ C   +P(ij)P(ab) Sum_me T(i,e)T(m,a) W(mb,ej) (DRRNG)
 C   +1/2 Sum_mn Tau(mn,ab)W(mn,ij) + 
 C    1/2 Sum_ef Tau(ij,ef)W(ab,ef)           (DRLAD)
 C
-       call Check_T2_VCC(icore(i0),Maxcor,Iuhf)
+       call check_t2(icore(i0),Maxcor,Iuhf) 
       CALL DRE3EN(ICORE(I0),MAXCOR,IUHF,0)
-       call PROBE_T1_90('PST-DR3-A90/3','PST-DR3-B90/4',Iuhf)
 C
 C DO TdegerWT CONTRIBUTION FOR UCC AND XCC
 C 
@@ -1308,11 +1318,10 @@ C
 C   -1/2 Sum_mef T(im,ef)<ma||ef>  (T2T1AA1, T2T1AB1)
 C   -1/2 Sum_men T(nm,ei)<nm||ei>  (T2T1AA2, T2T1AB2)
 C
-       call Check_T2_VCC(icore(i0),Maxcor,Iuhf)
+       call check_t2(icore(i0),Maxcor,Iuhf) 
 C Also, Do the T1 = T1/{f(i,i) - f(a,a)} to get a new T1
 C
          CALL E4S(ICORE(I0),MAXCOR,IUHF,EDUMMY)
-       call PROBE_T1_90('PST-E4S-A90/3','PST-E4S-B90/4',Iuhf)
       END IF
       CALL AMPSUM(ICORE(I0),MAXCOR,IUHF,0,SING1,'T')
 
@@ -1345,35 +1354,24 @@ C Ajith Perera, 10/2021.
          Write(6,"(20x,a)") " -----------------------------"
          call pccd_reset_vcc(icore(i0),Maxcor,Iuhf,63)
       ENDIF 
-       call Check_T2_VCC(icore(i0),Maxcor,Iuhf)
+       call check_t2(icore(i0),Maxcor,Iuhf)
       CALL NEWT2(ICORE(I0),MAXCOR,IUHF)
 
-       call Check_T2_VCC(icore(i0),Maxcor,Iuhf)
+       call check_t2(icore(i0),Maxcor,Iuhf)
        CALL AMPSUM(ICORE(I0),MAXCOR,IUHF,0,SING1,'T')
-       WRITE(6,*) '@VCC-GAP-DEBUG: after AMPSUM'
-       call Check_T2_VCC(icore(i0),Maxcor,Iuhf)
 
       IF (DAMP_PARAMETER .NE. 1.0D0) THEN
          CALL DAMP_CC_RESIDUAL(ICORE(I0),MAXCOR/IINTFP,IUHF,SING1,
      &                         44,61,90,90,DAMP_PARAMETER)
-      ENDIF
-       WRITE(6,*) '@VCC-GAP-DEBUG: after DAMP_CC_RESIDUAL block'
-       call Check_T2_VCC(icore(i0),Maxcor,Iuhf)
+      ENDIF 
 C
-C WRITE OUT RMS AND MAX DIFFERENCES FOR NEW T2 AND PUT
+C WRITE OUT RMS AND MAX DIFFERENCES FOR NEW T2 AND PUT 
 C NEW ERROR VECTOR
 C
       CALL DRTSTS(ICORE(I0),MAXCOR,ICYCLE,IUHF,ICONVG,ICONTL,
      &            SING1,0,'T')
-       WRITE(6,*) '@VCC-GAP-DEBUG: after DRTSTS'
-       call Check_T2_VCC(icore(i0),Maxcor,Iuhf)
-       WRITE(6,*) '@VCC-SING1-DEBUG: ICYCLE=',ICYCLE,' SING1=',SING1,
-     &            ' READT=',READT,' NONHF=',NONHF
       CALL CMPENG(ICORE(I0),MAXCOR,60,2,ECORR,ENERGY(ICYCLE+1,1),
      &            ENERGY(ICYCLE+1,2),IUHF,1)
-      WRITE(6,*) '@VCC-ENERGY-DEBUG: ICYCLE=',ICYCLE,
-     &           ' E1=',ENERGY(ICYCLE+1,1),' E2=',ENERGY(ICYCLE+1,2)
-      CALL FLUSH(6)
 C
       IF (OSFLAG) THEN
          WRITE(6,81)ENERGY(ICYCLE+1,1)+W
@@ -1750,3 +1748,43 @@ C LISTS IF NECESSARY
       RETURN
       END
 
+
+C ----------------------------------------------------------------------
+C Thin PROGRAM wrapper restoring the standalone xVCC entry point
+C (MAIN__), lost when this module was converted to a SUBROUTINE for
+C pyaces (see project memory: ACES_PROGRAM unification, 2026-08). This
+C calls the shared aces_init/aces_fin pair so the standalone binary
+C manages its own memory exactly as the classic driver's own separate
+C process used to, before the pyaces conversion removed that from
+C inside the subroutine itself.
+C ----------------------------------------------------------------------
+      PROGRAM XVCC
+      IMPLICIT NONE
+
+
+c icore.com : begin
+
+c icore(1) is an anchor in memory that allows subroutines to address memory
+c allocated with malloc. This system will fail if the main memory is segmented
+c or parallel processes are not careful in how they allocate memory.
+
+      integer icore(1)
+      common / / icore
+
+c icore.com : end
+
+
+
+
+
+c istart.com : begin
+      integer         i0, icrsiz
+      common /istart/ i0, icrsiz
+      save   /istart/
+c istart.com : end
+      INTEGER IUHF
+      CALL CRAPSI(ICORE, IUHF, 0)
+      CALL VCC(ICORE(I0), ICRSIZ, IUHF)
+      CALL ACES_FIN
+      STOP
+      END

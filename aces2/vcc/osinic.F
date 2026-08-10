@@ -39,6 +39,24 @@ C
       COMMON /ACTIRR/ IRREPOA,IRREPOB,IRREPVA,IRREPVB
 C
       COMMON /FLAGS/ IFLAGS(100)
+C 2026-08-09: FSIODRV/FSMAP build the IFSPOS/IFSPOSZ/ISCRLC position
+C tables (COMMON /FSIOLOC/) relative to THIS routine's own aliased
+C ICORE dummy argument (the pyaces PROGRAM->SUBROUTINE conversion's
+C standard local-I0-relative convention -- see vcc/vcc.F's own comment
+C on its ISTART_I0 for the full explanation). But FSPUT/FSGET (called
+C later, e.g. from ACTDNMBL) dereference those SAME position numbers
+C via "COMMON / / ICORE(1)", the TRUE unaliased global blank common --
+C not this routine's aliased view. Confirmed via case 028/029/032
+C (TWODET/QRHF openshell-singlet CCSD): FSMAP writes a correct nonzero
+C value at a computed position, and FSPUT reads back 0 moments later,
+C because it's reading a completely different, never-written address.
+C Reach the real /ISTART/ I0 under renamed variables (same trick as
+C vcc.F/vscf.F elsewhere) to convert IFSPOS/IFSPOSZ/ISCRLC to true-
+C global-relative right after FSIODRV returns.
+      INTEGER TRUISTART_I0,TRUISTART_ICRSIZ
+      COMMON /ISTART/ TRUISTART_I0,TRUISTART_ICRSIZ
+      INTEGER IFSPOS,ISCRLC,IFSPOSZ
+      COMMON /FSIOLOC/ IFSPOS(8,22,8),ISCRLC,IFSPOSZ(8,22,8)
       DATA ZILCH,FACTOR/0.D0,1.D10/
 C
       NBAS=NOCCO(1)+NVRTO(1)
@@ -109,6 +127,27 @@ C
 
 C      
       CALL FSIODRV(ICORE,MAXCOR,IUHF,IDO,IACTIVE,NACTIVE,NBAS,I0,1)
+C
+C     Convert the IFSPOS/IFSPOSZ/ISCRLC position tables FSIODRV/FSMAP
+C     just built from this routine's local-ICORE-relative addressing
+C     to true-global-blank-common-relative addressing, since FSPUT/
+C     FSGET (called below, e.g. via ACTDNMBL) dereference them via the
+C     unaliased global blank common, not a dummy argument (see the
+C     comment by this routine's declarations for the full explanation).
+C     0 entries are left as 0 (they mean "no such distribution", not a
+C     real position).
+      IFSDLT = TRUISTART_I0 - 1
+      DO 900 IR1=1,8
+       DO 910 IR2=1,22
+        DO 920 IR3=1,8
+         IF (IFSPOS(IR1,IR2,IR3).NE.0)
+     &      IFSPOS(IR1,IR2,IR3)=IFSPOS(IR1,IR2,IR3)+IFSDLT
+         IF (IFSPOSZ(IR1,IR2,IR3).NE.0)
+     &      IFSPOSZ(IR1,IR2,IR3)=IFSPOSZ(IR1,IR2,IR3)+IFSDLT
+ 920    CONTINUE
+ 910   CONTINUE
+ 900  CONTINUE
+      IF (ISCRLC.NE.0) ISCRLC=ISCRLC+IFSDLT
 C
 C     GET FIRST THE SYMMETRY OF THE ACTIVE ORBITALS
 C

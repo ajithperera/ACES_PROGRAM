@@ -235,6 +235,14 @@ c& new line
       CHARACTER*4 ACT
       DIMENSION ECORR(3)
       INTEGER ICORE(ICRSIZ),ICRSIZ,IUHF,I0
+C Same fix as vcc/vcc.F (see its comment): the pyaces PROGRAM->SUBROUTINE
+C conversion left INCOR's call still assuming I0 is relative to the true,
+C unaliased global blank common (matching /ISTART/), but VLAMBDA's own
+C local I0 (=1 below) is only relative to its OWN aliased ICORE dummy
+C arg. Reach the real /ISTART/ I0 under renamed variables and replay the
+C same advance onto the local I0 after each CALL INCOR.
+      INTEGER ISTART_I0,ISTART_ICRSIZ,ISTART_I0_SAV
+      COMMON /ISTART/ ISTART_I0,ISTART_ICRSIZ
       COMMON /INFO/ NOCCO(2),NVRTO(2)
       COMMON /FLAGS/IFLAGS(100)
       COMMON /FLAGS2/IFLAGS2(500)
@@ -466,7 +474,11 @@ C
 C The above ENDIF is for IHBAR.
 C
 
-      IF (IFLAGS(35).NE.0) CALL INCOR_LAMBDA(I0,ICRSIZ,IUHF)
+      IF (IFLAGS(35).NE.0) THEN
+         ISTART_I0_SAV = ISTART_I0
+         CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+         I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
+      ENDIF
       MAXCOR=ICRSIZ
 C
 C BLOCK OF CODE FOR THIRD-ORDER ROHF AND FOURTH-ORDER CALCULATIONS.
@@ -512,7 +524,7 @@ C
 C   FIRST DENOMINATOR "DEWEIGHT" THE QUAD CONTRIBUTION
 C   (SHOULD BE FIXED IN A LATER VERSION)
 C
-       CALL DEWQ_LAMBDA(ICORE(i0),MAXCOR,IUHF)
+       CALL DEWQ(ICORE(i0),MAXCOR,IUHF)
 c       IF(IUHF.EQ.1) THEN
 c       CALL CHECKGAM(ICORE,44,61)
 c       CALL CHECKGAM(ICORE,45,62)
@@ -674,8 +686,7 @@ C methods, Not sure how many of them actually works.
 C
          IF((METHOD.GE.14.AND.METHOD.LE.18).OR.METHOD.EQ.33.OR.
      &                                         METHOD.EQ.34    )THEN
-           CALL W45T3DRV_LAMBDA(ICORE(i0),MAXCOR,IUHF,106,126,13,4,
-     &                          .FALSE.)
+           CALL W45T3DRV(ICORE(i0),MAXCOR,IUHF,106,126,13,4,.FALSE.)
          ENDIF
 
          IF (IFLAGS2(122) .EQ. 2) THEN
@@ -749,7 +760,7 @@ C
         CALL DRRLE(ICORE(i0),MAXCOR,IUHF,RLECYC,.TRUE.)
        ENDIF
        IF(IFLAGS(21).EQ.1)THEN
-        CALL DIISLST_LAMBDA(1,IUHF,METHOD.GE.6.AND.METHOD.NE.8)
+        CALL DIISLST(1,IUHF,METHOD.GE.6.AND.METHOD.NE.8)
        ENDIF
 
        DO 55 ICYCLE=1,NCYCLE
@@ -759,9 +770,8 @@ C FILL LAMBDA(2) INCREMENTS WITH <IJ||AB> INTEGRALS
 C
 C AND ZERO THE LAMBDA(1) INCREMENTS (ONLY CCSD AND QCISD)
 C
-        CALL INITIN_LAMBDA(ICORE(i0),MAXCOR,IUHF)
-        IF(CCSD.OR.QCISD .OR.CC2) CALL INITSN_LAMBDA(ICORE(i0),MAXCOR,
-     &                                                IUHF)
+        CALL INITIN(ICORE(i0),MAXCOR,IUHF)
+        IF(CCSD.OR.QCISD .OR.CC2) CALL INITSN(ICORE(i0),MAXCOR,IUHF)
 c& new lines
 C
 C     CALCULATE OS CONTRIBUTION WITH THE H(EFF) DERIVATIVE
@@ -934,7 +944,7 @@ C
         ENDIF 
 
         IF(IFLAGS(21).EQ.1)THEN
-         CALL DODIIS0_LAMBDA(ICORE(i0),MAXCOR/IINTFP,IUHF,1,ICYCLE,
+         CALL DODIIS0(ICORE(i0),MAXCOR/IINTFP,IUHF,1,ICYCLE,
      &                ICONVG,ICONTL,SING,144,61,190,0,90,2,70,
      &                '     ')
          CALL DRMOVE(ICORE(i0),MAXCOR,IUHF,100,SING)
@@ -978,8 +988,7 @@ C IFLAGS2(124)=NT3EOMEE (controls EOM triples logic).
            IF( IFLAGS(2).EQ.22.AND.IFLAGS(87).EQ.3 .AND.
      &         (IFLAGS2(124).EQ.4.OR.IFLAGS2(124).EQ.6 .OR.
      &          IFLAGS2(124).EQ.8.OR.IFLAGS2(124).EQ.10    ) )THEN
-             CALL W45T3DRV_LAMBDA(ICORE(i0),MAXCOR,IUHF,384,388,13,0,
-     &                            .TRUE.)
+             CALL W45T3DRV(ICORE(i0),MAXCOR,IUHF,384,388,13,0,.TRUE.)
            ENDIF
            IF (IFLAGS2(122) .EQ. 2) THEN
              CALL   FORMW1(ICORE(i0),MAXCOR,IUHF,.TRUE.)
@@ -1012,7 +1021,14 @@ C-----------------------------------------------------------------------
             CALL ACES_AUXCACHE_FLUSH
             CALL ACES_AUXCACHE_RESET
          END IF
-         CALL FINISH_LAMBDA(ICYCLE+1,pCCD)
+         CALL FINISH(ICYCLE+1,pCCD)
+C     Missing exit: every other "converged, printed summary" branch in
+C     this file RETURNs immediately after (see the IHBAR-only and LCC
+C     branches above). This one fell through into the rest of the CC
+C     loop body and back to the top of "DO 55", running all NCYCLE
+C     iterations regardless of convergence and eventually hitting the
+C     "CC-Lambda did not converge" error even on fully converged jobs.
+         RETURN
         ENDIF
 C
 C DO THE RLE EXTRAPOLATION.
@@ -1047,4 +1063,44 @@ C
  1000 FORMAT(/,77('-'),/,T30,' Entering xlambda',/,77('-'),/)
  1010 FORMAT(/,77('-'),/,T30,' Exiting xlambda',/,77('-'))
       RETURN
+      END
+
+C ----------------------------------------------------------------------
+C Thin PROGRAM wrapper restoring the standalone xLAMBDA entry point
+C (MAIN__), lost when this module was converted to a SUBROUTINE for
+C pyaces (see project memory: ACES_PROGRAM unification, 2026-08). This
+C calls the shared aces_init/aces_fin pair so the standalone binary
+C manages its own memory exactly as the classic driver's own separate
+C process used to, before the pyaces conversion removed that from
+C inside the subroutine itself.
+C ----------------------------------------------------------------------
+      PROGRAM XLAMBDA
+      IMPLICIT NONE
+
+
+c icore.com : begin
+
+c icore(1) is an anchor in memory that allows subroutines to address memory
+c allocated with malloc. This system will fail if the main memory is segmented
+c or parallel processes are not careful in how they allocate memory.
+
+      integer icore(1)
+      common / / icore
+
+c icore.com : end
+
+
+
+
+
+c istart.com : begin
+      integer         i0, icrsiz
+      common /istart/ i0, icrsiz
+      save   /istart/
+c istart.com : end
+      INTEGER IUHF
+      CALL CRAPSI(ICORE, IUHF, 0)
+      CALL VLAMBDA(ICORE(I0), ICRSIZ, IUHF)
+      CALL ACES_FIN
+      STOP
       END

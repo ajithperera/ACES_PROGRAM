@@ -16,16 +16,6 @@
 
 
 
-c Macros beginning with M_ are machine dependant macros.
-c Macros beginning with B_ are blas/lapack routines.
-
-c  M_REAL         set to either "real" or "double precision" depending on
-c                 whether single or double precision math is done on this
-c                 machine
-
-c  M_IMPLICITNONE set iff the fortran compiler supports "implicit none"
-c  M_TRACEBACK    set to the call which gets a traceback if supported by
-c                 the compiler
 
 
 
@@ -49,7 +39,167 @@ c                 the compiler
 
 
 
-cYAU - ACES3 stuff . . . we hope - #include <aces.par>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -127,7 +277,8 @@ C
         ENDIF
       ENDIF
 
-      G_TDENS = (IFLAGS2(h_IFLAGS2_genrlizd_tdens) .Gt. 0) 
+
+      G_TDENS = (IFLAGS2(185) .Gt. 0) 
       CALL GETREC(20,'JOBARC','TOTENERG',IINTFP,ECC)
 
       IF (G_TDENS) THEN

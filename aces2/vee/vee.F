@@ -18,6 +18,13 @@ C
       LOGICAL DAVID,BLOCK_DAVID,LANCZOS
       DOUBLE PRECISION TDAVID, TMULT, POLTOT, R
       DIMENSION ICORE(ICRSIZ)
+C Same fix as vcc/vcc.F and lambda/vlamcc.F (see vcc.F's comment): INCOR
+C needs the real, unaliased /ISTART/ I0, not this routine's own local
+C ICORE(I0)-relative "1" (a mismatch introduced by the pyaces PROGRAM->
+C SUBROUTINE conversion). Reach it under renamed variables and replay
+C the same advance onto the local I0 after each CALL INCOR.
+      INTEGER ISTART_I0,ISTART_ICRSIZ,ISTART_I0_SAV
+      COMMON /ISTART/ ISTART_I0,ISTART_ICRSIZ
       COMMON /MACHSP/ IINTLN,IFLTLN,IINTFP,IALONE,IBITWD
       COMMON /INFO /  NOCCO(2),NVRTO(2)
       COMMON /PROPGRAD/ ESPROP,IOPTROOT,IOPTSYM
@@ -98,7 +105,11 @@ C
          endif
       endif
 
-      IF (IFLAGS(35).NE.0) CALL INCOR(I0,ICRSIZ,IUHF)
+      IF (IFLAGS(35).NE.0) THEN
+         ISTART_I0_SAV = ISTART_I0
+         CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+         I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
+      ENDIF
       MAXCOR=ICRSIZ
       CALL ZERO(POLTOT,9)
 C
@@ -131,7 +142,11 @@ C
         WRITE(6,"(a)") "        ------------------------"
         WRITE(6,"(a)") 
         ICALC = JCALC
-        IF (IFLAGS(35).NE.0) CALL INCOR(I0,ICRSIZ,IUHF)
+        IF (IFLAGS(35).NE.0) THEN
+         ISTART_I0_SAV = ISTART_I0
+         CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+         I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
+      ENDIF
         MAXCOR=ICRSIZ
 CMN END
       IF(CIS)THEN
@@ -278,4 +293,24 @@ CMN      CALL PUTREC(20,'JOBARC','RESTART ',IONE,IONE)
         WRITE(6,*)
       ENDIF
       RETURN
+      END
+
+C ----------------------------------------------------------------------
+C Thin PROGRAM wrapper restoring the standalone xVEE entry point
+C (MAIN__), lost when this module was converted to a SUBROUTINE for
+C pyaces (see project memory: ACES_PROGRAM unification, 2026-08). This
+C calls the shared aces_init/aces_fin pair so the standalone binary
+C manages its own memory exactly as the classic driver's own separate
+C process used to, before the pyaces conversion removed that from
+C inside the subroutine itself.
+C ----------------------------------------------------------------------
+      PROGRAM XVEE
+      IMPLICIT NONE
+#include "icore.com"
+#include "istart.com"
+      INTEGER IUHF
+      CALL CRAPSI(ICORE, IUHF, 0)
+      CALL VEE(ICORE(I0), ICRSIZ, IUHF)
+      CALL ACES_FIN
+      STOP
       END

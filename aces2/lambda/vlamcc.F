@@ -30,6 +30,14 @@ c& new line
       CHARACTER*4 ACT
       DIMENSION ECORR(3)
       INTEGER ICORE(ICRSIZ),ICRSIZ,IUHF,I0
+C Same fix as vcc/vcc.F (see its comment): the pyaces PROGRAM->SUBROUTINE
+C conversion left INCOR's call still assuming I0 is relative to the true,
+C unaliased global blank common (matching /ISTART/), but VLAMBDA's own
+C local I0 (=1 below) is only relative to its OWN aliased ICORE dummy
+C arg. Reach the real /ISTART/ I0 under renamed variables and replay the
+C same advance onto the local I0 after each CALL INCOR.
+      INTEGER ISTART_I0,ISTART_ICRSIZ,ISTART_I0_SAV
+      COMMON /ISTART/ ISTART_I0,ISTART_ICRSIZ
       COMMON /INFO/ NOCCO(2),NVRTO(2)
       COMMON /FLAGS/IFLAGS(100)
       COMMON /FLAGS2/IFLAGS2(500)
@@ -265,7 +273,11 @@ C
 C The above ENDIF is for IHBAR.
 C
 
-      IF (IFLAGS(35).NE.0) CALL INCOR(I0,ICRSIZ,IUHF)
+      IF (IFLAGS(35).NE.0) THEN
+         ISTART_I0_SAV = ISTART_I0
+         CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+         I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
+      ENDIF
       MAXCOR=ICRSIZ
 C
 C BLOCK OF CODE FOR THIRD-ORDER ROHF AND FOURTH-ORDER CALCULATIONS.
@@ -901,6 +913,13 @@ C-----------------------------------------------------------------------
        if (act_spc_cc .and. act .eq. "SAVE")
      &    call modf_amps(ICORE(I0),MAXCOR,IUHF,0,SING,'L',ACT,"AMPS")
 #endif
+C     Missing exit: every other "converged, printed summary" branch in
+C     this file RETURNs immediately after (see the IHBAR-only and LCC
+C     branches above). This one fell through into the rest of the CC
+C     loop body and back to the top of "DO 55", running all NCYCLE
+C     iterations regardless of convergence and eventually hitting the
+C     "CC-Lambda did not converge" error even on fully converged jobs.
+         RETURN
         ENDIF
 C
 C DO THE RLE EXTRAPOLATION.
@@ -935,4 +954,24 @@ C
  1000 FORMAT(/,77('-'),/,T30,' Entering xlambda',/,77('-'),/)
  1010 FORMAT(/,77('-'),/,T30,' Exiting xlambda',/,77('-'))
       RETURN
+      END
+
+C ----------------------------------------------------------------------
+C Thin PROGRAM wrapper restoring the standalone xLAMBDA entry point
+C (MAIN__), lost when this module was converted to a SUBROUTINE for
+C pyaces (see project memory: ACES_PROGRAM unification, 2026-08). This
+C calls the shared aces_init/aces_fin pair so the standalone binary
+C manages its own memory exactly as the classic driver's own separate
+C process used to, before the pyaces conversion removed that from
+C inside the subroutine itself.
+C ----------------------------------------------------------------------
+      PROGRAM XLAMBDA
+      IMPLICIT NONE
+#include "icore.com"
+#include "istart.com"
+      INTEGER IUHF
+      CALL CRAPSI(ICORE, IUHF, 0)
+      CALL VLAMBDA(ICORE(I0), ICRSIZ, IUHF)
+      CALL ACES_FIN
+      STOP
       END

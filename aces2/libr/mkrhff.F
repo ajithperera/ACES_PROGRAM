@@ -203,6 +203,16 @@ c      o initialize IMAP
             IOFFT=IOFFT+NBAS(IRREP)*(NBAS(IRREP)+1)/2
          END DO
 c      o initialize the Fock matrix
+c        H is NOT seeded here: it's added later, unconditionally, via
+c        the "ADD THE 1-ELECTRON CONTRIBUTION" block further down
+c        (shared by both the petite_list and dirscf branches). Seeding
+c        it here too would double-count it -- this branch used to skip
+c        H addition entirely due to a real, now-fixed bug (i011/i012/
+c        i013 dereferencing the wrong address space -- see this
+c        routine's declarations for the full explanation), which was
+c        first misdiagnosed as "H never gets added" before the true
+c        address-space cause was found; a same-shaped local F=H fix
+c        was tried and reverted once that became clear.
          DO I=1,NTOTAL
             F(I)=ZERO
          END DO
@@ -558,7 +568,7 @@ C ks terms
 C end prakash
 C________________________________________________________________
 
-C 
+C
 c ADD THE 1-ELECTRON CONTRIBUTION
       IF (ADDH) CALL XAXPY(NTOTAL,ONE,H,1,F,1)
 #ifdef _PRINTCRAP

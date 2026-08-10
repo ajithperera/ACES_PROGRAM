@@ -700,3 +700,47 @@ C     ************
 C
       RETURN
       End
+
+C ----------------------------------------------------------------------
+C Thin PROGRAM wrapper restoring the standalone xvmol2ja entry point
+C (MAIN__).
+C ----------------------------------------------------------------------
+      PROGRAM XVMOL2JA
+      IMPLICIT NONE
+
+
+c icore.com : begin
+
+c icore(1) is an anchor in memory that allows subroutines to address memory
+c allocated with malloc. This system will fail if the main memory is segmented
+c or parallel processes are not careful in how they allocate memory.
+
+      integer icore(1)
+      common / / icore
+
+c icore.com : end
+
+
+
+
+
+c istart.com : begin
+      integer         i0, icrsiz
+      common /istart/ i0, icrsiz
+      save   /istart/
+c istart.com : end
+      INTEGER IUHF
+C     V2JA's own dummy ICRSIZ argument is disconnected from the
+C     COMMON /ISTART/ ICRSIZ that its internal CrapsI/aces_init call
+C     actually populates (a latent bug from the pyaces PROGRAM->
+C     SUBROUTINE conversion -- pyaces itself never hits this because it
+C     always passes in an already-allocated ICRSIZ from its own earlier
+C     Init() call). Pre-allocate here exactly like the other Category-A
+C     wrappers so V2JA receives a real, non-zero ICRSIZ; its own
+C     internal CrapsI call then just becomes a safe reentrant no-op
+C     (aces_init's xFlag guard skips the redundant malloc).
+      CALL ACES_INIT(ICORE, I0, ICRSIZ, IUHF, .TRUE.)
+      CALL V2JA(ICORE(I0), ICRSIZ, IUHF)
+      CALL ACES_FIN
+      STOP
+      END

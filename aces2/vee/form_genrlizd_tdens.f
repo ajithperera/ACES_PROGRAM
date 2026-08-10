@@ -16,6 +16,7 @@
       DIMENSION SCR(MAXCOR),LENVV(2),LENOO(2),LENVO(2),MAP(6)
       DIMENSION SECMOM(6),GSECMOM(6),RSECMOM(6),TM(3),GM(3),RM(3)
       DOUBLE PRECISION LNORM(200),RNORM(200)
+      INTEGER T1SIZE
 
       LOGICAL VPROP,MBPT2,CC,CCD,RCCD,DRCCD,LOGICAL LCCD,LCCSD,CC2
       CHARACTER*2 SUFFIX(32)
@@ -77,6 +78,9 @@ c machsp.com : end
       CALL GETREC(20,"JOABRC","RNORM   ",I00*IINTFP,RNORM)
       CALL GETREC(20,"JOABRC","LNORM   ",I00*IINTFP,LNORM)
 
+      CALL IZERO(LENVV,2)
+      CALL IZERO(LENOO,2)
+      CALL IZERO(LENVO,2)
       DO ISPIN=1,1+IUHF
          LENVV(ISPIN)=IRPDPD(1,18+ISPIN)
          LENOO(ISPIN)=IRPDPD(1,20+ISPIN)
@@ -101,7 +105,6 @@ C
 
       IONE=1
       CALL GETREC(20,'JOBARC','NBASTOT ',IONE,NAO)
-      NAO2 = NAO* NAO
       NMO=NOCCO(1)+NVRTO(1)
       IDFLMO =ITOP
       IDFLMOG=ITOP   +NAO*NAO
@@ -164,6 +167,15 @@ C
                write(6,"(2a,(1x,i2))") " Reading the right vector",
      +                                  " of state: ",iget
                Call checksum("list-472      :",scr(itop),lenszx,s)
+            Do ispin = 1, 1+iuhf
+               t1size=irpdpd(irrepx,8+ispin)
+               call aces_list_resize(ispin+2,490,t1size)
+            enddo
+            do ispin =3,3-2*iuhf,-1
+               itypel=isytyp(1,43+ispin)
+               ityper=isytyp(2,43+ispin)
+               call newtyp2(irrepx,460+ispin,itypel,ityper,.true.)
+            enddo 
             CALL UPDATES(IRREPX,SCR(ITOP),461,2,490,IUHF)
 
             JDONE = 0
@@ -189,6 +201,15 @@ C
      +                                  " of state : ", Jget 
                Call checksum("list-472      :",scr(itop),lenszy,s)
                Write(6,*)
+                  Do ispin = 1, 1+iuhf
+                     t1size=irpdpd(irrepy,8+ispin)
+                     call aces_list_resize(ispin,490,t1size)
+                  enddo
+                  do ispin =3,3-2*iuhf,-1
+                     itypel=isytyp(1,43+ispin)
+                     ityper=isytyp(2,43+ispin)
+                     call newtyp2(irrepy,443+ispin,itypel,ityper,.true.)
+                  enddo 
                   CALL UPDATES(IRREPY,SCR(ITOP),444,0,490,IUHF)
 
                   CALL RESORT(SCR(ITOP),IINTFP*MAXCOR,IUHF,
@@ -217,9 +238,17 @@ C
                   FACT     =Z*(1.0D0+DFLOAT(1-IUHF))
                   R0       = Z0
                    Write(6, "(a,2F12.8)") "The <L|R>;R0: ", Z,R0
+c 2026-08-09: the two CHECK_TDENS_LISTS debug-print calls that used to be
+c here were removed -- that subroutine does not exist anywhere in this
+c tree (confirmed via a full-tree grep), so this file failed to LINK
+c (undefined reference to check_tdens_lists_) any time 1 was
+c defined, which it always is by default (Makefiles/GNUmakefile.src's own
+c global DEFINES_EXTRA). Pure diagnostic prints, not load-bearing for any
+c actual computation.
                   IF(MBPT2 .OR. LCCD .OR. LCCSD .OR. RCCD .OR. DRCCD 
      &                    .OR. CC2) R0=0.0d0
-                  CALL GDENS(IRREPY,IRREPX,1,SCR(IDOO),SCR(IDVV),
+                  IRREPXY =DIRPRD(IRREPY,IRREPX)
+                  CALL GDENS(IRREPY,IRREPX,IRREPXY,SCR(IDOO),SCR(IDVV),
      &                    SCR(IDVO),SCR(IDOV),SCR(ITOP),MXCOR,IUHF,
      &                    FACT,R0,ZILCH,
      &                    ONE,LSTGRL,LSTGTL,LSTGRLOF,LSTGTLOF,LSTTMP,
@@ -229,7 +258,7 @@ C
 
                   FACT=2.0D0-DFLOAT(IUHF)
                   DO ISPIN=1,1+IUHF
-                     IOFFOO =IDOO+(ISPIN-1)*LENOO(1)
+                   IOFFOO =IDOO+(ISPIN-1)*LENOO(1)
                      IOFFVV =IDVV+(ISPIN-1)*LENVV(1)
                      IOFFVO =IDVO+(ISPIN-1)*LENVO(1)
                      IOFFOV =IDOV+(ISPIN-1)*LENVO(1)
@@ -257,7 +286,7 @@ C
      +                                      Irrepx,Irrepy
                    Write(6,"(a,2(1x,i2))") "Rootx,Rooty   : ",
      +                                      Iroot,Jroot
-                   Call Checksum("TDENS-WRITE",SCR(idflmo),Nao2,s)
+                   Call Checksum("TDENS-WRITE",SCR(idflmo),Nao*Nao,s)
                    Write(6,*)
 
                   ENDDO 

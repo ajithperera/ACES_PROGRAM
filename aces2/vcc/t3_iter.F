@@ -1,13 +1,27 @@
 #include "flags.h"
-      Subroutine T3_iter(Icore, Maxcor, Iuhf)
+      Subroutine T3_iter(Icore, Maxcor, Iuhf, Extrnl_ccsd)
 
       Implicit Double Precision (A-H, O-Z)
 
 C Solve D3T3 = W*T2 + FOO*T3 + FVV T3 iteratively for NON-HF (ROHF and
 C QRHF or anyother) CCSD(T) when semicanonical orbitals can nor be used.
 C Natuallrly built on top of what is available in triples codes.
-C  
+C
+C 2026-08-09: EXTRNL_CCSD used to be silently dropped here -- vcc.F's
+C own CALL T3_ITER(...,EXTRNL_CCSD) already passed 4 arguments, but
+C this routine's signature only declared 3, so the value never arrived
+C (Fortran doesn't check argument counts across a call boundary). This
+C routine then called T3_FINALIZE with only 6 of its 7 arguments,
+C leaving T3_FINALIZE's own EXTRNL_CCSD parameter reading whatever
+C garbage was on the stack -- which happened to evaluate as .TRUE.
+C today, triggering the EXTRNL_CC code paths with a value that was
+C never actually validated as correct. Confirmed via case 124d.fno/
+C 124e.fno (UHF CCSD(T)+FNO): fixing just the immediate symptom this
+C exposed (a missing SET_EXTRNL_CC_LISTS+ZEROLIST init in T3_FINALIZE,
+C see its own comment) was not enough on its own -- this arity mismatch
+C is the actual root cause and needed fixing at both call levels.
       Logical Int1, Int2, NONHF, T3STOR, PRESNT, INCORE, INIT
+      Logical Extrnl_ccsd
       Logical Convrg(4), Converged, T3GRAD
       Double Precision ALLT3, RMS
       Dimension Icore(Maxcor), RMS(4)
@@ -204,7 +218,7 @@ C
 C
 C     Set W intermediate list numbers
 C
-      CALL INITRP 
+      CALL INITRP_TRP 
 
       IF(IUHF.EQ.1)THEN
         CALL TSPABCI(ICORE,MAXCOR,1)
@@ -569,7 +583,8 @@ C
 C Compute the energy and prepare for gradients.
 C 
       Write(*,*) "Entering the T3_finalize"
-      CALL T3_finalize(ICore, Maxcor, Iuhf, .TRUE., .TRUE., INCORE)
+      CALL T3_finalize(ICore, Maxcor, Iuhf, .TRUE., .TRUE., INCORE,
+     &                 Extrnl_ccsd)
 
       Return
       End

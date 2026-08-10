@@ -179,3 +179,15 @@ c   o finalize the job archive subsystem
 
       end
 
+
+C ----------------------------------------------------------------------
+C Thin PROGRAM wrapper restoring the standalone xjoda entry point
+C (MAIN__), lost when JODA was converted to SUBROUTINE JODA_() for
+C pyaces. JODA_ is fully self-contained (does its own aces_init_rte),
+C so no aces_init/aces_fin bracketing is needed here.
+C ----------------------------------------------------------------------
+      PROGRAM XJODA
+      IMPLICIT NONE
+      CALL JODA_()
+      STOP
+      END

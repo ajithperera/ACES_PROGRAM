@@ -216,9 +216,14 @@ C
                   R0       = Z0
 #ifdef _DEBUG_LVL0
                    Write(6, "(a,2F12.8)") "The <L|R>;R0: ", Z,R0
-                  call check_tdens_lists(irrepx,scr,maxcor,461,2,iuhf)
-                  call check_tdens_lists(irrepy,scr,maxcor,444,0,iuhf)
-#endif 
+c 2026-08-09: the two CHECK_TDENS_LISTS debug-print calls that used to be
+c here were removed -- that subroutine does not exist anywhere in this
+c tree (confirmed via a full-tree grep), so this file failed to LINK
+c (undefined reference to check_tdens_lists_) any time _DEBUG_LVL0 was
+c defined, which it always is by default (Makefiles/GNUmakefile.src's own
+c global DEFINES_EXTRA). Pure diagnostic prints, not load-bearing for any
+c actual computation.
+#endif
                   IF(MBPT2 .OR. LCCD .OR. LCCSD .OR. RCCD .OR. DRCCD 
      &                    .OR. CC2) R0=0.0d0
                   IRREPXY =DIRPRD(IRREPY,IRREPX)

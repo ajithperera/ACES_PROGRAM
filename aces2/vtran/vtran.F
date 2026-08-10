@@ -202,7 +202,7 @@ C
 C
 C FORM SYMMETRY VECTORS
 C
-      CALL SYMDRV(ICORE(I0),MAXCOR,NCOMP,IUHF)
+      CALL SYMDRV_VTRAN(ICORE(I0),MAXCOR,NCOMP,IUHF)
 c-----------------------------------------------------------------------
 c--  For the second run in Drop-MO analytical gradient  ------ KB ------
 c-----------------------------------------------------------------------
@@ -413,8 +413,28 @@ c-----------------------------------------------------------------------
      &            ICORE(I020),ICORE(I030),ICORE(I040),ICORE(I050),
      &            ICORE(I060))
        NCOMP=NBASIS-NDROP
-       CALL SYMDRV(ICORE(I0),MAXCOR,NCOMP,IUHF)
+       CALL SYMDRV_VTRAN(ICORE(I0),MAXCOR,NCOMP,IUHF)
       endif
 c-----------------------------------------------------------------------
       RETURN
+      END
+
+C ----------------------------------------------------------------------
+C Thin PROGRAM wrapper restoring the standalone xVTRAN entry point
+C (MAIN__), lost when this module was converted to a SUBROUTINE for
+C pyaces (see project memory: ACES_PROGRAM unification, 2026-08). This
+C calls the shared aces_init/aces_fin pair so the standalone binary
+C manages its own memory exactly as the classic driver's own separate
+C process used to, before the pyaces conversion removed that from
+C inside the subroutine itself.
+C ----------------------------------------------------------------------
+      PROGRAM XVTRAN
+      IMPLICIT NONE
+#include "icore.com"
+#include "istart.com"
+      INTEGER IUHF
+      CALL CRAPSI(ICORE, IUHF, 0)
+      CALL VTRAN(ICORE(I0), ICRSIZ, IUHF)
+      CALL ACES_FIN
+      STOP
       END

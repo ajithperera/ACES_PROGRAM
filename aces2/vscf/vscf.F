@@ -57,6 +57,21 @@ c...watson...
       DIMENSION IADERR(200),IADFCK(200,2)
 C
       INTEGER ICORE(ICRSIZ),ICRSIZ,IUHFARG,I0
+C Same class of bug as vcc/vcc.F's INCOR fix (see its comment there for
+C the full explanation): i011/i012/i013 below are computed relative to
+C THIS routine's own aliased ICORE dummy arg (the pyaces PROGRAM->
+C SUBROUTINE conversion's local I0=1 convention), but they get shared
+C via COMMON /GMSdirect/ to mkrhff.F/mkuhff.F/SCFINT, which dereference
+C them against the TRUE, unaliased, global blank common (via their own
+C "#include icore.com") -- landing at the wrong address entirely
+C (confirmed: XINTS/DSH read back as denormalized garbage or zero,
+C causing the GAMESS-direct-SCF Schwarz screening to skip literally
+C every shell quadruplet). Fixed below by converting i011/i012/i013 to
+C true-global-relative offsets right after they're computed, using the
+C same renamed-/ISTART/-common trick (can't use the name ISTART itself
+C here -- already taken by the unrelated RPPINF common below).
+      INTEGER TRUISTART_I0,TRUISTART_ICRSIZ
+      COMMON /ISTART/ TRUISTART_I0,TRUISTART_ICRSIZ
       COMMON /MACHSP/ IINTLN,IFLTLN,IINTFP,IALONE,IBITWD
       COMMON /FILES/  LUOUT,MOINTS
       COMMON /FLAGS/  IFLAGS(100)
@@ -1302,6 +1317,15 @@ C ignore that I will do so
 C scfks to provide  the information that it is KS calc
 C dcore(iVxc) store Vxc matrix
 
+c        i011/i012/i013 must be TRUE-GLOBAL-relative for MKRHFF's own
+c        SCFINT call (see this routine's header comment) -- toggle from
+c        the VSCF-local-relative values the xSHLDEN call just above
+c        needed, then toggle back immediately after.
+         IF (DIRSCF) THEN
+            I011=I011+(TRUISTART_I0-1)
+            I012=I012+(TRUISTART_I0-1)
+            I013=I013+(TRUISTART_I0-1)
+         END IF
             CALL MKRHFF(ICORE(I040),
      &                  ICORE(I030),ICORE(I010),
      &                  ICORE(I055),ICORE(I056),
@@ -1315,6 +1339,11 @@ C dcore(iVxc) store Vxc matrix
      &                  dcore(izvalao),dcore(izvalgradao),
      &                  dcore(iztotwt),max_angpts,natoms,
      &                  intnumradpts,ncount,kshf)
+         IF (DIRSCF) THEN
+            I011=I011-(TRUISTART_I0-1)
+            I012=I012-(TRUISTART_I0-1)
+            I013=I013-(TRUISTART_I0-1)
+         END IF
 C small letter means new stuff
 C end prakash
 C-------------------------------------------------------------------
@@ -1395,6 +1424,11 @@ c find maxima of shell-pair densities in icore(i012)
 cwc0
             
             call zero(icore(i040),itriln(nirrep+1))
+         IF (DIRSCF) THEN
+            I011=I011+(TRUISTART_I0-1)
+            I012=I012+(TRUISTART_I0-1)
+            I013=I013+(TRUISTART_I0-1)
+         END IF
             CALL MKUHFF(ICORE(I040),ICORE(I041),ICORE(I030),
      &                  ICORE(I031),ICORE(I051),ICORE(I010),
      &                  ICORE(I055),ICORE(I056),
@@ -1408,6 +1442,11 @@ cwc0
      &                  dcore(izvalao),dcore(izvalgradao),
      &                  dcore(iztotwt),max_angpts,natoms,
      &                  intnumradpts,ncount,kshf)
+         IF (DIRSCF) THEN
+            I011=I011-(TRUISTART_I0-1)
+            I012=I012-(TRUISTART_I0-1)
+            I013=I013-(TRUISTART_I0-1)
+         END IF
 
 cwc1
         if (fdiff) then
@@ -1756,6 +1795,11 @@ C
      &                 icore (i030), etot, dmax, itertype)
          call putrec(20, 'JOBARC', 'SCFEVCA0', nbas*nbas*iintfp, 
      &               Icore(i060))
+         IF (DIRSCF) THEN
+            I011=I011+(TRUISTART_I0-1)
+            I012=I012+(TRUISTART_I0-1)
+            I013=I013+(TRUISTART_I0-1)
+         END IF
          CALL MKRHFF(ICORE(I040),
      &               ICORE(I030),ICORE(I010),
      &               ICORE(I055),ICORE(I056),
@@ -1769,6 +1813,11 @@ C
      &               dcore(izvalao),dcore(izvalgradao),
      &               dcore(iztotwt),max_angpts,natoms,
      &               intnumradpts,ncount,kshf)
+         IF (DIRSCF) THEN
+            I011=I011-(TRUISTART_I0-1)
+            I012=I012-(TRUISTART_I0-1)
+            I013=I013-(TRUISTART_I0-1)
+         END IF
          call getrec(20, 'JOBARC', 'SCFEVLA0', nbas*iintfp, 
      &               icore(i050))
          call getrec(20, 'JOBARC', 'SCFEVCA0', nbas*nbas*iintfp, 
@@ -1824,6 +1873,11 @@ CSSS           call xSHLDEN
 CSSS     >       (iuhf,icore(i030),icore(i030),icore(i012),icore(i057),nbas)
         end if
 cwc0
+         IF (DIRSCF) THEN
+            I011=I011+(TRUISTART_I0-1)
+            I012=I012+(TRUISTART_I0-1)
+            I013=I013+(TRUISTART_I0-1)
+         END IF
             CALL MKRHFF(ICORE(I040),
      &                  ICORE(I030),ICORE(I010),
      &                  ICORE(I055),ICORE(I056),
@@ -1837,6 +1891,11 @@ cwc0
      &                  dcore(izvalao),dcore(izvalgradao),
      &                  dcore(iztotwt),max_angpts,natoms,
      &                  intnumradpts,ncount,kshf)
+         IF (DIRSCF) THEN
+            I011=I011-(TRUISTART_I0-1)
+            I012=I012-(TRUISTART_I0-1)
+            I013=I013-(TRUISTART_I0-1)
+         END IF
 C
          ELSE IF (IUHF.EQ.1) THEN
 C         o UHF
@@ -1889,6 +1948,11 @@ cwc1
      >       (iuhf,icore(i030),icore(i031),icore(i012),icore(i057),nbas)
         end if
 cwc0
+         IF (DIRSCF) THEN
+            I011=I011+(TRUISTART_I0-1)
+            I012=I012+(TRUISTART_I0-1)
+            I013=I013+(TRUISTART_I0-1)
+         END IF
             CALL MKUHFF(ICORE(I040),ICORE(I041),ICORE(I030),
      &                  ICORE(I031),ICORE(I051),ICORE(I010),
      &                  ICORE(I055),ICORE(I056),
@@ -1902,6 +1966,11 @@ cwc0
      &                  dcore(izvalao),dcore(izvalgradao),
      &                  dcore(iztotwt),max_angpts,natoms,
      &                  intnumradpts,ncount,kshf)
+         IF (DIRSCF) THEN
+            I011=I011-(TRUISTART_I0-1)
+            I012=I012-(TRUISTART_I0-1)
+            I013=I013-(TRUISTART_I0-1)
+         END IF
 C
          END IF
 C
@@ -2548,3 +2617,23 @@ C to disk.
       RETURN
       END
 
+
+C ----------------------------------------------------------------------
+C Thin PROGRAM wrapper restoring the standalone xVSCF entry point
+C (MAIN__), lost when this module was converted to a SUBROUTINE for
+C pyaces (see project memory: ACES_PROGRAM unification, 2026-08). This
+C calls the shared aces_init/aces_fin pair so the standalone binary
+C manages its own memory exactly as the classic driver's own separate
+C process used to, before the pyaces conversion removed that from
+C inside the subroutine itself.
+C ----------------------------------------------------------------------
+      PROGRAM XVSCF
+      IMPLICIT NONE
+#include "icore.com"
+#include "istart.com"
+      INTEGER IUHF
+      CALL CRAPSI(ICORE, IUHF, 0)
+      CALL VSCF(ICORE(I0), ICRSIZ, IUHF)
+      CALL ACES_FIN
+      STOP
+      END

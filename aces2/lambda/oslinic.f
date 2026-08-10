@@ -58,6 +58,17 @@ C
       COMMON /ACTIRR/ IRREPOA,IRREPOB,IRREPVA,IRREPVB
 C
       COMMON /FLAGS/ IFLAGS(100)
+C 2026-08-09: same fix as vcc/osinic.F (see its comment for the full
+C explanation) -- FSIODRV/FSMAP build IFSPOS/IFSPOSZ/ISCRLC relative to
+C this routine's own aliased ICORE dummy argument, but FSPUT/FSGET
+C dereference them via the true unaliased global blank common. Applied
+C proactively here (not yet exercised by any fast-suite case) since
+C OSLINIC is structurally identical to OSINIC, which had this exact bug
+C confirmed via case 028/029/032.
+      INTEGER TRUISTART_I0,TRUISTART_ICRSIZ
+      COMMON /ISTART/ TRUISTART_I0,TRUISTART_ICRSIZ
+      INTEGER IFSPOS,ISCRLC,IFSPOSZ
+      COMMON /FSIOLOC/ IFSPOS(8,22,8),ISCRLC,IFSPOSZ(8,22,8)
       DATA ZILCH,FACTOR/0.D0,1.D10/
 C
       NBAS=NOCCO(1)+NVRTO(1)
@@ -128,6 +139,22 @@ C
       IACTIVE(2,2)=IACTO(4)
 C      
       CALL FSIODRV(ICORE,MAXCOR,IUHF,IDO,IACTIVE,NACTIVE,NBAS,I0,1)
+C
+C     Convert IFSPOS/IFSPOSZ/ISCRLC to true-global-relative -- see the
+C     comment by this routine's declarations, and vcc/osinic.F's own
+C     identical fix, for the full explanation.
+      IFSDLT = TRUISTART_I0 - 1
+      DO 900 IR1=1,8
+       DO 910 IR2=1,22
+        DO 920 IR3=1,8
+         IF (IFSPOS(IR1,IR2,IR3).NE.0)
+     &      IFSPOS(IR1,IR2,IR3)=IFSPOS(IR1,IR2,IR3)+IFSDLT
+         IF (IFSPOSZ(IR1,IR2,IR3).NE.0)
+     &      IFSPOSZ(IR1,IR2,IR3)=IFSPOSZ(IR1,IR2,IR3)+IFSDLT
+ 920    CONTINUE
+ 910   CONTINUE
+ 900  CONTINUE
+      IF (ISCRLC.NE.0) ISCRLC=ISCRLC+IFSDLT
 C
 C     GET FIRST THE SYMMETRY OF THE ACTIVE ORBITALS
 C

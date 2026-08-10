@@ -680,3 +680,27 @@ C     ************
 C
       RETURN
       End
+
+C ----------------------------------------------------------------------
+C Thin PROGRAM wrapper restoring the standalone xvmol2ja entry point
+C (MAIN__).
+C ----------------------------------------------------------------------
+      PROGRAM XVMOL2JA
+      IMPLICIT NONE
+#include "icore.com"
+#include "istart.com"
+      INTEGER IUHF
+C     V2JA's own dummy ICRSIZ argument is disconnected from the
+C     COMMON /ISTART/ ICRSIZ that its internal CrapsI/aces_init call
+C     actually populates (a latent bug from the pyaces PROGRAM->
+C     SUBROUTINE conversion -- pyaces itself never hits this because it
+C     always passes in an already-allocated ICRSIZ from its own earlier
+C     Init() call). Pre-allocate here exactly like the other Category-A
+C     wrappers so V2JA receives a real, non-zero ICRSIZ; its own
+C     internal CrapsI call then just becomes a safe reentrant no-op
+C     (aces_init's xFlag guard skips the redundant malloc).
+      CALL ACES_INIT(ICORE, I0, ICRSIZ, IUHF, .TRUE.)
+      CALL V2JA(ICORE(I0), ICRSIZ, IUHF)
+      CALL ACES_FIN
+      STOP
+      END

@@ -886,16 +886,18 @@ endif
 
 # the names of all the ACES stand-alone libraries
 # If ${CURR} is in this string, then BUILDBIN=NO.
-# 2026-08-04, acesii_build_pic (pyaces's own independent tree) ONLY: all 12
+# 2026-08-04, acesii_build_pic (pyaces's own independent tree): the 12
 # PROGRAM->SUBROUTINE pyaces conversions (intprc, vmol, vscf, vtran, vcc,
-# hbar, lambda, vee, pccd, joda, props, vmol2ja -- see project memory) no
-# longer have a MAIN__ symbol, so a top-level `gmake` trying to link
-# xjoda/xvcc/etc as standalone binaries fails with "undefined reference to
-# `MAIN__'". Added here so BUILDBIN=NO for exactly these 12 in this tree
-# only -- .a libraries still get built and installed normally (that's all
-# pyaces's own build.sh actually needs). Do NOT copy this change into
-# ~/Develop/ACESII_build -- that tree's own copies of these files are
-# unconverted and its xjoda/xvcc/etc must still build.
+# hbar, lambda, vee, pccd, joda, props, vmol2ja -- see project memory) had
+# lost their MAIN__ symbol, so a top-level `gmake` trying to link
+# xjoda/xvcc/etc as standalone binaries failed with "undefined reference to
+# `MAIN__'", and were temporarily listed here to suppress binary linking.
+# 2026-08-09: each of the 12 now carries its own thin PROGRAM wrapper
+# (appended to the same source file that lost its PROGRAM statement, e.g.
+# vscf/vscf.F's SUBROUTINE VSCF plus a new PROGRAM XVSCF at the bottom of
+# the same file) that calls aces_init/aces_fin itself and then the
+# subroutine -- restores a MAIN__ for each, so none of the 12 need to be
+# in this library-only list anymore. Removed here accordingly.
 ACES_LIBS = \
    mpistubs mpw p_mpw blas lapack lb eispack linpack \
    tools nlo \
@@ -906,8 +908,7 @@ ACES_LIBS = \
    imm omm symtools diagtools \
    sbtools ecplib blockdave\
    mrcca3 mrcccore apg apg2 cse_mn eomprocs mbdirect mbgrad mbtest mbdiag mbtools \
-   molcas oeptools lnczos liboo libpccd \
-   intprc vmol joda vcc vscf vtran hbar lambda vee pccd props vmol2ja
+   molcas oeptools lnczos liboo libpccd
 
 # the names of the parallel libraries and binaries
 PACES_DIRS = \
@@ -930,7 +931,7 @@ ACES_LINK_LISTS = \
    rspdens1:libr2:crust:${LIST_DEF_LIBS} \
    findif:joda:symcor:ecplib:${LIST_DEF_LIBS} \
    joda:symcor:ecplib:${LIST_DEF_LIBS} \
-   lambda:trp:librt3:libr2:vcc:pccd:${LIST_DEF_LIBS} \
+   lambda:trp:librt3:libr2:vcc:pccd:${LIST_DEF_LIBS}:vcc:libr2 \
    nmr:libr2:${LIST_DEF_LIBS} \
    vcc:trp:librt3:libr2:crust:pccd:${LIST_DEF_LIBS} \
    lcct:trp:librt3:libr2:crust:${LIST_DEF_LIBS} \
@@ -984,7 +985,7 @@ ACES_LINK_LISTS = \
    tdee:vee:vcceh:lnczos:libr2:${LIST_DEF_LIBS} \
    scrnc:vcceh:libr2:${LIST_DEF_LIBS} \
    ringcc:vcc:libr2:${LIST_DEF_LIBS} \
-   pccd:libpccd:vcc:dens:lambda:libr2:liboo:${LIST_DEF_LIBS} \
+   pccd:libpccd:trp:vcc:dens:lambda:libr2:liboo:${LIST_DEF_LIBS} \
    pccd_drpmo:pccd:libpccd:vcc:dens:lambda:libr2:liboo:${LIST_DEF_LIBS} \
    psi4dbg:pccd:libpccd:vcc:dens:lambda:trp:librt3:libr2:liboo:${LIST_DEF_LIBS} \
    ringcl:ringcc:vcc:libr2:${LIST_DEF_LIBS} \

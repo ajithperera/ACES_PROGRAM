@@ -258,6 +258,12 @@ c      o initialize IMAP
             IOFFT=IOFFT+NBAS(IRREP)*(NBAS(IRREP)+1)/2
          END DO
 c      o initialize the Fock matrix
+c        H is added later, unconditionally, via the (default-active,
+c        #ifndef _ADD_H_AT_THE_VERY_END) "ADD THE 1-ELECTRON
+c        CONTRIBUTION" block further down in this same dirscf branch
+c        -- seeding it here too would double-count H (confirmed via
+c        MKRHFF's own analogous, now-reverted attempt: see that
+c        routine's dirscf F-init comment).
          DO I = 1,NTOTAL
             FA(I)=ZERO
          END DO

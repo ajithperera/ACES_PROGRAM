@@ -44,7 +44,7 @@ tl_tmp += \
           lib bin include \
           module% \
           scr tmp work test configure \
-          CVS Basis Info Makefiles Scripts Test%
+          CVS Basis Info Makefiles Scripts Test aces.py%
 tl_tmp += \
           molcas.% \
           %ource \
@@ -77,23 +77,24 @@ endif
 
 # libs and bins are (currently) built exactly the same way. This allows
 # us to list certains bins in tl_libs after the particular
-# libs they depend on (e.g., joda:symcor:ecp:libr -> "libr ecp symcor joda").
+# libs they depend on (e.g., joda:symcor:ecplib:libr -> "libr ecp symcor joda").
 # Use this if one AME depends on another AME (e.g., vscf_ks:intgrt:libra3).
 tl_tmp :=
 tl_tmp += \
           mpistubs mpw p_mpw blas lapack eispack linpack \
-          lb tools \
-          acescore p_acescore acesutil libr ecp symcor joda \
-          crust libr2 librt3 trp vcc
+          lb tools nlo blockdave liboo libpccd \
+          acescore p_acescore acesutil libr libr_extn ecplib symcor joda \
+          crust libr2 librt3 oed erd trp dens vcc lambda liboo lsccresp \
+          a3ecp vea ringcc aces2_libr
 tl_tmp += \
-          oed erd gamess p_gamess \
+          oed erd soi gamess p_gamess \
           sbtools sbcore libra3 intgrt oeptools \
           molcas util1 util2 util3 aixio parautil sewutil getmem_ma molpro \
           ${tl_mrcc_libs} \
           diagtools symtools omm imm
 tl_tmp += \
           vmol vmol2ja vscf vtran intprc lambda dens anti bcktrn vdint \
-          vcceh vee pdens
+          hbar vcceh vee pdens aces2 pccd runpccd psi4dbg
 tl_libs := $(strip ${tl_tmp})
 
 # Mature subtrees have their own build environment and should minimally

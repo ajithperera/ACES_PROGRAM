@@ -419,8 +419,18 @@ c
 C
 C INITIALIZE MACHINE DEPENDENT PARAMETERS
 C
+c   o the pyaces conversion left this subroutine's own top-level
+c     `CALL CRAPSI(ICORE(1),IUHF,0)` in place even though ICORE/MAXCOR/
+c     IUHF are now caller-supplied dummy args, not this routine's own
+c     allocation -- calling it again here corrupted the caller-supplied
+c     MAXCOR (observed live: MAXCOR jumped from the correct caller value
+c     to IFLAGS(36), CRAPSI's own internally-recomputed request size,
+c     immediately after this call returned), causing an out-of-bounds
+c     write a few lines below and a SIGSEGV in every standalone run.
+c     The caller (see the PROGRAM wrapper at the bottom of this file)
+c     already does the equivalent CRAPSI/aces_init call once per
+c     process, which is all that's needed -- removed here.
       if (isbwcc) iref=1
-      CALL CRAPSI(ICORE(1),IUHF,0)
       if (isbwcc) call bwprep(nocco,nvrto,iuhf)
 C
       CALL SETMET_PROC
@@ -703,3 +713,43 @@ CSSS      call check_ints(icore(i0),Maxcor,iuhf,.false.)
       RETURN
       END
 
+
+C ----------------------------------------------------------------------
+C Thin PROGRAM wrapper restoring the standalone xINTPRC entry point
+C (MAIN__), lost when this module was converted to a SUBROUTINE for
+C pyaces (see project memory: ACES_PROGRAM unification, 2026-08). This
+C calls the shared aces_init/aces_fin pair so the standalone binary
+C manages its own memory exactly as the classic driver's own separate
+C process used to, before the pyaces conversion removed that from
+C inside the subroutine itself.
+C ----------------------------------------------------------------------
+      PROGRAM XINTPRC
+      IMPLICIT NONE
+
+
+c icore.com : begin
+
+c icore(1) is an anchor in memory that allows subroutines to address memory
+c allocated with malloc. This system will fail if the main memory is segmented
+c or parallel processes are not careful in how they allocate memory.
+
+      integer icore(1)
+      common / / icore
+
+c icore.com : end
+
+
+
+
+
+c istart.com : begin
+      integer         i0, icrsiz
+      common /istart/ i0, icrsiz
+      save   /istart/
+c istart.com : end
+      INTEGER IUHF
+      CALL CRAPSI(ICORE, IUHF, 0)
+      CALL INTPROC(ICORE(I0), ICRSIZ, IUHF)
+      CALL ACES_FIN
+      STOP
+      END

@@ -22,6 +22,24 @@ C
       CHARACTER*4 ACT
       DIMENSION ECORR(3)
       INTEGER ICORE(ICRSIZ),ICRSIZ,IUHF,I0
+C The pyaces conversion turned this routine's own ICORE from a blank-
+C common-backed array (matching every OTHER legacy module) into a dummy
+C argument, aliased by the caller to start partway into the real heap.
+C I0 above is a LOCAL convention (=1) relative to THAT aliased array,
+C correct for every "CALL X(ICORE(I0),...)" site in this file since
+C Fortran composes the real address automatically for array-reference
+C arguments. INCOR is the one exception: it takes I0 as a bare NUMBER
+C and (via ACES_AUXCACHE_LDBLK) indexes the true, unaliased, global
+C blank common directly -- so it needs the real /ISTART/ I0, not this
+C routine's local ICORE(I0)-relative "1". Declared under renamed local
+C variables (I0/ICRSIZ are already taken) purely to reach that value.
+C INCOR/LDBLK also ADVANCE I0 as they cache lists (reserving that
+C region so later writes don't clobber it) -- in the original PROGRAM
+C VCC this was automatic (I0 and /ISTART/'s I0 were the same variable).
+C Here they are not, so the delta ISTART_I0 moves by is replayed onto
+C this routine's own local I0 after every CALL INCOR below.
+      INTEGER ISTART_I0,ISTART_ICRSIZ,ISTART_I0_SAV
+      COMMON /ISTART/ ISTART_I0,ISTART_ICRSIZ
       COMMON /INFO/ NOCCO(2),NVRTO(2)
       COMMON /FLAGS/  IFLAGS(100)
       COMMON /FLAGS2/ IFLAGS2(500)
@@ -310,7 +328,9 @@ C
             CALL SETLST(ICORE(I0),MAXCOR,IUHF)
             CALL INITIN(ICORE(I0),MAXCOR,IUHF)
             CALL INITSN(ICORE(I0),MAXCOR,IUHF)
-            CALL INCOR(I0,ICRSIZ,IUHF)
+            ISTART_I0_SAV = ISTART_I0
+            CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+            I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
             MAXCOR = ICRSIZ
             CALL RNABIJ(ICORE(I0),MAXCOR,IUHF,'T')
             CALL GENINT(ICORE(I0),MAXCOR,IUHF,2,DO_HBAR_4LCCSD)
@@ -449,7 +469,9 @@ C
             CALL SETLST(ICORE(I0),MAXCOR,IUHF)
             CALL INITIN(ICORE(I0),MAXCOR,IUHF)
             CALL INITSN(ICORE(I0),MAXCOR,IUHF)
-            CALL INCOR(I0,ICRSIZ,IUHF)
+            ISTART_I0_SAV = ISTART_I0
+            CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+            I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
             MAXCOR = ICRSIZ
             CALL RNABIJ(ICORE(I0),MAXCOR,IUHF,'T')
             CALL GENINT(ICORE(I0),MAXCOR,IUHF,2,DO_HBAR_4LCCSD)
@@ -540,7 +562,9 @@ C Ajith Perera, 02/2017.
             CALL SETLST(ICORE(I0),MAXCOR,IUHF)
             CALL INITIN(ICORE(I0),MAXCOR,IUHF)
             CALL INITSN(ICORE(I0),MAXCOR,IUHF)
-            CALL INCOR(I0,ICRSIZ,IUHF)
+            ISTART_I0_SAV = ISTART_I0
+            CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+            I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
             MAXCOR = ICRSIZ
             CALL RNABIJ(ICORE(I0),MAXCOR,IUHF,'T')
             CALL GENINT(ICORE(I0),MAXCOR,IUHF,2,DO_HBAR_4LCCSD)
@@ -591,7 +615,9 @@ C BY CALLING BRUECKIT
                       CALL SETLST(ICORE(I0),MAXCOR,IUHF)
                       CALL INITIN(ICORE(I0),MAXCOR,IUHF)
                       CALL INITSN(ICORE(I0),MAXCOR,IUHF)
-                      CALL INCOR(I0,ICRSIZ,IUHF)
+                      ISTART_I0_SAV = ISTART_I0
+                      CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+                      I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
                       MAXCOR = ICRSIZ
 CSSS                      CALL DRMOVE(ICORE(I0),MAXCOR,IUHF,0,.FALSE.)
                       CALL RNABIJ(ICORE(I0),MAXCOR,IUHF,'T')
@@ -608,7 +634,9 @@ CSSS                      CALL DRMOVE(ICORE(I0),MAXCOR,IUHF,0,.FALSE.)
 C
 C FOR GRADIENT CALCULATION, INITIALIZE ``GAMLAM-LISTS'' HERE
 C
-            CALL INCOR(I0,ICRSIZ,IUHF)
+            ISTART_I0_SAV = ISTART_I0
+            CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+            I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
             MAXCOR = ICRSIZ
 C
             IF (GRAD.AND.METHOD.GT.1) THEN
@@ -629,7 +657,9 @@ C HF CASES
 C
          ELSE IF (MBPT3) THEN
             CALL SETLST(ICORE(I0),MAXCOR,IUHF)
-            CALL INCOR(I0,ICRSIZ,IUHF)
+            ISTART_I0_SAV = ISTART_I0
+            CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+            I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
             MAXCOR = ICRSIZ
             CALL RNABIJ(ICORE(I0),MAXCOR,IUHF,'T')
             CALL INMBPT(ICORE(I0),MAXCOR,IUHF)
@@ -644,7 +674,9 @@ C
 C FOURTH-ORDER LOGIC.  COMPUTE D3 AND D4 ON FIRST PASS, THEN GET QUADS.
 C
             CALL SETLST(ICORE(I0),MAXCOR,IUHF)
-            CALL INCOR(I0,ICRSIZ,IUHF)
+            ISTART_I0_SAV = ISTART_I0
+            CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+            I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
             MAXCOR=ICRSIZ
             CALL RNABIJ(ICORE(I0),MAXCOR,IUHF,'T')
             CALL INMBPT(ICORE(I0),MAXCOR,IUHF)
@@ -787,7 +819,9 @@ C
       IF (IFLAGS(21).EQ.1) THEN
          CALL DIISLST(1,IUHF,METHOD.GE.6.AND.METHOD.NE.8)
       END IF
-      CALL INCOR(I0,ICRSIZ,IUHF)
+      ISTART_I0_SAV = ISTART_I0
+      CALL INCOR(ISTART_I0,ICRSIZ,IUHF)
+      I0 = I0 + (ISTART_I0 - ISTART_I0_SAV)
       MAXCOR = ICRSIZ
 
       icycle = 1
@@ -1459,3 +1493,23 @@ C LISTS IF NECESSARY
       RETURN
       END
 
+
+C ----------------------------------------------------------------------
+C Thin PROGRAM wrapper restoring the standalone xVCC entry point
+C (MAIN__), lost when this module was converted to a SUBROUTINE for
+C pyaces (see project memory: ACES_PROGRAM unification, 2026-08). This
+C calls the shared aces_init/aces_fin pair so the standalone binary
+C manages its own memory exactly as the classic driver's own separate
+C process used to, before the pyaces conversion removed that from
+C inside the subroutine itself.
+C ----------------------------------------------------------------------
+      PROGRAM XVCC
+      IMPLICIT NONE
+#include "icore.com"
+#include "istart.com"
+      INTEGER IUHF
+      CALL CRAPSI(ICORE, IUHF, 0)
+      CALL VCC(ICORE(I0), ICRSIZ, IUHF)
+      CALL ACES_FIN
+      STOP
+      END
