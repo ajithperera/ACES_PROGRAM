@@ -128,14 +128,8 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 # once joda's was suppressed (confirmed via nm -S size-matching against the
 # linked .so: 0x159 bytes matches libr/gschmidt.o exactly, not vee's
 # 0x17b). libr/david1.f calls its own gschmidt internally and IS present in
-# the linked .so (nm shows david1_ defined) -- but nothing in pyaces's own
-# exposed entry points (Runints/Runscf/Runcc/Runhbar/Runpccd/Runprops/
-# Runee) calls david1_ itself, so it's a harmless bystander pulled in by
-# something else in libr's archive, not a live call path -- verified safe
-# by re-running the FULL suite after this change (no regressions). vcceh's
-# and vea's own copies were never confirmed to be the actual winner at any
-# point (sizes 0x17b/0x183 never matched the linked symbol), only localized
-# preventatively since they're same-collision-class candidates too.
+# the linked .so (nm shows david1_ defined). vcceh/{blcklineq,truncate}.f
+# and vea/truncate.f likewise each call their own gschmidt internally.
 # 5th instance, same collision class again: MODF, called next inside vee_
 # itself (vee.f:406/410/481/485, CALL MODF(ICORE,MAXCOR,IUHF,ITYPE), 4 args)
 # after gschmidt_ was fixed and the crash moved past davidtda_. 8 modules
@@ -144,25 +138,32 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 # FINISH bug's shape); fsip/vcceh/hcmult/vea/lcct all share vee's own
 # identical 4-arg shape but are still each a DIFFERENT module's own
 # implementation, not guaranteed semantically identical just because the
-# call shape matches. None of fsip/hcmult/lcct's own internal callers
-# (fs01_/hcmult_driver_/lcc_) are even present in the linked .so (checked
-# via nm -- not reachable from anything pyaces's SOURCES actually needs),
-# so localizing their MODF copies is safe the same way libr's gschmidt was.
+# call shape matches. fsip/fs01.f, vcceh/vcceh.f, vea/{exitea,initea}.f all
+# call their own MODF internally too.
 # 6th instance: EXPDEN, next in the chain after MODF (vee_->doeomee_david_->
 # nextdav_->tdens_->expden_, crashing inside a memset -- an out-of-bounds
 # write, matching a wrong-copy/wrong-array-size symptom again). props's own
 # copy has a COMPLETELY different signature/purpose (DTRUNC,DFULL,NORB,...
 # vs vee's/vcceh's identical DOO,DVV,DVO,DOV,F,NMO,IRREPX,ISPIN,REFCONT).
-# CAVEAT, unlike every other localize above: props_ (props's own real
-# entry point, needed by Runprops) IS reachable in the linked .so, and
-# props.f DOES call its own expden internally -- so this collision may
-# ALREADY silently affect Runprops today, independent of anything this
-# session touched. Localizing props's copy here fixes vee/Runee (verified
-# below) but does NOT independently verify Runprops's own correctness --
-# if Runprops is ever exercised, re-check whether props's expden needs its
-# OWN dedicated fix (can't have both vee's and props's own copies win
-# simultaneously with a single flat symbol table; a real per-entry-point
-# link would be needed to fully separate them, not attempted here).
+# props/props.f and vcceh/cmpdso.f both call their own EXPDEN internally.
+#
+# 2026-08-11: switched this whole mechanism from --localize-symbol (hide
+# the losing module's copy, forcing EVERYTHING -- including that module's
+# OWN internal self-calls -- onto the winning module's copy) to
+# --redefine-sym (rename the losing module's copy to a unique name,
+# applied uniformly to every .o in its archive, definer AND any internal
+# caller alike). Discovered why this matters the hard way: lambda/vlamcc.f
+# calls its own 2-arg FINISH and its own 13-arg MODF internally
+# (lambda:finish_/lambda:modf_ above) -- localizing those left vlamcc_'s
+# own calls resolving to vcc's 4-arg FINISH / vee's 4-arg MODF instead of
+# lambda's own, corrupting the args and SIGSEGVing inside Runee (found via
+# a fresh gdb bt on case 054b: runee_->vlambda_->finish_). Every prior
+# "safe to localize" judgment call above (libr/vcceh/vea's own gschmidt
+# self-calls, fsip/vcceh/vea's own modf self-calls, props/vcceh's own
+# expden self-calls) was exactly this same latent risk, just not yet hit by
+# a live call path -- redefine-sym makes the whole reachability analysis
+# moot: each losing module keeps calling ITS OWN renamed copy correctly,
+# only the winning module's plain symbol name remains globally visible.
 EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_"
 EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct"
 
@@ -179,7 +180,8 @@ for mod in $MAIN_COLLISION_MODULES $EXTRA_LOCALIZE_MODULES; do
             pmod=${pair%%:*}
             psym=${pair#*:}
             [ "$pmod" = "$mod" ] || continue
-            nm "$o" 2>/dev/null | grep -q " T ${psym}\$" && objcopy --localize-symbol=${psym} "$o"
+            newsym="pyaces_${pmod}_${psym}"
+            objcopy --redefine-sym ${psym}=${newsym} "$o" 2>/dev/null || true
         done
     done
     (cd $workdir && ar rcs $PATCHED_LIBDIR/lib${mod}.a *.o)
