@@ -702,9 +702,19 @@ C
 C CALCULATE EOM-CCSD TWO-PARTICLE DENSITY
 C
                CALL TPDENS(SCR,IINTFP*MAXCOR,IUHF,Z0)
-               CALL ACES_FIN
-               STOP
-           ELSE 
+C This internal CALL ACES_FIN + STOP (ESTATE_GEOM_OPT, last-root density
+C finalization) is correct for the standalone xvee executable, which is
+C the LAST classic ACES II stage for EXCITE= jobs (see aces2/energy.F's
+C own driver: "call runit('xvee')" is the final call when iflags(87)!=0).
+C But it hard-terminates the whole OS process, which in pyaces's shared
+C long-lived process kills everything, including the Python interpreter
+C itself -- same bug class as vprops/props.F and lambda/vlamcc.F's own
+C internal ACES_FIN early-exits. IROOT (COMMON/EXTINF3, shared with the
+C caller doeomee_david.F) has just reached NROOT(IRREPX) here, so a
+C plain RETURN falls out of doeomee_david.F's "IF(IROOT.LT.NROOT(...))"
+C loop exactly as intended, with no further iteration attempted.
+               RETURN
+           ELSE
 
                IF (IROOT .EQ. NROOT) THEN
                    CALL INIGAM(IUHF)
@@ -714,10 +724,12 @@ C
 C CALCULATE EOM-CCSD TWO-PARTICLE DENSITY
 
                    CALL TPDENS(SCR,IINTFP*MAXCOR,IUHF,Z0)
-                   CALL ACES_FIN
-                   STOP
+C Same internal ACES_FIN+STOP -> RETURN fix as the ESTATE_GEOM_OPT branch
+C above (last-root density finalization, non-geom-opt case); see that
+C branch's comment for the full explanation.
+                   RETURN
 
-               ELSE 
+               ELSE
 C
 C This block is added to compute the S^2 for many states in a 
 C single run

@@ -384,10 +384,19 @@ C
       IF ( METHOD.LE.1                 .OR.
      &    (METHOD.EQ.2.AND.(.NOT.ROHF)).OR.
      &     METHOD.EQ.7                 .OR.
-     &     METHOD.EQ.9                
+     &     METHOD.EQ.9
      &   ) THEN
-         call aces_fin
-         stop
+C This internal CALL ACES_FIN + STOP tore down the shared JOBARC/I-O/
+C timing subsystem and hard-terminated the whole process in pyaces's
+C shared-process model -- same bug class as vprops/props.F and
+C vee/nextdav.F (see those fixes' own comments). VLAMBDA (vlamcc.F)
+C now checks this identical condition right after its own call to
+C SETMET_LAMBDA and RETURNs immediately, so removing this STOP is a
+C no-op for that caller. The standalone xlambda executable's own
+C PROGRAM XLAMBDA wrapper (vlamcc.F) still calls ACES_FIN+STOP after
+C VLAMBDA returns, so classic ACES II's observable behavior (and its
+C own runit('xvee') in a fresh process afterward) is unchanged.
+         RETURN
       END IF
 
       IF(METHOD.EQ.2) THEN

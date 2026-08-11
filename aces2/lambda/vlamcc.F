@@ -112,7 +112,45 @@ C
 C
 C  FILL /METH/ WHICH DETERMINES THE METHOD
 C
-      CALL SETMET_LAMBDA(pCCD,pCCDS,pCCDST)
+C This was previously CALL SETMET_LAMBDA(pCCD,pCCDS,pCCDST) -- 3 arguments
+C (the 3rd, "pCCDST", an undeclared/mistyped name for pCCDTS, implicitly
+C typed DOUBLE PRECISION and never assigned) passed to a subroutine
+C declared SUBROUTINE SETMET_LAMBDA(pCCD,pCCDS,pCCDTS,pCCDTSD) (setmet.F)
+C -- 4 LOGICAL arguments. The callee's 4th argument (pCCDTSD) had no
+C corresponding actual argument at all, so it read whatever happened to
+C be at that stack/register position -- undefined behavior, layout-
+C dependent (matches the case-057 uninitialized-memory bug signature).
+C In pyaces's shared-process layout this corrupted state badly enough to
+C reach an internal ACES_FIN/STOP soon after (case 063/064's "stops
+C silently right after Entering xlambda" symptom). Fixed to match
+C setmet.F's real signature.
+      CALL SETMET_LAMBDA(pCCD,pCCDS,pCCDTS,pCCDTSD)
+C setmet.F's own SUBROUTINE SETMET_LAMBDA has an internal
+C "IF (METHOD.LE.1 .OR. (METHOD.EQ.2.AND..NOT.ROHF) .OR. METHOD.EQ.7
+C .OR. METHOD.EQ.9) THEN CALL ACES_FIN; STOP; END IF" early-exit for
+C methods that need no lambda equations at all (e.g. plain MBPT(2),
+C the default reference for these EOM/EXCITE test cases). That STOP
+C only ends the standalone xlambda executable's own OS process in
+C classic ACES II (aces2/energy.F's driver then shells out to a FRESH
+C xvee process next) -- but pyaces calls Vlambda as a subroutine in
+C the same long-lived process as Vee, so it silently kills the whole
+C job before Vee ever runs (case 063/064's "stops right after
+C Entering xlambda" symptom). Fixed setmet.F's own copy to RETURN
+C instead (letting the standalone PROGRAM XLAMBDA wrapper's own
+C CALL ACES_FIN+STOP, further down this file, run identically to
+C before once SUBROUTINE VLAMBDA returns). Mirrored here so VLAMBDA
+C itself also returns immediately for this same "no lambda needed"
+C case, instead of falling through into the CC/LCC-oriented logic
+C below (which assumes every non-CC/non-LCC/non-ROHF method still
+C wants the fourth-order lambda(2) logic -- never true for plain
+C MBPT(2)).
+      IF ( METHOD.LE.1                 .OR.
+     &    (METHOD.EQ.2.AND.(.NOT.ROHF)).OR.
+     &     METHOD.EQ.7                 .OR.
+     &     METHOD.EQ.9
+     &   ) THEN
+         RETURN
+      END IF
 
       if (method .eq. 10 .or. method .eq. 8
      $     .or. method .eq. 22 .or. method  .eq. 13
@@ -329,12 +367,12 @@ c       CALL CHECKGAM(ICORE,44,61)
 c       CALL CHECKGAM(ICORE,45,62)
 c       ENDIF
 c       CALL CHECKGAM(ICORE,46,63)
-C	
+C
 C  RESORT FIRST LAMBDA AMPLITUDES
 C
-       if(bredundant) then 
+       if(bredundant) then
           CALL RNABIJ(ICORE(i0),MAXCOR,IUHF,'L')
-       endif 
+       endif
 C
 C CALCULATE THE DELTA T3(D) CONTRIBUTION
 C
@@ -553,7 +591,14 @@ CSSS        Call checkhbar(Icore(i0),Maxcor,iuhf)
              CALL PUTLST(ICORE(I0), 1, 1, 1, 2, 190)
          ENDIF
          CALL LGENINT(ICORE(i0),MAXCOR,IUHF)
-         CALL ACES_FIN
+C This internal CALL ACES_FIN (for the LCC/"linear CC methods" early-exit
+C path, e.g. MBPT(2) where the lambda equations are trivial) tore down
+C the whole shared JOBARC/I-O/timing subsystem and silently killed the
+C rest of pyaces's Runee.F pipeline (Vee never got a working JOBARC to
+C read from) -- same bug class as vprops/props.F (see that fix's own
+C comment). The standalone xlambda executable's own PROGRAM XLAMBDA
+C wrapper, further down this same file, already calls Aces_fin+stop
+C after this subroutine returns, so removing this one is a no-op there.
          RETURN
       ENDIF
 C
