@@ -187,8 +187,63 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 # routines (setrhf_/rhftce_/fmc_/aainer_/civpt_) -- oeptools's copies are
 # left as the global winners, vprops's own renamed so its internal call
 # chain (props.f calling rhftce.f/fmc.f/aainer.f/civpt.f) stays self-bound.
-EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_"
-EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct vprops"
+#
+# 8th instance: HBARXC, called right after NEWGES in vee/doeomee_david.F's
+# own EOM Davidson iteration loop (the sigma-vector build step) -- crashed
+# with "@GETLST: List (1,3) does not exist" for cases 054a/054b. vcceh AND
+# lcct BOTH also define their own HBARXC (confirmed meaningfully different
+# implementations via diff/size, not just a naming coincidence -- vee's own
+# copy has LANCZOS/DAVID/BLOCK_DAVID-gated LISTT1/LISTT2/LISTT2IN branching
+# that vcceh's/lcct's copies lack). All three modules ALSO have their own
+# internal callers (vcceh: blcklineq.f/lineqy*.f/phbarxc2.f/secprp.f; lcct:
+# clczeta2.f/calczeta.f/lineqy.f; vee: calczeta.f/clczeta2.f/diagall.f/
+# doeomee_david.f) -- redefine, not localize, same reasoning as FINISH.
+# Fixing HBARXC alone didn't fix 054a/054b -- a fresh gdb bt (via a
+# temporary out-of-bounds write injected at the GETLST assertion site
+# itself, since this is a clean aces_exit not a real crash -- ifx's own
+# ABORT() intrinsic doesn't raise a real signal/produce a core, a genuine
+# invalid memory write does) showed the REAL call chain: vee_->
+# doeomee_david_->hbarxc_->dt2int2_->draolad_->t2toao_->getlst_. Every one
+# of dt2int2/draolad/t2toao is ALSO a multi-module collision (9th, 10th,
+# 11th instances): DT2INT2 in vcceh/hcmult/vee/lcct (4 genuinely different
+# implementations, confirmed via `size`), DRAOLAD in vcceh/lambda/libr2/vee
+# (vcceh's and vee's happen to be byte-identical; lambda's/libr2's differ),
+# T2TOAO in vcceh/libr2/vee (vcceh's and vee's again byte-identical;
+# libr2's differs), GETAOINF (12th instance) in vcceh/dens/vee/libr2
+# (libr2's was missed on the first pass: it declares "subroutine getaoinf"
+# in lowercase, a case-sensitive grep for "SUBROUTINE GETAOINF" silently
+# skipped it -- confirmed the actual winner via
+# `ld -Wl,-trace-symbol=<sym>`, which prints the exact archive member
+# providing/referencing a symbol, more reliable than guessing from nm -S
+# size comparisons alone; use this first for any FUTURE "which copy
+# actually won" question).
+#
+# UNLIKE every other instance so far, this one is NOT a single global
+# winner -- it's a genuine two-context ambiguity. draolad_/t2toao_/
+# getaoinf_ are called from BOTH vee's own EOMEE Davidson path (via
+# hbarxc_->dt2int2_, needs vee's own copy) AND vcc's own ABCDTYPE=AOBASIS
+# path (via dre3en_->draolad_ directly, needs libr2's copy) -- confirmed
+# by checking which library the CLASSIC per-executable build actually
+# links for each (vcc/GNUmakefile's ACES_LINK_LISTS): xvcc's own link
+# list is "vcc:trp:librt3:libr2:crust:pccd:...", no vee at all, so libr2
+# must be what it uses; xvee's is "vee:trp:librt3:libr2:crust:hbar:vcc:
+# ...", vee's own archive scanned FIRST so vee's own copy wins there.
+# First attempt (renaming vcceh/lambda/libr2, letting vee win globally)
+# fixed the vee-originated crash but broke the vcc-originated one instead
+# (same @GETLST-class bug, now via getaoinf_'s own array-index arithmetic
+# reading an uninitialized COMMON block vee's own Davidson setup would
+# have populated but vcc's plain CC path never does). Fix: DON'T rename
+# libr2's copies (let libr2 be the natural global winner, matching what
+# vcc/most other modules actually need) -- instead rename VEE's OWN
+# copies (vee:draolad_/t2toao_/getaoinf_), so vee's internal chain
+# (hbarxc.f->dt2int2.f->draolad.f->t2toao.f->getaoinf.f, all within vee's
+# own archive) stays correctly self-bound to ITS OWN implementations,
+# while everyone else (vcc included) transparently gets libr2's. vcceh's
+# copies of draolad_/t2toao_ (byte-identical to vee's OLD copies, now
+# irrelevant either way) and dens's getaoinf_ (genuinely different, still
+# wrong for anyone) stay renamed away as before.
+EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_"
+EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens"
 
 PATCHED_LIBDIR=$WORK/build/patched_libs
 mkdir -p $PATCHED_LIBDIR
