@@ -40,12 +40,27 @@ c PARAMETERS
 
 c INTERNAL VARIABLES
       double precision dTmp
-      integer i0, iMem, iTmp
+      integer i0, iMem, iTmp, iMemActual
 c i0 must survive across reentrant calls: on a reentrant call (xFlag.ne.0)
 c the malloc block below that sets it is skipped, but iCoreNdx=i0 further
 c down still runs unconditionally -- without SAVE, i0 is undefined on
 c that path and corrupts the caller's ICORE indexing (istart.com's I0).
       save i0
+c iMemActual must ALSO survive across reentrant calls, separately from
+c iMem: iMem is reloaded fresh from iflags(36) (the REQUESTED size) on
+c every call below, but the malloc block that reconciles it against the
+c TRUE allocated size (shrink-retry on failure, cache-line rounding in
+c aces_malloc) only runs when xFlag.eq.0. On a reentrant call the malloc
+c block is correctly skipped, but iCoreDim=iMem further down used to run
+c unconditionally too -- silently overwriting the caller's ICRSIZ with
+c the raw REQUESTED size instead of the true allocated one whenever the
+c two differ (e.g. pyaces's Runee.F: V2JA's own internal CrapsI/aces_init
+c call is reentrant, iflags(36)=15000000 requested but only 14254530 was
+c ever actually allocated on the first call -- ICRSIZ silently grew by
+c the difference, so anything trusting it afterward could walk off the
+c end of the real buffer). Save the true size once and reuse it on every
+c reentrant call instead of recomputing it from the requested value.
+      save iMemActual
 
 c TIMING VARIABLES
       integer stime_sec, stime_usec
@@ -160,6 +175,7 @@ c            o make sure iCore(i0) starts on a double word boundary
 #endif
 #endif
                xFlag = 1
+               iMemActual = iMem
             else
 c               print *, '@ACES_INIT: Request for ',iMem,
 c     &                  ' integers of memory failed.'
@@ -175,11 +191,11 @@ c        closed-then-reopened if a legacy routine calls aces_init again
 c        later in the same process; aces_io_fin flushes pending list
 c        metadata to JOBARC first, so nothing already written is lost.
          if (bIOUp) call aces_io_fin
-         call aces_io_init(iCore,i0,iMem,.true.)
+         call aces_io_init(iCore,i0,iMemActual,.true.)
 
 c      o transfer the iCore statistics
          iCoreNdx = i0
-         iCoreDim = iMem
+         iCoreDim = iMemActual
 
 c     else if (.not.bAllocMem)
       else
