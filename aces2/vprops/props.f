@@ -791,9 +791,21 @@ C
       WRITE(6,152)
 C
       close(unit=id20,status='delete')
-      call aces_fin
 C
-      stop
+C This routine has no other exit path (grep confirms zero RETURN
+C statements anywhere in this file) -- it was written as a standalone
+C program's entire body, later mechanically wrapped into a callable
+C SUBROUTINE (see main.F, which still separately calls Aces_fin+stop
+C right after CALL PROPS returns -- same redundant-but-harmless pattern
+C as JODA_()/PROGRAM XJODA and every other Category-A module split in
+C this project). The CALL ACES_FIN+STOP that used to be here tore down
+C the whole JOBARC/I-O/timing subsystem and killed the entire process
+C outright the moment pyaces's Runee.F called this as one stage among
+C several -- Vscf/Vtran/etc after it never ran, silently, with a clean
+C exit code (no crash, no error, just nothing else ever happened).
+C main.F's own aces_fin call makes this a true no-op for the standalone
+C xvprops executable; RETURN makes this a real, reusable subroutine.
+      RETURN
 
 100   FORMAT(6I5)
 101   FORMAT(12A6)
