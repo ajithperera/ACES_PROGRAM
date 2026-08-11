@@ -53,8 +53,23 @@ C
        IOFFCL=ISYMOFF(IRREPI,IRREPC,8+ISPIN)
        IOFFCR=ISYMOFF(IRREPJ,IRREPC,8+ISPIN)
        IOFFD =ISYMOFF(IRREPJ,IRREPX,20+ISPIN)
-       CALL XGEMM('T','N',NUMI,NUMJ,NUMA,ONEM,C(IOFFCL),NUMA,
-     &             C(IOFFCR),NUMA,ZILCH,DOO(IOFFD),NUMI)
+C The contraction dimension (NUMA, the number of virtuals in IRREPA) can
+C legitimately be 0 for a low-symmetry irrep with no virtual orbitals --
+C XGEMM's own quick-return guard (tools/xgemm.F) only covers K=0 when
+C BETA=1 (meant for the "leave C unchanged" case); this call uses
+C BETA=ZILCH=0, so an empty contraction should ZERO this block of DOO
+C instead, which XGEMM's guard doesn't do. Found via case 057 (EE_SYM=
+C 3-2-2-2, small BASIS=3-21G): NUMA=0 with NUMI=NUMJ=1 reached MKL's own
+C DGEMM with an invalid LDA (parameter 8), which MKL's stricter checking
+C caught as a hard error where an older/looser BLAS apparently did not.
+C Same pre-existing gap in vcceh's own copy of this routine, unfixed
+C there -- not currently reachable via any passing pyaces case.
+       IF (NUMA.GT.0) THEN
+        CALL XGEMM('T','N',NUMI,NUMJ,NUMA,ONEM,C(IOFFCL),NUMA,
+     &              C(IOFFCR),NUMA,ZILCH,DOO(IOFFD),NUMI)
+       ELSE IF (NUMI*NUMJ.GT.0) THEN
+        CALL ZERO(DOO(IOFFD),NUMI*NUMJ)
+       ENDIF
 10    CONTINUE
       CALL PUTLST(DOO,1,1,1,ISPIN,160)
 
@@ -70,8 +85,14 @@ C
        IOFFCL=ISYMOFF(IRREPM,IRREPC,8+ISPIN)
        IOFFCR=ISYMOFF(IRREPM,IRREPC,8+ISPIN)
        IOFFD =ISYMOFF(IRREPB,IRREPX,18+ISPIN)
-       CALL XGEMM('N','T',NUMA,NUMB,NUMM,ONE,C(IOFFCR),NUMA,
-     &            C(IOFFCL),NUMB,ZILCH,DVV(IOFFD),NUMA)
+C Same gap as the OO block above -- NUMM (occupied count for IRREPM, the
+C contraction dimension here) can legitimately be 0.
+       IF (NUMM.GT.0) THEN
+        CALL XGEMM('N','T',NUMA,NUMB,NUMM,ONE,C(IOFFCR),NUMA,
+     &             C(IOFFCL),NUMB,ZILCH,DVV(IOFFD),NUMA)
+       ELSE IF (NUMA*NUMB.GT.0) THEN
+        CALL ZERO(DVV(IOFFD),NUMA*NUMB)
+       ENDIF
 20    CONTINUE
       CALL PUTLST(DVV,1,1,1,2+ISPIN,160)
 C
