@@ -792,6 +792,24 @@ C
 C
       close(unit=id20,status='delete')
 C
+C INU (unit 16, file 'IIII', opened above near the top of this routine)
+C and unit 35 ('VPOUT') are never closed anywhere else in this file.
+C Under the OLD standalone-program STOP (see below), this was harmless
+C -- process exit closes every fd for free. Now that this is a real
+C subroutine returning to a long-lived shared process, leaving 'IIII'
+C open here is a REAL bug: some later stage (found empirically -- an
+C ftruncate(fd,28388) syscall lands during Intproc's own GMOIAA integral
+C sorting, evidently a generic "flush+truncate every still-open unit"
+C step) treats this dangling connection as one of ITS OWN list files and
+C overwrites/truncates 'IIII' down to a few KB, destroying the TWOELSUP
+C section vcc's own ABCDTYPE=AOBASIS code later needs (case 054a's
+C "@LOCATE: Label TWOELSUP not found" failure, root-caused via strace
+C -tt tracking every openat/write/ftruncate on the exact byte offset
+C where the file first diverged from a known-good classic xvmol run).
+C Close both explicitly instead of relying on process-exit cleanup.
+      CLOSE(INU)
+      CLOSE(35)
+C
 C This routine has no other exit path (grep confirms zero RETURN
 C statements anywhere in this file) -- it was written as a standalone
 C program's entire body, later mechanically wrapped into a callable
