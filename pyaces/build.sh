@@ -242,7 +242,20 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 # copies of draolad_/t2toao_ (byte-identical to vee's OLD copies, now
 # irrelevant either way) and dens's getaoinf_ (genuinely different, still
 # wrong for anyone) stay renamed away as before.
-EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_"
+#
+# 13th instance, and the actual explanation for 054a/054b's own remaining
+# small (~1e-5) MISMATCH after all of the above: libr2's own draolad.f
+# calls Z2TOMO internally (the routine that prints "W(abef) AB
+# contribution", directly comparable against classic's own log) -- but
+# Z2TOMO ITSELF is a 4-way collision (vcceh/lambda/libr2/vee; tdee's and
+# pccd's own "z2tomo"-named files are already safely prefixed at the
+# source level as TDEE_Z2TOMO/PCCD_Z2TOMO, not real collisions) and
+# lambda's copy was winning globally -- so libr2's OWN internal call fell
+# through to lambda's DIFFERENT implementation, exactly the same
+# self-caller trap as every other instance today. Same two-context split
+# as draolad/t2toao/getaoinf (vee's own iabcont.f also calls its own
+# z2tomo internally) -- rename vcceh/lambda/vee's copies, let libr2 win.
+EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_"
 EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens"
 
 PATCHED_LIBDIR=$WORK/build/patched_libs
