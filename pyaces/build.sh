@@ -75,6 +75,12 @@ for f in $SOURCES; do
 done
 ifort $FFLAGS -c gen/aces2py-f2pywrappers.f -o build/aces2py-f2pywrappers.o
 
+# runee.o's own new CALL PROPS(...) (see the vprops:props_ comment above)
+# must be redefined to match vprops's renamed copy the SAME way, since it's
+# a pyaces-side .o, not one of aces2's own archives patched in the loop
+# below.
+objcopy --redefine-sym props_=pyaces_vprops_props_ build/runee.o
+
 echo "=== step 4: link ==="
 # Generated fresh every build (not cached) so this can never point at a
 # stale/dead location -- ACES is always this same build's own aces2 tree.
@@ -164,8 +170,25 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 # a live call path -- redefine-sym makes the whole reachability analysis
 # moot: each losing module keeps calling ITS OWN renamed copy correctly,
 # only the winning module's plain symbol name remains globally visible.
-EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_"
-EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct"
+#
+# 7th instance, but the FIRST triggered by ADDING a call rather than fixing
+# a crash on an existing one: vprops/props.F's own SUBROUTINE PROPS(S,
+# MAXCOR,IS,IMAXCOR) collides with props/props.F's SUBROUTINE PROPS(ICORE,
+# MAXCOR,IUHF) (needed by Runprops) -- both modules just happen to be named
+# "PROPS". Runee.F (a2_pyf, pyaces's OWN driver source, not aces2's) now
+# calls vprops's PROPS directly (to populate DIPOLE_X/etc before Vee's own
+# EOM transition-property code needs it, matching classic energy.f's own
+# "call runit('xvprops')" placement before xvscf whenever EXCITE= is set).
+# Since this is a NEW pyaces-side call site, not an existing aces2-internal
+# one, redefine-sym must ALSO be applied to pyaces's own compiled runee.o
+# (not just vprops's archive) -- see the loop right after step 3 below.
+# Linking vprops in for the first time ALSO surfaced 5 more of its own
+# helper routines colliding with liboeptools/nucatt.f's bundled same-named
+# routines (setrhf_/rhftce_/fmc_/aainer_/civpt_) -- oeptools's copies are
+# left as the global winners, vprops's own renamed so its internal call
+# chain (props.f calling rhftce.f/fmc.f/aainer.f/civpt.f) stays self-bound.
+EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_"
+EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct vprops"
 
 PATCHED_LIBDIR=$WORK/build/patched_libs
 mkdir -p $PATCHED_LIBDIR
