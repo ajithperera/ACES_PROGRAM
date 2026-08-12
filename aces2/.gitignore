@@ -11,11 +11,13 @@ make.output
 # per-module built binaries -- explicit paths (not a wildcard: several real
 # source/include files in this tree also start with 'x', e.g. joda/xtor.F,
 # vmol/xdab.f, Test/count/include/xcc.com -- so "x*" globs are NOT safe here)
+a2mix/xa2mix
 a2proc/xa2proc
 a3ecp/xa3ecp
 aces2/xaces2
 alice_nwchem/xalice_nwchem
 anti/xanti
+aux/xaux
 bcktrn/xbcktrn
 c6coef/xc6coef
 ccd_light/xccd_light
@@ -64,9 +66,11 @@ ringcc/xringcc
 ringcl/xringcl
 rspdens/xrspdens
 rspdens/xrspdens1
+rpa/xrpa
 runpccd/xrunpccd
 scale_ints/xscale_ints
 scfgrd/xscfgrd
+scrnc/xscrnc
 tdcc2/xtdcc2
 tdee/xtdee
 tdhf/xtdhf
