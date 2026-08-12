@@ -38,11 +38,24 @@ CFLAGS_EXTRA += -fPIC
 # tree parasitic on the other one instead of standalone. 2026-08-10: repointed
 # at this tree's own aces2/bin, aces2/lib so ACES_PROGRAM builds+installs
 # fully within itself -- do not point these back at acesii_build_pic again.
-LDFLAGS_NUMLIBS:= -L$(MKLROOT)/lib/intel64  -Wl,--start-group $(MKL_GRP) -Wl,--end-group -pthread -L/home/perera/Develop/ACES_PROGRAM/aces2/lib -llb -llinpack
-
-DIR_INSTBIN := /home/perera/Develop/ACES_PROGRAM/aces2/bin
-DIR_INSTLIB := /home/perera/Develop/ACES_PROGRAM/aces2/lib
+# 2026-08-12: this same "hardcoded absolute path assumes there is only one
+# checkout" bug recurred a 3rd time once a second tree (a git worktree, for
+# the CMake superbuild work) needed to build aces2 independently -- a plain
+# `gmake` from the worktree would have silently written into THIS path (the
+# main tree's bin/lib) instead of its own. Switched `:=` to `?=` so these
+# stay exactly this default for anyone invoking gmake directly (unchanged
+# behavior), but become overridable from the command line/environment --
+# `gmake DIR_INSTBIN=... DIR_INSTLIB=... all install` -- which is what the
+# CMake superbuild (see ../../CMakeLists.txt) always does, and is the same
+# override mechanism GNUmakefile itself already documents at "DIR_INSTLIB on
+# the command line will override the default behavior". LDFLAGS_NUMLIBS now
+# derives its -L from DIR_INSTLIB instead of duplicating the path, so a
+# single override point covers both instead of only fixing one of the two.
+DIR_INSTBIN ?= /home/perera/Develop/ACES_PROGRAM/aces2/bin
+DIR_INSTLIB ?= /home/perera/Develop/ACES_PROGRAM/aces2/lib
 DIR_SRCLIB  := ${DIR_INSTLIB}
+
+LDFLAGS_NUMLIBS:= -L$(MKLROOT)/lib/intel64  -Wl,--start-group $(MKL_GRP) -Wl,--end-group -pthread -L${DIR_INSTLIB} -llb -llinpack
 
 ###################################
 ## AME and ASL specific settings ##

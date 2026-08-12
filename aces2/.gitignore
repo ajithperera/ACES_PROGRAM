@@ -21,9 +21,11 @@ c6coef/xc6coef
 ccd_light/xccd_light
 ccsd_light/xccsd_light
 ccsdtq/xccsdtq
+ccsdtqf/xccsdtqf
 ccsdtqf_mm/xccsdtqf_mm
 copex/xcopex
 copex/xfsip
+copt/xcopt
 cphf/xcphf
 cse12/xcse12
 dens/xdens
@@ -55,11 +57,14 @@ mopac/xmopac
 nddo/xnddo
 nlorb/xnlorb
 nmr/xnmr
+oombpt2/xoombpt2
 oprots/xoprots
 pccd_drpmo/xpccd_drpmo
 pccd/xpccd
+pdens/xpdens
 prep/xprep
 props/xprops
+psi4dbg/xpsi4dbg
 ringcc/xringcc
 ringcl/xringcl
 rspdens/xrspdens
