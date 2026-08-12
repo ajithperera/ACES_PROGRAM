@@ -309,7 +309,7 @@ C
 C     Set W intermediate list numbers
 C
       Print*, "Entering initrp"
-      CALL INITRP
+      CALL INITRP_TRP
 C
 C     Form intermediates for ccsdt-1b and higher calculations.
 C
@@ -322,7 +322,7 @@ C     Transpose records of LWIC17 and LWIC27 (the latter only if it is
 C     not the same list).
 C
       IF(IUHF.EQ.1)THEN
-        CALL TSPABCI(ICORE,MAXCOR,1,.FALSE.)
+        CALL TSPABCI_TRP(ICORE,MAXCOR,1,.FALSE.)
       ENDIF
 
 c     Calculate triples contributions to W(abci) and W(ijka) (CCSDT).
@@ -535,7 +535,7 @@ C
        ENDIF
       ELSE
        Write(*,*) "Enetring setooov"
-       cALL SETOOOV(ICORE,MAXCOR,IUHF,1)
+       cALL SETOOOV_TRP(ICORE,MAXCOR,IUHF,1)
       ENDIF
 C
 C     I000   T1   alpha
@@ -649,7 +649,7 @@ cYAU      WRITE(6,2011) MAXCOR,NALLOC,NFREE
         ENDIF
        ENDIF
       ELSE
-       CALL SETOOOV(ICORE,MAXCOR,IUHF,2)
+       CALL SETOOOV_TRP(ICORE,MAXCOR,IUHF,2)
       ENDIF
  2000 CONTINUE
 C
@@ -661,7 +661,7 @@ C     Reorganize abci/ijka intermediate lists, t2 ab lists and,
 C     if appropriate, d2t2 ab increment lists.
 C
       IF(IUHF.EQ.1)THEN
-        CALL TSPABCI2(ICORE,MAXCOR,1,.FALSE.)
+        CALL TSPABCI2_TRP(ICORE,MAXCOR,1,.FALSE.)
 C
 cold    CALL AT2IAB(ICORE,0,INT2)
         CALL AT2IAB(ICORE,46,1,0)
@@ -734,7 +734,7 @@ C
 C     (Beta,Aplha) --> (Alpha,Beta).
 C
       IF(IUHF.EQ.1)THEN
-        CALL TSPABCI2(ICORE,MAXCOR,2,.FALSE.)
+        CALL TSPABCI2_TRP(ICORE,MAXCOR,2,.FALSE.)
 C
 cold    CALL AT2IAB(ICORE,1,INT2)
         CALL AT2IAB(ICORE,46,1,1)
@@ -751,7 +751,7 @@ C
 C     <Ab||cI> --> <Ab||Ic>.
 C
       IF(IUHF.EQ.1)THEN
-        CALL TSPABCI(ICORE,MAXCOR,2,.FALSE.)
+        CALL TSPABCI_TRP(ICORE,MAXCOR,2,.FALSE.)
       ENDIF
 C
 C     For CCSDT negate certain MBEJ lists.
@@ -765,7 +765,7 @@ C
 C     Attempt to make sure plain integrals end up on 231-233.
 C
       IF(CCSDT)THEN
-        CALL HBARCRAP(ICORE,MAXCOR,IUHF,.FALSE.)
+        CALL HBARCRAP_TRP(ICORE,MAXCOR,IUHF,.FALSE.)
         CALL   FORMW1(ICORE,MAXCOR,IUHF,.FALSE.)
       ENDIF
 C
@@ -827,7 +827,7 @@ C     If this is a gradient calculation, dump diagonal parts of density
 C     to lists.
 C
       IF(IDRLVL.GT.0.AND.T3GRAD)THEN
-        CALL DMPDEN(DOOA,DOOB,DVVA,DVVB,ICORE,
+        CALL DMPDEN_TRP(DOOA,DOOB,DVVA,DVVB,ICORE,
      &              NOCCO(1),NOCCO(2),NVRTO(1),NVRTO(2),IUHF,IINTFP)
       ENDIF
 C
@@ -836,7 +836,7 @@ C     CCSD/QCISD energy. Note F*T1 contribution must be included
 C     if reference is non-Hartree-Fock.
 C
       IF(ICLLVL.EQ.11.OR.ICLLVL.EQ.21.OR.ICLLVL.EQ.22)THEN
-        CALL CCENRG(ICORE,IUHF,ECCTOT,NONHF)
+        CALL CCENRG_TRP(ICORE,IUHF,ECCTOT,NONHF)
       ENDIF
 C
 C     Summarize results.

@@ -9,6 +9,14 @@
 
 
 
+
+
+
+
+
+
+
+
 C
 cjp
 cjp in bwcc it computes diagonal elements of the effective hamiltonian,

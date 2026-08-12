@@ -208,7 +208,7 @@ C
       CALL INITRP 
 
       IF(IUHF.EQ.1)THEN
-        CALL TSPABCI(ICORE,MAXCOR,1)
+        CALL TSPABCI_LAMBDA(ICORE,MAXCOR,1)
       ENDIF
 C
 C     If this is a gradient calculation, set gamma list numbers
@@ -444,7 +444,7 @@ C     Reorganize abci/ijka intermediate lists, t2 ab lists and,
 C     if appropriate, d2t2 ab increment lists.
 C
       IF(IUHF.EQ.1)THEN
-        CALL TSPABCI2(ICORE,MAXCOR,1)
+        CALL TSPABCI2_LAMBDA(ICORE,MAXCOR,1)
         CALL AT2IAB(ICORE,46,1,0)
       ENDIF
 C
@@ -510,7 +510,7 @@ C
      &                IUHF,L3STOR,.FALSE.)
 
       IF(IUHF.EQ.1)THEN
-        CALL TSPABCI2(ICORE,MAXCOR,2)
+        CALL TSPABCI2_LAMBDA(ICORE,MAXCOR,2)
         CALL AT2IAB(ICORE,46,1,1)
       ENDIF
 

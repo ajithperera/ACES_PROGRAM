@@ -1,14 +1,6 @@
 
 
 
-
-
-
-
-
-
-
-
       PROGRAM VTRAN
 C
 C INTEGRAL TRANSFORMATION PROGRAM
@@ -23,7 +15,7 @@ CEND
 C
 C  WRITTEN BY J. GAUSS,  UNIVERITY KARLSRUHE
 C
-C  EXPERIMENTAL VERSION MARCH/92   
+C  EXPERIMENTAL VERSION MARCH/92
 C  DROPPED CORE IMPLEMENTED, SEPTEMBER/92
 C  OPEN-SHELL IMPLEMENTED, NOVEMBER/92
 C
@@ -31,200 +23,6 @@ C
       INTEGER DIRPRD,POP,VRT
       LOGICAL DOALL,ABIJ,NOABCD,IGNORE_DROP_MO
 C
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 C
       COMMON//ICORE(1)
@@ -244,7 +42,7 @@ C
      &              NWRIT1,NWRIT2,NWRIT3,NWRIT4,
      &              NWRIT1A,NWRIT2A,NWRIT3A,NWRIT4A,
      &              NWRIT1B,NWRIT2B,NWRIT3B,NWRIT4B
-      COMMON/DANGRD/ndrop0 
+      COMMON/DANGRD/ndrop0
 C
       DATA TEN/10.D0/
 C
@@ -284,7 +82,7 @@ C
       MAXCOR=ICRSIZ
 C
       CALL SETMET(IUHF)
-      IGNORE_DROP_MO = (Iflags(2) .EQ. 0 .OR. 
+      IGNORE_DROP_MO = (Iflags(2) .EQ. 0 .OR.
      &                  Iflags(54) .EQ. 1 .OR.
      &                  Iflags(55) .GT. 0)
 C
@@ -302,7 +100,7 @@ c---- ndrgeo = 0 :  not a drop-mo analytic gradient  ------------------
 c----        = 1 :  first  run for the drop-mo analytic gradient ------
 c----        = 2 :  second run for the drop-mo analytic gradient ------
 c----------------------------------------------------------------------
-      CALL GETREC(20,'JOBARC','NDROPGEO',1,NDRGEO)  
+      CALL GETREC(20,'JOBARC','NDROPGEO',1,NDRGEO)
 c
 C
 C GET POPULATION VECTORS FOR ALL IRREPS
@@ -335,29 +133,29 @@ C     'CORRELATED' ORDERING :   WITHIN ONE IRREP ALL OCCUPIED FIRST,
 C                               THEN ALL VIRTUALS
 C
       CALL GTNRB2(ICORE(I0),MAXCOR,IUHF,NBASIS,NBASIS,1)
-C 
-C DROP MOS AND FORM CMO AND EVAL LISTS FOR CORRELATED 
+C
+C DROP MOS AND FORM CMO AND EVAL LISTS FOR CORRELATED
 C CALCULATION. The following block of code was added
-C to fix a long existed problem. For cases where the 
+C to fix a long existed problem. For cases where the
 C nirrep is more than the twice the number basis functions,
 C the code was erroneous. To alleviate this, we have now
-C defined a new variable MAXSIZE and that is used for 
-C memory allocation and to define the size of arrays in    
-C dropvc. 02/2001 Ajith Perera   
+C defined a new variable MAXSIZE and that is used for
+C memory allocation and to define the size of arrays in
+C dropvc. 02/2001 Ajith Perera
 C
       IF (2*NBASIS .LE. NIRREP) THEN
          MAXSIZE = 2*NIRREP
       ELSE
          MAXSIZE = 2*NBASIS
-      ENDIF 
-C  
+      ENDIF
+C
       I000=I0
       I010=I000+NBASIS*NBASIS*IINTFP
-C 
-C Note the correction 
-cSSS  I020=I010+MAX(2*NBASIS,NIRREP) 
-C 
-      I020=I010+MAXSIZE 
+C
+C Note the correction
+cSSS  I020=I010+MAX(2*NBASIS,NIRREP)
+C
+      I020=I010+MAXSIZE
       I030=I020+NBASIS
       I040=I030+NBASIS
       I050=I040+NBASIS
@@ -368,27 +166,27 @@ C
 c-----------------------------------------------------------------------
 c--  For the Drop-MO analytical gradient  ----------------- KB ---------
 c-----------------------------------------------------------------------
-      if (ndrgeo.ne.0) then 
-        CALL GETREC(20,'JOBARC','NUMDROPA',1,ndrop0)  
+      if (ndrgeo.ne.0) then
+        CALL GETREC(20,'JOBARC','NUMDROPA',1,ndrop0)
         if (ndrop0.ne.0) then
          ijzero=0
-         CALL PUTREC(20,'JOBARC','NUMDROPA',1,ijzero)   
-         if (iuhf.ne.0) CALL PUTREC(20,'JOBARC','NUMDROPB',1,ijzero)   
-        endif 
-      endif 
+         CALL PUTREC(20,'JOBARC','NUMDROPA',1,ijzero)
+         if (iuhf.ne.0) CALL PUTREC(20,'JOBARC','NUMDROPB',1,ijzero)
+        endif
+      endif
 c-----------------------------------------------------------------------
 c Ignore all drop core processing for scf only calculations. The drop
 c core (correctly should be called as post-SCF frozen core approximation)
-c should only apply for post scf electronic structure methods (scf 
+c should only apply for post scf electronic structure methods (scf
 c analytic second derivatives s not a post scf calculations, but needs
-c transformed integrals). Ajith Perera 06/2006. 
+c transformed integrals). Ajith Perera 06/2006.
 c
       If (IGNORE_DROP_MO) Then
          CALL DROPVC(NBASIS,MAXSIZE,NDROP,IUHF,ICORE(I000),
      &               ICORE(I010), ICORE(I020),ICORE(I030),
      &               ICORE(I040),ICORE(I050),ICORE(I060))
           NDROP = 0
-         NDRGEO = 0  
+         NDRGEO = 0
          CALL PUTREC(20, 'JOBARC', 'NDROPGEO', 1, 0)
          CALL PUTREC(20, 'JOBARC', 'NCOMPA  ', 1, NBASIS)
          CALL PUTREC(20, 'JOBARC', 'NBASCOMP', 1, NBASIS)
@@ -400,9 +198,9 @@ c
 c
          IF (IUHF .NE. 0) THEN
             CALL PUTREC(20, 'JOBARC', 'NCOMPB  ', 1, NBASIS)
-            CALL PUTREC(20, 'JOBARC', 'IDROPB  ', NBASIS, 
+            CALL PUTREC(20, 'JOBARC', 'IDROPB  ', NBASIS,
      &                  ICORE(I000))
-         ENDIF 
+         ENDIF
       Else
          CALL DROPVC(NBASIS,MAXSIZE,NDROP,IUHF,ICORE(I000),
      &               ICORE(I010), ICORE(I020),ICORE(I030),
@@ -421,7 +219,7 @@ c--  For the second run in Drop-MO analytical gradient  ------ KB ------
 c-----------------------------------------------------------------------
       if (ndrgeo.eq.2) then
         call aces_fin
-        stop 
+        stop
       endif
 c-----------------------------------------------------------------------
 C
@@ -485,7 +283,7 @@ C WRITE FINAL BUFFER TO HF2 FILE
 C
       ILNBUF=600
       IBUF1=JSTART
-      IBUF2=JSTART+ILNBUF*IINTFP 
+      IBUF2=JSTART+ILNBUF*IINTFP
       INUT=-1
 C
       CALL FINAL(LUHF2,ICORE(IBUF1),ICORE(IBUF2),ILNBUF,INUT)
@@ -512,7 +310,7 @@ C
         write(*,9101) npass1
        else if(npass1.le.9) then
         write(*,9111) npass1
-       else 
+       else
         write(*,9121) npass1
        endif
 9101   format (i3,' pass through the ',
@@ -544,7 +342,7 @@ C
          write(*,9101) npass2
         else if(npass2.le.9) then
          write(*,9111) npass2
-        else 
+        else
          write(*,9121) npass2
         endif
         write(*,9202) nload2
@@ -562,7 +360,7 @@ C
          write(*,9101) npass3
         else if(npass3.le.9) then
          write(*,9111) npass3
-        else 
+        else
          write(*,9121) npass3
         endif
         write(*,9302) nload3
@@ -581,7 +379,7 @@ C
           write(*,9101) npass4
          else if(npass4.le.9) then
           write(*,9111) npass4
-         else 
+         else
           write(*,9121) npass4
          endif
          write(*,9402) nload4
@@ -613,17 +411,17 @@ c---  HF2 file is made for all-mo index,  ------------------------------
 c---  But, others are made for drop-mo space, here  --------------------
 c-----------------------------------------------------------------------
       if (ndrgeo.eq.1) then
-       CALL PUTREC(20,'JOBARC','NUMDROPA',1,ndrop0)  
-       if (iuhf.ne.0) CALL PUTREC(20,'JOBARC','NUMDROPB',1,ndrop0)  
+       CALL PUTREC(20,'JOBARC','NUMDROPA',1,ndrop0)
+       if (iuhf.ne.0) CALL PUTREC(20,'JOBARC','NUMDROPB',1,ndrop0)
        CALL DROPVC(NBASIS,MAXSIZE,NDROP,IUHF,ICORE(I000),ICORE(I010),
      &            ICORE(I020),ICORE(I030),ICORE(I040),ICORE(I050),
      &            ICORE(I060))
        NCOMP=NBASIS-NDROP
        CALL SYMDRV_ITRAN(ICORE(I0),MAXCOR,NCOMP,IUHF)
-      endif 
+      endif
 c-----------------------------------------------------------------------
-      call aces_fin   
+      call aces_fin
 C
       STOP
-C        
+C
       END

@@ -6,7 +6,7 @@
 #define _HHIK
 #define _HHIJ
 
-      SUBROUTINE D1T14(W,T2IJ,T2IK,T2JK,
+      SUBROUTINE D1T14_TRP(W,T2IJ,T2IK,T2JK,
      1                 VIJ,VIK,VJK,
      1                 ICORE,ISPIN,
      1                 IADBLK,LENBLK,IADT2,LENT2,IADV,LENV,

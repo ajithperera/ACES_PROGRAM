@@ -10,7 +10,7 @@
 #define _DO_GSJK
 #define _DO_GSIK
 
-      SUBROUTINE D1T3(T3,W,
+      SUBROUTINE D1T3_TRP(T3,W,
      1                T2IJBB,T2BAJK,T2BAIK,
      1                VIJBB,VJKBA,VIKBA,VJKBA2,VIKBA2,
      1                 ICORE,IUHF,

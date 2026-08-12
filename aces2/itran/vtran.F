@@ -210,7 +210,7 @@ C
 C
 C FORM SYMMETRY VECTORS
 C
-      CALL SYMDRV(ICORE(I0),MAXCOR,NCOMP,IUHF)
+      CALL SYMDRV_ITRAN(ICORE(I0),MAXCOR,NCOMP,IUHF)
 c-----------------------------------------------------------------------
 c--  For the second run in Drop-MO analytical gradient  ------ KB ------
 c-----------------------------------------------------------------------
@@ -422,7 +422,7 @@ c-----------------------------------------------------------------------
      &            ICORE(I020),ICORE(I030),ICORE(I040),ICORE(I050),
      &            ICORE(I060))
        NCOMP=NBASIS-NDROP
-       CALL SYMDRV(ICORE(I0),MAXCOR,NCOMP,IUHF)
+       CALL SYMDRV_ITRAN(ICORE(I0),MAXCOR,NCOMP,IUHF)
       endif 
 c-----------------------------------------------------------------------
       call aces_fin   

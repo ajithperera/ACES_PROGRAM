@@ -1,19 +1,11 @@
 
 
 
-
-
-
-
-
-
-
-
       SUBROUTINE E4S(ICORE,MAXCOR,IUHF,SE4)
 C
 C  THIS ROUTINE IS THE DRIVER FOR THE CONTRIBUTION OF THE DOUBLES
 C  TO THE SINGLES.
-C  IT CALCULATES IN ADDITION THE FOURTH-ORDER SINGLE ENBERGY                
+C  IT CALCULATES IN ADDITION THE FOURTH-ORDER SINGLE ENBERGY
 C  CONTRIBUTION AND CALCULATES THE NEW T1-AMPLITUDES
 C
 CEND
@@ -223,7 +215,7 @@ C
        MXCOR=MXCOR-NWBB*IINTFP
       ENDIF
 C
-cjp    
+cjp
       WRITE(6,*) '@E4S-IBWPASS-DEBUG: ibwpass=',ibwpass,' isbwcc=',
      &           isbwcc
       if(ibwpass.lt.2) then
@@ -305,7 +297,7 @@ cjp
 cjp prepare for pass 2
       if(ibwpass.eq.2) then
 cjp read the intermediate result instead of the previous computation
-cjp do it transparently for E4SENG 
+cjp do it transparently for E4SENG
         call getlst(icore(itaa),1,1,1,3,90)
         if(iuhf.eq.1) call getlst(icore(itbb),1,1,1,4,90)
       endif

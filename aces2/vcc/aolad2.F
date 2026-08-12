@@ -265,7 +265,7 @@ c     end if (nirrep.gt.1)
          print *, '@AOLAD2: unable to gather Z(I<J,XX)'
          call aces_exit(iErr)
       end if
-               call symrhf3(irp_ab,irp_ij,pop(1,1),IAOPOP,max_ij,
+               call symrhf3_vcc(irp_ab,irp_ij,pop(1,1),IAOPOP,max_ij,
      &                      iCore(ndx),
      &                      iCore(iTmp1),iCore(iTmp2),iCore(iTmp3))
                call transp(iCore(ndx),iCore(p_T2),max_ab,max_ij)

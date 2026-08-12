@@ -1,4 +1,4 @@
-      Subroutine Check_T2(Work,Length,Iuhf)
+      Subroutine Check_T2_VCC(Work,Length,Iuhf)
       Implicit Double Precision (A-H,O-Z)
 
       Dimension Work(Length)

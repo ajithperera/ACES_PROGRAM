@@ -933,7 +933,7 @@ ACES_LINK_LISTS = \
    joda:symcor:ecplib:${LIST_DEF_LIBS} \
    lambda:trp:librt3:libr2:vcc:pccd:${LIST_DEF_LIBS}:vcc:libr2 \
    nmr:libr2:${LIST_DEF_LIBS} \
-   vcc:trp:librt3:libr2:crust:pccd:${LIST_DEF_LIBS} \
+   vcc:trp:librt3:libr2:crust:pccd:${LIST_DEF_LIBS}:vcc \
    lcct:trp:librt3:libr2:crust:${LIST_DEF_LIBS} \
    vcc5q:vcc:librt3:libr2:${LIST_DEF_LIBS} \
    vcc5t:librt3:libr2:${LIST_DEF_LIBS} \
