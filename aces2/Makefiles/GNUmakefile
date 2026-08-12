@@ -990,7 +990,7 @@ ACES_LINK_LISTS = \
    psi4dbg:pccd:libpccd:vcc:dens:lambda:trp:librt3:libr2:liboo:${LIST_DEF_LIBS} \
    ringcl:ringcc:vcc:libr2:${LIST_DEF_LIBS} \
    prep:${LIST_DEF_LIBS} \
-   aux:libr2:${LIST_DEF_LIBS} \
+   aux:aces2:libr2:${LIST_DEF_LIBS} \
    ccd_light:${LIST_DEF_LIBS}\
    ccsd_light:${LIST_DEF_LIBS}\
    cse:${LIST_DEF_LIBS}\
