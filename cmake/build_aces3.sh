@@ -39,6 +39,21 @@ module purge
 module load $MODULES
 
 cd "$ACES3_DIR"
+# aces3/lib is tracked (via .gitkeep) but aces3/bin is not -- the SIAL
+# compiler step's `cp sial ../../../bin/sial` assumes it already exists
+# (same "must already exist, no mkdir of its own" pattern as aces2's
+# install dirs) and fails with a plain "No such file or directory"
+# otherwise. aces_sial/Makefile.in's SIO_DIR=../../../bin/sio has the
+# identical assumption one level deeper: its rules are bare `cp $@
+# $(SIO_DIR)` with no directory creation of their own, so when bin/sio
+# doesn't already exist, cp silently creates a *plain file* named "sio"
+# instead (each subsequent .sio compile just clobbers that same file) --
+# no error, but every fast-suite case then fails at runtime with "Cannot
+# open object file .../bin/sio/scf_rhf.sio" because the path component is
+# a file, not a directory. Same latent bug as bin/sial, same reason it was
+# never caught before this fresh worktree (see 2026-08-12 note above).
+mkdir -p bin bin/sio lib
+
 bash configure_line.ufhpc
 
 # Level 0: independent leaf libraries -- each depends only on its own
@@ -62,6 +77,7 @@ src/aces/aces_library/special_directory/oed_F12
 src/aces/aces_library/special_directory/F12_grid
 src/aces/aces_library/special_directory/dkh
 src/aces/aces_library/special_directory/direct_integral
+src/aces/aces_library/special_directory/prop_ints
 src/aces/aces_library/a2driver/geopt
 src/aces/aces_library/a2driver/aces2
 src/aces/aces_library/a2driver/symcor
