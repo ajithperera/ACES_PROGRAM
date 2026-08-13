@@ -134,9 +134,16 @@ C W(A<B;IJ) -> W(AB,IJ)
           IF(IPRINT.NE.0)WRITE(*,92) E_T
 
           E_flip     = 0.25D0*(E_t + E_s)
-          E_no_flip  = 0.75D0*E_t + 0.25D0*E_s 
-          ETOT  = E_flip
-          ESPIN = E_flip
+          E_no_flip  = 0.75D0*E_t + 0.25D0*E_s
+C 2026-08-13: reverted to E_no_flip for ETOT/ESPIN -- the archived
+C reference output (Testdir_rcc/rccd_rhf_adz.out) unambiguously reports
+C E_no_flip as "The total correlation energy" (matches TOTENERG/the
+C converged Summary-table energy there, -0.277157669217 a.u. for
+C H2O/cc-pVDZ), not E_flip. Using E_flip here silently corrupted every
+C REF=RHF,CALC=RCCD ground-state energy (confirmed regression, not
+C something that was ever archived as correct).
+          ETOT  = E_no_flip
+          ESPIN = E_no_flip
 
  91       FORMAT(T3,' The singlet spin adapted contribution to',
      &           ' the correlation energy is: ',F12.7,' a.u.')
