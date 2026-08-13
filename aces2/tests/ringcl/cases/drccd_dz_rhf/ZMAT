@@ -1,0 +1,17 @@
+RING-CCD.
+H
+O 1 R
+H 2 R 1 A
+
+R=0.957
+A=104.5
+
+*ACES2(BASIS=DZ
+CALC=DRCCD,DAMP_TYPE=DAVIDSON
+REF=RHF,MEM_SIZE=1gb
+estate_sym=5
+ESTATE_TOL=10
+cc_extrapo=1
+sym=on
+cc_conv=12,scf_conv=12)
+

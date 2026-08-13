@@ -37,20 +37,33 @@ C
       I020=I010+IINTFP*ISIZE
       IF (I020.GT.MAXCOR+1) CALL INSMEM("FORMWL",(I020-1),MAXCOR)
       CALL GETALL(ICORE,ISIZE,1,54)
+#ifdef _DEBUG_LVL0
+      call checksum("List-54 raw Wprime(AAAA) before scale: ",
+     &              icore(i000),isize)
+      nrow=irpdpd(1,isytyp(1,54))
+      ncol=irpdpd(1,isytyp(2,54))
+      Write(6,"(a)") " Wprime(mb,ej) AAAA raw, pre-scale"
+      call output(icore(i000),1,nrow,1,ncol,nrow,ncol,1)
+#endif
 
       CALL SSCAL(ISIZE,TWO,ICORE,1)
       IF (DRCCD) THEN
          CALL GETALL(ICORE(I010),ISIZE,1,119)
-      ELSE 
+      ELSE
          CALL GETALL(ICORE(I010),ISIZE,1,23)
-      ENDIF 
+      ENDIF
+#ifdef _DEBUG_LVL0
+      call checksum("List-119 <mb||ej> AAAA raw: ",
+     &              icore(i010),isize)
+      Write(6,"(a)") " <mb||ej> AAAA (list 119) raw"
+      call output(icore(i010),1,nrow,1,ncol,nrow,ncol,1)
+#endif
       CALL SAXPY(ISIZE,ONEM,ICORE(I010),1,ICORE(I000),1)
 #ifdef _DEBUG_LVL0
       call checksum("List-54: ",icore(i000),isize)
-C      nrow=irpdpd(1,isytyp(1,54))
-C      ncol=irpdpd(1,isytyp(2,54))
-C      call output(icore(i000),1,nrow,1,ncol,nrow,ncol,1)
-#endif 
+      Write(6,"(a)") " Final W(mb,ej) AAAA = 2*Wprime - <mb||ej>"
+      call output(icore(i000),1,nrow,1,ncol,nrow,ncol,1)
+#endif
       CALL PUTALL(ICORE,ISIZE,1,54)
 
       ENDIF 
@@ -70,7 +83,7 @@ C Spin-adapted Coulomb integrals for DRCCD and RHF. I am not
 C sure why I needed to multiply the entire term (2W(mb,ej)-2<mb|ej>)
 C by a factor of 2, but that is the only way to maintain the identity of
 C closed shell RHF and UHF calcs. Well, I this multiplication no longer
-C necessary. This factor must be accounted when constructing 
+C necessary. This factor must be accounted when constructing
 C L2*W(mb,ej)-> L2. This is now done in rcl_lrngdrv_r.F
 
       IF (DRCCD .AND. IUHF .EQ.0) THEN

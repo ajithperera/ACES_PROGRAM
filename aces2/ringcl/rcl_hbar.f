@@ -110,21 +110,21 @@ C
          Write(6,"(2a)") " Hbar for EOM(S)-DXRCCD or EOM(SF)-DXRCCD is",
      +                   " constructed"
       Endif 
-C These Hbar terms originaly used only for EOM(SF)-CCD (non RPA) methods 
-C However, during the developement of doubles correction, it occurs that
-C these contributions can be added perturatively (as a correction) to 
-C RPA. So, now these terms are always built. 
-  
-CSSS      If (.Not. Get_rpa) Then
+C These Hbar terms originaly used only for EOM(SF)-CCD (non RPA) methods
+C were previously always built regardless of Get_rpa (see git history) --
+C restored the original guard: skip this amplitude correction for pure
+C RPA/DRPA, where Hbar(a,b)/Hbar(i,j) must stay at the bare Fock diagonal.
+
+      If (.Not. Get_rpa) Then
          Scale = 0.50D0
          Write(6,*)
          Write(6,"(a,a)") " Hbar(i,j) and Hbar(a,b) including",
      +                    " -1/2T2(mn,ae)<mn||be> -> Hbar(a,b) and"
          Write(6,"(a,a)") " 1/2T2(im,ef)<jm||ef> -> Hbar(i,j) is",
      +                    " built.`"
-         Write(6,*) 
+         Write(6,*)
 
-C COnstruct W(ab,ij) from W(a<b,i<j) and save 
+C COnstruct W(ab,ij) from W(a<b,i<j) and save
 
          Call Rcl_expanded_abij(WORK(INEXT),MAXCOR,IUHF)
 
@@ -135,7 +135,7 @@ C Construct Hbar(a,b) = f(a,b) - 1/2T2(mn,ae)<mn||be>
 C Construct Hbar(j,i) = f(j,i) + 1/2T2(im,ef)<jm||ef>
 
          Call Rcl_form_hbar_ji(Work,Maxcor,Iuhf,Scale)
-CSSS      Endif 
+      Endif
 
 C Construc Hbar(aj,ib) = <aj||ib> - T(im,ea)<mj||eb>
 C for various ring methods.
