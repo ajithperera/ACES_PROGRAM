@@ -159,5 +159,48 @@ ifeq (${CURR},vee)
    symexp5.o: compile_f += -O0
 endif
 
+# 2026-08-13, ringcc only: found while debugging why the ring-CCD T2-amplitude
+# DIIS iteration converges to the WRONG answer for H2O/cc-pVDZ/RHF/DRCCD
+# (SYMMETRY=ON) -- the T2=0 zeroth-iteration estimate already matched the
+# archive/reference-binary answer (-0.231259763876 a.u.), but every
+# subsequent DIIS-extrapolated iteration moved AWAY from it, converging
+# instead to -0.235769503949. `rcc_dodiis0.f` is ringcc's own LOCAL copy of
+# the DIIS extrapolation routine -- same duplicated-per-module pattern as
+# SYMEXP above -- and its `libr/dodiis.o` twin already has a confirmed
+# -O0 override (2026-07-19 entry above) that this copy never inherited.
+# Compiling rcc_dodiis0.o at -O0 (no other change) reproduces the
+# reference-binary iteration table EXACTLY (iteration 0 through the
+# converged 16th iteration, matching to 8+ decimals) -- 6th confirmed
+# instance of this ifx -O2 miscompilation bug class in this codebase.
+ifeq (${CURR},ringcc)
+   rcc_dodiis0.o: compile_f += -O0
+endif
+
+# 2026-08-13, applied proactively to every other local dodiis/dodiis0 copy
+# found in the tree (`find aces2 -iname '*dodiis*'`), same rationale as the
+# SYMEXP family's own proactive rollout above -- DIIS is the exact same
+# per-iteration amplitude-extrapolation mechanism in every one of these
+# modules, so there is no reason to expect ifx treats any of them
+# differently, and re-deriving each one via its own convergence-corruption
+# bug report first would just be paying the same discovery cost N more
+# times. Not each individually re-verified against an archive/reference
+# run the way rcc_dodiis0.o above was -- if any of these modules' own fast-
+# suite cases regress, check here first before assuming a different cause.
+ifeq (${CURR},lhbar)
+   dodiis0_l.o: compile_f += -O0
+endif
+ifeq (${CURR},lambda)
+   dodiis0.o: compile_f += -O0
+endif
+ifeq (${CURR},oombpt2)
+   oombpt_dodiis.o: compile_f += -O0
+endif
+ifeq (${CURR},pccd)
+   pccd_dodiiso.o: compile_f += -O0
+   pccd_dodiis.o: compile_f += -O0
+endif
+ifeq (${CURR},vcc)
+   dodiis0.o: compile_f += -O0
+endif
 
 
