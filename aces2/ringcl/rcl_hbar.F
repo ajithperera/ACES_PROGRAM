@@ -117,5 +117,47 @@ C aoid the existing EOM code getting confused.
       
       Call rcl_set_hbar2zero(Work,Maxor,Iuhf)
 
+C SCRNC_DEBUG_LOG.md step 2/3: independent ringcc-side Hbar
+C diagonalization self-check. This is the actually-exercised path for
+C excite=EOM(Sf)-DRCCD runs (RCL_DRIVER's own call site only fires for
+C Solve_4lambda=.True., which this pathway never sets) -- Hbar lists
+C 54-59 are fully built at this point, so diagonalize them now to get
+C ringcc's own independent EOM(Sf)-DRCCD eigenvalues.
+C
+C Rcl_heffxc (called inside Rcl_check_rcchbar) destructively overwrites
+C the same same-spin list(s) it reads from -- 54/55 for UHF, 56 for RHF
+C -- adding the Fock diagonal on top, same pattern as the scrnc Hbar
+C double-build bug fixed 2026-08-14. That's fine for Rcl_drvrpa's own
+C diagonalization, but would corrupt those lists for whatever downstream
+C production EOM step consumes rcl_hbar's raw output next. Save/restore
+C around the diagnostic call so it stays side-effect-free.
+#ifdef _DEBUG_LVL0
+      If (Iuhf .Ne. 0) Then
+         Isz54 = Isymsz(Isytyp(1,54),Isytyp(1,54))
+         Isz55 = Isymsz(Isytyp(1,55),Isytyp(1,55))
+         I900  = 1
+         I910  = I900 + Isz54*Iintfp
+         I920  = I910 + Isz55*Iintfp
+         If (I920 .Gt. Maxcor) Call Insmem("Rcl_hbar-chk",I920,Maxcor)
+         Call Getall(Work(I900),Isz54,1,54)
+         Call Getall(Work(I910),Isz55,1,55)
+      Else
+         Isz56 = Isymsz(Isytyp(1,56),Isytyp(1,56))
+         I900  = 1
+         I920  = I900 + Isz56*Iintfp
+         If (I920 .Gt. Maxcor) Call Insmem("Rcl_hbar-chk",I920,Maxcor)
+         Call Getall(Work(I900),Isz56,1,56)
+      Endif
+
+      Call Rcl_check_rcchbar(Work(I920),Maxcor-I920+1,Iuhf)
+
+      If (Iuhf .Ne. 0) Then
+         Call Putall(Work(I900),Isz54,1,54)
+         Call Putall(Work(I910),Isz55,1,55)
+      Else
+         Call Putall(Work(I900),Isz56,1,56)
+      Endif
+#endif
+
       Return
       End

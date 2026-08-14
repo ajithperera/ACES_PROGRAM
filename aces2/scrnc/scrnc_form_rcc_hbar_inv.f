@@ -327,6 +327,36 @@ CSSS         I000 = 1
          IF (IEND .GT. MAXCOR) CALL INSMEM("SCRNC_FORM_RCC_HBAR_INV",
      +                                     IEND,MAXCOR)
 
+C Independent Hbar diagonalization (Ajith's request 2026-08-14), to
+C compare against ringcc's own eigenvalues from Rcl_check_rcchbar (see
+C SCRNC_DEBUG_LOG.md). DGEEV destroys its input matrix in-place, so
+C snapshot Hbar into scratch first -- this is a read-only diagnostic and
+C must not perturb the production Hbar^(-1) that MINV builds below.
+         Ihcopy = IEND
+         Ievr   = Ihcopy + MATDIM*MATDIM
+         Ievi   = Ievr   + MATDIM
+         Ivl    = Ievi   + MATDIM
+         Ivr    = Ivl    + MATDIM*MATDIM
+         Idgwrk = Ivr    + MATDIM*MATDIM
+         Idgend = Idgwrk + 4*MATDIM
+         IF (Idgend .GT. MAXCOR) CALL INSMEM(
+     +                        "SCRNC_FORM_RCC_HBAR_INV-diag",
+     +                        Idgend,MAXCOR)
+
+         CALL DCOPY(MATDIM*MATDIM,W(I000),1,W(Ihcopy),1)
+         CALL DGEEV("V","V",MATDIM,W(Ihcopy),MATDIM,W(Ievr),W(Ievi),
+     +              W(Ivl),MATDIM,W(Ivr),MATDIM,W(Idgwrk),4*MATDIM,
+     +              Ierror)
+
+         Write(6,*)
+         Write(6,"(a)") " scrnc's own Hbar(ai,bj) is fully diagonalized"
+         Write(6,*)
+         Bohrtoev = 27.2113961D0
+         Write(6,"(a)") " The real eigenvalues"
+         Write(6,"(5(1x,F15.8))") (W(Ievr+I-1)*Bohrtoev,I=1,MATDIM)
+         Write(6,"(a)") " The imaginary eigenvalues"
+         Write(6,"(5(1x,F15.8))") (W(Ievi+I-1)*Bohrtoev,I=1,MATDIM)
+
          CALL MINV(W(I000),MATDIM,MATDIM,W(I010),DET,TOL,0)
         Iprint=Iloc(Irrep)
         Write(6,"(a)") " The drCCD Hbar inverse matrix"

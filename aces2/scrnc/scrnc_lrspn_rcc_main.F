@@ -162,9 +162,22 @@ C We construct e^-TMue(pq)^T, similarity transformed Mu(p,q).
              Call Scrnc_form_mubar_s(Work(Ioff_oo),Work(Ioff_vv),
      +                               Work(Ioff_vo),Work(I030),
      +                               Work(I040),Work(I050),
-     +                               Work(I060),Work(Iend),Maxcor, 
+     +                               Work(I060),Work(Iend),Maxcor,
      +                               Iuhf,Irrepx,Iside,Mbar_00,
      +                               Ieomprop)
+
+C R-side/L-routine cross-checkpoint (SCRNC_DEBUG_LOG.md step 1): the
+C same raw integrals for this Npert_count feed an Iside=1 mubar_s stage
+C in Scrnc_jj_rcc_lrspn.F too, before that routine's own Iside=2 stage
+C diverges. R-side is proven correct (RPA-sourced-T2 elimination test),
+C so these two checksums should match theirs exactly for the same
+C Npert_count -- diff to confirm before narrowing into Iside=2.
+#ifdef _DEBUG_LVL0
+      write(6,"(1x,a,i4)") "R-side Npert_count=",Npert_count
+      call checksum("R-side Mbar_00:",Mbar_00,1)
+      call checksum("R-side Mubar_s(Iside=1):",Work(I030),
+     +              Lenoo+Lenvv+2*Lenvo)
+#endif
              If (Iside .eq. 1) Then
 
                  Mu_s   = 480

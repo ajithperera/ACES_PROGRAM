@@ -128,9 +128,21 @@ C We construct e^-TMue(pq)^T, similarity transformed Mu(p,q).
          Call Scrnc_form_mubar_s(Work(Ioff_oo),Work(Ioff_vv),
      +                           Work(Ioff_vo),Work(I030),
      +                           Work(I040),Work(I050),
-     +                           Work(I060),Work(Iend),Mxcor, 
+     +                           Work(I060),Work(Iend),Mxcor,
      +                           Iuhf,Irrepx,Iside,Mbar_00,
      +                           Ieomprop)
+
+C R-side/L-routine cross-checkpoint (SCRNC_DEBUG_LOG.md step 1): this is
+C this routine's own Iside=1 stage, on the same raw integrals for this
+C Npert_count as Scrnc_lrspn_rcc_main.F's (proven-correct) R-side. Diff
+C against that routine's matching checksum before trusting the Iside=2
+C stage below.
+#ifdef _DEBUG_LVL0
+      write(6,"(1x,a,i4)") "L-routine Npert_count=",Npert_count
+      call checksum("L-routine Mbar_00:",Mbar_00,1)
+      call checksum("L-routine Mubar_s(Iside=1):",Work(I030),
+     +              Lenoo+Lenvv+2*Lenvo)
+#endif
 
          Iside = 2
          Ibgn  = I070 
@@ -157,7 +169,6 @@ C We construct e^-TMue(pq)^T, similarity transformed Mu(p,q).
 
          If (Iside .Eq. 2) Then
              Mu_s    = 482
-             Ioffset = 1
              Lenr1a = Irpdpd(Irrepx,9)
              Lenr1b = Irpdpd(Irrepx,10)
 
@@ -177,20 +188,26 @@ C Hbar^-1 here is exact, not an approximation. 2026-08-12.
      +                  Nsizec,Work(I000),Nsizec,Zilch,Work(Iwrk),
      +                  Nsizec)
 
-             Call Putlst(Work(Iwrk),1,1,0,Irrepx,374)
-
 #ifdef _DEBUG_LVL0
       write(6,*)
       call checksum("Jbar_L<(S,D)|pq>:",Work(Iwrk),Nsizec)
 #endif
+
+C Save the left amplitude straight to its real per-perturbation record.
+C Bug fix 2026-08-14 (see SCRNC_DEBUG_LOG.md): this used to go through a
+C "scratch" record 1 of list 374 (Putlst(...,1,...) here, then
+C Getlst(record 1)+Putlst(record Npert_count) below) -- but record 1 of
+C list 374 IS ALSO Npert_count=1's own permanent slot, so every later
+C Npert_count's scratch write silently clobbered Npert_count=1's
+C finished value with whatever the LAST perturbation's result happened
+C to be. That's what broke JJ_lrespn's symmetry (record 1 ended up
+C holding Npert_count=Nao_pair's value instead of its own). Writing
+C directly to Npert_count (already known here) removes the collision.
+
+          Call Putlst(Work(Iwrk),Npert_count,1,1,Irrepx,374)
           Endif
 
-C Save the left amplitudeds.
-
-          Call Getlst(Work(I000),Ioffset,1,1,Irrepx,372+Iside)
-          Call Putlst(Work(I000),Npert_count,1,1,Irrepx,372+Iside)
-
-         Enddo ! Enddo for Iao_pair 
+         Enddo ! Enddo for Iao_pair
       Enddo ! Enddo of irrepr
 
       Call Dzero(JJ_lrespn,Nao_pair*Nao_pair)
@@ -228,7 +245,9 @@ C Save the left amplitudeds.
 #ifdef _DEBUG_LVL0
          Write(6,"(a)") " <0|(1+L)M_bar and first-order e^T|0>"
          call checksum("373",work(i000),nsizec)
-#endif 
+         Write(6,"(a,I3,a,10F15.10)") " 373 raw, Iao_pair=",Iao_pair,
+     +                             ":",(Work(I000-1+I),I=1,Nsizec)
+#endif
          If (Iuhf .eq. 0) Then
             Call Spntsing(Isympert(Iao_pair),Work(I000),Work(Iend),
      +                    Memleft) 
@@ -242,7 +261,10 @@ C Save the left amplitudeds.
      +                     374)
 #ifdef _DEBUG_LVL0
                call checksum("374",work(i010),nsizec)
-#endif 
+               Write(6,"(a,I3,a,10F15.10)") " 374 raw, Jao_pair=",
+     +                             Jao_pair,":",
+     +                             (Work(I010-1+I),I=1,Nsizec)
+#endif
                X = Ddot(Nsizec,Work(I010),1,Work(I000),1)
 
                JJ_lrespn(Iao_pair,Jao_pair) = 

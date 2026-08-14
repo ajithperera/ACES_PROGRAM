@@ -8,23 +8,61 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ## RESUME POINT (as of 2026-08-14, latest)
 
-**Immediate next step**: dig into `aces2/scrnc/scrnc_jj_rcc_lrspn.F`'s
-`Iside=2` (L-side) branch specifically. This is now the conclusively
-isolated location of the JJ-matrix asymmetry bug (see "Where the bug is
-isolated to" below). No decision needed to start this — just go read/trace
-`Scrnc_form_mubar_s(Iside=2)` and the `Hbar^(-1)^T` transpose logic in that
-routine.
+**RESOLVED, 2026-08-14. Root cause found and fixed. JJ_lrespn is now
+exactly symmetric for both DRCCD and RCCD (RHS + off-diagonal all match
+to the digits shown).** See "Step 4 result / ROOT CAUSE" below for the
+full trace. Steps 1-3 (Hbar proven correct, twice over) turned out to be
+red herrings for the actual bug -- it was never in the CC/Hbar physics at
+all, it was an ACES2 list-storage collision in
+`scrnc_jj_rcc_lrspn.F`'s bookkeeping. Fixed, verified on both test cases
+from clean pipeline reruns. One open thread remains: `scrnc_jj_cc_lrspn.F`
+(the proven-symmetric CCSD control path) appears to use the exact same
+scratch-record-1-collision pattern and hasn't been checked for whether
+it's silently exposed to the same bug under different conditions -- not
+yet investigated, see bottom of this section.
 
-**Working tree state**: uncommitted changes exist in (`git status` in this
-repo confirms these, nothing lost):
-- `aces2/ringcc/rcc_driver.F` (+ preprocessed `.f`)
-- `aces2/scrnc/scrnc_driver.F` (+ `.f`)
-- `aces2/scrnc/scrnc_form_rcc_hbar.F` (+ `.f`)
-- `aces2/scrnc/scrnc_jj_cc_lrspn.F` (+ `.f`)
-- `aces2/scrnc/scrnc_jj_rcc_lrspn.F` (+ `.f`)
-- `aces2/scrnc/scrnc_lrspn_rcc_main.F` (+ `.f`)
+**Immediate next step — DO NOT diverge from this into generic code-reading.**
+The bug is isolated to `aces2/scrnc/scrnc_jj_rcc_lrspn.F`'s `Iside=2`
+(L-side) branch (see "Where the bug is isolated to" below), but the METHOD
+for chasing it must stay consistent with the debugging path already built
+and validated this project (the "3-route" comparison: native RPA / ringcc
+/ CCSD) — not ad-hoc source reading in isolation. Concretely, in order:
 
-Also 7 local commits ahead of `origin/master`, not yet pushed.
+1. Instrument the L-side (`Iside=2`) with checksums, but checkpoint them
+   **against the R-side's own already-correct intermediates** for the same
+   raw integrals (R-side is proven correct via the route-1 RPA-sourced-T2
+   test) — not in isolation.
+2. Wire in the existing orphaned dead-code cross-check
+   (`ringcl/rcl_check_rcchbar.F` + `rcl_drvrpa.F`, `#ifdef _DEBUG_LVL0`,
+   zero current callers) to get ringcc's own independent Hbar
+   diagonalization/eigenvalues for this system. This is step 1 of the
+   original agreed two-step plan ("verify scrnc's Hbar is genuinely
+   ringcc's Hbar") that was never executed — cheap, already written, just
+   needs a call site added in `rcl_driver.F`.
+3. Run the already-built, never-yet-executed test case
+   `h2_rpa_verify_uhf_sto3g` (`excite=EOM(Sf)-DRCCD`) to get ringcc's own
+   independently-reported EOM(Sf)-DRCCD excitation energy, and compare
+   against scrnc's Hbar eigenvalues from step 2 — confirms whether scrnc's
+   shared Hbar itself is trustworthy before blaming the L-side's
+   Mubar/transpose logic specifically.
+4. Only if Hbar checks out clean, narrow into `Mubar(Iside=2)` +
+   `Hbar^(-1)^T` transpose as the remaining suspect.
+
+**On every resume, re-read this numbered list before proposing a plan.**
+Do not re-derive a "go read the suspect file" plan from scratch — it skips
+the route-comparison methodology and has already caused one correction
+this project (see feedback memory `feedback_stay_on_agreed_debug_path`).
+
+**Working tree state (corrected 2026-08-14, post-freeze resume)**: the
+Hbar single-build refactor + RPA_T2VECS bypass fixes listed above as
+"uncommitted" were actually committed just before the terminal froze —
+`2e8d79f0` ("scrnc/ringcc: Hbar single-build refactor + RPA_T2VECS bypass
+fixes for GW debug"). `git status` now shows those files clean. Working
+tree is 8 local commits ahead of `origin/master`, still not pushed. Only
+stray leftovers from the freeze: a `.scrnc_driver.F.swp` (untracked) and a
+deleted `.asv_ctl.c.swp` — both harmless vim swap noise, not touched.
+`aces3/config.log`/`config.status` also show as modified (unrelated build
+byproducts, not part of this thread).
 
 **Standing rule, repeated across this whole saga — ALWAYS do this before
 testing any change**: `make` alone does NOT update `aces2/bin/x*`. You must
@@ -132,6 +170,216 @@ transpose (`Xgemm("T","N",...)`) to list `Mu_s=482`. This architectural
 mismatch is the prime suspect. **Not yet traced line-by-line** — the actual
 next step.
 
+**Step 1 result (2026-08-14, post-freeze resume, DONE)**: added matched
+`@CHECKSUM` instrumentation (label + `Npert_count`) to both routines'
+`Iside=1`-stage `Mbar_00`/`Mubar_s` intermediates — `scrnc_lrspn_rcc_main.F`
+(R-side, proven correct) and `scrnc_jj_rcc_lrspn.F`'s own internal
+`Iside=1` stage (computed before its `Iside=2` stage and the
+`Hbar^(-1)^T` transpose). Rebuilt (`make install` in `aces2/scrnc/` with
+`intel/2025.1.0` loaded — note: `which xscrnc` resolves to a STALE separate
+binary at `~/Develop/bin/xscrnc`, md5-different, not a symlink; had to
+invoke `~/Develop/ACES_PROGRAM/aces2/bin/xscrnc` by full path to test the
+real rebuild) and reran `h2_scrnc_drccd_uhf_sto3g`. Confirmed the
+documented asymmetry signature is unchanged (JJ(1,1) vs JJ(4,4) diff =
+JJ(1,4) vs JJ(4,1) diff = 0.00448453013, both routines' checksums for all
+4 `Npert_count` values bit-identical between R-side and L-routine.
+
+**Conclusion**: the shared `Iside=1`-stage machinery (raw integral prep,
+`Scrnc_form_mubar_00`, `Scrnc_form_mubar_s` for `Iside=1`) is NOT the bug
+source — ruled out with a positive, decisive checksum match. This further
+narrows suspicion onto exactly what step 4 already named: the L-routine's
+own `Iside=2`-stage `Scrnc_form_mubar_s` call (using `Mbar_00-M_expect`
+and the `Iside=1`-derived buffers as input) and/or the `Hbar^(-1)^T`
+transpose block. Per the agreed plan, steps 2-3 (independent ringcc Hbar
+eigenvalue cross-check) should still run before diving into that code,
+since they test whether scrnc's *shared* Hbar itself is trustworthy
+(orthogonal to this L/R intermediate check).
+
+Instrumentation is uncommitted in `aces2/scrnc/scrnc_lrspn_rcc_main.F` and
+`aces2/scrnc/scrnc_jj_rcc_lrspn.F` (checksums only, guarded by
+`_DEBUG_LVL0`, no logic changes) — kept in the tree, not reverted, since
+it's reusable for future checkpoints on this bug.
+
+**Step 2/3 result (2026-08-14, DONE)**: `RCL_DRIVER.F`'s own call site
+(where the plan originally assumed the check belonged) turned out to
+never fire for this test — `RCL_DRIVER` is the lambda-equation solver,
+gated on `Solve_4lambda=.True.`, which an EOM-only run like this never
+sets. The pathway actually exercised by `excite=EOM(Sf)-DRCCD` is
+`rcl_hbar.F`, which builds Hbar lists 54-59 and returns with nothing ever
+diagonalizing them — confirming the log's "never executed" description
+of this self-check was accurate for the reason originally guessed
+(no caller) but the *fix* location was wrong; reverted the `RCL_DRIVER.F`
+call site (added defensively, never verified, would have been an
+unverified corruption risk if that path is ever exercised) and wired the
+call into `rcl_hbar.F` instead, right after `rcl_set_hbar2zero`.
+
+Caught a real repeat of the exact same double-build bug class before it
+shipped: `Rcl_check_rcchbar` → `Rcl_heffxc` destructively overwrites the
+same same-spin list(s) it reads from (54/55 UHF, 56 RHF) by adding the
+Fock diagonal on top — needed by `Rcl_drvrpa`'s own diagonalization, but
+would silently corrupt those lists for whatever downstream production EOM
+step consumes `rcl_hbar`'s raw output next, same failure mode as the
+scrnc Hbar bug. Added explicit save/restore of those lists around the
+diagnostic call (`GETALL` before, `PUTALL` after) in `rcl_hbar.F`.
+Verified side-effect-free: reran the full fresh pipeline
+(`xjoda,xvmol,xvmol2ja,xvprops,xvscf,xvtran,xintprc,xringcc,xringcl`) on
+`h2_rpa_verify_uhf_sto3g` and confirmed the raw/final `Wprime`/list-54-57
+checksums are bit-identical to the uninstrumented baseline
+(`0.170975410565E+00` raw, `0.160628396930E+00` final on all of
+54/55/56/57) — the check's own list-54/55 mutation is fully undone.
+
+**Result: ringcc's own independent EOM(Sf)-DRCCD Hbar diagonalization
+gives real eigenvalues 42.66923610 eV and 33.92739023 eV** (imaginary
+parts both exactly zero, as expected for a real, non-defective Hbar in
+this 2-state system). This is ringcc's own number, computed via a
+completely separate code path (`Rcl_heffxc`+`Rcl_drvrpa`, full `DGEEV`
+non-symmetric diagonalization) from anything scrnc touches.
+
+**Not yet done, needs a physics call before proceeding**: comparing this
+against scrnc's own Hbar. scrnc never reports raw eigenvalues — only the
+JJ=W=v+v·χ·v matrix — so "confirms whether scrnc's shared Hbar is
+trustworthy" (per step 3's original framing) needs Ajith to say what
+scrnc-side number should match 42.669/33.927 eV, or whether these should
+instead be cross-checked against the native RPA module (`xrpa`)'s own
+independent output for the same system as a third, orthogonal source.
+Test dir: `/blue/ufhpc/perera/scrnc_test/h2_rpa_verify_uhf_sto3g/`
+(rebuilt from scratch, all 9 pipeline steps' `.out` files present).
+
+**2026-08-14 follow-up, `_RCC` flag clarified**: Ajith asked to add
+Hbar-diagonalization code to scrnc itself (see new TODO below), and
+separately to switch to "Sf-RCCD, not DRCC" via recompiling `rpa` with
+its CPP directive off. Tried `_RCC` off first — but that selects the
+`#else` branch in `do_uhf_rpa.F`/`mkb_uhf.F` (prints "dr-CCD Correlation
+energy", list-4+ISPIN numbering), i.e. DRCCD, the opposite of what was
+asked. Ajith clarified: **"regular RPA" = ring-CCD (RCCD), keeps BOTH
+Coulomb (J) AND exchange (K) integrals** — that's the `#ifdef _RCC`
+branch ("r-CCD" label, list-18+ISPIN numbering), not `#else`. **Reverted
+`rpa` back to `_RCC` ON** (`make ppclean && make install` in
+`aces2/rpa/`, no override) — matches the tree's actual global default in
+`Makefiles/GNUmakefile.src` (never touched), confirmed via the same
+label/list-number check. Net effect: no change from before this
+excursion, `xrpa` is back to its normal build. Direct-vs-exchange
+terminology note for future reference: DRCCD/dRPA = direct-only
+(Coulomb/J), RCCD/regular-RPA = full (Coulomb+exchange, J+K) — `_RCC`
+selects the latter when defined.
+
+**Step 2/3/scrnc-Hbar-diag result (2026-08-14, DONE)**: added independent
+Hbar diagonalization directly to scrnc, in
+`scrnc_form_rcc_hbar_inv.F`, right before the existing `CALL MINV(...)`
+(which destroys its input in-place) -- snapshots Hbar into scratch
+(`DCOPY`) first so the diagnostic (`DGEEV`, same non-symmetric
+diagonalization ringcl's own check uses) can never perturb the
+production `Hbar^(-1)` build MINV computes right after. Guarded by
+`_DEBUG_LVL0` like everything else here. Rebuilt cleanly (`make install`
+in `aces2/scrnc/`).
+
+Built a new RCCD (regular RPA, both Coulomb+exchange kept) scrnc test,
+`/blue/ufhpc/perera/scrnc_test/h2_scrnc_rccd_uhf_sto3g/` (H2/STO-3G/UHF,
+`CALC=RCCD`, same 10-step pipeline including `xscrnc`) -- **scrnc's own
+new diagnostic gives real eigenvalues 25.26716566 eV and 15.09016923 eV**
+(imaginary parts zero). Also built the RCCD counterpart of the ringcc
+verify test, `h2_rpa_verify_rccd_uhf_sto3g/` (`excite=EOM(Sf)-RCCD`,
+`eomref=RCCD` -- the "switch to Sf-RCCD, not DRCCD" Ajith asked for) --
+**ringcc's independent diagonalization gives the exact same
+25.26716566 eV and 15.09016923 eV.** Bit-identical between the two
+completely separate code paths (scrnc's own `Scrnc_form_rcc_hbar`+`DGEEV`
+vs ringcl's `Rcl_heffxc`+`Rcl_drvrpa`+`DGEEV`).
+
+Also confirmed the JJ-matrix asymmetry reproduces in RCCD too, same
+exactly-equal-offset signature as DRCCD (diagonal diff = off-diagonal
+diff = `0.06020595989` here, vs `0.00448453013` for DRCCD) -- physics-
+method-independent, consistent with an architectural bug in scrnc's own
+L-side code rather than anything CC-method-specific.
+
+**`aces2/rpa`'s `_RCC` flag**: tried turning it off per Ajith's initial
+phrasing, got DRCCD instead of the intended RCCD (see follow-up above) --
+reverted to `_RCC` ON (`make ppclean && make install`, no override),
+matching the tree's normal default. No net change to `rpa/` from before
+this thread. `_RCC` is scoped to `rpa/` only (grep-confirmed: no other
+module's `.F` files reference it), so the scoped `DEFINES_EXTRA=`
+command-line override used during the experiment never touched the
+shared `Makefiles/GNUmakefile.src` or any other module's build.
+
+**Step 4 result / ROOT CAUSE (2026-08-14, RESOLVED)**: Ajith confirmed
+Hbar being exactly symmetric for H2/CCSD-derived Hbar is a known special
+case unique to H2 -- not itself suspicious -- which redirected the
+search away from the `Hbar^(-1)^T` transpose (mathematically a no-op on
+a symmetric matrix, so it could not have been the bug regardless).
+
+Traced the actual mechanism by dumping raw vector values (not just
+checksums) at each stage of `scrnc_jj_rcc_lrspn.F`'s `Iside=2` handling,
+for the 4-AO-pair H2/STO-3G system:
+1. Raw `Mu(482)` (pre-`Hbar`-multiply): correctly antisymmetric between
+   AO-pair 1 and 4 (`+0.113.../-0.113...`).
+2. `Work(Iwrk)` immediately post-`Xgemm`: still correctly antisymmetric
+   (`+0.1218.../-0.1218...`) -- confirms the `Hbar^(-1)^T` multiply
+   itself was never the problem.
+3. List 374's record 1, read back immediately after being written: still
+   correct at that instant.
+4. The FINAL value of list 374 record 1, read later in the JJ-assembly
+   `Ddot` loop: **wrong** -- came back as AO-pair 4's value, not AO-pair
+   1's own.
+
+Root cause: the code wrote the `Hbar^(-1)^T`-multiplied result to a
+"scratch" slot -- **record 1 of list 374** -- via
+`Putlst(Work(Iwrk),1,1,0,Irrepx,374)`, then immediately relocated it to
+its real per-perturbation slot via
+`Getlst(...,Ioffset=1,...)`/`Putlst(...,Npert_count,...)`. But record 1
+of list 374 is ALSO the permanent final-storage slot for `Npert_count=1`
+itself (since perturbations are numbered 1..Nao_pair and stored at
+matching record numbers). So every iteration after the first
+(`Npert_count=2,3,4,...`) reused that same record 1 as scratch, and each
+one silently overwrote whatever `Npert_count=1`'s finished value had
+been left there. By the time the JJ-assembly loop read record 1 back, it
+held the LAST perturbation's value instead of the first's -- explaining
+both the "additive offset tied to atom-2's AO-pair index" signature
+(record `Nao_pair`'s value leaking into record 1's slot) and why fixing
+the earlier, unrelated Hbar double-build bug made the asymmetry *worse*
+(that fix changed what ended up in the last-written record, changing the
+leaked value, not removing the leak).
+
+**Fix** (`aces2/scrnc/scrnc_jj_rcc_lrspn.F`): write the `Xgemm` result
+directly to its real record --
+`Call Putlst(Work(Iwrk),Npert_count,1,1,Irrepx,374)` -- removing the
+scratch `Putlst(...,1,...)` and the subsequent
+`Getlst(record 1)`/`Putlst(record Npert_count)` relocation pair entirely
+(`Npert_count` is already known at that point in the loop, so the
+round-trip was never necessary). Also removed the now-unused `Ioffset`
+variable.
+
+**Verified**: rebuilt (`make install` in `aces2/scrnc/`), reran full
+fresh pipelines for both control cases from clean directories:
+- `h2_scrnc_rccd_uhf_sto3g`: `JJ(1,1)=JJ(4,4)=0.80470880500`,
+  `JJ(1,4)=JJ(4,1)=0.53913978308` -- exactly symmetric.
+- `h2_scrnc_drccd_uhf_sto3g`: `JJ(1,1)=JJ(4,4)=0.78965007478`,
+  `JJ(1,4)=JJ(4,1)=0.55419851331` -- exactly symmetric.
+
+scrnc's own Hbar-eigenvalue diagnostic (added earlier this session,
+`scrnc_form_rcc_hbar_inv.F`) still reproduces ringcc's independent
+25.26716566/15.09016923 eV exactly -- confirming this fix didn't touch
+(and didn't need to touch) anything Hbar-related, consistent with the
+root cause being pure list-bookkeeping, not physics.
+
+Left in `scrnc_jj_rcc_lrspn.F` as ongoing diagnostics (kept, not
+exploratory cruft): the "R-side/L-routine Npert_count" cross-checkpoint
+checksums from step 1, and new "373 raw, Iao_pair=N" / "374 raw,
+Jao_pair=N" raw-vector prints (these are what caught the sign/collision
+bug -- checksums alone, being sum/sumsq, don't preserve enough
+sign/structure information to have caught this one directly).
+
+**Open thread, NOT yet investigated**: `scrnc_jj_cc_lrspn.F` (the CCSD
+control path, proven symmetric to 11 digits for the CCSD test case) uses
+the textually identical scratch-record-1-of-list-374 pattern
+(`Call Putlst(Work(I000),1,1,0,Irrepx,374)` then the same
+`Getlst(record 1)`/`Putlst(record Npert_count)` relocation). Unclear why
+it hasn't shown symptoms -- possibilities: (a) it's genuinely fine for
+some structural reason specific to how CCSD's `Scrnc_load_vec` populates
+things that ring-CC's `Xgemm` doesn't share, (b) it's exposed to the same
+collision but the CCSD H2 control case happens not to trigger a visible
+difference, or (c) something else. Worth a deliberate look later, but
+NOT part of the current fix and not blocking it -- flagging so it isn't
+lost.
+
 Also found and confirmed genuinely dead/orphaned (not related, don't touch
 unless deliberately picking this up separately):
 `ringcl/rcl_check_rcchbar.F` + `ringcl/rcl_drvrpa.F` — a fully-written but
@@ -165,8 +413,35 @@ this.
     T2, decisive elimination test)
   - `/blue/ufhpc/perera/scrnc_test/h2_rpa_verify_uhf_sto3g/` (built for an
     earlier planned Hbar-eigenvalue cross-check, not yet run through)
+  - `h2_rpa_verify_rccd_uhf_sto3g/` (RCCD counterpart of the above,
+    ringcc's own Hbar eigenvalues for regular RPA)
+  - `h2_scrnc_rccd_uhf_sto3g/` (RCCD counterpart of the drccd control
+    case, scrnc's own Hbar eigenvalues + JJ matrix for regular RPA)
   - 11 further scrnc_test dirs from earlier sessions, see memory for detail
     if needed.
+
+**PATH trap, bigger than previously documented (2026-08-14)**: `which
+xjoda`/`which xscrnc`/`which xaces2` etc. all resolve to a STALE, separate
+`~/Develop/bin/` tree by default (not a symlink, genuinely different
+binaries, confirmed via `md5sum`) -- `aces2/bin` is NOT on `$PATH` by
+default in a fresh shell. Always
+`export PATH=/home/perera/Develop/ACES_PROGRAM/aces2/bin:$PATH` (and
+`module load intel/2025.1.0`, same shell command, not piped -- piping
+`module load | tail` runs it in a subshell and silently loses the PATH
+change) before testing any rebuilt module, or you're silently running old
+code. `xaces2`'s automatic pipeline builder also doesn't know to route
+`EOM(Sf)-DRCCD`/`EOM(Sf)-RCCD` through the manual ring-CC pipeline -- it
+sends these through the standard `xvcc`/EOM-CC machinery instead, which
+can crash on H2/STO-3G edge cases unrelated to anything in this thread
+(hit an integer-divide-by-zero in `xvcc`'s `e4s`/`t2t1aa1` this way).
+Always build these test pipelines manually:
+`xjoda,xvmol,xvmol2ja,xvprops,xvscf,xvtran,xintprc,xringcc,xringcl[,xscrnc]`.
+New/empty test dirs also need `GENBAS` copied in by hand (3.5MB reference
+basis file, not tracked in git) -- copy from any sibling `scrnc_test/*`
+dir. Rerunning a single pipeline step (e.g. just `xringcl`) on top of an
+already-completed run's leftover `JOBARC` is NOT idempotent for Hbar-type
+quantities -- always clear the directory back to `ZMAT`+`GENBAS` and
+rerun the full pipeline fresh rather than resuming partway.
 
 ---
 

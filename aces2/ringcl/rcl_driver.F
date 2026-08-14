@@ -206,7 +206,7 @@ C
          CALL RCC_CMPENG(WORK(INEXT),MAXCOR,143,0,ECORR,
      &                   ENERGY(ICYCLE+1,1),ENERGY(ICYCLE+1,2),
      &                   IUHF,1)
-     
+
          CALL RCC_AMPSUM(WORK(INEXT),MAXCOR,IUHF,0,.FALSE.,'L')
 C
          CALL RCC_FINISH(ICYCLE+1)
