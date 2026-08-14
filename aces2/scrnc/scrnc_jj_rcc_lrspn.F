@@ -274,6 +274,13 @@ C directly to Npert_count (already known here) removes the collision.
          Enddo
       Enddo
 
+#ifdef _DEBUG_LVL0
+      Write(6,*)
+      Write(6,"(a)") " Response-only JJ matrix (before bare v added)"
+      call output(JJ_lrespn,1,Nao_pair,1,Nao_pair,Nao_pair,
+     +            Nao_pair,1)
+#endif
+
 C --------------------------------------------------------------------
 C Add the bare (uncorrelated) Coulomb integral (mu nu|kappa lambda) so
 C that JJ_lrespn holds the FULL screened Coulomb interaction

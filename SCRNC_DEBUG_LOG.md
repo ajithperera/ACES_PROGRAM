@@ -6,7 +6,150 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
-## RESUME POINT (as of 2026-08-14, latest)
+## SESSION END, 2026-08-14 evening -- RESUME TOMORROW HERE
+
+Stopping for the day. State to pick back up with, in one paragraph: H2's
+list-374 collision bug (both L-side and CCSD R-side instances) is fixed
+and committed, confirmed still correct. H2O's ring-CC path (DRCCD/RCCD)
+is a SEPARATE, still-open bug -- JJ is genuinely asymmetric
+(1.104E-04 DRCCD / 6.653E-04 RCCD max diff, both deterministic, confirmed
+via independent reruns), while H2O's CCSD control path stays exactly
+symmetric. Two candidate causes have been tested and RULED OUT today (see
+below): the `scrnc_form_mubar_s.F` I020 sizing typo (A/B tested, zero
+effect on this system) and the Hbar^-1 transpose identity (verified clean
+to 1E-15). The next concrete step, not yet started: raw-value-dump trace
+of `scrnc_form_mubar_s.F`'s `Mubar_s(Iside=2)` XGEMM/`MAIBAR` formation
+(~lines 287-320) for the H2O worst-offending AO-pair indices
+(9/20/38/41/49), the same method (not just checksums) that caught the
+original H2 bug. Start there tomorrow -- don't re-derive from scratch,
+and don't re-litigate the two ruled-out candidates above.
+
+---
+
+## RESUME POINT (as of 2026-08-14, latest -- CORRECTED, NOT RESOLVED)
+
+**STATUS CORRECTION, 2026-08-14 evening.** The "RESOLVED" claim directly
+below (from earlier the same day) is WRONG for H2O -- it was only ever
+verified against H2/STO-3G's tiny 4x4 JJ matrix. When actually tested on
+H2O/STO-3G (49x49 JJ matrix), **the ring-CC path (DRCCD/RCCD) is
+genuinely asymmetric**, with the two H2-derived fixes (`b2443051`,
+`82f3f2fe`) both already in place. The CCSD (non-ring) control path is
+still exactly symmetric for H2O too, so this is confined to the same
+ring-CC L-side architecture as before, but it is evidently a DIFFERENT or
+ADDITIONAL bug from the list-374 collision -- that one is confirmed fixed
+(H2 case still exact), this is new.
+
+**Hard numbers (2026-08-14 evening), from `/blue/ufhpc/perera/scrnc_test/`:**
+- `h2o_scrnc_ccsd_uhf_sto3g` (production CCSD-GW path): exactly symmetric,
+  max|JJ(r,c)-JJ(c,r)| = 0.0. Still clean.
+- `h2o_scrnc_drccd_uhf_sto3g` (ring-CC, orig run) and
+  `h2o_scrnc_drccd_uhf_sto3g_rerun` (completely fresh pipeline rerun,
+  same ZMAT/GENBAS, run independently end-to-end): **max asymmetry =
+  1.103811E-04 at JJ(9,20)=-0.00496532118 vs JJ(20,9)=-0.00507570228**,
+  bit-identical between the two independent runs -- deterministic bug,
+  not a race/numerical-noise artifact. Next-worst: JJ(9,41) diff
+  1.027E-04, JJ(9,49) diff 6.32E-05, JJ(33,38) diff 5.98E-05.
+- `h2o_scrnc_rccd_uhf_sto3g` (ring-CC, regular RPA variant): **max
+  asymmetry = 6.653099E-04 at JJ(9,41)=1.28137548208 vs
+  JJ(41,9)=1.28204079195**. Same general pattern (row/col 9 recurring on
+  the worse-offending pairs), larger magnitude than DRCCD.
+- No obvious simple signature yet (the old H2 bug's "diagonal-diff exactly
+  equals off-diagonal-diff" signature has NOT been checked for H2O yet --
+  worth checking before assuming it's unrelated to the fixed collision
+  bug's mechanism).
+
+**Process failure worth noting for next time**: my own first attempt to
+check H2O symmetry (same session, human collaborator flagged it was
+wrong) used a regex parser that assumed one matrix column per
+`COLUMN` header block. `scrnc`'s real output (verified 2026-08-14 evening
+via `sed`/raw inspection) uses the standard ACES2 `output` subroutine
+format -- **4 columns per header line**
+(`COLUMN 1  COLUMN 2  COLUMN 3  COLUMN 4`), with up to 4 values per `ROW`
+line. The broken parser silently matched almost nothing (11 of 49 column
+blocks) and reported a false "exactly symmetric, diff=0.0" for ALL THREE
+H2O tests including the CCSD control -- which is why the CCSD 0.0 result
+above should be trusted (it independently reproduced after the parser fix)
+but the original DRCCD/RCCD "symmetric" claims earlier this session were
+never real. Also note: the file additionally contains a SEPARATE, smaller
+"Response-only JJ matrix (before bare v added)" debug block (from the new
+uncommitted debug print in `scrnc_jj_rcc_lrspn.F`/`scrnc_jj_cc_lrspn.F`,
+see below) printed just before the real final "RPA JJ matrix" block --
+grab the LAST matrix in the file (search for `RPA JJ matrix`), not the
+first one that parses.
+
+**Uncommitted work found sitting in the tree this session** (from an
+earlier, un-logged session that hit a terminal freeze before writing
+back here -- NOT written by Ajith by hand): `git diff` on
+`aces2/scrnc/{scrnc_form_mubar_s,scrnc_form_rcc_hbar_inv,scrnc_jj_cc_lrspn,
+scrnc_jj_rcc_lrspn}.F` shows:
+1. A real fix in `scrnc_form_mubar_s.F`: `I020=I010+MAX(NT2DSZAA*NT2DISAA,
+   NT2DSZAB*NT2DSZAB)` corrected to `...,NT2DSZAB*NT2DISAB)` -- a
+   copy-paste typo (squared instead of size*dis, inconsistent with the
+   correct AA term right above it). Numerically inert when
+   `NT2DSZAB==NT2DISAB` (true for H2/STO-3G's small UHF case), so may
+   matter for H2O where AB block dimensions can differ -- **not yet
+   confirmed whether this is related to the new H2O asymmetry, worth
+   checking directly** (e.g. temporarily reverting just this one line and
+   rerunning to see if the H2O asymmetry changes).
+2. New `_DEBUG_LVL0` checksums around the `MAIBAR` XGEMM calls in the same
+   file.
+3. In `scrnc_form_rcc_hbar_inv.F`: an independent `(Hbar^-1)^T ==
+   (Hbar^T)^-1` identity cross-check (builds Hbar^T, inverts it
+   separately, diffs against the transpose of the production Hbar^-1,
+   prints `Xpmax`). Guarded by `_DEBUG_LVL0`, same guard as the
+   pre-existing DGEEV diagnostic; did NOT print `Xpmax` in the H2O DRCCD
+   run's output even though `_DEBUG_LVL0` is clearly on (the sibling
+   "drCCD Hbar inverse matrix" print under the SAME `#ifdef` block did
+   fire) -- **unexplained, worth checking** (possible early RETURN/branch
+   skips past it, or a build staleness at the time that run happened).
+4. New "Response-only JJ matrix (before bare v added)" debug print in both
+   `scrnc_jj_cc_lrspn.F` and `scrnc_jj_rcc_lrspn.F` (this is the extra
+   matrix block noted above that a naive "first matrix in the file" parse
+   will grab by mistake).
+
+All of this is STILL uncommitted (`git status` in
+`~/Develop/ACES_PROGRAM` shows these 4 `.F`/`.f` pairs modified, not
+staged). Do not commit yet -- Ajith has not confirmed the mubar_s fix or
+the new diagnostics are correct/wanted, and the H2O asymmetry means the
+debugging isn't finished regardless.
+
+**Both "transformation" suspects ruled out (2026-08-14 evening, DONE):**
+1. **I020 A/B test**: reverted just the `scrnc_form_mubar_s.F` I020 fix
+   back to the buggy `NT2DSZAB*NT2DSZAB`, rebuilt (confirmed via md5sum,
+   different binary), reran `h2o_scrnc_drccd_uhf_sto3g_i020ab` fresh from
+   ZMAT+GENBAS. Result: **bit-identical** to the fixed build -- same
+   1.103811E-04 max asymmetry, same worst pairs, same values to the last
+   digit. `NT2DSZAB==NT2DISAB` for this H2O/STO-3G/UHF system too (same
+   as H2), so the AB-block-squareness this fix addresses never actually
+   triggers here. Fix is still correct/worth keeping for other systems,
+   but it is NOT the cause of the H2O asymmetry. Reverted the test back
+   to the fixed source immediately after (md5sum-verified restored,
+   `f69468720b0b61fe32af2208b8a6674f`) -- tree is back in the
+   I020-fixed state.
+2. **`(Hbar^-1)^T == (Hbar^T)^-1` identity check**: DOES fire (my first
+   grep for it used the wrong search string, "Xpmax" -- that's the
+   Fortran variable name, not the printed text; the real printed line is
+   `max|(Hbarinv)^T - (Hbar^T)^-1| = `). Found at
+   `h2o_scrnc_drccd_uhf_sto3g_rerun/xscrnc.out:3418`:
+   **`0.111022D-15`** -- clean to machine epsilon. The Hbar^-1 transpose
+   shortcut is NOT the bug.
+
+**Immediate next step**: with both current "transformation" suspects
+cleared, narrow into the actual `Mubar_s(Iside=2)` formation math itself
+in `scrnc_form_mubar_s.F` (the XGEMM calls building `MAIBAR` from T2 and
+`MAI`, lines ~287-320) -- trace with RAW VALUE dumps for a couple of
+AO-pair indices spanning the worst-offending H2O pairs (9/20/38/41/49),
+not just checksums (checksums alone missed the original H2 bug's
+sign/collision signature; this is the same lesson, method already
+validated). Compare Iside=1 vs Iside=2 intermediate values for the same
+underlying quantity, the same cross-checkpoint approach that worked
+before.
+
+---
+
+## OLDER, INCORRECT "RESOLVED" entry (kept for its real content on the
+## H2 bug trace, which IS still believed correct -- just don't trust the
+## top-line "done" framing below)
 
 **RESOLVED, 2026-08-14. Root cause found and fixed -- TWO independent
 instances of the same collision bug, both fixed. JJ_lrespn is now exactly
@@ -23,6 +166,8 @@ simultaneously, and they happened to cancel for this specific H2 system.
 Fixing only the L-side first (prompted by Ajith noting the CCSD path
 "has not been tested thoroughly") broke that accidental cancellation and
 exposed the R-side bug too -- both are now fixed and verified together.
+**This H2-only claim is confirmed still true (re-checked with the corrected
+parser); it's the generalization to H2O that fails, see correction above.**
 
 **Immediate next step — DO NOT diverge from this into generic code-reading.**
 The bug is isolated to `aces2/scrnc/scrnc_jj_rcc_lrspn.F`'s `Iside=2`

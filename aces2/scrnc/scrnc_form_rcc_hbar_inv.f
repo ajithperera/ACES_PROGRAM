@@ -357,10 +357,46 @@ C must not perturb the production Hbar^(-1) that MINV builds below.
          Write(6,"(a)") " The imaginary eigenvalues"
          Write(6,"(5(1x,F15.8))") (W(Ievi+I-1)*Bohrtoev,I=1,MATDIM)
 
+C Independent cross-check of the (Hbar^-1)^T shortcut used by the L-side
+C in scrnc_jj_rcc_lrspn.F: (A^-1)^T = (A^T)^-1 is a pure linear-algebra
+C identity, so it must hold to numerical precision for ANY invertible A,
+C symmetric or not. Verify it directly here rather than trusting the
+C algebra -- build Hbar^T explicitly and invert IT independently, then
+C compare against the transpose of the (already-computed-elsewhere)
+C Hbar^-1. Copy from W(I000), which still holds pristine Hbar here (the
+C DGEEV diagnostic above destroyed its OWN copy at Ihcopy, not this one;
+C the main MINV call below is what destroys W(I000), and that hasn't
+C run yet).
+         Ihbt  = Idgend
+         Iscr2 = Ihbt + MATDIM*MATDIM
+         Idend = Iscr2 + MATDIM
+         IF (Idend .GT. MAXCOR) CALL INSMEM(
+     +                        "SCRNC_FORM_RCC_HBAR_INV-xpchk",
+     +                        Idend,MAXCOR)
+         DO Jc = 1, MATDIM
+            DO Ic = 1, MATDIM
+               W(Ihbt-1+(Jc-1)*MATDIM+Ic) =
+     +            W(I000-1+(Ic-1)*MATDIM+Jc)
+            ENDDO
+         ENDDO
+         CALL MINV(W(Ihbt),MATDIM,MATDIM,W(Iscr2),Dett,TOL,0)
+
          CALL MINV(W(I000),MATDIM,MATDIM,W(I010),DET,TOL,0)
         Iprint=Iloc(Irrep)
         Write(6,"(a)") " The drCCD Hbar inverse matrix"
         call output(W(Iprint),1,MATDIM,1,MATDIM,MATDIM,MATDIM,1)
+
+        Xpmax = 0.0D0
+        DO Jc = 1, MATDIM
+           DO Ic = 1, MATDIM
+C (Hbarinv)^T(Ic,Jc) = Hbarinv(Jc,Ic); compare to (Hbar^T)^-1(Ic,Jc)
+              Xp1 = W(I000-1+(Ic-1)*MATDIM+Jc)
+              Xp2 = W(Ihbt-1+(Jc-1)*MATDIM+Ic)
+              Xpmax = MAX(Xpmax,ABS(Xp1-Xp2))
+           ENDDO
+        ENDDO
+        Write(6,"(a,D15.6)") " max|(Hbarinv)^T - (Hbar^T)^-1| = ",
+     +                        Xpmax
 
       ENDDO 
       RETURN 

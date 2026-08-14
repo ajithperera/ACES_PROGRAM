@@ -159,7 +159,15 @@ C
        I0GV=I000+LENT1
        I0GO=I0GV+NFEA(ISPIN)
        I010=I0GO+NFMI(ISPIN)
-       I020=I010+MAX(NT2DSZAA*NT2DISAA,NT2DSZAB*NT2DSZAB)
+
+C Bug fix 2026-08-14: was NT2DSZAB*NT2DSZAB (squared -- copy-paste typo
+C off the AA term above, which correctly uses SZ*DIS). Numerically inert
+C for closed-shell-like UHF references where alpha/beta occ/virt counts
+C match (NT2DSZAB happens to equal NT2DISAB there), which is why this
+C survived undetected -- but wrong in general, and a real corruption risk
+C (I020 landing too close, overlapping still-needed T2AB data) for any
+C case where the AB block truly is non-square.
+       I020=I010+MAX(NT2DSZAA*NT2DISAA,NT2DSZAB*NT2DISAB)
        IF(IUHF.EQ.0)I030=I020+NT2DSZAA*NT2DISAA
        CALL GETLST(SCR(I000),1,1,1,ISPIN,LISTT1)
        IF(ISIDE.EQ.2)THEN
@@ -279,16 +287,36 @@ C
              CALL SSCAL(NT2DSZAB*NT2DISAB,TWO,SCR(I010),1)
              CALL SAXPY(NT2DSZAB*NT2DISAB,ONEM,SCR(I020),1,SCR(I010),1)
           ENDIF
+#ifdef _DEBUG_LVL0
+      call checksum("T2AB(pre-xgemm)              :",SCR(I010),
+     +               NT2DSZAB*NT2DISAB)
+      call checksum("MAI(IOFFVO2)(pre-xgemm)      :",MAI(IOFFVO2),
+     +               NT2DISAB)
+#endif
           CALL XGEMM('N','N',NT2DSZAB,1,NT2DISAB,ONE*SIGN1,SCR(I010),
      &                NT2DSZAB,MAI(IOFFVO2),NT2DISAB,ONE,
      &                MAIBAR(IOFFVO1),NT2DSZAB)
+#ifdef _DEBUG_LVL0
+      call checksum("MAIBAR(post-AB-xgemm)        :",MAIBAR(IOFFVO1),
+     +               NT2DSZAB)
+#endif
           IF(IUHF.NE.0)THEN
              CALL GETLST(SCR(I010),1,NT2DISAA,1,IRREPX,LISTT2AA)
+#ifdef _DEBUG_LVL0
+      call checksum("T2AA(pre-xgemm)              :",SCR(I010),
+     +               NT2DSZAA*NT2DISAA)
+      call checksum("MAI(IOFFVO1)(pre-xgemm)      :",MAI(IOFFVO1),
+     +               NT2DISAA)
+#endif
              CALL XGEMM('N','N',NT2DSZAA,1,NT2DISAA,ONEM*SIGN1,
      &                   SCR(I010),NT2DSZAA,MAI(IOFFVO1),NT2DISAA,ONE,
      &                   MAIBAR(IOFFVO1),NT2DSZAA)
+#ifdef _DEBUG_LVL0
+      call checksum("MAIBAR(post-AA-xgemm)        :",MAIBAR(IOFFVO1),
+     +               NT2DSZAA)
+#endif
           ENDIF
-       ENDIF 
+       ENDIF
 C
        IF (ISIDE .EQ. 2 .AND. IRREPX .EQ. 1 .AND. IEOMPROP .EQ. 0) THEN
           CALL GETLST(SCR(I000),1,1,1,ISPIN,190)
