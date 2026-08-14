@@ -8,18 +8,21 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ## RESUME POINT (as of 2026-08-14, latest)
 
-**RESOLVED, 2026-08-14. Root cause found and fixed. JJ_lrespn is now
-exactly symmetric for both DRCCD and RCCD (RHS + off-diagonal all match
-to the digits shown).** See "Step 4 result / ROOT CAUSE" below for the
-full trace. Steps 1-3 (Hbar proven correct, twice over) turned out to be
-red herrings for the actual bug -- it was never in the CC/Hbar physics at
-all, it was an ACES2 list-storage collision in
-`scrnc_jj_rcc_lrspn.F`'s bookkeeping. Fixed, verified on both test cases
-from clean pipeline reruns. One open thread remains: `scrnc_jj_cc_lrspn.F`
-(the proven-symmetric CCSD control path) appears to use the exact same
-scratch-record-1-collision pattern and hasn't been checked for whether
-it's silently exposed to the same bug under different conditions -- not
-yet investigated, see bottom of this section.
+**RESOLVED, 2026-08-14. Root cause found and fixed -- TWO independent
+instances of the same collision bug, both fixed. JJ_lrespn is now exactly
+symmetric for DRCCD, RCCD, AND the CCSD control case.** See "Step 4
+result / ROOT CAUSE" and "Second instance / CCSD path" below for the full
+trace. Steps 1-3 (Hbar proven correct, twice over) turned out to be red
+herrings for the actual bug -- it was never in the CC/Hbar physics at
+all, it was an ACES2 list-storage bookkeeping collision, independently
+present in both the ring-CC L-side (`scrnc_jj_rcc_lrspn.F`) and the CCSD
+R-side (`scrnc_lrspn_cc_main.F`). The CCSD control case's original
+"symmetric to 11 digits" claim was accidental -- it had BOTH bugs
+(L-side in `scrnc_jj_cc_lrspn.F`, R-side in `scrnc_lrspn_cc_main.F`)
+simultaneously, and they happened to cancel for this specific H2 system.
+Fixing only the L-side first (prompted by Ajith noting the CCSD path
+"has not been tested thoroughly") broke that accidental cancellation and
+exposed the R-side bug too -- both are now fixed and verified together.
 
 **Immediate next step — DO NOT diverge from this into generic code-reading.**
 The bug is isolated to `aces2/scrnc/scrnc_jj_rcc_lrspn.F`'s `Iside=2`
@@ -367,18 +370,56 @@ Jao_pair=N" raw-vector prints (these are what caught the sign/collision
 bug -- checksums alone, being sum/sumsq, don't preserve enough
 sign/structure information to have caught this one directly).
 
-**Open thread, NOT yet investigated**: `scrnc_jj_cc_lrspn.F` (the CCSD
-control path, proven symmetric to 11 digits for the CCSD test case) uses
-the textually identical scratch-record-1-of-list-374 pattern
-(`Call Putlst(Work(I000),1,1,0,Irrepx,374)` then the same
-`Getlst(record 1)`/`Putlst(record Npert_count)` relocation). Unclear why
-it hasn't shown symptoms -- possibilities: (a) it's genuinely fine for
-some structural reason specific to how CCSD's `Scrnc_load_vec` populates
-things that ring-CC's `Xgemm` doesn't share, (b) it's exposed to the same
-collision but the CCSD H2 control case happens not to trigger a visible
-difference, or (c) something else. Worth a deliberate look later, but
-NOT part of the current fix and not blocking it -- flagging so it isn't
-lost.
+**Second instance / CCSD path (2026-08-14, RESOLVED)**: Ajith flagged
+that the CCSD path "has not been tested thoroughly," so rather than trust
+the proven-symmetric-for-H2 claim, applied the same defensive fix to
+`scrnc_jj_cc_lrspn.F`'s own scratch-record-1-of-374 pattern (identical to
+the ring-CC bug -- same `Putlst(Work(I000),1,1,0,Irrepx,374)` then
+`Getlst(record 1)`/`Putlst(record Npert_count)` relocation). That alone
+**broke** the CCSD control case's symmetry
+(`JJ(1,1)=0.74473239934` vs `JJ(4,4)=0.80447994652`, asymmetric) --
+meaning the "proven symmetric to 11 digits" result had been masking a
+SECOND, independent collision bug on the R-side that was accidentally
+canceling the L-side one for this specific H2 geometry (same "one bug
+partially cancels another" pattern already seen once for the earlier
+Hbar double-build fix).
+
+Traced the R-side bug to `scrnc_lrspn_cc_main.F` (CCSD's R-side
+companion to `scrnc_jj_cc_lrspn.F`, analogous to
+`scrnc_lrspn_rcc_main.F` on the ring-CC side). Its `Iside=1` branch does
+the same `Putlst(Work(I000),1,1,0,Irrepx,373)` scratch write, but the
+"solve" in between isn't a simple matrix multiply like ring-CC's Hbar^-1
+-- it's a genuine iterative Davidson-type linear-equation solve via
+`Lineqy` (`vcceh/lineqy.F`) or `Plineqy` (`vcceh/plineqy.f`, in-core
+variant), general CCSD response-property infrastructure shared well
+beyond scrnc. Read both: `Lineqy`/`Plineqy` read their RHS from, and
+write their converged solution back to, list `372+Iside` record
+`Ioffset` -- but `Ioffset` is a fully generic pass-through parameter to
+both (confirmed via `vcceh/lineqy.F:107,398` and
+`vcceh/plineqy.f:89,328`) -- nothing requires it to be a fixed scratch
+record. `scrnc_lrspn_cc_main.F` just happened to always pass
+`Ioffset=1`, recreating the exact same record-1-collides-with-
+Npert_count=1 problem, one level removed through the solver.
+
+**Fix** (`aces2/scrnc/scrnc_lrspn_cc_main.F`, scrnc-local only --
+`vcceh/lineqy.F`/`plineqy.f` untouched, so no blast radius beyond scrnc):
+write the initial RHS directly to record `Npert_count` instead of record
+1 (both the `Iside=1`→373 and dead `Iside=2`→374 branches, for
+consistency), and set `Ioffset=Npert_count` (both the `Incore`/`Plineqy`
+and non-`Incore`/`Lineqy` branches) instead of hardcoding `1`. Removed
+the now-bug-causing relocate `Putlst`, but kept a plain `Getlst` after
+the solve returns -- `Lineqy`/`Plineqy` write the converged solution into
+their OWN scratch array (a different memory region than this routine's
+`Work(I000)`) and to disk at record `Ioffset`, so a re-fetch is still
+needed to get the result back into `Work(I000)` for the existing debug
+checksum print.
+
+**Verified**: rebuilt, reran the CCSD control case
+(`h2_scrnc_ccsd_uhf_sto3g`, fresh full pipeline
+`xjoda,xvmol,xvmol2ja,xvprops,xvscf,xvtran,xintprc,xvcc,xlambda,xscrnc`)
+from a clean directory: `JJ(1,1)=JJ(4,4)=0.80447994652`,
+`JJ(1,4)=JJ(4,1)=0.53936933731` -- exactly symmetric again, with BOTH
+fixes (L-side + R-side) in place together.
 
 Also found and confirmed genuinely dead/orphaned (not related, don't touch
 unless deliberately picking this up separately):

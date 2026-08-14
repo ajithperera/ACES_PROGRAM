@@ -229,24 +229,31 @@ C We construct e^-TMue(pq)^T, similarity transformed Mu(p,q).
      +                                  Ieomprop)
          Endif   
 
-          If (Iside .Eq. 2) Then 
+          If (Iside .Eq. 2) Then
              Mu_s    = 482
              Mu_d    = 453
              Ioff_s  = 0
              Ioff_d  = 0
-             Ioffset = 1
              Call Scrnc_load_vec(Irrepx,Work(I000),Maxcor,Mu_s,
      +                           Ioff_s,Mu_d,Ioff_d,Iuhf,.False.)
-             Call Putlst(Work(I000),1,1,0,Irrepx,374)
 
       write(6,*)
       call checksum("Jbar_L<(S,D)|pq>:",Work(I000),Nsizec)
-          Endif 
 
-C Save the left amplitudeds.
+C Save the left amplitude straight to its real per-perturbation record.
+C Bug fix 2026-08-14 (see SCRNC_DEBUG_LOG.md): this used to go through a
+C "scratch" record 1 of list 374 (Putlst(...,1,...), then
+C Getlst(record 1)/Putlst(record Npert_count) below) -- but record 1 of
+C list 374 is ALSO Npert_count=1's own permanent slot, so every later
+C Npert_count's scratch write would silently clobber Npert_count=1's
+C finished value. Same collision as the ring-CC bug fixed in
+C scrnc_jj_rcc_lrspn.F; fixed identically here as a defensive measure
+C -- this CCSD path's own control case (H2/STO-3G) never exposed it, but
+C hadn't been tested thoroughly enough to trust on less-symmetric
+C systems.
 
-          Call Getlst(Work(I000),Ioffset,1,1,Irrepx,372+Iside)
-          Call Putlst(Work(I000),Npert_count,1,1,Irrepx,372+Iside)
+             Call Putlst(Work(I000),Npert_count,1,1,Irrepx,374)
+          Endif
 
          Enddo ! Enddo for Iao_pair 
       Enddo ! Enddo of irrepr

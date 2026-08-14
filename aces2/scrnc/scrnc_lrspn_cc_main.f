@@ -207,7 +207,7 @@ C We construct e^-TMue(pq)^T, similarity transformed Mu(p,q).
                  Ioff_d = 0
                  Call Scrnc_load_vec(Irrepx,Work(I000),Maxcor,Mu_s,
      +                               Ioff_s,Mu_d,Ioff_d,Iuhf,.False.)
-                 Call Putlst(Work(I000),1,1,0,Irrepx,373)
+                 Call Putlst(Work(I000),Npert_count,1,1,Irrepx,373)
                  Dmod_r=Ddot(Nsizec,Work(I000),1,Work(I000),1)
       write(6,*)
       call checksum("Jbar_R<(S,D)|pq>:",Work(I000),Nsizec)
@@ -218,7 +218,7 @@ C We construct e^-TMue(pq)^T, similarity transformed Mu(p,q).
                  Ioff_d = 0
                  Call Scrnc_load_vec(Irrepx,Work(I000),Maxcor,Mu_s,
      +                               Ioff_s,Mu_d,Ioff_d,Iuhf,.False.)
-                 Call Putlst(Work(I000),1,1,0,Irrepx,374)
+                 Call Putlst(Work(I000),Npert_count,1,1,Irrepx,374)
                  Dmod_l=Ddot(Nsizec,Work(I000),1,Work(I000),1)
       write(6,*)
       call checksum("Jbar_R<(S,D)|pq>:",Work(I000),Nsizec)
@@ -264,7 +264,7 @@ C linear equations. Simply set the solution vector to zero.
              Endif 
                 
              If (Incore) Then
-                Ioffset  = 1
+                Ioffset  = Npert_count
                 Ipert    = Iao_pair
       Write(6,"(1x,a)") "-----Entering Plineqy------"
                 Call Plineqy(Work(I070),Mxcor,Iuhf,Work(I000),
@@ -279,9 +279,9 @@ C linear equations. Simply set the solution vector to zero.
                 I010 = I000 + Kmax * Kmax
                 I020 = I010 + Kmax
        
-                Ioffset = 1
+                Ioffset = Npert_count
                 Ipert   = Iao_pair
-                Mxcor   = Maxcor - I020 
+                Mxcor   = Maxcor - I020
                 Kmax    = Maxexp - 1
       Write(6,"(1x,a)") "-----Entering Lineqy------"
                 Write(6,"(3a,1x,5I,2I)")" Linear equations are",
@@ -293,14 +293,24 @@ C linear equations. Simply set the solution vector to zero.
      +                      Work(I010),Kmax,Irrepx,Ioffset,Ipert, 
      +                      Freq,Iside,Realfreq)
 
-             Endif 
+             Endif
 
-C Save the 1^st order perturbed amplitude for all perturbations
+C Bug fix 2026-08-14 (see SCRNC_DEBUG_LOG.md): Lineqy/Plineqy read their
+C RHS from, and write their converged solution back to, list 372+Iside
+C record Ioffset in-place (see vcceh/lineqy.F line 107/398 and
+C vcceh/plineqy.f line 89/328 -- Ioffset is a fully generic parameter to
+C both, nothing requires it to be a fixed scratch record). This used to
+C hardcode Ioffset=1 and relocate afterward via a Getlst(record
+C 1)/Putlst(record Npert_count) pair -- but record 1 is ALSO
+C Npert_count=1's own permanent slot, so every later perturbation's
+C solve clobbered Npert_count=1's finished value. Setting
+C Ioffset=Npert_count above means Lineqy/Plineqy already left the
+C converged solution in its real record, so the relocating Putlst is
+C gone -- but the solution lives in Lineqy/Plineqy's OWN scratch array
+C (a different memory region than this routine's Work(I000)), so a
+C plain re-fetch of the now-correct record is still needed here.
 
              Call Getlst(Work(I000),Ioffset,1,1,Irrepx,372+Iside)
-  
-             Call Putlst(Work(I000),Npert_count,1,1,Irrepx,
-     +                   372+Iside)
       write(6,*)
       call checksum("1^st order amps:",Work(I000),Nsizec)
               Endif ! Endif for Dmod_r and Dmod_l
