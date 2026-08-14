@@ -452,10 +452,62 @@ C Check whether r/dr-CCD vectors are on lists 44,45 and 46 from
 C the RPA code.
 
       IF (RPA_T2VECS) THEN
+
+C DRCC_TENER (called from RCC_CMPENG, which ringcl's RCL_DRIVER invokes
+C right after loading T2) unconditionally reads raw <AB||IJ> integrals
+C from list ISPIN (1=AA, 2=BB), regardless of where T2 came from. Those
+C lists are normally set up by RCC_MAKE_T2's integral-reorder step
+C (called via RCC_DRIVE_D2T2, which the RPA_T2VECS path otherwise skips
+C entirely). Replicate just that reorder here -- NOT the rest of
+C RCC_DRIVE_D2T2/RCC_MAKE_T2, which also writes a throwaway MBPT2-style
+C guess onto lists 44/45 that would clobber the genuine RPA-derived T2
+C we rely on below.
+
+         IRREPX = 1
+         IMOD   = 0
+         CALL INIPCK(IRREPX,19,21,1,IMOD,0,1)
+         IF (IUHF .NE. 0) CALL INIPCK(IRREPX,20,22,2,IMOD,0,1)
+         DO ISPN = 1, 1+IUHF
+            NSZ12 = IDSYMSZ(IRREPX,ISYTYP(1,4+ISPN),ISYTYP(2,4+ISPN))
+            J000 = INEXT
+            J010 = J000 + NSZ12
+            J020 = J010 + NSZ12
+            JEND = J020 + NSZ12
+            IF (JEND .GT. MAXCOR) CALL INSMEM("RCC_DRIVER",JEND,MAXCOR)
+            CALL GETALL(WORK(J010),NSZ12,IRREPX,4+ISPN)
+            CALL SSTGEN(WORK(J010),WORK(J000),NSZ12,VRT(1,ISPN),
+     &                  POP(1,ISPN),VRT(1,ISPN),POP(1,ISPN),
+     &                  WORK(J020),IRREPX,"1324")
+            CALL PUTALL(WORK(J000),NSZ12,IRREPX,ISPN)
+         ENDDO
+
          CALL RCC_RNABIJ(WORK(INEXT),MAXCOR,IUHF,'T')
          CALL RCC_GENINT(WORK(INEXT),MAXCOR,IUHF)
+
+C RCC_SETLST (above) registers lists 61/62/63 with the SAME dissection
+C type as 44/45/46 (see the matching INIPCK calls in rcc_setlst.F) and
+C then ZERSYMs them -- they are the "current T2" lists ringcl's
+C RCL_DRIVER reads at the very start of the Lambda solve. The RPA_T2VECS
+C path never otherwise writes into 61/62/63, so ringcl was silently
+C reading the ZERSYM-initialized zeros. Copy the RPA-derived T2 (already
+C on 44/45/46 courtesy of rpa/process_rpat2.F) across so ringcl picks up
+C the real amplitudes.
+
+         NSIZE46 = IDSYMSZ(1,ISYTYP(1,46),ISYTYP(2,46))
+         CALL GETALL(WORK(INEXT),NSIZE46,1,46)
+         CALL PUTALL(WORK(INEXT),NSIZE46,1,63)
+
+         IF (IUHF .NE. 0) THEN
+            NSIZE44 = IDSYMSZ(1,ISYTYP(1,44),ISYTYP(2,44))
+            CALL GETALL(WORK(INEXT),NSIZE44,1,44)
+            CALL PUTALL(WORK(INEXT),NSIZE44,1,61)
+            NSIZE45 = IDSYMSZ(1,ISYTYP(1,45),ISYTYP(2,45))
+            CALL GETALL(WORK(INEXT),NSIZE45,1,45)
+            CALL PUTALL(WORK(INEXT),NSIZE45,1,62)
+         ENDIF
+
          RETURN
-      ENDIF 
+      ENDIF
 
       IF (IUHF .NE. 0) THEN 
          CALL RCC_DRIVE_D2T2(WORK(INEXT),MAXCOR,IUHF)

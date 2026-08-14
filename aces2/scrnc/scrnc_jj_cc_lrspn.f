@@ -295,7 +295,36 @@ C Save the left amplitudeds.
             Endif 
               
          Enddo
-      Enddo 
+      Enddo
+
+C --------------------------------------------------------------------
+C Add the bare (uncorrelated) Coulomb integral (mu nu|kappa lambda) so
+C that JJ_lrespn holds the FULL screened Coulomb interaction
+C    W = v + v*Chi*v
+C rather than just the screening correction v*Chi*v computed above.
+C List_xxxx (record 220, built in scrnc_prep_2ints.F) is the symmetry
+C-packed bare AO two-electron integral list, indexed identically
+C (irrep, within-irrep column) to JJ_lrespn's own Iao_pair bookkeeping,
+C so it adds in block by block, irrep by irrep. 2026-08-12.
+C --------------------------------------------------------------------
+
+      List_xxxx   = 220
+      I000        = 1
+      Npert_count = 0
+      Do Irrep = 1, Nirrep
+         Nperts_4irrepr = Irpdpdao(Irrep)
+         Irow_base      = Npert_count
+         Do Iao_pair_4irrep = 1, Nperts_4irrepr
+            Npert_count = Npert_count + 1
+            Call Getlst(Work(I000),Iao_pair_4irrep,1,1,Irrep,
+     +                  List_xxxx)
+            Do Irow = 1, Nperts_4irrepr
+               JJ_lrespn(Irow_base+Irow,Npert_count) =
+     +              JJ_lrespn(Irow_base+Irow,Npert_count) +
+     +              Work(I000-1+Irow)
+            Enddo
+         Enddo
+      Enddo
       Write(6,*)
       Write(6,"(a)") " CI-like JJ matrix"
       call output(JJ_lrespn,1,Nao_pair,1,Nao_pair,Nao_pair,

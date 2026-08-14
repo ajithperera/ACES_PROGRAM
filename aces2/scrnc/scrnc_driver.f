@@ -210,6 +210,7 @@
 
       Logical Ccsd,Mbpt,Parteom,Nodavid,Rccd,Drccd
       Dimension Work(Maxmem)
+      Dimension Iloc(8)
 
       COMMON/AOSYM/IAOPOP(8),IOFFAO(8),ioffv(8,2),ioffo(8,2),
      &             IRPDPDAO(8),IRPDPDAOMO_OCCBK(8,2),
@@ -362,26 +363,72 @@ c operators.
       
       I000 = 1
       Iend = Maxmem
+
+C Build Hbar^(-1) ONCE here and share it between the R-side and L-side
+C response routines below, instead of letting each of them build it
+C independently. Scrnc_form_rcc_hbar.F hands its result to
+C Scrnc_form_rcc_hbar_inv.F by writing it back into the SAME list it
+C read the raw (ai,bj) integrals from -- so a second, independent
+C rebuild would silently re-add the one-particle F(ab)d(ij)-F(ij)d(ab)
+C diagonal on top of the first build's already-dressed output, breaking
+C L/R Hbar consistency and hence the symmetry of the final
+C W=v+v*chi*v matrix (confirmed via instrumentation: the second build's
+C diagonal came out exactly one SCF orbital-energy gap too large).
+C Building it once and sharing it is both cheaper and correct by
+C construction. 2026-08-14.
+
+      Ihbarinv_bgn = 1
+      If (Rccd .OR. Drccd) Then
+         Ndim  = 0
+         Iloc(1) = 1
+         Do Irrepr = 2, Nirrep
+            Length = Irpdpd(Irrepr-1,9)
+            If (Iuhf .NE. 0) Length = Length + Irpdpd(Irrepr-1,10)
+            Length = Length * Length
+            Iloc(Irrepr) = Iloc(Irrepr-1) + Length
+         Enddo
+         Do Irrepr = 1, Nirrep
+            Ndim = Ndim + Irpdpd(Irrepr,9)
+            If (Iuhf .NE. 0) Ndim = Ndim + Irpdpd(Irrepr-1,10)
+         Enddo
+C Scrnc_form_rcc_hbar/_inv need scratch space beyond the persistent
+C Ndim*Ndim+Ndim Hbar^(-1) storage itself (diagonal buffers, SSTGEN
+C scratch, MINV pivot arrays) -- give them the same generous headroom
+C the old per-caller Maxcor budget provided, not just the bare
+C Ndim*Ndim+Ndim. Only the first Ineed words (read back via
+C Hbarinv(Iloc(irrepr)) in the callees below) need to survive after
+C this call returns; the padding above that is free scratch that gets
+C overwritten before it would ever be read as data.
+         Ineed        = Ndim * Ndim + Ndim
+         Ipad         = 10000 + 10 * Ineed
+         Ihbarinv_bgn = Iend - (Ineed + Ipad) + 1
+         Iend         = Ihbarinv_bgn - 1
+         Call Scrnc_rcc_hbar_inv(Work(Ihbarinv_bgn),Ineed+Ipad,
+     +                           Iuhf,1,Iloc)
+      Endif
+
       Isym_pert_bgn  = Iend - Nao_pairs + 1
-      Ioff_pert_bgn  = Isym_pert_bgn - Nao_pairs 
+      Ioff_pert_bgn  = Isym_pert_bgn - Nao_pairs
       Ijj_lrspn_bgn  = Ioff_pert_bgn - Nao_pairs * Nao_pairs
       Memleft        = Ijj_lrspn_bgn - 1
-    
-      If (Memleft .Le. 0) Then 
+
+      If (Memleft .Le. 0) Then
          Length = 2*Nao_pairs + Nao_pairs * Nao_pairs
          Call Insmem("scrnc_driver",Length,Maxmem)
-      Endif 
+      Endif
 
       If (Rccd .OR. Drccd)  Then
 
           Call Scrnc_lrspn_rcc_main(Work(I000),Memleft,Iuhf,
      +                              Work(Isym_pert_bgn),
-     +                              Work(Ioff_pert_bgn),Nao_pairs)
+     +                              Work(Ioff_pert_bgn),Nao_pairs,
+     +                              Work(Ihbarinv_bgn),Iloc)
 
           Call Scrnc_jj_rcc_lrspn(Work(I000),Memleft,Iuhf,
      +                            Work(Ijj_lrspn_bgn),
      +                            Work(Isym_pert_bgn),
-     +                            Work(Ioff_pert_bgn),Nao_pairs)
+     +                            Work(Ioff_pert_bgn),Nao_pairs,
+     +                            Work(Ihbarinv_bgn),Iloc)
 
       Else
        

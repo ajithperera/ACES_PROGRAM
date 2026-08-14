@@ -347,7 +347,7 @@ C
            IOFFE =IOFFE+NVRT*IINTFP
            IOFFTV=IOFFTV+NVRT*NVRT*IINTFP
 13        CONTINUE
-       ENDIF        
+       ENDIF
 C
       IOFFO(1)=I000
       IOFFO(2)=I010
@@ -398,7 +398,7 @@ C Reorder; (ai,bj) -> (ab,ij)
      &                VRT(1,ISPIN),POP(1,ISPIN),VRT(1,ISPIN),
      &                POP(1,ISPIN),ICORE(I060),1,'1324')
 
-C Add the one particle contributions 
+C Add the one particle contributions
 
           DISSZ1=IRPDPD(1,18+ISPIN)
           NUMDS1=IRPDPD(1,20+ISPIN)

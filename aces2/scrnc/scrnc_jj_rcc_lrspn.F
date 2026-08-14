@@ -1,8 +1,8 @@
       Subroutine Scrnc_jj_rcc_lrspn(Work,Maxcor,Iuhf,JJ_lrespn,Isympert,
-     +                             Ioffpert,Nao_pair)
+     +                             Ioffpert,Nao_pair,Hbarinv,Iloc)
 
       Implicit Double Precision (A-H,O-Z)
-      
+
       Double Precision M_expect,Mbar_00
       Double Precision JJ_lrespn(Nao_pair,Nao_pair)
       Logical Incore
@@ -11,7 +11,10 @@
       Integer Occ_pair,Occ_pair_4irrep
       Dimension Isympert(Nao_pair),Ioffpert(Nao_pair)
       Dimension Work(Maxcor)
+      Dimension Hbarinv(*)
+      Dimension Iloc(8)
       Character*8 Label(3),Work_label
+      Data One, Zilch /1.0D0,0.0D0/
 
       COMMON/AOSYM/IAOPOP(8),IOFFAO(8),ioffv(8,2),ioffo(8,2),
      &             IRPDPDAO(8),IRPDPDAOMO_OCCBK(8,2),
@@ -42,6 +45,25 @@
 #ifdef _DEBUG_LVL0
       Write(6,"(1x,a)") "-----Entering scrnc_jj_rcc_lrspn------"
 #endif
+
+C The left-hand (L) response also needs multiplying by Hbar^(-1), same
+C as the right-hand (R) response does in scrnc_lrspn_rcc_main.F -- this
+C was previously entirely missing (L was just the raw, un-inverted
+C Mbar operator), which broke JJ_lrespn's symmetry (large error for
+C strongly-coupled AO pairs, negligible for weakly-coupled ones, since
+C skipping the inversion is closer to correct when Hbar is close to
+C diagonal). 2026-08-12.
+C
+C 2026-08-14: Hbar^(-1) is now built ONCE by the caller
+C (Scrnc_driver.F) and passed in via Hbarinv/Iloc, instead of being
+C independently rebuilt here. Scrnc_form_rcc_hbar.F hands its result to
+C Scrnc_form_rcc_hbar_inv.F by writing it back into the same list it
+C read the raw integrals from, so a second, independent build (as this
+C routine used to do) silently re-added the one-particle Fock diagonal
+C on top of the first build's already-dressed output -- breaking L/R
+C Hbar consistency and hence the symmetry of the final W=v+v*chi*v
+C matrix.
+
       Do Irrepr = 1, Nirrep
          Irrepl = Dirprd(Irrepr,Irreprl)
          Irrepx = Irrepl
@@ -50,6 +72,8 @@
          If (Iuhf .NE. 0) Then
             Nsizec = Nsizec + Irpdpd(Irrepx,10)
          Endif
+
+         Ifnd = Iloc(irrepr)
 
          Call Scrnc_reset_lrspn_rcc_lists(Work,Maxcor,Iuhf,Irrepx)
 
@@ -131,27 +155,35 @@ C We construct e^-TMue(pq)^T, similarity transformed Mu(p,q).
      +                           Iuhf,Irrepx,Iside,Mbar_00-
      +                           M_expect,Ieomprop)
 
-         If (Iside .Eq. 2) Then 
+         If (Iside .Eq. 2) Then
              Mu_s    = 482
              Ioffset = 1
              Lenr1a = Irpdpd(Irrepx,9)
              Lenr1b = Irpdpd(Irrepx,10)
 
-             I000 = 1
-             I020 = I010 + Lenr1a
+             I000  = 1
+             Iloc2 = I000 + Lenr1a
+             Iwrk  = Iloc2 + Lenr1b
              Call Getlst(Work(I000),1,1,1,1,Mu_s)
              If (Iuhf .NE. 0) Then
-                 I020 = I010 + Lenr1b
-                 Call Getlst(Work(I010),1,1,1,2,Mu_s)
+                 Call Getlst(Work(Iloc2),1,1,1,2,Mu_s)
              Endif
 
-             Call Putlst(Work(I010),1,1,0,Irrepx,374)
+C Hbar is NOT symmetric (EOM-CC has distinct left/right eigenvectors),
+C so the L-side needs (Hbar^-1)^T, not the same Hbar^-1 used for R.
+C (A^-1)^T = (A^T)^-1 always, so transposing the already-computed
+C Hbar^-1 here is exact, not an approximation. 2026-08-12.
+             Call Xgemm("T","N",Nsizec,1,Nsizec,One,Hbarinv(Ifnd),
+     +                  Nsizec,Work(I000),Nsizec,Zilch,Work(Iwrk),
+     +                  Nsizec)
+
+             Call Putlst(Work(Iwrk),1,1,0,Irrepx,374)
 
 #ifdef _DEBUG_LVL0
       write(6,*)
-      call checksum("Jbar_L<(S,D)|pq>:",Work(I010),Nsizec)
+      call checksum("Jbar_L<(S,D)|pq>:",Work(Iwrk),Nsizec)
 #endif
-          Endif 
+          Endif
 
 C Save the left amplitudeds.
 
@@ -218,7 +250,36 @@ C Save the left amplitudeds.
             Endif 
               
          Enddo
-      Enddo 
+      Enddo
+
+C --------------------------------------------------------------------
+C Add the bare (uncorrelated) Coulomb integral (mu nu|kappa lambda) so
+C that JJ_lrespn holds the FULL screened Coulomb interaction
+C    W = v + v*Chi*v
+C rather than just the screening correction v*Chi*v computed above.
+C List_xxxx (record 220, built in scrnc_prep_2ints.F) is the symmetry
+C-packed bare AO two-electron integral list, indexed identically
+C (irrep, within-irrep column) to JJ_lrespn's own Iao_pair bookkeeping,
+C so it adds in block by block, irrep by irrep. 2026-08-12.
+C --------------------------------------------------------------------
+
+      List_xxxx   = 220
+      I000        = 1
+      Npert_count = 0
+      Do Irrep = 1, Nirrep
+         Nperts_4irrepr = Irpdpdao(Irrep)
+         Irow_base      = Npert_count
+         Do Iao_pair_4irrep = 1, Nperts_4irrepr
+            Npert_count = Npert_count + 1
+            Call Getlst(Work(I000),Iao_pair_4irrep,1,1,Irrep,
+     +                  List_xxxx)
+            Do Irow = 1, Nperts_4irrepr
+               JJ_lrespn(Irow_base+Irow,Npert_count) =
+     +              JJ_lrespn(Irow_base+Irow,Npert_count) +
+     +              Work(I000-1+Irow)
+            Enddo
+         Enddo
+      Enddo
 #ifdef _DEBUG_LVL0
       Write(6,*)
       Write(6,"(a)") " RPA JJ matrix"
