@@ -28,8 +28,7 @@ confirmed self-consistent within this session, not yet cross-checked
 against the published paper's RPA column -- do that before treating them
 as physics-validated, not just regression-safe).
 
-KNOWN REAL, SEPARATE BUGS (not fixed here, ZMATs kept under cases/ for
-when they are):
+KNOWN REAL, SEPARATE BUGS (not fixed here):
   - h2o_rpa: SIGSEGV in xintprc (scatter.f <- sstgen.f <- sst004.f <-
     ds4aa.f, AA-spin integral processing). H2O-specific -- N2/CH2/BH all
     process AA-spin integrals fine via the same code path, so this isn't
@@ -38,13 +37,21 @@ when they are):
     session of H2O being the outlier case that exposes bugs invisible on
     other molecules (see tests/jcp2020_eom_rccd/run_tests.py's H2O
     EOM(S)-rCCD discussion, and the ringcc/ringcl NSZIE bug history in
-    project memory).
+    project memory). 2026-08-14: registered in EXPECTED_CRASH below so
+    the suite always runs it and reports XFAIL instead of silently
+    skipping it -- flips to UPASS the moment the crash signature stops
+    reproducing, which is the cue to fix it for real.
   - ne_rpa: runs most of the way (multiple states print correctly) then
     crashes in RPA_DENS_MAIN with "@GETREC: ORBMAP_A record length
     mismatch requested length = 18 stored length = 17" while computing
     natural transition orbitals for state 5 -- looks like an off-by-one
     in dropped-MO/active-orbital-count bookkeeping specific to Ne's
-    DROPMO=1 setup, not yet investigated further.
+    DROPMO=1 setup, not yet investigated further. ZMAT kept under
+    cases/ne_rpa/ but not yet added to EXPECTED_CRASH -- confirmed
+    2026-08-14 it fails in xrpa itself (not xintprc) with returncode 1
+    via ACES_EXIT, and the "ORBMAP_A" message lands on stdout rather
+    than stderr (unlike h2o_rpa's SIGSEGV traceback), so it's a quick
+    but separate EXPECTED_CRASH entry to add if picked up.
 
 Usage:
     module load intel/2025.1.0 openmpi/5.0.7   # must be loaded first
@@ -137,6 +144,27 @@ REFERENCE = {
     ],
 }
 
+# Cases with a known, real, unfixed crash. Run every time (never silently
+# skipped) so the suite catches it either way: reports XFAIL while the
+# crash still reproduces exactly as documented, but flags loudly (UPASS or
+# a differently-shaped ERROR) the moment that stops being true -- either
+# because someone fixed it (move the case into REFERENCE and drop it from
+# here) or because something regressed differently (needs investigation).
+#
+# h2o_rpa's excitation energies, once xintprc is fixed, should be
+# cross-checkable against tests/jcp2020_eom_rccd's h2o_eomsrccd REFERENCE
+# base_value_eV column (RCCD/RPA-with-exchange via the ringcc path is the
+# same physics as this module's default RPA, and H2O is a closed-shell
+# singlet so REF=UHF there == REF=RHF here -- see project memory
+# project_rpa_module_tests.md for the ringcc<->RPA correspondence).
+EXPECTED_CRASH = {
+    "h2o_rpa": {
+        "exe": "xintprc",
+        "returncode": 174,
+        "signature": "scatter.f",
+    },
+}
+
 
 def _parse_states(out_text):
     lines = out_text.splitlines()
@@ -165,6 +193,8 @@ def run_case(case_name, env):
     if not os.path.isfile(zmat):
         return case_name, "ERROR", 0.0, f"no ZMAT found in {case_dir}"
 
+    expected = EXPECTED_CRASH.get(case_name)
+
     t0 = time.time()
     with tempfile.TemporaryDirectory(prefix=f"acesii_rpa_{case_name}_") as scratch:
         shutil.copy(GENBAS, os.path.join(scratch, "GENBAS"))
@@ -182,12 +212,27 @@ def run_case(case_name, env):
                 return case_name, "ERROR", time.time() - t0, f"{exe} timed out (300s)"
             out_chunks.append(run.stdout)
             if run.returncode != 0:
-                tail = "\n".join(run.stdout.splitlines()[-15:])
-                return case_name, "ERROR", time.time() - t0, f"{exe} exited {run.returncode}\n{tail}"
+                elapsed = time.time() - t0
+                tail = "\n".join((run.stdout + run.stderr).splitlines()[-15:])
+                if (expected and exe == expected["exe"]
+                        and run.returncode == expected["returncode"]
+                        and expected["signature"] in (run.stdout + run.stderr)):
+                    return case_name, "XFAIL", elapsed, (
+                        f"known bug reproduced: {exe} exited "
+                        f"{run.returncode} ('{expected['signature']}')"
+                    )
+                return case_name, "ERROR", elapsed, f"{exe} exited {run.returncode}\n{tail}"
+
+        elapsed = time.time() - t0
+        if expected:
+            return case_name, "UPASS", elapsed, (
+                f"expected known crash in {expected['exe']} but the full "
+                f"pipeline completed -- bug may be fixed; check output, "
+                f"pin REFERENCE, and remove this case from EXPECTED_CRASH"
+            )
 
         got = _parse_states("\n".join(out_chunks))
         want = REFERENCE[case_name]
-        elapsed = time.time() - t0
 
         if len(got) != len(want):
             return case_name, "FAIL", elapsed, (
@@ -224,7 +269,7 @@ def main():
     if _EXTRA_LD_PATH not in ld:
         env["LD_LIBRARY_PATH"] = _EXTRA_LD_PATH + (":" + ld if ld else "")
 
-    all_case_names = sorted(REFERENCE.keys())
+    all_case_names = sorted(set(REFERENCE) | set(EXPECTED_CRASH))
     case_names = args.cases if args.cases else all_case_names
     unknown = set(case_names) - set(all_case_names)
     if unknown:
@@ -241,7 +286,7 @@ def main():
             results.append(fut.result())
 
     results.sort(key=lambda r: r[0])
-    n_pass = n_fail = n_error = 0
+    n_pass = n_fail = n_error = n_xfail = n_upass = 0
     total_time = 0.0
     for name, status, elapsed, detail in results:
         total_time += elapsed
@@ -249,19 +294,25 @@ def main():
             n_pass += 1
         elif status == "FAIL":
             n_fail += 1
+        elif status == "XFAIL":
+            n_xfail += 1
+        elif status == "UPASS":
+            n_upass += 1
         else:
             n_error += 1
         detail_first_line = detail.splitlines()[0] if detail else ""
         print(f"{name:<20} {elapsed:>6.2f}s  {status:<6}  {detail_first_line}")
-        if status in ("FAIL", "ERROR") and "\n" in detail:
+        if status in ("FAIL", "ERROR", "UPASS") and "\n" in detail:
             for line in detail.splitlines()[1:]:
                 print(f"    {line}")
 
     print("-" * 90)
     print(f"{len(case_names)} case(s), {n_pass} passed, {n_fail} failed, "
-          f"{n_error} errored, {total_time:.1f}s total CPU-time-of-runs")
+          f"{n_error} errored, {n_xfail} known-crash (xfail), "
+          f"{n_upass} unexpectedly-fixed (upass), "
+          f"{total_time:.1f}s total CPU-time-of-runs")
 
-    sys.exit(0 if (n_fail == 0 and n_error == 0) else 1)
+    sys.exit(0 if (n_fail == 0 and n_error == 0 and n_upass == 0) else 1)
 
 
 if __name__ == "__main__":
