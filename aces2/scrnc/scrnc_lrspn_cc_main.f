@@ -109,9 +109,27 @@ C in AO basis. We process the p(1)q(1) integrals for a given pair
 C of X(2)X(2) C and lets designate them as Mu(pq).
 
       Irreprl     = 1
-      Npert_count = 0
 
       Call Scrnc_form_lrspn_cc_lists(Work,Maxcor,Iuhf,Nperts)
+
+C Dynamic (frequency-dependent) response, mirroring vcceh/secprp.F's
+C ITOP/FACT scheme exactly (2026-08-15): for a nonzero real frequency,
+C solve the perturbed-amplitude equations at +Freq and -Freq separately
+C (ITOP=2), saving the +Freq solution to list 375 (secprp's own
+C convention, see secprp.F lines 256-264) before the -Freq pass
+C overwrites list 373 in place. For the static case (no frequency file,
+C Freq=0) or an imaginary frequency, this collapses to a single solve
+C (ITOP=1) -- Freq=0 exactly reproduces the original static code path.
+C Lineqy/Plineqy already accept Freq/Realfreq as arguments (unchanged
+C here); this loop is what actually varies Freq and combines the two
+C solves, which scrnc never did before.
+
+      Itop = 1
+      If (Freq .NE. Zilch .AND. Realfreq) Itop = 2
+
+      Do Icount = 1, Itop
+
+      Npert_count = 0
 
       Do Irrep = 1, Nirrep
          Nperts_4irrep = Irpdpdao(Irrep)
@@ -315,10 +333,22 @@ C plain re-fetch of the now-correct record is still needed here.
       call checksum("1^st order amps:",Work(I000),Nsizec)
               Endif ! Endif for Dmod_r and Dmod_l
 
+C Save the +Freq solution to list 375 before the next Icount pass
+C (which negates Freq below) overwrites list 372+Iside in place with
+C the -Freq solution. Matches secprp.F's own 372+ISIDE->375 copy.
+
+              If (Icount .EQ. 1 .AND. Itop .EQ. 2) Then
+                 Call Putlst(Work(I000),Npert_count,1,1,Irrepx,375)
+              Endif
+
           Enddo ! Enddo for Iside
         Enddo ! Enddo for Iao_pair
 
       Enddo ! Enddo of irrepr
+
+      Freq = -Freq
+
+      Enddo ! Enddo for Icount (dynamic +/-Freq loop)
 
     
       Return

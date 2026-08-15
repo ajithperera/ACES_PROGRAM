@@ -301,7 +301,7 @@ C
       Do Irrep = 1, Nirrep 
           Length(Irrep) = Irpdpd(Irrep,9)
           If (Iuhf .NE. 0) Then
-             Length(Irrep) = Length(Irrep) + Irpdpd(Irrep,9)
+             Length(Irrep) = Length(Irrep) + Irpdpd(Irrep,10)
           Endif
           Call Updmoi(Nperts,Length(Irrep),Irrep,373,0,0)
           Call Updmoi(Nperts,Length(Irrep),Irrep,374,0,0)

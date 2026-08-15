@@ -245,47 +245,70 @@ C systems.
       Write(6,"(5(1x,I5))") (Ioffpert(i),i=1,Nao_pair)
       Write(6,*)
 #endif 
-      Do Iao_pair = 1, I_pairs 
+C Dynamic (frequency-dependent) response assembly, mirroring
+C vcceh/secprp.F's ITOP/FACT combination exactly (2026-08-15): for a
+C nonzero real frequency, Scrnc_lrspn_cc_main solved the R-side
+C amplitude at +Freq (saved to list 375) and -Freq (left in list 373),
+C separately; sum the two contributions here (FACT=1 each). For the
+C static case (Freq=0) or an imaginary frequency, this collapses to a
+C single pass reading list 373 with FACT=2 -- reproduces the original
+C static code path exactly at Freq=0 (Itop=1, single Ddot, times 2).
+
+      Itop = 1
+      Fact = 2.0D0
+      If (Freq .NE. 0.0D0 .AND. Realfreq) Then
+         Itop = 2
+         Fact = 1.0D0
+      Endif
+
+      Do Icount = 1, Itop
+
+      Listin = 373
+      If (Icount .EQ. 1 .AND. Itop .EQ. 2) Listin = 375
+
+      Do Iao_pair = 1, I_pairs
 
          Irrepx = Isympert(Iao_pair)
          Call Scrnc_newsize(Work,Maxcor,Iuhf,Irrepx,Nsizec)
 
          I000 = 1
-         I010 = I000 + Nsizec 
-         I020 = I010 + Nsizec 
+         I010 = I000 + Nsizec
+         I020 = I010 + Nsizec
          Iend = I020
 
-         Memleft = Maxcor - Iend 
+         Memleft = Maxcor - Iend
          If (Iend .Gt. Maxcor)  Call Insmem("Scrnc_jj_lrspn",Iend,
      +                                      Memleft)
 
-         Call Getlst(Work(I000),Iao_pair,1,1,Irrepx,373)
+         Call Getlst(Work(I000),Iao_pair,1,1,Irrepx,Listin)
 #ifdef _DEBUG_LVLM
          Write(6,"(a)") " <0|(1+L)M_bar and first-order e^T|0>"
          call checksum("373",work(i000),nsizec)
-#endif 
+#endif
          If (Iuhf .eq. 0) Then
             Call Spntsing(Isympert(Iocc_pair),Work(I000),Work(Iend),
-     +                    Memleft) 
-         Endif 
+     +                    Memleft)
+         Endif
 
-         Do Jao_pair = 1, J_pairs 
+         Do Jao_pair = 1, J_pairs
 
             If (Isympert(Iao_pair) .eq. Isympert(Jao_pair)) Then
- 
+
                Call Getlst(Work(I010),Jao_pair,1,1,Irrepx,
      +                     374)
 #ifdef _DEBUG_LVLM
                call checksum("374",work(i010),nsizec)
-#endif 
-               X = Ddot(Nsizec,Work(I010),1,Work(I000),1)
+#endif
+               X = Fact*Ddot(Nsizec,Work(I010),1,Work(I000),1)
 
-               JJ_lrespn(Iao_pair,Jao_pair) = 
+               JJ_lrespn(Iao_pair,Jao_pair) =
      +                  JJ_lrespn(Iao_pair,Jao_pair) + X
-            Endif 
-              
+            Endif
+
          Enddo
       Enddo
+
+      Enddo ! Enddo for Icount (dynamic +/-Freq loop)
 
 #ifdef _DEBUG_LVL0
       Write(6,*)

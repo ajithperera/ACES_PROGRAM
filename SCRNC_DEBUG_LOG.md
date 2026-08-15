@@ -252,6 +252,131 @@ clean up.
 
 ---
 
+## SESSION 2026-08-15 evening -- dynamic (frequency-dependent) W(omega), CCSD path (Phase 1, WORKING, uncommitted)
+
+Goal shift: from static W=v+v*chi*v toward an actual GW-like quasiparticle
+pipeline, per Ajith's direction ("mimic dynamic pol[arizability]").
+`vcceh` already has a working dynamic-polarizability solver
+(`secprp.F`, driven by a `frequency` file, FREQ/REALFREQ threaded into
+`Lineqy`/`Plineqy`) that was never imported into scrnc -- this session
+imported it into scrnc's CCSD path (`Rccd`/`Drccd` ring-CC path NOT yet
+touched, still static-only).
+
+**Key finding, secprp vs secprp2**: `secprp2.F` (the NMR spin-spin
+coupling-tensor code, `JJSPNCUP` call -- direct ancestor of scrnc's own
+"JJ_lrespn" naming) is static-only, `FREQ=0.0d0`/`FACT=TWO` hardcoded,
+no omega loop at all. `secprp.F` (general dynamic polarizability) has
+the real ITOP/FACT/+-omega machinery. scrnc's response-list
+architecture (lists 373/374/375/376, common `/Freqinfo/`) was already
+modeled on this exact secprp scheme -- `Freq`/`Realfreq` were already
+being threaded into `Lineqy`/`Plineqy` calls in
+`scrnc_lrspn_cc_main.F`, and `scrnc_form_lrspn_cc_lists.F` already
+allocated all 4 lists -- but nobody ever varied `Freq` away from 0 or
+did the +-omega double-solve-and-sum. That's what this session added.
+
+**Implementation** (mirrors `secprp.F` almost line-for-line):
+- `scrnc_lrspn_cc_main.F`: added `Itop = 1 if Freq=0-or-imaginary else
+  2` and wrapped the existing per-perturbation solve loop in
+  `Do Icount = 1, Itop`, negating `Freq` between passes. On the first
+  pass of a 2-pass (+omega) run, the converged R-side amplitude is also
+  saved to list 375 (secprp's own convention) before the second
+  (-omega) pass overwrites list 373 in place.
+- `scrnc_jj_cc_lrspn.F`: generalized the final assembly Ddot loop to
+  the same `Do Icount = 1, Itop` structure, reading list 375 (+omega)
+  on the first pass of a 2-pass run and list 373 (-omega, or the single
+  static solve) otherwise, with `X = Fact*Ddot(...)` (`Fact=2` for
+  `Itop=1`, `Fact=1` for `Itop=2`) instead of the old plain
+  unweighted `Ddot`. The L-side Mbar/list-374 build (lines ~141-230,
+  unaffected by frequency -- property operators like the perturbation
+  Mbar don't depend on omega, only the solved amplitude does) is
+  untouched.
+- Two incidental bugs fixed while in this code: (1)
+  `scrnc_form_lrspn_cc_lists.F:208`, the same alpha/beta
+  copy-paste-off-by-one-column typo as the two fixed earlier today,
+  except this one sizes the actual 373-376 response-amplitude storage
+  (not just scratch padding) -- for open-shell UHF this could have
+  under-allocated and corrupted memory, not just been numerically inert.
+  (2) `scrnc_set_vars.F`: `Inquire(File="frequency",...)` vs
+  `Open(...,File="Frequency",...)` -- case mismatch on a
+  case-sensitive filesystem, meant ANY `frequency`-file run would crash
+  immediately (`forrtl: file not found, unit 10`). Both fixed, both
+  numerically inert for every test run so far (closed-shell UHF /
+  never-before-exercised frequency path), same caveat as before.
+
+**MAJOR FINDING, changes default static-path numbers**: rebuilding
+after these changes (note: `make` alone did NOT relink `aces2/bin/xscrnc`
+this time either, needed `make install` -- same trap as always, caught
+via stale timestamp before wasting a test cycle) and rerunning the
+static control case (`h2_scrnc_ccsd_uhf_sto3g`, no `frequency` file,
+fresh full pipeline) gives `JJ(1,1)=JJ(4,4)=0.83435406798`,
+`JJ(1,4)=JJ(4,1)=0.50949591159` -- DIFFERENT from the previously
+committed/verified `0.80447994652`/`0.53936933731`. Isolated the cause:
+the new `Fact=2.0` (introduced by mirroring secprp's `ITOP=1,FACT=TWO`
+static branch) exactly doubles the *response-only* part of JJ (bare-v
+part untouched) -- confirmed by hand: old response(1,1) =
+0.80447994652 - (bare v, backed out) = 0.02987412147; new response(1,1)
+= 0.05974824293 = exactly 2x. Still exactly symmetric either way (H2's
+known special case). This means the OLD "verified" static CCSD-path
+JJ was always self-consistent (symmetric, matched scrnc's own
+independent Hbar-eigenvalue diagnostic) but a factor of 2 off from
+vcceh's own established response-normalization convention in its
+response term -- invisible to every prior check because those checks
+only tested internal consistency (symmetry, no crashes), never the
+absolute normalization against the vcceh convention. Matches exactly
+what Ajith described: the EOM-effective-Hamiltonian route (secprp2/
+CI-like, what scrnc's JJ was modeled on) is known to differ from
+genuine linear response by factors like this; the quadratic/
+Perera-Nooijen-extended correction (`IEOMPROP=2`, already wired via
+`Calcquad1` in `scrnc_jj_cc_lrspn.F`) is the documented fix for the
+gap, "small but can be significant."
+
+**Not yet resolved -- Ajith's call before committing**: whether
+`Fact=2` on the static (Freq=0) branch is the correct final answer
+(i.e. the OLD static numbers, already committed/documented as
+"verified," were actually wrong by a factor of 2 in their response
+term), since this changes default output for every existing scrnc
+CCSD-path run, not just new frequency-dependent ones.
+
+**Validated, dynamic mechanism itself works correctly**: real-frequency
+test cases (`h2_scrnc_ccsd_uhf_sto3g_freqtest`/`_freqtest2`, H2/STO-3G/
+CCSD, `frequency` file format `No_freqs` / real-or-imaginary flag (0/1)
+/ freq value per line, one value per line after the first two)
+confirm:
+- omega=0.001 a.u.: response(1,1)=0.05974830686 vs omega=0's
+  0.05974824293 -- tiny, smooth, continuous shift as expected.
+- omega=0.3 a.u.: response(1,1)=0.06611559494 -- clear, sane,
+  non-divergent dispersion (~11% growth), still exactly symmetric
+  (`Symmet2` a no-op both times, LR JJ = CI-like JJ).
+- No crashes, no memory errors, in either case.
+- One test-harness lesson (not a code bug): copying a completed test
+  directory wholesale and rerunning only `xscrnc` on top of its
+  leftover list files (instead of a fresh full pipeline from ZMAT+
+  GENBAS) throws `@ACES_LIST_TOUCH: list already exists and is of
+  different dimensions` -- confirms the existing "not idempotent,
+  always rerun fresh" rule applies to xscrnc's own list files too, not
+  just JOBARC-level quantities.
+
+**Not yet done**:
+- Ring-CC/DRCCD/RCCD path has NO frequency-shift capability yet
+  (`scrnc_form_rcc_hbar_inv.F`'s Hbar^-1 build via plain `MINV` has no
+  omega argument at all) -- CCSD path only so far, which is fine since
+  that's "the real production target" per the earlier goal-framing
+  entry, but ring-CC's RPA-vs-published-GW validation role means it'll
+  need this eventually too.
+- Imaginary-frequency axis not yet exercised (only tested REALFREQ=
+  .TRUE. so far) -- the file-format/REALFREQ machinery claims to
+  support it (mirrors vcceh's own IMAG_FREQ handling) but untested.
+- No actual self-energy/quasiparticle-equation construction yet --
+  this session only gets W(omega) itself working dynamically, which is
+  the necessary input, not the full GW pipeline.
+- Everything in this entry is uncommitted (four files: `scrnc_lrspn_cc_
+  main.F`, `scrnc_jj_cc_lrspn.F`, `scrnc_form_lrspn_cc_lists.F`,
+  `scrnc_set_vars.F`) -- holding for Ajith's confirmation on the
+  Fact=2/static-number-change question above before committing, since
+  it changes previously-verified default output.
+
+---
+
 ## SESSION END, 2026-08-14 evening -- RESUME TOMORROW HERE
 
 Stopping for the day. State to pick back up with, in one paragraph: H2's

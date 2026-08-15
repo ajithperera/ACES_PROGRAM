@@ -271,7 +271,7 @@ c files.com : end
       Endif 
       Inquire(File="frequency",Exist=Freq_exist)
       If (Freq_Exist) Then
-         OPen(Unit=10,File="Frequency",Form="Formatted",Status="OLD")
+         OPen(Unit=10,File="frequency",Form="Formatted",Status="OLD")
          Junk = 0
          Read(10,*,End=800) No_Freqs
          Read(10,*,End=800) JunK
