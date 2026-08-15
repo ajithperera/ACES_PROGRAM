@@ -141,7 +141,7 @@ C construction. 2026-08-14.
          Enddo
          Do Irrepr = 1, Nirrep
             Ndim = Ndim + Irpdpd(Irrepr,9)
-            If (Iuhf .NE. 0) Ndim = Ndim + Irpdpd(Irrepr-1,10)
+            If (Iuhf .NE. 0) Ndim = Ndim + Irpdpd(Irrepr,10)
          Enddo
 C Scrnc_form_rcc_hbar/_inv need scratch space beyond the persistent
 C Ndim*Ndim+Ndim Hbar^(-1) storage itself (diagonal buffers, SSTGEN
