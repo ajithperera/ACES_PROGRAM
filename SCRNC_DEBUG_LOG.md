@@ -330,12 +330,9 @@ Perera-Nooijen-extended correction (`IEOMPROP=2`, already wired via
 `Calcquad1` in `scrnc_jj_cc_lrspn.F`) is the documented fix for the
 gap, "small but can be significant."
 
-**Not yet resolved -- Ajith's call before committing**: whether
-`Fact=2` on the static (Freq=0) branch is the correct final answer
-(i.e. the OLD static numbers, already committed/documented as
-"verified," were actually wrong by a factor of 2 in their response
-term), since this changes default output for every existing scrnc
-CCSD-path run, not just new frequency-dependent ones.
+**RESOLVED, 2026-08-15**: Ajith confirmed `Fact=2` on the static branch
+is correct -- committed as `83c8980d`, superseding the old static
+numbers everywhere.
 
 **Validated, dynamic mechanism itself works correctly**: real-frequency
 test cases (`h2_scrnc_ccsd_uhf_sto3g_freqtest`/`_freqtest2`, H2/STO-3G/
@@ -369,11 +366,7 @@ confirm:
 - No actual self-energy/quasiparticle-equation construction yet --
   this session only gets W(omega) itself working dynamically, which is
   the necessary input, not the full GW pipeline.
-- Everything in this entry is uncommitted (four files: `scrnc_lrspn_cc_
-  main.F`, `scrnc_jj_cc_lrspn.F`, `scrnc_form_lrspn_cc_lists.F`,
-  `scrnc_set_vars.F`) -- holding for Ajith's confirmation on the
-  Fact=2/static-number-change question above before committing, since
-  it changes previously-verified default output.
+- Committed as `83c8980d` (four source files + this log).
 
 ---
 
