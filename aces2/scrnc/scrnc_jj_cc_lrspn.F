@@ -335,7 +335,14 @@ C --------------------------------------------------------------------
           Call Calcquad1(Work(I000),JJ_lrespn,Maxcor,Isympert,
      +                   Ioffpert,Nao_pair,Iuhf,1.0D0,
      +                   Nao_pair,1,Itop,.False.)
-      Endif 
+      Endif
+
+C Force-symmetrize the final W=v+v*chi*v matrix, matching the standard
+C ACES2 EOM-effective-Hamiltonian property recipe (vcceh/secprp.F's
+C Call Symmet2(XPROP,MAXPRT), J. Gauss 1990). 2026-08-15.
+
+      Call Symmet2(JJ_lrespn,Nao_pair)
+
 #ifdef _DEBUG_LVL0
       Write(6,*)
       Write(6,"(a)") " LR JJ matrix"

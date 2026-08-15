@@ -142,6 +142,8 @@ C stage below.
       call checksum("L-routine Mbar_00:",Mbar_00,1)
       call checksum("L-routine Mubar_s(Iside=1):",Work(I030),
      +              Lenoo+Lenvv+2*Lenvo)
+      Write(6,"(a,20F15.10)") " RAWTRACE Work(I050) right after "//
+     +     "Iside=1 returns:",(Work(I050-1+I),I=1,MIN(Lenvo,20))
 #endif
 
          Iside = 2
@@ -309,13 +311,27 @@ C --------------------------------------------------------------------
             Enddo
          Enddo
       Enddo
+
+C Force-symmetrize the final W=v+v*chi*v matrix, matching the standard
+C ACES2 EOM-effective-Hamiltonian property recipe (vcceh/secprp.F's
+C Call Symmet2(XPROP,MAXPRT), J. Gauss 1990): the L/R response
+C construction above (T2 vs ringcl's ground-state Lambda2, which are
+C never identical -- distinct left/right EOM/effective-Hamiltonian
+C quantities) leaves JJ_lrespn with a small numerical asymmetry by
+C construction, same as vcceh's XPROP before its own Symmet2 call.
+C vcceh's established practice is to symmetrize the finished property
+C matrix explicitly rather than require exact symmetry to fall out of
+C the L/R construction itself. 2026-08-15.
+
+      Call Symmet2(JJ_lrespn,Nao_pair)
+
 #ifdef _DEBUG_LVL0
       Write(6,*)
       Write(6,"(a)") " RPA JJ matrix"
       call output(JJ_lrespn,1,Nao_pair,1,Nao_pair,Nao_pair,
      +            Nao_pair,1)
       Write(6,*)
-#endif 
-      
+#endif
+
       Return
-      End 
+      End

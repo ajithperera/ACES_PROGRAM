@@ -302,22 +302,40 @@ C
      +               NT2DSZAB*NT2DISAB)
       call checksum("MAI(IOFFVO2)(pre-xgemm)      :",MAI(IOFFVO2),
      +               NT2DISAB)
+      Write(6,"(a,I2,a,I2,a,I2,a,I5,a,I5)")
+     +     " RAWTRACE Iside=",Iside," Irrepx=",Irrepx," Ispin=",Ispin,
+     +     " NT2DSZAB=",NT2DSZAB," NT2DISAB=",NT2DISAB
+      Write(6,"(a,20F15.10)") " RAWTRACE T2AB(1:NT2DSZAB,dis=1)  :",
+     +     (SCR(I010-1+I),I=1,MIN(NT2DSZAB,20))
+      Write(6,"(a,20F15.10)") " RAWTRACE MAI(IOFFVO2)            :",
+     +     (MAI(IOFFVO2-1+I),I=1,MIN(NT2DISAB,20))
           CALL XGEMM('N','N',NT2DSZAB,1,NT2DISAB,ONE*SIGN1,SCR(I010),
      &                NT2DSZAB,MAI(IOFFVO2),NT2DISAB,ONE,
      &                MAIBAR(IOFFVO1),NT2DSZAB)
       call checksum("MAIBAR(post-AB-xgemm)        :",MAIBAR(IOFFVO1),
      +               NT2DSZAB)
+      Write(6,"(a,20F15.10)") " RAWTRACE MAIBAR(post-AB-xgemm)   :",
+     +     (MAIBAR(IOFFVO1-1+I),I=1,MIN(NT2DSZAB,20))
           IF(IUHF.NE.0)THEN
              CALL GETLST(SCR(I010),1,NT2DISAA,1,IRREPX,LISTT2AA)
       call checksum("T2AA(pre-xgemm)              :",SCR(I010),
      +               NT2DSZAA*NT2DISAA)
       call checksum("MAI(IOFFVO1)(pre-xgemm)      :",MAI(IOFFVO1),
      +               NT2DISAA)
+      Write(6,"(a,I2,a,I2,a,I2,a,I5,a,I5)")
+     +     " RAWTRACE Iside=",Iside," Irrepx=",Irrepx," Ispin=",Ispin,
+     +     " NT2DSZAA=",NT2DSZAA," NT2DISAA=",NT2DISAA
+      Write(6,"(a,20F15.10)") " RAWTRACE T2AA(1:NT2DSZAA,dis=1)  :",
+     +     (SCR(I010-1+I),I=1,MIN(NT2DSZAA,20))
+      Write(6,"(a,20F15.10)") " RAWTRACE MAI(IOFFVO1)            :",
+     +     (MAI(IOFFVO1-1+I),I=1,MIN(NT2DISAA,20))
              CALL XGEMM('N','N',NT2DSZAA,1,NT2DISAA,ONEM*SIGN1,
      &                   SCR(I010),NT2DSZAA,MAI(IOFFVO1),NT2DISAA,ONE,
      &                   MAIBAR(IOFFVO1),NT2DSZAA)
       call checksum("MAIBAR(post-AA-xgemm)        :",MAIBAR(IOFFVO1),
      +               NT2DSZAA)
+      Write(6,"(a,20F15.10)") " RAWTRACE MAIBAR(post-AA-xgemm)   :",
+     +     (MAIBAR(IOFFVO1-1+I),I=1,MIN(NT2DSZAA,20))
           ENDIF
        ENDIF
 C

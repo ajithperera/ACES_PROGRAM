@@ -6,6 +6,240 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
+## SESSION 2026-08-15 -- backward logic trace on H2O/STO-3G (IN PROGRESS)
+
+Per Ajith's direction: use H2O/STO-3G directly (already confirmed
+asymmetric, no need to escalate basis), and do a full backward LOGIC
+review (not just instrumentation) from JJ assembly back through the call
+chain. Traced and read in full: `scrnc_jj_rcc_lrspn.F` (JJ assembly) ->
+`scrnc_lrspn_rcc_main.F` (R-side, list 373) -> `scrnc_form_mubar_s.F` +
+`scrnc_form_mubar_00.F` -> `scrnc_driver.F` (top-level, Hbar-once
+build/Iloc) -> `scrnc_form_rcc_hbar.F` + `scrnc_form_rcc_hbar_inv.F` ->
+`scrnc_prep_culomb_ints.F` -> `scrnc_form_lrspn_rcc_lists.F` ->
+`scrnc_built_respn_den.F`. Not yet reached: `scrnc_dens_oo/vv/vo.F`,
+`scrnc_xxxx_pqxx.F`, `scrnc_ao2mo.F`, `scrnc_getaoinf.F`,
+`scrnc_make_lists.F`, `scrnc_prep_2ints.F`, `scrnc_form_rccd_g2.F`,
+`scrnc_i1tran.F`, `scrnc_bcktran*.F` -- keep working backward from here on
+resume, in that rough order (density-build routines next, then the AO2MO
+transform chain).
+
+**Two real (but probably non-causal) bugs found and NOT yet fixed** (do
+not fix without deciding whether to bundle with the eventual root-cause
+fix, or fix now separately -- ask Ajith which he prefers when resuming):
+1. `scrnc_driver.F:144`, inside the `Ndim` accumulation loop (used only
+   to size the Hbar^(-1) scratch-padding budget, `Ineed=Ndim*Ndim+Ndim`,
+   `Ipad=10000+10*Ineed`): `Ndim = Ndim + Irpdpd(Irrepr-1,10)` should read
+   `Irpdpd(Irrepr,10)` -- off-by-one, reads `Irpdpd(0,10)` (out of bounds)
+   on the Irrepr=1 iteration. Protected by the 10x Ipad margin, so almost
+   certainly harmless in practice, but worth fixing for correctness/
+   robustness regardless. Does NOT affect `Iloc(:)`, which is built
+   correctly in the loop just above it (verified: `Iloc(Irrepr) =
+   Iloc(Irrepr-1) + Length` with `Length` from `Irpdpd(Irrepr-1,9)[+10]`
+   squared -- that recurrence is right, each step adds the PREVIOUS
+   irrep's own block size, which is the correct prefix-sum pattern).
+2. `scrnc_form_lrspn_rcc_lists.F:61`, sizing lists 373/374/375/376:
+   `Length(Irrep) = Length(Irrep) + Irpdpd(Irrep,9)` for the UHF case
+   should add column `10` (beta PH-pair count), not `9` (alpha) a second
+   time -- same copy-paste-off-by-one-column shape as the already-fixed
+   `scrnc_form_mubar_s.F` I020 typo. Numerically inert for any genuinely
+   closed-shell UHF reference (H2 and H2O both), since alpha/beta
+   occ+virt counts match per irrep there, so `Irpdpd(Irrep,9) ==
+   Irpdpd(Irrep,10)` always holds and the list ends up the right size
+   anyway. Real risk only for open-shell UHF references, out of scope
+   for this thread.
+
+**Key structural finding, narrows the search a lot**: for RCCD/DRCCD
+(ring-CC, no singles), `scrnc_rccd_dummy_inits.F` hard-zeros lists 90
+(T1), 190 (L1), 191 (G_im), 192 (G_ea) every run. `scrnc_form_mubar_s.F`
+reads exactly these lists to drive its OO-block, VV-block, and the
+G-intermediate part of its VO-block (Iside=2 lines ~232-256) -- all zero,
+so those terms contribute nothing for ring-CC regardless of Iside. This
+means, for ring-CC specifically:
+- `MIJBAR`/`MABBAR` are identically zero on BOTH sides (no singles at
+  all) -- not a source of L/R asymmetry.
+- The only nonzero content of `Scrnc_form_mubar_s`'s output, either side,
+  is the T2-contraction term at lines ~273-318: `MAIBAR(ai) +=
+  T2(ai,em)*MAI(em)` [+AA spin term], using list `38-ISPIN`/`33+ISPIN`
+  (regular T2, right-hand amplitude, Iside=1) vs list
+  `138-ISPIN`/`133+ISPIN` (offset +100, "L2"/Lambda-T2, left-hand
+  amplitude, Iside=2).
+- Also confirmed the `Mbar_00-M_expect` SAXPY term (line 321-324,
+  `IF(ISIDE.EQ.2 .AND. IRREPX.EQ.1 .AND. IEOMPROP.EQ.0)`) is a genuine
+  no-op for ring-CC too -- it scales list 190 (L1), which is zero. So a
+  bug in `Scrnc_built_respn_den.F`'s density (which only feeds
+  `M_expect`) CANNOT be the cause here; ruled out without needing to read
+  `scrnc_dens_oo/vv/vo.F` in detail for this purpose (may still be worth
+  a pass for its own sake, but not on this critical path).
+
+**Where this points next**: the L/R asymmetry, if it's a code bug and not
+a deeper physics/algebra gap, most likely lives in whether list
+`133+ISPIN`/`138-ISPIN` ("L2", populated by `ringcl`'s own Lambda solve,
+NOT by scrnc) uses the exact same DPD storage/ordering convention as list
+`33+ISPIN`/`38-ISPIN` ("T2", populated by `ringcc`). This is a
+cross-module convention-matching question (ringcc vs ringcl), same shape
+as the original list-374 bug but one level removed -- NOT yet
+investigated. Concretely: find where `ringcc` writes lists 33+ISPIN/
+38-ISPIN (likely `ringcc/rcc_rng.F` or `ringcc/rcc_rng_4rhf_rccd.F`,
+grep-confirmed both reference `LISTT=33+ISPIN`/`38-ISPIN`) and where
+`ringcl` writes 133+ISPIN/138-ISPIN (`ringcl/rcl_l2rng.F`,
+grep-confirmed `LISTT=133+ISPIN`/`138-ISPIN`), and diff their storage
+conventions (row/col ordering, symmetry-packing, sign conventions)
+line-by-line. If they match, the next fallback is the raw-value-dump plan
+from yesterday (H2O AO-pairs 9/20/38/41/49) but now narrowed specifically
+to the T2AB/L2AB values feeding the line-296 XGEMM in
+`scrnc_form_mubar_s.F`, since everything else in that routine is now
+confirmed zero for ring-CC.
+
+**Raw-value-dump result (2026-08-15, DONE) -- no code bug found, this now
+looks like a physics/design question.** Instrumented
+`scrnc_form_mubar_s.F` (raw T2AB/T2AA/MAI/MAIBAR dumps, both sides) and
+`scrnc_jj_rcc_lrspn.F` (raw dump of `Work(I050)` right after the Iside=1
+call returns, before any Iside=2 setup runs). Rebuilt, reran fresh on
+`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_drccd_uhf_sto3g_rawtrace2/`.
+
+**First pass at reading the output was WRONG** -- a self-inflicted parsing
+bug, not a code bug: the `"L-routine Npert_count=N"` marker prints
+*between* AO-pair N's Iside=1 trace and its Iside=2 trace (see code at
+`scrnc_jj_rcc_lrspn.F:140-146`), so a naive "split the log by marker
+line" parse pairs pair N's Iside=2 block with pair (N+1)'s Iside=1 block
+by accident. That false pairing produced an apparent ~5-10x magnitude
+mismatch between "Iside=1's MAIBAR output" and "Iside=2's MAI input" that
+looked exactly like the original list-374 collision bug's signature --
+worth remembering for next time: always sanity-check parsed line ranges
+against `grep -n` + manual inspection before trusting a derived
+"mismatch," especially when the file has interleaved multi-block prints
+like this one.
+
+**Corrected pairing (hand-verified against `xscrnc.out` line numbers,
+AO-pair 9, lines 5915-5975)**: Iside=2's "MAI" input (`Work(I050)`,
+read via `MAI(IOFFVO2)`) matches Iside=1's own `MAIBAR` output for the
+SAME AO-pair EXACTLY, as the code intends (Iside=2 legitimately consumes
+Iside=1's dressed Mbar as its own "bare" operator input -- confirmed
+intentional, matches the doc-comment's overbarred `M(ei)` notation for
+Iside=2 in the routine header). No aliasing/collision bug here.
+
+The only real difference between the two sides is T2 (ringcc, list
+`38-ISPIN`/`33+ISPIN`) vs L2 (ringcl, list `138-ISPIN`/`133+ISPIN`)
+differing at the 6th-7th significant digit for the same AO pair (e.g.
+AO-pair 9: T2AB(1)=-0.0007489825 vs L2AB(1)=-0.0007489964). This is
+almost certainly REAL physics (T2 and L2 are genuinely different
+amplitudes for a non-symmetric Hbar, not a bug), and it's plausible on
+its face that this tiny per-component difference, propagated through the
+`MAIBAR` contraction (~4e-5 level difference in the dressed value) and
+then the `Hbar^-1`/`Hbar^-T`-multiply + 373-dot-374 sum over
+~10-20 components, is fully sufficient to produce the observed ~1e-4
+level JJ asymmetry -- i.e. this may not need a "bug" explanation at all.
+
+Also confirmed (same trace, both sides, not new): for several AO pairs
+the AA and AB xgemm contributions to `MAIBAR` exactly cancel (T2AA reads
+bit-identical to T2AB at the `dis=1` slice), leaving `MAIBAR` equal to
+the raw undressed `MAI`. Happens identically on R-side (trusted) too, so
+NOT a source of the asymmetry -- likely a real closed-shell-UHF
+degeneracy at this particular DPD slice, not a bug. Don't re-chase this.
+
+**Bottom line after this full backward pass**: exhausted static logic
+review of every routine in scrnc's own ring-CC call chain (see full list
+above) plus a corrected, hand-verified raw-value trace at the one
+remaining line with real physics content, and found NO further coding
+bug. What's left is a genuine physics/design question, needs Ajith's
+judgment, not more code reading:
+
+- Is there supposed to be a specific mathematical relation between T2,
+  L2, and Hbar's left/right eigenvectors that forces JJ to be EXACTLY
+  symmetric (in which case something enforcing that relation is
+  currently missing -- e.g. maybe ringcl's L2 solve needs an extra
+  biorthogonality/normalization constraint against ringcc's T2 that isn't
+  currently being applied before scrnc consumes both)?
+- OR was H2's earlier "exact symmetry to 11 digits" itself a special
+  case (H2/STO-3G's minimal, highly-degenerate amplitude structure)
+  rather than a general guarantee, and a small residual asymmetry at the
+  H2O scale (~1e-4, small relative to the ~0.5-1.3 magnitude of the JJ
+  elements themselves) is actually the EXPECTED, correct behavior of
+  this method?
+
+Whichever answer, the next concrete step depends on it: if a missing
+constraint, need to find where/how ringcl's L2 solve should be tied back
+to T2 (biorthogonal Davidson normalization is the likely place to look,
+`ringcl/rcl_*.F`, not yet investigated). If expected residual, this
+thread is effectively DONE and the number itself (or its convergence
+behavior vs cc_conv/basis size) becomes the thing to characterize instead
+of chased as a bug.
+
+**PHYSICS CALL, 2026-08-15 -- RESOLVED, no bug: this asymmetry is
+expected, not a defect.** Ajith's ruling: like CC (and worse, since
+ring-CC/RPA-type EOM has no explicit exp(T) similarity-transform form
+constraining it), left and right EOM eigenvectors are genuinely different
+even though they share the same excitation energy -- T2 (right/ringcc)
+and L2 (left/ringcl) are a biorthogonal pair, NEVER identical in general.
+H2's earlier "exact symmetry to 11 digits" was the special case (H2/
+STO-3G's minimal, highly-degenerate amplitude structure let T2≈L2 there
+by accident), not a general guarantee. The ~1e-4-level H2O JJ asymmetry
+found this session is the CORRECT, EXPECTED behavior of the method, not
+a code defect -- no further chasing needed on this specific thread.
+
+**SUPERSEDED, 2026-08-15 -- there WAS still a real fix, just not the one
+guessed above.** The "expected, no bug" verdict was based on a wrong
+premise: I had assumed `ringcl`'s L2 was a state-specific EOM left
+eigenvector (biorthogonal to T2, genuinely never equal, no exact-symmetry
+guarantee). Ajith corrected this directly: `ringcl` is ring-CC's
+GROUND-STATE Lambda solver (same role as `xlambda` for CCSD), not an
+excited-state EOM solve -- confirmed by reading `ringcl/rcl_driver.F`
+directly: no diagonalization anywhere in the real solve path (`RCL_FORM_
+HBAR_AB/JI`, `RCL_DORNG`, `DRCL_DWMBEJ`, DIIS, `RCL_NEWT2`, convergence
+test -- a plain iterative Lambda-amplitude solve, `'L'`-tagged). The only
+`DGEEV` calls anywhere in `ringcl/` are in `rcl_drvrpa.F`/`rcl_heffxc.F`,
+which are the orphaned diagnostic *we* wired in this project, not part of
+production ringcl at all.
+
+Given that, the CCSD-vs-ring-CC asymmetry difference needed a real
+explanation, not a physics shrug. Found it by direct comparison with
+`vcceh/secprp.F` (Stanton 1993 EOM-effective-Hamiltonian property code --
+Ajith's own prior work in this exact area, predating/contemporaneous with
+Koch & Jorgensen 1990). `secprp.F` builds its polarizability tensor
+`XPROP` via essentially the same L/R-response-vector Ddot construction as
+scrnc's JJ_lrespn (same `OPRBAR`/372+ISIDE list-pairing architecture) --
+and then, at line 484, explicitly calls `Call Symmet2(XPROP,MAXPRT)`
+before ever printing or using the result. `Symmet2` (`aces2/libr/
+symmet2.f`, J. Gauss 1990) is a plain `A(pq)=0.5*(A(pq)+A(qp))`
+force-symmetrization. This is the ACES2-established, decades-old standard
+practice for exactly this class of L/R response construction: don't rely
+on the raw construction to be exactly symmetric, symmetrize the finished
+property matrix as the final step (same conceptual move as the complex-
+conjugate symmetrization of a propagator, per Ajith's own framing).
+scrnc's JJ routines were clearly modeled on `secprp.F`'s architecture but
+never carried over this final step.
+
+**FIX (2026-08-15, VERIFIED)**: added `Call Symmet2(JJ_lrespn,Nao_pair)`
+to both `scrnc_jj_rcc_lrspn.F` (right before the final `_DEBUG_LVL0`
+print, after the bare-integral add) and `scrnc_jj_cc_lrspn.F` (right
+after the optional `Calcquad1` quadratic-contribution call), matching
+`secprp.F`'s placement exactly. Rebuilt, reran fresh full pipelines for
+all four available control/test cases:
+- `h2o_scrnc_drccd_uhf_sto3g`: max asymmetry 0.0 (was 1.104E-04)
+- `h2_scrnc_drccd_uhf_sto3g`: max asymmetry 0.0 (still exact, as before)
+- `h2o_scrnc_rccd_uhf_sto3g`: max asymmetry 0.0 (was 6.653E-04)
+- `h2o_scrnc_ccsd_uhf_sto3g`: max asymmetry 0.0 (still exact, as before)
+
+Symmetrized values are sane (same order of magnitude/structure as the
+pre-fix asymmetric pairs, consistent with a genuine average rather than
+corruption) -- e.g. H2O DRCCD JJ(1,1)=0.79387968734,
+JJ(1,3)=JJ(3,1)=0.30939310680.
+
+**This closes out the entire scrnc JJ-asymmetry investigation**, this
+time for real: both the H2 list-374 collision bug from 2026-08-14 (real,
+fixed, committed) and the missing-Symmet2-call bug found and fixed today.
+The two minor indexing bugs found today
+(`scrnc_driver.F:144` Ndim off-by-one, `scrnc_form_lrspn_rcc_lists.F:61`
+Length column typo -- both described in detail above, both still
+uncommitted) remain open cleanup items, worth fixing for correctness but
+NOT blocking anything physics-wise; low priority, fix whenever convenient.
+Everything from today (the two `Symmet2` calls, the raw-trace
+instrumentation in `scrnc_form_mubar_s.F`/`scrnc_jj_rcc_lrspn.F` guarded
+by `_DEBUG_LVL0`) is still uncommitted -- ready to commit whenever Ajith
+wants to close out the working tree.
+
+---
+
 ## SESSION END, 2026-08-14 evening -- RESUME TOMORROW HERE
 
 Stopping for the day. State to pick back up with, in one paragraph: H2's
