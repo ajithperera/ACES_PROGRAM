@@ -228,15 +228,27 @@ JJ(1,3)=JJ(3,1)=0.30939310680.
 **This closes out the entire scrnc JJ-asymmetry investigation**, this
 time for real: both the H2 list-374 collision bug from 2026-08-14 (real,
 fixed, committed) and the missing-Symmet2-call bug found and fixed today.
-The two minor indexing bugs found today
-(`scrnc_driver.F:144` Ndim off-by-one, `scrnc_form_lrspn_rcc_lists.F:61`
-Length column typo -- both described in detail above, both still
-uncommitted) remain open cleanup items, worth fixing for correctness but
-NOT blocking anything physics-wise; low priority, fix whenever convenient.
-Everything from today (the two `Symmet2` calls, the raw-trace
-instrumentation in `scrnc_form_mubar_s.F`/`scrnc_jj_rcc_lrspn.F` guarded
-by `_DEBUG_LVL0`) is still uncommitted -- ready to commit whenever Ajith
-wants to close out the working tree.
+
+**Cleanup items also CLOSED (2026-08-15, committed `77aa9fc4`)**: the two
+minor indexing bugs found today (`scrnc_driver.F:144` Ndim off-by-one,
+`scrnc_form_lrspn_rcc_lists.F:61` Length beta-column typo -- both
+described in detail above) are now fixed and committed. Verified by a
+fresh full-pipeline rerun of `h2o_scrnc_drccd_uhf_sto3g`
+(`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_drccd_uhf_sto3g_idxfix/`): JJ
+matrix bit-identical to the pre-fix baseline
+(`JJ(1,1)=0.79387968734`, `JJ(1,3)=0.30939310680`), confirming both fixes
+are numerically inert for closed-shell UHF as expected -- real effect
+only for open-shell UHF references, not currently tested by any scrnc
+case.
+
+**Working tree status**: clean on the scrnc thread -- both `Symmet2`
+calls (`35cdb853`) and both indexing-typo fixes (`77aa9fc4`) are
+committed. The raw-trace instrumentation added earlier today in
+`scrnc_form_mubar_s.F`/`scrnc_jj_rcc_lrspn.F` is guarded by
+`_DEBUG_LVL0` (already the project's standing debug flag, see
+`GNUmakefile.src`) and was left in as permanent diagnostics, also
+committed as part of `0cddc3eb`/`35cdb853` -- not exploratory cruft to
+clean up.
 
 ---
 
