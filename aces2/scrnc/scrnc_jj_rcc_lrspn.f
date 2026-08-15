@@ -9,13 +9,13 @@
 
 
 
-      Subroutine Scrnc_jj_rcc_lrspn(Work,Maxcor,Iuhf,JJ_lrespn,Isympert,
-     +                             Ioffpert,Nao_pair,Hbarinv,Iloc)
+      Subroutine Scrnc_jj_rcc_lrspn(Work,Maxcor,Iuhf,Isympert,
+     +                             Ioffpert,Nao_pair,Hbarinv,Iloc,
+     +                             Icount,Itop)
 
       Implicit Double Precision (A-H,O-Z)
 
       Double Precision M_expect,Mbar_00
-      Double Precision JJ_lrespn(Nao_pair,Nao_pair)
       Logical Incore
       Logical ccsd,Mbpt,Parteom,Nodavid,Aoladder,Rccd,Drccd
       Logical Realfreq
@@ -256,121 +256,23 @@ C holding Npert_count=Nao_pair's value instead of its own). Writing
 C directly to Npert_count (already known here) removes the collision.
 
           Call Putlst(Work(Iwrk),Npert_count,1,1,Irrepx,374)
+
+C Dynamic (frequency-dependent) response, 2026-08-15: this routine now
+C runs once per +/-Freq pass of Scrnc_driver.F's Icount loop (Hbarinv
+C is rebuilt fresh, (Hbar+Freq)^(-1), for each pass and shared here).
+C Unlike the CCSD path, ring-CC's L-side genuinely depends on Freq too
+C (it goes through the same Hbarinv), so on the +Freq pass also save to
+C list 376 -- the L-side counterpart of 375, mirroring the R-side save
+C in Scrnc_lrspn_rcc_main.F -- before the -Freq pass overwrites 374.
+
+             If (Icount .EQ. 1 .AND. Itop .EQ. 2) Then
+                Call Putlst(Work(Iwrk),Npert_count,1,1,Irrepx,376)
+             Endif
+
           Endif
 
          Enddo ! Enddo for Iao_pair
       Enddo ! Enddo of irrepr
-
-      Call Dzero(JJ_lrespn,Nao_pair*Nao_pair)
-
-      I_pairs = Nao_pair
-      J_pairs = Nao_pair
-
-      Write(6,*)
-      Write(6,"(a)") " Symmetry of perturbations"
-      Write(6,"(5(1x,I5))") (Isympert(i),i=1,Nao_pair)
-      Write(6,"(a)") " Offset for perturbations"
-      Write(6,"(5(1x,I5))") (Ioffpert(i),i=1,Nao_pair)
-      Write(6,*)
-      Do Iao_pair = 1, I_pairs 
-
-         Irrepx = Isympert(Iao_pair)
-
-         Nsizec = Irpdpd(Irrepx,9)
-         If (Iuhf .NE. 0) Then
-            Nsizec = Nsizec + Irpdpd(Irrepx,10)
-         Endif
-
-         I000 = 1
-         I010 = I000 + Nsizec 
-         I020 = I010 + Nsizec 
-         Iend = I020
-
-         Memleft = Maxcor - Iend 
-         If (Iend .Gt. Maxcor)  Call Insmem("Scrnc_jj_lrspn",Iend,
-     +                                      Memleft)
-
-         Call Getlst(Work(I000),Iao_pair,1,1,Irrepx,373)
-         Write(6,"(a)") " <0|(1+L)M_bar and first-order e^T|0>"
-         call checksum("373",work(i000),nsizec)
-         Write(6,"(a,I3,a,10F15.10)") " 373 raw, Iao_pair=",Iao_pair,
-     +                             ":",(Work(I000-1+I),I=1,Nsizec)
-         If (Iuhf .eq. 0) Then
-            Call Spntsing(Isympert(Iao_pair),Work(I000),Work(Iend),
-     +                    Memleft) 
-         Endif 
-
-         Do Jao_pair = 1, J_pairs 
-
-            If (Isympert(Iao_pair) .eq. Isympert(Jao_pair)) Then
- 
-               Call Getlst(Work(I010),Jao_pair,1,1,Irrepx,
-     +                     374)
-               call checksum("374",work(i010),nsizec)
-               Write(6,"(a,I3,a,10F15.10)") " 374 raw, Jao_pair=",
-     +                             Jao_pair,":",
-     +                             (Work(I010-1+I),I=1,Nsizec)
-               X = Ddot(Nsizec,Work(I010),1,Work(I000),1)
-
-               JJ_lrespn(Iao_pair,Jao_pair) = 
-     +                  JJ_lrespn(Iao_pair,Jao_pair) + X
-            Endif 
-              
-         Enddo
-      Enddo
-
-      Write(6,*)
-      Write(6,"(a)") " Response-only JJ matrix (before bare v added)"
-      call output(JJ_lrespn,1,Nao_pair,1,Nao_pair,Nao_pair,
-     +            Nao_pair,1)
-
-C --------------------------------------------------------------------
-C Add the bare (uncorrelated) Coulomb integral (mu nu|kappa lambda) so
-C that JJ_lrespn holds the FULL screened Coulomb interaction
-C    W = v + v*Chi*v
-C rather than just the screening correction v*Chi*v computed above.
-C List_xxxx (record 220, built in scrnc_prep_2ints.F) is the symmetry
-C-packed bare AO two-electron integral list, indexed identically
-C (irrep, within-irrep column) to JJ_lrespn's own Iao_pair bookkeeping,
-C so it adds in block by block, irrep by irrep. 2026-08-12.
-C --------------------------------------------------------------------
-
-      List_xxxx   = 220
-      I000        = 1
-      Npert_count = 0
-      Do Irrep = 1, Nirrep
-         Nperts_4irrepr = Irpdpdao(Irrep)
-         Irow_base      = Npert_count
-         Do Iao_pair_4irrep = 1, Nperts_4irrepr
-            Npert_count = Npert_count + 1
-            Call Getlst(Work(I000),Iao_pair_4irrep,1,1,Irrep,
-     +                  List_xxxx)
-            Do Irow = 1, Nperts_4irrepr
-               JJ_lrespn(Irow_base+Irow,Npert_count) =
-     +              JJ_lrespn(Irow_base+Irow,Npert_count) +
-     +              Work(I000-1+Irow)
-            Enddo
-         Enddo
-      Enddo
-
-C Force-symmetrize the final W=v+v*chi*v matrix, matching the standard
-C ACES2 EOM-effective-Hamiltonian property recipe (vcceh/secprp.F's
-C Call Symmet2(XPROP,MAXPRT), J. Gauss 1990): the L/R response
-C construction above (T2 vs ringcl's ground-state Lambda2, which are
-C never identical -- distinct left/right EOM/effective-Hamiltonian
-C quantities) leaves JJ_lrespn with a small numerical asymmetry by
-C construction, same as vcceh's XPROP before its own Symmet2 call.
-C vcceh's established practice is to symmetrize the finished property
-C matrix explicitly rather than require exact symmetry to fall out of
-C the L/R construction itself. 2026-08-15.
-
-      Call Symmet2(JJ_lrespn,Nao_pair)
-
-      Write(6,*)
-      Write(6,"(a)") " RPA JJ matrix"
-      call output(JJ_lrespn,1,Nao_pair,1,Nao_pair,Nao_pair,
-     +            Nao_pair,1)
-      Write(6,*)
 
       Return
       End

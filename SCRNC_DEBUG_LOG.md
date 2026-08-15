@@ -370,6 +370,142 @@ confirm:
 
 ---
 
+## SESSION 2026-08-15 evening -- dynamic W(omega), ring-CC/RPA path (Phase 2, WORKING, committed)
+
+Extended the same dynamic-response machinery to the ring-CC (RCCD/
+DRCCD) path, per Ajith's direction ("do ring-CC first, so we have
+something to verify our machinery" -- ring-CC is the one path with a
+known-good external cross-check, both against ringcc/ringcl's own
+independent Hbar eigenvalues and against the published GW=EOM-drCCD
+identity).
+
+**Architecture**: ring-CC builds Hbar explicitly as a matrix (unlike
+CCSD's implicit Lineqy/Plineqy iterative solve) and inverts it once via
+MINV, sharing the result (`Hbarinv`/`Iloc`) between the R-side
+(`Scrnc_lrspn_rcc_main.F`) and L-side (`Scrnc_jj_rcc_lrspn.F`) -- and,
+per the code's own comment, ring-CC's L-side genuinely needs Hbar^(-1)
+too (unlike CCSD's L-side, which is a fixed Freq-independent operator).
+So going dynamic here means building `(Hbar+Freq)^(-1)` instead of
+`Hbar^(-1)`, once per +/-Freq pass, and sharing it with BOTH sides for
+that pass -- both sides end up Freq-dependent, unlike CCSD.
+
+**A real, non-trivial bug found and fixed (not a guess-and-check
+sign issue)**: initial implementation (wrap the Hbarinv-build+R-call+
+L-call in a Do Icount=1,Itop loop, negate Freq between passes, same
+shape as the CCSD path) gave a response that *decreased* with
+increasing Freq -- backwards from the CCSD path's correct increasing-
+toward-resonance trend. Flipping the shift sign (Hbar-Freq vs
+Hbar+Freq) changed the number but made it WORSE in the wrong direction,
+which is a logical contradiction (summing +Freq and -Freq shifts should
+be invariant to which pass is labeled which, by commutativity of
+addition) -- proof this wasn't a sign-convention question at all but a
+real bug.
+
+**Isolated via direct diagnostic printing** (Hbar(1,1) before/after
+shift, both passes): calling `Scrnc_rcc_hbar_inv` (the top-level ONE
+that `Scrnc_driver.F` actually calls) twice in a row, even with
+Freq=0.0 throughout (fully isolating away from anything Freq-related),
+gave DIFFERENT raw Hbar(1,1) values each time
+(1.40743653968732 -> 2.65424468244473 -> 3.90105282520215 on a third
+call), with the EXACT SAME increment (1.24680814275741) added every
+time -- a constant, deterministic, additive corruption, not noise.
+
+**Root cause**: `Scrnc_rcc_hbar_inv.F` (the actual routine
+`Scrnc_driver.F` calls -- easy to miss, named almost identically to
+`Scrnc_form_rcc_hbar_inv.F`, which is the one this whole thread had
+been reading/editing/instrumenting) is a thin WRAPPER:
+```
+Call Scrnc_form_rcc_hbar(Work,Memleft,Iuhf,Imult)
+Call Scrnc_form_rcc_hbar_inv(Work,Memleft,Iuhf,Iloc)
+```
+`Scrnc_form_rcc_hbar` -- previously believed to be dead/orphaned code
+(a grep for its call sites turned up nothing, see the 2026-08-15
+"actual goal" entry above) -- IS in fact called, every time, via this
+wrapper. The grep that missed it filtered matches with
+`| command grep -v "_inv\|_INV"` to exclude irrelevant "_inv" hits, but
+that filter matches on the whole line INCLUDING the filename, and
+`scrnc_rcc_hbar_inv.F`'s own filename contains "_inv" -- silently
+excluding the one file that actually mattered. Lesson: a second grep
+pass "to clean up noise" can eat the real match if it filters on
+whole-line text rather than being scoped to what's actually noise.
+
+`Scrnc_form_rcc_hbar` destructively reads the raw AA/BB Hbar blocks
+(lists 54/55) via `GETALL`, adds the one-particle Fock diagonal
+(`F(ab)d(ij)-F(ij)d(ab)`, via `Scrnc_addoneh`), and writes the result
+back via `PUTALL` to the SAME list it read from -- exactly the
+"destructive read-modify-write" bug class already fixed once before
+(2026-08-14, the original Hbar-double-build bug) in a *different*
+routine. Calling the wrapper twice (needed for the dynamic Icount loop)
+added the Fock diagonal a second time on the second call, corrupting
+the "raw" Hbar that gets shifted+inverted -- which is exactly why
+flipping the shift sign changed the number in the wrong way: both
+sign choices were being applied to an already-corrupted second-pass
+Hbar, so neither could give the right answer.
+
+**Fix** (clean architectural split, not a patch): new
+`Scrnc_rcc_hbar_read.F` -- pure GETLST-based read of the raw Hbar
+blocks (RHF or UHF AA/BB/AABB/BBAA), no dressing, no PUTALL, safe to
+call as often as needed since it never writes. `Scrnc_form_rcc_hbar_inv.F`
+reworked to take the pristine Hbar as an INPUT array (`WHBAR`) plus a
+separate OUTPUT array (`W`) -- copies `WHBAR`->`W` via `DCOPY`, applies
+the Freq shift and MINV to `W` only, leaving `WHBAR` untouched.
+`Scrnc_driver.F` now calls `Scrnc_form_rcc_hbar` (the dressing/PUTALL
+step) exactly ONCE, then `Scrnc_rcc_hbar_read` once into a dedicated
+pristine buffer (`Ihbar_bgn`, same `Ineed+Ipad` sizing as `Ihbarinv_bgn`
+since `Scrnc_form_rcc_hbar` needs it as scratch too) -- both before the
+dynamic Icount loop. Inside the loop, only
+`Scrnc_form_rcc_hbar_inv(Work(Ihbar_bgn),Work(Ihbarinv_bgn),...)` gets
+called per pass, which only copies+shifts+inverts, never re-touches the
+underlying lists.
+
+Also moved `Scrnc_form_lrspn_rcc_lists` (list creation) out of
+`Scrnc_lrspn_rcc_main.F` and into `Scrnc_driver.F`, called once before
+the Icount loop instead of once per pass -- same "don't repeat
+list-touching operations across a dynamic loop" lesson, cheap insurance
+even though it turned out not to be the actual bug this time.
+
+List 376 (already allocated by `Scrnc_form_lrspn_rcc_lists.F`, unused
+until now) is used as the L-side's +Freq companion to list 374, mirroring
+375's role as the R-side's +Freq companion to 373. New
+`Scrnc_jj_rcc_assemble.F` (split out of the old `Scrnc_jj_rcc_lrspn.F`,
+which now only builds the per-pass L-side Mbar/374(+376)) runs once
+after the Icount loop, combining {375,376} (+Freq pass) and {373,374}
+(-Freq pass, or the single static solve) with the same Fact=2(static)/
+1(dynamic) convention as the CCSD path's assembly.
+
+**Verified** (H2/STO-3G/UHF/DRCCD, fresh full pipelines each time,
+`/blue/ufhpc/perera/scrnc_test/h2_scrnc_drccd_finaltest_*`):
+- Static (no `frequency` file): response(1,1)=0.03008849944 (before
+  bare-v add) -- exactly reproduces the earlier post-Fact=2-fix
+  baseline, confirming the read/dress/invert split changed nothing
+  about the static answer.
+- omega=0.1 a.u.: response(1,1)=0.03045810992 -- correct direction
+  (increasing), small.
+- omega=0.4 a.u.: response(1,1)=0.03666255361 -- clearly increasing,
+  accelerating as omega approaches the known ~0.55 a.u. (15.09 eV)
+  RPA excitation energy from below, exactly the expected dynamic-
+  response shape. Exactly symmetric (`Symmet2` a no-op) at every
+  frequency tested.
+- CCSD path regression: h2_scrnc_ccsd_uhf_sto3g static case still
+  gives the exact committed baseline (0.83435406798/0.50949591159) --
+  confirms the shared `Scrnc_driver.F` changes didn't disturb the CCSD
+  branch.
+
+**Committed**: `scrnc_driver.F`, `scrnc_form_rcc_hbar_inv.F`,
+`scrnc_lrspn_rcc_main.F`, `scrnc_jj_rcc_lrspn.F`, plus new files
+`scrnc_rcc_hbar_read.F` and `scrnc_jj_rcc_assemble.F`.
+
+**Not yet done**: imaginary-frequency axis still untested for either
+path (file-format support exists, mechanism untested). No self-energy/
+QP-equation construction yet on either path -- this and the CCSD-path
+session both only get W(omega) itself working, which is the necessary
+input, not a full GW pipeline. `scrnc_form_rcc_hbar.F`'s companion copy
+in `aces2/rpa/scrnc_form_rcc_hbar.F` (found during the dead-code
+search) not investigated -- may be a vestigial duplicate, may be
+genuinely used by the native RPA module, not part of this thread.
+
+---
+
 ## SESSION END, 2026-08-14 evening -- RESUME TOMORROW HERE
 
 Stopping for the day. State to pick back up with, in one paragraph: H2's

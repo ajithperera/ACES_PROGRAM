@@ -4,8 +4,10 @@
       Implicit Double Precision (A-H,O-Z)
 
       Logical Ccsd,Mbpt,Parteom,Nodavid,Rccd,Drccd
+      Logical Realfreq
       Dimension Work(Maxmem)
       Dimension Iloc(8)
+      Common /Freqinfo/Freq,Realfreq,Xfreq(200),No_freqs
 
       COMMON/AOSYM/IAOPOP(8),IOFFAO(8),ioffv(8,2),ioffo(8,2),
      &             IRPDPDAO(8),IRPDPDAOMO_OCCBK(8,2),
@@ -155,8 +157,25 @@ C overwritten before it would ever be read as data.
          Ipad         = 10000 + 10 * Ineed
          Ihbarinv_bgn = Iend - (Ineed + Ipad) + 1
          Iend         = Ihbarinv_bgn - 1
-         Call Scrnc_rcc_hbar_inv(Work(Ihbarinv_bgn),Ineed+Ipad,
-     +                           Iuhf,1,Iloc)
+
+C Separate, pristine copy of the raw (dressed) Hbar (2026-08-15), built
+C ONCE by Scrnc_form_rcc_hbar+Scrnc_rcc_hbar_read before the dynamic
+C Icount loop and never rewritten again -- Scrnc_form_rcc_hbar_inv now
+C only COPIES from this into Work(Ihbarinv_bgn) each pass. The actual
+C bug (found via isolation testing, see SCRNC_DEBUG_LOG.md): the
+C original Scrnc_rcc_hbar_inv is a WRAPPER (Scrnc_rcc_hbar_inv.F, easy
+C to miss -- named almost identically to Scrnc_form_rcc_hbar_inv.F)
+C that calls Scrnc_form_rcc_hbar (destructively adds the one-particle
+C Fock diagonal IN PLACE via GETALL-then-PUTALL to the SAME list) THEN
+C Scrnc_form_rcc_hbar_inv. Calling that wrapper more than once (which
+C the dynamic Icount loop needs to do, once per +/-Freq pass) added the
+C Fock diagonal again on every call. Fix: call Scrnc_form_rcc_hbar
+C exactly once (below, sharing this same scratch buffer, same as the
+C old wrapper did), then Scrnc_rcc_hbar_read once to snapshot the
+C now-correctly-dressed Hbar -- same Ineed+Ipad sizing as Ihbarinv_bgn
+C since Scrnc_form_rcc_hbar needs it as scratch too.
+         Ihbar_bgn    = Iend - (Ineed + Ipad) + 1
+         Iend         = Ihbar_bgn - 1
       Endif
 
       Isym_pert_bgn  = Iend - Nao_pairs + 1
@@ -171,19 +190,59 @@ C overwritten before it would ever be read as data.
 
       If (Rccd .OR. Drccd)  Then
 
+C List creation (2026-08-15): moved out of Scrnc_lrspn_rcc_main.F to
+C run exactly once here, before the dynamic Icount loop below re-calls
+C that routine per +/-Freq pass -- see the comment in
+C Scrnc_lrspn_rcc_main.F for why calling it twice corrupted things.
+
+         Call Scrnc_form_lrspn_rcc_lists(Work(I000),Memleft,Iuhf,
+     +                                   Nao_pairs)
+
+C Dynamic (frequency-dependent) response, 2026-08-15: mirror the CCSD
+C path's Icount/Itop +/-Freq loop (see scrnc_lrspn_cc_main.F). Unlike
+C CCSD, ring-CC's Hbar^(-1) itself is Freq-dependent (built via
+C Scrnc_form_rcc_hbar_inv as (Hbar+Freq)^(-1)), so it must be rebuilt fresh
+C for each pass -- both the R-side and L-side per-pass routines below
+C consume whatever Hbarinv this pass just built. The final JJ assembly
+C (reading lists 373/374 and, for a dynamic run, 375/376) only happens
+C ONCE, after both passes, in the new Scrnc_jj_rcc_assemble.
+
+         Itop = 1
+         If (Freq .NE. 0.0D0 .AND. Realfreq) Itop = 2
+
+         Call Scrnc_form_rcc_hbar(Work(Ihbar_bgn),Ineed+Ipad,Iuhf,1)
+         Call Scrnc_rcc_hbar_read(Work(Ihbar_bgn),Ineed+Ipad,Iuhf,
+     +                             Iloc)
+
+         Do Icount = 1, Itop
+
+         Call Scrnc_form_rcc_hbar_inv(Work(Ihbar_bgn),
+     +                           Work(Ihbarinv_bgn),Ineed+Ipad,
+     +                           Iuhf,Iloc)
+
           Call Scrnc_lrspn_rcc_main(Work(I000),Memleft,Iuhf,
      +                              Work(Isym_pert_bgn),
      +                              Work(Ioff_pert_bgn),Nao_pairs,
-     +                              Work(Ihbarinv_bgn),Iloc)
+     +                              Work(Ihbarinv_bgn),Iloc,
+     +                              Icount,Itop)
 
           Call Scrnc_jj_rcc_lrspn(Work(I000),Memleft,Iuhf,
-     +                            Work(Ijj_lrspn_bgn),
      +                            Work(Isym_pert_bgn),
      +                            Work(Ioff_pert_bgn),Nao_pairs,
-     +                            Work(Ihbarinv_bgn),Iloc)
+     +                            Work(Ihbarinv_bgn),Iloc,
+     +                            Icount,Itop)
+
+         Freq = -Freq
+
+         Enddo ! Enddo for Icount (dynamic +/-Freq loop)
+
+         Call Scrnc_jj_rcc_assemble(Work(I000),Memleft,Iuhf,
+     +                              Work(Ijj_lrspn_bgn),
+     +                              Work(Isym_pert_bgn),
+     +                              Work(Ioff_pert_bgn),Nao_pairs)
 
       Else
-       
+
           Call Scrnc_lrspn_cc_main(Work(I000),Memleft,Iuhf,
      +                             Work(Isym_pert_bgn),
      +                             Work(Ioff_pert_bgn),Nao_pairs)
@@ -192,7 +251,7 @@ C overwritten before it would ever be read as data.
      +                           Work(Ijj_lrspn_bgn),
      +                           Work(Isym_pert_bgn),
      +                           Work(Ioff_pert_bgn),Nao_pairs)
-      Endif 
+      Endif
 
 C This block is obsolete. 
 C At this point Work(Ijj_lrspn_bgn) contains the what I called the "response

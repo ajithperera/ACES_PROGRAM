@@ -10,7 +10,8 @@
 
 
       Subroutine Scrnc_lrspn_rcc_main(Work,Maxcor,Iuhf,Isympert,
-     +                                Ioffpert,Nperts,Hbarinv,Iloc)
+     +                                Ioffpert,Nperts,Hbarinv,Iloc,
+     +                                Icount,Itop)
 
       Implicit Double Precision (A-H,O-Z)
 
@@ -121,12 +122,20 @@ C already-dressed output, breaking L/R Hbar consistency.
       Npert_count = 0
 
 C Next step is to prepare the integrals. We have the repulsion
-C integrals prepared in the form X(p(1)q(1),i(2)j(2)) where p and q can 
+C integrals prepared in the form X(p(1)q(1),i(2)j(2)) where p and q can
 C be occ-occ,vrt-vrt or occ-vrt and i(2) and j(2) always kept as AO
 C We process the p(1)q(1) integrals for a given pair of i(2)j(2)
 C and lets designate them as Mu(pq).
 
-      Call Scrnc_form_lrspn_rcc_lists(Work,Maxcor,Iuhf,Nperts)
+C 2026-08-15: list creation (Scrnc_form_lrspn_rcc_lists) moved to
+C Scrnc_driver.F, called ONCE before the dynamic +/-Freq Icount loop,
+C instead of here -- this routine is now called once PER Icount pass,
+C and re-touching/re-opening the underlying list files on the second
+C pass was found to corrupt the (otherwise Freq-independent) raw Hbar
+C data that Scrnc_form_rcc_hbar_inv.F reads (same class of bug as the
+C original list-374 collision, one level removed: a shared underlying
+C file getting reset by a second Updmoi/list-creation call). See
+C SCRNC_DEBUG_LOG.md, 2026-08-15 dynamic-ring-CC entry.
 
       Do Irrepr = 1, Nirrep
          Irrepl = Dirprd(Irrepr,Irreprl)
@@ -254,6 +263,15 @@ C Save the 1^st order perturbed amplitude for all perturbations
 
                  Call Putlst(Work(I030),Npert_count,1,1,Irrepx,
      +                       372+Iside)
+
+C Dynamic (frequency-dependent) response, 2026-08-15: on the +Freq pass
+C of a 2-pass dynamic run (see Scrnc_driver.F's Icount loop), also save
+C to list 375 (secprp's own convention, mirrors the CCSD path) before
+C the -Freq pass overwrites list 372+Iside=373 in place.
+
+                 If (Icount .EQ. 1 .AND. Itop .EQ. 2) Then
+                    Call Putlst(Work(I030),Npert_count,1,1,Irrepx,375)
+                 Endif
 
       write(6,*)
       call checksum("1^st order amps,Iside=1:",Work(I030),Nsizec)
