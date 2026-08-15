@@ -6,7 +6,7 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
-## SESSION 2026-08-15 -- backward logic trace on H2O/STO-3G (IN PROGRESS)
+## SESSION 2026-08-15 -- backward logic trace on H2O/STO-3G (CLOSED -- see the two "dynamic W(omega)" entries below for what followed)
 
 Per Ajith's direction: use H2O/STO-3G directly (already confirmed
 asymmetric, no need to escalate basis), and do a full backward LOGIC
@@ -252,7 +252,7 @@ clean up.
 
 ---
 
-## SESSION 2026-08-15 evening -- dynamic (frequency-dependent) W(omega), CCSD path (Phase 1, WORKING, uncommitted)
+## SESSION 2026-08-15 evening -- dynamic (frequency-dependent) W(omega), CCSD path (Phase 1, WORKING, committed 83c8980d)
 
 Goal shift: from static W=v+v*chi*v toward an actual GW-like quasiparticle
 pipeline, per Ajith's direction ("mimic dynamic pol[arizability]").
