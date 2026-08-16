@@ -6,6 +6,63 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
+## SESSION 2026-08-16 (evening, continued) -- Mexpect convention reconciliation attempted, partial progress, root cause still OPEN (RESUME HERE)
+
+Attempted step 1 of the two next-steps named in the entry below:
+extend the independent pilot to compute `Mexpect` directly (via
+PySCF's `mycc.make_rdm1()`, the standard Lambda-CCSD relaxed 1-RDM)
+and diff against scrnc's own printed "mu_0/mu_bar" values for AO-pair
+9/41 (sym=off run, `h2o_scrnc_ccsd_uhf_sto3g_crosscheck2`: AO-pair 9
+Mexpect=-0.021827/Mbar00=-0.008283, AO-pair 41
+Mexpect=-0.016931/Mbar00=-0.005255).
+
+**First attempt (raw `Tr[D_relaxed*M]`) way off**: 2.01 and 0.64 vs
+scrnc's -0.022 and -0.017 -- wrong order of magnitude entirely (these
+look like genuine electron-population-scale density-matrix diagonal
+values, not scrnc's much smaller numbers).
+
+**Correlation-only density gets much closer**: subtracting the UHF
+reference density (`D_corr = D_CCSD - D_HF`) before contracting with
+`M` gives 0.0427 and 0.0411 -- same order of magnitude as scrnc's
+values now (consistent with `Mexpect` representing a CORRELATION
+correction to a density-matrix element, not the raw expectation value,
+which makes physical sense for a "screened Coulomb via CC response"
+construction). But the ratio to scrnc's values isn't a clean, constant
+factor across the two AO pairs (-1.96 for AO-pair 9, -2.43 for AO-pair
+41, a real ~20% spread) -- meaning there's still a genuine convention
+detail not yet matched (most likely how the AO-pair "M" operator
+should be applied per spin-block: `dm_ao = dm1a+dm1b` sums both spins
+uniformly, but scrnc's `Scrnc_i1tran.F`-built `MIJ`/`MAB`/`MAI` blocks
+are built and summed per-`ISPIN` INSIDE `Scrnc_form_mubar_00.F`'s own
+loop, which may not be equivalent to my "sum densities first, then
+contract once" approach if the AO-pair operator itself needs to be
+spin-resolved differently, e.g. only counted once total rather than
+implicitly doubled by being applied to both alpha and beta density
+blocks identically).
+
+**Decision, given the scope already covered this session**: this
+reconciliation is turning into its own open-ended sub-investigation
+(spin-block convention matching) with uncertain payoff, layered on top
+of an already extremely long session (2 confirmed+committed fixes,
+independent-pilot confirmation the bug is real, nine-plus clean
+code-level checks). Stopping the convention-chase here rather than
+continuing to sink effort into an increasingly uncertain path --
+flagging this as the concrete resume point rather than pushing further
+unprompted.
+
+**On resume**: the most promising concrete next step is fixing the
+spin-block handling in the pilot's `Mexpect` calculation (build and
+contract `MIJ`/`MAB`/`MAI`-equivalent quantities PER SPIN, matching
+`Scrnc_form_mubar_00.F`'s own `DO 10 ISPIN=1,1+IUHF` loop structure
+exactly, rather than summing `dm1a+dm1b` before contracting) --
+if that closes the remaining ratio gap to a clean constant, the
+resulting reconciled pilot could then directly reproduce scrnc's own
+`Mbar00`/`Mexpect`/full response numbers element-by-element, which
+would be a far sharper localization tool than anything tried so far
+this session.
+
+---
+
 ## SESSION 2026-08-16 (evening, continued) -- Lineqy invocation + oprbar.f orchestration audited, both clean; root cause STILL open
 
 Continued from the independent-pilot session below (which confirmed
