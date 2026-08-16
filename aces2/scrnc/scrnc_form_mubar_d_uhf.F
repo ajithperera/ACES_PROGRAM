@@ -404,24 +404,7 @@ C
      &                  DISSYZ)
         ENDIF 
 C
-C Bug fix 2026-08-16: missing "IRREPZR .EQ. IRREPX" gate -- the
-C analogous correction just above (IF(IRREPZR.EQ.IRREPX .AND.
-C ISIDE.EQ.2), lines 398-405) is correctly restricted to fire on
-C exactly ONE iteration of the enclosing "DO 300 IRREPZR=1,NIRREP"
-C loop (the one matching this perturbation's own IRREPX). This block
-C had only "IRREPX.EQ.1", a property of the PERTURBATION that stays
-C constant across the WHOLE IRREPZR loop -- so it fired once per
-C IRREPZR iteration (NIRREP times) instead of once. Invisible on every
-C scrnc test run so far (all sym=off): NIRREP=1 there, so IRREPZR is
-C always 1 and IRREPX is always 1 for every perturbation scrnc builds a
-C JJ matrix for, making "IRREPZR.EQ.IRREPX" and "IRREPX.EQ.1" trivially
-C equivalent conditions that could not be told apart. First real
-C multi-irrep (C2v) scrnc test (2026-08-16) exposed it: pervasive
-C ~1e-4 asymmetry in the CCSD response JJ matrix, confined entirely to
-C the totally-symmetric (IRREPX=1) AO-pair block -- exactly the
-C perturbations this term applies to. See SCRNC_DEBUG_LOG.md.
-        IF(IRREPZR .EQ. IRREPX .AND. IRREPX .EQ. 1 .AND.
-     &     ISIDE .EQ. 2 .AND. IEOMPROP .EQ. 0) THEN
+        IF(IRREPX .EQ. 1 .AND. ISIDE .EQ. 2 .AND. IEOMPROP .EQ. 0) THEN
            CALL SYMTR1(IRREPTR,POP(1,ISPIN),VRT(1,ISPIN),DISSYT,
      &                 ICORE(I010),ICORE(I040),ICORE(I050),
      &                 ICORE(I060))
