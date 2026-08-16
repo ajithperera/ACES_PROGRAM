@@ -147,6 +147,22 @@ C VO and OV integral lists
      +                               Work(Ioff_vo),Iuhf,Lenoo,
      +                                Lenvv,Lenvo,Iao_pair_4irrep,
      +                                Irrepx,Irrepr)
+#ifdef _DEBUG_LVL0
+      If (Npert_count .EQ. 9) Then
+         Nocca = Nocco(1)
+         Write(6,"(a,i3)") " DIAG-CHECK MIJ(i,j) vs MIJ(j,i), Nocca=",
+     +                     Nocca
+         Do Idi = 1, Nocca
+            Do Idj = Idi+1, Nocca
+               Xij = Work(Ioff_oo-1+(Idj-1)*Nocca+Idi)
+               Xji = Work(Ioff_oo-1+(Idi-1)*Nocca+Idj)
+               Write(6,"(a,i2,i2,a,F18.12,a,F18.12,a,D12.4)")
+     +            " MIJ i,j=",Idi,Idj," MIJ(i,j)=",Xij,
+     +            " MIJ(j,i)=",Xji," diff=",Xij-Xji
+            Enddo
+         Enddo
+      Endif
+#endif
 #ifdef _DEBUG
 C      Nbfns   = Nocco(1) + Nvrto(1)
 C      Call Getrec(20, "JOBARC","NBASTOT ", 1, Naobfns)

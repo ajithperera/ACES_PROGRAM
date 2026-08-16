@@ -6,6 +6,191 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
+## SESSION 2026-08-16 (evening) -- real Abelian symmetry turned on for the first time ever; bug found, one false lead found+reverted, real cause still OPEN
+
+Ajith's direction: "let's get abelian sym as rest of ACES II." Every
+single scrnc test case in this entire project (all sessions above) had
+used `sym=off`. Built the first-ever real-symmetry scrnc test:
+H2O/STO-3G/UHF/CCSD/DENSITY=RESPONSE, C2v (same ZMAT as the trusted
+`h2o_scrnc_ccsd_uhf_sto3g` control case, just with `sym=off` removed --
+`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_ccsd_uhf_sto3g_symon`). ACES2
+auto-detects C2v correctly (`Iaopop(1..4)=(4,1,2,0)`,
+`Irpdpdao(1..4)=(21,8,16,4)`, summing to Nao=7/Nao_pairs=49). Pipeline
+runs to completion, no crash.
+
+**Real bug found, immediately**: parsed the pre-`Symmet2` "Response-only
+JJ matrix" with a small Python script (`file` reports this pipeline.log
+as "data" not "ASCII text" -- some stray non-UTF8 byte trips plain
+`grep`'s binary-file heuristic silently; `grep -a` or Python's
+`encoding='latin-1'` are needed, NOT a race condition -- this explains
+several earlier "grep returned nothing" false alarms this session,
+worth remembering permanently). Found 203/210 nonzero off-diagonal
+pairs asymmetric (~1e-4 to 4e-4), all confined to AO-pair range 1-21
+(the totally-symmetric A1 irrep block) -- an internal ordering/
+consistency issue *within* that block, invisible on every prior
+`sym=off` (Nirrep=1) run since there was only ever one such block.
+
+**Ruled out, empirically**: `scrnc_prep_2ints.F` /
+`Scrnc_reord_cols.F` / `Scrnc_sympack_aoints.F` (the AO-pair
+irrep-grouping machinery, and the `Irrep_ao_pairs` array both CCSD and
+ring-CC drivers rely on for `Npert_count`/`Irrepr` bookkeeping) --
+isolated the BARE (uncorrelated) AO integral part by subtracting
+"Response-only" from "CI-like" (=bare+response); the bare part is
+symmetric to ~1e-11 (parser rounding noise), 100% of the real asymmetry
+is in the response part alone. A plausible-looking hand-derived theory
+about a row/column reordering mismatch in `Scrnc_reord_cols.F` (kept
+in git history, not repeated here) turned out to be wrong once checked
+this way -- first instance this session of "verify empirically before
+trusting a plausible reading," see the second instance right below.
+
+**FALSE LEAD, found then reverted** -- worth keeping the story, not
+just the correction, per this log's own established practice:
+1. Found `scrnc_form_mubar_d_uhf.F`'s `IRREPX.EQ.1 .AND. ISIDE.EQ.2
+   .AND. IEOMPROP.EQ.0` correction (inside `DO 300 IRREPZR=1,NIRREP`)
+   lacked an `IRREPZR.EQ.IRREPX` gate that a structurally similar
+   correction just above it (lines 398-405) has. Patched it to add
+   that gate; committed as `03dceae1`.
+2. **This was WRONG.** Found the actual origin of this whole routine --
+   `vcceh/oprbar2u.F`, the general, decades-old ACES2 EOM-CC property
+   routine (`grep -rl OPRBAR2U`) this was clearly adapted from
+   (`INSMEM('OPRBAR2U',...)` literal string still present in scrnc's
+   own error messages). `oprbar2u.F` line 440 has the EXACT SAME
+   `IF(IRREPX.EQ.1 ...)` with NO `IRREPZR.EQ.IRREPX` gate, in the
+   identical loop position -- the trusted, presumably symmetry-tested-
+   for-decades reference does it the same "ungated" way scrnc did.
+   Re-examined why: the `SAXPY` input (`ICORE(I010)`) is freshly read
+   via `GETLST(...,IRREPTR,LISTT)` where `IRREPTR=DIRPRD(IRREPZR,
+   IRREPX)` -- a DIFFERENT, irrep-appropriate T1 sub-block on every
+   `IRREPZR` iteration, not the same value repeated. This term
+   legitimately distributes a correction across every irrep block of
+   the 2-particle quantity; the ADJACENT `IRREPZR.EQ.IRREPX`-gated term
+   (a genuinely different, LOCALIZED correction using a fixed `MIABAR`
+   offset) was not a valid analogy for it. Treating "structurally
+   similar-looking code two blocks apart" as "must follow the same
+   gating rule" was the error.
+3. Reverted cleanly (`git revert --no-edit 03dceae1`, commit
+   `3635808b`) rather than a destructive reset, since `03dceae1` was
+   already on `master`.
+
+**Systematic reference comparison done instead** (the right way to
+have started, and what to do FIRST next time a scrnc routine looks
+suspect): `scrnc_form_mubar_d_uhf.F`, `scrnc_form_mubar_s.F`, and
+`scrnc_form_mubar_00.F` all have clean, findable vcceh ancestors --
+`oprbar2u.F`, `oprbar1r.F`, `oprbar0.f` respectively (1:1
+correspondence confirmed via `wc -l` + `diff -u`). All three diffs are
+CLEAN: only cosmetic changes (renamed subroutine/variables, removed
+antisymmetric-perturbation handling scrnc never needs since its
+perturbations are always symmetric Coulomb-type, added debug
+checksums, and scrnc's own genuinely-new `PUTLST`-to-lists-480/482/456
+persistence). No formula or indexing bug found in any of the three.
+
+**Also checked, directly, empirically**: added a targeted diagnostic in
+`scrnc_lrspn_cc_main.F` (guarded `_DEBUG_LVL0`, fires only for
+`Npert_count.EQ.9`, one of the worst-offending AO pairs in the
+sym=off H2O regression -- see the separate entry below) dumping every
+`MIJ(i,j)` vs `MIJ(j,i)` element of the raw alpha OO block (input to
+`Scrnc_form_mubar_s`/`_00`/`_d_uhf`, built by
+`Scrnc_prep_culomb_ints.F` from `Scrnc_i1tran.F`'s AO2MO transform).
+Result: exactly symmetric to machine precision (~1e-16) for all 10
+off-diagonal pairs of the 5x5 alpha OO block. Rules out the raw
+integral/AO2MO prep chain too.
+
+**Where this leaves things**: the three "mubar" formula routines are
+clean (verified against trusted references) and their raw input is
+clean (verified directly). `JJ(p,q)=JJ(q,p)` is fundamentally a
+CROSS-perturbation identity (`Ddot(373(p),374(q))` must equal
+`Ddot(373(q),374(p))`), not a property of any single perturbation's own
+R-side/L-side construction in isolation -- every check done so far
+(Mexpect/Mbar00 R==L, mubar_d_uhf R==L, MIJ symmetry) is inherently
+single-perturbation-scoped and structurally CANNOT catch a bug that
+only shows up comparing two DIFFERENT perturbations. This is the right
+next angle on resume: instrument list 373/374 raw values for a specific
+pair (e.g. Npert_count=9 and 41) and directly verify or refute the
+cross identity by hand.
+
+**Committed**: `scrnc_form_mubar_d_uhf.F` (revert `3635808b`), this log.
+**Left in the tree, uncommitted**: the `Npert_count.EQ.9` MIJ-symmetry
+diagnostic in `scrnc_lrspn_cc_main.F` -- harmless
+(`_DEBUG_LVL0`-guarded, single-perturbation-scoped), kept as a template
+for the next targeted check.
+
+---
+
+## SESSION 2026-08-16 (evening) -- SEPARATE bug: H2O/STO-3G/CCSD asymmetric even with sym=off, NOT a convergence artifact (OPEN, bigger than the symmetry bug above)
+
+While regression-testing the (now-reverted) IRREPZR change above,
+parsed the `h2o_scrnc_ccsd_uhf_sto3g` control case's own "Response-only
+JJ matrix" (the SAME system the 2026-08-15 evening session's RESUME
+POINT claimed was "exactly symmetric, max diff = 0.0") with the same
+rigorous programmatic parser used for the sym=on case. **It is not
+symmetric**: 600 of 1176 nonzero off-diagonal pairs differ, up to
+5.17e-4 (JJ(9,41)=0.36434921829 vs JJ(41,9)=0.36486641546, both
+independently verified by hand against the raw printed matrix, not a
+parser artifact). The worst-offending pairs disproportionately involve
+AO-pair index 9 (=natural AO pair (2,2), O's 2s orbital self-pair) and
+41 (=natural AO pair (6,6), one H's 1s self-pair) -- both DIAGONAL
+self-pairs. This is almost certainly why every prior "exactly
+symmetric" verification in this whole project's history never caught
+it: EVERY SINGLE ONE used H2/STO-3G (1 occupied orbital per spin -- the
+OO block is a trivial 1x1 scalar, so an OO-block off-diagonal bug is
+structurally invisible there). H2O has 5 occupied orbitals per spin --
+a genuinely non-trivial 5x5 OO block -- and is apparently the first
+time this project has checked JJ symmetry for a system where that
+block isn't degenerate.
+
+**Ruled out, decisively**: numerical convergence noise. Reran with
+`cc_conv=12,scf_conv=12` (vs the control's `cc_conv=9,scf_conv=10`) --
+the asymmetry is bit-identical to the last printed digit (5.172e-04
+both times). A real convergence-noise effect would shrink when
+tightening convergence by 3+ orders of magnitude; this didn't move at
+all, meaning it's a deterministic, reproducible bug, not numerical
+residue.
+
+**Ruled out**: the same R-side/L-side "computed twice" double-build
+check used (initially, wrongly, see above) to chase the IRREPZR false
+lead -- `Scrnc_form_mubar_00` Mexpect/Mbar00 and
+`Scrnc_form_mubar_d_uhf` Iside=1 checksums both agree exactly between
+R-side and L-side's internal redundant recompute for this sym=off H2O
+case too. Whatever is wrong is NOT the "same quantity computed twice
+inconsistently" pattern that explains most of this project's prior
+bugs -- it's something that's WRONG THE SAME WAY both times it's
+computed (invisible to an R==L cross-check on a single perturbation).
+
+**Confirmed cross-path**: reran the SAME H2O/STO-3G system through the
+ring-CC/DRCCD path instead of CCSD (fresh ZMAT,
+`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_drccd_uhf_sto3g_check`) --
+ALSO asymmetric, even worse (1009/1176 pairs), with the SAME
+disproportionate AO-pair-index-9 signature. CCSD and ring-CC share
+`Scrnc_form_mubar_s.F`/`Scrnc_form_mubar_00.F`/
+`Scrnc_prep_culomb_ints.F` but NOT `Scrnc_form_mubar_d_uhf.F`
+(CCSD-only) or ring-CC's own Hbar-based doubles machinery -- since
+BOTH paths show the same signature, the shared root cause is most
+likely in the shared code, NOT in CCSD-specific doubles handling. (This
+prediction held up: the systematic reference-diff work in the entry
+above found `Scrnc_form_mubar_s.F`/`_00.F` clean too, and the direct
+MIJ-symmetry check found the shared `Scrnc_prep_culomb_ints.F`/AO2MO
+input clean as well -- so the shared-code hypothesis is confirmed
+correct in scope, even though the specific culprit inside that shared
+scope is still unidentified.)
+
+**Why this matters more than the symmetry bug above**: this affects the
+CCSD AND ring-CC paths' correctness for ANY system with a non-trivial
+OO or VV block, independent of point-group symmetry -- i.e. it's not
+really a "symmetry" bug at all, despite being found while chasing one.
+Turning on Abelian symmetry (this session's actual goal) can't be
+fully validated as "done" until this is fixed too, since even the
+sym=off H2O baseline is now known-broken.
+
+**Not yet done**: per the cross-perturbation-identity reasoning in the
+entry above, instrument list 373 (R-side)/374 (L-side) raw values for
+Npert_count=9 and 41 directly and check the `Ddot(373(p),374(q)) ==
+Ddot(373(q),374(p))` identity by hand -- the next concrete step on
+resume. Once fixed, recheck the sym=on C2v case to see whether it's
+then clean, or whether a third, genuinely symmetry-specific issue
+remains on top.
+
+---
+
 ## SESSION 2026-08-16 (later) -- Scrnc_bcktran_left MO->AO transform kernel fixed+verified
 
 Ajith: "I intended to do a correct bcktrn... let's do it correctly." Scope
