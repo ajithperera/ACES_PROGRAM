@@ -6,6 +6,196 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
+## SESSION 2026-08-16 (evening, continued) -- IRREPZR gate bug found+fixed (RESOLVED for its own scope); SEPARATE, bigger, non-symmetry-specific bug found (OPEN)
+
+**Fix found and verified**: `scrnc_form_mubar_d_uhf.F`, the
+`IRREPX.EQ.1 .AND. ISIDE.EQ.2 .AND. IEOMPROP.EQ.0` correction inside
+the `DO 300 IRREPZR=1,NIRREP` loop (adds `HALF*MBAR00*T1` to the
+doubles-like Z-block being built for `IRREPZR`) was missing the
+`IRREPZR.EQ.IRREPX` gate that the structurally identical correction
+just above it (lines 398-405) already has. Confirmed via matched
+R-side/L-side checksums first (`Scrnc_form_mubar_00`'s
+`Mexpect`/`Mbar00` and `Scrnc_form_mubar_d_uhf`'s own Iside=1 checksum
+both agree exactly between the R-side driver's own call and the
+L-side's internal redundant Iside=1 recompute, for every one of the 49
+perturbations -- ruled out the "computed twice" double-build pattern
+that caused earlier bugs in this project) before reading code further
+and finding this specific missing gate by direct comparison against
+the adjacent, correctly-gated block. Fixed by adding
+`IRREPZR.EQ.IRREPX .AND.` to the condition.
+
+**Regression-tested and confirmed NOT the cause of a separate finding
+below**: git-stashed the fix (reverting to committed HEAD) and reran
+the sym=off H2O CCSD control case fresh -- the asymmetry found below
+was IDENTICAL with and without this fix, proving the two issues are
+independent. Restored the fix afterward (`git stash pop`).
+
+**Committed**: `scrnc_form_mubar_d_uhf.F`.
+
+---
+
+## SESSION 2026-08-16 (evening) -- SEPARATE bug: H2O/STO-3G/CCSD asymmetric even with sym=off, NOT a convergence artifact (OPEN, bigger than the symmetry bug above)
+
+While regression-testing the IRREPZR fix above, parsed the
+`h2o_scrnc_ccsd_uhf_sto3g` control case's own "Response-only JJ matrix"
+(the SAME system the 2026-08-15 evening session's RESUME POINT claimed
+was "exactly symmetric, max diff = 0.0") with the same rigorous
+programmatic parser used for the sym=on case. **It is not symmetric**:
+600 of 1176 nonzero off-diagonal pairs differ, up to 5.17e-4
+(JJ(9,41)=0.36434921829 vs JJ(41,9)=0.36486641546, both independently
+verified by hand against the raw printed matrix, not a parser
+artifact). The worst-offending pairs disproportionately involve AO-pair
+index 9 (=natural AO pair (2,2), O's 2s orbital self-pair) and 41
+(=natural AO pair (6,6), one H's 1s self-pair) -- both DIAGONAL
+self-pairs. This is almost certainly why every prior "exactly
+symmetric" verification in this whole project's history never caught
+it: EVERY SINGLE ONE used H2/STO-3G (1 occupied orbital per spin --
+the OO block is a trivial 1x1 scalar, so an OO-block off-diagonal bug
+is structurally invisible there). H2O has 5 occupied orbitals per spin
+-- a genuinely non-trivial 5x5 OO block -- and is apparently the first
+time this project has checked JJ symmetry for a system where that
+block isn't degenerate.
+
+**Ruled out, decisively**: numerical convergence noise. Reran with
+`cc_conv=12,scf_conv=12` (vs the control's `cc_conv=9,scf_conv=10`) --
+the asymmetry is bit-identical to the last printed digit
+(5.172e-04 both times). A real convergence-noise effect would shrink
+when tightening convergence by 3+ orders of magnitude; this didn't
+move at all, meaning it's a deterministic, reproducible bug, not
+numerical residue.
+
+**Ruled out**: the same R-side/L-side "computed twice" double-build
+check used to isolate the IRREPZR bug above (`Scrnc_form_mubar_00`
+Mexpect/Mbar00, `Scrnc_form_mubar_d_uhf` Iside=1 checksums) -- both
+agree exactly between R-side and L-side's internal recompute for this
+sym=off H2O case too. Whatever is wrong is NOT in the "same quantity
+computed twice inconsistently" pattern that explains most of this
+project's prior bugs -- it's something that's WRONG THE SAME WAY both
+times it's computed (invisible to an R==L cross-check), which then
+shows up downstream when L-side and R-side get combined asymmetrically
+in the final JJ Ddot.
+
+**Live lead, not yet confirmed**: `scrnc_form_mubar_s.F`'s own header
+comment on the Iside=2 OO-block construction says "L(ji) which is what
+actually being evaluated is stored in L(ij) ... Moreover, L(ij)
+[MIJBAR, Iside=2] has no use in the rest of the program." This appears
+to be STALE/WRONG: `scrnc_form_mubar_d_uhf.F`'s own DO-300 loop DOES
+consume `MIJBAR` for ISIDE=2 (`CALL XGEMM('N','T',...,MIJBAR(IOFFM),
+NCOL,...)`, transposed). If MIJBAR(Iside=2) is stored pre-transposed
+(per the comment, holding "L(ji)" labeled as "L(ij)") AND consumed with
+an explicit 'T' flag downstream, that could be a correct
+double-negative (deliberately stored transposed, deliberately
+un-transposed on read) OR a genuine transpose-convention bug -- this
+needs the SAME careful adjoint-style re-derivation used to find the
+`Scrnc_bcktran_left.F` bugs earlier today, not a guess. Whether this is
+really the OO-block issue, or something else entirely (VV-block MABBAR
+has an analogous "no use" comment worth checking too, and the doubles
+G-intermediates from lists 191/192 haven't been examined at all yet)
+is still open.
+
+**Why this matters more than the symmetry bug above**: this affects the
+CCSD path's correctness for ANY system with a non-trivial OO or VV
+block, independent of point-group symmetry -- i.e. it's not really a
+"symmetry" bug at all, despite being found while chasing one. Turning
+on Abelian symmetry (this session's actual goal) can't be fully
+validated as "done" until this is fixed too, since even the sym=off
+H2O baseline is now known-broken.
+
+**Not yet done**: isolate which specific term (OO, VV, or the doubles
+G-intermediate contributions) is responsible, via the same
+backward-trace/instrumented-checksum methodology as always. Once fixed,
+recheck the sym=on C2v case (its remaining asymmetry, if any, after
+combining with the already-fixed IRREPZR bug) to see whether it's then
+clean, or whether a third, genuinely symmetry-specific issue remains.
+
+---
+
+## SESSION 2026-08-16 (evening) -- real Abelian symmetry turned on for the first time ever, NEW bug found (OPEN)
+
+Ajith's direction: "let's get abelian sym as rest of ACES II" -- every
+single scrnc test case in this entire project (all sessions above) has
+used `sym=off`. Built the first-ever real-symmetry scrnc test:
+H2O/STO-3G/UHF/CCSD/DENSITY=RESPONSE, same ZMAT as the trusted
+`h2o_scrnc_ccsd_uhf_sto3g` control case but with `sym=off` simply
+removed (`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_ccsd_uhf_sto3g_symon`).
+ACES2 auto-detects C2v correctly (confirmed in xjoda output: "The
+computational point group is C2v", `Iaopop(1..4)=(4,1,2,0)`,
+`Irpdpdao(1..4)=(21,8,16,4)`, summing to Nao=7/Nao_pairs=49 as expected).
+Pipeline runs to completion, no crash.
+
+**Real bug found, immediately, as expected**: parsed the pre-`Symmet2`
+"Response-only JJ matrix" block with a small Python script (`file`
+reports this pipeline.log as "data" not "ASCII text" -- some stray
+non-UTF8 byte trips plain `grep`'s binary-file heuristic silently;
+`grep -a` or Python's `encoding='latin-1'` are needed, NOT a race
+condition -- this explains several earlier "grep returned nothing" false
+alarms this whole session, worth remembering). Found **203 of 210
+nonzero off-diagonal pairs asymmetric**, magnitudes ~1e-4 to ~4e-4 (not
+noise) -- e.g. JJ(6,21)=-0.08588314 vs JJ(21,6)=-0.08631766. Every
+single asymmetric pair has BOTH indices in AO-pair range 1-21 (the
+totally-symmetric A1 irrep block, per `Irpdpdao(1)=21`) -- this is not a
+cross-irrep leak, it's an internal ordering/indexing inconsistency
+*within* the symmetric block, which is exactly why it was invisible on
+every `sym=off` (Nirrep=1) test run so far: there was only ever one such
+block, trivially self-consistent with itself.
+
+**One candidate ruled out, decisively, empirically** (not by
+inspection): isolated the BARE (uncorrelated) AO Coulomb integral part
+by subtracting the "Response-only JJ matrix" from the "CI-like JJ
+matrix" (=bare+response, both pre-`Symmet2`) -- the bare part alone is
+symmetric to ~1e-11 (parsing-precision noise from 11-digit text
+formatting, not a real discrepancy), while 100% of the 4.3e-4-scale
+asymmetry lives in the response part alone (identical whether measured
+in the response-only or CI-like block). This rules out
+`scrnc_prep_2ints.F` / `Scrnc_reord_cols.F` / `Scrnc_sympack_aoints.F`
+(the AO-pair irrep-grouping/symmetry-packing machinery that builds
+List_xxxx AND the `Irrep_ao_pairs` array both `scrnc_lrspn_cc_main.F`
+and `scrnc_jj_cc_lrspn.F` rely on for their own `Npert_count`/`Irrepr`
+bookkeeping) -- that machinery is confirmed CORRECT even under real
+symmetry, not the bug source, despite an initial hand-derivation
+(below, kept for the record since the reasoning pattern may still be
+useful) that looked very plausible before this empirical check.
+
+**Investigated and ruled out on paper** (`Scrnc_reord_cols.F`,
+2026-08-16): worth recording briefly since the reasoning was concrete,
+even though the empirical bare-integral check above shows it isn't the
+active bug. `Scrnc_reord_cols` reorders G2's COLUMNS into irrep-grouped
+order via a permutation array (`Iordr_ao`) built by scanning raw
+(k,l) AO-pair positions and collecting matches per irrep -- then
+SEPARATELY bubble-sorts the `Irrep_ao_pairs` VALUE array in place (the
+data-side column swap matching that same bubble sort is guarded by
+`#ifdef _NOSKIP`, apparently never defined -- dead code, but harmless
+since the array values still get the correct final sorted values either
+way). `Scrnc_sympack_aoints.F` then independently re-derives the ROW-side
+packing per column using a completely different traversal (Nu/nu-outer,
+Mu/mu-inner, via `Iaopop`/`IoffAO`) -- a real, structurally distinct
+construction from the column-side `Iordr_ao` scan (k-outer, l-inner).
+Flagged as a plausible row/column within-block-ordering mismatch --
+turned out NOT to be the active bug (bare integrals are provably
+correct), so this specific theory is dead, but the general lesson
+("verify empirically before fixing a plausible-looking theory") is worth
+keeping.
+
+**Next, not yet done**: the bug is isolated to the CCSD response
+construction itself (`scrnc_lrspn_cc_main.F`'s R-side amplitude solve
+via `Lineqy`/`Plineqy`, and/or `scrnc_jj_cc_lrspn.F`'s L-side Mubar
+construction/bra-transform) -- the same general territory as every
+previous bug in this whole project, but this is a genuinely new
+instance, first exposed by symmetry. `Parteom`/`Nodavid`'s effect on
+whether the Davidson-iterative vs partitioned solve path is taken for
+this ZMAT (no `PARTEOM` keyword set) hasn't been checked yet -- worth
+confirming which path actually ran before assuming either is the
+culprit. **On resume: do NOT re-derive a "read the code" plan from
+scratch -- follow the same backward-trace-from-JJ-assembly methodology
+that cracked every prior bug in this log** (matched checksums at each
+stage, L-side vs R-side, per [[feedback_stay_on_agreed_debug_path]]).
+
+Not yet checked: whether the ring-CC/DRCCD path shows the same or a
+different signature under symmetry -- worth doing once the CCSD bug is
+understood, since it may or may not be the same root cause.
+
+---
+
 ## SESSION 2026-08-16 (later) -- Scrnc_bcktran_left MO->AO transform kernel fixed+verified
 
 Ajith: "I intended to do a correct bcktrn... let's do it correctly." Scope
