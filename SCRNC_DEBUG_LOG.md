@@ -93,13 +93,43 @@ open question actually is. Possibilities, not yet distinguished:
    share the same "oprbar" machinery -- possible, but nine-plus prior
    clean-vs-reference checks make this the least likely of the three.
 
-**Not yet done**: test IEOMPROP=2 (properly, via whatever real ZMAT
-keyword reaches it for a standard dipole-polarizability calculation,
-not the hacked-in scrnc_set_vars.F override from earlier) on this
-SAME distorted-H2O CCSD polarizability case, and see whether it closes
-the alpha_xy/alpha_yx gap. This is now the single most informative next
-experiment: it directly tests hypothesis 2 using ACES2's own
-established property code, with no scrnc-specific ambiguity at all.
+**IEOMPROP=2 reachability checked -- it's dead code throughout the
+ENTIRE codebase, not just scrnc**: confirmed `vcceh.F` itself reads
+`IEOMPROP = IFLAGS2(106)` (line 95), the exact same flag scrnc reads.
+The earlier `grep -rl h_IFLAGS2_eomprop` search (only the read sites in
+`scrnc_set_vars.F`/`rpa/scrnc_set_vars.F`) already established nothing
+anywhere WRITES this flag -- this now confirms it's not a scrnc-
+specific gap, it's that IEOMPROP=2 ("the quadratic Perera-Nooijen
+correction," the code's own documented fix for a CI-like-vs-exact gap)
+is genuinely UNREACHABLE from any ZMAT keyword for ANY property
+calculation in this whole ACES2 build, CCSD or otherwise. This means
+`Calcquad1` (the routine that implements it) has essentially never
+been exercised in production, in this codebase's current state --
+consistent with the earlier finding that force-hacking `Ieomprop=2` in
+`scrnc_set_vars.F` made scrnc's asymmetry WORSE rather than better:
+that's much more likely to mean `Calcquad1`'s implementation itself is
+incomplete/unvalidated (never having had a real caller) than that the
+underlying quadratic-correction PHYSICS idea is wrong. Testing
+IEOMPROP=2 "the real way" on the ACES2-native dipole case would
+require the identical kind of source hack (there is no legitimate
+path), so it would not actually be a cleaner test than the one already
+done -- not pursued further for now.
+
+**Where this leaves the investigation**: the asymmetry is confirmed
+present in ACES2's own core, decades-established CI-like/EOM-effective-
+Hamiltonian property machinery (IEOMPROP=0), not just scrnc's
+adaptation of it -- and the one available attempt at the documented
+"fix" (IEOMPROP=2) is unreachable/unvalidated dead code throughout the
+whole build. This is squarely a question for Ajith's own domain
+knowledge: is a small pre-Symmet2 asymmetry in CI-like/EOM-effective-
+Hamiltonian properties (of the magnitude seen here, ~0.1-8% relative
+depending on system/property) ALREADY KNOWN, documented, and accepted
+ACES2 behavior for this scheme (in which case scrnc doing the same
+thing is not a defect, just consistent with established practice) --
+or is this itself news, meaning there may be a genuine, deeper issue
+in the shared oprbar/Lineqy machinery that predates scrnc entirely and
+has simply never been noticed because Symmet2 always hides it in the
+final published numbers.
 
 ---
 
