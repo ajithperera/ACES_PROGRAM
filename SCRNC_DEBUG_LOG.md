@@ -6,6 +6,129 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
+## SESSION 2026-08-16 (later) -- Scrnc_bcktran_left MO->AO transform kernel fixed+verified
+
+Ajith: "I intended to do a correct bcktrn... let's do it correctly." Scope
+note: this session deliberately did NOT re-decide what scrnc_bcktran's
+real caller/consumer will be (the AO-vs-MO self-energy direction question
+from earlier this session is still open) -- it treats "finish the
+transform kernel itself, correctly, verified" as a self-contained,
+valuable unit of work regardless of how it eventually gets called.
+
+**Reference established first**: read aces2/bcktrn/ (the general ACES II
+MO->AO two-particle-density back-transform used for CCSD/MBPT gradients,
+J.F. Stanton & J. Gauss 1991) as the trusted precedent. Confirmed via
+sytraa.f ("Q(XX) = C(X,A) Z(A,I) C^T(X,I)") and a `grep -l AOOVRLAP` over
+the whole module (zero hits) that the correct, established convention for
+this class of transform is Gamma_AO = C * Gamma_MO * C^T with NO AO
+overlap-matrix (S) correction -- this is NOT the algebraic inverse of the
+AO2MO integral transform used elsewhere in scrnc (scrnc_i1tran.F's
+ICASE=3, "M_MO = C^T M_AO C", which WOULD need an S-metric sandwich to
+invert exactly in a non-orthogonal AO basis), it's the separate, standard
+convention for re-expressing a density/response-like tensor in a
+different one-particle basis. Settled a real worry (a naive AO-integral
+round-trip test would NOT have been the right validation method, since
+forward and backward here are genuinely different operations, not
+inverses of each other).
+
+**Two real bugs found in scrnc_bcktran_left.F**, by re-deriving it as the
+explicit adjoint of scrnc_i1tran.F's ICASE=3 block (the trusted,
+already-working local AO2MO reference, same AOSYM/SYM/SYMPOP offset
+conventions):
+1. The per-irrep offset into the input MO-pair array incremented by
+   `Nsum` (=Pop(Irrep_j,Ispin) alone) instead of the full block size
+   `Numi*Numj` -- would misread every irrep block after the first once
+   more than one irrep contributes to a pair symmetry.
+2. The column offsets used to slice the eigenvector matrix ("Ioff_j"/
+   "Ioff_i") were raw MO population COUNTS (Pop(Irrep,Ispin)) instead of
+   actual MO column OFFSETS (Ioffo(Irrep,Ispin) -- confirmed via
+   scrnc_getaoinf.F's own construction, "ioffo(1,1)=1;
+   ioffo(irrep+1,1)=ioffo(irrep,1)+pop(irrep,1)", a genuine 1-based
+   cumulative offset, and scrnc_i1tran.F's own direct usage
+   "EVEC1(IOFFL1,IOFFR1)" with no extra +1).
+Both bugs are silently invisible on any single-irrep (sym=off) system --
+Nirrep=1 makes every irrep-block offset trivially 0 regardless -- which
+is why they'd escaped notice: every scrnc test case run so far this whole
+project has used sym=off. They only bite once real point-group symmetry
+is turned on.
+
+**Also found and fixed**: the routine was hardcoded alpha-spin-only
+(SCFEVECA, Pop(*,1) unconditionally) with no way to get beta -- wrong for
+the UHF-only systems scrnc requires (Scrnc_set_vars.F rejects RHF
+outright). Added explicit Ispin/Iuhf arguments, threaded through to the
+SCFEVECA/SCFEVECB record selection (same LABELX(ISPIN) pattern
+scrnc_i1tran.F already uses) and the Pop(Irrep,Ispin)/Ioffo(Irrep,Ispin)
+lookups.
+
+**Driver-level bugs found in scrnc_bcktran.F** (the (IJ,KL)->(XX,XX)
+caller that drives Scrnc_bcktran_left twice per irrep, "transform left
+pair, transpose, transform right pair" -- same pattern
+aces2/bcktrn/bxaaaa2.f uses):
+1. `I040 = Iend` used Iend before it was ever assigned (undefined-value
+   read) -- that whole I040 buffer was never actually referenced again
+   in the routine, so removed outright rather than patched forward.
+2. `JJ_respn_ijkl(1,Icol)` always read starting at GLOBAL row 1, local
+   column Icol=1..Nij_cols, for EVERY Irrep_r -- correct only for the
+   very first irrep block; any irrep past the first silently re-read the
+   first irrep's rows/columns instead of its own. Fixed with explicit
+   cumulative per-irrep offsets (Nij_cumoff(Irrep), built once before the
+   main loop, indexed directly by irrep number so it stays correct
+   regardless of loop order or Irrepx). NOTE: this assumes
+   JJ_respn_ijkl's GLOBAL occ-pair index is laid out as consecutive
+   per-irrep blocks in irrep order -- scrnc's own invented convention (no
+   other scrnc routine stores a dense all-irrep occ-pair matrix to check
+   this against), flagged as a documented assumption, not an established
+   fact, until a real caller exists to confirm it.
+Also added Ispin as an explicit driver-level argument (using
+Irpdpd(Irrep,20+Ispin) instead of hardcoded column 21 -- confirmed
+correct convention via scrnc_xxxx_pqxx.F's own identical
+"NUMIJ=IRPDPD(IRREPIJ,20+ISPIN)" for IFLAG=3).
+
+**Verification**: added a permanent, cheap, self-contained brute-force
+cross-check directly inside Scrnc_bcktran_left.F (guarded by
+_DEBUG_LVL0, kept as a standing diagnostic, not exploratory cruft) --
+independently recomputes each per-block result via direct nested-do-loop
+evaluation of Result(X1,X2)=Sum_I Sum_J C(X1,I)*Z(I,J)*C(X2,J), sharing
+nothing with the Xgemm code path except the raw offsets, and reports
+max|brute-xgemm|. Also added a small, explicitly-temporary standalone
+harness (new file Scrnc_bcktran_test.F, called once from Scrnc_driver.F
+right after Scrnc_getaoinf, guarded by _DEBUG_LVL0) that feeds a
+synthetic deterministic occ-pair matrix through Scrnc_bcktran_left for
+both spins, since nothing wires real data into it yet -- header comment
+marks it "safe to delete once a real caller exists."
+
+Ran on H2O/STO-3G/UHF/sym=off (fresh full pipeline, xjoda through
+xscrnc) -- a genuinely non-trivial case (25x25 occ-occ pair block per
+spin, 49 AO pairs, unlike H2's degenerate 1x1 case):
+```
+Ispin=1 (alpha): max|brute-xgemm| = 0.166533D-15
+Ispin=2 (beta):  max|brute-xgemm| = 0.333067D-15
+```
+Both at machine precision -- confirms the Xgemm call convention
+(argument order, leading dimensions, transposes) and the UHF spin
+threading are correct. **Still NOT independently verified**: the
+multi-irrep Ioffo/block-size fixes (Nirrep=1 for every scrnc test case
+run so far, including this one, can't exercise them) and the
+driver-level scrnc_bcktran.F itself (only the Scrnc_bcktran_left kernel
+was exercised by this test; the (IJ,KL)->(XX,XX) driver's global-offset
+bookkeeping and its assumed Npairs ordering convention remain unverified
+end-to-end).
+
+**Committed**: scrnc_bcktran.F, scrnc_bcktran_left.F, new
+scrnc_bcktran_test.F, scrnc_driver.F (temporary harness call), this log.
+
+**Not yet done**: this is still just the transform kernel -- the earlier
+open question (does the self-energy pipeline need G0 backtransformed
+MO->AO, or W_c transformed the other way AO->MO, or something else
+entirely -- see the "bcktran target" discussion above) is UNRESOLVED and
+should be settled before building the real caller. Once decided, the
+driver's Npairs-ordering assumption should get a real end-to-end check
+(not just the kernel's synthetic-data test), and a genuine multi-irrep
+(symmetry-on) test case would close the remaining verification gap on
+the Ioffo/block-size fixes.
+
+---
+
 ## SESSION 2026-08-16 -- imaginary-frequency axis, both paths (WORKING, committed)
 
 Picked up per Ajith's direction ("do 1" = build the GW self-energy,

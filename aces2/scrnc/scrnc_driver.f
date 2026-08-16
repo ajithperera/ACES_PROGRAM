@@ -281,7 +281,9 @@ c info.com : end
       Irrepx = 1
       Call scrnc_set_vars(Iuhf)
       Call Scrnc_getaoinf(Iuhf,Irrepx)
-  
+
+      Call Scrnc_bcktran_test(Work,Maxmem,Iuhf)
+
       Call Scrnc_make_lists(Iuhf,Irrepx,List_aibj,List_xibj,
      +                      List_xxbj,List_xxxx,List_ijxx,
      +                      List_abxx,List_aixx,List_iaxx)
