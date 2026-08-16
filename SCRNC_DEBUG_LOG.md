@@ -291,6 +291,90 @@ kept as templates/regression checks for whoever picks this up next.
 
 ---
 
+## SESSION 2026-08-16 (evening, continued) -- independent numerical pilot CONFIRMS the bug is real (not missed physics)
+
+Ajith's direction: build an independent numerical reference, a small
+pilot code, no symmetry. Note on framing: PySCF is used here only
+because it is a genuinely SEPARATE codebase from ACES II/scrnc, so it
+cannot share whatever bug is specific to scrnc's own Fortran -- this is
+NOT a claim that PySCF is more authoritative than ACES II. ACES II's
+own SCF/CCSD/Lambda are the established, decades-validated reference
+this whole project already trusts (and PySCF's own CCSD/Lambda code
+was historically itself checked against codes in the ACES/CFOUR
+lineage, not the other way around -- there was no PySCF in 1990).
+Confirmed first: PySCF UHF energy (-74.96290541582) and CCSD
+correlation energy (-0.04933703248) both match ACES II's own
+`h2o_scrnc_ccsd_uhf_sto3g` output (-74.9629053675,
+-0.049337003434) to 6-7 significant figures -- same geometry/basis,
+good starting agreement.
+
+**Deliberately avoided re-deriving scrnc's own response equations by
+hand** (Hbar linear solve + Lambda-dressed property-gradient vector) --
+doing so would risk introducing an independent bug of its own, which
+would defeat the entire point of an independent check. Used a
+lower-risk, physically equivalent route instead: the CCSD linear
+response reciprocity theorem `<<A;B>>(0) == <<B;A>>(0)` (a direct
+consequence of the CCSD energy Lagrangian being a smooth function of
+perturbation strengths -- Clairaut/Schwarz symmetry of mixed partial
+derivatives, standard 2n+1-rule Lagrangian derivation, Koch & Jorgensen
+JCP 93, 3333 (1990)) can be tested via FINITE DIFFERENCE of the
+CCSD+Lambda relaxed one-particle density matrix, using ONLY PySCF's own
+trusted `cc.UCCSD`/`solve_lambda`/`make_rdm1` end-to-end -- no hand-coded
+response formulas anywhere. Frozen HF orbitals throughout (core
+Hamiltonian shifted by `eps*B`, orbitals NOT reoptimized), matching
+scrnc's own "pure T/Lambda amplitude response, no orbital relaxation"
+formulation (Lineqy solves only for T; there is no CPHF/Z-vector piece
+anywhere in scrnc).
+
+**Operators used**: diagonal AO-pair "self" operators for the SAME
+physical AOs behind scrnc's own worst-offender pair (ACES2 AO-pair
+index 9 = AO(2,2) = O 2s self-pair, index 41 = AO(6,6) = one H's 1s
+self-pair) -- confirmed via `mol.ao_labels()` that PySCF's own AO
+ordering for this exact STO-3G/H2O system places these same physical
+orbitals at 0-based indices 1 and 5, i.e. an exact match, no
+cross-code AO-ordering translation needed.
+
+**Result** (`aces2/scrnc/independent_pilot/reciprocity_pilot.py`,
+committed): at `eps=1e-3`, `d<A>/dlambda_B=-0.39660964`,
+`d<B>/dlambda_A=-0.39660751`, relative difference `5.4e-6`. Halving
+`eps` to `5e-4` shrinks the relative difference to `2.0e-6` --
+consistent with `O(eps^2)` finite-difference truncation error, not a
+real effect (a genuine physical asymmetry would NOT shrink when
+tightening the finite-difference step). scrnc's own
+`JJ(9,41)`/`JJ(41,9)` relative discrepancy is `~1.4e-3` -- roughly
+1000x larger than anything finite-difference truncation could produce
+here.
+
+**Conclusion, decisively**: the reciprocity theorem genuinely holds
+for this exact system and these exact physical operators, confirmed
+independently via a completely different computational route
+(amplitude-response finite difference vs analytic response-vector dot
+product). scrnc's asymmetry is a REAL IMPLEMENTATION BUG, not a missed
+physics effect or an inherent limitation of the CI-like/
+EOM-effective-Hamiltonian construction. This also independently
+corroborates the earlier finding that IEOMPROP=2 ("the quadratic
+correction is the documented fix for a gap like this") was the wrong
+explanation -- there is no genuine physics gap here to correct.
+
+**Not yet done**: this pilot confirms the SYMMETRY expectation, not
+scrnc's exact numerical value -- the raw magnitudes differ in sign and
+~10% in scale from scrnc's own numbers, almost certainly just a
+perturbation-strength/`Fact=2`/sign-convention difference between "
+`d<A>/dlambda_B` for `H=H0+lambda*B`" and whatever exact convention
+scrnc's `Ddot(373,374)*Fact` construction uses -- not yet reconciled,
+and not needed for the symmetry conclusion above. Reconciling the
+convention would let this pilot's `X^A`/`X^B`-equivalent quantities be
+compared ELEMENT-BY-ELEMENT against scrnc's raw list-373/374 dumps
+(already captured in the `Npert_count.EQ.9`/`(9,41)` diagnostics left
+in the tree above), which would be a much sharper localization tool
+than the reciprocity check alone -- the natural next step if this
+picks back up.
+
+**Committed**: `aces2/scrnc/independent_pilot/reciprocity_pilot.py`,
+this log entry.
+
+---
+
 ## SESSION 2026-08-16 (later) -- Scrnc_bcktran_left MO->AO transform kernel fixed+verified
 
 Ajith: "I intended to do a correct bcktrn... let's do it correctly." Scope
