@@ -6,7 +6,84 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
-## SESSION 2026-08-16 (evening, continued) -- MAJOR REFRAME: ACES2's own core property machinery has the SAME pre-Symmet2 asymmetry (RESUME HERE)
+## SESSION 2026-08-16 (evening, continued) -- CORRECTION: EOMPROP=QUADRATIC IS reachable (Ajith); Calcquad1 itself confirmed buggy, makes asymmetry WORSE not better (RESUME HERE)
+
+Ajith corrected the previous entry's "IEOMPROP=2 is unreachable"
+conclusion: "EOM_PROPS=QUADRATIC should do CCLR." He was right, and
+the earlier conclusion was wrong -- the error was searching only
+Fortran source for an assignment to `IFLAGS2(106)`/`h_IFLAGS2_eomprop`
+and finding none. The real keyword-to-flag path goes through
+`joda/asv_ctl.c` (the C-based ASV/keyword parser), which is invisible
+to a Fortran-only search. Found it there: `h_IOPPAR_eomprop=206` maps
+handle strings `CILIKE=0/LINEAR=1/QUADRATIC=2/COMBO=3`
+(`asv_ctl.c:988`), and confirmed via `flags.h`
+(`h_IOPPAR_print=1 /* START IFLAGS */`) that "IOPPAR" indices above
+100 are the SAME underlying array as `IFLAGS2`, just offset by 100 --
+i.e. `IOPPAR` index 206 IS `IFLAGS2(106)` in Fortran-side terms, no
+separate array, no missing translation. The real ZMAT keyword is
+`EOMPROP=QUADRATIC` (test case `tests/fast/cases/046/ZMAT` already
+uses it, `EOMPROP=QUADRATIC` alongside `PROP=JSC_ALL`). Confirmed
+working: rerunning the ACES2-native distorted-H2O CCSD polarizability
+case (previous entry) with `EOMPROP=QUADRATIC` in the ZMAT shows
+`Updating (EOMPROP,QUADRATIC): 'QUADRATIC' converts to 'QUADRATIC' ->
+2` and "Fully quadratic evaluation of properties." in the output --
+the keyword genuinely reaches `IEOMPROP=2` and `CALCQUAD1` genuinely
+runs.
+
+**Decisive result, now that the correction is tested with real data**:
+`Calcquad1`'s own debug print (`secprp.F` line ~474, guarded by an
+`if(.false.)` that was temporarily flipped to `.true.` to see it, then
+reverted -- never committed) shows the matrix immediately AFTER
+`CALCQUAD1` runs, still BEFORE `Symmet2`:
+```
+ Quadratic contribution, ifreq 1
+   alpha_xy = -0.073442
+   alpha_yx = -0.103871
+```
+Absolute difference 0.0304, ~34.5% relative to the average magnitude
+-- WORSE than both the plain CI-like (IEOMPROP=0) raw asymmetry
+(7.6% relative, previous entry) AND the pre-CALCQUAD1 "CI-LIke Pol.
+matrix" printed just before it in this SAME run (alpha_xy=-0.01893,
+alpha_yx=-0.03112, ~49% relative but smaller absolute gap of 0.0122).
+**`CALCQUAD1` makes the asymmetry substantially WORSE, not better**,
+reproducing EXACTLY the same qualitative result found earlier today
+when `Ieomprop=2` was force-hacked into `scrnc_set_vars.F` for scrnc's
+own AO-pair case (asymmetry went from 5.17e-4 to 3.58e-3, ~7x worse)
+-- now confirmed on a SECOND, INDEPENDENT, ACES2-native test case
+using the real keyword, not a hack. Two independent reproductions of
+the same qualitative failure mode is strong evidence this is a genuine
+implementation bug in `CALCQUAD1` (or shared infrastructure it calls),
+not a physics-concept problem or a scrnc-specific issue.
+
+**Where this leaves the investigation, now on much firmer ground**:
+- The BASELINE (`IEOMPROP=0`, "CILIKE") pre-`Symmet2` asymmetry
+  (0.14% for scrnc's H2O case, 7.6% for this dipole case) is confirmed
+  present in ACES2's own core property code, not scrnc-specific --
+  still an open question whether this baseline-level gap itself is a
+  known/accepted characteristic of the CI-like scheme or a separate,
+  deeper bug (unresolved either way).
+- The DOCUMENTED FIX for that gap (`EOMPROP=QUADRATIC`/`CALCQUAD1`) is
+  reachable and does run, but is ITSELF demonstrably broken --
+  confirmed on two independent test cases -- making things worse
+  rather than closing the gap it's meant to fix. This is now the
+  clearer, more tractable bug to actually chase: `CALCQUAD1.F` is a
+  much smaller, more self-contained routine than the full oprbar/
+  Lineqy machinery, and now has TWO independent, reproducible failing
+  test cases to debug against (the ACES2-native dipole case is
+  simpler/cleaner than scrnc's AO-pair case and doesn't need scrnc at
+  all to reproduce).
+
+**Not yet done**: read `vcceh/calcquad1.F` (or wherever `CALCQUAD1` is
+implemented) in full and start the same backward-trace/instrumented-
+checksum methodology used throughout this whole project, using the
+ACES2-native distorted-H2O dipole polarizability case
+(`h2o_ccsd_polar_check_asym_quad`/`_quad2` ZMATs, already built and
+working) as the primary reproducer -- it's simpler and doesn't require
+scrnc's own AO-pair machinery to be correct first.
+
+---
+
+## SESSION 2026-08-16 (evening, continued) -- MAJOR REFRAME: ACES2's own core property machinery has the SAME pre-Symmet2 asymmetry (SUPERSEDED, see entry above -- "IEOMPROP=2 unreachable" was WRONG)
 
 Ajith's direction: "since you have a pyscf reference, check every step
 and match, find out what this bug is all about." Started by trying to
