@@ -6,7 +6,104 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
-## SESSION 2026-08-16 (evening, continued) -- Mexpect convention reconciliation attempted, partial progress, root cause still OPEN (RESUME HERE)
+## SESSION 2026-08-16 (evening, continued) -- MAJOR REFRAME: ACES2's own core property machinery has the SAME pre-Symmet2 asymmetry (RESUME HERE)
+
+Ajith's direction: "since you have a pyscf reference, check every step
+and match, find out what this bug is all about." Started by trying to
+match the `Mexpect` convention exactly (see the entry below --
+inconclusive, a real spin-block gap remained). Redirected to a more
+powerful test: rather than fighting to reproduce scrnc's exact AO-pair
+integral/density conventions in Python, checked whether the SHARED
+"oprbar" machinery ITSELF (used identically by scrnc for AO-pair
+operators and by ACES2's own standard `vcceh/secprp.F` for dipole
+properties) has this asymmetry AT ALL, using ACES2 itself as the
+reference this time -- no PySCF, no convention-matching risk.
+
+**Method**: ran ACES2's own standard CCSD static dipole polarizability
+(`PROPS=EOM_NLO`, triggers `vcceh/secprp.F` -> the exact same
+`oprbar1r.F`/`oprbar2u.F`/`Lineqy.F` routines scrnc's
+`Scrnc_form_mubar_s.F`/`_d_uhf.F` were adapted from) for H2O/STO-3G/
+UHF/CCSD, sym=off. First attempt used the SAME symmetric H2O geometry
+as all along -- gave an exactly-diagonal polarizability tensor
+(alpha_xy=alpha_yx=0.0), which turned out to be a bad test: H2O's own
+C2v symmetry (and/or ACES2's automatic reorientation to a principal-
+axis frame) forces the off-diagonal elements to vanish trivially,
+telling us nothing about whether they'd AGREE if nonzero. Switched to
+a deliberately ASYMMETRIC H2O geometry (R1=0.957, R2=1.05 Angstrom,
+breaking C2v) to get genuinely nonzero, independently-computed
+alpha_xy and alpha_yx.
+
+**Result, decisive**: ACES2's own raw output, literally labeled
+"CI-LIke Pol. matrix" (same "CI-like" naming convention scrnc uses for
+its own pre-`Symmet2` matrix!) in the `PROPS=EOM_NLO` pipeline log:
+```
+ CI-LIke Pol. matrix
+ ROW 1  ...   -0.09222300617   ...
+ ROW 2  -0.08519804618   ...
+```
+`alpha_xy=-0.09222300617` vs `alpha_yx=-0.08519804618` -- these
+DIFFER by ~7.6% relative, LARGER than scrnc's own H2O AO-pair
+discrepancy (~0.14% relative). The final displayed "Molecular
+Polarizabilities" table shows `-0.088711` for BOTH (1,2) and (2,1) --
+exactly the simple average of the two raw values, i.e. Symmet2 forcibly
+symmetrizing them, identical in spirit to what scrnc's own
+`Call Symmet2(JJ_lrespn,Nao_pair)` does.
+
+**Conclusion, tentative but significant**: this pre-symmetrization
+asymmetry is NOT specific to scrnc's AO-pair adaptation -- it is
+apparently a property of the shared "CI-like"/EOM-effective-Hamiltonian
+(IEOMPROP=0, "John's original implementation" per the code's own
+comments, as distinct from "Hideo's modification" IEOMPROP=1 and the
+"quadratic Perera-Nooijen correction" IEOMPROP=2) construction ITSELF,
+which ACES2's own core, decades-established property module has
+apparently ALWAYS relied on `Symmet2` to paper over, for properties in
+general (not just scrnc's screened-Coulomb AO-pair case). This is
+CONSISTENT with, not contradicted by, the earlier independent-PySCF-
+pilot finding: that pilot confirmed the EXACT, TRUE CCSD linear
+response function (via finite-difference of the fully relaxed T/Lambda
+density matrix, a different and exact construction) IS symmetric to
+high precision -- meaning the CI-like/EOM-effective-Hamiltonian
+SCHEME is an APPROXIMATION to the true response function that happens
+to not exactly satisfy the reciprocity theorem, with the size of the
+violation apparently varying by system/property (0.14% here, 7.6% for
+this particular distorted-water polarizability case) -- not a
+mechanical coding defect with a single fixed root cause to find and
+patch.
+
+**This does NOT mean "nothing to do here"** -- it reframes what the
+open question actually is. Possibilities, not yet distinguished:
+1. This IS simply how the IEOMPROP=0 CI-like scheme behaves, always
+   has, and Symmet2 is the correct, intentional, long-standing
+   remedy -- in which case scrnc doing the same thing is not a defect
+   at all, just consistent with established ACES2 practice.
+2. IEOMPROP=2 ("the quadratic correction... documented fix for a gap
+   like this," per the earlier-cited note) is SUPPOSED to reduce or
+   eliminate this asymmetry for genuine CCSD calculations, and the
+   earlier test showing it made scrnc's OWN asymmetry worse (not
+   better) means something in HOW IEOMPROP=2 was invoked was
+   incomplete/wrong (recall it's currently unreachable via any ZMAT
+   keyword in this codebase -- untested, unvalidated machinery) --
+   worth testing IEOMPROP=2 on THIS SAME ACES2-native dipole-
+   polarizability case (where it presumably CAN be reached via a
+   documented keyword) to see whether it actually shrinks the
+   alpha_xy/alpha_yx gap there, which would validate or refute
+   hypothesis 2 independent of any scrnc-specific code question.
+3. There's a genuine, separate implementation bug that happens to
+   affect BOTH the dipole and AO-pair cases identically, since they
+   share the same "oprbar" machinery -- possible, but nine-plus prior
+   clean-vs-reference checks make this the least likely of the three.
+
+**Not yet done**: test IEOMPROP=2 (properly, via whatever real ZMAT
+keyword reaches it for a standard dipole-polarizability calculation,
+not the hacked-in scrnc_set_vars.F override from earlier) on this
+SAME distorted-H2O CCSD polarizability case, and see whether it closes
+the alpha_xy/alpha_yx gap. This is now the single most informative next
+experiment: it directly tests hypothesis 2 using ACES2's own
+established property code, with no scrnc-specific ambiguity at all.
+
+---
+
+## SESSION 2026-08-16 (evening, continued) -- Mexpect convention reconciliation attempted, partial progress, root cause still OPEN
 
 Attempted step 1 of the two next-steps named in the entry below:
 extend the independent pilot to compute `Mexpect` directly (via
