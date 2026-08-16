@@ -6,6 +6,85 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
+## SESSION 2026-08-16 (evening, continued) -- Lineqy invocation + oprbar.f orchestration audited, both clean; root cause STILL open
+
+Continued from the independent-pilot session below (which confirmed
+the bug is real, not missed physics). Went back to code-level auditing
+with that confirmation in hand, targeting the two leads named at the
+end of that entry.
+
+**Lineqy invocation checked against `vcceh/secprp.F`'s own call**:
+arguments (`IOFFSET`, `IPERT`, `FREQ`, `ISIDE`, `REALFREQ`) match in
+order and role. Found `IPERT` is passed with swapped semantics
+relative to secprp.F (`Ioffset=Npert_count`/`Ipert=Iao_pair` in scrnc
+vs `IOFFSET=IOFFPRT(IPERT)`/`IPERT`=global counter in secprp) --
+harmless: confirmed by direct inspection that neither `lineqy.F` nor
+`plineqy.f` ever actually USES the `IPERT` argument anywhere in their
+bodies (dead parameter, present in the signature only). For `Nirrep=1`
+(our sym=off test), `Npert_count` and `Iao_pair` are numerically
+identical anyway, so `IOFFSET` itself is unaffected regardless. (Note
+for whenever the sym=on bug is revisited: `Ioffset` should really be a
+within-irrep-block position like secprp's `IOFFPRT(IPERT)`, not the
+raw global `Npert_count` -- a separate, real latent bug for the
+multi-irrep case, though moot for sym=off.)
+
+Checked `Lineqy.F`'s own convergence: hardcoded `CUTOFF=1.D-14`
+(machine precision, not a loose tolerance), and non-convergence within
+`KMAX` iterations hits `CALL ERREX` (hard error, run terminates) rather
+than silently returning a partially-converged result -- so "loose/
+incomplete Davidson convergence for the richer H2O subspace" is not a
+viable explanation either (a real convergence failure would have
+crashed the run, which it didn't -- confirmed via
+`grep "Derivative amplitudes converged"` showing clean 7-8 iteration
+convergence for every perturbation, no anomalies).
+
+**`vcceh/oprbar.f` (the actual trusted orchestration routine
+`secprp.F` calls, which scrnc split into `scrnc_lrspn_cc_main.F` +
+`scrnc_jj_cc_lrspn.F`) read in full and traced line-by-line against
+scrnc's own Iside=1-then-Iside=2 sequencing** -- this is exactly the
+kind of scrnc-specific adaptation logic (not a near-verbatim routine
+copy) that could hide a bug invisible to the six previous per-routine
+diffs. Specifically verified the "MBAR00-MEXPECT for Iside=2" argument
+convention (matches exactly: `oprbar.f` lines 170/184 use
+`MBAR00-MEXPECT` for `ISIDE=2`, plain `MBAR00` for `ISIDE=1`, scrnc's
+`scrnc_jj_cc_lrspn.F` does the identical thing) and the L-side
+array-seeding pattern -- `oprbar.f` seeds its L-side MIJBAR/MABBAR/
+MAIBAR/MIABAR OUTPUT arrays fresh from the BARE M(ij)/M(ab)/M(ai)
+(`IMLIJBAR` etc., lines 154-158), while passing the ALREADY Iside=1-
+DRESSED R-bar arrays (`IMRIJBAR`/`IMRABBAR`/`IMRAIBAR`) as the
+formula's own "M" INPUT slot for the Iside=2 call (line 166-170) --
+traced scrnc_jj_cc_lrspn.F's own Dcopy/argument-passing pattern
+(`Work(I000/I010/I020)` = still-bare Ioff_oo/vv/vo copied fresh into
+the Iside=2 output slots `Work(I070/I080/I090/I100)`, while
+`Work(I030/I040/I050)` = the Iside=1-dressed values from the earlier
+call, passed as the Iside=2 formula's own "MIJ,MAB,MAI" input) and
+confirmed it matches this exact pattern precisely.
+
+**Where this leaves things**: essentially the entire response-
+construction pipeline has now been audited against trusted references
+at BOTH the individual-routine level (six clean diffs: mubar_00,
+mubar_s, mubar_d_uhf, load_vec, plus direct empirical checks of raw
+MIJ symmetry and Nsizec sizing) AND the orchestration level (Lineqy
+invocation, oprbar.f sequencing) -- nine-plus independent checks, all
+clean. The independent PySCF pilot (below) already confirms the bug is
+real. At this point continued line-by-line code auditing has a very
+low remaining hit rate. The two genuinely different angles still worth
+trying, in priority order:
+1. Reconcile the independent pilot's sign/scale convention with
+   scrnc's `Ddot(373,374)*Fact` construction (noted as not-yet-done in
+   the pilot entry below) to get an ELEMENT-BY-ELEMENT numerical
+   comparison against the raw list-373/374 dumps already captured for
+   `Npert_count=9`/`41` -- this would localize the bug far more
+   precisely than either the reciprocity check or code-reading alone.
+2. Extend the independent pilot itself to compute `Mbar_00`/`Mexpect`
+   (or the full Xi-vector construction, now that the exact `oprbar.f`
+   formulas have been read and traced carefully enough to reduce the
+   re-derivation risk that motivated avoiding this route originally)
+   and diff element-by-element against scrnc's own raw checksums/prints
+   for the SAME perturbations.
+
+---
+
 ## SESSION 2026-08-16 (evening) -- real Abelian symmetry turned on for the first time ever; bug found, one false lead found+reverted, real cause still OPEN
 
 Ajith's direction: "let's get abelian sym as rest of ACES II." Every
