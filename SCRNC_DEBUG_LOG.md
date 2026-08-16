@@ -6,6 +6,150 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
+## SESSION 2026-08-16 -- imaginary-frequency axis, both paths (WORKING, committed)
+
+Picked up per Ajith's direction ("do 1" = build the GW self-energy,
+"use your own judgement"). Both 2026-08-15 dynamic-W(omega) sessions
+independently flagged the same open item: "imaginary-frequency axis not
+yet tested." Investigated first rather than diving straight into
+self-energy code, since any spectral/contour-based self-energy
+construction needs W(i*omega) as its actual numerical input (standard
+numerical-GW contour-deformation technique) -- so this was a genuine
+prerequisite, not a detour.
+
+**Real bug found on the CCSD path (not just "untested," actually
+broken)**: `vcceh/secprp.F` -- the existing, working, presumably
+decades-validated dynamic-polarizability code this whole scrnc dynamic-W
+effort mirrors -- has its own explicit convention at line 124:
+`IF(.NOT. REALFREQ) FREQ = FREQ*FREQ`, i.e. the imaginary-axis magnitude
+must be SQUARED by the caller before being passed into `Lineqy`/
+`Plineqy`. Confirmed why: `vcceh/lineqy.F` (lines 143,242,277) divides by
+`(denom**2+FREQ)` on its `.NOT.REALFREQ` branches -- it expects `FREQ` to
+already be `omega**2`, not raw `omega`. `scrnc_lrspn_cc_main.F` (added
+2026-08-15) passes `Freq`/`Realfreq` straight through to `Lineqy`/
+`Plineqy` unchanged but never did this squaring -- so any imaginary-axis
+scrnc run was silently dividing by `(denom**2+omega)` instead of the
+correct `(denom**2+omega**2)`. Confirmed numerically: baseline (buggy)
+H2/STO-3G/CCSD run at `omega=0.3i` gave response(1,1)=0.04522885127;
+after the fix (below), the same input gives 0.05449824469 -- a real,
+non-trivial difference, not a rounding-level discrepancy.
+
+**Fix (CCSD path, `scrnc_lrspn_cc_main.F`)**: added
+`If (.NOT. Realfreq) Freq = Freq * Freq`, once, right after the
+`Itop`/`Fact` determination and before the `Do Icount` loop -- same
+placement `secprp.F` uses relative to its own `ITOP`/`FACT` logic.
+Confirmed no other consumer in scrnc needs the un-squared magnitude
+(`Freq` is used only for the `Lineqy`/`Plineqy` calls and the real-axis
+`Freq = -Freq` negation; `Xfreq(:)` array, unaffected, is unused apart
+from being populated at read time).
+
+**Ring-CC path had no imaginary-frequency handling AT ALL** (not a typo
+this time -- a missing branch): `scrnc_form_rcc_hbar_inv.F` unconditionally
+did `Hbar_diag += Freq` on any nonzero `Freq`, regardless of `Realfreq`,
+then a single `MINV`. That is the correct object for the REAL-axis
+single-pass cases (static `Freq=0`, or one leg of the already-verified
++/-Freq two-pass sum) but is not the right matrix for the imaginary axis,
+because ring-CC builds Hbar^(-1) as a genuine full (non-diagonal) matrix
+inverse rather than `Lineqy`'s per-element denominator shortcut.
+
+**Derivation (linear algebra identity, not an approximation)**: the
+already-verified real-axis two-pass sum is
+`(Hbar-Freq)^(-1) + (Hbar+Freq)^(-1) = 2*Hbar*(Hbar**2-Freq**2)^(-1)`.
+Substituting `Freq -> i*sqrt(Freq)` (purely imaginary) and summing the
++i*omega/-i*omega poles the same way gives the real-valued
+`2*Hbar*(Hbar**2+Freq)^(-1)` (`Freq` already squared by the caller, same
+convention as the CCSD fix). This collapses to plain `Hbar^(-1)` at
+`Freq=0`, exactly matching the existing static case
+(`Hbar*(Hbar**2)^(-1) = Hbar^(-1)`). As with the real-axis branch, the
+existing `Fact=2` in `Scrnc_jj_rcc_assemble.F` supplies the overall
+factor of 2 -- only `Hbar*(Hbar**2+Freq)^(-1)` itself needed building
+here.
+
+**Fix (ring-CC path)**: `Scrnc_driver.F` squares `Freq` once (same
+placement/convention as the CCSD fix) before the dynamic Icount loop.
+`scrnc_form_rcc_hbar_inv.F` now branches three ways: `REALFREQ` nonzero
+(unchanged, already-verified `Hbar+-Freq` single-shift+MINV), imaginary
+nonzero (new: build `Hbar**2` via `Xgemm`, add `Freq` to its diagonal,
+`MINV` that, then `Xgemm` the original (untouched) `Hbar` against the
+inverse to get `Hbar*(Hbar**2+Freq)^(-1)`, `Dcopy` into the output slot),
+and `Freq=0` (unchanged plain `Hbar^(-1)`). New scratch (`Hbar**2`
+buffer, product buffer, MINV pivot array) allocated from whatever `IEND`
+already is at that point in the routine -- correct under both `_DEBUG_LVL0`
+on and off, since those conditionally-compiled diagnostic blocks already
+advance `IEND` before this code runs.
+
+**Verified** (H2/STO-3G/UHF, fresh full pipelines from ZMAT+GENBAS every
+time, `/blue/ufhpc/perera/scrnc_test/h2_scrnc_{ccsd,drccd}_*imagfreq*`):
+- CCSD path (response(1,1), before bare-v add): static
+  0.05974824293; omega=0.001i: 0.05974817899 (~static, continuous);
+  omega=0.3i: 0.05449824469; omega=1.0i: 0.02886296549.
+- Ring-CC/DRCCD path: static 0.03008849944 (fresh regression rerun,
+  bit-identical to the already-committed baseline -- confirms the
+  three-way branch split didn't disturb the real/static path); omega=0.001i:
+  0.03008847497; omega=0.3i: 0.02800114343; omega=1.0i: 0.01520543542.
+- Both paths: smooth, monotonically DECREASING response magnitude as
+  |omega| grows on the imaginary axis (opposite trend from the real
+  axis's increasing-toward-resonance behavior, exactly as expected --
+  the imaginary axis never crosses a pole) -- continuous through
+  omega->0, no crashes, no NaNs, full W(omega) matrix ("LR JJ matrix" /
+  "RPA JJ matrix") exactly symmetric at every frequency tested on both
+  paths.
+- This is a strong but NOT independently-cross-validated check (no
+  external reference imaginary-axis polarizability was compared against
+  -- unlike the real axis, which had the ~0.55 a.u. RPA excitation energy
+  as an external landmark to approach). The qualitative signature
+  (smoothness, monotonic decrease, correct static limit, symmetry) is
+  exactly what a correct implementation must produce and what several
+  classes of bugs (sign errors, missing terms, wrong shift target) would
+  very likely have broken, but it is not a substitute for an independent
+  numerical cross-check if one becomes convenient later (e.g. comparing
+  against `vcceh/secprp.F`'s own imaginary-axis dynamic polarizability
+  for some ordinary property, on a system where that path is already
+  trusted).
+
+**Committed**: `scrnc_driver.F`, `scrnc_form_rcc_hbar_inv.F`,
+`scrnc_lrspn_cc_main.F`, plus this log.
+
+**Not yet done / actual next step**: the imaginary-frequency machinery
+validated here is the necessary numerical input for a contour-deformation
+GW self-energy (`Sigma_c(p,q;i*omega)` built from `W_c(p,q;i*omega')`
+integrated along the imaginary axis then analytically continued to the
+real axis, e.g. via Pade) -- this session did NOT build any of that:
+no AO-to-MO transform of the correlation part of `W(omega)` into the
+particle-hole/quasiparticle index pattern a self-energy contraction
+needs, no frequency quadrature, no analytic continuation, no quasiparticle
+equation solve. `W(omega)` itself is still purely in the AO-pair basis
+(`JJ_lrespn`, `Nao_pair x Nao_pair`) on both paths. Two genuinely
+different architectures were considered for the self-energy step itself
+and NOT decided between yet:
+1. Numerical contour-deformation using `W(i*omega')` sampled along the
+   imaginary axis (what this session's fix directly enables) -- avoids
+   ever diagonalizing Hbar, stays closest to "W computed via CC linear-
+   response machinery" as stated in the goal, but needs a frequency
+   quadrature grid, analytic continuation (Pade or similar) from
+   imaginary to real axis, and the AO-to-MO transform of `W_c` either
+   way.
+2. Sum-over-poles/spectral representation using ring-CC's own Hbar
+   eigenvalues+eigenvectors as the poles of `W_c` (the standard
+   molecular-GW residue formula, e.g. Bruneval/van Setten style,
+   `Sigma_c^pq(omega) = sum_s sum_i (pi|s)(qi|s)/(omega-e_i+Omega_s-i*eta)
+   + ...`) -- `ringcl/rcl_drvrpa.F` already computes Hbar eigenvalues AND
+   left/right eigenvectors via `DGEEV` (confirmed 2026-08-16 while
+   investigating this session's bug) but currently discards the
+   eigenvectors immediately after computing them (only eigenvalues are
+   ever printed) -- would need those captured/stored first.
+Route 1 is closer to the architecture already built and to the stated
+goal's own framing ("computed via CC linear-response machinery"); route 2
+reuses the already-external-validated (EOM(Sf)-DRCCD vs ringcc's own
+eigenvalues) Hbar diagonalization but requires wiring up eigenvector
+storage that doesn't exist yet and moves further from a "pure CC
+response" construction toward a conventional RPA-diagonalization one.
+**Ask Ajith which he prefers before starting the self-energy contraction
+itself** -- this is a real fork in the physics/architecture, not an
+implementation detail, and picking wrong means redoing real work.
+
+---
+
 ## SESSION 2026-08-15 -- backward logic trace on H2O/STO-3G (CLOSED -- see the two "dynamic W(omega)" entries below for what followed)
 
 Per Ajith's direction: use H2O/STO-3G directly (already confirmed

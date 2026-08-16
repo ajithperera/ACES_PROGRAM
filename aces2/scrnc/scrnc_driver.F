@@ -210,6 +210,14 @@ C ONCE, after both passes, in the new Scrnc_jj_rcc_assemble.
          Itop = 1
          If (Freq .NE. 0.0D0 .AND. Realfreq) Itop = 2
 
+C Imaginary-frequency axis, 2026-08-16: square Freq exactly once here
+C (never inside Scrnc_form_rcc_hbar_inv.F's per-irrep loop, which would
+C re-square it once per irrep) -- see that routine's own header comment
+C and scrnc_lrspn_cc_main.F's identical fix for the CCSD path (mirrors
+C vcceh/secprp.F's own "IF(.NOT. REALFREQ) FREQ = FREQ*FREQ" convention).
+
+         If (.NOT. Realfreq) Freq = Freq * Freq
+
          Call Scrnc_form_rcc_hbar(Work(Ihbar_bgn),Ineed+Ipad,Iuhf,1)
          Call Scrnc_rcc_hbar_read(Work(Ihbar_bgn),Ineed+Ipad,Iuhf,
      +                             Iloc)

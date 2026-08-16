@@ -237,6 +237,7 @@ c flags.com : begin
 c flags.com : end
 
       DATA TWO, TOL /2.0D0,1.0D-08/
+      DATA ONE, ZILCH /1.0D0,0.0D0/
       Write(6,"(1x,a)") "-----Entering scrnc_form_rcc_hbar_inv------"
 C
       CIS = .FALSE.
@@ -330,14 +331,70 @@ C shifted inverse with both the R-side (Scrnc_lrspn_rcc_main.F) and
 C L-side (Scrnc_jj_rcc_lrspn.F) routines for that pass, same as the
 C static Hbar^(-1) always was.
 
-         IF (FREQ .NE. 0.0D0) THEN
+         IF (FREQ .NE. 0.0D0 .AND. REALFREQ) THEN
             DO ID1 = 1, MATDIM
                W(I000-1+(ID1-1)*MATDIM+ID1) =
      +            W(I000-1+(ID1-1)*MATDIM+ID1) + FREQ
             ENDDO
-         ENDIF
 
-         CALL MINV(W(I000),MATDIM,MATDIM,W(I010),DET,TOL,0)
+            CALL MINV(W(I000),MATDIM,MATDIM,W(I010),DET,TOL,0)
+
+         ELSEIF (FREQ .NE. 0.0D0) THEN
+
+C Imaginary-frequency axis, 2026-08-16. The REALFREQ branch above
+C evaluates Hbar^(-1) at each of the two real poles Hbar=+-Freq
+C separately (one per +/-Freq Icount pass of Scrnc_driver.F), summed
+C afterward (Fact=1 each) by Scrnc_jj_rcc_assemble.F. Algebraically,
+C   (Hbar-Freq)^(-1) + (Hbar+Freq)^(-1) = 2*Hbar*(Hbar**2-Freq**2)^(-1).
+C For a purely imaginary frequency Freq=i*Freq_im (Freq_im real),
+C Scrnc_driver.F already squares Freq to Freq_im**2 once before this
+C routine ever runs (mirroring vcceh/secprp.F's own convention -- see
+C scrnc_lrspn_cc_main.F's identical fix for the CCSD path, which the
+C ring-CC path must match since Scrnc_jj_rcc_assemble.F applies the
+C same single-pass/Fact=2 combination rule to both paths, never
+C double-passing for an imaginary frequency). Substituting
+C Freq -> i*SQRT(Freq) into the identity above and summing the +i*omega
+C and -i*omega poles gives the real-valued
+C   2*Hbar*(Hbar**2+Freq)^(-1)
+C -- no complex arithmetic needed, and it collapses to the ordinary
+C Hbar^(-1) at Freq=0 exactly like the REALFREQ branch does
+C (Hbar*(Hbar**2)^(-1) = Hbar^(-1)). Built as a genuine
+C (Hbar**2+Freq*I)^(-1) matrix inverse (not a per-element shortcut like
+C Lineqy/Plineqy's (denom**2+Freq) division) since ring-CC's Hbar is a
+C full, non-diagonal matrix in this basis -- Lineqy/Plineqy can shift a
+C per-element orbital-energy denominator only because their off-diagonal
+C Hbar coupling is handled separately by their own AX=B iteration.
+C As with the REALFREQ branch, the caller's existing Fact=2 (applied
+C once, in Scrnc_jj_rcc_assemble.F) supplies the overall factor of 2 --
+C only Hbar*(Hbar**2+Freq)^(-1) itself is built here.
+
+            Ihsq    = IEND
+            Ihprod  = Ihsq   + MATDIM*MATDIM
+            Iscr3   = Ihprod + MATDIM*MATDIM
+            Inewend = Iscr3  + MATDIM
+            IF (Inewend .GT. MAXCOR) CALL INSMEM(
+     +               "SCRNC_FORM_RCC_HBAR_INV-imagfreq",Inewend,MAXCOR)
+
+            CALL XGEMM("N","N",MATDIM,MATDIM,MATDIM,ONE,W(I000),
+     +                 MATDIM,W(I000),MATDIM,ZILCH,W(Ihsq),MATDIM)
+
+            DO ID1 = 1, MATDIM
+               W(Ihsq-1+(ID1-1)*MATDIM+ID1) =
+     +            W(Ihsq-1+(ID1-1)*MATDIM+ID1) + FREQ
+            ENDDO
+
+            CALL MINV(W(Ihsq),MATDIM,MATDIM,W(Iscr3),DET,TOL,0)
+
+            CALL XGEMM("N","N",MATDIM,MATDIM,MATDIM,ONE,W(I000),
+     +                 MATDIM,W(Ihsq),MATDIM,ZILCH,W(Ihprod),MATDIM)
+
+            CALL DCOPY(MATDIM*MATDIM,W(Ihprod),1,W(I000),1)
+
+         ELSE
+
+            CALL MINV(W(I000),MATDIM,MATDIM,W(I010),DET,TOL,0)
+
+         ENDIF
         Iprint=Iloc(Irrep)
         Write(6,"(a)") " The drCCD Hbar inverse matrix"
         call output(W(Iprint),1,MATDIM,1,MATDIM,MATDIM,MATDIM,1)

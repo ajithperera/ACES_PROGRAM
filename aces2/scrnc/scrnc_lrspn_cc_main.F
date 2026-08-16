@@ -63,6 +63,22 @@ C solves, which scrnc never did before.
       Itop = 1
       If (Freq .NE. Zilch .AND. Realfreq) Itop = 2
 
+C Imaginary-frequency axis, 2026-08-16: Lineqy/Plineqy (vcceh/lineqy.F
+C lines 143,242,277 etc.) divide by (denom**2+Freq) on their
+C .NOT.Realfreq branches -- i.e. they expect the CALLER to already have
+C squared the imaginary-axis magnitude before passing it in as Freq,
+C exactly like vcceh/secprp.F does (its own "IF(.NOT. REALFREQ) FREQ =
+C FREQ*FREQ", secprp.F:124). This call site never did that squaring,
+C so any run with an imaginary frequency file silently passed the raw
+C (unsquared) magnitude into Lineqy/Plineqy's (denom**2+Freq) formula
+C instead of the correct (denom**2+Freq**2) -- a real, silent physics
+C bug, not yet caught because the imaginary axis had never been tested
+C (see SCRNC_DEBUG_LOG.md). Square it here, once, before the Icount
+C loop -- matches secprp.F's own placement (right after its ITOP/FACT
+C determination, before its main IPERT loop).
+
+      If (.NOT. Realfreq) Freq = Freq * Freq
+
       Do Icount = 1, Itop
 
       Npert_count = 0
