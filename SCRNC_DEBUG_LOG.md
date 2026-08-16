@@ -181,13 +181,113 @@ Turning on Abelian symmetry (this session's actual goal) can't be
 fully validated as "done" until this is fixed too, since even the
 sym=off H2O baseline is now known-broken.
 
-**Not yet done**: per the cross-perturbation-identity reasoning in the
-entry above, instrument list 373 (R-side)/374 (L-side) raw values for
-Npert_count=9 and 41 directly and check the `Ddot(373(p),374(q)) ==
-Ddot(373(q),374(p))` identity by hand -- the next concrete step on
-resume. Once fixed, recheck the sym=on C2v case to see whether it's
-then clean, or whether a third, genuinely symmetry-specific issue
-remains on top.
+**Cross-perturbation identity check done** (2026-08-16, continued):
+added a targeted diagnostic in `scrnc_jj_cc_lrspn.F` (guarded
+`_DEBUG_LVL0`, fires only for the `(Iao_pair,Jao_pair)` pairs
+`(9,41)`/`(41,9)`) splitting the final `Ddot(373(p),374(q))` into its
+VO part (first 20 elements, the one-particle/singles-like `MAIBAR`
+block) and doubles part (remaining 120 elements), plus raw-value and
+checksum dumps of 373/374 themselves. Result: `X(9,41)=0.36434921829`
+vs `X(41,9)=0.36486641546` (matches the matrix-parsed value exactly).
+Decomposition: `Xvo(9,41)=0.36229369334`, `Xvo(41,9)=0.36370391709`
+(diff +0.00141) and `Xdbl(9,41)=0.00205552495`,
+`Xdbl(41,9)=0.00116249837` (diff -0.00089303) -- the two partially
+cancel to give the observed +0.00051720 total. Both the VO
+(one-particle) part AND the doubles part are individually MORE
+asymmetric than the final combined total -- the bug is not confined to
+the doubles machinery, and is present even in the simplest (VO-only)
+piece of the construction.
+
+**IEOMPROP=2 hypothesis tested and REFUTED**: the earlier
+"[[project_scrnc_gw_method]]"-era note that "the EOM-effective-
+Hamiltonian/CI-like route is known to differ from genuine linear
+response... IEOMPROP=2 (Calcquad1) is the documented fix" looked like
+a strong candidate explanation, especially since `grep -rl
+h_IFLAGS2_eomprop` finds ONLY the read site in
+`scrnc_set_vars.F` -- IFLAGS2(106) is never written anywhere in this
+codebase, so IEOMPROP=2 is currently UNREACHABLE from any ZMAT
+keyword. Tested directly: temporarily hardcoded `Ieomprop=2` in
+`scrnc_set_vars.F` (clearly marked as a throwaway diagnostic, reverted
+immediately after, never committed), rebuilt, reran the same H2O
+cross-check. Result: asymmetry got WORSE, not better --
+`X(9,41)=0.41718836125` vs `X(41,9)=0.42077131578`, diff 0.00358 (7x
+larger than the IEOMPROP=0 default's 0.00052). This rules out "missing
+quadratic correction" as the explanation.
+
+**Scrnc_load_vec.F checked against its trusted ancestor**
+(`tdee/tdee_load_vec.F`, found via the routine's own debug label
+"@-tdee_load_vec" still present in scrnc's copy) -- diff is 100% clean,
+literally identical modulo the renamed subroutine and one checksum-
+call-signature difference (an extra unused `S` argument in the
+original). List-number usage (`Mu_s=482`/`Mu_d=453`, offsets `1`/`2`
+per spin for singles, `IRREPX`-indexed `+1`/`+2`/`+3` for
+AAAA/BBBB/ABAB doubles) is self-consistent with how
+`Scrnc_form_mubar_s.F`/`_d_uhf.F` write those same lists. No bug found.
+
+**Where this leaves things, honestly**: FIVE scrnc-original or
+scrnc-adapted routines across the entire L-side/R-side construction
+chain (`Scrnc_form_mubar_00.F`, `Scrnc_form_mubar_s.F`,
+`Scrnc_form_mubar_d_uhf.F`, `Scrnc_load_vec.F`, and
+`Scrnc_prep_culomb_ints.F`'s raw-integral output) have all been
+checked -- either against a decades-trusted vcceh/tdee reference
+(clean diffs) or directly and empirically (MIJ symmetry, VO/doubles
+decomposition) -- and NONE show an identifiable bug. The remaining
+untested pieces are: (1) `Lineqy`/`Plineqy` themselves (general,
+widely-used ACES2 infrastructure, so a NEW bug there is less likely a
+priori, but scrnc's specific INVOCATION of them -- not the general
+routines -- has not been comprehensively re-audited beyond the
+Ioffset=Npert_count fix from 2026-08-14); (2)
+`Scrnc_form_lrspn_cc_lists.F`'s list-size allocation for 373/374/446/
+456 etc.; (3) something about how `Nsizec`/`Scrnc_newsize.F` computes
+the JJ-assembly Ddot length, since a size MISMATCH between what 373
+and 374 actually contain vs what `Nsizec` assumes could produce
+exactly this kind of "close but wrong" cross-term without either side
+being individually "wrong" in isolation. (3) is a genuinely new,
+not-yet-considered angle and probably the best next lead.
+
+**Scrnc_newsize.F checked too, also clean**: added a debug print
+comparing its hardcoded `Idsymsz(Irrepx,1,3)/(2,4)/(13,14)` (AA/BB/AB
+doubles sizes) against the same sizes computed via
+`Idsymsz(Irrepx,ISYTYP(1,44),ISYTYP(2,44))` etc. (the indirect,
+list-number-driven lookup `Scrnc_load_vec.F` uses for the lists that
+actually store this data) -- exact match (10/10/100 both ways,
+Nsizec=140 total) for H2O/STO-3G. Rules out a block-boundary/size
+mismatch between how `Nsizec` is computed for the final Ddot and how
+the lists were actually built.
+
+**Six independent checks, all clean, root cause still not found**:
+`Scrnc_form_mubar_00.F`, `Scrnc_form_mubar_s.F`,
+`Scrnc_form_mubar_d_uhf.F` (all three vs their exact vcceh ancestors),
+`Scrnc_load_vec.F` (vs its exact tdee ancestor), raw `MIJ` symmetry
+(direct), and `Scrnc_newsize.F`'s sizing (direct, cross-checked two
+ways). The IEOMPROP=2 alternative-physics hypothesis was also tested
+and refuted (makes the asymmetry 7x worse, not better). At this point,
+continuing to check individual routines in isolation has a low hit
+rate -- six for six clean. The two remaining candidates worth trying
+next time are qualitatively different from what's been tried:
+1. `Lineqy`/`Plineqy`'s specific INVOCATION by
+   `scrnc_lrspn_cc_main.F` (not the general routines themselves, which
+   are trusted, widely-used ACES2 infrastructure) -- has not been
+   comprehensively re-audited beyond the 2026-08-14 Ioffset fix.
+2. A genuinely from-scratch independent numerical reference (e.g. a
+   small Python/NumPy CCSD linear-response calculation for H2O/STO-3G)
+   to compare scrnc's raw 373/374 vectors against element-by-element --
+   qualitatively different from "read scrnc's own code more carefully,"
+   which has now been tried six times without success. Given six clean
+   code-reading passes, the bug may be a genuine physics/formula gap
+   only visible against an independent calculation, not a local
+   indexing slip visible from reading scrnc's code alone.
+
+Once fixed, recheck the sym=on C2v case to see whether it's then
+clean, or whether a third, genuinely symmetry-specific issue remains
+on top of this one.
+
+**Left in the tree, uncommitted, all `_DEBUG_LVL0`-guarded and
+harmless**: the `Npert_count.EQ.9` MIJ-symmetry check in
+`scrnc_lrspn_cc_main.F`, the `(9,41)`/`(41,9)` VO/doubles
+cross-check in `scrnc_jj_cc_lrspn.F`, and the `Idsymsz` vs `ISYTYP`
+comparison in `scrnc_newsize.F` -- all confirmed-clean diagnostics,
+kept as templates/regression checks for whoever picks this up next.
 
 ---
 

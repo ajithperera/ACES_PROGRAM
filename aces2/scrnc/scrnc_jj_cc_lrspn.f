@@ -318,6 +318,22 @@ C static code path exactly at Freq=0 (Itop=1, single Ddot, times 2).
      +                     374)
                X = Fact*Ddot(Nsizec,Work(I010),1,Work(I000),1)
 
+      If ((Iao_pair.EQ.9 .AND. Jao_pair.EQ.41) .OR.
+     +    (Iao_pair.EQ.41 .AND. Jao_pair.EQ.9)) Then
+         Nvopart = Min(20,Nsizec)
+         Ndblpart = Nsizec - Nvopart
+         Xvo  = Ddot(Nvopart,Work(I010),1,Work(I000),1)
+         Xdbl = 0.0D0
+         If (Ndblpart .GT. 0) Xdbl = Ddot(Ndblpart,Work(I010+Nvopart),
+     +                                     1,Work(I000+Nvopart),1)
+         Write(6,"(a,i3,a,i3,a,i5,a,F20.14,a,F20.14,a,F20.14)")
+     +      " CROSSCHECK Iao_pair=",Iao_pair," Jao_pair=",Jao_pair,
+     +      " Nsizec=",Nsizec," X=",X," Xvo(1:20)=",Fact*Xvo,
+     +      " Xdbl(21:end)=",Fact*Xdbl
+         call checksum("CROSSCHECK 373(Iao_pair)",Work(I000),Nsizec)
+         call checksum("CROSSCHECK 374(Jao_pair)",Work(I010),Nsizec)
+      Endif
+
                JJ_lrespn(Iao_pair,Jao_pair) =
      +                  JJ_lrespn(Iao_pair,Jao_pair) + X
             Endif
