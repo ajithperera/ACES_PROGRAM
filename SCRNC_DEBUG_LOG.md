@@ -6,7 +6,95 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
-## SESSION 2026-08-17 (continued 13) -- larger-basis (H2O/DZ) check: core-machinery clean, but surfaces a REAL Pade-robustness gap (2 of 14 MOs fail to converge) -- NOT silently patched, flagged for discussion (RESUME HERE)
+## SESSION 2026-08-17 (continued 14) -- CCSD-path bug found+fixed (directory not cleared between nodes); first internal CC-vs-RPA screening comparison run -- REAL, non-trivial differences found (RESUME HERE)
+
+Ajith's "check internally" instruction, in response to "do we have
+something novel to add": since ring-CC (RCCD/DRCCD) IS RPA, reformulated
+through the same CC-response machinery ([[project_rpa_module_tests]]:
+"RPA=ringcc/dRPA=dringcc confirmed in code"), the cleanest possible test
+of whether going to genuine CCSD-level screening changes anything is
+entirely internal to scrnc -- run the IDENTICAL sigma-driver/AO2MO/
+Padé/QP pipeline on the SAME geometry/basis, changing only
+`CALC=DRCCD` vs `CALC=CCSD` in the ZMAT. No new code needed for the
+comparison itself; this was the first time the CCSD path was ever run
+through the sigma-driver chain, though.
+
+**Bug found and fixed first**: CCSD path crashed on the driver's
+SECOND node (`@GETLST: Assertion failed. List (1,127) does not
+exist.`), never on the first. Root cause: `scrnc_sigma_driver.F`
+re-runs `xjoda...xscrnc` fresh each node but never actually DELETED
+the previous node's leftover generated files first -- `xjoda`
+apparently doesn't fully reset every record-container file (e.g.
+`MOABCD`) that the CCSD linear-response path writes dynamic list
+records into between separate `xscrnc` invocations in the same
+directory. Same root cause as the already-documented "rerunning a
+pipeline step on top of stale JOBARC is NOT idempotent" lesson, just
+manifesting on a path never previously driven repeatedly in one
+directory. Never surfaced on the ring-CC/DRCCD path (different list-
+record usage pattern, apparently not colliding the same way).
+
+**Fix**: added an explicit `find . -maxdepth 1 -type f ! -name ZMAT
+! -name GENBAS ! -name sigma_input ! -name pipeline_cmds ! -name
+'*.log' -delete` at the top of each node's loop iteration in
+`scrnc_sigma_driver.F`, before writing `frequency`/running
+`pipeline_cmds`. Still the SAME single shared directory (Ajith's
+design choice, "continued 10") -- only the generated-file CONTENTS
+get cleared each iteration, never the directory itself. **Verified
+no regression**: reran the H2O/STO-3G DRCCD case (which never had
+this bug) with the fix in place -- bit-identical `qp_energies.dat` to
+before, digit for digit.
+
+**CCSD path itself, once fixed**: clean on H2O/STO-3G. Exit 0,
+bare-v symmetry exactly `0.0`, AO2MO bfcheck `3.6D-15` to `3.0D-14` at
+all 4 nodes, all 7 MOs converged (unlike the DZ case -- STO-3G's
+similar-magnitude core orbital, eps_HF~-20.2, converges fine on both
+paths; only DZ's core, eps_HF~-20.6, hit the Padé domain-of-validity
+issue from "continued 13" -- consistent, not a new puzzle).
+
+**The comparison** (H2O/STO-3G, same geometry/ZMAT settings, same
+sigma_input `N=4,Omega_c=1.0,Nomega=6`, only `CALC=DRCCD` vs
+`CALC=CCSD` differs):
+
+```
+ p     eps_HF   dRPA corr   CCSD corr  diff(mHa)  diff(eV)
+ 1  -20.24174     -26.35m     -32.66m      -6.31    -0.172
+ 2   -1.26854       9.58m      19.91m      10.33     0.281
+ 3   -0.61801       3.65m       7.56m       3.91     0.106
+ 4   -0.45307       1.15m      -0.50m      -1.65    -0.045
+ 5   -0.39127      -2.52m      -7.68m      -5.16    -0.140
+ 6    0.60591      -3.63m      -7.78m      -4.14    -0.113
+ 7    0.74258      -9.88m     -21.96m     -12.08    -0.329
+```
+
+("corr" = eps_QP-eps_HF, the QP correction itself; diff = CCSD corr
+minus dRPA corr.) **Real, non-trivial differences** -- up to 0.33 eV
+(MO 7), several times the typical ~0.1-0.2 eV "good agreement" bar
+used in GW100-style benchmark comparisons, and MO 4 even flips SIGN
+between the two screening levels (dRPA: opens the gap slightly; CCSD:
+closes it slightly). Going from RPA-equivalent to genuine CCSD-level
+dynamical screening is NOT a small perturbative correction here, at
+least for this toy system.
+
+**What this does and doesn't establish, stated plainly**: this is
+strong evidence the CC-response screening construction captures
+physics that plain RPA misses and that it propagates through to
+chemically/spectroscopically meaningful QP shifts -- necessary
+groundwork for a novelty claim. It does NOT yet establish which
+screening level is more ACCURATE (no comparison against CCSD(T) IPs,
+experiment, or GW100-style references attempted) -- that comparison,
+plus resolving the Padé robustness gap so the comparison can be
+trusted beyond STO-3G-scale toy systems, is the natural next step
+before treating this as manuscript evidence.
+
+**Committed**: `scrnc_sigma_driver.F` (directory-cleanup fix); this
+log entry; CCSD debug artifacts (small text outputs) under
+`aces2/scrnc/sigma_debug_archive/h2o_ccsd_*`. Full pipeline directory
+left on disk, not committed:
+`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_sigma_debug_ccsd/`.
+
+---
+
+## SESSION 2026-08-17 (continued 13) -- larger-basis (H2O/DZ) check: core-machinery clean, but surfaces a REAL Pade-robustness gap (2 of 14 MOs fail to converge) -- NOT silently patched, flagged for discussion
 
 Per Ajith's "check everything with large basis" instruction. Built a
 NEW H2O/DZ ZMAT (`h2o_scrnc_sigma_debug_dz`) rather than reusing the

@@ -151,6 +151,29 @@ C --- Main loop: one pipeline subprocess run per quadrature node.
 C
       Do K = 1, N
 C
+C        Clear the shared working directory back to ZMAT/GENBAS/this
+C        driver's own control files before each node's pipeline run --
+C        re-running xjoda alone (without deleting the previous node's
+C        leftover generated files first) is NOT sufficient: hit
+C        "@GETLST: Assertion failed. List (1,127) does not exist" on
+C        the CCSD (non-ring) path's second node, xjoda apparently
+C        doesn't fully reset every record-container file (e.g.
+C        MOABCD) that the CCSD linear-response path writes dynamic
+C        list records into between separate xscrnc invocations in the
+C        same directory. Same root cause as the already-documented
+C        "rerunning a pipeline step on top of stale JOBARC is NOT
+C        idempotent" lesson (SCRNC_DEBUG_LOG.md) -- this just deletes
+C        the leftover files explicitly rather than relying on xjoda to
+C        do it. Stays within the single shared directory (never
+C        creates a new one) -- only the generated-file CONTENTS get
+C        cleared each iteration, not the directory itself.
+C
+         Call Execute_Command_Line(
+     +      "find . -maxdepth 1 -type f "//
+     +      "! -name ZMAT ! -name GENBAS ! -name sigma_input "//
+     +      "! -name pipeline_cmds ! -name '*.log' -delete",
+     +      Wait=.True.)
+C
          Open(Unit=23,File="frequency",Form="Formatted",
      +        Status="UNKNOWN")
          Write(23,*) 1
