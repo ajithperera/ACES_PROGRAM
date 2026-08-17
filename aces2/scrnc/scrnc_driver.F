@@ -275,5 +275,16 @@ C
 CSSS      Call Scrnc_bcktran(Work(I000),Memleft,Iuhf,Work(Ijj_lrspn_bgn),
 CSSS     +                   Nocc_pairs,Irrepx)
 
+C AO->MO transform of Wc into the MO particle-hole basis, first step of
+C the self-energy construction (route decided 2026-08-17: contour-
+C deformation, see SCRNC_DEBUG_LOG.md). Always required -- not a
+C diagnostic, so not _DEBUG_LVL0-gated (Ajith, 2026-08-17): every
+C downstream self-energy step needs Wc_mo, so this transform must run
+C unconditionally, unlike Scrnc_bcktran_test.F's genuinely-optional
+C validation-harness convention.
+C
+      Call Scrnc_wc_ao2mo_test(Work(I000),Memleft,Iuhf,
+     +                         Work(Ijj_lrspn_bgn),Nao_pairs)
+
       RETURN
       END

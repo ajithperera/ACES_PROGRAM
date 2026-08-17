@@ -6,6 +6,1093 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
+## SESSION 2026-08-17 (continued 8) -- ROOT CAUSE FOUND AND FIXED: Jj_lrespn was implicitly Integer*8, not Double Precision (classic Fortran I-N implicit-typing trap on a name starting with 'J'); AO2MO transform now verified to machine precision and wired in unconditionally (CLOSED)
+
+Used gdb (hardware watchpoints + direct DWARF address-of, both cross-
+checked against raw RDI-register reads) to find the actual mechanism,
+per Ajith's "complete the project" instruction. First attempt was a
+DEAD END worth recording so it isn't repeated: setting a breakpoint at
+`scrnc_wc_ao2mo_do_`'s function name (gdb auto-skips the prologue) and
+reading `$rdi` immediately gave a STABLE, plausible-looking address --
+but this was a false trail. At -O0, by the time gdb's default
+prologue-skip lands, argument registers have already been spilled to
+their home stack/Work-array slots and are being REUSED as scratch for
+the first statement's own address computation -- `$rdi` at that point
+had been silently repurposed to hold `Blk_mo`'s address (the routine's
+own last internal scratch array), not `Jj_lrespn`'s. Chasing this gave
+an entirely spurious "MKL dgemm writes into Jj_lrespn's memory"
+watchpoint hit that looked like conclusive proof of aliasing but wasn't
+-- a lesson for next time: never trust a raw register read at a
+breakpoint as "the argument value" without cross-checking against a
+DWARF-based `&variable` (or explicit pre-prologue address) lookup.
+
+Redid it properly: `set language c` (needed -- Fortran-mode expression
+parsing rejected C-style pointer casts) then `(long)&jj_lrespn` at
+THREE levels of the call chain (`Scrnc_wc_ao2mo_test`, `Scrnc_wc_ao2mo`,
+`Scrnc_wc_ao2mo_do`) all agreed exactly: `0x155554d2c628`, Fortran index
+127498918 -- EXACTLY `Ijj_lrspn_bgn` (`=Memleft+1`, independently
+confirmed via `maxcor=127498917` read directly off the live argument).
+No aliasing, no overlap, address correct and stable throughout -- fully
+retracts the "continued 7" watchpoint finding above.
+
+**So the address was always right; the VALUE was wrong.** Broke exactly
+at the read statement (`scrnc_wc_ao2mo.f:104`,
+`Blk_ao(Mu,Nu) = Jj_lrespn(Iao_pair,Jao_pair)`) for the very first
+iteration (`Mu=Nu=Iao_pair=Jao_pair=1`), confirmed the address seen
+there matches the verified-true address exactly (delta=0), then did
+`set language fortran; print jj_lrespn(1,1)` -- got back
+`4605170097222381441`, a huge INTEGER, not a small real value. This is
+the exact int64 bit-reinterpretation of a normal double: `struct.unpack
+('<q', struct.pack('<d', 0.777650825))` in Python gives
+`4605179675476665134` -- same leading digits, matching magnitude and
+sign (~4.6D+18), i.e. the compiled code was reading the 8 raw bytes at
+that address as an INTEGER, not a REAL*8. This is EXACTLY the same
+"~4.6D+18" magnitude seen in the very first "DBG Xtmp" print from the
+2026-08-17 "continued 6" entry, and the same order of magnitude as
+every garbage `Wc_mo`/bfcheck value seen throughout this whole
+investigation -- one single root cause explains all of it.
+
+**Root cause**: `Jj_lrespn`'s name starts with `J`, which falls in
+Fortran's implicit I-N range (default INTEGER). This file's own
+`Implicit Double Precision (A-H,O-Z)` statement covers ONLY A-H and
+O-Z -- it does NOT touch I-N. A bare `Dimension Jj_lrespn(Nao_pairs,
+Nao_pairs)` (present in all 4 routines that take it as a dummy arg:
+`Scrnc_wc_ao2mo`, `Scrnc_wc_ao2mo_do` in `scrnc_wc_ao2mo.F`, and
+`Scrnc_wc_ao2mo_test`, `Scrnc_wc_ao2mo_bfcheck` in
+`scrnc_wc_ao2mo_test.F`) only sets the ARRAY SHAPE, not the type -- so
+`Jj_lrespn` was silently `Integer*8` in every one of these new routines.
+Every element READ converted the raw IEEE-754 bit pattern into its
+integer value, then (since the destination, e.g. `Blk_ao`, IS correctly
+Double Precision under A-H,O-Z) an INTEGER-TO-REAL numeric conversion
+ran on that huge integer, producing the ~1e18-1e19-scale garbage seen
+everywhere. Because -i8 makes `Integer` and `Double Precision` both
+8 bytes, array-indexing/stride arithmetic was completely unaffected --
+which is exactly why every address-based check across this whole
+investigation (hand-verified offsets, gdb address-of, watchpoints on
+the correct address) kept coming back clean: the bug was never about
+WHERE the data lived, only about how its bits were being interpreted
+once read. This also fully explains why "brute force" and "fast"
+`Wc_mo` always agreed with each other despite both being wrong --
+`Scrnc_wc_ao2mo_bfcheck` has its OWN independent `Jj_lrespn` dummy arg
+with the identical bare-`Dimension` bug, so both paths independently
+misread the same underlying bits the same way.
+
+The codebase's own established convention for this exact array already
+protects against this everywhere else -- `scrnc_jj_rcc_assemble.F:6`:
+`Double Precision JJ_lrespn(Nao_pair,Nao_pair)`, an explicit type
+declaration, not a bare `Dimension`. The four new routines in this
+session's two new files simply missed that convention.
+
+**Fix**: changed `Dimension Jj_lrespn(Nao_pairs,Nao_pairs)` to
+`Double Precision Jj_lrespn(Nao_pairs,Nao_pairs)` in all four routines
+(`scrnc_wc_ao2mo.F` x2, `scrnc_wc_ao2mo_test.F` x2). Rebuilt clean via
+`gmake clean && gmake && gmake install` in `aces2/scrnc/` (production
+flags, no debug/-O0 overrides), md5-verified the installed binary.
+Reran the H2O/STO-3G/UHF/DRCCD ring-CC case fresh
+(`h2o_wc_ao2mo_fixed/`): `@-Scrnc_wc_ao2mo_bfcheck: max|brute force -
+Scrnc_wc_ao2mo| = 1.065814D-14` (machine precision), `brute value =
+fast value = 5.061380D+00` (a physically sane magnitude, not garbage).
+**Fixed and verified.**
+
+**Also this session (Ajith's instruction)**: the `#ifdef _DEBUG_LVL0`
+guard around the `Scrnc_wc_ao2mo_test` call in `Scrnc_driver.F` was
+removed -- this transform is a required step of the self-energy
+pipeline (every downstream step needs `Wc_mo`), not an optional
+diagnostic, so it now always runs unconditionally. `Scrnc_wc_ao2mo_test`
+still bundles the brute-force cross-check every call, which is fine at
+STO-3G toy-system scale (this project's whole scope so far) but would
+not scale to a real system -- worth splitting the always-needed
+transform from the diagnostic brute-force check before this goes beyond
+toy systems; not done this session (not asked, and out of scope of the
+immediate fix).
+
+**Status: this specific bug is CLOSED.** The AO->MO transform is
+production-ready and wired into the real pipeline. The broader
+self-energy roadmap from the "continued 5" entry above is NOT complete
+-- still not started: the frequency quadrature grid choice, the Pade
+continuation implementation, G0 pole placement/eta convergence, the
+bare-exchange Sigma_x term, and the final quasiparticle equation solve.
+"Complete the project" (Ajith, this session) refers to clearing this
+specific blocker, not the full GW self-energy implementation -- confirm
+with Ajith which of those pieces to tackle next.
+
+---
+
+## SESSION 2026-08-17 (continued 7) -- ruled out the build-flags theory for the Scrnc_wc_ao2mo corruption; a same-binary reproducibility check confirms it's fully deterministic (100% reproducible), not a heisenbug -- clear to use a debugger next
+
+Ajith's instruction after the terminal freeze: stop hand-linking a standalone
+test harness and instead compile/link `Scrnc_wc_ao2mo`/`Scrnc_wc_ao2mo_test`
+through this tree's own `GNUmakefile`/`GNUmakefile.src` (`64BIT=1` ->
+`-i8` -Zp8, `-Bstatic -lmkl_intel_ilp64` ILP64 MKL), same as every other
+scrnc file, so nothing about the standalone "verified correct in isolation"
+tests' build could be silently mismatched vs. the real pipeline. Rationale
+was sound (this project's whole bug history is ifx-flag-sensitivity), so
+worth checking properly before more manual debugging.
+
+**Result: theory ruled out.** Re-enabled the `Scrnc_wc_ao2mo_test` call in
+`Scrnc_driver.F` (`_DEBUG_LVL0`-guarded, was `CSSS`-disabled), rebuilt via
+plain `gmake` + `gmake install` in `aces2/scrnc/` (needed `module load
+intel/2025.1.0` first -- `ifx` wasn't on `PATH` in this shell; confirmed via
+`gmake -n` that the real compile line is
+`ifx -c -Wall -traceback -O2 -Zp8 -zero -i8 -fPIC scrnc_driver.f`, i.e.
+`-i8` really is always on, exactly as Ajith said, no manual flag-wrangling
+needed), md5-verified `aces2/bin/xscrnc` matches the freshly-linked local
+binary (per [[feedback_aces_build_install_trap]]). Reran the ORIGINAL
+ring-CC (DRCCD) H2O/STO-3G/UHF test case (`ZMAT` from
+`h2o_scrnc_wc_ao2mo_check/`, fresh dir `h2o_scrnc_wc_ao2mo_check2/`) via the
+exact same manual `xjoda,xvmol,xvmol2ja,xvprops,xvscf,xvtran,xintprc,
+xringcc,xringcl,xscrnc` chain the earlier verification runs used (NOT
+`xaces2` -- tried that first, it routes `CALC=DRCCD` through `xvcc` instead
+of `xringcc` and dies in `xvcc` with an unrelated `GETLST` list-size error;
+this whole DRCCD path apparently isn't reachable via the standard top-level
+driver, only the manual per-binary chain -- worth a separate look someday
+but not this bug). Corruption reproduced identically in kind: `Wc_mo`
+elements ~1e19 (should be O(1-100)), brute-force and fast-transform paths
+agree with each other (both give the same garbage value), confirming the
+corruption is upstream of both algorithms, in what `Jj_lrespn` reads as.
+
+**Apparent non-determinism claim RETRACTED (was a bad comparison, not a
+real finding)**: initially compared this run's worst-mismatch location
+`(p,q,r,s)=(7,1,7,6)` against the earlier session's `(6,6,6,6)` and
+concluded run-to-run variance -> uninitialized memory. Ajith immediately
+pushed back, correctly: this is single-threaded serial code, identical
+input MUST give identical output, full stop -- if it doesn't, something
+external is wrong (different binary, corrupted files), not "expected
+randomness." Ajith's instruction: `gmake clean`, `gmake install` fresh
+from `aces2/scrnc/`, then run the INSTALLED binary twice and compare
+directly, rather than comparing across sessions/builds.
+
+Did exactly that: `gmake clean` (full), `gmake` (fresh compile of all of
+scrnc including `scrnc_wc_ao2mo.F`/`scrnc_wc_ao2mo_test.F`), `gmake
+install`, md5-verified `aces2/bin/xscrnc` matches the local build
+(`3efb006494128b2431ee5becdcd396fe`). Ran the SAME installed binary,
+same `xjoda...xscrnc` chain, in two independent fresh directories
+(`h2o_wc_ao2mo_repro_A`, `h2o_wc_ao2mo_repro_B`) from identical
+`ZMAT`/`GENBAS`. `diff -a` of the two full pipeline logs: the ONLY
+differences anywhere in ~20k lines are `@ACES_INIT-DEBUG`/`@INTS_-DEBUG`
+raw heap-address printouts (`base addr=`, `i0=`, `ICORE(...)  addr=` --
+ordinary ASLR noise, a fresh process gets a different heap base every
+launch, expected and harmless) and sub-hundredth-second wallclock timing
+noise. Every physics number, including the `Scrnc_wc_ao2mo_bfcheck`
+block, is BIT-IDENTICAL between the two runs: `worst (p,q,r,s) = 7 1 7
+6`, `brute value = fast value = -2.459861D+19`, both runs, exactly.
+
+**Corrected conclusion**: the corruption is fully deterministic and
+100% reproducible given the same binary + same input -- there is no
+run-to-run randomness. The earlier "(6,6,6,6) vs (7,1,7,6)" mismatch
+was comparing against a stale run from BEFORE this session's rebuild
+(different code -- the old run still had the temporary `DBG` print
+instrumentation compiled in, and was very likely built via a different,
+not-fully-`gmake`-clean path pre-freeze) -- not a real property of the
+current code. The "uninitialized memory" theory and the associated
+`Nao`/`Nao_pairs` out-of-bounds-read speculation are RETRACTED --
+spot-checked `Nao_pairs` threading through `Scrnc_driver.F` anyway
+(`Nao_pairs=Nao*Nao` set once at line 115, passed unchanged through
+`Ijj_lrspn_bgn`'s sizing and the `Scrnc_wc_ao2mo_test` call site) and
+found no mismatch, consistent with this being a dead end. Back to
+believing this is a genuine deterministic bug (wrong index, aliasing,
+or similar) -- good news, since deterministic + 100% reproducible means
+a debugger watchpoint (the (a) option from the entry below) will show
+the same thing every time, no need to worry about it being a heisenbug.
+
+---
+
+## SESSION 2026-08-17 (continued 5) -- self-energy architecture DECIDED (Ajith: contour-deformation route), initial data-flow analysis done, implementation not yet started (RESUME HERE)
+
+Ring-CC is closed (see entry below). Moving to the "next level" per
+Ajith's direction: build `Sigma_c(omega)` on top of the now-verified
+`W(omega)`. The 2026-08-16 entry (below) had already identified this as
+a genuine fork needing Ajith's call and left it unresolved -- asked
+explicitly this session.
+
+**Decision (Ajith, 2026-08-17): route 1, contour-deformation** --
+imaginary-axis `W(i*omega')` (already validated on both CCSD and
+ring-CC paths, static+dynamic, real+imaginary axis, H2 and H2O) +
+frequency quadrature + Pade analytic continuation to the real axis.
+Rejected route 2 (sum-over-poles via Hbar diagonalization) specifically
+because it would diagonalize/upfold Hbar, moving closer to the
+diagrammatic/upfolding GW-CC formalism style the manuscript's novelty
+claim needs to stay distinct from (see
+[[project_scrnc_gw_manuscript_goal]]).
+
+**Standard equation** (imaginary axis, orbital/MO basis, G0 diagonal
+in the MO basis since G0_mn(i*nu) = delta_mn/(i*nu-eps_m)):
+```
+Sigma_c(p,q; i*omega) = -(1/2*pi) * Integral d(omega') Sum_m
+     [1/(i*omega+i*omega'-eps_m)] * W_c(p,m,q,m; i*omega')
+```
+where `W_c = W - v` (correlation part only, bare Coulomb subtracted)
+and `W_c(p,m,q,m'; i*omega')` is a 4-MO-index screened-interaction
+tensor -- structurally analogous to a 2-electron integral, but with the
+bare Coulomb kernel replaced by the frequency-dependent `W_c`.
+
+**Key finding this session -- the AO->MO transform is 4-index, not
+2-index, but collapses to two big matmuls.** Checked how `JJ_lrespn`
+(scrnc's `W(omega)` in AO-pair basis) is actually dimensioned:
+`Nao_pairs = Nao*Nao` (`scrnc_driver.F:115`) -- the FULL, unpacked
+square of AO indices (not a symmetry-triangle-packed set), and
+`JJ_lrespn` is genuinely `Nao_pairs x Nao_pairs` = `Nao**2 x Nao**2`
+(confirmed via `scrnc_jj_rcc_assemble.F:6`,
+`I_pairs=J_pairs=Nao_pair`). So `JJ_lrespn(mu*nu, lam*sig)` already
+carries all four AO indices via two compound Kronecker-style pair
+indices -- this means the needed AO->MO transform is the SAME
+computational class as a standard 2-electron-integral AO2MO transform
+(4 AO indices -> 4 MO indices), NOT the simpler 2-index density-like
+transform `scrnc_bcktran_left.F`/`scrnc_i1tran.F`'s ICASE=3 handle
+(those were built for a different, now-apparently-wrong hypothesized
+use case -- the 2026-08-16 "bcktran target"/"AO-vs-MO self-energy
+direction" open question is resolved by this: neither existing
+transform kernel is directly the right shape for this job).
+
+Because `JJ_lrespn` is stored UNPACKED (`Nao_pairs=Nao**2`, no AO
+symmetry packing), the 4-index transform does NOT need the full
+standard ERI quarter-transform algorithm's index-permutation
+machinery -- it collapses to two ordinary matrix multiplies using a
+Kronecker-product transformation matrix `T = C tensor C`
+(`T((mu,nu),(p,q)) = C(mu,p)*C(nu,q)`, size `Nao**2 x Nao**2`):
+```
+Step 1 (row/left pair):  W'(pq, lam*sig) = T^T * JJ_lrespn
+Step 2 (col/right pair): W_c_mo(pq, rs) = W'(pq, :) * T
+```
+i.e. `W_c_mo = T^T * JJ_lrespn * T`, two `Nao**2 x Nao**2` Xgemm calls
+(reusing the same BLAS scrnc already calls elsewhere), NOT a bespoke
+index-permutation transform. `T` itself is cheap to build (Kronecker
+product of the existing SCF eigenvector matrix `C` with itself).
+
+**Scaling caveat, flagged not yet resolved**: `Nao_pairs=Nao**2` means
+`JJ_lrespn` is `O(Nao**4)` in memory -- fine for STO-3G H2/H2O (this
+whole project's test systems so far) but will not scale to any
+realistically-sized molecule the eventual manuscript needs. Decided
+(consistent with how every other piece of this project has been built)
+to prove correctness on the existing STO-3G toy systems first and treat
+storage-scaling as a separate, later optimization -- NOT to redesign
+the storage convention now. Revisit before attempting any real-system
+GW numbers.
+
+**AO-pair index convention, pinned down (was the real blocker for
+writing the transform correctly)**: `scrnc_prep_2ints.F:68-77` builds
+the authoritative `Irrep_ao_pairs` map (shared via
+`Common/Sym_pqxx_ints/`, reused by `scrnc_lrspn_rcc_main.F` and others)
+via `Do k=1,Nbfns; Do l=1,Nbfns; Ithru=Ithru+1; ...`, i.e.
+**`Iao_pair = (Mu-1)*Nao + Nu`**, with `Mu` (=`k`) the OUTER/slow loop
+and `Nu` (=`l`) the INNER/fast loop. This is the reshape needed to
+treat `JJ_lrespn(Iao_pair,Jao_pair)` as a genuine 4-AO-index tensor
+`W(Mu,Nu,Lam,Sig)` for the transform above -- confirmed by direct
+inspection, not assumed (guessing this backwards would silently
+transpose the transform, same failure class as several already-found
+bugs in this project).
+
+**Not yet started**: actually writing the `T=C(x)C` construction and
+the two-Xgemm transform routine; the frequency quadrature grid choice
+(minimax vs Gauss-Legendre-after-transform, standard choices in
+numerical-GW contour-deformation codes -- not yet researched/decided);
+the Pade continuation implementation; the G0 pole placement/eta
+convergence; and the final quasiparticle equation solve
+(`eps_QP = eps_HF + Sigma_c(eps_QP) + Sigma_x - v_xc`-style, needs the
+bare-exchange `Sigma_x` term too, which is a separate, simpler,
+frequency-independent piece not yet scoped at all). This entry is the
+resume point for all of that.
+
+---
+
+## SESSION 2026-08-17 (continued 4) -- RE-VERIFIED CLEAN: ring-CC H2O JJ symmetry re-checked fresh against current code, no open bug (correcting a stale mischaracterization made earlier this same session)
+
+Earlier in this session I described the H2O ring-CC JJ asymmetry
+(2026-08-14) as "still open" -- that was wrong, based on only having
+read the stale `## RESUME POINT (as of 2026-08-14...)` section near the
+end of this file without having yet read the 2026-08-15 entry above it
+that actually fixed it (missing `Call Symmet2` in `scrnc_jj_rcc_lrspn.F`/
+`scrnc_jj_cc_lrspn.F`, commit `35cdb853`, "This closes out the entire
+scrnc JJ-asymmetry investigation, this time for real").
+
+On Ajith's instruction to "clean out ringcc" before moving on, did NOT
+just trust that old log entry -- re-verified against the CURRENT
+codebase (the fix has since moved into `scrnc_jj_rcc_assemble.F`, split
+out during the 2026-08-15-evening dynamic-omega refactor):
+
+- Confirmed `Call Symmet2(JJ_lrespn,Nao_pair)` present in both
+  `scrnc_jj_rcc_assemble.F:147` and `scrnc_jj_cc_lrspn.F:385`.
+- Ran 3 fresh, full pipelines (`xjoda...xringcc,xringcl,xscrnc`) on
+  H2O/STO-3G/UHF with the CURRENT code, parsed the real 49x49 "RPA JJ
+  matrix" block programmatically (4-cols-per-header ACES2 `output`
+  format), checked every symmetric pair:
+  - DRCCD static (`h2o_scrnc_drccd_postrefactor_check`): max
+    |JJ(r,c)-JJ(c,r)| = 0.0
+  - RCCD static (`h2o_scrnc_rccd_postrefactor_check`): 0.0
+  - DRCCD dynamic, omega=0.3 a.u. real
+    (`h2o_scrnc_drccd_omega03_check`): 0.0 -- **this closes a real gap**:
+    dynamic-omega correctness had only ever been verified on H2 before
+    (2026-08-14 entry, "Verified (H2/STO-3G/UHF/DRCCD...)"), never on
+    H2O. Now confirmed on H2O too.
+- No errors/non-convergence in any of the three runs (checked directly,
+  not just assumed).
+- Confirmed the two minor indexing-typo fixes (`scrnc_driver.F:149-150`,
+  `scrnc_form_lrspn_rcc_lists.F:61`) are still present, no regression.
+- `git status` on `aces2/scrnc/`, `aces2/ringcc/`, `aces2/ringcl/`:
+  clean, nothing uncommitted (only an unrelated untracked file from the
+  2026-08-16 vcceh independent-pilot thread,
+  `aces2/scrnc/independent_pilot/ci_like_vs_lr_polarizability.py` --
+  not ring-CC, not touched).
+
+Test artifacts left on disk (not committed, per project convention):
+`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_drccd_postrefactor_check/`,
+`h2o_scrnc_rccd_postrefactor_check/`, `h2o_scrnc_drccd_omega03_check/`.
+
+**Verdict: ring-CC has no open correctness issues.** Static and dynamic
+paths, both DRCCD and RCCD variants, all exactly symmetric on H2O with
+the current code. Clear to move on.
+
+---
+
+## SESSION 2026-08-17 (continued) -- RESOLVED by Ajith's read: only the CI-like piece is required to be self-symmetric; CI-like's raw asymmetry in vcceh is a confirmed real bug (RESUME HERE)
+
+Read `spnspn_jcp.pdf` directly (via Dropbox) and pulled the actual text
+of Eqs. (26)-(31), not just the earlier paraphrase. Precise statement:
+
+- **Eq. (30)** splits the quadratic model into three terms: term A =
+  `<0|(1+L)(H_N'-E_N')T_N|0>`, term B = `<0|(1+L)(H_N-E_N)T_N'|0>`
+  (A+B = the CI-like piece), plus a third "quadratic correction" term
+  `<0|(1+L)[H,T_N T_N']|0>`. Swapping N<->N' swaps A and B into each
+  other, so **A+B is symmetric by algebraic construction alone** --
+  no physics/derivative argument needed, holds explicitly "if the
+  excitation space is restricted to singles and doubles" (line
+  ~620-624 of the paper), i.e. at CCSD truncation.
+- The quadratic correction term (third term) has **no such structural
+  guarantee on its own**. Only the FULL Eq. (30) = Eq. (26) (all three
+  terms combined) is proven symmetric, and that proof is the separate,
+  weaker "elementary considerations" argument right after Eq. (26)
+  (line 547): it's an exact mixed second energy derivative, and mixed
+  partials of energy commute. That argument does not apply to any one
+  piece in isolation.
+
+**Conclusion**: Ajith's recollection was correct -- only the CI-like
+piece is required to satisfy `f(N,N')=f(N',N)` (i.e. JJ(N,N')=JJ(N',N))
+on its own. This settles the flip-flop below: the "corrected"/PySCF-
+docstring framing (SESSION 2026-08-16 night, below) was the
+overcorrection; the original [[feedback_eomcc_lr_eigenvectors_never_equal]]
+reading stands, but scoped precisely to the CI-like piece only.
+
+Cross-checked against the actual `vcceh` code the same session (not
+just the paper): confirmed in `aces2/vcceh/secprp.F:368-421` that terms
+A and B (`XPROP(IPERT,JPERT)` and `XPROP(JPERT,IPERT)`) are BOTH
+independently computed via a full `DO 40 IPERT/DO 50 JPERT` double loop
+over the entire NOPERT x NOPERT range (no `J>=I` restriction) -- this is
+NOT a "compute one triangle, mirror it" shortcut like NWChem's (see
+CALCQUAD1-vs-NWChem entry below). `SYMMET2`
+(`aces2/libr/symmet2.f:20-24`) then does
+`A(I,J)=0.5*(A(I,J)+A(J,I))` -- an average of two independently-solved
+numbers, not a mirror-copy. Since terms A and B are proven to be exactly
+equal under exchange by the paper's own algebra, any nonzero raw
+pre-`SYMMET2` difference between `XPROP(IPERT,JPERT)` and
+`XPROP(JPERT,IPERT)` for the CI-like piece is a **genuine implementation
+bug** in `secprp.F` (or upstream in `OPRBAR`/the perturbed-T-amplitude
+lists it reads), not expected/tolerable behavior.
+
+Same logic does NOT extend to `calcquad1.f`'s raw asymmetry (the
+~34.5% CALCQUAD1 number below) -- the paper gives no term-by-term
+symmetry guarantee for the quadratic correction term alone, so its raw
+asymmetry is not on its own diagnostic of a bug the way CI-like's is.
+The already-established CALCQUAD1-vs-NWChem post-`SYMMET2` agreement
+(4-5 sig figs, entry below) remains the best evidence that piece is
+correctly implemented overall.
+
+**Next step (not yet started)**: chase the CI-like term A/B mismatch
+itself. Both terms are computed via the same `OPRBAR` call
+(`secprp.F:350-353`, `DOLEFT`/`DORIGHT` branches) reading perturbed
+T-amplitude lists `372+ISIDE` -- worth checking whether this is the
+same list/scratch-record collision family as the already-fixed
+ring-CC (`scrnc_jj_rcc_lrspn.F`) and CCSD-response
+(`scrnc_lrspn_cc_main.F`) bugs, or something new in `secprp.F`/`OPRBAR`
+itself. `secprp.F` is the general vcceh property-tensor path (not
+scrnc-specific), so a fix here has broader blast radius than the
+scrnc-local fixes -- confirm scope before touching it.
+
+---
+
+## SESSION 2026-08-17 (continued 2) -- CHECKED, NOT RESOLVED: `OPRBAR`/`LINEQY` wiring itself has no structural bug, but the "just numerical residual" explanation for the 7.6% gap is now RULED OUT (RESUME HERE)
+
+Two things verified this pass, on Ajith's direct ask to check for a real
+coding error before trusting `Symmet2` as the explanation:
+
+**1. No structural bug in the `OPRBAR`/`LINEQY`/`Symmet2` wiring.**
+`secprp.F` calls `OPRBAR` twice, not once (missed the first call two
+entries ago): once inside the amplitude-solving loop (~line 197,
+`DORIGHT=ISIDE.EQ.1`/`DOLEFT=ISIDE.EQ.2`) which writes the raw RHS to
+list 373 and is then solved in place by `LINEQY`/`PLINEQY` into the
+converged perturbed-T amplitude; once more in the property-construction
+section (~line 350, flags deliberately **reversed**:
+`DOLEFT=ISIDE.EQ.1`/`DORIGHT=ISIDE.EQ.2`), which writes the L-bar
+operator (a direct, non-iterative construction -- confirmed `LINEQY`/
+`PLINEQY` never touch list 374 anywhere) straight to list 374. With
+`ISIDE` hardcoded to 1, this reversal is what lets a single fixed
+`ISIDE` populate both 373 (solved) and 374 (direct) correctly. Confusing
+to read, but deliberate and correct -- not a record-collision bug like
+the two already-fixed scrnc-local ones.
+
+**2. Checked whether the amplitude solve behind the ~7.6%
+`h2o_ccsd_polar_check_asym` gap (two entries above) actually converged.**
+Raw pipeline log
+(`/blue/ufhpc/perera/scrnc_test/h2o_ccsd_polar_check_asym/pipeline.log`):
+all three perturbations (DIPOLE_X/Y/Z) hit
+`@LINEQY-I, Derivative amplitudes converged after 8 iterations.`
+(lines 12597/12709/12821), with the intervening `@CHECKSUM` trace
+showing the residual shrinking cleanly from ~0.5 to ~1e-13 beforehand --
+consistent with genuinely reaching `LINEQY`'s own `CUTOFF=1.D-14`
+(`lineqy.F:63`). No non-convergence, no max-iteration cutoff hit.
+
+**This is decisive against, not for, "Symmet2 is just cleaning up
+ordinary numerical residual."** A solve converged to 1e-14 should leave
+term-by-term noise at roughly that scale. A 7.6% raw asymmetry is six-
+plus orders of magnitude too large to be explained by finite iterative-
+solve precision. So: confirmed no coding error in the wiring checked so
+far, but ALSO no longer have a benign explanation for the gap's size --
+"just numerical noise, nothing to fix" is not yet an earned conclusion
+either. Status is genuinely open, not resolved either direction.
+
+## SESSION 2026-08-17 (continued 6) -- Scrnc_wc_ao2mo (AO->MO transform) written and verified correct in isolation; wiring it into the real pipeline hit an unexplained, reproducible corruption -- disabled, not fixed (RESUME HERE)
+
+Implemented `aces2/scrnc/scrnc_wc_ao2mo.F` (new): `Scrnc_wc_ao2mo` /
+`Scrnc_wc_ao2mo_do`, the two-block-Xgemm AO->MO transform of `Wc`
+(`JJ_lrespn`) designed in the entry above, using the confirmed
+`Iao_pair=(Mu-1)*Nao+Nu` convention. All loop/index variables kept in
+the I-N implicit-integer range on purpose (see the file's own header
+comment) -- an earlier attempt using `P,Q,R,S,Sig` (which fall in the
+O-Z implicit-DOUBLE-PRECISION range under this file's
+`Implicit Double Precision (A-H,O-Z)`) was a REAL bug, caught via a
+brute-force cross-check (`Scrnc_wc_ao2mo_bfcheck` in the new
+`scrnc_wc_ao2mo_test.F`, same methodology as `Scrnc_bcktran_left.F`'s
+own brute-force check) and fixed.
+
+**Verified correct in isolation**: two standalone test programs
+(dedicated, non-shared arrays, linked directly against
+`Scrnc_wc_ao2mo.F` + `aces2/crust/xgemm.f` + MKL, bypassing all ACES2
+Work-array/GETREC machinery) at Nao=Nmo=2 and Nao=Nmo=7 (matching the
+real H2O/STO-3G production size) both agree with an independent
+quadruple-nested-loop brute-force reference to ~1e-11 (machine
+precision), for every element. The core transform algorithm is
+believed correct.
+
+**NOT resolved**: wiring it into the real pipeline (via
+`Scrnc_wc_ao2mo_test`, called from `Scrnc_driver.F` guarded by
+`_DEBUG_LVL0`, using the REAL `Jj_lrespn`/SCF eigenvectors) reproducibly
+corrupts the result -- `Wc_mo` elements come out ~1e18-1e19 in
+magnitude (should be O(1-100)). Chased extensively this session and
+ruled out, in order: (1) a genuine implicit-typing bug (`P,Q,R,S,Sig`
+as O-Z-range doubles -- real bug, fixed, but corruption persisted
+unchanged); (2) `-i8`-vs-explicit-`Integer`-declaration kind mismatch
+(renamed all loop vars to the I-N range instead of declaring
+`Integer` explicitly -- ALSO had zero effect on the corruption, same
+exact wrong value at the same location before and after, ruling this
+out as the cause despite being a plausible mechanism in general); (3)
+`ifx -O2` miscompilation, this project's own established failure class
+per `feedback_aces_debug_try_low_opt_first` -- rebuilt
+`scrnc_wc_ao2mo.o` at `-O0` by hand (matching the real `cpp`+`ifx`
+invocation from `make -n`), corruption persisted identically; (4)
+memory offset/aliasing between `Jj_lrespn`, `C`, `Wc_mo`, and
+`Scrnc_wc_ao2mo`'s internal scratch, in the real `Scrnc_driver.F`
+Work-array layout -- hand-verified the absolute offsets of every array
+involved, found no overlap; (5) a naive "large local test array
+overflows the 8MB stack" false lead in one intermediate reproduction
+attempt -- confirmed via `ulimit -s` (8192 KB) vs a 16MB test array,
+irrelevant to the real pipeline since ACES2's Work array is a COMMON
+block, not stack-allocated.
+
+**Most specific finding, still unexplained**: instrumented directly
+inside `Scrnc_wc_ao2mo_do`'s Step-1 extraction loop. `Jj_lrespn(1,1)`
+printed via a `Write` statement shows the correct value (0.8131535...,
+matching the independently-printed "RPA JJ matrix" block earlier in
+the same log) -- but assigning that SAME expression,
+`Xtmp = Jj_lrespn(Iao_pair,Jao_pair)`, into a plain scalar `Xtmp` ONE
+LINE EARLIER in strictly sequential `-O0` code gives ~4.6D+18 for the
+identical `(Iao_pair,Jao_pair)=(1,1)`. I.e. the identical array-element
+read expression evaluates to two different values a few nanoseconds
+apart in the same loop iteration, with nothing in between that should
+change `Iao_pair`/`Jao_pair`/`Jj_lrespn`. Confirmed via a PRE/POST
+check that the destination (`Blk_ao`/`Xtmp`) genuinely starts at 0.0
+(correctly zero-initialized by `-zero`) and becomes ~4.6D+18 only after
+the assignment executes -- so it is the READ side that's wrong at that
+call site specifically, not stale/uninitialized destination memory.
+Never got further than this before deciding to stop rather than keep
+guessing.
+
+**Decision, this session**: rather than continue blind trial-and-error
+(already 5 ruled-out hypotheses), disabled the driver-level call
+(`Scrnc_driver.F`'s `Scrnc_wc_ao2mo_test` hook, now `CSSS`-commented
+with an explicit "DO NOT re-enable" note) and cleaned all temporary
+debug instrumentation out of `Scrnc_wc_ao2mo.F` itself, leaving it in
+its believed-correct, standalone-verified state. Confirmed NO
+regression from any of this session's changes: reran the H2O DRCCD
+static/dynamic and CCSD control cases fresh
+(`h2o_scrnc_drccd_postrefactor_check`, `h2o_scrnc_ccsd_postclean_check`)
+-- both still exactly symmetric (max diff 0.0), matching the "ring-CC
+is clean" verdict from earlier this session.
+
+**Not yet done / real next step**: root-cause the read-inconsistency
+above. Candidate approaches not yet tried: (a) use an actual debugger
+(gdb/idb) with a watchpoint on `Jj_lrespn`'s memory address rather than
+more printf-style instrumentation -- would show definitively whether
+something writes to that address between the two reads, or whether
+this is a codegen artifact; (b) write `Jj_lrespn` out to a small
+dedicated JOBARC record via `PUTREC`/`PUTLST` right where it's known
+good, then have `Scrnc_wc_ao2mo_test` read it back via `GETREC` fresh
+(bypassing whatever call-chain/argument-passing path is implicated)
+and compare; (c) check whether this is specific to `_DEBUG_LVL0` builds
+specifically (i.e. try reproducing with a non-`_DEBUG_LVL0` build, in
+case some OTHER `_DEBUG_LVL0`-guarded code earlier in `Scrnc_driver.F`
+is the actual culprit writing where it shouldn't, and this transform
+code is just an innocent bystander that happens to read the clobbered
+region). Do not re-attempt the already-ruled-out hypotheses above
+without new evidence.
+
+---
+
+**Next step (not yet started, this is now the concrete blocker)**:
+directly inspect what `XPROP(IPERT,JPERT)` (`FACT * SDOT(T(IPERT)[373],
+Y(JPERT)[374])`) is actually supposed to represent term-by-term. Two
+live hypotheses, not yet distinguished:
+1. A genuine implementation bug specifically in how `T(IPERT)` (373) or
+   `Y(JPERT)` (374) is built/read for CROSS pairs (IPERT != JPERT) --
+   the wiring check above only confirmed 373/374 get populated at all,
+   not that the SDOT contraction combines them correctly for every
+   ordered pair.
+2. The paper's symmetry proof (Eq. 30's term structure, valid
+   at CCSD truncation) may be a claim about the SUM
+   `term_A(N,N')+term_A(N',N)` being invariant under simultaneous
+   exchange, not a claim that `term_A(N,N')` alone equals `term_A(N',N)`
+   alone -- in which case a raw single-term `XPROP(I,J)` before
+   `Symmet2` is not expected to already be close to `XPROP(J,I)`, and
+   the "7.6%" framing itself (comparing two individually-meaningless
+   half-quantities) may be measuring the wrong thing. Needs re-deriving
+   exactly what `FACT*SDOT(T(I),Y(J))` corresponds to in Eq. (30)'s
+   term structure before concluding either way.
+Best concrete test: a finite-field CCSD energy check (vary DIPOLE_X and
+DIPOLE_Y field strengths independently, finite-difference the energy)
+for just the H2O-asym case's alpha_xy vs alpha_yx pair, as an
+independent ground truth outside the OPRBAR/Symmet2 machinery entirely
+-- would settle whether 7.6% raw asymmetry is expected-but-mislabeled
+or a real bug, without more Fortran-side guessing.
+
+---
+
+## SESSION 2026-08-17 (continued 3) -- RESOLVED: the raw pre-Symmet2 asymmetry is expected by construction, not a bug -- Symmet2 supplies the missing second term of the formula, not numerical cleanup
+
+Re-derived from the paper's OWN sum-over-states form (Eqs. 36-40, not
+just the operator-form Eq. 30) and it explains every observation
+cleanly.
+
+Eq. (40)'s CI-like expression, written as a dynamic (frequency-
+dependent) sum-over-states property, has the standard two-resonance-
+term structure:
+```
+E_NN'(w) = Sum_l [ <0|(Hbar_N-E_N)|l><l|H_N'|0> / (E-E_l-w) ]   <- "+w" term = term_A(N,N')
+         + Sum_l [ <0|(Hbar_N'-E_N')|l><l|H_N|0> / (E-E_l+w) ]   <- "-w" term = term_A(N',N)
+```
+At w=0 (the static case, where the asymmetry is seen) both denominators
+become identical. `secprp.F` computes only ONE resonance term per
+(IPERT,JPERT) pair -- `XPROP(I,J) = FACT*SDOT(T(I)[373, converged
+perturbed-T], Y(J)[374, direct L-bar operator])` -- and sets `FACT=2`
+(`secprp.F:123`, the w=0/`ITOP=1` branch), implicitly assuming the two
+resonance terms are equal at w=0. That assumption has NO theoretical
+basis: only the SUM `term_A(N,N')+term_A(N',N)` is proven symmetric
+(Eq. 40 is built as exactly that sum, matching Eq. 30's term-A/term-B
+split), never the individual terms.
+
+Because the outer double loop in `secprp.F` genuinely computes
+`XPROP(I,J)=2*term_A(I,J)` AND `XPROP(J,I)=2*term_A(J,I)`
+independently (confirmed two entries above -- full NOPERT x NOPERT
+loop, no shortcut), the raw pre-`Symmet2` mismatch is exactly
+`2*(term_A(I,J)-term_A(J,I))` -- a real, physically meaningful gap
+between the two resonance terms for that specific system, not noise,
+not a convergence artifact, not a bug. `Symmet2`'s averaging,
+`0.5*(XPROP(I,J)+XPROP(J,I)) = term_A(I,J)+term_A(J,I)`, is therefore
+not defensive cleanup -- **it supplies the missing second resonance
+term**, obtained "for free" from the mirror loop position instead of
+being computed twice per pair. Deliberate efficiency trick, correctly
+implemented.
+
+Consistent with every prior data point without exception: H2/STO-3G
+(small, near-symmetric system) has the two resonance terms nearly equal
+already -> near-zero raw pre-`Symmet2` gap in earlier tests; distorted
+H2O has them genuinely differ more -> the observed 7.6% gap; the
+quadratic correction term (established two entries above to have NO
+swap-pair structural protection at all) shows an even larger 34.5% raw
+gap, consistent with having no such "assume equal, then correct"
+mechanism backing it; CALCQUAD1's post-`Symmet2` agreement with NWChem
+to 4-5 sig figs makes sense because post-`Symmet2` IS the complete,
+mathematically correct formula.
+
+**Verdict**: [[feedback_eomcc_lr_eigenvectors_never_equal]] does NOT
+apply here after all -- reinstating it two entries above was premature;
+this is the "expected/accepted behavior" case, not a missing-symmetrize
+bug, but for a different and more precise reason than blind trust in
+the raw framing would have given ("it's just how the approximation
+works" is right, but specifically because of the ITOP=1/FACT=2
+resonance-term-doubling shortcut, not because of vague "sum-over-states
+structural" hand-waving). No code changes needed in `secprp.F`,
+`OPRBAR`, `LINEQY`, or `Symmet2`. CLOSED -- clear to move on to
+scrnc/GW-work proper.
+
+---
+
+## SESSION 2026-08-17 -- RE-OPENED (needs Ajith's read): the landmark paper's own derivation says quadratic AND CI-like are both exactly symmetric at CCSD truncation, not just full CI
+
+Read the actual text of the landmark paper (now in hand via Dropbox,
+`spnspn_jcp.pdf` = Perera, Nooijen, Bartlett, JCP 104, 3290 (1996)) to
+verify claims made in this log about symmetry. Eqs. (26) and (30)
+derive the quadratic EOM-CCSD model as an exact energy second
+derivative `E_NN' = d^2E/dk_N dk_N'`, and state it "is symmetric in N
+and N', as required by elementary considerations" -- and explicitly
+that this holds "if the excitation space is restricted to singles and
+doubles substitution operators," i.e. at CCSD truncation, NOT only
+for full CI. Splitting Eq. (30), the CI-like piece (first two terms)
+is separately, algebraically symmetric under N<->N' exchange on its
+own (it has the form f(N,N')+f(N',N)), independent of the derivative
+argument.
+
+This is exactly the claim the PySCF pilot's docstring made ("LR
+construction guaranteed exactly symmetric by Schwarz's theorem
+regardless of CC truncation") that the entry below (SESSION 2026-08-16
+night) retracted as "the wrong standard." Reading the primary source,
+that retraction looks like an overcorrection: exact symmetry requires
+only that the perturbed-amplitude (response) equations are solved
+consistently/converged, not a full-CI/variational wavefunction. Under
+this reading, the raw pre-Symmet2 asymmetry seen numerically in ACES2
+(CI-like ~7.6%, CALCQUAD1 ~34.5%, see two entries below) is a
+numerical/implementation artifact of the ACES2 code path, not expected
+structural behavior of either approximation -- which would instead
+re-confirm [[feedback_eomcc_lr_eigenvectors_never_equal]] (the earlier
+"missing Symmet2 step" finding) over the "corrected" framing below.
+
+**Not yet done**: this needs Ajith's own read/judgment before treating
+it as settled -- it reopens a question that flip-flopped multiple
+times already in this log (RESOLVED -> CORRECTED -> RESOLVED again
+below). The CALCQUAD1-vs-NWChem post-Symmet2 agreement (4-5 sig figs,
+see two entries below) is unaffected either way and stands as the
+strongest evidence CALCQUAD1 itself is correctly implemented; what's
+back open is only the *interpretation* of the raw pre-Symmet2 split.
+
+---
+
+## SESSION 2026-08-16 (night, continued) -- RESOLVED: CALCQUAD1 is NOT buggy, it's validated against NWChem to 4-5 sig figs; CI-like's larger raw symmetry is a "sum-over-states" structural artifact, not evidence of correctness (RESUME HERE)
+
+Direct test of Ajith's question ("does NWChem's lower triangle agree
+with ACES2 quadratic's lower triangle?"): since NWChem and ACES2 use
+different molecular orientations, compared full-tensor EIGENVALUES
+(rotation-invariant) instead of raw axis-labeled elements. Using
+NWChem's one genuinely-computed off-diagonal element (`alpha(Z,X) =
+1.6268696`, not the mirrored copy -- see the correction two entries
+above) plus its three genuine diagonal elements, vs ACES2 CALCQUAD1's
+post-Symmet2 tensor from the `vcceh_run.out` run:
+
+| | lambda1 | lambda2 | lambda3 |
+|---|---|---|---|
+| NWChem TCE-LR (genuine elements only) | 5.593206 | 2.338374 | 0.052156 |
+| ACES2 CALCQUAD1 (post-Symmet2) | 5.593252 | 2.338436 | 0.052150 |
+
+Agreement to 4-5 significant figures on ALL THREE eigenvalues -- not
+just the isotropic trace (already known, ~0.001% agreement), but the
+full anisotropic shape of the tensor. CI-like's isotropic value alone
+was off by ~9.4% from NWChem by comparison.
+
+**This reverses the standing conclusion from the entries below.** The
+finding that CALCQUAD1's raw pre-Symmet2 left/right split (-0.073442
+vs -0.103871, ~34.5%) is LARGER than CI-like's raw split (~7.6%) had
+been read as "CALCQUAD1 makes things worse -> implementation bug."
+That reasoning implicitly assumed raw pre-symmetrization asymmetry is
+itself a correctness metric. It isn't, and Ajith confirmed why: **CI-
+like is a sum-over-states-type construction, which is structurally
+MORE symmetric by its own form, independent of whether the underlying
+physics/numbers are more accurate.** CALCQUAD1's larger raw split is
+just what restoring the missing quadratic/size-extensivity term (the
+Perera-Nooijen correction) looks like before the two sides are
+averaged -- it does not indicate a defect. What actually matters is
+the POST-Symmet2 answer, and CALCQUAD1's post-Symmet2 answer matches
+an independent, trusted code (NWChem TCE-LR) almost exactly, while
+CI-like's does not (9.4% isotropic error). **Conclusion: CALCQUAD1 is
+correctly implemented and validated.** The real story of this whole
+multi-session investigation was never "find the bug in CALCQUAD1" --
+it was confirming that CI-like is a known, expected, structurally-
+more-symmetric-but-less-accurate approximation, exactly as the
+Perera-Nooijen paper already lays out.
+
+**Reference for the manuscript / for anyone picking this up cold**:
+Ajith says the Perera-Nooijen paper has extensive discussion of
+exactly how CI-like / LINEAR / QUADRATIC fit together (including the
+sum-over-states symmetry point above) -- that paper, not this debug
+log's earlier speculative reasoning, is the authoritative source for
+the theory-background section. Full citation not yet pulled into this
+log; do that before drafting the manuscript's theory section (see
+also the Stanton & Bartlett / Koch & Jorgensen lineage noted in the
+entry below).
+
+**Open item (2) resolved, same session**: Ajith's call is that
+CI-like is the RIGHT construction for scrnc/GW specifically, not a
+compromise -- GW itself is built on variational/RPA-type (sum-over-
+states) machinery, so CI-like's sum-over-states structural symmetry
+(the same property that makes it "more symmetric but less exact" for
+a generic CC property, per the entry above) is actually a MATCH for
+GW's own theoretical structure, not a mismatch. scrnc should keep
+using CI-like (IEOMPROP=0) -- no change needed there. The
+quadratic/CALCQUAD1 validation above still matters for the manuscript
+(establishes CI-like's known, quantified deviation from the "exact"
+CC-LR answer) but is not a reason to switch scrnc's own construction.
+
+Ajith also proposed a specific alternative construction worth noting
+for the manuscript's formalism section: instead of the standard CC
+similarity-transformed Hamiltonian `H-bar = e^{-T} H e^{T}` (the basis
+of the EOM L/R-vector "CI-like" approach), consider `e^{Lambda} H
+e^{T}` -- i.e., replacing the EOM left-eigenvector L with the
+Lambda-deexcitation operator directly. He noted this may already be
+what the PySCF pilot's `mu_relaxed()` function computes (solves
+Lambda self-consistently via `mycc.solve_lambda()`, then contracts the
+Lambda-relaxed one-particle density via `mycc.make_rdm1()`) -- that
+reading looks right: `make_rdm1(t1,t2,l1,l2)` is exactly the
+`<0|(1+Lambda) e^{-T} p^dagger q e^{T}|0>`-type density, which is the
+Lambda-based (not L-eigenvector-based) construction. Worth revisiting
+this correspondence explicitly when drafting the formalism section --
+not yet fully worked out here, just flagged.
+
+**Not yet done / open**: ~~(1) pull exact citations (Perera & Nooijen;
+Stanton & Bartlett; Koch & Jorgensen) with year/journal for the
+manuscript.~~ RESOLVED 2026-08-17 via Dropbox search, see below. (2)
+revert the still-uncommitted `secprp.F` debug-print flip
+(`if(.false.)` -> `.true.`) and rebuild `xvcceh` clean, per the
+not-yet-done note two entries below (still applies).
+
+**Citations pulled 2026-08-17** (Dropbox, `/Private/Documents/Downloads/`):
+- **THE landmark paper (confirmed by header scan, supersedes the
+  Rozyczko entry below as the primary "Perera & Nooijen" citation):
+  Perera, S. A.; Nooijen, M.; Bartlett, R. J.** "Electron correlation
+  effects on the theoretical calculation of nuclear magnetic resonance
+  spin-spin coupling constants." *J. Chem. Phys.* **104**, 3290
+  (1996). File: `spnspn_jcp.pdf`. This paper derives the EOM-CCSD
+  CI-like, quadratic, and linked-diagram forms for general
+  second-order properties -- exactly scrnc's CI-like/LINEAR/QUADRATIC
+  framework -- applied to NMR spin-spin coupling constants. This is
+  Ajith's own 1996 paper and the direct theoretical ancestor of scrnc
+  (see [[project_scrnc_gw_manuscript_goal]]: scrnc is "a direct
+  linear-response construction, generalized from Ajith's own 1994 NMR
+  spin-spin-coupling response theory"). Its 1994 predecessor is also
+  in Dropbox: **Perera, S. A.; Sekino, H.; Bartlett, R. J.**
+  "Coupled-cluster calculations of indirect nuclear coupling
+  constants: The importance of non-Fermi contact contributions." *J.
+  Chem. Phys.* **101**, 2186 (1994). File: `spnspn_first_jcp.pdf`.
+- **Rozyczko, P. B.; Perera, S. A.; Nooijen, M.; Bartlett, R. J.**
+  "Correlated calculations of molecular dynamic polarizabilities."
+  *J. Chem. Phys.* **107** (17), 6736 (1 November 1997). Secondary
+  citation -- same CI-like/LINEAR/QUADRATIC framework applied to
+  dynamic polarizabilities instead of NMR couplings. File:
+  `Rozyczko_pol.pdf`.
+- **Stanton, J. F.; Bartlett, R. J.** "A coupled-cluster based
+  effective Hamiltonian method for dynamic electric polarizabilities."
+  *J. Chem. Phys.* **99** (7), 5178 (1 October 1993). The original
+  CI-like/CC-EH construction paper. File: `Stanton_Bartlett_EOMPOL.pdf`.
+- **Koch, H.; Jørgensen, P.** "Coupled Cluster Response Functions."
+  *J. Chem. Phys.* **93**, 3333 (1990). The foundational CC-LR paper.
+  Not present as a standalone PDF in the Dropbox `Downloads` folder,
+  but the exact citation is now confirmed independently from the
+  reference lists of two related papers that *are* in Dropbox (both
+  under `/Private/Documents/Downloads/Excited states/`):
+  `Chris_koch_jorgensen_cc2.pdf` (Christiansen, Koch, Jørgensen,
+  "The second-order approximate coupled cluster singles and doubles
+  model CC2," *Chem. Phys. Lett.* **243**, 409 (1995)) and
+  `Jorgensen_EE2.pdf` (Christiansen, Koch, Jørgensen, "Perturbative
+  triple excitation corrections to CCSD excitation energies," *J.
+  Chem. Phys.* **105**, 1451 (1996)). Either of these two is usable
+  as a secondary citation for the CC-response lineage if the primary
+  1990 paper's PDF is never tracked down.
+
+---
+
+## SESSION 2026-08-16 (night) -- CORRECTION (Ajith): the whole "true tensor is exactly symmetric" premise was wrong; only full CI/variational methods guarantee exact symmetry -- CALCQUAD1's regression (7.6% -> 34.5%) is still the real bug (SUPERSEDED, see entry above)
+
+Ajith corrected the framing of every entry below that treated "exact
+symmetry" as the ground-truth target: **CI-LIKE and LINEAR
+(IEOMPROP=0/1) are both approximations to QUADRATIC (IEOMPROP=2);
+"LR" is later-generation terminology, and it was subsequently proven
+that ACES2's QUADRATIC construction *is* LR.** CI-like can even look
+*more* symmetric than quadratic by construction, coincidentally, and
+that means nothing about correctness. **Only full CI or a genuinely
+variational method gives an exactly symmetric response tensor** --
+truncated CC-LR (quadratic), even implemented perfectly, is not
+expected to be exactly symmetric either, just much closer than the
+cruder CI-like/LINEAR approximations it improves on.
+
+This retracts the framing (not just the NWChem numbers, see the entry
+directly below) of several earlier entries this session: the PySCF
+`ci_like_vs_lr_polarizability.py` pilot's docstring claim that the
+Lambda-relaxed "LR" construction is *guaranteed exactly symmetric* by
+Schwarz's theorem regardless of CC truncation level is not the right
+standard to hold ACES2's CALCQUAD1 to. Do not cite that pilot, or the
+now-retracted NWChem numbers, as proof that "the true answer is
+exactly symmetric" in the manuscript or in future debugging framing.
+
+**What survives this correction, unchanged**: the concrete,
+tractable bug. CALCQUAD1 was found to make the alpha_xy/alpha_yx
+asymmetry go from ~7.6% (CI-like, IEOMPROP=0) to ~34.5%
+(IEOMPROP=2/QUADRATIC) on the same distorted-H2O dipole case -- a
+~5x regression, reproduced independently on two separate test cases
+(the ACES2-native dipole case and scrnc's own AO-pair case, see
+entries below). Since QUADRATIC is supposed to be the *better*
+approximation (closer to LR/closer to full-CI-level symmetry, per
+Ajith's correction above), it making things dramatically worse is
+still strong evidence of a genuine implementation bug in
+`CALCQUAD1` -- that conclusion does not depend on "the true tensor is
+exactly symmetric" being true. A truncation-level residual asymmetry
+would be expected to shrink or stay flat going CI-like -> QUADRATIC,
+not grow 5x.
+
+**Resume point, concretely**: proceed to the already-identified next
+step -- read `vcceh/calcquad1.F` in full and trace why it produces a
+LARGER off-diagonal gap than the cruder CI-like construction it's
+supposed to improve on, using the saved `vcceh_run.out` matrices
+(both CI-like and CALCQUAD1, full off-diagonal + diagonal) as
+reference data. The isotropic/diagonal cross-check against NWChem
+(CALCQUAD1 trace matches NWChem to ~0.001%, CI-like trace off by
+~9.4%, see two entries below) is unaffected by this correction and
+still stands as independently-computed, valid evidence that
+CALCQUAD1's diagonal/trace physics is basically right -- it's
+specifically the off-diagonal construction that's broken.
+
+**Deeper why, from Ajith, this session -- the real defect in CI-like
+is size-extensivity, not tensor symmetry per se**: symmetry was
+always a downstream SYMPTOM, not the actual defining flaw. The
+EOM-CC property formulation built from L and R vectors (Stanton &
+Bartlett's EOM-CC framework, "CI-like" in ACES2's naming) is not
+size-extensive -- a strict requirement of proper CC theory. Perera &
+Nooijen identified that the L/R-vector EOM construction is MISSING A
+QUADRATIC TERM, and derived the correction for it (this is the origin
+of `CALCQUAD1`/IEOMPROP=2, "the Perera-Nooijen quadratic
+correction"). Koch & Jorgensen independently reached an equivalent
+construction from a completely different starting point -- the CC
+response-theory/Lagrangian viewpoint, which is where "LR" terminology
+comes from -- confirming from the outside that ACES2's quadratic
+correction and later-generation "linear response" theory are the same
+underlying physics. **Citations to use for the manuscript's
+theory-background section**: Stanton & Bartlett (EOM-CC formulation),
+Perera & Nooijen (quadratic correction / size-extensivity fix), Koch &
+Jorgensen (independent CC-response-theory derivation of the same
+result) -- exact citation details (year/journal) not yet pulled, do
+that before drafting that section.
+
+---
+
+## SESSION 2026-08-16 (evening, continued yet further) -- CORRECTION (Ajith): NWChem's "exact off-diagonal symmetry" was a code artifact, NOT independent evidence -- retracted; diagonal/isotropic finding still stands
+
+Ajith pushed back on the "NWChem independently confirms the true
+CCSD-LR tensor is exactly symmetric" claim two entries below: "I do
+not think off diagonal wrong. NWchem might have symmetrized the
+tensor to match with physics." Checked the actual NWChem TCE source
+(`/dist/apps/nwchem/7.2.3/src/tce/ccsd_lr_alpha.F`) instead of taking
+the printed output at face value -- he was right, I was wrong.
+
+The main compute loop (`ccsd_lr_alpha.F:387-388`):
+```fortran
+do axisA = 1, 3
+  do axisB = 1, axisA        ! only axisB <= axisA ever computed!
+```
+NWChem's TCE-LR module only ever computes ONE triangle of the tensor
+(lower triangle including diagonal). It NEVER independently evaluates
+the `axisB > axisA` elements. The "full" matrix used for
+diagonalization is then built by literally mirroring
+(`ccsd_lr_alpha.F:519-524`):
+```fortran
+do i = 1, 3
+  do j = 1, i
+    alphacopy(i,j)=alpha(i,j)
+    alphacopy(j,i)=alpha(i,j)   ! same value copied into the transpose slot
+  enddo
+enddo
+```
+and the print statement (lines 541-546) reuses the single stored
+`alpha(2,1)` value for BOTH printed off-diagonal positions. So what
+the entry below reported as "alpha_XZ = alpha_ZX to 7 digits,
+independent confirmation of symmetry" was NWChem printing the exact
+same stored number twice -- not an independent numerical check.
+This is a legitimate performance optimization on NWChem's part
+(exploiting that a properly Lagrangian-relaxed CC linear-response
+tensor IS provably symmetric via Schwarz's theorem on mixed partial
+derivatives of a stationary functional -- see the PySCF pilot
+docstring, `scrnc/independent_pilot/ci_like_vs_lr_polarizability.py`),
+but it means NWChem's off-diagonal numbers carry ZERO independent
+evidentiary weight for the ACES2 asymmetry question. **Retracted**:
+"THIRD independent line of evidence... exactly symmetric" (entry
+below). The only genuine independent evidence that a fully-relaxed
+CC-LR construction gives symmetric alpha_xy/alpha_yx remains the
+earlier PySCF pilot script, which actually re-solves Lambda
+independently at each perturbed field (no symmetry assumed anywhere
+in that code).
+
+**What still stands, unaffected by this correction**: the DIAGONAL
+elements (`axisA.eq.axisB` branch, line 434-435: `alpha2=alpha1`) ARE
+genuinely, independently computed in NWChem -- that branch is a
+different, legitimate simplification (a diagonal element is trivially
+self-referential: computing "response of mu_i to F_i" only ever needs
+one direction, there's no second independent quantity to compare it
+against, unlike i!=j where two genuinely different quantities
+alpha_ij and alpha_ji COULD in principle disagree and NWChem's code
+just never checks). So the isotropic/trace comparison from the entry
+below is still valid, independently-computed cross-code evidence:
+NWChem isotropic 2.6612454 au vs ACES2 CALCQUAD1 isotropic 2.661279 au
+(~0.001% agreement) vs ACES2 CI-like isotropic 2.912252 au (~9.4% off).
+
+**Where this leaves the investigation**: the "CALCQUAD1's diagonal is
+right, bug is isolated to the off-diagonal construction" conclusion
+(entry below) still holds -- it was derived from the isotropic/trace
+comparison, which is unaffected by this correction. But the framing
+of NWChem as a third independent code proving the TRUE tensor is
+symmetric is gone; that claim now rests on the PySCF pilot and the
+Schwarz-theorem argument alone, not on this NWChem run. Do not cite
+the NWChem off-diagonal numbers as evidence in the manuscript.
+
+---
+
+## SESSION 2026-08-16 (evening, continued even further) -- CALCQUAD1's ISOTROPIC (trace) polarizability matches NWChem to ~0.001%; CI-like's is off by ~9.4% -- bug narrows to the off-diagonal construction specifically
+
+Ajith asked whether the diagonal elements are identical (pre- vs
+post-`Symmet2`, within the CALCQUAD1/quadratic result). Ran ACES2's
+own `xvcceh` directly (NOT `xscrnc`) to get real numbers instead of
+guessing: flipped the `if(.false.)` debug print at
+`aces2/vcceh/secprp.F:474` to `.true.` (temporary, uncommitted, same
+as before), rebuilt+installed `xvcceh` (md5-verified fresh), and ran
+a plain `xaces2` job in `/home/perera/nwchem_scrnc_crosscheck/
+aces2_vcceh_run/` with `SYMMETRY=OFF, BASIS=STO-3G, REF=UHF,
+CALC=CCSD, PROPS=EOM_NLO, EOMPROP=QUADRATIC`, same distorted
+geometry (R1=0.957, R2=1.05, A=104.5) as the NWChem cross-check
+above. `_DEBUG_LVL0` is already on by default in this build
+(`GNUmakefile.src`), so the "CI-LIke Pol. matrix" print fired too --
+got BOTH full matrices in one run, saved to `vcceh_run.out`:
+```
+ CI-LIke Pol. matrix
+ ROW 1   6.03267129332  -0.01893062086   0.00000000000
+ ROW 2  -0.03111777202   2.65062243908   0.00000000000
+ ROW 3   0.00000000000   0.00000000000   0.05346127221
+
+ Quadratic contribution, ifreq 1
+   1   5.590835  -0.073442   0.000000
+   2  -0.103871   2.340853   0.000000
+   3   0.000000   0.000000   0.052150
+
+ Molecular Polarizabilities (post-Symmet2)
+   1   5.590835  -0.088657   0.000000
+   2  -0.088657   2.340853   0.000000
+   3   0.000000   0.000000   0.052150
+```
+Confirms the trivial fact directly: `Symmet2` leaves the diagonal
+completely untouched (pre- and post- CALCQUAD1 diagonal identical,
+5.590835/2.340853/0.052150 both times) -- it only averages the (1,2)
+and (2,1) off-diagonal pair. Diagonal DOES differ between CI-like and
+CALCQUAD1 themselves (6.03267/2.65062/0.05346 vs
+5.590835/2.340853/0.052150) -- CALCQUAD1 is not a no-op on the
+diagonal, it's a real correction there too.
+
+**New, more decisive finding**: the polarizability tensor's trace
+(3x isotropic value) is orientation-invariant, so it's a valid
+apples-to-apples cross-code check regardless of ACES2 vs NWChem axis
+convention differences. Comparing:
+- NWChem TCE-CCSD-LR isotropic (its own printed value) = **2.6612454** au
+- ACES2 CALCQUAD1 isotropic = (5.590835+2.340853+0.052150)/3 = **2.661279** au -- agrees with NWChem to ~0.001% (diff 0.000034)
+- ACES2 CI-like isotropic = (6.03267129332+2.65062243908+0.05346127221)/3 = **2.912252** au -- off from NWChem by ~9.4%
+
+**Implication**: CALCQUAD1's diagonal/trace-level physics is
+essentially CORRECT (matches the independent NWChem reference almost
+exactly), while CI-like's is not. This narrows the bug: CALCQUAD1 is
+NOT globally broken -- its isotropic/diagonal contribution is right,
+and the "makes asymmetry worse" failure mode from the entry below is
+specifically an OFF-DIAGONAL (cross-term, i != j) construction bug.
+This is a much more tractable target for the planned
+`vcceh/calcquad1.F` read-through than "the whole routine is wrong."
+
+**Not yet done**: same as before -- read `vcceh/calcquad1.F` in full,
+now specifically focused on how it builds/combines the i!=j terms
+differently from i==j, using this run's saved `vcceh_run.out` (full
+matrices, both CI-like and CALCQUAD1, diagonal AND off-diagonal) as
+the reference data. Also revert the `secprp.F` debug-print edit and
+rebuild `xvcceh` back to clean before moving on (temporary/uncommitted,
+same convention as prior sessions -- do this before ending the
+session if not already done).
+
+---
+
+## SESSION 2026-08-16 (evening, continued further) -- NWChem independent cross-check now WORKING; off-diagonal "exact symmetry" claim below is CORRECTED/RETRACTED by the entry above (code only computes one triangle) -- diagonal/isotropic numbers still valid
+
+Set up an independent third-code cross-check in
+`/home/perera/nwchem_scrnc_crosscheck/` (NWChem 7.2.3 on HPG, module
+`intel/2025.1.0 openmpi/5.0.7 nwchem/7.2.3`): `h2o_ccsd_lr.nw` runs
+UHF/STO-3G CCSD static dipole polarizability via
+`tce ccsd` + `set tce:lineresp T`, on the exact same distorted H2O
+geometry (R1=0.957, R2=1.05 Angstrom, A=104.5) as ACES2's
+`h2o_ccsd_polar_check_asym_quad2` case referenced in the entry above.
+
+Hit and fixed FOUR unrelated infrastructure bugs to get it running
+(all in `/home/perera/nwchem_scrnc_crosscheck/`, not physics bugs):
+1. `NWCHEM_BASIS_LIBRARY` (module-set) pointed at a path that doesn't
+   exist on HPG compute nodes (only resolves on login/interactive
+   nodes) -- fixed by `cp`ing the real `sto-3g` file from
+   `/dist/apps/nwchem/7.2.3/src/basis/libraries/sto-3g` into a local
+   `basis_lib/` and exporting `NWCHEM_BASIS_LIBRARY=.../basis_lib/`
+   (trailing slash) in the sbatch scripts before `mpirun`. (Passing an
+   absolute path directly to `library` in the `.nw` basis block does
+   NOT work -- NWChem mangles `/` to `_` and treats the whole string
+   as a lookup tag against the compiled-in default dir.)
+2. `noorient` is not a real NWChem geometry keyword (valid ones:
+   `nocenter`/`noautoz`/`noautosym`) -- NWChem silently misparsed it
+   as the geometry's *name* instead of a flag, leaving the
+   default-named geometry object empty -> `scf_init: no geometry`.
+   Fixed by removing it (`symmetry c1` already disables autosym).
+3. `run.sbatch` had `--ntasks=4` with no `--nodes`, so Slurm spread
+   the 4 MPI ranks across 3 separate nodes and the job died instantly
+   (0-byte output, exit 250) -- fixed with `--nodes=1
+   --ntasks-per-node=4` to match the working minimal-test layout.
+4. The `tce` block's `2eorb` keyword requires an RHF/ROHF reference
+   (`tce_init: 2eorb needs RHF/ROHF ref.`) and is incompatible with
+   the UHF reference this case needs -- removed it.
+
+**Result, decisive**: with all four fixed, the job runs clean end to
+end (UHF SCF converges to -74.959514194573 Ha, CCSD-LR converges in
+20 iterations). Because the `.nw` geometry was given as literal
+Cartesian coordinates with `nocenter noautoz` (no reorientation), the
+molecule sits in NWChem's XZ-plane, making Y the out-of-plane axis --
+so the XY/YX couplings are trivially zero by molecular symmetry and
+NOT the informative pair (this is why the printed tensor shows
+Y-row/Y-column all zero). The physically meaningful off-diagonal pair
+for this orientation is XZ/ZX, and NWChem gives:
+```
+ X            3.9236260     -0.0000000      1.6268696
+ Y           -0.0000000      0.0521562     -0.0000000
+ Z            1.6268696     -0.0000000      4.0079540
+```
+i.e. **alpha_XZ = alpha_ZX = 1.6268696 bohr^3, identical to all 7
+displayed digits** -- exactly symmetric, no fix-up/Symmet2-equivalent
+step needed anywhere in NWChem's TCE-LR pipeline.
+
+Compare to ACES2 on the equivalent geometry (previous entries):
+- IEOMPROP=0 (CI-like): alpha_xy=-0.01893, alpha_yx=-0.03112 (~49% relative asymmetry)
+- IEOMPROP=2/CALCQUAD1: alpha_xy=-0.073442, alpha_yx=-0.103871 (~34.5% asymmetry, WORSE)
+- NWChem TCE-CCSD-LR (independent code, this entry): exactly symmetric
+
+This is now a THIRD independent line of evidence (after the earlier
+PySCF pilot, which confirmed the exact CCSD response function is
+symmetric) that the true CCSD linear-response polarizability tensor
+IS symmetric, and that BOTH of ACES2's schemes (baseline CI-like
+*and* CALCQUAD1) have a genuine implementation bug in ACES2's own
+oprbar/Lineqy/CALCQUAD1 machinery -- not an accepted/expected
+characteristic of the CI-like formalism. The open question from the
+entry above ("is the pre-Symmet2 asymmetry already-known/accepted
+physics?") is now answered: no, it is not accepted physics, it is a
+bug, and a real one worth chasing down for the manuscript.
+
+**Not yet done**: run the h2o_ccsd_lr.nw case a second time with the
+geometry reoriented (or added noautoz/nocenter removed) so the
+in-plane axes land on X/Y instead of X/Z, to get a literal
+alpha_xy/alpha_yx pair directly comparable to ACES2's own printed
+labels (cosmetic only, not expected to change the conclusion). Then
+return to the original plan: read `vcceh/calcquad1.F` in full and
+start the backward-trace/instrumented-checksum methodology against
+this now-working NWChem reference.
+
+---
+
 ## SESSION 2026-08-16 (evening, continued) -- CORRECTION: EOMPROP=QUADRATIC IS reachable (Ajith); Calcquad1 itself confirmed buggy, makes asymmetry WORSE not better (RESUME HERE)
 
 Ajith corrected the previous entry's "IEOMPROP=2 is unreachable"
