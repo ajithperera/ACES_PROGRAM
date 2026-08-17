@@ -232,8 +232,67 @@ This needs a real decision, not a solo one.
   equilibrium, STO-3G/DZ. No stress test yet against anything a
   manuscript reviewer would call "a real molecule."
 
+## 12. Internal comparison: CC-level vs dRPA-level screening (2026-08-17, same session)
+
+Ajith's question after reading a first draft of this document: "do we
+have something novel to add?" His own answer, and the reason the
+ring-CC path exists at all: since ring-CC (RCCD/DRCCD) IS RPA,
+reformulated through the exact same CC-response machinery that builds
+CCSD-level W(omega), the cleanest test of whether genuine CCSD-level
+screening changes anything is entirely INTERNAL to scrnc -- run the
+identical downstream Sigma_c/Pade/QP pipeline on the identical
+geometry/basis, changing only `CALC=DRCCD` vs `CALC=CCSD` in the ZMAT.
+
+First running the CCSD path through the sigma-driver chain surfaced
+one more bug (fixed): the driver re-ran `xjoda...xscrnc` fresh each
+frequency node but never deleted the previous node's leftover
+generated files first, and `xjoda` doesn't fully reset every record-
+container file (e.g. `MOABCD`) the CCSD linear-response path writes
+dynamic list records into between separate `xscrnc` invocations in one
+directory -- crashed with "List (1,127) does not exist" on node 2,
+every time. Fixed by explicitly clearing generated files back to
+ZMAT/GENBAS/the driver's own control files at the top of each node's
+loop (still the same single shared working directory). Verified no
+regression: the already-working DRCCD path reran bit-identical.
+
+**Result** (H2O/STO-3G, identical geometry and sigma-driver settings,
+N=4, Omega_c=1.0, Nomega=6 -- only CALC differs):
+
+    p     eps_HF   dRPA corr   CCSD corr   diff
+    1  -20.24174     -26.35m     -32.66m   -0.172 eV
+    2   -1.26854       9.58m      19.91m   +0.281 eV
+    3   -0.61801       3.65m       7.56m   +0.106 eV
+    4   -0.45307       1.15m      -0.50m   -0.045 eV  (sign flip)
+    5   -0.39127      -2.52m      -7.68m   -0.140 eV
+    6    0.60591      -3.63m      -7.78m   -0.113 eV
+    7    0.74258      -9.88m     -21.96m   -0.329 eV
+
+("corr" = eps_QP - eps_HF, the QP correction itself; diff = CCSD corr
+minus dRPA corr; m = milliHartree.)
+
+Real, non-trivial differences -- up to 0.33 eV (MO 7), several times
+the ~0.1-0.2 eV bar typically used for "good agreement" in GW100-style
+benchmark comparisons, with MO 4's correction even flipping sign
+between the two screening levels. Genuine CCSD-level dynamical
+screening is not a small perturbative correction relative to RPA here,
+at least for this toy system.
+
+**What this does and does not establish, stated plainly**: strong
+evidence the CC-response screening construction captures physics plain
+RPA misses, and that it propagates through to chemically/
+spectroscopically meaningful QP shifts -- real groundwork for a
+novelty claim. It does NOT yet establish which screening level is more
+ACCURATE (no comparison against CCSD(T) IPs, experiment, or GW100-
+style references attempted yet) -- that comparison, plus resolving the
+Section 11 Padé robustness gap so the comparison can be trusted beyond
+STO-3G-scale toy systems, is the natural next check before treating
+this as manuscript evidence.
+
+See `SCRNC_DEBUG_LOG.md` "continued 14" for the full technical
+writeup.
+
 ---
 
 Source: `aces2/scrnc/scrnc_sigma_prep.F`, `scrnc_sigma_driver.F`.
-Log: `SCRNC_DEBUG_LOG.md`, "continued 10" through "continued 13".
-Commits: 548bed40, 30e1bf1c, ab6774ab, a4714a87, 742e0d66.
+Log: `SCRNC_DEBUG_LOG.md`, "continued 10" through "continued 14".
+Commits: 548bed40, 30e1bf1c, ab6774ab, a4714a87, 742e0d66, 754a3352.
