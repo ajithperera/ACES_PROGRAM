@@ -6,7 +6,83 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
-## SESSION 2026-08-17 (continued 12) -- full sigma-driver chain (orchestration + W_c reduction + Pade + QP solve) verified on H2O/STO-3G/DRCCD, not just H2 (RESUME HERE)
+## SESSION 2026-08-17 (continued 13) -- larger-basis (H2O/DZ) check: core-machinery clean, but surfaces a REAL Pade-robustness gap (2 of 14 MOs fail to converge) -- NOT silently patched, flagged for discussion (RESUME HERE)
+
+Per Ajith's "check everything with large basis" instruction. Built a
+NEW H2O/DZ ZMAT (`h2o_scrnc_sigma_debug_dz`) rather than reusing the
+pre-existing `h2o_scrnc_drccd_uhf_dz` test dir -- that one uses
+`sym=on` and no `CC_EXTRAP=OFF`, settings never exercised through this
+session's sigma-driver code path, so reusing it would have confounded
+"does the basis-size scale-up work" with "does a different symmetry/
+extrapolation setting work". New ZMAT matches the already-verified
+H2O/STO-3G run's flags exactly (`sym=off, CC_EXTRAP=OFF,
+DENSITY=RESPONSE, REF=UHF`), only `BASIS=DZ` changed -- confirmed
+`H:DZ`/`O:DZ` present in GENBAS. Nao=14 (`Nao_pairs=196`, confirmed via
+pipeline's own "number of ao pairs" printout), Nmo=14 -- 2x the AO/MO
+count of every prior test.
+
+**Core machinery: clean, no regressions.** Same `N=4, Omega_c=1.0,
+Nomega=6` settings as the H2O/STO-3G run. Exit 0.
+`Scrnc_sigma_bare_ao` symmetry check exactly `0.0` at all 4 nodes;
+`Scrnc_wc_ao2mo_bfcheck` regression check `3.6D-14` to `6.5D-14` at all
+4 nodes (larger than the 7-MO case's `~1D-14` but still comfortably
+machine-precision-clean, expected growth with matrix size) -- the AO2MO
+transform, bare-v subtraction, and frequency-orchestration machinery
+all scale to 2x the basis with no code changes and no correctness
+regression.
+
+**QP solve: 12 of 14 MOs converged cleanly** (4-12 iterations,
+well-behaved corrections of a few hundredths of a Hartree, same
+qualitative pattern as every prior run). **2 of 14 (p=1, p=7) hit the
+50-iteration cap without converging** -- investigated rather than
+ignored or silently patched:
+- `p=1` (O 1s core, `eps_HF=-20.559`): `Sigma_c(1,1;i*omega)` on the
+  fitted `omega in [0,1.5]` grid is small and nearly flat
+  (`Re` ranges only `-9.396D-3` to `-9.281D-3` across all 6 points) --
+  evaluating the resulting Pade rational approximant at the on-shell
+  point `z=eps_HF=-20.559`, roughly 14x past the edge of the fitted
+  domain, is a genuine Pade EXTRAPOLATION-DOMAIN VIOLATION, not a bug
+  in the continuation algorithm itself (already validated exact to
+  `~1D-15` against a known analytic function in "continued 11", but
+  only tested there for evaluation points near/inside the fitted
+  domain). Result came out wildly different in scale from every other
+  MO (`eps_QP=-19.58`, a ~1 Hartree shift vs `~0.01-0.06` Hartree for
+  every valence/virtual MO) with a spurious NEGATIVE `Im[Sigma_c]`
+  (unphysical for occupied-state removal energies in this convention --
+  every converged MO has positive `Im[Sigma_c]`) -- both symptoms
+  consistent with a spurious near-pole of the fitted rational function
+  lying between the sampled domain and `z=-20.559`, not a real physical
+  result.
+- `p=7` (`eps_HF=0.311`, WELL INSIDE the fitted `[0,1.5]` domain --
+  not an extrapolation issue): `Sigma_c(7,7;i*omega)`'s real part
+  drops by ~8x between the first two sample points
+  (`1.443D-3` at `omega=0` -> `1.832D-4` at `omega=0.3`) then stays
+  flat (`~1-2D-4`) for the rest -- this sharp early kink in only 6
+  sampled points is exactly the kind of feature a low-order Thiele
+  fit can represent with a spurious pole landing close to the real
+  axis near `z~0.3`, destabilizing the fixed-point iteration even
+  in-domain. Also produced a spurious negative `Im[Sigma_c]`.
+
+**Deliberately NOT patched with iteration damping**: damping (mixing
+the fixed-point update) would very likely make both cases LOOK
+converged, but would not fix an underlying bad Pade extrapolation --
+it would just converge smoothly to a still-untrustworthy number. The
+real fix needs a numerical-methods decision (wider/better-scaled
+`Omega_ext` sampling per orbital-energy scale, higher Pade order more
+points, an explicit domain-of-validity check that flags/excludes
+QP corrections requested far outside the fitted imaginary-axis range,
+or some combination) -- exactly the kind of call to raise with Ajith
+rather than deciding alone. Left open, written up in the new equations
+doc (`SCRNC_SIGMA_C_EQUATIONS.md`, this session) for discussion.
+
+**Committed**: this log entry; DZ debug artifacts (small text outputs
+only) under `aces2/scrnc/sigma_debug_archive/h2o_dz_*`. Full pipeline
+directory left on disk, not committed:
+`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_sigma_debug_dz/`.
+
+---
+
+## SESSION 2026-08-17 (continued 12) -- full sigma-driver chain (orchestration + W_c reduction + Pade + QP solve) verified on H2O/STO-3G/DRCCD, not just H2
 
 Ran the exact same `xscrncsigma` chain ("continued 10"/"continued 11")
 unmodified on a second, larger test system -- same incremental-
