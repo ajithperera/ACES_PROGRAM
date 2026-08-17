@@ -532,5 +532,16 @@ C
       Call Scrnc_wc_ao2mo_test(Work(I000),Memleft,Iuhf,
      +                         Work(Ijj_lrspn_bgn),Nao_pairs)
 
+C Imaginary-frequency quadrature grid for the Sigma_c(i*omega) contour-
+C deformation integral (Ajith, 2026-08-17: Gauss-Legendre + rational map
+C to [0,Infinity), over a minimax grid -- see Scrnc_freq_grid.F's header
+C comment). Pure-numerics self-check against closed-form integrals,
+C genuinely optional (unlike the AO2MO transform above), so
+C 1-gated like Scrnc_bcktran_test.F. NOT yet used to drive the
+C actual per-frequency-point pipeline runs / Sigma_c accumulation --
+C that orchestration is the next step, see SCRNC_DEBUG_LOG.md.
+C
+      Call Scrnc_freq_grid_test
+
       RETURN
       END

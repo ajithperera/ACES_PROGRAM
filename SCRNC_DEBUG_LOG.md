@@ -6,6 +6,77 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
+## SESSION 2026-08-17 (continued 9) -- frequency quadrature grid implemented and verified (Gauss-Legendre + rational map to [0,Infinity)); NOT yet wired to drive per-frequency pipeline runs / Sigma_c accumulation (RESUME HERE)
+
+Next roadmap item after the AO2MO transform fix (continued 8, below):
+the frequency quadrature grid for the contour-deformation Sigma_c(i*
+omega) integral, previously flagged "not yet researched/decided"
+(continued 5 entry). Ajith's call, asked directly: Gauss-Legendre with
+a rational map to [0,Infinity), over a minimax grid (minimax needs
+external tabulated points/weights this codebase doesn't have; GL+map is
+simple, no new dependency, fits this project's whole correctness-first
+approach so far).
+
+Found `aces2/vdint/gaussl.f` already has a working Gauss-Legendre root/
+weight finder (`GAUSSL(X1,X2,N,X,W)`, Numerical-Recipes-derived, JG
+4/93) -- reused it rather than writing one from scratch. Per Ajith's
+Fortran-typing correction earlier this session
+([[feedback_aces_fortran_implicit_typing]]): no explicit Integer*8
+anywhere in the new code, plain implicit typing throughout, matching
+this file's own convention.
+
+New files: `scrnc_freq_grid.F` (`Scrnc_freq_grid(N,Omega_c,Xnode,
+Wnode)` -- builds the N-point [0,Infinity) grid via `omega'=Omega_c*
+(1+x)/(1-x)` applied to GL's native [-1,1] nodes, with the matching
+Jacobian on the weights; `Scrnc_gaussl` is a local copy of
+`aces2/vdint/gaussl.f`'s routine, not a cross-module link -- same
+multiply-duplicated-per-module convention as SYMEXP/DODIIS elsewhere in
+this codebase, see GNUmakefile.src) and `scrnc_freq_grid_test.F`
+(`Scrnc_freq_grid_test`, `_DEBUG_LVL0`-gated like
+`Scrnc_bcktran_test.F` -- genuinely optional pure-numerics self-check,
+unlike the AO2MO transform which Ajith said must always run
+unconditionally). Wired into `Scrnc_driver.F` right after the AO2MO
+transform call.
+
+**Verified**: built clean via `gmake`/`gmake install` (matching the
+lesson from continued 7/8 -- always the real build system, never a
+hand-rolled compile), ran on the H2O/STO-3G/UHF/DRCCD case. Checked
+against two closed-form integrals at N=8,16,24 and Omega_c=0.5,2.0:
+`Integral 1/(1+omega**2) = Pi/2` converges to `1.7D-13` by N=24 (both
+Omega_c scales); `Integral Exp(-omega) = 1` converges more slowly
+(expected -- exponential decay is the harder case for a rational-map GL
+grid) but still monotonically, down to `4.1D-9` at N=24,Omega_c=2.0.
+Both integrals converge cleanly with increasing N at both Omega_c
+scales -- no bugs, grid is correct. Also reran the AO2MO
+`Scrnc_wc_ao2mo_bfcheck` in the same run to confirm no regression:
+still `max|brute force - fast| = 1.065814D-14`, unchanged.
+
+**Not yet done**: this grid is NOT yet used to actually drive anything
+-- no code yet loops over `Xnode(1..N)`, runs the pipeline (or the
+relevant sub-piece) at each imaginary frequency, collects `Wc_mo` at
+each point, and accumulates the `Sigma_c(p,q)` sum with the GL weights
+and the `1/(i*omega+i*omega'-eps_m)` denominator. Investigated how
+multi-frequency runs work in this codebase first: `scrnc_main.F` calls
+`Scrnc_driver` exactly ONCE per `xscrnc` invocation (no outer loop);
+frequencies are read from a `"frequency"` file
+(`Scrnc_set_vars.F:59-76`: `No_Freqs`, a real/imaginary flag, then
+`No_Freqs` frequency values into the `Xfreq(200)`/`Freqinfo` common) --
+but only the LAST-read value populates the scalar `Freq` actually
+consumed downstream; `Xfreq`/`No_freqs` don't appear to be looped over
+anywhere else in this module. So the working assumption (not yet
+confirmed against how the earlier 2026-08-16 imaginary-axis W(omega)
+validation was actually driven) is: multi-frequency point-by-point runs
+happen via EXTERNAL orchestration (write a `"frequency"` file with a
+single imaginary `Freq` value, run the full `xjoda...xscrnc` chain,
+repeat per point) -- not an internal Fortran loop. Next step: confirm
+this against how the 2026-08-16 dynamic-omega H2/H2O validation runs
+were actually driven (check old pipeline.log/test-dir provenance for a
+driving script), then build the actual per-point orchestration +
+Sigma_c(p,q) accumulation on top of `Scrnc_freq_grid`'s nodes/weights
+and the now-fixed `Scrnc_wc_ao2mo`.
+
+---
+
 ## SESSION 2026-08-17 (continued 8) -- ROOT CAUSE FOUND AND FIXED: Jj_lrespn was implicitly Integer*8, not Double Precision (classic Fortran I-N implicit-typing trap on a name starting with 'J'); AO2MO transform now verified to machine precision and wired in unconditionally (CLOSED)
 
 Used gdb (hardware watchpoints + direct DWARF address-of, both cross-
