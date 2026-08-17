@@ -6,7 +6,70 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
-## SESSION 2026-08-17 (continued 11) -- Pade continuation (imaginary->real axis) + on-shell QP equation solve built and verified end-to-end (RESUME HERE)
+## SESSION 2026-08-17 (continued 12) -- full sigma-driver chain (orchestration + W_c reduction + Pade + QP solve) verified on H2O/STO-3G/DRCCD, not just H2 (RESUME HERE)
+
+Ran the exact same `xscrncsigma` chain ("continued 10"/"continued 11")
+unmodified on a second, larger test system -- same incremental-
+verification-first pattern as every other piece of this project (H2
+first, then H2O), per "continued 11"'s own flagged open item.
+
+Setup: fresh `/blue/ufhpc/perera/scrnc_test/h2o_scrnc_sigma_debug/`,
+`ZMAT`/`GENBAS` seeded from the already-validated
+`h2o_scrnc_drccd_uhf_sto3g` (7 AOs/7 MOs, STO-3G), same
+`sigma_input`/`pipeline_cmds` as the H2 `Nomega=6` run (`N=4,
+Omega_c=1.0`).
+
+**Result**: exit 0. A `file` check on the captured log showed it as
+"data" (binary) rather than "text" -- turned out to be harmless
+(some subprocess mixes non-text bytes into stdout somewhere in the
+pipeline; `grep -a` recovers plain-text matching fine) but is worth
+remembering next time a `grep` on one of these logs comes back
+suspiciously empty.
+- `Scrnc_sigma_bare_ao` symmetry self-check: exactly `0.0` at all 4
+  nodes (same as H2).
+- `Scrnc_wc_ao2mo_bfcheck` (pre-existing AO2MO regression check):
+  `4.4D-15` to `1.1D-14` at all 4 nodes -- clean, no regression, and
+  properly exercised on a non-trivial 7x7 MO case (H2's own 2x2 case
+  is nearly too small to stress-test the block-Xgemm transform
+  machinery).
+- `qp_energies.dat`, all 7 MOs converged (4-12 iterations, well under
+  the 50-iteration cap):
+  ```
+    p      eps_HF          eps_QP       Im[Sigma_c(eps_QP)]   iters  converged
+    1   -2.024174D+01   -2.026809D+01    1.425449D-02     4       1
+    2   -1.268536D+00   -1.258960D+00    2.173615D-02     5       1
+    3   -6.180077D-01   -6.143544D-01    1.387520D-02     5       1
+    4   -4.530670D-01   -4.519204D-01    4.198156D-02    10       1
+    5   -3.912734D-01   -3.937945D-01    5.288300D-02    12       1
+    6    6.059097D-01    6.022754D-01    1.504180D-02     5       1
+    7    7.425789D-01    7.326967D-01    1.772998D-02     6       1
+  ```
+  Physically sensible: MO 1 (O 1s core) barely perturbed by valence
+  correlation (small, expected); valence MOs 2-5 shift by a few
+  hundredths of a Hartree; virtuals 6-7 shift down slightly (narrowing
+  gap, same qualitative direction as H2); all `Im[Sigma_c]` positive
+  and reasonable-magnitude on-shell broadenings, no wild outliers or
+  non-convergence.
+
+**Verdict**: the full chain (external per-point orchestration -> bare-v
+subtraction -> MO reduction -> Sigma_c accumulation -> Pade continuation
+-> QP solve) is no longer H2-only -- confirmed working end-to-end on a
+second, structurally different (lower symmetry, more MOs, core+valence
+orbital spread) system with no code changes needed.
+
+**Not yet done**: same open items as "continued 11" (degenerate-orbital
+treatment, off-diagonal Sigma_c unused, Pade robustness under sparser/
+noisier data not stress-tested) -- none newly opened by this H2O run.
+
+**Committed**: this log entry; H2O debug artifacts (small text outputs
+only, same convention as the H2 archive) under
+`aces2/scrnc/sigma_debug_archive/h2o_*`. Full pipeline directory left
+on disk, not committed:
+`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_sigma_debug/`.
+
+---
+
+## SESSION 2026-08-17 (continued 11) -- Pade continuation (imaginary->real axis) + on-shell QP equation solve built and verified end-to-end
 
 Continuation of "continued 10" in the same session. Built the deferred
 piece flagged there: real-axis Pade continuation of `Sigma_c(p,p;i*omega)`
