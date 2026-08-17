@@ -286,6 +286,17 @@ C
       Call Scrnc_wc_ao2mo_test(Work(I000),Memleft,Iuhf,
      +                         Work(Ijj_lrspn_bgn),Nao_pairs)
 
+C Correlation-only W_c = W - v, reduced to Wc_reduced(p,q,m) =
+C Wc_mo(p,m,q,m), written to "wcreduc.dat" for the external
+C scrnc_sigma_driver orchestration to pick up after this pipeline pass
+C completes (Ajith, 2026-08-17: do the bare-Coulomb subtraction now,
+C not deferred -- see SCRNC_DEBUG_LOG.md). Always required for the
+C same reason the AO2MO transform above is unconditional -- not
+C _DEBUG_LVL0-gated.
+
+      Call Scrnc_sigma_prep(Work(I000),Memleft,Iuhf,
+     +                       Work(Ijj_lrspn_bgn),Nao_pairs)
+
 C Imaginary-frequency quadrature grid for the Sigma_c(i*omega) contour-
 C deformation integral (Ajith, 2026-08-17: Gauss-Legendre + rational map
 C to [0,Infinity), over a minimax grid -- see Scrnc_freq_grid.F's header

@@ -6,7 +6,154 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
-## SESSION 2026-08-17 (continued 9) -- frequency quadrature grid implemented and verified (Gauss-Legendre + rational map to [0,Infinity)); NOT yet wired to drive per-frequency pipeline runs / Sigma_c accumulation (RESUME HERE)
+## SESSION 2026-08-17 (continued 10) -- per-frequency-point orchestration + Sigma_c(p,q) accumulation built and verified end-to-end on H2/STO-3G/DRCCD debug case (RESUME HERE)
+
+Picked up right at "continued 9"'s resume point after a context reset.
+Confirmed its open question first: no saved driving script exists
+anywhere (`aces2/scrnc/`, `/blue/ufhpc/perera/scrnc_test/*/`, searched
+for `run_scrnc*`/`*scrnc*driv*`) -- prior dynamic-omega validation runs
+really were driven by hand, one point at a time (edit `frequency`,
+rerun the full `xjoda...xscrnc` chain, repeat), confirming that
+session's working assumption.
+
+**Design decisions (Ajith, this session)**:
+- Orchestration: external (not an internal Fortran loop inside
+  Scrnc_driver.F), reusing a SINGLE shared working directory across all
+  N frequency-point pipeline runs -- not a fresh subdirectory per point.
+- Language: Fortran, not shell/python -- a standalone external driver
+  program that spawns the existing, unmodified pipeline binaries as
+  subprocesses via the Fortran 2008 `EXECUTE_COMMAND_LINE` intrinsic.
+- Bare-Coulomb subtraction (`W_c = W - v`): do it now, not deferred --
+  needed for `Sigma_c` to be physically meaningful, not just a wiring
+  placeholder.
+- External evaluation frequency `omega` in `Sigma_c(p,q;i*omega)`:
+  `omega=0` for this session's debug/wiring pass; the real target is
+  a proper real-axis Pade-continuation frequency scan, deferred as its
+  own next step. The driver's architecture (see below) is built so that
+  scan can reuse the SAME N pipeline runs already cached in this
+  session's design -- no rearchitecture needed later, just populating
+  `sigma_input`'s `Omega_ext` list with more points.
+
+**New files**:
+- `scrnc_sigma_prep.F` (new, part of the normal `xscrnc` build, called
+  unconditionally from `Scrnc_driver.F` right after the existing
+  `Scrnc_wc_ao2mo_test` diagnostic call): builds the bare AO 2-electron
+  Coulomb matrix `Jj_bare` (via `Scrnc_get2ints`, the same routine
+  `scrnc_prep_2ints.F` uses to prep `List_xxxx`, re-indexed into
+  scrnc's own `Iao_pair=(Mu-1)*Nao+Nu` convention -- safe despite
+  `Scrnc_get2ints`'s own different internal `indx2` convention because
+  bare 2-electron AO integrals are already fully permutationally
+  symmetrized at that routine's own construction, confirmed by
+  inspection, not assumed), computes `Jj_corr = Jj_lrespn - Jj_bare`
+  in place (`W_c = W - v`, valid since the AO->MO transform is linear),
+  reuses the already-verified `Scrnc_wc_ao2mo` unchanged on `Jj_corr`,
+  reduces the result to `Wc_reduced(p,q,m) = Wc_mo(p,m,q,m)` (the
+  diagonal-in-second/fourth-index slice the self-energy formula
+  actually needs -- `Nmo**3` instead of the full `Nmo**4` tensor), and
+  writes `Wc_reduced` + the alpha-spin `SCFEVALA` orbital energies to a
+  plain formatted file `wcreduc.dat`. Alpha-spin only -- inherited
+  scope from `Scrnc_wc_ao2mo_test.F`, not a new decision.
+- `scrnc_sigma_driver.F` (new, standalone `PROGRAM`, deliberately NOT
+  linked into the normal ACES2/JOBARC-aware build -- compiled and
+  installed separately, see below): reads `sigma_input` (N, Omega_c,
+  Nomega, then Nomega external `Omega_ext` values) and `pipeline_cmds`
+  (one line, the shell command for one pipeline pass -- kept external/
+  path-agnostic so the SAME driver works for either the ring-CC or
+  CCSD pipeline chain without editing Fortran source). Builds the
+  quadrature grid via a local copy of `Scrnc_freq_grid`/`Scrnc_gaussl`
+  (same multiply-duplicated-per-module convention as the original).
+  Loops `K=1,N`: writes the `frequency` file for node `Xnode(K)`
+  (unsquared -- matches the existing `h2_scrnc_drccd_imagfreq_0.3`
+  convention, `Scrnc_driver.F` squares it internally), runs
+  `pipeline_cmds` via `EXECUTE_COMMAND_LINE`, checks the exit status,
+  reads back `wcreduc.dat`, and immediately folds node K's contribution
+  into the running `Sigma_c(p,q;i*Omega_ext(j))` accumulation for EVERY
+  requested `j` in one pass (only `Nmo**3` transient storage needed per
+  node, never all N nodes' `Wc_reduced` simultaneously) -- since the
+  expensive pipeline only depends on the inner quadrature frequency
+  `omega'`, while the outer evaluation frequency `omega` only enters
+  algebraically in the G0 denominator, exactly N pipeline runs suffice
+  regardless of how many external `omega` points are requested, ready
+  to support the deferred Pade-continuation scan without rearchitecture.
+  Writes `sigma_c_output.dat` (real+imaginary `Sigma_c(p,q)` per
+  requested `Omega_ext`).
+
+**Build**: `scrnc_sigma_prep.F` picked up automatically by the normal
+`gmake`/`gmake install` in `aces2/scrnc/` (wildcard-discovered like
+every other `.F` file there) -- confirmed it does NOT get pulled into
+the `xscrnc` binary's own duplicate-main hazard: `scrnc_sigma_driver.F`
+also compiles in that same pass (it's a `.F` file in the same
+directory) but its `PROGRAM` is never referenced by `scrnc_main`'s call
+graph, so the linker never pulls its object's `MAIN__` into `xscrnc` --
+confirmed via `md5sum`/size delta (only ~8KB growth, consistent with
+just `Scrnc_sigma_prep`'s own new code, not an entire duplicate
+program). `scrnc_sigma_driver` itself built separately, standalone, no
+ACES2 library linkage: `ifx -i8 -o scrnc_sigma_driver
+scrnc_sigma_driver.F`, installed as `aces2/bin/xscrncsigma` (new
+executable name, doesn't collide with `xscrnc`). Re-hit the
+`make`-vs-`make install` PATH trap ([[feedback_aces_build_install_trap]])
+immediately -- first plain `gmake` left the OLD `aces2/bin/xscrnc`
+untouched even though the local module-dir binary and `.o` files were
+fresh; `gmake install` was required to actually update
+`aces2/bin/xscrnc`, confirmed via `md5sum` matching between the local
+and installed copies afterward.
+
+**Verified end-to-end**, fresh directory
+(`/blue/ufhpc/perera/scrnc_test/h2_scrnc_sigma_debug/`, seeded from
+`h2_scrnc_drccd_uhf_sto3g`'s `ZMAT`/`GENBAS`, debug settings `N=4,
+Omega_c=1.0, Nomega=1, Omega_ext(1)=0.0`,
+`pipeline_cmds="xjoda;xvmol;xvmol2ja;xvprops;xvscf;xvtran;xintprc;
+xringcc;xringcl;xscrnc"`):
+- `xscrncsigma` ran all 4 subprocess pipeline passes and exited 0, no
+  manual intervention.
+- New `Scrnc_sigma_bare_ao` self-check: max bare-`v` AO-integral
+  asymmetry = exactly `0.0` at every node.
+- Pre-existing `Scrnc_wc_ao2mo_bfcheck` regression check unaffected:
+  still `~2.2D-16`, confirming `Scrnc_sigma_prep.F` didn't disturb the
+  already-verified AO2MO transform it reuses.
+- Free independent sanity check noticed in the pipeline's own existing
+  debug output: `Scrnc_get2ints`'s raw bare-AO-integral printout
+  (e.g. `(11|11)=0.774605825`) matches the already-printed "RPA JJ
+  matrix" (full `W`, e.g. `JJ(1,1)=0.77461131149`) to 5-6 significant
+  figures, with the residual difference (`~5.5D-6`) matching the
+  separately-printed "Response-only JJ matrix (before bare v added)"
+  matrix's own magnitude (`~5.5D-6`) almost exactly -- independent
+  confirmation, from data the pipeline was already printing for
+  unrelated reasons, that `W = v + (small correlation piece)` for this
+  system and that `Jj_bare`'s magnitude/convention is right, without
+  needing to add any new instrumentation to check it.
+- `sigma_c_output.dat`: `Sigma_c(p,q;i*0)` came out purely diagonal
+  (off-diagonal elements exactly `0.0`) -- correct qualitative
+  signature for H2/STO-3G's symmetric bonding/antibonding MO pair not
+  mixing under this system's symmetry. Diagonal magnitudes
+  (`Sigma_c(1,1)=7.95D-3 + 5.48D-3i`, `Sigma_c(2,2)=-8.44D-3 +
+  6.34D-3i`) are physically reasonable in scale for an STO-3G
+  correlation self-energy; nonzero imaginary part at `omega=0` is
+  expected (not a bug) -- the contour integral here runs one-sided over
+  `omega' in [0,Infinity)`, not symmetrized over `+/-omega'`, so there
+  is no structural reason for the imaginary part to cancel at this
+  stage (that would only happen after the real-axis analytic
+  continuation, not yet built).
+
+**Not yet done / next step**: the deferred real-axis Pade-continuation
+frequency scan (populate `sigma_input`'s `Omega_ext` list with a proper
+scan of points, fit `Sigma_c(p,q;i*omega_j)` to a Pade approximant, and
+continue to the real axis for the quasiparticle equation
+`eps_QP = eps_HF + Sigma_c(eps_QP) + Sigma_x - v_xc`-style solve) --
+this session's driver architecture is ready for that (see "only N
+pipeline runs regardless of Nomega" note above) but the actual Pade
+fit + QP solve code does not exist yet. The bare-exchange `Sigma_x`
+term also still not scoped at all (flagged, unchanged, since
+"continued 5").
+
+**Committed**: `scrnc_driver.F`, `scrnc_sigma_prep.F`,
+`scrnc_sigma_driver.F`, plus this log. Debug test artifacts left on
+disk (not committed, per project convention):
+`/blue/ufhpc/perera/scrnc_test/h2_scrnc_sigma_debug/`.
+
+---
+
+## SESSION 2026-08-17 (continued 9) -- frequency quadrature grid implemented and verified (Gauss-Legendre + rational map to [0,Infinity)); NOT yet wired to drive per-frequency pipeline runs / Sigma_c accumulation
 
 Next roadmap item after the AO2MO transform fix (continued 8, below):
 the frequency quadrature grid for the contour-deformation Sigma_c(i*
