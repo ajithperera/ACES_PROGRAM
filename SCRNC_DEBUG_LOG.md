@@ -6,7 +6,85 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
-## SESSION 2026-08-17 (continued 10) -- per-frequency-point orchestration + Sigma_c(p,q) accumulation built and verified end-to-end on H2/STO-3G/DRCCD debug case (RESUME HERE)
+## SESSION 2026-08-17 (continued 11) -- Pade continuation (imaginary->real axis) + on-shell QP equation solve built and verified end-to-end (RESUME HERE)
+
+Continuation of "continued 10" in the same session. Built the deferred
+piece flagged there: real-axis Pade continuation of `Sigma_c(p,p;i*omega)`
+and the quasiparticle-equation solve.
+
+**Physics simplification applied (flagged, not silently assumed --
+standard textbook result, not new physics)**: since this project's
+reference is HF (not DFT), the usual "Sigma_x - v_xc" double-counting
+correction in the QP equation is EXACTLY ZERO for canonical HF orbitals
+-- eps_HF(p) already equals `<p|h+J-Sigma_x|p>` exactly (that's the
+definition of "canonical": the Fock operator h+J-Sigma_x is diagonal in
+this basis), and the GW self-energy's static-exchange piece is the SAME
+Sigma_x operator. So this driver builds NO separate Sigma_x machinery at
+all -- the on-shell QP equation used is simply
+`eps_QP(p) = eps_HF(p) + Re[Sigma_c(p,p;eps_QP(p))]`, solved by plain
+fixed-point iteration from `eps_QP^(0)=eps_HF(p)`.
+
+**New code** (appended to `scrnc_sigma_driver.F`, same standalone
+non-ACES2-linked program as "continued 10"):
+- `Scrnc_sigma_pade_coeff`/`Scrnc_sigma_pade_eval`: Thiele reciprocal-
+  difference continued-fraction Pade continuation (Vidberg-Serene 1977
+  algorithm, standard numerical-GW technique) -- coefficient recursion
+  and the standard forward two-term (`A(n)`,`B(n)`) evaluation
+  recurrence.
+- `Scrnc_sigma_qp_solve`: for each diagonal MO index p, builds the
+  Pade fit from the already-computed `Sigma_c(p,p;i*Omega_ext(j))`
+  points (pure post-processing on data the "continued 10" architecture
+  already produces -- no new pipeline runs), then fixed-point-iterates
+  the QP equation (50-iteration cap, `1D-8` convergence tolerance).
+  Writes `qp_energies.dat` (`eps_HF`, `eps_QP`, `Im[Sigma_c(eps_QP)]`
+  as the QP lifetime/broadening, iteration count, converged flag).
+  Only runs if `Nomega>=2` (skipped, same as before, for a single-point
+  debug run).
+
+**Verified**:
+- Pade routines validated FIRST, in isolation, against a known analytic
+  function (`f(z)=1/(z-2)`, sampled at 8 imaginary points, evaluated
+  back at 4 real points) before trusting them on real physics data --
+  matched the exact closed form to `~1D-15` at every test point
+  (`/tmp/.../scratchpad/pade_test.F`, not committed, throwaway
+  verification harness).
+- Full pipeline rerun on the same `h2_scrnc_sigma_debug` directory,
+  `sigma_input` extended to `Nomega=6` (`Omega_ext=0.0,0.3,...,1.5`,
+  same `N=4,Omega_c=1.0` inner quadrature as before -- confirms the
+  "only N pipeline runs regardless of Nomega" design claim from
+  "continued 10": still exactly 4 pipeline subprocess calls, now
+  producing 6x the external-frequency data for free). Exit 0.
+  `qp_energies.dat`:
+  ```
+    p      eps_HF          eps_QP       Im[Sigma_c(eps_QP)]   iters  converged
+    1   -5.777270D-01   -5.720521D-01    2.758885D-03     4       1
+    2    6.690811D-01    6.634062D-01    2.758829D-03     4       1
+  ```
+  Both MOs converged in 4 iterations. Physically sensible: small
+  correlation shifts (`~6D-3` Hartree) in the expected direction
+  (occupied MO less bound, virtual MO lower -- HOMO-LUMO gap narrows
+  slightly under correlation, a commonly-seen GW correction direction),
+  reasonable-magnitude on-shell lifetime broadening, and near-identical
+  broadening for both MOs -- consistent with H2's symmetric bonding/
+  antibonding MO structure.
+
+**Not yet done**: multi-reference/degenerate-orbital QP treatment (not
+needed for H2's non-degenerate case, may matter for larger/higher-
+symmetry test systems later); off-diagonal `Sigma_c` is computed but
+not used in the QP solve (standard for a non-degenerate on-shell
+treatment); no test yet on H2O (only H2/STO-3G so far, same
+incremental-verification-first pattern as every other piece of this
+project); Pade continuation is known to be numerically delicate with
+noisy/sparse input data in general -- this session's `Nomega=6`,
+evenly-spaced, noise-free (analytic pipeline output, not experimental)
+grid worked cleanly, but robustness with fewer/more points or a
+noisier `Wc_reduced` has not been separately stress-tested.
+
+**Committed**: `scrnc_sigma_driver.F`, plus this log.
+
+---
+
+## SESSION 2026-08-17 (continued 10) -- per-frequency-point orchestration + Sigma_c(p,q) accumulation built and verified end-to-end on H2/STO-3G/DRCCD debug case
 
 Picked up right at "continued 9"'s resume point after a context reset.
 Confirmed its open question first: no saved driving script exists

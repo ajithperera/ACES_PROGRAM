@@ -241,10 +241,156 @@ C
       Enddo
       Close(Unit=25)
 C
+C --- Pade continuation (imaginary axis -> real axis) and on-shell
+C     quasiparticle equation solve, diagonal elements only (standard
+C     non-degenerate QP treatment -- off-diagonal Sigma_c not used
+C     here). Needs Nomega>=2 imaginary-axis points to be meaningful;
+C     skipped (matching this driver's original debug-mode behavior)
+C     if Nomega=1.
+C
+C     HF-reference simplification (see this session's SCRNC_DEBUG_LOG.md
+C     entry): for canonical HF orbitals, eps_HF(p) already equals
+C     <p|h+J-Sigma_x|p> exactly (that IS the definition of "canonical" --
+C     the Fock operator h+J-Sigma_x is diagonal in this basis). The GW
+C     self-energy's static-exchange piece is the SAME Sigma_x operator,
+C     so the usual DFT-style "Sigma_x - v_xc" double-counting correction
+C     is EXACTLY ZERO for a HF reference (unlike DFT, where v_xc is not
+C     exact exchange) -- standard result for HF-based G0W0, not new
+C     physics, but flagged here since it means this driver deliberately
+C     builds NO separate Sigma_x machinery. On-shell QP equation used:
+C        eps_QP(p) = eps_HF(p) + Re[Sigma_c(p,p; eps_QP(p))]
+C     solved by simple fixed-point iteration from eps_QP^(0)=eps_HF(p).
+C
+      If (Nomega .GE. 2) Call Scrnc_sigma_qp_solve(Nmo,Nomega,
+     +                        Omega_ext,Sigma_re,Sigma_im,Eps,Maxmo,
+     +                        Maxomega)
+C
       Write(6,"(a)")
      +   " @-Scrnc_sigma_driver: done, see sigma_c_output.dat"
 C
       Stop
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_sigma_qp_solve(Nmo,Nomega,Omega_ext,Sigma_re,
+     +                                 Sigma_im,Eps,Maxmo,Maxomega)
+C
+C Diagonal Pade continuation + on-shell QP solve, one MO index at a
+C time -- see the calling comment above for the physics.
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Omega_ext(Maxomega)
+      Dimension Sigma_re(Maxmo,Maxmo,Maxomega)
+      Dimension Sigma_im(Maxmo,Maxmo,Maxomega)
+      Dimension Eps(Maxmo)
+C
+      Double Complex Zpt(Maxomega), Fpt(Maxomega), Acoef(Maxomega)
+      Double Complex Zeval, Fval
+C
+      Parameter (Maxiter=50, Tol=1.0D-8)
+C
+      Open(Unit=26,File="qp_energies.dat",Form="Formatted",
+     +     Status="UNKNOWN")
+      Write(26,"(a)") "  p      eps_HF          eps_QP     "//
+     +                 "  Im[Sigma_c(eps_QP)]   iters  converged"
+C
+      Do Ip = 1, Nmo
+C
+         Do J = 1, Nomega
+            Zpt(J) = Dcmplx(0.0D0,Omega_ext(J))
+            Fpt(J) = Dcmplx(Sigma_re(Ip,Ip,J),Sigma_im(Ip,Ip,J))
+         Enddo
+C
+         Call Scrnc_sigma_pade_coeff(Nomega,Zpt,Fpt,Acoef,Maxomega)
+C
+         Eps_qp   = Eps(Ip)
+         Iconverged = 0
+         Do Iter = 1, Maxiter
+            Zeval = Dcmplx(Eps_qp,0.0D0)
+            Call Scrnc_sigma_pade_eval(Nomega,Zpt,Acoef,Zeval,Fval,
+     +                                  Maxomega)
+            Eps_new = Eps(Ip) + Dble(Fval)
+            If (Abs(Eps_new-Eps_qp) .LT. Tol) Then
+               Eps_qp = Eps_new
+               Iconverged = 1
+               Goto 100
+            Endif
+            Eps_qp = Eps_new
+         Enddo
+  100    Continue
+C
+         Write(26,"(I3,2(1x,1PD15.6),1x,1PD15.6,3x,I3,5x,I3)")
+     +      Ip,Eps(Ip),Eps_qp,Dimag(Fval),Iter,Iconverged
+C
+      Enddo
+C
+      Close(Unit=26)
+C
+      Write(6,"(a)")
+     +   " @-Scrnc_sigma_driver: QP solve done, see qp_energies.dat"
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_sigma_pade_coeff(N,Zpt,Fpt,Acoef,Maxomega)
+C
+C Thiele's reciprocal-difference continued-fraction coefficients
+C (standard Pade analytic-continuation algorithm, e.g. Vidberg-Serene
+C 1977 -- textbook numerical-GW technique, not new to this project).
+C g(1,i)=f(z_i); g(k,i)=(g(k-1,k-1)-g(k-1,i)) /
+C ((z_i-z_(k-1))*g(k-1,i)) for k=2..N, i=k..N; a_k=g(k,k).
+C
+      Implicit Double Precision (A-H,O-Z)
+      Double Complex Zpt(Maxomega), Fpt(Maxomega), Acoef(Maxomega)
+      Double Complex G(Maxomega,Maxomega)
+C
+      Do I = 1, N
+         G(1,I) = Fpt(I)
+      Enddo
+C
+      Do K = 2, N
+         Do I = K, N
+            G(K,I) = (G(K-1,K-1) - G(K-1,I)) /
+     +               ((Zpt(I)-Zpt(K-1)) * G(K-1,I))
+         Enddo
+      Enddo
+C
+      Do K = 1, N
+         Acoef(K) = G(K,K)
+      Enddo
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_sigma_pade_eval(N,Zpt,Acoef,Z,Fval,Maxomega)
+C
+C Evaluates the Thiele continued fraction at Z via the standard
+C forward two-term recurrence (Vidberg-Serene): A(0)=0, A(1)=a(1),
+C B(0)=1, B(1)=1; A(n)=A(n-1)+(z-z(n-1))*a(n)*A(n-2),
+C B(n)=B(n-1)+(z-z(n-1))*a(n)*B(n-2); f(z)=A(N)/B(N).
+C
+      Implicit Double Precision (A-H,O-Z)
+      Double Complex Zpt(Maxomega), Acoef(Maxomega), Z, Fval
+      Double Complex A(0:Maxomega), B(0:Maxomega)
+C
+      A(0) = Dcmplx(0.0D0,0.0D0)
+      A(1) = Acoef(1)
+      B(0) = Dcmplx(1.0D0,0.0D0)
+      B(1) = Dcmplx(1.0D0,0.0D0)
+C
+      Do N2 = 2, N
+         A(N2) = A(N2-1) + (Z-Zpt(N2-1))*Acoef(N2)*A(N2-2)
+         B(N2) = B(N2-1) + (Z-Zpt(N2-1))*Acoef(N2)*B(N2-2)
+      Enddo
+C
+      Fval = A(N) / B(N)
+C
+      Return
       End
 C
 C-----------------------------------------------------------------
