@@ -6,7 +6,7 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
-## SESSION 2026-08-18 (continued 26) -- Nsel escalation IMPLEMENTED + verified: closes the STO-3G MO 1 gap from "continued 25" cleanly (10 points, pilot-confirmed pole-free); full comprehensive re-verification across STO-3G sym=off/sym=on/CCSD + DZ, all MOs converge, none unconverged -- ready to commit pending sign-off (RESUME HERE)
+## SESSION 2026-08-18 (continued 26) -- Nsel escalation IMPLEMENTED + verified: closes the STO-3G MO 1 gap from "continued 25" cleanly (10 points, pilot-confirmed pole-free); full comprehensive re-verification across STO-3G sym=off/sym=on/CCSD + DZ, all MOs converge, none unconverged -- COMMITTED (459a1571) (RESUME HERE)
 
 Picked up "continued 25"'s open next step directly.
 
@@ -72,18 +72,21 @@ guard constants, and the `1.3x`/`x1.6` auto-grid constants are all
 reasonable-looking but essentially engineering judgment calls, not
 independently derived or swept.
 
-**Committed**: nothing yet -- ready for sign-off now that STO-3G/
-sym=on/CCSD/DZ all re-verify cleanly. Changed:
+**Committed**: `459a1571` ("scrnc: escalating per-MO Nsel selection
+closes STO-3G MO 1 convergence gap"), 2026-08-18. Changed:
 `scrnc_sigma_driver.F`/`.f` (auto-grid, per-orbital escalating
 selection, scaled pole guard -- the full "continued 24"-"continued
-26" arc lives in this one file's diff). `sigma_input` in all four test
-directories reduced to the 2-line auto format (old versions backed up
-alongside with timestamped names, e.g. `sigma_input.bak_<epoch>`) --
-scratch, not archived.
+26" arc lives in this one file's diff) and this log. `sigma_input` in
+all four test directories reduced to the 2-line auto format (old
+versions backed up alongside with timestamped names, e.g.
+`sigma_input.bak_<epoch>`) -- scratch, not archived, not part of the
+commit.
 
-**Next**: get sign-off to commit; consider archiving updated
-`qp_energies.dat`/logs for all four cases to `sigma_debug_archive/`
-as the new baseline before committing.
+**Next**: consider archiving updated `qp_energies.dat`/logs for all
+four cases to `sigma_debug_archive/` as the new baseline; then try a
+molecule/basis larger or more chemically different than H2O/STO-3G
+and H2O/DZ to actually test the "universal" grid/escalation design
+claim (see "Not yet done" above).
 
 ---
 
