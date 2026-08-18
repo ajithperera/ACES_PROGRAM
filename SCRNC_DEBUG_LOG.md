@@ -6,7 +6,759 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
-## SESSION 2026-08-17 (continued 14) -- CCSD-path bug found+fixed (directory not cleared between nodes); first internal CC-vs-RPA screening comparison run -- REAL, non-trivial differences found (RESUME HERE)
+## SESSION 2026-08-18 (continued 21) -- Pade/QP-solve robustness: root cause was the naive fixed-point iteration, NOT a bad Pade fit; replaced with bracketed bisection; H2O/STO-3G MO 5 now converges (matches independent pilot-code prediction exactly), sym=on/off still consistent, DZ p=7 now genuinely clean, DZ p=1 (core) "converges" but is STILL an unresolved extrapolation-domain artifact -- not silently treated as fixed (RESUME HERE)
+
+Picked up "continued 20"'s open next step, per Ajith's own framing:
+diagnose the Pade robustness gap (H2O/STO-3G MO 5 hitting the 51-iter
+cap post-fold-fix) "reasoning from math, not tuning to what looks
+right." Per [[feedback_pilot_code_debugging]]/
+[[feedback_consistency_check_debugging]].
+
+**Pilot-code diagnosis (independent Python reimplementation of the
+exact Thiele/Vidberg-Serene algorithm, reusing the driver's own 6
+`(z_i,f_i)` sample points verbatim)**: scanned `F(z)=z-eps_HF-
+Re[Sigma_c(z)]` and the continued fraction's denominator `B(N)(z)`
+over real z for MO 5 (`eps_HF=-0.3912734`). Found exactly ONE clean
+real root, `z=-0.49680`, `Sigma_c(root)=-0.1055-0.1518i`, with no
+nearby Pade pole (`|B(N)|` stays order-0.1-1 throughout). But the
+local slope `g'(root)=dRe[Sigma_c]/dz` at that root is **-2.14**.
+Since fixed-point iteration `eps_new=eps_HF+Re[Sigma_c(eps_qp)]` only
+converges locally when `|g'(root)|<1`, this root is mathematically
+unreachable by the original iteration scheme -- reproducing the exact
+production algorithm in the pilot confirmed it settles into a stable
+period-2 limit cycle (-0.408 <-> -0.562, averaging near but never
+landing on -0.497), exactly matching the real 51-iteration
+non-convergence. **Conclusion: MO 5's Pade continuation was fine all
+along; only the iteration scheme was inadequate** -- a different
+failure mode than the DZ p=1/p=7 concerns from "continued 13"
+(extrapolation-domain violation / sparse-grid kink), and exactly what
+the external review's point 4 ("continued 15") already anticipated
+(replace fixed-point with a bracketed root-find).
+
+**Fix implemented**: `scrnc_sigma_driver.F`, `Scrnc_sigma_qp_solve` --
+replaced the fixed-point loop with a new `Scrnc_sigma_qp_bracket`
+subroutine: scans an expanding window centered on `eps_HF` (starting
++-2 Ha, doubling up to 8x) for the sign change of `F(z)` closest to
+`eps_HF`, rejecting any interval where `Re[Sigma_c]` itself blows up
+(`>1000`, the signature of straddling a pole rather than crossing a
+genuine root), then bisects to `Tol=1D-8`. Cost is negligible (Pade
+eval is already just an O(N) continued-fraction recurrence). Rebuilt
+(`ifx -i8`), installed to `aces2/bin/xscrncsigma`, md5-verified.
+
+**Verified, not just plausible**:
+- H2O/STO-3G sym=off: MO 5 now converges to `eps_QP=-0.4967992,
+  Im=-0.1517794` -- matches the independent pilot prediction to 4
+  decimal places. All other 6 MOs reproduce their prior fixed-point
+  results bit-for-bit (no regression). 21 bisection iterations for
+  every MO (expected -- fixed iteration count from the doubling+
+  bisection design, not a red flag).
+- H2O/STO-3G sym=on (`SAVE_INTS=ON`): all 7 MOs now converge too, and
+  still match sym=off by `eps_HF` to ~1e-4-1e-6 (one MO, the same
+  MO-5/4 pair, is ~6e-4 -- an order of magnitude looser than the rest
+  but still small; plausibly amplification of the usual
+  `cc_conv=9`-scale truncation noise near this particular root's
+  steep slope, not investigated further).
+- H2O/STO-3G CCSD path: all 7 MOs converge cleanly too.
+- H2O/DZ (larger basis, the original "continued 13" case): 14/14 MOs
+  now report `converged=1` (previously 12/14, with p=1 and p=7
+  failing). **Did NOT stop at "it converged" -- re-ran the same
+  pilot-code pole/slope analysis on both previously-failing MOs**:
+  - **p=7 (`eps_HF=0.311`)**: genuinely clean now -- single isolated
+    root at `z=0.3182`, `|B(N)|` stays ~0.39 throughout (no nearby
+    pole), root sits INSIDE the sampled `|omega| in [0,1.5]` domain,
+    tiny slope (`g'=0.0085`). The original "sharp kink" concern
+    doesn't reproduce under the fold-fixed Sigma_c samples -- this MO
+    is resolved for real, not just numerically quieted.
+  - **p=1 (`eps_HF=-20.559`, O 1s core)**: also finds a single,
+    pole-free root (`z=-20.552`, small `|g'|=0.007`) -- BUT that root
+    sits at `|z|=20.55`, ~14x past the sampled `|omega| in [0,1.5]`
+    domain edge, i.e. still a severe Pade EXTRAPOLATION, not
+    interpolation. The extrapolated `Sigma_c` there
+    (`Re=+0.0069,Im=-0.053`) is qualitatively different from the flat,
+    small, same-sign trend seen across the actual sampled points
+    (`Re` stays `~-0.0187` to `-0.0188` the whole way) -- exactly the
+    kind of sign/magnitude discontinuity a rational-function
+    extrapolation produces when asked far outside its fitted range,
+    with nothing in the fit's own internal structure (no pole, small
+    slope) able to flag it as untrustworthy. **This MO's
+    "convergence" does NOT mean the extrapolation is trustworthy --
+    the original "continued 13" domain-of-validity concern for core
+    orbitals is UNRESOLVED, just no longer visible as an iteration
+    failure.** Deliberately not claimed as fixed.
+
+**Not done / left open, per standing "not silently patched" practice**:
+the core-orbital extrapolation-domain gap needs the already-scoped fix
+from "continued 15" item 3 (widen/rescale the external `Omega_ext`
+evaluation grid per orbital energy scale -- e.g. sample out to ~20+ Ha
+for deep-core states -- reusing the SAME already-computed inner
+omega'-quadrature `Wc_reduced` per the driver's own N-node
+architecture, no expensive pipeline rerun needed) rather than trusting
+this extrapolation. Not started this session.
+
+**Housekeeping note**: `git status` shows several scrnc files
+("continued 17"-"continued 20"'s fold-fix, `Scrnc_get2ints.F` guard,
+`Scrnc_jj_unpack_natural.F`, etc.) as still MODIFIED/untracked despite
+earlier log entries saying "Committed" -- those commits apparently
+never actually happened (or were reverted). Not addressed this
+session (no commit requested); flagging so a future session doesn't
+assume that work is safely in git history when it isn't yet.
+
+**Committed**: nothing yet this session (not requested). Changed:
+`scrnc_sigma_driver.F` (the bracket/bisection rootfind); this log
+entry. Rerun outputs left in place, not archived to
+`sigma_debug_archive/` yet: `xscrncsigma_rootfind.log`/
+`qp_energies.dat` in each of `h2o_scrnc_sigma_debug{,_ccsd,_dz}` and
+`h2o_scrnc_sigma_debug_symon_saveints`. Pilot scripts (scratch, not in
+repo): `pade_mo5_probe.py`, `pade_dz_probe.py`.
+
+**Next**: (1) get Ajith's read on whether/how to commit the backlog of
+already-verified-but-uncommitted scrnc work (fold fix, save_ints
+guard, this session's rootfind); (2) if the core-orbital extrapolation
+gap matters for the manuscript's basis-set scope, widen the
+`Omega_ext` grid per "continued 15" item 3; (3) the still-open
+bracketed-root-find endorsement also separately resolves the "is the
+continuation trustworthy vs does the QP equation have a stable root"
+question the external review raised -- worth re-reading "continued
+15" in full now that this piece is done.
+
+---
+
+## SESSION 2026-08-18 (continued 20) -- sym=on bug FULLY RESOLVED: second root cause was SAVE_INTS=ON missing, not a code bug at all; both fixes verified together, sym=on now matches sym=off to ~1e-4 or better across all 7 H2O/STO-3G MOs; standing FATAL guard added so this can't silently recur (RESUME HERE)
+
+Picked up "continued 19"'s open residual (~0.11 max diff after the Iao_pair
+permutation fix). Ajith's steer: "scrnc_prep_2ints calls scrnc_get2ints.
+When sym=on all 4 files have integrals (abelian symmetry)... similar logic
+can be found inside acesii" -- i.e. don't assume this is scrnc's own bug,
+check the shared ACES2 machinery first.
+
+**Traced the file lifecycle precisely**, stepping the pipeline one binary
+at a time and checking `IIII`/`IIJJ`/`IJIJ`/`IJKL` existence after each:
+present after `xvscf`, GONE after `xvtran`. Root cause, found via two
+background research passes into `aces2/vmol/` and `aces2/vtran/`:
+- `aces2/vmol/readin.F` (~line 519) and `aces2/vmol/twoel.F` (~line 45):
+  `NSYMOP` (number of Abelian symmetry generators) gates which of the 4
+  files even get OPENED by `xvmol` -- 0=only `IIII`, 1=+`IJIJ`/`IIJJ`,
+  `>=2`=all four (C2v needs 2 generators for its 4 irreps, satisfied here;
+  confirmed directly in the pipeline log: `xvmol` itself reports "45
+  integrals of symmetry type I J I J", "39 ... I I J J" -- the data is
+  genuinely computed).
+- `aces2/vtran/load2.f` (lines 159-173), called from the standard
+  `TRIIJJ`/`TRIJIJ`/`TRIJKL` AO->MO transform routines: once `xvtran` has
+  consumed a raw integral file for the transform, it does
+  `close(unit=iUnit,status='DELETE')` -- UNLESS one of five existing
+  `IFLAGS`/`IFLAGS2` conditions holds, in which case `status='KEEP'`.
+  Identified via a second background research pass (mapping indices to
+  ZMAT keywords via `aces2/joda/asv_ctl.c`): `IFLAGS(26)` =
+  `h_IFLAGS_save_ints`, ZMAT keyword **`SAVE_INTS=ON`** -- literally the
+  existing, user-facing "keep the AO integral files" switch (the other
+  four conditions are PROPS>=NMR-class, ABCDTYPE=AOBASIS, open-shell-
+  reference-specific, and TDHF=ON -- none apply to scrnc's own runs).
+
+**So the second bug isn't a scrnc code bug at all** -- `scrnc_get2ints.F`
+reads the SAME raw integral files every other ACES2 "light"/pilot module
+(`ccsd_light/get2ints.F`, `ccd_light/get2ints.F`, `cse/get2ints.F`,
+`cse12/get2ints.F`) also reads, all sharing this identical 4-file/8-fold-
+permutational-unfold pattern -- it's a standard, working ACES2 idiom.
+scrnc's own pipeline (`xjoda;xvmol;...;xvtran;xintprc;xringcc;...;xscrnc`)
+just needs `SAVE_INTS=ON` in the ZMAT, same as any other module that reads
+raw AO integrals after `xvtran` has already run, which scrnc uniquely does
+(most modules consume AO integrals BEFORE or DURING the transform, not
+after).
+
+**Verified together, decisively**: built `h2o_scrnc_sigma_debug_symon_saveints`
+(same ZMAT as "continued 18"/"19"'s sym=on case, `+SAVE_INTS=ON`). Confirmed
+all 4 files now survive past `xvtran`. Full driver run (`xscrncsigma`),
+`qp_energies.dat` compared to the sym=off baseline by matched `eps_HF`:
+
+```
+ eps_HF     sym=off eps_QP   sym=on eps_QP    diff
+-20.242       -20.25952       -20.25950       2D-5
+ -1.269        -1.319428       -1.319382       5D-5
+ -0.618        -0.616500       -0.616503       3D-6
+ -0.453        -0.472807       -0.472815       8D-6
+ -0.391        -0.408053(*)    -0.408248(*)    2D-4  (*not converged, BOTH --
+                                                        same pre-existing
+                                                        Pade issue as
+                                                        "continued 17",
+                                                        unrelated to sym)
+  0.606         0.603966        0.603965       1D-6
+  0.743         0.737865        0.737859       5D-6
+```
+
+All converged MOs now agree to 1e-6 to 1e-5 (residual fully consistent with
+`cc_conv=9,scf_conv=10` truncation, not a structural bug); the one
+unconverged MO fails to converge THE SAME WAY in both sym=off and sym=on,
+confirming that non-convergence is the already-flagged, separate Pade-
+robustness question, not a symmetry artifact. **The sym=on bug is closed.**
+
+**Standing guard added** (`scrnc_get2ints.F`, right after `Nirrep` is read):
+under `Nirrep>1`, `Inquire`s for all 4 files and calls `Errex` with a clear
+message naming the missing file and pointing at `SAVE_INTS=ON` if any are
+absent, instead of silently proceeding with zero-filled data -- this is
+exactly how the bug went undetected for so long (see "continued 19"'s own
+finding: `Scrnc_get2ints` just `Dzero`s and reads whatever files exist,
+no completeness check). Verified both directions: without `SAVE_INTS=ON`
+(files already deleted from a prior run), `xscrnc` now exits 1 with
+`@-Scrnc_get2ints: FATAL -- symmetry AO integral file missing under
+Nirrep>1: IIJJ` printed before `Scrnc_get2ints` even reaches its main
+loop; with `SAVE_INTS=ON`, exits 0 with no FATAL line.
+
+**Practical consequence for future scrnc test ZMATs under sym=on**:
+`SAVE_INTS=ON` must be included, or the new guard will (correctly) abort
+the run rather than let it proceed with silently-wrong physics. Sym=off
+runs are unaffected either way (the guard only fires for `Nirrep>1`, and
+`IIII` alone has been observed to survive `xvtran` regardless of this flag
+in every sym=off case checked -- not investigated further since sym=off
+was never broken).
+
+**Committed**: `scrnc_get2ints.F` (the guard). This log entry.
+**Archived**: `sigma_debug_archive/h2o_symon_qp_energies_saveints.dat`
+(final, correct sym=on `qp_energies.dat`, for direct comparison against
+`h2o_qp_energies_postfix.dat` from "continued 17"). Pipeline directory
+left on disk, not committed: `/blue/ufhpc/perera/scrnc_test/
+h2o_scrnc_sigma_debug_symon_saveints/`.
+
+**Next**: per Ajith's own framing at the start of this whole thread --
+"sym on off bug needs to be fixed first, then look at Pade, and in Pade
+what we should follow is math not what happens to the results" -- the
+sym=on/off work is now done. The Pade-robustness question (MO 5/4's
+non-convergence, present identically in both symmetry settings, first
+flagged in "continued 13" and sharpened in "continued 17") is next, with
+the explicit instruction to reason from the mathematics of the
+continuation/QP-equation rather than tuning against what "looks right."
+
+---
+
+## SESSION 2026-08-18 (continued 19) -- Iao_pair permutation fix IMPLEMENTED + VERIFIED (real, order-of-magnitude improvement); traced the REMAINING residual to a second, deeper, ARCHITECTURAL gap: Scrnc_get2ints.F's raw AO-integral files don't contain complete data under sym=on -- NOT fixed, needs Ajith's call on the right replacement
+
+Direction 1 from "continued 18" implemented: `Scrnc_jj_unpack_natural.F` (new
+file) rebuilds the packed<->natural permutation from `Iaopop`/`Dirprd` alone
+(mirrors `Scrnc_reord_cols.F`'s own construction) and un-permutes
+`JJ_lrespn` in place; wired into `scrnc_driver.F` right after either CC
+path builds `JJ_lrespn`, before `Scrnc_wc_ao2mo_test`/`Scrnc_sigma_prep`
+touch it. No-op under sym=off (early `If (Nirrep.Eq.1) Return`).
+
+**Verified working, not just plausible**: rebuilt, reran H2O/STO-3G sym=on
+and sym=off. `Scrnc_wc_ao2mo_bfcheck` now gives the IDENTICAL residual
+between the two runs (`6.217249D-15` both). `Wc_reduced(p,q,m)` comparison
+(matched by `eps_HF` permutation, same method as "continued 17"): 194/343
+entries (57%) now match sym=off EXACTLY (<1e-6), and the worst-case
+discrepancy dropped from ~4.1 (unbounded/wild) to ~0.11 -- an order of
+magnitude. **This part of the fix is solid and should be kept.**
+
+**Residual investigated -- root cause is NOT a leftover ordering bug**,
+confirmed several ways before concluding this:
+- Both matrices still internally p<->q symmetric to ~1e-17 (an ordering
+  bug would show up here; it doesn't).
+- The worst offenders have a distinctive signature: `sym=on` comes out
+  EXACTLY `0.000000` where `sym=off` has a real nonzero value, including
+  fully-diagonal entries like `Wc_reduced(4,4,4)` (same MO three times --
+  no symmetry reason to vanish).
+
+**Traced with the same "print and find where it breaks" method, three
+layers deeper**:
+1. `Scrnc_jj_rcc_assemble.F`'s own "Response-only JJ matrix" dump: packed
+   row 17 is entirely zero, every other row in the same 21-entry irrep-1
+   product block is populated. Packed position 17 = natural AO-pair (5,5)
+   (verified via the now-exact `Iordr_ao` permutation) -- the self-pair of
+   AO#5, the SOLE AO in irrep-2.
+2. Compared `_DEBUG_LVL0` checksums already in the log for Npert_count=16
+   (works) vs 17 (broken), in `Scrnc_prep_culomb_ints.F`'s existing prints:
+   `<oo|j|xx>` nonzero in BOTH; `<vv|j|xx>`/`<vo|j|xx>` nonzero for 16,
+   EXACTLY ZERO for 17. This is where the zero first appears in that
+   routine's own output.
+3. Added a new diagnostic (`Scrnc_dump_dble_array`, new small helper in
+   `scrnc_xxxx_pqxx.F` -- needed because that routine's own
+   `Implicit Integer (A-Z)` would silently bit-reinterpret a direct dump
+   of `Icore` as integers, the exact same trap as the already-fixed
+   Jj_lrespn bug from "continued 8"; routing through a genuinely
+   Double-Precision-typed callee sidesteps it) dumping the raw `I(XX,XX)`
+   input block itself, before ANY transform. Result: packed row/col 17
+   (natural (5,5)) has exactly ONE nonzero entry (itself, the self-Coulomb
+   diagonal) out of 21; rows/cols 18 and 21 (natural (6,6) and (7,7), the
+   two self-pairs of the two irrep-3 AOs) show the SAME pattern -- zero
+   cross-terms with columns 1-16 (all pairs native to irrep-1's own 4 AOs),
+   nonzero only among themselves (columns 17-21, the "self-pairs of
+   non-irrep-1 AOs" block). Rows 1-16 have rich cross-structure among
+   themselves and are correspondingly zero for columns 17-21.
+
+**This block-isolated pattern is NOT explained by Abelian point-group
+selection rules** -- for an Abelian group, any AO self-pair's density is
+ALREADY totally symmetric regardless of which irrep the underlying AO
+belongs to, so a bare Coulomb integral like (1,1|5,5) between two
+totally-symmetric densities is allowed to be nonzero by symmetry; there is
+no group-theoretic reason for it to vanish. And it isn't a coincidental
+physical zero either -- checked `Jj_bare` (built via an entirely SEPARATE
+call chain, `Scrnc_sigma_bare_ao.F` -> its own fresh `Scrnc_get2ints` call,
+no packing/reordering involved at all) and found the IDENTICAL zero
+pattern there too (`bare(1,1;5,5)=0.0`, `bare(5,5;6,6)=bare(5,5;6,7)=
+bare(5,5;7,6)=bare(5,5;7,7)=0.0`, etc.) -- two independent code paths
+agreeing on the same wrong answer is exactly this project's own
+established "both wrong the same way" failure signature (see "continued
+8"), not evidence of correctness.
+
+**Root cause traced to `Scrnc_get2ints.F` itself, one further level down**
+-- both `Jj_bare` and `List_xxxx` (hence `JJ_lrespn`) ultimately source
+their raw AO two-electron integrals from this ONE shared routine. It reads
+four legacy, hardcoded filenames (`IIII`,`IIJJ`,`IJIJ`,`IJKL` -- the
+classic ACES2/vmol integral-class sort, split by which index positions
+coincide), using `Inquire(...,Exist=...)` to skip any that aren't present,
+then reconstructs the full dense `Nbfns**2 x Nbfns**2` matrix via simple
+8-fold PERMUTATIONAL symmetry only (lines 91-98: fill all 8
+index-swap-equivalent slots from one stored value) -- no point-group
+symmetry unfolding logic anywhere in this routine. Checked directly: in
+BOTH the sym=on and sym=off H2O/STO-3G test directories, only the `IIII`
+file exists (`IIJJ`/`IJIJ`/`IJKL` absent in both) -- same file, nearly
+identical size (79964 vs 79864 bytes) -- but different CONTENT. Working
+hypothesis (not yet independently confirmed against vmol's own source):
+under real symmetry, `xvmol`'s integral sort applies genuine point-group
+compression when writing this file (skips integrals derivable from others
+via a symmetry OPERATION, not just an index permutation), and
+`Scrnc_get2ints.F`'s reconstruction -- built and only ever exercised under
+sym=off, where point-group compression is trivial/absent -- has no code to
+undo that specific kind of compression, silently leaving the
+un-reconstructed slots at their `Call Dzero` initial value.
+
+**Not fixed. Deliberately stopped here** rather than attempting a
+work-around alone: this is an architectural gap in how scrnc acquires raw
+AO integrals under symmetry, not a local index bug -- the same class of
+call this project's standing practice reserves for Ajith (see "continued
+17"'s framing: physics-affecting research-pipeline changes, verify-before-
+trusting). The right fix is very likely NOT extending
+`Scrnc_get2ints.F`'s own unfolding logic (would mean re-deriving/
+reimplementing point-group integral-symmetry expansion by hand, exactly
+the kind of "why is this project's own machinery duplicated/reinvented"
+risk flagged elsewhere in this log) but replacing this whole raw-file
+read with whatever symmetry-aware AO two-electron integral retrieval the
+REST of this codebase already trusts (e.g. however `List_xxxx`'s own
+GETLST-based construction gets ITS starting data, or however vcceh/other
+established ACES2 modules read full AO integrals under symmetry) -- but
+which existing mechanism is right, and whether it is even called at a
+point in the pipeline where scrnc could reuse it, needs Ajith's read of
+ACES2's own integral-list conventions, not more code archaeology alone.
+
+**Diagnostics left in the tree** (all `_DEBUG_LVL0`-gated, harmless,
+intentionally kept rather than reverted -- see file-by-file list so none
+of this needs re-deriving on resume):
+- `scrnc_jj_rcc_assemble.F`: `Isympert`/`Iaopop` dump (confirms packed
+  ordering); plain dumps of `JJ_lrespn` before bare-v add
+  (`jjlrespn_resp_packed.dat`) and after (before Symmet2)
+  (`jjlrespn_plusbare_packed.dat`).
+- `scrnc_sigma_prep.F`: plain dump of `Jj_bare` in natural order
+  (`jjbare_natural.dat`).
+- `scrnc_xxxx_pqxx.F`: new `Scrnc_dump_dble_array` helper; call site
+  dumping the raw `I(XX,XX)` block for `Iflag=4,Irrepxx=1,Ispin=1`
+  (`ixxxx_iflag4_irrepxx1.dat`).
+- `Scrnc_prep_culomb_ints.F`/`Scrnc_lrspn_rcc_main.F`: pre-existing
+  `_DEBUG_LVL0` checksums (not new this session), just newly load-bearing
+  for this investigation -- no changes needed, already sufficient.
+
+**Fixed and installed**: `scrnc_jj_unpack_natural.F` (new),
+`scrnc_driver.F` (wired the call in). **Not fixed**: the deeper
+`Scrnc_get2ints.F` gap -- H2O/C2v `Wc_reduced`/QP energies are IMPROVED
+but still NOT fully correct under sym=on; do not treat sym=on results as
+trustworthy yet.
+
+**Committed**: all of the above (fix + diagnostics), this log entry.
+Archived: `sigma_debug_archive/h2o_symon_isympert_diag.txt`,
+`h2o_symoff_isympert_diag.txt` (from "continued 18"). Pipeline directories
+(with the raw `.dat` diagnostic dumps) left on disk, not committed, per
+project convention: `/blue/ufhpc/perera/scrnc_test/
+h2o_scrnc_sigma_debug_sym{on,off}_oneterm_isolation/`.
+
+---
+
+## SESSION 2026-08-18 (continued 18) -- sym=on bug ROOT-CAUSE FOUND via debug printing: Jj_lrespn's Iao_pair index is irrep-grouped/packed, NOT the natural (Mu-1)*Nao+Nu order Scrnc_wc_ao2mo.F's header comment claims -- exact break point pinned down, fix not yet applied
+
+Per Ajith's instruction: use debug-level printing to find the FIRST place
+things break, rather than continuing to reason forward from symptoms. This
+is the SAME bug as the 2026-08-16 "real Abelian symmetry" session's "real
+cause still OPEN" A1-block finding (see that entry, much further down this
+file) -- today's work traces it to an exact, concrete mechanism that session
+didn't reach.
+
+**Ruled out first** (bisecting backward from the symptom): `SCFEVALA`/
+`SCFEVECA` pairing is self-consistent even under `sym=on` -- traced
+`vtran/dropvc.F`'s write of both records (lines ~316-384): both go through
+the SAME `Do I=1,NBAS` masking loop with the SAME running `ITHRU` index, so
+eigenvalue slot i and eigenvector column i are always the same physical
+orbital, just in native-SCF (irrep-blocked) order rather than energy order.
+Not the bug.
+
+**Root cause, confirmed by direct printed evidence**: `Scrnc_wc_ao2mo.F`'s
+own header comment claims `Jj_lrespn`'s `Iao_pair` index is
+`(Mu-1)*Nao+Nu` (natural row-major AO-pair order), citing
+"`scrnc_prep_2ints.F:68-77`" as authority. That citation is wrong -- those
+lines only build `Irrep_ao_pairs`, a per-natural-position LABEL array;
+the actual `Iao_pair` numbering `Jj_lrespn` is built with comes from
+`Scrnc_lrspn_rcc_main.F` (lines ~127-135): `Do Irrepr=1,Nirrep; Do
+Iao_pair=1,Irpdpdao(Irrepr); Npert_count=Npert_count+1;
+Isympert(Npert_count)=Irrepx` -- i.e. Iao_pair position = a running
+counter that visits ALL of one irrep's AO-pairs first, then the next
+irrep's, etc. -- genuinely irrep-GROUPED, not natural raster order.
+`scrnc_prep_2ints.F`'s own `List_xxxx` (the bare-integral piece added into
+`JJ_lrespn` in `Scrnc_jj_rcc_assemble.F`, lines 125-141) uses this same
+irrep-grouped convention via `Scrnc_reord_cols.F`/`Scrnc_sympack_aoints.F`.
+
+Added a temporary `_DEBUG_LVL0`-gated print in `Scrnc_jj_rcc_assemble.F`
+(kept in the tree, gated, not a permanent unconditional print) dumping
+`Iaopop(1..Nirrep)` and `Isympert(1..Nao_pair)`. H2O/STO-3G/C2v,
+`Iaopop=(4,1,2,0)`: printed `Isympert` sequence is `21` consecutive `1`s,
+then `8` consecutive `2`s, then `16`ish consecutive `3`s (one early `1`
+mixed at position 21, then clean), then `4` consecutive `4`s -- a perfectly
+clean grouping into 4 contiguous same-irrep runs
+(archived: `sigma_debug_archive/h2o_symon_isympert_diag.txt`). Cross-
+checked the block sizes by hand: direct-product-symmetry pair counts
+`Sum_irrep Iaopop(irrep)**2` (totally-symmetric/self-product pairs) `=
+4**2+1**2+2**2+0**2 = 21` -- matches the first run exactly. **This
+pattern is only possible if Iao_pair positions are sorted/grouped by
+irrep; natural `(Mu,Nu)` raster order would interleave different
+product-irreps within nearly every row** (confirmed by hand for `Mu=1`:
+as `Nu` ranges `1..7`, the product irrep changes every few steps
+depending on `Nu`'s own irrep, never staying constant for 21 straight
+positions) -- so this is conclusive, not a coincidence of AO-block
+ordering. Sym=off control run (`Iaopop=(7)`, one irrep) printed all-`1`s,
+uninformative by construction (only one irrep exists, so the question
+"packed vs natural" can't be distinguished there) -- exactly why this bug
+has been invisible on every `sym=off` run in this project's history,
+including the original 2026-08-16 investigation's own controls.
+
+**Consequence**: `Scrnc_wc_ao2mo.F` (AO2MO transform) and
+`Scrnc_sigma_prep.F`'s `Jj_corr = Jj_lrespn - Jj_bare` subtraction (`Jj_bare`
+built via `Scrnc_get2ints`, genuinely natural `(Mu-1)*Nao+Nu` order, per
+`Scrnc_sigma_bare_ao.F`'s own explicit `Do Mu...Do Nu...Iao_pair=
+(Mu-1)*Nao+Nu` loop) BOTH treat `Jj_lrespn` as natural-order when it is
+actually irrep-grouped-order. Under `sym=off` these two orderings coincide
+(trivial, one irrep = no grouping needed), so every check this project has
+ever run against `sym=off` passed cleanly regardless. Under `sym=on` they
+diverge for the large majority of AO-pair slots, so `Jj_corr` -- and
+everything built from it (`Wc_mo`, `Wc_reduced`, `Sigma_c`, `eps_QP`) --
+silently combines mismatched AO pairs. This fully explains "continued 17"'s
+finding (134/343 `Wc_reduced` entries wrong by orders of magnitude after
+correcting for MO-index permutation, localized by orbital identity rather
+than uniform) and matches 2026-08-16's finding (asymmetry confined to a
+specific irrep block) as two different symptoms of the same root
+mismatch.
+
+**Not yet fixed.** Two candidate fix directions, not yet chosen or
+attempted:
+1. Reorder `Jj_lrespn` from irrep-grouped order back to natural
+   `(Mu-1)*Nao+Nu` order right after `Scrnc_jj_rcc_assemble.F` builds it
+   (or inside it, before return) -- everything downstream
+   (`Scrnc_wc_ao2mo.F`, `Scrnc_sigma_prep.F`) then needs no changes at all,
+   since their natural-order assumption becomes true again. Needs the
+   actual inverse permutation, which `Scrnc_reord_cols.F`'s own `Iord`
+   array (built in `scrnc_prep_2ints.F`, currently used one-way,
+   natural->packed) may already encode, or can be reconstructed directly
+   from `Isympert`+the per-irrep AO index lists (`Irrep_aos`/`Iaopop`/
+   `Ioffao`).
+2. Build `Jj_bare` in `Scrnc_sigma_prep.F` in the SAME irrep-grouped order
+   instead (so the subtraction is apples-to-apples), then make
+   `Scrnc_wc_ao2mo.F`'s AO2MO transform aware of the same permutation when
+   applying the MO coefficient matrix `C` (whose row index needs to be
+   confirmed as natural-AO-order or not -- not yet checked). More
+   invasive, touches more files, higher regression risk to the
+   already-verified `sym=off` path.
+
+Direction 1 looks preferable (minimal blast radius, sym=off path
+untouched) but the actual permutation array needs to be nailed down and
+verified (e.g. against the `sym=off` case, where it should reduce to the
+identity) before writing it -- next step on resume.
+
+**Committed**: `scrnc_jj_rcc_assemble.F` (the `_DEBUG_LVL0`-gated
+diagnostic print, kept for future reference); this log entry; new archive
+files `sigma_debug_archive/h2o_symon_isympert_diag.txt` /
+`h2o_symoff_isympert_diag.txt`. Rebuilt `xscrnc` via `gmake`/`gmake
+install`, md5-verified installed.
+
+---
+
+## SESSION 2026-08-18 (continued 17) -- negative-frequency folding fix IMPLEMENTED + independently pilot-code-verified; QP results change substantially (new non-convergence + sign flips, not yet assessed); NEW independent bug found via sym=on/sym=off consistency check (pre-existing, unrelated to the fix)
+
+Picked up "continued 16"'s confirmed gap. Per [[feedback_pilot_code_debugging]]
+(standalone minimal code as ground truth) and
+[[feedback_consistency_check_debugging]] (exhaust checks from every angle),
+Ajith's instruction this session: complete the fix, verify with a pilot code,
+and use the sym=on/off and RHF/UHF consistency checks that have worked before.
+
+**Fix implemented**: `scrnc_sigma_driver.F`, fold loop (~line 227) -- added
+the second propagator term `Dim2 = Omega_ext(J) - Xnode(K)` alongside the
+existing `Dim = Omega_ext(J) + Xnode(K)`, both sharing the same
+`Wc_reduced(.,.,Im)` and `Wnode(K)` weight, exactly as derived in "continued
+16". `Tre`/`Tim` now sum both terms before multiplying into
+`Sigma_re`/`Sigma_im`.
+
+**Pilot-code verification (independent of the production code)**: wrote
+`pilot_sigma_fold_check.f90` (scratchpad, archived to
+`aces2/scrnc/sigma_debug_archive/pilot_sigma_fold_check.f90` +
+its output `pilot_sigma_fold_check_output.txt`) -- a standalone program with
+NO connection to ACES2/chemistry. Synthetic surrogate `g(w')=1/(1+(w'/b)**2)`
+stands in for `Wc_reduced` at one fixed `(p,q,m)`; ground truth is
+`Int_{-inf}^{inf} dw' [1/(i(omega+w')-eps_m)]*g(w')` evaluated via a
+substitution `w'=b*tan(theta)` (maps the tail exactly, removes it
+analytically) + fine composite Simpson quadrature -- a genuinely different
+substitution and quadrature rule than production's Gauss-Legendre + rational
+map, so this isn't the code checking itself. Reused the actual
+`Scrnc_sigma_freq_grid`/`Scrnc_sigma_gaussl` routines verbatim (same
+duplicated-per-module convention) to build the real production grid, then
+compared the ONE-TERM (pre-fix) and TWO-TERM (post-fix) folded sums against
+the Simpson ground truth, at 9 `(eps_m,omega)` combinations spanning
+`eps_m={-0.5,0.3,-20.6}` (the last matching the DZ core-orbital scale from
+"continued 13") and `omega={0,0.3,0.75}`.
+
+Result: **two-term matches ground truth to `1e-9`-`1e-15` by N=32, at every
+single test point**; **one-term is wrong by 5-90% at every test point and
+does NOT converge to the true value as N grows** (converges cleanly to a
+stable but incorrect number -- the signature of a missing term, not a
+quadrature-precision issue). Hit one self-inflicted snag worth recording:
+first run had the two `folded_sum` calls' `one_term` boolean swapped,
+making the mislabeled output look like the OPPOSITE conclusion (one-term
+matching, two-term wrong) -- caught by a second diagnostic program
+(`diag_halfvsfull.f90`, not archived, pure scratch) that split the exact
+integral into its `(0,inf)` and `(-inf,0)` halves explicitly and noticed the
+mislabeled "two-term" column exactly equalled the `(0,inf)`-only half-integral,
+not the full one -- fixed the call, reran, got the result above. Worth
+remembering: a pilot code's OWN wiring needs the same "don't trust it blindly"
+scrutiny as the thing it's checking.
+
+**Rebuilt and reinstalled**: `module load intel/2025.1.0`; `ifx -i8 -o
+scrnc_sigma_driver scrnc_sigma_driver.F`; installed to `aces2/bin/xscrncsigma`;
+md5-verified installed binary matches the freshly-linked local one (per
+[[feedback_aces_build_install_trap]]).
+
+**Reran H2O/STO-3G (sym=off, REF=UHF) DRCCD and CCSD** in the existing
+`h2o_scrnc_sigma_debug`/`h2o_scrnc_sigma_debug_ccsd` dirs (same
+`sigma_input`/`ZMAT` as "continued 14"). Both exit 0. Self-checks unaffected
+by the fix, as expected (fix is isolated to fold arithmetic downstream of
+them): `Scrnc_sigma_bare_ao` still exactly `0.0`; `Scrnc_wc_ao2mo_bfcheck`
+still `~1D-14`-`3D-14`.
+
+**But the QP results themselves changed substantially** (post-fix
+`qp_energies.dat` archived as `h2o_qp_energies_postfix.dat` /
+`h2o_ccsd_qp_energies_postfix.dat`):
+- DRCCD: MO 5 (`eps_HF=-0.391`) now FAILS to converge (51 iters, hits cap) --
+  converged cleanly pre-fix. `Im[Sigma_c]` is now NEGATIVE for MOs 3,4,6,7
+  (was positive for all 7 MOs pre-fix) -- per "continued 13"'s own flagged
+  convention this was treated as a symptom of a bad Pade
+  extrapolation/spurious pole, not dismissed as fine there, so it shouldn't
+  be dismissed here either.
+- CCSD: same pattern (MO 5 fails to converge, same sign flips), and MO 5's
+  correction is enormous (`eps_QP=-0.629` vs `eps_HF=-0.391`, a ~0.24 Hartree
+  shift) -- given non-convergence this number is not trustworthy as-is.
+- Recomputing "continued 14"'s CC-vs-dRPA diff table with the fix (excluding
+  the non-converged MO 5) gives differences up to ~1.8 eV (MO 2), several
+  times larger than the pre-fix ~0.33 eV max -- a real, qualitative change to
+  the internal CC-vs-RPA comparison this project is building toward as
+  manuscript evidence.
+- **Not yet assessed**: whether this is "the fix correctly revealing a
+  bigger effect" or "the fix destabilized the existing Pade continuation
+  in a new way" (or both) -- needs the same Pade-robustness discussion
+  already flagged open in "continued 13"/"continued 15", now sharper since
+  it affects more MOs than before. Deliberately not chased further or
+  patched this session -- a numerics/physics call for Ajith, same standing
+  practice as always.
+
+**NEW finding, independent of the fold fix -- sym=on vs sym=off consistency
+check (Ajith's suggested check) surfaces a real, separate bug.** Built
+`h2o_scrnc_sigma_debug_symon` (identical ZMAT to the sym=off baseline,
+only `sym=on`) and reran. `eps_HF` values matched the sym=off run exactly
+(just reordered/re-blocked by irrep, as expected), but the QP corrections
+for the SAME physical MOs (matched by `eps_HF` value) differ wildly --
+not a small numerical difference: e.g. MO with `eps_HF=-20.24174` gets
+`corr=-17.8 mHa` under sym=off vs `corr=-835 mHa` under sym=on; MO with
+`eps_HF=-0.618` gets `+1.5 mHa` vs `+250 mHa`; sign flips on two other MOs
+too. Magnitudes up to ~0.8 Hartree apart -- far outside anything explicable
+as "different code path, same physics, small numerical difference."
+
+**Isolated from the fold fix**: rebuilt a throwaway one-term (pre-fix
+formula) control binary (`scrnc_sigma_driver_oneterm`, scratchpad only, not
+committed/archived -- built by reverting the fold-loop patch on a scratch
+copy of the file, real repo file untouched throughout, md5-verified after)
+and reran BOTH sym=off and sym=on with it. **The sym=on/sym=off discrepancy
+is present with the OLD one-term formula too**, same order of magnitude
+(archived as `h2o_symoff_oneterm_qp_energies.dat` /
+`h2o_symon_oneterm_qp_energies.dat`, plus the two-term sym=on result as
+`h2o_symon_twoterm_qp_energies.dat`). **Conclusion: this is a pre-existing,
+independent bug, not caused by or related to today's fold-formula fix.**
+Leading suspicion (not confirmed, not investigated further this session):
+a MO-index-ordering mismatch between `Wc_reduced(p,q,m)` and `Eps(m)` as
+written to `wcreduc.dat` by `Scrnc_sigma_prep.F` -- irrep-block MO ordering
+under `sym=on` vs plain energy ordering under `sym=off` -- but this needs
+its own dedicated investigation, not guessed at further here.
+
+**REF=RHF consistency check attempted, inconclusive**: `h2o_scrnc_sigma_debug_rhf`
+(same ZMAT, `REF=RHF` instead of `UHF`, `sym=off`) -- the DRCCD/CC step itself
+completes fine (`Rcl_check_uhf` T-amplitude checksums print normally), but
+the pipeline dies with `@ACES_EXIT` right after, before `xscrnc` finishes,
+at node 1. Never previously exercised -- every prior scrnc test in this whole
+project uses `REF=UHF` even for closed-shell H2O (established convention,
+not investigated as to why). Not chased further -- appears to be a
+pre-existing limitation of this code path with `REF=RHF`, unrelated to the
+fold fix, orthogonal to both bugs above. Left open.
+
+**Committed**: `scrnc_sigma_driver.F` (the fold fix only); this log entry;
+new archive files under `aces2/scrnc/sigma_debug_archive/` (post-fix
+`qp_energies.dat` for H2O DRCCD/CCSD, the sym=on/sym=off one-term/two-term
+comparison outputs, the pilot code + its output). Full pipeline directories
+left on disk, not committed, per project convention:
+`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_sigma_debug{,_ccsd,_symon,_rhf,
+_symoff_oneterm_isolation,_symon_oneterm_isolation}/`.
+
+**Next steps, both needing Ajith's call, neither started**: (1) Pade
+robustness given the fix now destabilizes MO 5 and flips several
+`Im[Sigma_c]` signs -- same open numerics question as "continued 13"/
+"continued 15", now more pressing; (2) investigate the sym=on MO-index-
+ordering bug in `Scrnc_sigma_prep.F` (or wherever the actual mismatch turns
+out to be) -- brand new, not previously known, found only because the
+sym=on/off consistency check was run as a check on the fold fix and
+happened to catch something unrelated.
+
+---
+
+## SESSION 2026-08-17 (continued 16) -- verified item 1 from "continued 15": the omega'-integral folding IS missing a term (CONFIRMED bug); grid-conflation worry (item 3/4) is a false alarm; Ajith is reconsidering whether to frame this as GW at all
+
+**Housekeeping note first, corrected**: Ajith clarified same day: "Similarity
+to GW is undisputed. One improvement or difference is linear response. We
+want something new. That is all I am saying." He is NOT rejecting the GW
+framing (an earlier version of this note overread his first remark as
+that -- wrong, corrected here). The GW resemblance stays; CC-linear-response
+W is already one acknowledged difference from RPA-GW, but he doesn't yet
+consider that sufficient novelty on its own -- still studying GW more,
+still deciding what the additional angle is. So the Pade/contour-
+deformation/GWGamma-hierarchy material in "continued 15" is NOT moot, still
+live. The frequency-reduction check below is unaffected either way -- it's
+just whether the existing quadrature correctly represents the omega'
+convolution it claims to.
+
+**Further refinement same day**: "Nothing we did is moot. They
+improve/debug our code. If we get big improvement with CC, then CCLR-GW is
+worth a manuscript." All debugging/correctness work stands on its own
+value regardless of the novelty question. And the novelty bar itself is
+sharper than "need one more new ingredient beyond CC-response screening":
+if CC screening gives a BIG improvement (not just a nonzero effect) over
+RPA-GW, that's sufficient on its own -- CCLR-GW would be the manuscript.
+The concrete next test this points to is benchmarking CC-vs-dRPA screened
+QP energies against a trusted reference (CCSD(T) IPs or GW100-style set),
+not searching for a separate new angle -- see
+[[project_scrnc_gw_manuscript_goal]] for full framing.
+
+**Item 3/4 from "continued 15" (quadrature-vs-continuation grid conflation)
+-- FALSE ALARM, already correctly separated in code.** Checked
+`scrnc_sigma_driver.F` directly: `Xnode(K)`/`Wnode(K)` (the omega' quadrature,
+built by `Scrnc_sigma_freq_grid`, N nodes mapped from Gauss-Legendre(-1,1) to
+(0,infinity) via the standard `Omega_c*(1+x)/(1-x)` substitution) and
+`Omega_ext(J)` (the external omega_j points, read directly from
+`sigma_input`, completely independent count `Nomega`) are already two
+distinct arrays, and the main fold loop (`Do J.../Do Im.../Do K` structure,
+lines ~227-244) already reuses one pipeline run's `Wc_reduced` across every
+J with no extra pipeline cost -- i.e. the "many cheap external omega_j
+evaluations from one expensive omega' quadrature" idea the external review
+recommended is already exactly how the code works. Nothing to fix here.
+
+**Item 1 (negative-frequency folding) -- CONFIRMED, real gap, not yet
+fixed.** Re-derived the reduction: starting from the full-axis convolution
+`Sigma_c(iw) = -(1/2pi) Int_{-inf}^{inf} dw' G0(iw+iw') Wc(iw')` and using
+`Wc(-iw')=Wc(iw')` (Wc is an even function of the response frequency, true
+for any real-Hamiltonian response function), substituting w'->-w' on the
+negative half and folding gives
+
+  Sigma_c(iw) = -(1/2pi) Int_0^inf dw' Sum_m
+     [ 1/(iw+iw'-eps_m) + 1/(iw-iw'-eps_m) ] Wc(pm,qm;iw')
+
+i.e. TWO propagator terms per quadrature node, not one. Read the actual
+fold loop in `scrnc_sigma_driver.F` (lines ~227-244): for each node K and
+external point J it computes `Dim = Omega_ext(J) + Xnode(K)`,
+`Dre = -Eps(Im)`, then `T = 1/(Dre+i*Dim)` -- exactly
+`1/(i*omega_j+i*omega'_K-eps_m)`, accumulated as
+`Sigma += (-Wnode(K)/2pi) * T * Wc_reduced`. **There is no companion term
+using `Omega_ext(J) - Xnode(K)`** -- the second propagator from the
+derivation above is simply absent from the sum. No occ/virt iη branch or
+other mechanism was found elsewhere in the file that could be silently
+supplying it. This is a genuine, previously-undetected gap in the Sigma_c
+construction itself (independent of the Pade/continuation questions), not
+a documentation/notation issue as first suspected.
+
+**Not yet fixed** -- deliberately left for Ajith's return given (a) it's a
+physics-affecting change to the research pipeline (standing "verify before
+trusting/committing" practice) and (b) the open GW-vs-new-direction question
+above may change whether this code path matters at all. If/when resuming:
+the fix is mechanical -- inside the `Do J / Do Im` block, add a second
+`Dim2 = Omega_ext(J) - Xnode(K)` term with the same `Eps(Im)`/`Wnode(K)`
+weight and accumulate it into `Sigma_re`/`Sigma_im` alongside the existing
+term. Worth re-running the H2O/STO-3G DRCCD-vs-CCSD comparison
+("continued 14") after the fix to see whether it changes the magnitude/sign
+of the already-observed differences, since that comparison was run before
+this gap was found.
+
+---
+
+## SESSION 2026-08-17 (continued 15) -- external theoretical review of the Sigma_c/Pade implementation + modern-GW positioning discussion, archived not yet acted on
+
+Ajith pasted a discussion document (`~/claude_docs/CC_screened_GW_discussion.md`,
+an external review of `SCRNC_SIGMA_C_EQUATIONS.md` and
+`scrnc_sigma_prep.F`/`scrnc_sigma_driver.F`) to be archived. **Not yet
+implemented or verified against code -- this is a set of recommendations to
+evaluate, not a confirmed diagnosis.** Full text in that file; key points:
+
+**Part 1 -- concrete implementation review, ordered "do not change AO->MO/Wc
+machinery yet, proceed in this order":**
+1. *Check first*: whether the working Sigma_c integral (0->infinity in
+   omega') already implicitly contains the negative-frequency contribution
+   that a symmetric W_c(-iw')=W_c(iw') reduction from [-inf,inf] should
+   produce (would normally give two propagator denominators, not one) --
+   flagged as possibly more fundamental than the Pade convergence problem.
+2. The current pipeline is imaginary-axis evaluation + Pade continuation, not
+   true contour deformation (which would evaluate Sigma_c(omega_real)
+   directly via Green's-function residues, no continuation step).
+3. **Likely actionable fix, low cost**: the omega' quadrature (expensive, CC-
+   response) and the external omega_j evaluation grid (cheap, algebraic) are
+   two independent grids. Suspects the `0.075i, 0.493i, 2.030i, 13.40i` nodes
+   in the notes are the N=4 omega' quadrature, possibly conflated with the
+   omega_j continuation points in code/notation -- worth auditing
+   `scrnc_sigma_driver.F` for this. If they're entangled, decoupling them
+   means the core-orbital Pade domain-of-validity gap (DZ, 2/14 MOs, "continued
+   13") could be fixed by cheaply sampling many more external omega_j points
+   over the relevant energy scale (e.g. log/rational grid out to ~20 Ha for
+   the eps_HF~-20.6 core case) WITHOUT rerunning the expensive omega'
+   quadrature -- reassess Pade only after this decoupling is confirmed/fixed.
+4. Separately, suggests replacing the bare fixed-point QP iteration
+   omega_{n+1}=eps_HF+Re(Sigma_c(omega_n)) with a bracketed root find on
+   F_p(omega)=omega-eps_HF-Re(Sigma_c(omega)), to separate "is the
+   continuation trustworthy" from "does the QP equation have a stable root" --
+   endorses NOT adding damping just to force convergence (matches Ajith's
+   existing "not silently patched" stance from "continued 13").
+5. If the decoupled-grid approach still leaves Pade unreliable, implementing
+   true contour deformation w/ residues becomes attractive precisely because
+   the expensive ingredient (W(iw')) is already computed and reusable.
+6. Endorses the existing HF-exchange argument (no separate Sigma_x module
+   needed since F=h+J-Sigma_x already for canonical HF orbitals) as worth
+   keeping in the writeup, not accidental.
+
+**Part 2 -- modern-GW positioning for the novelty question**
+([[project_scrnc_gw_manuscript_goal]]): frames scrnc as CC-improved
+*screening* only (chi_CC -> W_CC -> Sigma=iG0*W_CC), explicitly NOT yet a
+vertex-corrected theory (Sigma=iGWGamma) -- proposes the hierarchy
+`G0W_RPA -> G0W_CC -> G0W_CC*Gamma_CC` as the natural framing, with the
+2026-08-17 DRCCD-vs-CCSD comparison ("continued 14") being the first data
+point on step 1->2 of that hierarchy. Names recent vertex-corrected/modern-GW
+directions as context (G3W2, SOSEX, self-consistent GWGamma, BSE vertex
+corrections, contour-deformation/imaginary-time alternatives to Pade,
+low-scaling/THC methods) -- flags that vertex effects in the self-energy and
+polarizability can partially cancel, so improving W alone need not improve QP
+energies monotonically, i.e. the "real differences" found in "continued 14"
+demonstrate an effect but not yet that it's an improvement.
+
+**Not done**: no code changes, no verification of the [-inf,inf] reduction
+claim, no audit of whether omega'/omega_j are actually conflated in
+`scrnc_sigma_driver.F`. Natural next step per this doc's own recommended
+order: verify the frequency-reduction identity first, then check the
+quadrature-vs-continuation grid separation in code, before touching Pade
+itself. Needs Ajith's read/call before acting, per the standing "verify
+before trusting" and "positioning is his call" practice in this project.
+
+---
+
+## SESSION 2026-08-17 (continued 14) -- CCSD-path bug found+fixed (directory not cleared between nodes); first internal CC-vs-RPA screening comparison run -- REAL, non-trivial differences found
 
 Ajith's "check internally" instruction, in response to "do we have
 something novel to add": since ring-CC (RCCD/DRCCD) IS RPA, reformulated

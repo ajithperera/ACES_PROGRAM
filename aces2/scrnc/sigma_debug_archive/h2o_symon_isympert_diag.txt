@@ -1,0 +1,10 @@
+@CHECKSUM: Jbar_L<(S,D)|pq>:         0.000000000000E+00      0.000000000000E+00
+ @-DIAG Iaopop(1..Nirrep):
+    4    1    2    0
+ @-DIAG Nao_pair=    49
+ @-DIAG Isympert(1..Nao_pair):
+   1   1   1   1   1   1   1   1   1   1
+   1   1   1   1   1   1   1   1   1   1
+   1   2   2   2   2   2   2   2   2   3
+   3   3   3   3   3   3   3   3   3   3
+   3   3   3   3   3   4   4   4   4
