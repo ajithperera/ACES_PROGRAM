@@ -177,6 +177,25 @@ C
       Write(6,"(a,1PD15.6)")
      +   " @-Scrnc_sigma_bare_ao, max bare-v asymmetry = ", Xmaxasym
 C
+C Diagnostic (2026-08-18, sym=on/off Iao_pair permutation investigation,
+C see SCRNC_DEBUG_LOG.md "continued 18"): dump Jj_bare in its own
+C natural (Mu-1)*Nao+Nu order, plain one-value-per-line (Iao_pair
+C fastest), so its values can be matched, by value, against the
+C packed-order bare block recoverable from Scrnc_jj_rcc_assemble.F's
+C own diagnostic dumps -- an empirical, code-reading-independent way to
+C read off the actual packed<->natural permutation rather than
+C hand-deriving it. Avoids the "output" pretty-printer's column-
+C blocked/zero-row-skipping format, which is unreliable to parse back.
+      Open(Unit=88,File="jjbare_natural.dat",Form="Formatted",
+     +     Status="UNKNOWN")
+      Write(88,*) Nao_pairs
+      Do Jao_pair = 1, Nao_pairs
+       Do Iao_pair = 1, Nao_pairs
+        Write(88,*) Jj_bare(Iao_pair,Jao_pair)
+       Enddo
+      Enddo
+      Close(Unit=88)
+C
       Return
       End
 C

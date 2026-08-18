@@ -99,6 +99,16 @@ C times total for Itop=2).
 
       Call Dzero(JJ_lrespn,Nao_pair*Nao_pair)
 
+C Diagnostic confirming Isympert(1..Nao_pair)'s ordering convention --
+C see SCRNC_DEBUG_LOG.md 2026-08-18 sym=on/off investigation for the
+C printed evidence this produced (kept 1-gated, matching this
+C file's existing convention, rather than left permanently unguarded).
+      Write(6,"(a)") " @-DIAG Iaopop(1..Nirrep):"
+      Write(6,"(8(1x,I4))") (Iaopop(Ir),Ir=1,Nirrep)
+      Write(6,"(a,I6)") " @-DIAG Nao_pair=",Nao_pair
+      Write(6,"(a)") " @-DIAG Isympert(1..Nao_pair):"
+      Write(6,"(10(1x,I3))") (Isympert(Ir),Ir=1,Nao_pair)
+
       I_pairs = Nao_pair
       J_pairs = Nao_pair
 
@@ -159,6 +169,18 @@ C times total for Itop=2).
       Write(6,"(a)") " Response-only JJ matrix (before bare v added)"
       call output(JJ_lrespn,1,Nao_pair,1,Nao_pair,Nao_pair,
      +            Nao_pair,1)
+C Diagnostic (2026-08-18, see scrnc_sigma_prep.F's own comment) -- plain
+C dump of the packed-order response-only JJ_lrespn, before the bare-v
+C add, for empirical permutation recovery.
+      Open(Unit=89,File="jjlrespn_resp_packed.dat",Form="Formatted",
+     +     Status="UNKNOWN")
+      Write(89,*) Nao_pair
+      Do Jao_pair = 1, Nao_pair
+       Do Iao_pair = 1, Nao_pair
+        Write(89,*) JJ_lrespn(Iao_pair,Jao_pair)
+       Enddo
+      Enddo
+      Close(Unit=89)
 
 C --------------------------------------------------------------------
 C Add the bare (uncorrelated) Coulomb integral (mu nu|kappa lambda) so
@@ -188,6 +210,19 @@ C --------------------------------------------------------------------
             Enddo
          Enddo
       Enddo
+
+C Diagnostic (2026-08-18) -- plain dump right after the bare-v add,
+C BEFORE Symmet2, so (this dump) - (jjlrespn_resp_packed.dat) recovers
+C the bare part alone, in packed order, unaffected by symmetrization.
+      Open(Unit=90,File="jjlrespn_plusbare_packed.dat",
+     +     Form="Formatted",Status="UNKNOWN")
+      Write(90,*) Nao_pair
+      Do Jao_pair = 1, Nao_pair
+       Do Iao_pair = 1, Nao_pair
+        Write(90,*) JJ_lrespn(Iao_pair,Jao_pair)
+       Enddo
+      Enddo
+      Close(Unit=90)
 
 C Force-symmetrize the final W=v+v*chi*v matrix, matching the standard
 C ACES2 EOM-effective-Hamiltonian property recipe (vcceh/secprp.F's

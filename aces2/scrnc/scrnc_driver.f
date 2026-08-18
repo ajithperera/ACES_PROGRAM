@@ -511,7 +511,19 @@ C vcceh/secprp.F's own "IF(.NOT. REALFREQ) FREQ = FREQ*FREQ" convention).
      +                           Work(Ioff_pert_bgn),Nao_pairs)
       Endif
 
-C This block is obsolete. 
+C Un-pack Jj_lrespn from scrnc's internal irrep-grouped Iao_pair
+C ordering back to the natural (Mu-1)*Nao+Nu convention that
+C Scrnc_wc_ao2mo.F and Scrnc_sigma_prep.F's Jj_bare subtraction both
+C assume -- see SCRNC_DEBUG_LOG.md, 2026-08-18 "continued 18"/
+C "continued 19" (sym=on QP-energy corruption, root cause + fix). A
+C no-op under sym=off (Nirrep=1), where the two conventions already
+C coincide. Must run before Scrnc_wc_ao2mo_test below, for either the
+C ring-CC or CCSD path above.
+
+      Call Scrnc_jj_unpack_natural(Work(I000),Memleft,
+     +                              Work(Ijj_lrspn_bgn),Nao,Nao_pairs)
+
+C This block is obsolete.
 C At this point Work(Ijj_lrspn_bgn) contains the what I called the "response
 C matrix". It is of the type (IJ|KL) (all alpha and occupied). We need to 
 C transform this to (munu|lamdasigma) basis. First we do (IJKJL) --> (XX|KL) 
