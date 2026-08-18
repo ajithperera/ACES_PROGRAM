@@ -222,15 +222,28 @@ C
 C        Fold node K's contribution into Sigma_c(p,q;i*omega_j) for
 C        every requested outer omega_j.
 C
+C        Full-axis convolution Int_{-inf}^{inf} dw' G0(iw+iw')Wc(iw'),
+C        folded to [0,inf) using Wc(-iw')=Wc(iw') (even in the response
+C        frequency, true for any real-Hamiltonian response function --
+C        see SCRNC_DEBUG_LOG.md 2026-08-17 "continued 16"), gives TWO
+C        propagator denominators per quadrature node, not one:
+C
 C        i*omega_j + i*omega'_K - eps_m = -eps_m + i*(omega_j+omega'_K)
+C        i*omega_j - i*omega'_K - eps_m = -eps_m + i*(omega_j-omega'_K)
+C
+C        Both terms share the same Wc_reduced(.,.,Im) (that symmetry is
+C        exactly what licenses the fold in the first place) and the
+C        same Wnode(K) quadrature weight.
 C
          Do J = 1, Nomega
-          Dim = Omega_ext(J) + Xnode(K)
+          Dim  = Omega_ext(J) + Xnode(K)
+          Dim2 = Omega_ext(J) - Xnode(K)
           Do Im = 1, Nmo
            Dre = -Eps(Im)
-           Dmag2 = Dre*Dre + Dim*Dim
-           Tre =  Dre / Dmag2
-           Tim = -Dim / Dmag2
+           Dmag2  = Dre*Dre + Dim*Dim
+           Dmag22 = Dre*Dre + Dim2*Dim2
+           Tre =  Dre / Dmag2   + Dre  / Dmag22
+           Tim = -Dim / Dmag2   - Dim2 / Dmag22
            Factor = -Wnode(K) / (2.0D0*Pi)
            Do Iq = 1, Nmo
             Do Ip = 1, Nmo
@@ -282,7 +295,9 @@ C     exact exchange) -- standard result for HF-based G0W0, not new
 C     physics, but flagged here since it means this driver deliberately
 C     builds NO separate Sigma_x machinery. On-shell QP equation used:
 C        eps_QP(p) = eps_HF(p) + Re[Sigma_c(p,p; eps_QP(p))]
-C     solved by simple fixed-point iteration from eps_QP^(0)=eps_HF(p).
+C     solved by bracketed bisection on F(z)=z-eps_HF-Re[Sigma_c(z)]
+C     (see Scrnc_sigma_qp_bracket below for why, not naive fixed-point
+C     iteration).
 C
       If (Nomega .GE. 2) Call Scrnc_sigma_qp_solve(Nmo,Nomega,
      +                        Omega_ext,Sigma_re,Sigma_im,Eps,Maxmo,
@@ -309,9 +324,7 @@ C
       Dimension Eps(Maxmo)
 C
       Double Complex Zpt(Maxomega), Fpt(Maxomega), Acoef(Maxomega)
-      Double Complex Zeval, Fval
-C
-      Parameter (Maxiter=50, Tol=1.0D-8)
+      Double Complex Fval
 C
       Open(Unit=26,File="qp_energies.dat",Form="Formatted",
      +     Status="UNKNOWN")
@@ -327,21 +340,13 @@ C
 C
          Call Scrnc_sigma_pade_coeff(Nomega,Zpt,Fpt,Acoef,Maxomega)
 C
-         Eps_qp   = Eps(Ip)
-         Iconverged = 0
-         Do Iter = 1, Maxiter
-            Zeval = Dcmplx(Eps_qp,0.0D0)
-            Call Scrnc_sigma_pade_eval(Nomega,Zpt,Acoef,Zeval,Fval,
-     +                                  Maxomega)
-            Eps_new = Eps(Ip) + Dble(Fval)
-            If (Abs(Eps_new-Eps_qp) .LT. Tol) Then
-               Eps_qp = Eps_new
-               Iconverged = 1
-               Goto 100
-            Endif
-            Eps_qp = Eps_new
-         Enddo
-  100    Continue
+         Call Scrnc_sigma_qp_bracket(Nomega,Zpt,Acoef,Eps(Ip),
+     +                                 Maxomega,Eps_qp,Fval,
+     +                                 Iconverged,Iter)
+C
+         If (Iconverged .EQ. 0) Write(6,"(a,i3)")
+     +      " @-Scrnc_sigma_qp_solve: WARNING -- no bracketed root"//
+     +      " found for MO",Ip
 C
          Write(26,"(I3,2(1x,1PD15.6),1x,1PD15.6,3x,I3,5x,I3)")
      +      Ip,Eps(Ip),Eps_qp,Dimag(Fval),Iter,Iconverged
@@ -352,6 +357,117 @@ C
 C
       Write(6,"(a)")
      +   " @-Scrnc_sigma_driver: QP solve done, see qp_energies.dat"
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_sigma_qp_bracket(N,Zpt,Acoef,Eps_hf,Maxomega,
+     +                                    Eps_qp,Fval,Iconverged,Iter)
+C
+C Finds the root of F(z)=z-Eps_hf-Re[Sigma_c(z)] closest to Eps_hf,
+C by scanning an expanding window centered on Eps_hf for a genuine
+C sign change of F (rejecting any interval where the Pade-evaluated
+C Re[Sigma_c] itself blows up, the signature of a pole rather than a
+C root), then bisecting the bracket to Tol.
+C
+C Why not naive fixed-point iteration eps_new=Eps_hf+Re[Sigma_c(eps)]
+C (the original implementation): F(z)=0 can have a perfectly good,
+C isolated root even where the fixed-point map's local slope has
+C magnitude greater than 1 at that root -- a property of the actual
+C Sigma_c(z) function being continued, not a numerics artifact.
+C Fixed-point iteration is only guaranteed to converge locally when
+C that slope is below 1 in magnitude, and provably cannot converge
+C otherwise (settles into a limit cycle instead), even though the
+C root itself is fine. Confirmed on the H2O/STO-3G MO-5 case (the
+C original 51-iteration non-convergence): standalone check found a
+C single clean root at z=-0.4968 (no nearby pole) with local slope
+C -2.14, exactly reproducing the observed oscillation. See
+C SCRNC_DEBUG_LOG.md 2026-08-18 for the full pilot-code analysis.
+C
+      Implicit Double Precision (A-H,O-Z)
+      Double Complex Zpt(Maxomega), Acoef(Maxomega), Fval, Fv1, Fv2
+C
+      Parameter (Nscan=200, Maxdoubling=8, Tol=1.0D-8,
+     +           Whalf0=2.0D0, Fmax=1.0D3)
+C
+      Iconverged = 0
+      Eps_qp = Eps_hf
+      Fval = Dcmplx(0.0D0,0.0D0)
+      Iter = 0
+      Whalf = Whalf0
+C
+      Do Idbl = 1, Maxdoubling
+C
+         Dz = 2.0D0*Whalf/Nscan
+         Z1 = Eps_hf - Whalf
+         Call Scrnc_sigma_pade_eval(N,Zpt,Acoef,Dcmplx(Z1,0.0D0),
+     +                                Fv1,Maxomega)
+         F1 = Z1 - Eps_hf - Dble(Fv1)
+         Bestdist = 1.0D30
+         Zbrlo = 0.0D0
+         Zbrhi = 0.0D0
+         Ifound = 0
+C
+         Do Iscan = 1, Nscan
+            Z2 = Z1 + Dz
+            Call Scrnc_sigma_pade_eval(N,Zpt,Acoef,Dcmplx(Z2,0.0D0),
+     +                                   Fv2,Maxomega)
+            F2 = Z2 - Eps_hf - Dble(Fv2)
+C
+            If ((F1.LT.0.0D0) .NEQV. (F2.LT.0.0D0)) Then
+               If (Abs(Dble(Fv1)).LT.Fmax .AND.
+     +             Abs(Dble(Fv2)).LT.Fmax) Then
+                  Dist = Min(Abs(Z1-Eps_hf),Abs(Z2-Eps_hf))
+                  If (Dist .LT. Bestdist) Then
+                     Bestdist = Dist
+                     Zbrlo = Z1
+                     Zbrhi = Z2
+                     Ifound = 1
+                  Endif
+               Endif
+            Endif
+C
+            Z1 = Z2
+            F1 = F2
+            Fv1 = Fv2
+         Enddo
+C
+         If (Ifound .EQ. 1) Goto 200
+C
+         Whalf = Whalf * 2.0D0
+C
+      Enddo
+C
+      Return
+C
+  200 Continue
+C
+      Call Scrnc_sigma_pade_eval(N,Zpt,Acoef,Dcmplx(Zbrlo,0.0D0),
+     +                             Fv1,Maxomega)
+      Fone = Zbrlo - Eps_hf - Dble(Fv1)
+C
+      Do Iter = 1, 200
+         Zmid = 0.5D0*(Zbrlo+Zbrhi)
+         Call Scrnc_sigma_pade_eval(N,Zpt,Acoef,Dcmplx(Zmid,0.0D0),
+     +                                Fval,Maxomega)
+         Fmid = Zmid - Eps_hf - Dble(Fval)
+         If ((Fmid.LT.0.0D0) .EQV. (Fone.LT.0.0D0)) Then
+            Zbrlo = Zmid
+            Fone = Fmid
+         Else
+            Zbrhi = Zmid
+         Endif
+         If (Abs(Zbrhi-Zbrlo) .LT. Tol) Goto 300
+      Enddo
+C
+  300 Continue
+C
+      Eps_qp = 0.5D0*(Zbrlo+Zbrhi)
+      Call Scrnc_sigma_pade_eval(N,Zpt,Acoef,Dcmplx(Eps_qp,0.0D0),
+     +                             Fval,Maxomega)
+      Iconverged = 1
 C
       Return
       End

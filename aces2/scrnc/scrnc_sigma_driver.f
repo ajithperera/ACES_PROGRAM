@@ -233,15 +233,28 @@ C
 C        Fold node K's contribution into Sigma_c(p,q;i*omega_j) for
 C        every requested outer omega_j.
 C
+C        Full-axis convolution Int_{-inf}^{inf} dw' G0(iw+iw')Wc(iw'),
+C        folded to [0,inf) using Wc(-iw')=Wc(iw') (even in the response
+C        frequency, true for any real-Hamiltonian response function --
+C        see SCRNC_DEBUG_LOG.md 2026-08-17 "continued 16"), gives TWO
+C        propagator denominators per quadrature node, not one:
+C
 C        i*omega_j + i*omega'_K - eps_m = -eps_m + i*(omega_j+omega'_K)
+C        i*omega_j - i*omega'_K - eps_m = -eps_m + i*(omega_j-omega'_K)
+C
+C        Both terms share the same Wc_reduced(.,.,Im) (that symmetry is
+C        exactly what licenses the fold in the first place) and the
+C        same Wnode(K) quadrature weight.
 C
          Do J = 1, Nomega
-          Dim = Omega_ext(J) + Xnode(K)
+          Dim  = Omega_ext(J) + Xnode(K)
+          Dim2 = Omega_ext(J) - Xnode(K)
           Do Im = 1, Nmo
            Dre = -Eps(Im)
-           Dmag2 = Dre*Dre + Dim*Dim
-           Tre =  Dre / Dmag2
-           Tim = -Dim / Dmag2
+           Dmag2  = Dre*Dre + Dim*Dim
+           Dmag22 = Dre*Dre + Dim2*Dim2
+           Tre =  Dre / Dmag2   + Dre  / Dmag22
+           Tim = -Dim / Dmag2   - Dim2 / Dmag22
            Factor = -Wnode(K) / (2.0D0*Pi)
            Do Iq = 1, Nmo
             Do Ip = 1, Nmo
