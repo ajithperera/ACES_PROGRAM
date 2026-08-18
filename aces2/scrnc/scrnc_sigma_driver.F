@@ -47,8 +47,13 @@ C
 C Inputs (plain text files in the shared working directory):
 C   sigma_input:   line 1: N (quadrature order)
 C                  line 2: Omega_c (quadrature scale, a.u.)
-C                  line 3: Nomega (number of external omega points)
-C                  next Nomega lines: Omega_ext(j) values (a.u.)
+C                  Omega_ext (external evaluation grid) is NOT read
+C                  from here -- it is generated automatically once
+C                  Eps(1..Nmo) is known (end of node 1, see "Auto-
+C                  build" below), so the grid always reaches this
+C                  system's own orbital-energy range regardless of
+C                  molecule/basis. See SCRNC_DEBUG_LOG.md 2026-08-18
+C                  "continued 25".
 C   pipeline_cmds: single line, the full shell command to run ONE
 C                  frequency point's pipeline pass in the current
 C                  directory, e.g.
@@ -89,21 +94,12 @@ C
       Open(Unit=21,File="sigma_input",Form="Formatted",Status="OLD")
       Read(21,*) N
       Read(21,*) Omega_c
-      Read(21,*) Nomega
+      Close(Unit=21)
       If (N .GT. Maxfreq) Then
          Write(6,"(a,I5)") " @-Scrnc_sigma_driver: N exceeds Maxfreq, ",
      +                     Maxfreq
          Stop 1
       Endif
-      If (Nomega .GT. Maxomega) Then
-         Write(6,"(a,I5)")
-     +      " @-Scrnc_sigma_driver: Nomega exceeds Maxomega, ",Maxomega
-         Stop 1
-      Endif
-      Do J = 1, Nomega
-         Read(21,*) Omega_ext(J)
-      Enddo
-      Close(Unit=21)
 C
       Inquire(File="pipeline_cmds",Exist=Fexist)
       If (.NOT. Fexist) Then
@@ -117,24 +113,14 @@ C
 C
       Write(6,"(a,I4,a,1PD12.4)")
      +   " @-Scrnc_sigma_driver: N=",N," Omega_c=",Omega_c
-      Write(6,"(a,I4)") "   Nomega=",Nomega
       Write(6,"(a,a)")  "   pipeline: ",Trim(Cmdline)
 C
 C --- Build the imaginary-frequency quadrature grid.
 C
       Call Scrnc_sigma_freq_grid(N,Omega_c,Xnode,Wnode)
 C
-C --- Zero the accumulators.
-C
-      Do J = 1, Nomega
-       Do Iq = 1, Maxmo
-        Do Ip = 1, Maxmo
-         Sigma_re(Ip,Iq,J) = 0.0D0
-         Sigma_im(Ip,Iq,J) = 0.0D0
-        Enddo
-       Enddo
-      Enddo
       Nmo = 0
+      Nomega = 0
 C
 C --- Main loop: one pipeline subprocess run per quadrature node.
 C
@@ -218,6 +204,61 @@ C
           Read(24,*) Eps(Im)
          Enddo
          Close(Unit=24)
+C
+         If (K .EQ. 1) Then
+C
+C           Auto-build the external evaluation grid, now that this
+C           system's own Eps(1..Nmo) is known -- universal across any
+C           molecule/basis, not tuned per test case. See
+C           SCRNC_DEBUG_LOG.md 2026-08-18 "continued 25": a fixed
+C           valence-scale sub-grid (proven across every case run so
+C           far in this project -- CC-response energy scales in the
+C           frontier-orbital region don't vary wildly with system)
+C           plus a geometric extension (x1.6/step) computed from THIS
+C           run's own Max|Eps|, reaching Safety*Emax regardless of how
+C           deep or shallow that turns out to be. Cheap either way --
+C           Sigma_c at any Omega_ext point reuses the same Wc_reduced,
+C           no extra pipeline cost, so there is no reason to under-
+C           reach.
+C
+            Nomega = 6
+            Omega_ext(1) = 0.0D0
+            Omega_ext(2) = 0.3D0
+            Omega_ext(3) = 0.6D0
+            Omega_ext(4) = 0.9D0
+            Omega_ext(5) = 1.2D0
+            Omega_ext(6) = 1.5D0
+C
+            Emax = 0.0D0
+            Do Im = 1, Nmo
+               Emax = Max(Emax,Abs(Eps(Im)))
+            Enddo
+            Etarget = 1.3D0 * Emax
+            Omega_last = 1.5D0
+C
+            Do While (Omega_last.LT.Etarget .AND. Nomega.LT.Maxomega)
+               Omega_last = Omega_last * 1.6D0
+               Nomega = Nomega + 1
+               Omega_ext(Nomega) = Omega_last
+            Enddo
+C
+            Write(6,"(a,I4,a,1PD12.4,a,1PD12.4)")
+     +         " @-Scrnc_sigma_driver: auto Omega_ext grid, Nomega=",
+     +         Nomega," Emax=",Emax," reaching ",Omega_last
+C
+C           Zero the accumulators -- deferred to here since Nomega
+C           wasn't known before this point.
+C
+            Do J = 1, Nomega
+             Do Iq = 1, Maxmo
+              Do Ip = 1, Maxmo
+               Sigma_re(Ip,Iq,J) = 0.0D0
+               Sigma_im(Ip,Iq,J) = 0.0D0
+              Enddo
+             Enddo
+            Enddo
+C
+         Endif
 C
 C        Fold node K's contribution into Sigma_c(p,q;i*omega_j) for
 C        every requested outer omega_j.
@@ -317,6 +358,40 @@ C
 C Diagonal Pade continuation + on-shell QP solve, one MO index at a
 C time -- see the calling comment above for the physics.
 C
+C Each MO builds its Thiele fit from only the Omega_ext points closest
+C to its OWN |eps_HF|, not the full shared Omega_ext array -- see
+C SCRNC_DEBUG_LOG.md 2026-08-18 "continued 23": swept Nomega=8..36 on
+C the same shared grid and found eps_QP scatters by up to ~0.25 Ha
+C with N, non-monotonically; confirmed via independent arbitrary-
+C precision (mpmath, 15-100 digit) arithmetic that this is NOT
+C double-precision roundoff (bit-identical root at every precision)
+C but the well-documented intrinsic ill-posedness of high-order
+C EXACT-interpolation Pade continuation -- more points does not mean
+C a better fit. The original hand-picked 6-point [0,1.5] grid gave
+C clean, pilot-verified results for every valence/virtual MO; only a
+C deep-core orbital far outside that range ever broke. Fix: the auto-
+C built union grid (see main program, right after node 1's Eps is
+C known) is cheap regardless of size -- Sigma_re/Sigma_im at any
+C Omega_ext reuses the same already-computed Wc_reduced, no extra
+C pipeline cost -- but each MO selects only its own nearby subset,
+C recovering the original 6-point valence/virtual behavior
+C automatically while giving deep orbitals their own locally-relevant
+C points instead of either a wild extrapolation or an unstable
+C all-points fit.
+C
+C Starting count is Nsel0=6 points (static + 5 nearest to |eps_HF|);
+C if Scrnc_sigma_qp_bracket can't find a clean, non-pole-adjacent
+C bracket at that count, ESCALATE to 8, then 10, ... up to Nselmax,
+C adding more nearby (still LOCAL, not far-away) points before giving
+C up -- see SCRNC_DEBUG_LOG.md 2026-08-18 "continued 25"/"continued
+C 26": 6 points was not uniformly sufficient (H2O/STO-3G's own core
+C orbital needed more, even though DZ's near-identical-energy core
+C orbital was fine at 6) and there was no way to predict which MOs
+C would need it. This escalation is NOT the same failure mode as
+C "continued 23"'s huge-shared-grid instability -- these extra points
+C stay local to the MO's own energy, not spread across the whole
+C union grid's range.
+C
       Implicit Double Precision (A-H,O-Z)
       Dimension Omega_ext(Maxomega)
       Dimension Sigma_re(Maxmo,Maxmo,Maxomega)
@@ -326,27 +401,111 @@ C
       Double Complex Zpt(Maxomega), Fpt(Maxomega), Acoef(Maxomega)
       Double Complex Fval
 C
+      Parameter (Nsel0=6, Nselstep=2, Nselmax=20)
+      Dimension Isel(Nselmax), Dsel(Nselmax)
+C
       Open(Unit=26,File="qp_energies.dat",Form="Formatted",
      +     Status="UNKNOWN")
       Write(26,"(a)") "  p      eps_HF          eps_QP     "//
      +                 "  Im[Sigma_c(eps_QP)]   iters  converged"
 C
+      Istatic = 1
+      Do J = 2, Nomega
+         If (Omega_ext(J) .LT. Omega_ext(Istatic)) Istatic = J
+      Enddo
+C
       Do Ip = 1, Nmo
 C
-         Do J = 1, Nomega
-            Zpt(J) = Dcmplx(0.0D0,Omega_ext(J))
-            Fpt(J) = Dcmplx(Sigma_re(Ip,Ip,J),Sigma_im(Ip,Ip,J))
+         Anchor = Abs(Eps(Ip))
+         Iconverged = 0
+         Nseltry = Nsel0
+C
+         Do While (Iconverged.EQ.0 .AND. Nseltry.LE.Nselmax .AND.
+     +             Nseltry.LE.Nomega)
+C
+            Nuse = Min(Nseltry,Nomega)
+C
+C           The static (Omega_ext closest to 0) point is ALWAYS kept
+C           -- dropping it can destabilize the fit even when the
+C           remaining points are all individually close to Anchor
+C           (confirmed on H2O/DZ MO 2, "continued 23"). Insertion-
+C           select the remaining Nuse-1 Omega_ext indices closest to
+C           Anchor, keeping Isel/Dsel sorted by distance ascending.
+C
+            Isel(1) = Istatic
+            Dsel(1) = Abs(Omega_ext(Istatic)-Anchor)
+            Nfound = 1
+            Do J = 1, Nomega
+               If (J .EQ. Istatic) Goto 50
+               Dist = Abs(Omega_ext(J)-Anchor)
+               If (Nfound .LT. Nuse) Then
+                  Nfound = Nfound + 1
+                  Isel(Nfound) = J
+                  Dsel(Nfound) = Dist
+                  Islot = Nfound
+               Else If (Dist .LT. Dsel(Nuse)) Then
+                  Isel(Nuse) = J
+                  Dsel(Nuse) = Dist
+                  Islot = Nuse
+               Else
+                  Islot = 0
+               Endif
+               Do While (Islot .GT. 2)
+                  If (Dsel(Islot) .GE. Dsel(Islot-1)) Goto 40
+                  Dtmp = Dsel(Islot)
+                  Itmp = Isel(Islot)
+                  Dsel(Islot) = Dsel(Islot-1)
+                  Isel(Islot) = Isel(Islot-1)
+                  Dsel(Islot-1) = Dtmp
+                  Isel(Islot-1) = Itmp
+                  Islot = Islot - 1
+               Enddo
+   40          Continue
+   50          Continue
+            Enddo
+C
+C           Re-sort the Nuse selected indices by Omega_ext value
+C           ascending (standard Thiele-fit node ordering).
+C
+            Do Ii = 1, Nuse-1
+               Do Jj = Ii+1, Nuse
+                  If (Omega_ext(Isel(Jj)).LT.Omega_ext(Isel(Ii))) Then
+                     Itmp = Isel(Ii)
+                     Isel(Ii) = Isel(Jj)
+                     Isel(Jj) = Itmp
+                  Endif
+               Enddo
+            Enddo
+C
+            Fscale = 0.0D0
+            Do Ii = 1, Nuse
+               Jsrc = Isel(Ii)
+               Zpt(Ii) = Dcmplx(0.0D0,Omega_ext(Jsrc))
+               Fpt(Ii) = Dcmplx(Sigma_re(Ip,Ip,Jsrc),
+     +                          Sigma_im(Ip,Ip,Jsrc))
+               Fscale = Max(Fscale,Cdabs(Fpt(Ii)))
+            Enddo
+C
+            Call Scrnc_sigma_pade_coeff(Nuse,Zpt,Fpt,Acoef,Maxomega)
+C
+            Call Scrnc_sigma_qp_bracket(Nuse,Zpt,Acoef,Eps(Ip),Fscale,
+     +                                    Maxomega,Eps_qp,Fval,
+     +                                    Iconverged,Iter)
+C
+            If (Iconverged .EQ. 0) Nseltry = Nseltry + Nselstep
+C
          Enddo
 C
-         Call Scrnc_sigma_pade_coeff(Nomega,Zpt,Fpt,Acoef,Maxomega)
-C
-         Call Scrnc_sigma_qp_bracket(Nomega,Zpt,Acoef,Eps(Ip),
-     +                                 Maxomega,Eps_qp,Fval,
-     +                                 Iconverged,Iter)
-C
-         If (Iconverged .EQ. 0) Write(6,"(a,i3)")
-     +      " @-Scrnc_sigma_qp_solve: WARNING -- no bracketed root"//
-     +      " found for MO",Ip
+         If (Iconverged .EQ. 0) Then
+            Write(6,"(a,i3,a,i3,a)")
+     +         " @-Scrnc_sigma_qp_solve: WARNING -- no bracketed root"
+     +         //" found for MO",Ip," even after escalating to",
+     +         Min(Nseltry,Nselmax)," points"
+         Else If (Nseltry .GT. Nsel0) Then
+            Write(6,"(a,i3,a,i3,a)")
+     +         " @-Scrnc_sigma_qp_solve: MO",Ip," needed escalation"//
+     +         " to",Nuse," points to find a clean bracket"
+         Endif
 C
          Write(26,"(I3,2(1x,1PD15.6),1x,1PD15.6,3x,I3,5x,I3)")
      +      Ip,Eps(Ip),Eps_qp,Dimag(Fval),Iter,Iconverged
@@ -363,15 +522,26 @@ C
 C
 C-----------------------------------------------------------------
 C
-      Subroutine Scrnc_sigma_qp_bracket(N,Zpt,Acoef,Eps_hf,Maxomega,
-     +                                    Eps_qp,Fval,Iconverged,Iter)
+      Subroutine Scrnc_sigma_qp_bracket(N,Zpt,Acoef,Eps_hf,Fscale,
+     +                                    Maxomega,Eps_qp,Fval,
+     +                                    Iconverged,Iter)
 C
 C Finds the root of F(z)=z-Eps_hf-Re[Sigma_c(z)] closest to Eps_hf,
 C by scanning an expanding window centered on Eps_hf for a genuine
 C sign change of F (rejecting any interval where the Pade-evaluated
-C Re[Sigma_c] itself blows up, the signature of a pole rather than a
-C root), then bisecting the bracket to Tol.
+C Sigma_c itself blows up relative to Fscale -- the magnitude actually
+C spanned by the fit's own sample data -- the signature of a nearby
+C pole rather than a root), then bisecting the bracket to Tol.
 C
+C Fscale-relative rejection, not a fixed absolute cutoff: a blanket
+C |Sigma_c|<1000 threshold (the original implementation) missed a
+C real case -- H2O/STO-3G MO 1's 6-point fit had a root sitting near
+C a pole "only" mild enough to push |Sigma_c| to ~0.68, still under
+C 1000 but ~190x every actual sampled value (max ~0.0036) -- i.e.
+C obviously spurious relative to the data, just not in an absolute
+C sense. See SCRNC_DEBUG_LOG.md 2026-08-18 "continued 25".
+C
+
 C Why not naive fixed-point iteration eps_new=Eps_hf+Re[Sigma_c(eps)]
 C (the original implementation): F(z)=0 can have a perfectly good,
 C isolated root even where the fixed-point map's local slope has
@@ -390,13 +560,14 @@ C
       Double Complex Zpt(Maxomega), Acoef(Maxomega), Fval, Fv1, Fv2
 C
       Parameter (Nscan=200, Maxdoubling=8, Tol=1.0D-8,
-     +           Whalf0=2.0D0, Fmax=1.0D3)
+     +           Whalf0=2.0D0, Rejfac=20.0D0, Fmaxfloor=1.0D-2)
 C
       Iconverged = 0
       Eps_qp = Eps_hf
       Fval = Dcmplx(0.0D0,0.0D0)
       Iter = 0
       Whalf = Whalf0
+      Fmax = Max(Rejfac*Fscale,Fmaxfloor)
 C
       Do Idbl = 1, Maxdoubling
 C
@@ -417,8 +588,8 @@ C
             F2 = Z2 - Eps_hf - Dble(Fv2)
 C
             If ((F1.LT.0.0D0) .NEQV. (F2.LT.0.0D0)) Then
-               If (Abs(Dble(Fv1)).LT.Fmax .AND.
-     +             Abs(Dble(Fv2)).LT.Fmax) Then
+               If (Cdabs(Fv1).LT.Fmax .AND.
+     +             Cdabs(Fv2).LT.Fmax) Then
                   Dist = Min(Abs(Z1-Eps_hf),Abs(Z2-Eps_hf))
                   If (Dist .LT. Bestdist) Then
                      Bestdist = Dist

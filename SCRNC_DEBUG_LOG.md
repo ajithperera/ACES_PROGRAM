@@ -6,6 +6,408 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
+## SESSION 2026-08-18 (continued 26) -- Nsel escalation IMPLEMENTED + verified: closes the STO-3G MO 1 gap from "continued 25" cleanly (10 points, pilot-confirmed pole-free); full comprehensive re-verification across STO-3G sym=off/sym=on/CCSD + DZ, all MOs converge, none unconverged -- ready to commit pending sign-off (RESUME HERE)
+
+Picked up "continued 25"'s open next step directly.
+
+**Implemented**: `Scrnc_sigma_qp_solve`'s per-MO selection is now in
+a `Do While` escalation loop -- starts at `Nsel0=6` (static + 5
+nearest to `|eps_HF|`, as before); if `Scrnc_sigma_qp_bracket` can't
+find a clean bracket (now using the "continued 25" data-scaled pole
+guard), retries with `+Nselstep=2` more (still all selected by
+nearest-distance to the SAME anchor -- local, not the huge-shared-grid
+regime that caused "continued 23"'s instability), up to `Nselmax=20`
+or until `Nomega` is exhausted. Added a one-line diagnostic
+(`"MO n needed escalation to N points"`) so the actual count used is
+always visible in the log, not just inferred. Rebuilt, reinstalled,
+md5-verified.
+
+**Result on H2O/STO-3G**: MO 1 now converges at `Nuse=10`
+(`eps_QP=-20.36516`, `Im[Sigma_c]=0.0714`). Independently pilot-
+verified the actual 10-point selection the driver used (confirmed via
+a driver diagnostic print, since a hand-derived guess at the selection
+turned out wrong the first time -- worth remembering: don't guess
+which points an escalating/adaptive selection picked, have the code
+say so): single sign change, `|B(N)|` stays `2.9-606` throughout (no
+near-pole anywhere), tiny slope (`g'=0.067`) -- genuinely clean, not
+just guard-satisfying.
+
+**Comprehensive re-verification, all four existing test
+directories, fresh `sigma_input` (2-line auto-grid format) in each**:
+- STO-3G sym=off: all 7 MOs converged (MO 1 via escalation to 10, as
+  above).
+- STO-3G sym=on (`SAVE_INTS=ON`): all 7 converged, MO 1 needed the
+  SAME escalation to 10 points and lands at `eps_QP=-20.36513` --
+  matches sym=off's `-20.36516` to `3D-5`, as tight as every other MO
+  pair in this comparison. Auto-grid + escalation logic is symmetric-
+  vs-non-symmetric-run deterministic/consistent.
+- STO-3G CCSD: all 7 converged, MO 1 converged directly at the base
+  `Nsel0=6` (no escalation needed) -- a different CC level apparently
+  gives a smoother `Sigma_c(z)` for this same MO, consistent with
+  escalation being a genuine per-fit adaptive response, not a fixed
+  requirement baked into any one MO index.
+- H2O/DZ: all 14 MOs converged, none needed escalation beyond 6 this
+  time (this session's grid differs slightly in extension-point
+  values from "continued 24"'s manual union grid, since it's now
+  auto-derived from `Emax=43.3`, so exact point placement shifted) --
+  same qualitative results as "continued 24"'s per-orbital design
+  (core and high-virtual both previously pilot-verified clean).
+
+**No unconverged MOs anywhere across all four cases.** This closes the
+open gap from "continued 25" -- the per-orbital-scaled auto-grid
+design (universal, no manual per-system tuning) plus data-scaled pole
+rejection plus adaptive point-count escalation together give a
+mechanism that: (a) reaches whatever energy range a given molecule/
+basis actually needs, (b) never silently accepts a spurious root
+(fails loudly with a WARNING instead), and (c) recovers automatically
+when the base 6-point count isn't enough, without needing to guess a
+bigger number for everyone up front.
+
+**Not yet done**: no molecule/basis LARGER or more chemically
+different than this project's existing H2O/STO-3G and H2O/DZ test
+cases has been tried -- "universal" is a design intent verified
+against two related test systems, not proven across a wide chemical
+range. `Nsel0=6`, `Nselstep=2`, `Nselmax=20`, the `20x`/`0.01` pole-
+guard constants, and the `1.3x`/`x1.6` auto-grid constants are all
+reasonable-looking but essentially engineering judgment calls, not
+independently derived or swept.
+
+**Committed**: nothing yet -- ready for sign-off now that STO-3G/
+sym=on/CCSD/DZ all re-verify cleanly. Changed:
+`scrnc_sigma_driver.F`/`.f` (auto-grid, per-orbital escalating
+selection, scaled pole guard -- the full "continued 24"-"continued
+26" arc lives in this one file's diff). `sigma_input` in all four test
+directories reduced to the 2-line auto format (old versions backed up
+alongside with timestamped names, e.g. `sigma_input.bak_<epoch>`) --
+scratch, not archived.
+
+**Next**: get sign-off to commit; consider archiving updated
+`qp_energies.dat`/logs for all four cases to `sigma_debug_archive/`
+as the new baseline before committing.
+
+---
+
+## SESSION 2026-08-18 (continued 25) -- auto-scaled universal Omega_ext grid IMPLEMENTED (no more per-system hand-tuning); bracket-search pole guard tightened from a fixed absolute cutoff to a data-scaled one (catches a real, previously-missed spurious-root case); net effect: STO-3G MO 1 now HONESTLY reports unconverged instead of silently returning a wrong answer -- new open gap, not yet resolved (RESUME HERE)
+
+Ajith's question after "continued 24": a hand-typed `sigma_input`
+Omega_ext range is a real limitation for other molecules/basis sets --
+"we need a grid that works more or less universally."
+
+**Implemented auto-grid generation** in `scrnc_sigma_driver.F`:
+`sigma_input` now only carries `N`/`Omega_c` (2 lines, the
+Nomega/Omega_ext block removed). Right after node 1's `wcreduc.dat`
+gives the real `Eps(1..Nmo)` (before that node's own fold step runs),
+the driver builds its own grid: the proven `{0,0.3,0.6,0.9,1.2,1.5}`
+valence sub-grid, then geometric extension (x1.6/step) until exceeding
+`1.3*Max(|Eps(p)|)` for THIS run's own orbitals -- zero extra pipeline
+cost either way. Verified on DZ (Emax=43.3 from MO 14, the highest
+virtual, not the core -- auto-reached to 64.4, Nomega=14) and STO-3G
+(Emax=20.2, Nomega=13): MOs whose own energy was already within the
+fixed valence sub-grid are bit-identical to "continued 24"'s
+hand-picked-grid results (provably a no-op for them); DZ's core (p=1)
+and highest virtual (p=14) both independently pilot-verified clean
+(no pole, in-domain, small slope).
+
+**But STO-3G's own core orbital (p=1, `eps_HF=-20.24`) came back
+wrong**: `eps_QP=-20.470`, `Im[Sigma_c]=+0.681` -- two orders of
+magnitude out of scale vs. every other converged MO (`~0.005-0.15`)
+and vs. every actual SAMPLED value for this same MO
+(`Im` maxes out at `0.0036` across its 6 fit points). Pilot-code check
+confirmed a real, if moderate, nearby pole (`min|B(N)|~0.26` over a
+wide window, one lone sign change, right where the driver's root
+landed) -- the existing bracket-search's `|Sigma_c|<1000` pole guard
+(fixed absolute cutoff, unchanged since "continued 21") completely
+missed this since `0.68 << 1000`, even though it's obviously spurious
+relative to the actual data scale.
+
+**Fixed the guard, not the symptom**: `Scrnc_sigma_qp_bracket` now
+takes an `Fscale` argument (`Max(|Fpt|)` over the MO's own 6 selected
+sample points, computed by the caller) and rejects any candidate
+bracket where `|Sigma_c|` at either endpoint exceeds
+`Max(20*Fscale,0.01)` instead of the old blanket `1000` -- scaled to
+what's actually physically plausible for THIS fit, not an arbitrary
+global number. Also switched the check from `|Re[Sigma_c]|` to the
+full `|Sigma_c|` (catches Im blowing up too, which is what actually
+happened here). Rebuilt, reinstalled, md5-verified.
+
+**Result: STO-3G MO 1 now correctly reports `converged=0` ("no
+bracketed root found for MO 1") instead of silently returning the
+wrong answer** -- the intended behavior (fail loudly, per this
+project's standing practice) but NOT a fix for the underlying gap:
+this particular MO's 6-point selection genuinely doesn't have a
+trustworthy nearby root with the current design. All other STO-3G MOs
+(2-7) unaffected -- confirms the tighter guard doesn't false-positive
+on well-behaved fits.
+
+**Open question, not yet resolved**: DZ's core orbital (very similar
+`eps_HF~-20.6`, similar-shaped 6-point selection) worked fine;
+STO-3G's core orbital (`eps_HF~-20.2`) doesn't. `Nsel=6` is
+apparently not uniformly sufficient -- sometimes it is, sometimes it
+isn't, and it isn't obvious in advance which. Natural next step
+(not yet tried): automatically escalate `Nsel` (e.g. retry with 8,
+then 10 local points, still all selected near that MO's own energy --
+NOT the same failure mode as "continued 23"'s huge-shared-grid
+instability, since these stay local) when the 6-point bracket search
+comes back empty, before giving up.
+
+**Committed**: nothing yet. Changed: `scrnc_sigma_driver.F`/`.f`
+(auto-grid generation, `Fscale`-relative pole guard). `sigma_input`
+in both `h2o_scrnc_sigma_debug{,_dz}` reduced to the new 2-line
+format (scratch, not archived/committed).
+
+**Next**: try automatic Nsel escalation on bracket-search failure;
+re-verify sym=on and CCSD paths with the new auto-grid once STO-3G's
+core orbital is resolved; then get sign-off to commit the whole
+"continued 24"/"continued 25" arc together.
+
+---
+
+## SESSION 2026-08-18 (continued 24) -- per-orbital-scaled small grid IMPLEMENTED + verified: fixes DZ p=1 (core) cleanly, one bug found+fixed along the way (must always keep the omega=0 anchor point), all 14 DZ MOs now converge to sane, pole-free, in-domain roots (RESUME HERE)
+
+Ajith's call after "continued 23"'s diagnosis (regularized/robust fit
+vs. per-orbital small grid): per-orbital grid -- smaller lift, and the
+data isn't actually noisy (CC-response Sigma_c is accurate to
+1e-9-1e-14; a robust/least-squares fit solves a problem we don't have)
+-- and "might as well do it now" rather than defer.
+
+**Implemented in `Scrnc_sigma_qp_solve`**: `sigma_input` now carries
+one modest UNION grid (13 points, `0..25`, same as "continued
+22"/"23", cheap since it's still just algebraic folds of the existing
+`Wc_reduced`). For each MO, instead of fitting all Nomega points, the
+routine now selects only `Nsel=6` of them -- the omega=0 (static)
+point ALWAYS included, plus the 5 nearest to that MO's own
+`|eps_HF|` by simple insertion selection -- sorts them back into
+ascending-omega order, and runs the exact same (unchanged)
+`Scrnc_sigma_pade_coeff`/`Scrnc_sigma_qp_bracket` on that 6-point
+subset. This automatically recovers the original `[0,1.5]` 6-point
+fit for every valence/virtual MO (already its own 6 nearest points)
+while giving deep orbitals their own locally-relevant subset.
+
+**Bug found and fixed during verification, not glossed over**: first
+version (distance-only selection, no forced inclusion of omega=0)
+made MO 2's fit badly unphysical -- `Im[Sigma_c(eps_QP)]=+2.94`,
+two orders of magnitude out of scale vs. every other MO (`~0.01-0.16`).
+Root cause: MO 2's `Anchor=1.362` is roughly equidistant from `0.0`
+(dist 1.362) and `2.0` (dist 0.638) but `2.0` is numerically closer,
+so pure nearest-6 selection silently swapped `2.0` in for `0.0`
+-- and losing the physically-meaningful static point destabilized the
+fit even though every selected point was individually "close" to the
+target. Confirmed via the same independent pilot-code check
+(`data_selected` vs `data_orig` in scratch): min`|B(N)|` over a wide
+window dropped from `0.58` (with 0.0) to `0.24` (without) -- not
+technically AT a pole, but close enough that the fitted value at the
+root went wildly out of scale. Fixed by always forcing the omega=0
+(or whichever `Omega_ext` value is smallest) index into the selection
+first, then filling the remaining `Nsel-1` slots by nearest-distance
+among the rest. Rebuilt, reinstalled, md5-verified both times.
+
+**Verified on H2O/DZ (all 14 MOs)**:
+- MOs 3,4,5,6,7,8,9,10 -- IDENTICAL to the original 6-point-grid
+  rootfind baseline (their nearest-6 already was `[0,1.5]`, so this
+  change is provably a no-op for them). No regression.
+- MOs 2,11,12,13 -- small, sane shifts (their nearest-6 swaps one
+  distant `[0,1.5]` point for a slightly-closer wider-grid point,
+  e.g. MO 13 trades `0.3` for `2.0`); MO 2 specifically now gives
+  `Im[Sigma_c]=-0.159`, back in normal range after the static-anchor
+  fix.
+- **MO 1 (core) -- the original target**: `eps_QP=-20.74686`,
+  `Im[Sigma_c]=-0.113`. Independent pilot-code check on its own
+  6-point selection (`0,5,8,12,18,25`): single clean root, no nearby
+  pole (`min|B(N)|~0.92`, nowhere near zero over `[-30,10]`), root
+  INSIDE the sampled domain, tiny slope (`g'=0.046`) -- a genuinely
+  well-conditioned, trustworthy fit, unlike every prior attempt at
+  this orbital (6-point extrapolation: untrustworthy by construction;
+  13/36-point all-points fit: right ballpark but itself part of the
+  now-discredited "more points" family). Lands within ~0.03-0.06 Ha
+  of the interpolated-but-unstable wide-grid answers from "continued
+  22"/"23" (`-20.69` to `-20.82` across those), which is reassuring
+  convergence given none of those were individually trustworthy on
+  their own.
+
+**Not yet done**: did not re-verify STO-3G (only DZ tested this
+session) or re-run sym=on with the new grid; `Nsel=6` and the 13-point
+union grid's specific values (`0..25`) are reasonable defaults but not
+rigorously optimized/swept themselves (would need the same kind of
+small-N stability study flagged as unexplored in "continued 23").
+
+**Committed**: nothing yet -- pending Ajith's go-ahead now that this
+is implemented and verified (per "wait to fix convergence issues").
+Changed: `scrnc_sigma_driver.F`/`.f` (the per-orbital selection).
+Scratch (not archived): `h2o_scrnc_sigma_debug_dz/sigma_input` (holds
+the 13-point union grid), `qp_energies_perorbital{,_v2}.dat`.
+
+**Next**: get sign-off to commit; re-verify STO-3G + sym=on with the
+new grid/selection logic before calling this fully done; consider
+whether `Nsel`/grid-point choices need a small stability sweep of
+their own.
+
+---
+
+## SESSION 2026-08-18 (continued 23) -- N-convergence study DONE: the eps_QP scatter across grid sizes is NOT double-precision roundoff (ruled out via 100-digit arbitrary-precision arithmetic reproducing the double-precision answer exactly) -- it's the well-known intrinsic ill-posedness of high-order exact-interpolation Thiele/Pade continuation; the fix is a small per-orbital-scaled grid, not one large shared grid (RESUME HERE)
+
+Picked up "continued 22"'s open next step: an actual N-convergence
+study, per Ajith's "wait to fix convergence issues" instruction.
+
+**Swept N = 8, 12, 18, 26, 36** for the H2O/DZ case, using a graded
+grid `omega_i = Omega_c*(1+x_i)/(1-x_i)` with `x_i` evenly spaced in
+`(-1,1)` (same functional form as the codebase's own
+`Scrnc_sigma_freq_grid`, so N naturally grows both denser AND wider at
+once -- covers up to `|omega|~71` by N=36, comfortably past even MO
+14's `eps_HF=43.3`). (Process note: had to generate the grid files and
+copy results OUT of the working directory each iteration -- the
+driver's own per-node `find ... -delete` cleanup, added in "continued
+14", wipes anything not named `sigma_input`/`ZMAT`/`GENBAS`/
+`pipeline_cmds`/`*.log` at the start of its NEXT invocation, so
+same-named scratch files silently got deleted mid-loop on the first
+attempt; fixed by keeping generated grids and per-N output copies
+outside the pipeline directory entirely.)
+
+**Result: eps_QP does NOT converge smoothly as N grows -- it
+scatters, non-monotonically, by amounts up to ~0.25 Ha** (e.g. p=12:
+1.294->1.233->1.487->1.323->1.258 across N=8..36; p=2: -1.457->
+-1.121->-1.572->-1.341->-1.477). This looked at first like classic
+numerical instability, but which kind mattered: double-precision
+roundoff (fixable with more precision) vs. genuine ill-posedness of
+exact high-order rational interpolation (not fixable by precision
+alone).
+
+**Diagnosed which, using mpmath arbitrary-precision arithmetic**
+(installed this session, `pip install --user mpmath`) -- reimplemented
+the identical Thiele algorithm a third, independent way, and evaluated
+p=1's and p=2's N=36 fit at 15, 30, 50, and 100 decimal digits.
+**Result: bit-identical root at every precision level, matching the
+double-precision Fortran/earlier-Python result almost exactly.**
+This RULES OUT double-precision roundoff as the cause of the N-scatter
+-- each individual N's fit is computed to full accuracy, precision is
+not the problem. **The scatter is therefore the well-documented
+intrinsic behavior of exact-interpolation Thiele/Pade continued
+fractions at high order**: an exact rational interpolant through many
+points is only weakly constrained between/beyond its nodes (a
+Runge's-phenomenon-like effect for rational rather than polynomial
+fits), so its near-real-axis pole/zero structure -- and hence the
+extracted on-shell root -- can shift substantially with each added
+point, even in exact arithmetic. This matches long-standing cautions
+in the numerical-analytic-continuation literature (Vidberg-Serene
+1977's own original method; robustness studies going back to
+Beach-Gooding-Marsiglio 2000) that naive many-point Thiele
+continuation becomes increasingly non-unique/ill-posed well before
+double-precision roundoff would ever matter -- this is NOT a bug in
+this codebase, and NOT fixable by adding more sample points, more
+precision, or a better root-finder (the bracket/bisection solver from
+"continued 21" is doing its job correctly on whatever fit it's handed
+-- the fit itself is the moving target).
+
+**Conclusion, reframing "continued 22"'s open question**: the right
+design is NOT "one large shared Omega_ext grid, more points = more
+trustworthy" (this session disproves that) and NOT "the original
+6-point grid was basically fine, just check convergence" (also
+disproved -- p=2/p=12/etc's 6-point-ish low-N answers scatter just as
+much as the high-N ones do; there is no evidence ANY of the N tested
+is "the converged answer"). The literature's usual fix applies
+directly: keep N small (order ~6-10, where this scatter is presumably
+tamer, though NOT yet checked systematically at low N the same way)
+and place those few points to BRACKET each orbital's own energy scale
+-- i.e. "continued 15" item 3's original per-orbital-scaled-grid
+proposal, now with a concrete reason (not just "wider domain is nice
+to have") for why it beats a single big shared grid. An unexplored
+alternative also worth naming: a regularized/robust rational fit
+(least-squares over more points than free parameters, or an
+SVD-truncated Thiele variant) instead of exact interpolation --
+standard in the GW/DMFT analytic-continuation literature for exactly
+this reason, but a bigger implementation lift than a per-orbital grid.
+
+**Not done**: did not yet test whether SMALL N (6-10) is itself
+actually stable/convergent when scanned the same way (e.g. N=4,6,8,10
+all bracketing a given orbital) -- assumed favorable by literature
+precedent but not verified in this codebase; did not implement any
+per-orbital grid logic; did not touch production code this session
+(all experimentation stayed in scratch `sigma_input`/copied-out
+results, per Ajith's "wait to fix convergence issues" -- nothing
+committed).
+
+**Committed**: nothing yet. Changed (scratch only, not archived/
+committed): `h2o_scrnc_sigma_debug_dz/sigma_input` (currently holds
+the last-swept N=36 grid; `sigma_input.orig_6pt` backup from
+"continued 22" untouched). Scratch files (not in repo):
+`sigma_input_N{8,12,18,26,36}`, `qp_energies_N{8,12,18,26,36}.dat`,
+`p1_N36_raw.txt`, `p2_N36_raw.txt`, `pade_highprec_probe.py`.
+
+**Next**: get Ajith's read on which fix direction to pursue
+(per-orbital-scaled small grid vs. a regularized/robust rational-fit
+algorithm) before implementing anything in production; if per-orbital
+grid, first verify small-N (4-10) stability systematically (the one
+open empirical gap above) before trusting it as the final design.
+
+---
+
+## SESSION 2026-08-18 (continued 22) -- widened Omega_ext grid genuinely fixes DZ p=1's extrapolation-domain problem, but reveals a DEEPER, more general issue: even previously "clean" valence/virtual MOs' eps_QP are NOT converged w.r.t. Pade sample count -- NOT resolved, needs Ajith's numerics call (RESUME HERE)
+
+Picked up "continued 21"'s open next step (widen `Omega_ext` for the DZ
+core orbital). Per the driver's own architecture (`Wc_reduced` reused
+across any `Omega_ext(J)`, no extra pipeline cost), extended
+`h2o_scrnc_sigma_debug_dz/sigma_input` from 6 points (`0..1.5`) to 13
+(`0,0.3,0.6,0.9,1.2,1.5,2,3,5,8,12,18,25` -- original backed up as
+`sigma_input.orig_6pt`). Reran `xscrncsigma`: all 14/14 MOs still
+converge, no bracket-search failures.
+
+**p=1 (core) -- genuinely fixed this time**, confirmed via the same
+independent pilot-code check: single clean root at `z=-20.692`, now
+INSIDE the sampled `[0,25]` domain (a real interpolation, not
+extrapolation), no nearby pole (`|B(N)|~5-7D5`, nowhere near zero),
+tiny slope (`g'=0.036`). But the value moved substantially from the
+6-point result: `eps_QP` went from `-20.552` (correction `+0.007` Ha)
+to `-20.692` (correction `-0.133` Ha) -- a SIGN FLIP in the QP shift.
+Confirms the original "continued 13"/"continued 20" suspicion: the
+6-point extrapolated answer was not just formally out-of-domain, it
+was actually wrong.
+
+**But p=2 and p=13 (valence/virtual, NOT domain-violation cases --
+both roots were already inside the old `[0,1.5]` sampled range even
+with only 6 points) ALSO shifted substantially** when the same wider
+grid was used to build their Pade fit: p=2's `eps_QP` moved
+`-1.335->-1.377`, p=13's moved `1.692->1.745` -- shifts of the same
+order as the corrections themselves, not small refinements. Checked
+both with the pilot code: both remain single clean roots, no nearby
+pole, well-conditioned slopes (`g'=-0.25`, `g'=0.12`, both safely
+`|g'|<1`) -- so this isn't a new instability being introduced by the
+wider grid. **The likely explanation: the original 6-point/N=6 Thiele
+fit was never actually verified to be CONVERGED in N** -- i.e. this
+project has been implicitly assuming 6 sample points is enough to
+pin down the analytic continuation accurately, but never tested that
+assumption by comparing against a higher-N fit, for ANY MO. Adding
+more points changing the valence-orbital numbers by O(0.01-0.05) Ha,
+comparable to the physics differences reported as significant in
+"continued 14"'s CC-vs-dRPA comparison, means **every eps_QP number
+produced so far (STO-3G included) has an unquantified, potentially
+non-negligible Pade-order truncation error that has never been
+checked** -- this is a more fundamental gap than the core-orbital
+domain issue that motivated this session's experiment.
+
+**Not resolved, deliberately not patched further**: this needs an
+actual N-convergence study (rerun with several different N/Omega_ext
+choices -- e.g. 6, 10, 13, 20 points -- and check whether eps_QP
+stabilizes as N grows, the standard way to establish a numerical
+result is converged) before trusting ANY previously-reported eps_QP
+number, including the already-published-in-this-log STO-3G MO-5 case
+from "continued 21". Whether a fixed shared grid (this session's
+approach) or a per-orbital-scaled grid (closer to "continued 15" item
+3's original wording) is the right design also still needs Ajith's
+numerics call, now sharpened by this finding.
+
+**Committed**: nothing yet this session. Changed (not yet archived to
+`sigma_debug_archive/` or committed): `h2o_scrnc_sigma_debug_dz/
+sigma_input` (widened, original backed up alongside as
+`sigma_input.orig_6pt`), `xscrncsigma_widegrid.log`/`qp_energies.dat`
+in that directory. Pilot script (scratch, not in repo):
+`pade_dz_widegrid_probe.py`.
+
+**Next**: get Ajith's read on the Pade-order convergence question
+before doing anything else with Sigma_c/QP numbers -- this is now the
+central open numerics question for the whole pipeline, superseding
+the narrower "core orbital domain" framing this session started with.
+
+---
+
 ## SESSION 2026-08-18 (continued 21) -- Pade/QP-solve robustness: root cause was the naive fixed-point iteration, NOT a bad Pade fit; replaced with bracketed bisection; H2O/STO-3G MO 5 now converges (matches independent pilot-code prediction exactly), sym=on/off still consistent, DZ p=7 now genuinely clean, DZ p=1 (core) "converges" but is STILL an unresolved extrapolation-domain artifact -- not silently treated as fixed (RESUME HERE)
 
 Picked up "continued 20"'s open next step, per Ajith's own framing:
