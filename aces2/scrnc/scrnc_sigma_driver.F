@@ -5,21 +5,46 @@ C
 C   Sigma_c(p,q; i*omega) = -(1/2*pi) * Integral d(omega') Sum_m
 C        [1/(i*omega+i*omega'-eps_m)] * W_c(p,m,q,m; i*omega')
 C
-C Design (Ajith, 2026-08-17): external orchestration (not an internal
-C Fortran loop inside Scrnc_driver.F), in Fortran (not a shell/python
-C wrapper), reusing a SINGLE shared working directory across all N
-C frequency-point pipeline runs. This program is deliberately NOT part
-C of the normal ACES2 aces_init/JOBARC-linked build -- it never calls
-C Getrec/Putrec itself; instead it spawns the existing, unmodified
-C xjoda...xscrnc pipeline as a subprocess once per Gauss-Legendre
-C quadrature node (via the standard Fortran 2008 EXECUTE_COMMAND_LINE
-C intrinsic) and reads back the plain text file "wcreduc.dat" that
-C Scrnc_sigma_prep.F (compiled into xscrnc itself, normal ACES2 build)
-C writes at the end of each such run, right before the NEXT iteration's
-C fresh xjoda overwrites that directory's JOBARC (rerunning a pipeline
-C step on top of stale JOBARC is NOT idempotent -- see debug log's
-C "PATH trap" entry -- so this program always drives a full fresh
-C xjoda...xscrnc chain per node, never a partial resume).
+C Design (Ajith, 2026-08-17; restructured 2026-08-18 into a static/
+C per-frequency split -- see SCRNC_DEBUG_LOG.md and
+C project_scrnc_pipeline_restructure.md memory): external orchestration
+C (not an internal Fortran loop inside Scrnc_driver.F), in Fortran (not
+C a shell/python wrapper), reusing a SINGLE shared working directory
+C across all N frequency-point pipeline runs. This program is
+C deliberately NOT part of the normal ACES2 aces_init/JOBARC-linked
+C build -- it never calls Getrec/Putrec itself; instead it spawns the
+C existing, unmodified ACES2 binaries as subprocesses via the standard
+C Fortran 2008 EXECUTE_COMMAND_LINE intrinsic, and reads back the plain
+C text file "wcreduc.dat" that Scrnc_sigma_prep.F (compiled into xscrnc
+C itself, normal ACES2 build) writes at the end of each xscrnc run.
+C
+C Two-phase pipeline, traced+confirmed against source 2026-08-18: only
+C xscrnc reads the frequency file (scrnc_set_vars.F/vcceh.F) -- xjoda,
+C xvmol, xvmol2ja, xvprops, xvscf, xvtran, xintprc, and the ground-state
+C amplitude step (xvcc,xlambda for CCSD; xringcc,xringcl for ring-CC --
+C confirmed zero frequency/omega references in ringcc/ringcl source,
+C and rpa/'s superficially-similar -D_RCC-gated scrnc_set_vars.F copy
+C builds into a wholly separate xrpa binary, never linked into
+C xringcc/xringcl) are all frequency-independent. So:
+C   - STATIC_CMDS runs ONCE, before the loop, to build the frequency-
+C     independent state (integrals/SCF/ground-state amplitudes).
+C   - PIPELINE_CMDS (now just the frequency-dependent step, e.g.
+C     "xscrnc") runs once per quadrature node inside the loop.
+C Naively looping PIPELINE_CMDS alone on top of the SAME on-disk static
+C state repeatedly is NOT safe: xscrnc itself writes dynamic list
+C records (e.g. into MOABCD, on the CCSD linear-response path) that
+C collide on a second same-directory invocation -- the exact
+C "@GETLST: Assertion failed" failure mode already hit and documented
+C below for the old always-rerun-everything design, just one level
+C removed (there it was xjoda not fully resetting xscrnc's leftover
+C dynamic records; here it would be a second bare xscrnc call hitting
+C its OWN previous invocation's leftover records with no xjoda in
+C between at all). Fix: snapshot the directory's full generated-file
+C state immediately after STATIC_CMDS completes (".static_snapshot/"),
+C then each loop iteration clears the directory back to that pristine
+C snapshot (never to bare ZMAT/GENBAS) before running PIPELINE_CMDS --
+C so every xscrnc invocation always starts from the SAME clean static
+C state, never from another xscrnc call's leftovers.
 C
 C Only N pipeline subprocess runs are needed in total, regardless of
 C how many external evaluation points Nomega is set to: the expensive
@@ -54,15 +79,18 @@ C                  build" below), so the grid always reaches this
 C                  system's own orbital-energy range regardless of
 C                  molecule/basis. See SCRNC_DEBUG_LOG.md 2026-08-18
 C                  "continued 25".
-C   pipeline_cmds: single line, the full shell command to run ONE
-C                  frequency point's pipeline pass in the current
-C                  directory, e.g.
+C   static_cmds:   single line, the shell command that builds the
+C                  frequency-INDEPENDENT state ONCE, before the loop,
+C                  e.g.
 C                  "xjoda;xvmol;xvmol2ja;xvprops;xvscf;xvtran;xintprc;
-C                   xringcc;xringcl;xscrnc" (ring-CC path) or
+C                   xringcc;xringcl" (ring-CC path) or
 C                  "xjoda;xvmol;xvmol2ja;xvprops;xvscf;xvtran;xintprc;
-C                   xvcc;xlambda;xscrnc" (CCSD path) -- deliberately not
-C                  hardcoded here so this driver works for either path
-C                  (or any future one) without editing Fortran source.
+C                   xvcc;xlambda" (CCSD path).
+C   pipeline_cmds: single line, the shell command for the frequency-
+C                  DEPENDENT step only, run once per quadrature node,
+C                  e.g. "xscrnc" -- deliberately not hardcoded here so
+C                  this driver works for either path (or any future
+C                  one) without editing Fortran source.
 C
 C Output: "sigma_c_output.dat", formatted, real+imaginary Sigma_c(p,q)
 C for each requested Omega_ext(j).
@@ -79,7 +107,7 @@ C
       Dimension Sigma_re(Maxmo,Maxmo,Maxomega)
       Dimension Sigma_im(Maxmo,Maxmo,Maxomega)
 C
-      Character*500 Cmdline
+      Character*500 Cmdline, Staticcmd
       Logical Fexist
 C
       Pi = 4.0D0 * Datan(1.0D0)
@@ -111,9 +139,20 @@ C
       Read(22,"(a)") Cmdline
       Close(Unit=22)
 C
+      Inquire(File="static_cmds",Exist=Fexist)
+      If (.NOT. Fexist) Then
+         Write(6,"(a)")
+     +      " @-Scrnc_sigma_driver: static_cmds not found"
+         Stop 1
+      Endif
+      Open(Unit=25,File="static_cmds",Form="Formatted",Status="OLD")
+      Read(25,"(a)") Staticcmd
+      Close(Unit=25)
+C
       Write(6,"(a,I4,a,1PD12.4)")
      +   " @-Scrnc_sigma_driver: N=",N," Omega_c=",Omega_c
-      Write(6,"(a,a)")  "   pipeline: ",Trim(Cmdline)
+      Write(6,"(a,a)")  "   static (once):     ",Trim(Staticcmd)
+      Write(6,"(a,a)")  "   per-frequency-node: ",Trim(Cmdline)
 C
 C --- Build the imaginary-frequency quadrature grid.
 C
@@ -122,32 +161,62 @@ C
       Nmo = 0
       Nomega = 0
 C
-C --- Main loop: one pipeline subprocess run per quadrature node.
+C --- Phase 1: build the frequency-independent state ONCE, then
+C     snapshot it so every per-node xscrnc call below can restore a
+C     pristine copy instead of running the whole chain again (see
+C     header comment for why a bare restore-to-ZMAT/GENBAS-and-rerun-
+C     everything is being replaced, not just the "static_cmds" part).
+C
+      Call Execute_Command_Line(
+     +   "find . -maxdepth 1 -type f "//
+     +   "! -name ZMAT ! -name GENBAS ! -name sigma_input "//
+     +   "! -name pipeline_cmds ! -name static_cmds ! -name '*.log' "//
+     +   "-delete",
+     +   Wait=.True.)
+C
+      Write(6,"(a)") " @-Scrnc_sigma_driver: running static prefix"
+      Call Execute_Command_Line(Trim(Staticcmd),Wait=.True.,
+     +                           Exitstat=Iexit)
+      If (Iexit .NE. 0) Then
+         Write(6,"(a,I6)")
+     +      " @-Scrnc_sigma_driver: static_cmds FAILED, exit status ",
+     +      Iexit
+         Stop 1
+      Endif
+C
+      Call Execute_Command_Line(
+     +   "rm -rf .static_snapshot && mkdir .static_snapshot && "//
+     +   "cp -p $(find . -maxdepth 1 -type f "//
+     +   "! -name ZMAT ! -name GENBAS ! -name sigma_input "//
+     +   "! -name pipeline_cmds ! -name static_cmds "//
+     +   "! -name '*.log') .static_snapshot/",
+     +   Wait=.True.,Exitstat=Iexit)
+      If (Iexit .NE. 0) Then
+         Write(6,"(a,I6)")
+     +      " @-Scrnc_sigma_driver: static-state snapshot FAILED, "//
+     +      "exit status ",Iexit
+         Stop 1
+      Endif
+C
+C --- Phase 2: one xscrnc (frequency-dependent) subprocess run per
+C     quadrature node, always starting from a fresh restore of the
+C     Phase-1 snapshot -- never from another node's leftover state.
 C
       Do K = 1, N
-C
-C        Clear the shared working directory back to ZMAT/GENBAS/this
-C        driver's own control files before each node's pipeline run --
-C        re-running xjoda alone (without deleting the previous node's
-C        leftover generated files first) is NOT sufficient: hit
-C        "@GETLST: Assertion failed. List (1,127) does not exist" on
-C        the CCSD (non-ring) path's second node, xjoda apparently
-C        doesn't fully reset every record-container file (e.g.
-C        MOABCD) that the CCSD linear-response path writes dynamic
-C        list records into between separate xscrnc invocations in the
-C        same directory. Same root cause as the already-documented
-C        "rerunning a pipeline step on top of stale JOBARC is NOT
-C        idempotent" lesson (SCRNC_DEBUG_LOG.md) -- this just deletes
-C        the leftover files explicitly rather than relying on xjoda to
-C        do it. Stays within the single shared directory (never
-C        creates a new one) -- only the generated-file CONTENTS get
-C        cleared each iteration, not the directory itself.
 C
          Call Execute_Command_Line(
      +      "find . -maxdepth 1 -type f "//
      +      "! -name ZMAT ! -name GENBAS ! -name sigma_input "//
-     +      "! -name pipeline_cmds ! -name '*.log' -delete",
-     +      Wait=.True.)
+     +      "! -name pipeline_cmds ! -name static_cmds "//
+     +      "! -name '*.log' -delete && "//
+     +      "cp -p .static_snapshot/* .",
+     +      Wait=.True.,Exitstat=Iexit)
+         If (Iexit .NE. 0) Then
+            Write(6,"(a,I4,a,I6)")
+     +         " @-Scrnc_sigma_driver: snapshot restore FAILED at "//
+     +         "node ",K,", exit status ",Iexit
+            Stop 1
+         Endif
 C
          Open(Unit=23,File="frequency",Form="Formatted",
      +        Status="UNKNOWN")

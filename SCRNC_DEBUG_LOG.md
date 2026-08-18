@@ -6,7 +6,112 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
-## SESSION 2026-08-18 (continued 26) -- Nsel escalation IMPLEMENTED + verified: closes the STO-3G MO 1 gap from "continued 25" cleanly (10 points, pilot-confirmed pole-free); full comprehensive re-verification across STO-3G sym=off/sym=on/CCSD + DZ, all MOs converge, none unconverged -- COMMITTED (459a1571) (RESUME HERE)
+## SESSION 2026-08-18 (continued 27) -- NEW THREAD, separate from the Nsel/Pade numerics arc below: scrnc_sigma_driver restructured to a static/per-frequency split, verified bit-identical on 3 cases (RESUME HERE)
+
+This is a new architectural thread (see
+`project_scrnc_pipeline_restructure.md` memory), not a continuation of
+"continued 26"'s Nsel escalation work -- that arc is still exactly where
+it left off (see below), just no longer the RESUME HERE.
+
+**Problem**: `scrnc_sigma_driver.F` (`xscrncsigma`) reran the ENTIRE
+pipeline (`xjoda...xscrnc` or `xjoda...xringcc,xringcl,xscrnc`) fresh
+from `ZMAT`/`GENBAS` for every one of the `N` Gauss-Legendre quadrature
+nodes, even though most of that chain is frequency-independent. Traced
+which steps actually touch the `frequency` file to confirm a split
+would be correct, not just faster (getting this wrong would be a
+silent-correctness bug): `xjoda, xvmol, xvmol2ja, xvprops, xvscf,
+xvtran, xintprc` and the ground-state amplitude step (`xvcc,xlambda`
+for CCSD, `xringcc,xringcl` for ring-CC) have zero frequency/omega
+references anywhere in source -- only `xscrnc` reads `frequency`
+(`scrnc_set_vars.F`/`vcceh.F`). A second copy of `scrnc_set_vars.F` in
+`aces2/rpa/` (gated by rpa's own `-D_RCC` switch) looked like it might
+mean `xringcc` is frequency-aware too -- ruled out: `rpa/` builds a
+wholly separate binary (`xrpa`), and `ringcc/GNUmakefile.src` /
+`ringcl/GNUmakefile.src` link neither `librpa.a` nor any `rpa/` object,
+confirmed via both `grep -il "freq\|omega" ringcc/*.F ringcl/*.F`
+(zero hits) and reading the link lines directly.
+
+**Design**: `scrnc_sigma_driver.F` now reads TWO control files instead
+of one -- `static_cmds` (the frequency-independent prefix, run ONCE
+before the loop) and `pipeline_cmds` (now just the frequency-dependent
+step, e.g. `"xscrnc"`, run once per node, same file name as before but
+repurposed). A naive "just loop `xscrnc` alone on the same directory"
+implementation would NOT be safe -- this driver's own existing header
+comment already documents that `xscrnc`'s CCSD linear-response path
+writes dynamic list records (into `MOABCD`) that collide on a second
+same-directory invocation (the `@GETLST: Assertion failed` failure
+mode that originally forced the old always-rerun-everything design).
+Fix: after `static_cmds` completes once, snapshot every generated file
+into `.static_snapshot/`; each loop iteration clears the directory back
+to that pristine snapshot (never to bare `ZMAT`/`GENBAS`, never to the
+previous node's leftover state) before running `pipeline_cmds`. One
+implementation snag hit and fixed along the way: `find -exec cp {}
+DIR/ \;` needs the `;` shell-escaped, which is fragile through
+Fortran's `EXECUTE_COMMAND_LINE` string-literal path (no backslash-
+escape processing without `-assume bscc`) -- switched to `cp -p $(find
+...) .static_snapshot/` instead, simpler and avoids the escaping
+question entirely.
+
+**Verified bit-identical to the pre-restructure baseline** on 3 cases
+(fresh directories, e.g. `h2o_scrnc_sigma_debug_ccsd_restructure_test`,
+seeded from each canonical case's own `ZMAT`/`GENBAS`/`sigma_input`,
+compared via plain `diff` against `qp_energies.dat`/`sigma_c_output.dat`
+copied out as baselines before this change):
+- H2O/STO-3G/DRCCD (ring-CC path, sym=off): `diff` clean on both files,
+  including the exact same MO 1 "needed escalation to 10 points"
+  behavior as the pre-restructure run.
+- H2O/STO-3G/CCSD (the path the `MOABCD`-collision comment specifically
+  warns about): `diff` clean on both files, no `@GETLST` assertion,
+  confirming the snapshot/restore design actually does what its own
+  design comment claims.
+- H2O/DZ/DRCCD (larger basis): `diff` clean on both files.
+- sym=on (`h2o_scrnc_sigma_debug_symon`) NOT separately re-verified this
+  session -- its `ZMAT` predates the `SAVE_INTS=ON` fix from "continued
+  20" (missing that keyword), a pre-existing gap unrelated to this
+  restructure; only its `static_cmds`/`pipeline_cmds` were updated in
+  place (see below), not run.
+
+**Rough timing signal** (H2O/DZ, N=4, tiny toy system so this
+understates the real-world win): static prefix alone ~1.6s wall, one
+`xscrnc` alone ~1.2s wall -- old design ~4x(1.6+1.2)=11.2s, new design
+~1.6+4x1.2=6.4s, ~43% even here. The whole point of the split is that
+the static-prefix cost stays FIXED regardless of `N` while the
+per-node cost is the only one actually justified to repeat, so the win
+grows with both `N` and system size -- not separately benchmarked on a
+larger/more realistic system this session.
+
+**Canonical test directories updated in place** (matching this
+project's established convention, e.g. "continued 26"): the 4 existing
+`h2o_scrnc_sigma_debug*` directories' `pipeline_cmds` (previously the
+full chain) backed up alongside as `pipeline_cmds.bak_fullchain_<epoch>`,
+replaced with the new split `static_cmds`/`pipeline_cmds` pair -- so
+they stay directly runnable with the newly-installed `xscrncsigma`
+rather than immediately failing its new `static_cmds not found` check.
+Verification itself was done in separate `*_restructure_test` sibling
+directories, left on disk as evidence (scratch, not archived, not part
+of the commit).
+
+**Build**: `ifx -i8 -o scrnc_sigma_driver scrnc_sigma_driver.F`, same
+command as before; installed to `aces2/bin/xscrncsigma` (`md5sum`
+matched between local and installed copies).
+
+**Not yet done / next steps**: (1) fold this into `xaces2` as a proper
+keyword-driven job type instead of an external orchestration program --
+this session only did the static/per-frequency split, not the
+`xaces2` integration, which was the second half of the original design
+goal. (2) sym=on re-verification with the correct `SAVE_INTS=ON` ZMAT.
+(3) a real-system timing benchmark now that the split is verified
+correct, to get an honest performance number instead of the toy-system
+estimate above.
+
+**Committed**: `scrnc_sigma_driver.F`, this log entry. Test-directory
+`pipeline_cmds`/`static_cmds` updates and `*_restructure_test` scratch
+dirs left on `/blue/ufhpc/perera/scrnc_test/`, not committed (data, not
+source, per project convention).
+
+---
+
+## SESSION 2026-08-18 (continued 26) -- Nsel escalation IMPLEMENTED + verified: closes the STO-3G MO 1 gap from "continued 25" cleanly (10 points, pilot-confirmed pole-free); full comprehensive re-verification across STO-3G sym=off/sym=on/CCSD + DZ, all MOs converge, none unconverged -- COMMITTED (459a1571)
 
 Picked up "continued 25"'s open next step directly.
 
