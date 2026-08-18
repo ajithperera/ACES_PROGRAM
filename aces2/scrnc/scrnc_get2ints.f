@@ -17,7 +17,7 @@ C
 C*************************************************************
       implicit double precision (a-h,o-z)
 c
-      logical FileExist
+      logical FileExist, Fexist2
       integer and,or,nut,Nbfns,ifile,ldim2
       character*4 filename(4)
 
@@ -63,6 +63,42 @@ c
       filename(2)='IIJJ'
       filename(3)='IJIJ'
       filename(4)='IJKL'
+
+C Standing correctness guard (2026-08-18, see SCRNC_DEBUG_LOG.md
+C "continued 19"/"continued 20"): under real Abelian symmetry
+C (Nirrep>1), xvmol writes bare AO two-electron integrals split
+C across all four of IIII/IIJJ/IJIJ/IJKL (gated by NSYMOP -- see
+C vmol/readin.F), but aces2/vtran/load2.f DELETES these raw files once
+C the standard AO->MO transform (xvtran) has consumed them, UNLESS the
+C ZMAT sets SAVE_INTS=ON (or another of load2.f's own keep-conditions
+C happens to be true). scrnc reads these same raw files itself, LATER
+C in the pipeline (inside xringcc/xvcc, after xvtran has already run)
+C -- if they were deleted, every cross-irrep-block Coulomb integral
+C silently reads back as zero (G2 stays at its Dzero-initialized value
+C below) instead of erroring, which is exactly how this bug went
+C undetected for so long. Fail loudly instead: under Nirrep>1, require
+C all three of IIJJ/IJIJ/IJKL to still be present (IIII has been
+C observed to survive independently in every case checked so far, but
+C is checked too for completeness). Nirrep already read above.
+      If (Nirrep .Gt. 1) Then
+         Do Ifile = 1, 4
+            Inquire(File=filename(Ifile),Exist=Fexist2)
+            If (.NOT. Fexist2) Then
+               Write(6,"(a)")
+     +          " @-Scrnc_get2ints: FATAL -- symmetry AO integral "//
+     +          "file missing under Nirrep>1:"
+               Write(6,"(a,a)") "   ", filename(Ifile)
+               Write(6,"(a)")
+     +          " @-Scrnc_get2ints: xvtran deletes IIII/IIJJ/IJIJ/"//
+     +          "IJKL after the standard AO->MO transform unless "//
+     +          "the ZMAT sets SAVE_INTS=ON. Add SAVE_INTS=ON to "//
+     +          "the ZMAT and rerun -- proceeding without it would "//
+     +          "silently read missing cross-irrep-block integrals "//
+     +          "as zero (see SCRNC_DEBUG_LOG.md, 2026-08-18)."
+               Call Errex
+            Endif
+         Enddo
+      Endif
 
       Call Dzero(G2,Nbfns**4)
 
