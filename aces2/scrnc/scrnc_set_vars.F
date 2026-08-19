@@ -43,13 +43,20 @@
       Aoladder = (Iflags(h_IFLAGS_abcdtype).eq. 2)
       Ieomprop =  Iflags2(h_IFLAGS2_eomprop)
 
+C 2026-08-19: probed disabling this trap to see whether it was an
+C artificial holdover -- it is NOT. With it removed, xscrnc segfaults
+C in spin-adaptation code (spinad3.f, via spntsing.f/
+C scrnc_jj_rcc_assemble.f) because RHF-generated spin-orbital lists
+C aren't shaped the way this module's routines (Iuhf-branched
+C throughout, 28 source files) expect. Real RHF support would need
+C actual code changes, not a flag flip. See SCRNC_DEBUG_LOG.md.
       If (Iuhf .EQ. 0) Then
          Write(6,*)
          Write(6,"(a,a)") " The approach implemented here is not",
      +                    " supported for RHF reference."
          Write(6,*)
          Call Errex
-      Endif 
+      Endif
       If (.NOT. Respn_d) Then
          Write(6,"(a,a)")" The Density=Response is not set in the",
      +                   " ZMAT and calculation can not proceed."

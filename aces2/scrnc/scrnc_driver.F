@@ -295,8 +295,18 @@ C downstream self-energy step needs Wc_mo, so this transform must run
 C unconditionally, unlike Scrnc_bcktran_test.F's genuinely-optional
 C validation-harness convention.
 C
-      Call Scrnc_wc_ao2mo_test(Work(I000),Memleft,Iuhf,
-     +                         Work(Ijj_lrspn_bgn),Nao_pairs)
+C 2026-08-19: disabled (Ajith's call) -- the brute-force
+C O(Nao^4*Nmo^4) check inside is combinatorially infeasible on
+C anything bigger than the STO-3G/DZ toy cases it was written for
+C (hours+ at cc-pVDZ scale, confirmed not a hang, just an astronomical
+C loop count). Safe to skip: this call's Wc_mo is a throwaway local
+C copy used only for the brute-force comparison -- the real pipeline
+C (Scrnc_sigma_prep.F line ~87) calls Scrnc_wc_ao2mo directly and does
+C not depend on this diagnostic. Already independently verified to
+C 1e-14 on STO-3G/DZ; re-enable (or add a size guard) if this needs
+C re-checking on a future larger system. See SCRNC_DEBUG_LOG.md.
+CSSS  Call Scrnc_wc_ao2mo_test(Work(I000),Memleft,Iuhf,
+CSSS +                         Work(Ijj_lrspn_bgn),Nao_pairs)
 
 C Correlation-only W_c = W - v, reduced to Wc_reduced(p,q,m) =
 C Wc_mo(p,m,q,m), written to "wcreduc.dat" for the external
