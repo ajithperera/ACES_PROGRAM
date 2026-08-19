@@ -6,6 +6,310 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
+## SESSION 2026-08-19 (continued 2) -- terminal froze mid-investigation, recovered next session; found+fixed a real copy/paste bug in ringcl's dxrcl_dwmbej.F (Lambda-side twin of the already-fixed rcc_dwmbej.F bug), rebuilt+reran clean RHF-vs-UHF RCCD -- agreement got WORSE (0.933->3.98%), not better; root cause NOT the list-routing bug alone, still OPEN (RESUME HERE)
+
+Picked up cold after a frozen terminal. Found substantial uncommitted
+work already in place from before the freeze (not written up in a log
+entry yet -- reconstructed from the working-tree diff, see below) that
+had gone well beyond the "continued" entry above's stated next step.
+
+**What was already done, uncommitted, before the freeze:**
+1. `Ajith's physics call`: RHF RCCD's ring-CC=RPA equivalence needs
+   BOTH the singlet (Imult=1, Hbar list 56) and triplet (Imult=2, Hbar
+   list 54) channels, each with its own full Hbar/Hbar^(-1)/L/R
+   response solve, combined only at the very end with the standard
+   0.25 (singlet) / 0.75 (triplet) weight -- matching
+   `check_rhf_rcc.F`'s `E_total=0.75*E_t+0.25*E_s` reference formula.
+   Implemented across `scrnc_driver.F` (new `Imult`/`Nmult` loop around
+   the existing Icount dynamic-frequency loop, with a Freq-sign-flip
+   fix for the Itop=1 case), `scrnc_lrspn_rcc_main.F` and
+   `scrnc_jj_rcc_lrspn.F` (both take a new `Imult` arg, route list
+   numbers via `Loffset=4*(Imult-1)` so each channel gets its own
+   373-376/377-380 list block), `scrnc_form_lrspn_rcc_lists.F`
+   (registers 377-380 for `Iuhf=0`), and `scrnc_jj_rcc_assemble.F`
+   (new `Imult`/`Wt` loop applying the 0.25/0.75 weights, and
+   `Iuhf.EQ.0 .AND. Nmult.EQ.1` guard on the `Spntsing` call since the
+   Nmult=2 channels are already spin-adapted at the Hbar source and
+   Spntsing expects genuinely-UHF-shaped input).
+2. A real bug fix in `ringcc/rcc_dwmbej.F`'s `IMULT.EQ.2` (triplet)
+   branch: was reading list `LISTTB` but sizing/contracting with the
+   singlet `NMSYTA`/`DSSYTA`/`LISTTA` variables instead of the TB-
+   suffixed ones. Fixed to use `NMSYTB`/`DSSYTB`/`LISTTB` throughout
+   that branch (both the `GETLST` call and the `RCC_TRP_CNTRCT` call).
+3. `vcc.F`: `METHOD.NE.48.AND.METHOD.NE.49` guard added to the
+   singles-contribution block (RCCD/DRCCD have no singles, but the old
+   `METHOD.GE.9` catch-all let them through once RHF RCCD's upstream
+   crashes were cleared, hitting a real divide-by-zero in
+   `t2t1aa1.f:86`). Also registers list 190 explicitly before the
+   `DRMOVE` call in both branches (was only registered later, inside
+   `xscrnc`, too late for this call under RHF+DENSITY=RESPONSE where
+   `SING1` can come out true even for singles-free ring-CC).
+4. `checkhbar.F`: disabled the Hbar(AB,CI)/Hbar(IA,JK) diagnostic
+   checksum blocks entirely (both UHF and RHF branches) -- ring-CC
+   never builds those Hbar pieces at all (lists 107-110, 127-130), so
+   the diagnostic's `IDSYMSZ` call was asserting (`ITYPL=0 ITYPR=0`)
+   the first time ring-CC ever reached this routine. Diagnostic-only,
+   zero effect on actual results.
+5. `scrnc_set_vars.F`: the `REF=UHF` trap for RCCD/DRCCD temporarily
+   forced open (`.FALSE. .AND. ...`) for testing -- NOT a permanent
+   change, needs reverting to the selective CCSD-only-allow state once
+   this thread resolves.
+
+**New this session: found the same bug's twin, unfixed.** `ringcl`
+(the Lambda-equation solver) has its own copy of this exact routine,
+`ringcl/dxrcl_dwmbej.F`, and its `IMULT.EQ.2` branch (lines ~267-293)
+had the identical copy/paste bug: `CALL GETLST(...,NMSYTA,...,LISTTB)`
+and `RCC_TRP_CNTRCT(...,DSSYTA,NMSYTA,...,LISTTA,...)` where the
+already-computed `DSSYTB`/`NMSYTB`/`LISTTB` should have been used.
+`xringcl` had NOT been rebuilt since 2026-08-14 -- this bug was live in
+every RHF RCCD run done earlier today. Fixed identically to the
+`rcc_dwmbej.F` fix, rebuilt `xringcl` (`make` in `aces2/ringcl`),
+installed to `aces2/bin`, md5-verified.
+
+**Verification setup**: confirmed all four relevant binaries
+(`xvcc` 13:46, `xringcc` 12:52, `xscrnc` 13:48, `xringcl` now 14:14)
+are freshly built and consistent. Discarded the prior UHF comparison
+run (`h2_scrnc_rccd_uhf_sto3g_fresh2`, ran at 13:47) as invalid --
+it predates the 13:48 `xscrnc` rebuild by a minute, so its `@IDSYMSZ`
+crash reflects stale code, not real signal.
+
+**Ran two genuinely fresh, clean, full manual pipelines**
+(`xjoda,xvmol,xvmol2ja,xvprops,xvscf,xvtran,xintprc,xringcc,xringcl,
+xscrnc`, per this file's own "Practical test-running notes") in new
+directories seeded from the same H2/STO-3G `ZMAT`s used earlier today,
+`/blue/ufhpc/perera/scrnc_test/h2_scrnc_rccd_{rhf,uhf}_sto3g_finalcheck/`:
+
+- Both completed with exit 0, no crashes, no assertions -- the
+  `checkhbar.F`/`vcc.F` fixes hold up cleanly on a from-scratch run.
+- Bare-v-independent **response-only** JJ(1,1): RHF `0.09340450647` vs
+  UHF `0.06020595989` -- ratio 1.55, i.e. RHF's response piece is
+  ~55% too large, not a small correction.
+- Full **RPA JJ matrix** JJ(1,1): RHF `0.86801033153` vs UHF
+  `0.83481178495` -- a **3.98% relative gap**, i.e. WORSE than the
+  ~1.2% gap recorded in the "continued" entry above (which predates
+  both this session's fixes AND the singlet/triplet-combination
+  rewrite). Off-diagonal JJ(1,2)/JJ(2,2) etc. remain bit-identical
+  between RHF and UHF (`0.44345130488`/`0.29626627913`), confirming
+  the bare-v piece and the doubly-off-diagonal response elements are
+  fine -- the gap is entirely localized to the same diagonal/(1,4)
+  response elements as before.
+
+**Conclusion: the dxrcl_dwmbej.F fix was a real bug, worth having
+fixed, but it is NOT the (sole) source of the RHF/UHF gap** -- fixing
+it and adding the singlet+triplet combination together made the
+disagreement bigger, not smaller. For H2/STO-3G's single irrep (sym=
+off), `NMSYTA` may simply equal `NMSYTB` numerically, making that fix
+a correctness improvement with near-zero effect on this particular
+test case -- consistent with the gap barely moving from the fix itself
+and instead being dominated by something in the new singlet/triplet
+combination machinery (items 1 above): the 0.25/0.75 weight assignment
+itself, a sign convention, or the `Loffset` list-routing scheme are
+now the prime suspects, NOT yet individually isolated.
+
+**Next step (needs Ajith's physics judgment, not just more code-
+reading)**: isolate which piece of the Imult=1/2 combination is wrong
+by comparing the Imult=1-only (singlet, weight forced to 1.0, Nmult
+temporarily forced to 1) response-only JJ against a hand-derivable
+expectation, then add the triplet channel back in and see at which
+step the 3.98% appears. Also worth double-checking the 0.25/0.75
+assignment isn't swapped (0.75/0.25) -- an accidental swap would still
+combine to a real number, just the wrong one, and wouldn't show up as
+a crash. Not yet done this session.
+
+**Housekeeping still needed, not done this session**: (1) revert
+`scrnc_set_vars.F`'s temporary `.FALSE. .AND.` override once resolved
+-- currently RCCD is wide open for RHF with a known-wrong answer,
+should not ship like this. (2) nothing committed this session --
+all of items 1-5 above plus the `dxrcl_dwmbej.F` fix and this log
+entry remain uncommitted in the working tree.
+
+---
+
+## SESSION 2026-08-19 (continued 4) -- ROOT CAUSE FOUND AND FIXED: `rcc_cmpeng.F` was using the WRONG singlet/triplet recombination formula for RHF RCCD ground-state energy; corrected + verified against UHF to ~1e-10; confirmed independently by the Rishi/Perera/Bartlett JCP paper's own Eq. 49 (RESUME HERE)
+
+Ajith's own suggested debugging method, stepwise from the ground up:
+"ringcc energy must match, ringcl energies must match. If they are,
+then problem is in scrnc." Checked step 1 first (skipping the
+scrnc-level two-channel design entirely) -- and it immediately failed:
+fresh RHF vs UHF RCCD ground-state energies (H2/STO-3G,
+`h2_scrnc_rccd_{rhf,uhf}_sto3g_finalcheck`, both from "continued 3")
+differed by **15 mHartree** (`-1.143309875506` vs `-1.128488116293`),
+not the sub-percent response-only gap this whole thread had been
+chasing -- the real problem was one level upstream of everything
+looked at so far.
+
+**Root cause, found in `aces2/ringcc/rcc_cmpeng.F`'s `RHF.AND.RCCD`
+branch (~line 117)**: the routine already computes TWO candidate total
+energies from the same singlet/triplet channels (`E_S`, `E_T` from
+`RCC_RHF_CMPENEG`) and PRINTS both, correctly labeled:
+```
+E_flip     = 0.25*(E_S + E_T)        <- printed "with spin-flip excitations"
+E_no_flip  = 0.75*E_T + 0.25*E_S     <- printed "without spin-flip excitations"
+```
+with an adjacent hardcoded comment stating `E_flip` "is identical to
+the energy computed with the spin-orbital formulation" -- but a prior,
+dated `2026-08-13` change set `ETOT=E_no_flip` anyway, based solely on
+matching an archived reference file (`Testdir_rcc/rccd_rhf_adz.out`,
+H2O/cc-pVDZ) that was apparently never itself cross-checked against an
+independent UHF run.
+
+**Two independent confirmations that `E_flip` (not `E_no_flip`) is
+correct:**
+1. Fresh UHF RCCD (H2/STO-3G) converges to correlation energy
+   `-0.011836838064` -- matches `E_flip`'s `-0.011836838068` to 8
+   decimal places, does NOT match `E_no_flip`'s `-0.026658597092`.
+2. Ajith recalled a co-authored paper covering exactly this: Rishi,
+   Perera & Bartlett, *J. Chem. Phys.* 153, 234101 (2020) (arXiv
+   2008.00336). Its Eq. 49 gives the plain rCCD ground-state
+   correlation energy as the EQUAL-weight combination
+   `E_RrCCD=(1/4)(3B.3T+1B.1T)` -- exactly `E_flip`'s shape (no
+   triplet-degeneracy factor). The paper's OWN 3x-triplet-weighted
+   formula (Eq. 60, `E_no_flip`'s shape) is for a DIFFERENT quantity --
+   spin-flip-inclusive excitation/response energies -- not the
+   ground-state energy. This also means the scrnc two-channel
+   0.25/0.75 response design (matching `E_no_flip`'s shape) may be the
+   physically CORRECT choice for the response function specifically,
+   even though that same shape is wrong for the energy -- narrows the
+   still-open scrnc response gap to an implementation bug (list
+   routing/sign/etc.), not a wrong-formula problem.
+
+**Fix applied**: `rcc_cmpeng.F`'s `ETOT`/`ESPIN` switched from
+`E_no_flip` to `E_flip`, old comment kept (superseded, not deleted) for
+the record. Rebuilt via `make` in `aces2/ringcc` (also tried the
+top-level `./build.sh aces2` first for proper multi-target
+lib-propagation safety, but it fails early in the unrelated `pdens`
+module -- pre-existing, not investigated, worked around by rebuilding
+`aces2/ringcc` directly, which turned out to already auto-install to
+`aces2/bin/xringcc`, md5-verified).
+
+**VERIFIED, fresh directories** (`h2_scrnc_rccd_{rhf,uhf}_sto3g_
+energyfix`, `/blue/ufhpc/perera/scrnc_test/`): RHF `-1.128258565382`
+a.u. vs UHF `-1.128258565299` a.u. -- **agree to ~8e-11**, i.e. exactly
+at the convergence floor, essentially machine-precision agreement.
+This is the ground-truth check Ajith's stepwise method called for, and
+it now passes cleanly.
+
+**Ringcl checked too, per the same stepwise method**: `xringcl` links
+`libringcc.a` (contains `rcc_cmpeng.o`) but had NOT been relinked since
+the energy fix -- relinked (`make` in `aces2/ringcl`), reinstalled,
+reran fresh. RHF `-1.128980631497` vs UHF `-1.128980631422` a.u. --
+agree to ~7.5e-11, same convergence-floor quality as ringcc alone.
+Both stages of Ajith's stepwise check now pass.
+
+**Then reran the full pipeline through scrnc with everything above in
+place**: the RPA JJ matrix is **UNCHANGED** --
+RHF `JJ(1,1)=0.86801033153` vs UHF `0.83481178495`, still the same
+3.98% gap as before any of today's fixes. Makes sense on reflection:
+`rcc_cmpeng.F`'s `ETOT`/`ESPIN` only control what gets PRINTED as the
+total energy (and the Jacobi convergence check) -- they never feed
+back into the T2 amplitudes or Hbar that scrnc actually reads from
+`JOBARC`. So this is a clean, meaningful result under Ajith's own
+method, not a null result: **ringcc and ringcl are now independently
+verified correct and RHF/UHF-consistent; the remaining gap is entirely
+inside scrnc's own response construction**, not inherited from
+upstream. This rules out an entire class of explanation (bad
+amplitudes/Hbar feeding scrnc) that was never actually eliminated
+before today.
+
+**Next step**: with amplitudes/Hbar now trusted, go back into
+`scrnc_jj_rcc_assemble.F`/`scrnc_lrspn_rcc_main.F`/
+`scrnc_jj_rcc_lrspn.F`'s two-channel `Imult`/`Loffset`/0.25-0.75-weight
+machinery and look for an implementation bug specifically (list
+routing, sign, off-by-one in `Loffset`, etc.) -- the paper (Eq. 60)
+suggests the 0.25/0.75 weight itself is likely the right choice for
+this response quantity, so treat the weighting formula as probably
+correct and look elsewhere first. Not yet started.
+`scrnc_set_vars.F`'s RCCD/DRCCD RHF trap is STILL force-disabled for
+testing -- still needs reverting before this ships. Nothing committed
+yet this session.
+
+---
+
+## SESSION 2026-08-19 (continued 3) -- found a conflicting, unverifiable claim in the higher-frequency memory safety net (Claude's own `reference_scrnc_debug_log_location.md`, "update 5": "MAJOR MILESTONE... ~0.03% agreement"); could NOT reproduce it after isolating every variable; current best evidence is the gap is real, ~4-12%, and NOT explained by any single uncommitted change (RESUME HERE)
+
+Before doing anything else this entry, re-read
+`reference_scrnc_debug_log_location.md` (the memory-system safety net
+this project uses specifically because this terminal keeps freezing).
+It contains a LATER, never-committed "update 5" claiming all of this
+was already resolved: 4 bugs fixed (the 3 in "continued 2" above plus a
+`vcc.F` E4S/T2T1AA1 divide-by-zero guard), and RHF/UHF RCCD JJ(1,1)
+agreeing to **~0.03%** (`0.78952789957` vs `0.78977444812`) -- a
+"MAJOR MILESTONE". That update also explicitly flagged its own
+uncertainty: the two-channel `Imult`/`Nmult` design in
+`scrnc_driver.F` etc. was "NOT yet revisited... may or may not still
+be needed" and the result was "not independently confirmed but matches
+expectation" -- i.e. even the session that wrote it wasn't fully sure
+before the next freeze hit.
+
+**Tried to reproduce it and could not, despite isolating every
+variable found:**
+- Current full working tree (all 5 known bugs fixed, including this
+  session's new `dxrcl_dwmbej.F` fix, two-channel `Nmult=2` design
+  active): RHF `JJ(1,1)=0.86801033153` vs UHF `0.83481178495` --
+  **3.98%**, not 0.03%.
+- Same tree with the `dxrcl_dwmbej.F` fix reverted (genuinely
+  reproducing the pre-this-session bug, md5-verified against the
+  original Aug-14 binary): IDENTICAL numbers, `0.86801033153` /
+  `0.83481178495` -- confirms the fix is numerically inert on this
+  H2/STO-3G/sym=off system (single irrep, `NMSYTA` apparently equals
+  `NMSYTB` here even though the code was reading the wrong list before)
+  and is NOT what's blocking agreement.
+- Same tree with `Nmult` forced to 1 (single-channel, i.e. reverting
+  just the two-channel design update-5 itself doubted): RHF
+  `JJ(1,1)=0.93587773109` -- **WORSE** (12.1% vs UHF), not better.
+  Rules out "just drop the two-channel design" as the fix update-5's
+  own doubt implied it might be.
+
+**Leading hypothesis, not yet confirmed**: the original "listfix" test
+directory that produced `0.78952789957` (both in this session's very
+first check AND apparently behind update 5's claim) shows suspicious
+timing -- its `ZMAT`/`GENBAS` are timestamped 13:14 but
+`DERGAM`/`MOABCD`/`JOBARC`/etc. are all 13:43, a 29-minute gap for a
+2-atom STO-3G job that runs in ~1-3 seconds end-to-end. That strongly
+suggests the directory was reused for multiple partial reruns (e.g.
+rerunning just `xscrnc` or `xringcl` on top of leftover `JOBARC` state
+rather than a single clean `xjoda`-to-`xscrnc` pass) -- exactly the
+non-idempotent-reuse pitfall this file's own "Practical test-running
+notes" section warns about, and the exact failure mode update 5 itself
+caught happening to an OLDER "reference" UHF directory ("the old
+'successful' UHF reference run really was relying on stale directory
+state the whole time"). If `listfix`'s RHF number is ALSO contaminated
+by stale state, then `0.78952789957` was never a trustworthy number to
+begin with, in either this session's first check or update 5's.
+
+**Every number in THIS entry, by contrast, comes from directories
+created fresh this session** (`ZMAT`+`GENBAS` copied in, immediately
+run `xjoda` through `xscrnc` once, no reuse):
+`h2_scrnc_rccd_{rhf,uhf}_sto3g_finalcheck`,
+`h2_scrnc_rccd_{rhf,uhf}_sto3g_origringcl`,
+`h2_scrnc_rccd_rhf_sto3g_nmult1test` (all under
+`/blue/ufhpc/perera/scrnc_test/`). All exit 0, no crashes -- so the
+disagreement is not a stale-state artifact on THIS side, at least.
+
+**Current best-evidence conclusion**: with everything currently
+believed fixed, RHF and UHF RCCD genuinely disagree by several percent
+on their response-only contribution, and neither of the two design
+choices tried (two-channel-weighted vs single-channel) reproduces the
+close agreement update 5 claimed. That claimed result is more likely
+explained by stale-directory contamination than by a real prior state
+of the code that has since regressed -- but this is not proven, just
+the best available explanation. **Genuinely open, needs Ajith's
+steer**: worth deciding whether to (a) trust this session's
+fresh-directory numbers as ground truth and treat update 5's claim as
+a false positive, not chase it further, or (b) try to reconstruct
+update 5's exact test conditions more carefully before giving up on
+reproducing it.
+
+**Working tree restored to a clean, understood state** before writing
+this entry: `scrnc_driver.F`'s `Nmult` logic is back to its intended
+`Nmult=2 If (Iuhf.EQ.0 .AND. Rccd)` form (the temporary `Nmult=1` test
+edit was reverted), `xscrnc`/`xringcl` rebuilt+reinstalled+md5-verified
+to match. Nothing committed. `scrnc_set_vars.F`'s RCCD/DRCCD RHF trap
+is STILL force-disabled (`.FALSE. .AND. ...`) for testing -- still
+needs reverting before this ships, per "continued 2"'s note.
+
+---
+
 ## SESSION 2026-08-19 -- NEW THREAD: RHF-support question for scrnc raised, probed, and scoped; then RESOLVED for CCSD-LR (2 small bugs, not a 28-file rewrite) and verified against UHF to ~1e-8; RCCD/DRCCD left open with a real, separate ~1.2% gap (RESUME HERE, see "continued" below for the resolution)
 
 Ajith, mid-typing when the terminal froze (recovered next session):

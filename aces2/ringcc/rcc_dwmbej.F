@@ -268,7 +268,7 @@ C There are no antisymmetrized T2 amplitudes.
         IF (IMULT .EQ. 1) THEN
            CALL GETLST(ICORE(I020),1,NMSYTA,1,IRREP,LISTTA)
         ELSE IF (IMULT .EQ.2) THEN
-           CALL GETLST(ICORE(I020),1,NMSYTA,1,IRREP,LISTTB)
+           CALL GETLST(ICORE(I020),1,NMSYTB,1,IRREP,LISTTB)
         ENDIF
 
 C        IF (IMULT .EQ. 2) CALL SSCAL (NMSYTA*NMSYTA,TWO,
@@ -281,7 +281,8 @@ C in cntract for the singlet spin-adpated path.
         Write(6,"(a,i2,a,i4,a,i4)") " RCC_DWMBEJ RHF IMULT=",IMULT,
      &        " irrep=",IRREP," T2 list=",
      &        MERGE(LISTTA,LISTTB,IMULT.EQ.1)
-        call checksum("T2-in", ICORE(I020), NMSYTA*DSSYTA)
+        call checksum("T2-in", ICORE(I020),
+     &        MERGE(NMSYTA*DSSYTA,NMSYTB*DSSYTB,IMULT.EQ.1))
 #endif
         IF (IMULT .EQ. 1) THEN
             CALL CNTRCT(ICORE(I000),ICORE(I010),ICORE(I020),
@@ -292,8 +293,8 @@ C The triplet spin-adapted path. Also notice that minus sign in front
 C (by using C4 instead of -C4).
 
             CALL RCC_TRP_CNTRCT(ICORE(I000),ICORE(I010),ICORE(I020),
-     &                          DISSYQ,NUMSYQ,DSSYTA,NMSYTA,DSSYWA,
-     &                          NMSYWA,IRREP,LISTWA,LISTWB,LISTTA,
+     &                          DISSYQ,NUMSYQ,DSSYTB,NMSYTB,DSSYWA,
+     &                          NMSYWA,IRREP,LISTWA,LISTWB,LISTTB,
      &                         'WxT',ZILCH,-C4,1)
         ENDIF
         NSIZE=DISSYQ*NUMSYQ
