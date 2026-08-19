@@ -125,6 +125,247 @@ entry remain uncommitted in the working tree.
 
 ---
 
+## SESSION 2026-08-19 (continued 5) -- the "3.98%->1.42%" fix in the entry below was a MEASUREMENT ARTIFACT, not real progress: found a SECOND bug (`scrnc_form_rcc_hbar.F`'s Hbar write-back, also hardcoded to list 56) that exactly CANCELS the first one when both are present -- properly fixing BOTH restores the ORIGINAL 3.98% number exactly. The real RHF/UHF response gap is still 100% unexplained (RESUME HERE)
+
+**What happened**: after the "continued 4" entry below reported
+3.98%->1.42% from fixing `scrnc_rcc_hbar_read.F`'s hardcoded list-56
+read, kept digging (per Ajith's "continue, goal is to fix this") and
+found `scrnc_form_rcc_hbar.F` ALSO hardcodes its Hbar *write-back*
+target to list 56 regardless of `Imult` (`LISTDUMP=56` unconditionally,
+before this fix) -- the completed, Fock-diagonal-added triplet Hbar
+was never actually being stored to list 54 at all. Fixed it
+(`LISTDUMP=54` for `Imult.EQ.2`), also fixed a matching hardcoded-to-
+type-56 `ISIZE` calculation in the same routine for consistency.
+
+**Then the numbers went BACKWARD**: rebuilt, reran fresh (properly
+this time, not reusing a directory -- caught myself reusing one once,
+which corrupted a UHF number that should never have changed; redid it
+clean) -- RHF landed EXACTLY back on `0.86801033153`, the untouched
+ORIGINAL pre-any-fix number, to all 11 printed digits. Too precise to
+be coincidence. Traced it with round-trip checksums (write value vs.
+immediately-following read value for list 54) -- the write/read pair
+IS internally consistent, no corruption there. The real explanation:
+**the original code had TWO bugs, both hardcoded to list 56, that
+canceled each other out for this exact call pattern.** `Scrnc_driver.F`
+calls `Scrnc_form_rcc_hbar` then immediately `Scrnc_rcc_hbar_read`,
+same `Imult`, back to back, every pass. In the untouched original
+code: Imult=2's `Scrnc_form_rcc_hbar` correctly READ raw W from list
+54, built the complete Hbar, then WROTE it to list 56 (the write bug)
+-- and the very next call, `Scrnc_rcc_hbar_read`'s own list-56-only
+read bug, picked up EXACTLY that freshly-written value, because both
+bugs pointed at the same wrong list at the same moment. Two wrongs
+made a right, by accident, only because of this specific call
+adjacency. Fixing ONLY the read bug (as "continued 4" did) broke that
+accidental cancellation -- Imult=2's read then legitimately hit list
+54, but list 54 still only held the STALE, Fock-diagonal-incomplete
+raw W (from `rcc_dwmbej.F`'s much earlier write during `xringcc`,
+before `xscrnc` ever ran) -- giving a real but WRONG number
+(`0.82296269100`), not a partial fix. Fixing BOTH bugs together
+restores self-consistency and reproduces the untouched original
+result exactly, because both paths now agree on which list holds the
+real answer.
+
+**Correct, sobering conclusion**: `scrnc_rcc_hbar_read.F`'s and
+`scrnc_form_rcc_hbar.F`'s list-56 hardcoding were both real bugs
+(fragile, list-56-was-never-supposed-to-be-hardcoded), and both are
+now fixed correctly and are worth keeping -- but they were NEVER the
+cause of the RHF/UHF response mismatch. The "continued 4" entry's
+3.98%->1.42% narrative is **wrong** and should not be trusted or cited
+-- it measured an inconsistent intermediate state (read fixed, write
+not yet fixed), not real progress. **The actual RHF/UHF gap is back to
+its original, still fully unexplained 3.98%** (confirmed via fresh,
+non-reused directories:
+`h2_scrnc_rccd_{rhf,uhf}_sto3g_isizefix`/`callcount`/`roundtrip`).
+
+**Lesson for next time, worth remembering**: when two bugs are both
+"hardcoded to list N" in a read/write pair called back-to-back, fixing
+only one can look like huge progress (a real, large, correctly-
+observed effect) while being completely wrong -- because breaking an
+accidental cancellation looks identical to a real partial fix from a
+single before/after comparison. Should have suspected this the moment
+solving for the empirical combination weight kept giving non-physical
+fractions (0.406, then 0.043) instead of converging toward something
+clean -- that was the tell that the "raw" numbers being combined
+weren't actually trustworthy yet, not that the weight itself was hard
+to pin down.
+
+**Follow-up, same entry's continuation**: with the two Hbar bugs
+properly, self-consistently fixed (confirmed reproducible across two
+independent fresh runs -- identical raw values both times, ruling out
+non-determinism), pulled trustworthy raw per-channel response numbers
+one more time: `R_S(Imult=1)=0.080635953018`,
+`R_T(Imult=2)=0.097660690958`, UHF target `0.06020595989`. **No linear
+combination `Wt_S*R_S + Wt_T*R_T` reaches the target at all** -- tried
+0.25/0.75 (current, 55% too high), 0.25/0.25 (energy-style, 26% too
+low), 0.5/0.5 (48% too high), and solving directly for whatever weight
+would fit gives `Wt_S~2.2, Wt_T~-1.2` -- not a physically meaningful
+weight (outside [0,1], wrong sign). This is qualitatively different
+from earlier attempts (which at least gave weights in a plausible
+range, just not a clean fraction) -- here NO weight works.
+
+**Working hypothesis, needs Ajith's physics judgment, not more code
+tracing**: UHF's own Hbar (`scrnc_rcc_hbar_read.F`'s `ELSE` branch,
+`IUHF.NE.0`) is NOT block-diagonal in a "singlet channel + triplet
+channel" sense -- it explicitly builds AABB/BBAA OFF-DIAGONAL coupling
+blocks (`IOFFAABB`, `IOFFBBAA`) alongside the AAAA/BBBB diagonal ones,
+a genuine 2x2-coupled system. A coupled matrix's EIGENVALUES can still
+exactly match the eigenvalues of its symmetry-decoupled diagonal
+blocks (basic linear algebra for a block matrix that's actually
+block-diagonalizable in a rotated basis) -- which is exactly why the
+Hbar eigenvalue check passed. But the RESPONSE FUNCTION (built from
+how a perturbation vector Y projects onto and gets inverted against
+that structure) does NOT have to reduce to a simple weighted sum of
+two INDEPENDENT block inversions, even when the eigenvalues do decouple
+cleanly. The current RHF two-channel design (`Scrnc_driver.F`'s
+`Imult=1,2` loop + `Scrnc_jj_rcc_assemble.F`'s final `Wt`-weighted sum)
+assumes exactly that reduction. If UHF's AABB/BBAA cross-coupling
+genuinely contributes to the response (not just formally present but
+numerically negligible), no amount of weight-tuning on two
+INDEPENDENT channel solves can ever reproduce it -- the architecture
+itself, not any single line, would need to change to include an
+analogous cross-term.
+
+**RESOLUTION of the architecture question (2026-08-19, same day,
+"continued 6")**: Ajith confirmed directly -- "NO, they should not
+decouple. We do not do that in CCSD route." Compared `rcc_dwmbej.F`'s
+RHF two-channel construction against `vcc/dwmbej.F`'s (CCSD's, RHF,
+never decouples) side by side. Found the two channels are NOT an
+arbitrary decoupling -- `rcc_dwmbej.F` IMULT=1's bare-integral term is
+literally `2*J-K` and IMULT=2's is `-K` (list 56, list 54
+respectively) -- this is exactly the standard closed-shell Casida
+singlet/triplet RPA matrix construction
+(`A^singlet=2K_direct-K_exchange`, `A^triplet=-K_exchange`). So list 56
+alone (`2J-K`) IS the complete, genuine singlet RPA matrix, not half
+of something needing external recombination. First-principles check:
+a spin-independent (density-type) perturbation operator
+`V=Sum_pq v_pq(a+_pa a_qa + a+_pb a_qb)` has ZERO overlap with the
+Sz=0 triplet excitation manifold (only the symmetric/singlet
+combination) -- so the RESPONSE to such a perturbation should come
+from the singlet channel ALONE, weight 0 on triplet, not 0.25/0.75.
+Searched literature (3 angles: spin-adapted RPA, closed-shell
+polarizability, GW screened Coulomb) -- confirms the general
+singlet/triplet decoupling principle for eigenvalues but no exact
+published formula for this specific CC-dressed ring-CC response
+quantity; the derivation above is first-principles, not a citation.
+
+**Implemented**: `Scrnc_driver.F`'s `Nmult` forced to 1 always
+(dropped the `Iuhf.EQ.0.AND.Rccd`-triggered `Nmult=2` -- RCCD now
+matches DRCCD's pre-existing Imult=1-only treatment). Removed the
+`Spntsing` call from `Scrnc_jj_rcc_assemble.F` entirely at first (it
+was only ever valid for CCSD-LR's stacked T1+T2(ABAB) shape, never
+ring-CC's pure-doubles vector) -- but this made DRCCD WORSE (1.44%->
+2.59%) while helping RCCD (3.98%->2.45%). Investigated why: DRCCD
+(`drcc_dwmbej.F`) drops the exchange term entirely (`2J` only, direct-
+RPA by definition) -- it never had a second channel to begin with, and
+its own Hbar-eigenvalue check (an earlier entry today) already showed
+UHF's direct-RPA Hbar still has a genuine SECOND eigenvalue (`33.927`)
+that RHF's single list-56 channel doesn't reproduce -- DRCCD is
+missing a real, unbuilt piece of Hbar, a bigger separate problem;
+`Spntsing` was accidentally, if wrongly, compensating for some of that
+gap. Restored `Spntsing` for DRCCD specifically (added the
+`/Eominfo/` `Rccd`/`Drccd` common block to `Scrnc_jj_rcc_assemble.F`,
+guarded `Spntsing` to `Iuhf.EQ.0 .AND. Drccd` only) -- confirmed fresh:
+DRCCD reproduces its exact original baseline (`0.79307663018`)
+unaffected, RCCD keeps its improvement.
+
+**Current state, RCCD, fresh verified**: RHF `JJ(1,1)=0.85524177807`
+vs UHF `0.83481178495` -- **2.45% gap**, down from the original 3.98%,
+real and reproducible. Response-only piece: RHF `0.08063595302` vs UHF
+`0.06020595989`, ratio ~1.339 -- not a clean/recognizable scale factor
+(not 4/3, not sqrt(2), not 2). Traced further into
+`Scrnc_form_mubar_s.F` (the T2-contraction dressing that builds the
+480/482 perturbation lists `scrnc_lrspn_rcc_main.F` reads) -- its RHF
+branch (`IUHF.EQ.0`) already correctly does the same `2*T(AB)-T(list
+39)` CCSD-style combination, so this piece looks correctly
+implemented on inspection; the remaining ~2.45% source not yet
+isolated further. Not a clean weight or scale-factor problem this
+time (unlike the earlier "1.42%" false lead) -- genuinely still open.
+
+**FOUND IT, and it's the real one.** Instrumented `Scrnc_form_mubar_s.F`
+directly (temp debug prints, since removed) to print `T(list37)` and
+`T(list39)` side by side, for both H2/STO-3G and H2/DZ. Result:
+**`T(list37) == T(list39)`, element for element, exactly**, in both
+systems (not a coincidence of the trivial STO-3G case -- confirmed at
+DZ's multi-element MATDIM=3 too). Root cause: `rcc_dwmbej.F`'s own
+header comment says it outright -- "There are no antisymmetrized T2
+amplitudes" for ring-CC. List 39 is built generically (via
+`RNABIJ(TYPE='T')`, resorting list 46 into an `Ab<->bA`-swapped
+version) for CCSD's genuinely-antisymmetrized T2, where that swap
+produces a real, different quantity. For RCCD's un-antisymmetrized
+T2, that same swap is a no-op -- list 39 degenerates to an exact copy
+of list 37. `Scrnc_form_mubar_s.F`'s RHF dressing (shared between
+CCSD and RCCD, called from both `scrnc_lrspn_cc_main.F` and
+`scrnc_lrspn_rcc_main.F`/`scrnc_jj_rcc_lrspn.F`) does
+`2*T(37)-T(39)`, exactly matching CCSD's own working formula -- but
+for RCCD, `2*T(37)-T(39) = 2*T(37)-T(37) = T(37)`, silently DROPPING
+the entire second (exchange-type) contribution the formula is meant
+to subtract. This is the actual bug: CCSD's dressing formula was
+reused as-is for RCCD's response without accounting for RCCD's
+different (non-antisymmetrized) amplitude structure.
+
+**Fix**: confirmed `T(list34)` (the SAME exchange-type partner
+`rcc_dwmbej.F`'s own, already-verified-correct Hbar construction uses
+for list 37) holds genuinely distinct, nonzero data (`0.159334637447`
+vs list37/39's `-0.096723866173` at STO-3G) -- reused it.
+`Scrnc_form_mubar_s.F` now branches on the `/Eominfo/` `Rccd` flag
+(added the common block): `LISTT2B = 39` normally, `= 34` when
+`Rccd` -- CCSD and DRCCD (deferred, separate, unaffected) keep list
+39 exactly as before.
+
+**VERIFIED, fresh, both systems, both references**:
+```
+                RHF/UHF gap, before -> after this fix
+H2/STO-3G RCCD:  2.45%  ->  1.41%
+H2/DZ     RCCD:  11.6%  ->  1.02%
+```
+DZ -- the system with real off-diagonal Hbar coupling, previously the
+WORST case -- improved the most, strong evidence this was the right
+mechanism (a bug that only bites once there's genuine multi-element
+T2 data to lose, exactly matching the earlier "gap grows with system
+size" observation). DRCCD reconfirmed unaffected (exact original
+baseline `0.79307663018`), ground-state energy reconfirmed unaffected
+and still ~1e-10 RHF/UHF agreement (this fix only touches the
+response-dressing path, never `rcc_cmpeng.F`).
+
+**Still not fully closed**: ~1-1.4% residual remains, both systems,
+notably more consistent in size across systems now than before (was
+2.45% vs 11.6%, wildly different scaling; now 1.41% vs 1.02%, close)
+-- possibly a smaller remaining issue, possibly approaching the
+`cc_conv=9`/`scf_conv=10` convergence floor (though CCSD-LR's own
+~1e-8 agreement suggests floor should be tighter than 1%). Checked
+`Scrnc_form_mubar_00.F` (the OTHER RHF-specific dressing piece,
+computes the `MBAR00` scalar) -- looks clean, its own T1-list (90)
+read is naturally zero for RCCD (no singles), no analogous bug found
+there. `scrnc_jj_rcc_lrspn.F` calls the SAME (now-fixed)
+`Scrnc_form_mubar_s.F`, so the L-side is automatically covered too,
+no separate fix needed. Not yet root-caused further.
+
+**Next step**: decide whether the remaining ~1-1.4% is worth chasing
+further (diminishing returns territory) or is close enough to accept
+as a convergence-level residual -- Ajith's call. `scrnc_set_vars.F`'s
+RCCD/DRCCD RHF trap is STILL force-disabled for testing -- revert
+before shipping. Nothing from today's scrnc-level response-side
+changes committed yet (only the earlier, unrelated verified fixes
+from `d80f2742` are committed) -- this fix (and the earlier Hbar-read/
+write Imult fixes, and the Nmult=1/Spntsing architecture change) are
+all real, verified improvements worth committing once the residual is
+resolved or accepted.
+
+**Superseded decision, kept for the narrative** (below was written
+before the "NO, they should not decouple" resolution above; the actual
+outcome differs from what this predicted):
+Next session should start by thinking through the correct RHF response
+formula on paper/in discussion -- specifically whether the singlet/
+triplet channels genuinely decouple for THIS response quantity (they
+do for the ground-state energy, confirmed today, and for the bare
+Hbar eigenvalues) or whether a cross term is structurally required,
+before writing any more code. Not yet resolved. `scrnc_set_vars.F`'s
+RCCD/DRCCD RHF trap is STILL force-disabled for testing -- revert this
+before anything ships regardless of how the architecture question
+resolves.
+
+---
+
 ## SESSION 2026-08-19 (continued 4) -- ROOT CAUSE FOUND AND FIXED: `rcc_cmpeng.F` was using the WRONG singlet/triplet recombination formula for RHF RCCD ground-state energy; corrected + verified against UHF to ~1e-10; confirmed independently by the Rishi/Perera/Bartlett JCP paper's own Eq. 49 (RESUME HERE)
 
 Ajith's own suggested debugging method, stepwise from the ground up:
@@ -211,17 +452,124 @@ upstream. This rules out an entire class of explanation (bad
 amplitudes/Hbar feeding scrnc) that was never actually eliminated
 before today.
 
-**Next step**: with amplitudes/Hbar now trusted, go back into
-`scrnc_jj_rcc_assemble.F`/`scrnc_lrspn_rcc_main.F`/
-`scrnc_jj_rcc_lrspn.F`'s two-channel `Imult`/`Loffset`/0.25-0.75-weight
-machinery and look for an implementation bug specifically (list
-routing, sign, off-by-one in `Loffset`, etc.) -- the paper (Eq. 60)
-suggests the 0.25/0.75 weight itself is likely the right choice for
-this response quantity, so treat the weighting formula as probably
-correct and look elsewhere first. Not yet started.
+**Committed** (`d80f2742`): the 5 verified fixes above (`rcc_cmpeng.F`
+energy formula, `rcc_dwmbej.F`/`dxrcl_dwmbej.F` triplet dimension bugs,
+`vcc.F`, `checkhbar.F`) + this log. The scrnc two-channel design and
+`scrnc_set_vars.F`'s temporary test override deliberately left
+uncommitted -- still open, see below.
+
+**Tried to empirically pin down the Imult=1/Imult=2 combination
+weight** (Ajith's own suggested method: find the right answer from the
+UHF/RPA route, then work out the RHF adjustment) by instrumenting
+`scrnc_jj_rcc_assemble.F` to print each channel's raw, unweighted
+response contribution to JJ(1,1) before combining (temporary debug
+print, marked for removal, not committed). Result:
+```
+singlet (Imult=1) raw: 0.005411120836
+triplet (Imult=2) raw: 0.097660690958
+UHF target:             0.06020595989
+```
+Neither the current 0.25/0.75 weight (gives 0.0746, 24% too high) nor
+the energy's 0.25/0.25 weight (gives 0.0258, 57% too low) reproduces
+the UHF target. Solving for whatever weight *would* fit
+(`Wt_S~0.406`) gives a non-physical fraction -- not a match to any
+textbook singlet/triplet weight. Ajith's own correction, worth
+recording as method: **a single data point can't tell you whether the
+weight is wrong or one of the raw channel numbers themselves is
+wrong -- both are live possibilities, don't assume it's just a weight
+problem.**
+
+**Decisive follow-up test, exploiting DRCCD's simpler structure**:
+DRCCD (direct RPA, no exchange) never enters the two-channel
+combination at all (`Scrnc_driver.F`'s `Nmult` stays 1 for DRCCD even
+under RHF -- `drcc_dwmbej.F` has no triplet list) -- so a fresh RHF vs
+UHF DRCCD comparison removes the weight question entirely and tests
+the shared single-channel machinery on its own. Result
+(`h2_scrnc_drccd_{rhf,uhf}_sto3g_isolationcheck`, fresh dirs, all of
+today's other fixes in place):
+- Ground-state energy: RHF `-1.137618408411` a.u. == UHF
+  `-1.137618408411` a.u. -- EXACT match, amplitudes provably fine here.
+- Response-only JJ(1,1): RHF `0.01847080512` vs UHF `0.03008849944` --
+  still disagree (ratio 0.61), reproducing the original ~1.2%
+  total-JJ gap from the very first "continued" thread entry, now
+  isolated with zero ambiguity.
+
+**Conclusion: the bug is NOT a weight-combination problem at all.**
+It's a real defect in scrnc's single-channel response-construction
+code itself (`scrnc_lrspn_rcc_main.F`/`scrnc_jj_rcc_lrspn.F`, the
+machinery both DRCCD and RCCD's Imult=1 pass share) -- upstream
+amplitudes/Hbar are fine (energy matches exactly), the two-channel
+weighting question is now moot until this more fundamental bug is
+found, since even the "cleanest" single-channel case is already wrong.
+
+**Ajith's redirect**: don't assume the code diff will show the bug --
+use H2's known physics instead. (Not "CCSD=RCCD for H2", which is
+false -- ring vs full CCD genuinely differ even here -- but: finish
+the Aug-14 planned-but-never-run Hbar-eigenvalue cross-check.)
+
+**Hbar eigenvalue check, finally run (fresh dirs,
+`h2_rpa_hbar_eig_{rhf,uhf}_sto3g`, `excite=EOM(Sf)-RCCD`,
+`eomref=RCCD`, manual pipeline through `xringcl` which does the actual
+`Heff(ai,bj)` diagonalization and prints `The real eigenvalues`):**
+```
+UHF (one diagonalization, both channels): 25.26716566  15.09016923
+RHF (two diagonalizations, singlet then triplet): 25.26716566   15.09016922
+```
+**Match to 7 decimal places.** This is decisive: the Hbar itself
+(`rcc_dwmbej.F`, `rcc_trp_cntrct.F`, `Scrnc_form_rcc_hbar.F`) is
+CORRECT for RHF -- the physical excitation spectrum agrees with UHF
+exactly, RHF just gets it from two separate singlet/triplet
+diagonalizations instead of UHF's one combined one, exactly as
+expected. Rules out the Hbar construction entirely.
+
+**IMPORTANT CORRECTION, found right after this entry was first
+written (kept below for the narrative, but its "3.98%->1.42%" claim is
+WRONG -- see the follow-up entry after this one for what's actually
+true).**
+
+**FOUND, and it's a real one: `scrnc_rcc_hbar_read.F` always read list
+56 (singlet Hbar), regardless of `Imult`.** This routine (called once
+per `Imult` pass inside `Scrnc_driver.F`'s `Do Imult = 1, Nmult` loop)
+never had an `Imult` parameter at all -- `LISTDIAG` was hardcoded to
+56. `Scrnc_form_rcc_hbar.F` correctly writes the triplet Hbar to list
+54 for `Imult=2` (confirmed correct by the eigenvalue check above),
+but nothing ever read it back -- the "triplet channel" response was
+actually built from a second, redundant re-read of the SINGLET Hbar,
+mislabeled as triplet. `Scrnc_form_rcc_hbar_inv.F`'s `MATDIM`
+calculation had the identical hardcoded-to-56 gap (harmless for H2/
+STO-3G since list 54 and 56 happen to share the same dimension there,
+but wrong in general).
+
+**Fixed**: added `Imult` to both `Scrnc_rcc_hbar_read.F` and
+`Scrnc_form_rcc_hbar_inv.F` (`LISTDIAG=54` when `Imult.EQ.2`, else 56 --
+matching `Scrnc_form_rcc_hbar.F`'s own convention), updated
+`Scrnc_driver.F`'s two call sites to pass it through. Also fixed the
+same gap in `scrnc_rcc_hbar_inv.F` (a thin wrapper, found to be
+orphaned/uncalled dead code with its own pre-existing arg-count
+mismatch predating the 2026-08-15 WHBAR/W buffer split -- left mostly
+as-is, not in the active path, just added the missing `Imult` pass-
+through for whoever finds it next).
+
+**Rebuilt, reinstalled, reran fresh RHF RCCD (temporary debug print
+still in `scrnc_jj_rcc_assemble.F` from the earlier empirical-weight
+check, not yet removed)**: the raw Imult=2 (triplet) response
+contribution changed completely --
+`0.097660690958` (stale singlet reread) -> `0.062672114317` (genuinely
+different data now). Full JJ(1,1): **3.98% gap -> 1.42% gap**
+(`0.86801033153`->`0.82296269100` vs UHF's `0.83481178495`). Response-
+only JJ(1,1): `0.04835686595` vs UHF `0.06020595989` (still ~20% off
+on this piece alone, though the bare-v-dominated total is much
+closer). Real, major bug, confirmed by a 3x reduction in the gap --
+but NOT fully closed yet. Remaining possibilities: the 0.25/0.75
+weight itself still isn't quite right even with correct data now, or
+a smaller residual bug remains somewhere in the list-routing/`Loffset`
+machinery. Not yet root-caused further -- next step, if continued:
+check whether a different weight (solve for it the same way as
+before, now with TRUSTED raw numbers) reproduces UHF exactly, which
+would mean the weight was the last piece; if not, keep tracing.
 `scrnc_set_vars.F`'s RCCD/DRCCD RHF trap is STILL force-disabled for
-testing -- still needs reverting before this ships. Nothing committed
-yet this session.
+testing -- still needs reverting before this ships. Nothing from this
+entry committed yet (temp debug print still in place).
 
 ---
 

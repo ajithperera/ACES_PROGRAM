@@ -222,36 +222,66 @@ C vcceh/secprp.F's own "IF(.NOT. REALFREQ) FREQ = FREQ*FREQ" convention).
 
          If (.NOT. Realfreq) Freq = Freq * Freq
 
-         Call Scrnc_form_rcc_hbar(Work(Ihbar_bgn),Ineed+Ipad,Iuhf,1)
+C 2026-08-19 SUPERSEDED (see SCRNC_DEBUG_LOG.md, "continued 6"): the
+C two-channel (Imult=1 singlet + Imult=2 triplet, 0.25/0.75-weighted)
+C design below this comment used to set Nmult=2 for RHF RCCD. Dropped
+C it -- confirmed (Ajith) the singlet/triplet channels must NOT be
+C decoupled and weight-recombined for a response quantity, unlike the
+C ground-state energy where that's valid; CCSD's own RHF response
+C route never decouples this way either. A first-principles check
+C (density-type perturbations couple only to the singlet manifold,
+C zero overlap with the Sz=0 triplet excitation operator) supports
+C Nmult=1 (singlet-only) as the physically correct structure -- RCCD
+C now matches DRCCD's existing Imult=1-only treatment. A residual
+C normalization-scale mismatch against UHF is still being tracked
+C down (see log), not yet resolved to full agreement.
+         Nmult = 1
+
+         Do Imult = 1, Nmult
+
+         Call Scrnc_form_rcc_hbar(Work(Ihbar_bgn),Ineed+Ipad,Iuhf,
+     +                            Imult)
          Call Scrnc_rcc_hbar_read(Work(Ihbar_bgn),Ineed+Ipad,Iuhf,
-     +                             Iloc)
+     +                             Iloc,Imult)
 
          Do Icount = 1, Itop
 
          Call Scrnc_form_rcc_hbar_inv(Work(Ihbar_bgn),
      +                           Work(Ihbarinv_bgn),Ineed+Ipad,
-     +                           Iuhf,Iloc)
+     +                           Iuhf,Iloc,Imult)
 
           Call Scrnc_lrspn_rcc_main(Work(I000),Memleft,Iuhf,
      +                              Work(Isym_pert_bgn),
      +                              Work(Ioff_pert_bgn),Nao_pairs,
      +                              Work(Ihbarinv_bgn),Iloc,
-     +                              Icount,Itop)
+     +                              Icount,Itop,Imult)
 
           Call Scrnc_jj_rcc_lrspn(Work(I000),Memleft,Iuhf,
      +                            Work(Isym_pert_bgn),
      +                            Work(Ioff_pert_bgn),Nao_pairs,
      +                            Work(Ihbarinv_bgn),Iloc,
-     +                            Icount,Itop)
+     +                            Icount,Itop,Imult)
 
          Freq = -Freq
 
          Enddo ! Enddo for Icount (dynamic +/-Freq loop)
 
+C When Itop=1 (static or imaginary-frequency case), the Freq=-Freq
+C above ran exactly once with no matching second flip to cancel it
+C (unlike Itop=2, where it runs twice and nets to zero) -- harmless
+C when this whole block only ran once, but now that it's nested inside
+C the Imult loop, an uncancelled flip would leak the WRONG-signed Freq
+C into the next channel's Scrnc_form_rcc_hbar_inv call. Undo it here so
+C every Imult pass starts from the same Freq this one did.
+         If (Itop .EQ. 1) Freq = -Freq
+
+         Enddo ! Enddo for Imult (RHF RCCD singlet/triplet channels)
+
          Call Scrnc_jj_rcc_assemble(Work(I000),Memleft,Iuhf,
      +                              Work(Ijj_lrspn_bgn),
      +                              Work(Isym_pert_bgn),
-     +                              Work(Ioff_pert_bgn),Nao_pairs)
+     +                              Work(Ioff_pert_bgn),Nao_pairs,
+     +                              Nmult)
 
       Else
 

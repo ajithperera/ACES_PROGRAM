@@ -25,11 +25,14 @@ C ARE INCLUDED.
 C
       IMPLICIT INTEGER (A-Z)
       LOGICAL PRINT
+      LOGICAL Ccsd,Mbpt,Parteom,Nodavid,Aoladder,Rccd,Drccd
       DOUBLE PRECISION ONE,ONEM,ZILCH,SNRM2,TWO,SCR,SDOT,
      &                 SIGN1, SIGN2
       DOUBLE PRECISION MIJ(*),MAB(*),MAI(*),MEXPECT,MBAR00
       DOUBLE PRECISION MIJBAR(*),MABBAR(*),MAIBAR(*),MIABAR(*)
       DIMENSION SCR(MAXCOR)
+      COMMON /Eominfo/Ccsd,Mbpt,Parteom,Nodavid,Aoladder,Rccd,
+     +                Drccd
       COMMON/MACHSP/IINTLN,IFLTLN,IINTFP,IALONE,IBITWD
       COMMON/SYMINF/NSTART,NIRREP,IRREPS(255,2),DIRPRD(8,8)
       COMMON/SYM/POP(8,2),VRT(8,2),NT(2),NFMI(2),NFEA(2)
@@ -282,8 +285,22 @@ C
 C
           CALL GETLST(SCR(I010),1,NT2DISAB,1,IRREPX,LISTT2AB)
           IF(IUHF.EQ.0)THEN
-             CALL GETLST(SCR(I020),1,NT2DISAA,1,IRREPX,
-     &                   100*(ISIDE-1)+39)
+C 2026-08-19: RCCD's own T2(Ij,Ab) (list 37, read above as LISTT2AB)
+C is never antisymmetrized (rcc_dwmbej.F's own comment) -- unlike
+C CCSD's, so list 39 (the generic RNABIJ 'Ab<->bA'-type resort of list
+C 46, valid for CCSD's antisymmetrized amplitudes) turns out IDENTICAL
+C to list 37 for RCCD, element for element (confirmed empirically,
+C H2/STO-3G and H2/DZ both). That silently collapses this routine's
+C "2*T37-T39" CCSD-style dressing combination to just "T37" for RCCD,
+C losing the intended second (exchange-type) contribution entirely --
+C the real source of the still-open RHF/UHF response mismatch (see
+C SCRNC_DEBUG_LOG.md). rcc_dwmbej.F's OWN Hbar construction already
+C solves this correctly using list 34 (not 39) as list 37's exchange-
+C type partner -- reuse that same list here for RCCD specifically.
+C CCSD (and DRCCD, deferred separately, not fixed here) keep list 39.
+             LISTT2B = 100*(ISIDE-1) + 39
+             IF (RCCD) LISTT2B = 100*(ISIDE-1) + 34
+             CALL GETLST(SCR(I020),1,NT2DISAA,1,IRREPX,LISTT2B)
              CALL SSCAL(NT2DSZAB*NT2DISAB,TWO,SCR(I010),1)
              CALL SAXPY(NT2DSZAB*NT2DISAB,ONEM,SCR(I020),1,SCR(I010),1)
           ENDIF

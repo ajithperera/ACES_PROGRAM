@@ -307,6 +307,17 @@ C
           Call Updmoi(Nperts,Length(Irrep),Irrep,374,0,0)
           Call Updmoi(Nperts,Length(Irrep),Irrep,375,0,0)
           Call Updmoi(Nperts,Length(Irrep),Irrep,376,0,0)
+
+C 2026-08-19: 377-380 are the Imult=2 (triplet-channel) counterparts of
+C 373-376, used only for the RHF (Iuhf=0) RCCD singlet+triplet
+C combination -- see Scrnc_lrspn_rcc_main.F/Scrnc_jj_rcc_lrspn.F/
+C Scrnc_jj_rcc_assemble.F and SCRNC_DEBUG_LOG.md.
+          If (Iuhf .EQ. 0) Then
+             Call Updmoi(Nperts,Length(Irrep),Irrep,377,0,0)
+             Call Updmoi(Nperts,Length(Irrep),Irrep,378,0,0)
+             Call Updmoi(Nperts,Length(Irrep),Irrep,379,0,0)
+             Call Updmoi(Nperts,Length(Irrep),Irrep,380,0,0)
+          Endif
       Enddo
          
       Return

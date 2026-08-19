@@ -1,5 +1,6 @@
 #include "flags.h"
-      SUBROUTINE SCRNC_FORM_RCC_HBAR_INV(WHBAR,W,MAXCOR,IUHF,ILOC)
+      SUBROUTINE SCRNC_FORM_RCC_HBAR_INV(WHBAR,W,MAXCOR,IUHF,ILOC,
+     +                                   IMULT)
 C
 C THIS ROUTINE DRIVES THE drCCD Hbar diagonalizations
 C
@@ -39,7 +40,14 @@ C
       DO IRREP=1,NIRREP
 
          IF (IUHF.EQ.0)THEN
-            NUMDIS=IRPDPD(IRREP,ISYTYP(2,56))
+C 2026-08-19: LISTDIAG must match Scrnc_rcc_hbar_read.F's own choice
+C for this Imult pass (56=singlet, 54=triplet) -- both lists happen to
+C share the same dimension for H2/STO-3G (masking the bug there), but
+C using the wrong one here would desync WHBAR's actual per-irrep
+C layout from what MATDIM/ILOC assume for a system where they differ.
+            LISTDIAG = 56
+            IF (IMULT.EQ.2) LISTDIAG = 54
+            NUMDIS=IRPDPD(IRREP,ISYTYP(2,LISTDIAG))
             MATDIM = NUMDIS
          ELSE
             NUMAA=IRPDPD(IRREP,ISYTYP(1,19))

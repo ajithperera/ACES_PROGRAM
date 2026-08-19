@@ -11,7 +11,7 @@
 
       Subroutine Scrnc_lrspn_rcc_main(Work,Maxcor,Iuhf,Isympert,
      +                                Ioffpert,Nperts,Hbarinv,Iloc,
-     +                                Icount,Itop)
+     +                                Icount,Itop,Imult)
 
       Implicit Double Precision (A-H,O-Z)
 
@@ -120,6 +120,17 @@ C already-dressed output, breaking L/R Hbar consistency.
 
       Irreprl     = 1
       Npert_count = 0
+
+C 2026-08-19: Imult selects which spin-adapted RHF channel's Hbar^(-1)
+C the caller built for this pass (1=singlet, list 56; 2=triplet, list
+C 54 -- see Scrnc_form_rcc_hbar.F). Route each channel's raw R-side
+C vector to its own list numbers (Loffset=0 for Imult=1 reproduces the
+C original 373/375 numbers exactly) so Scrnc_jj_rcc_assemble.F can read
+C both channels back separately and combine them with the correct
+C 0.25 (singlet) / 0.75 (triplet) weights -- see check_rhf_rcc.F and
+C SCRNC_DEBUG_LOG.md. For Iuhf.NE.0 (UHF), Imult is always 1 and this
+C is a no-op (Loffset=0, identical to the pre-existing behavior).
+      Loffset = 4*(Imult-1)
 
 C Next step is to prepare the integrals. We have the repulsion
 C integrals prepared in the form X(p(1)q(1),i(2)j(2)) where p and q can
@@ -258,19 +269,21 @@ C Npert_count -- diff to confirm before narrowing into Iside=2.
                  Call Xgemm("N","N",Nrow,1,Nrow,One,Work(Ibgn),
      +                       Nrow,Work(I010),Nrow,Zilch,Work(I030),
      +                       Nrow)
-                 
+
 C Save the 1^st order perturbed amplitude for all perturbations
 
                  Call Putlst(Work(I030),Npert_count,1,1,Irrepx,
-     +                       372+Iside)
+     +                       372+Iside+Loffset)
 
 C Dynamic (frequency-dependent) response, 2026-08-15: on the +Freq pass
 C of a 2-pass dynamic run (see Scrnc_driver.F's Icount loop), also save
 C to list 375 (secprp's own convention, mirrors the CCSD path) before
-C the -Freq pass overwrites list 372+Iside=373 in place.
+C the -Freq pass overwrites list 372+Iside=373 in place. (Loffset shifts
+C this to 379 for the Imult=2/triplet channel.)
 
                  If (Icount .EQ. 1 .AND. Itop .EQ. 2) Then
-                    Call Putlst(Work(I030),Npert_count,1,1,Irrepx,375)
+                    Call Putlst(Work(I030),Npert_count,1,1,Irrepx,
+     +                          375+Loffset)
                  Endif
 
       write(6,*)
@@ -301,7 +314,7 @@ C the -Freq pass overwrites list 372+Iside=373 in place.
 C Save the 1^st order perturbed amplitude for all perturbations
 
                  Call Putlst(Work(I030),Npert_count,1,1,Irrepx,
-     +                       372+Iside)
+     +                       372+Iside+Loffset)
 
       write(6,*)
       call checksum("1^st order amps,Iside=2",Work(I030),Nsizec)

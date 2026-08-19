@@ -9,7 +9,7 @@
       Write(6,"(1x,a)") "-----Entering scnc_rcc_hbar_inv------"
 #endif
       Call Scrnc_form_rcc_hbar(Work,Memleft,Iuhf,Imult)
-      Call Scrnc_form_rcc_hbar_inv(Work,Memleft,Iuhf,Iloc) 
+      Call Scrnc_form_rcc_hbar_inv(Work,Memleft,Iuhf,Iloc,Imult)
       
       Return
       End

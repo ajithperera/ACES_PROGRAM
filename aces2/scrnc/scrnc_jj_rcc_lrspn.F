@@ -1,6 +1,6 @@
       Subroutine Scrnc_jj_rcc_lrspn(Work,Maxcor,Iuhf,Isympert,
      +                             Ioffpert,Nao_pair,Hbarinv,Iloc,
-     +                             Icount,Itop)
+     +                             Icount,Itop,Imult)
 
       Implicit Double Precision (A-H,O-Z)
 
@@ -41,6 +41,11 @@
 
       Irreprl     = 1
       Npert_count = 0
+
+C See the matching comment in Scrnc_lrspn_rcc_main.F -- Loffset routes
+C this channel's L-side vector to its own list numbers (0 for Imult=1/
+C singlet, reproducing the original 374/376; 4 for Imult=2/triplet).
+      Loffset = 4*(Imult-1)
 
 #ifdef _DEBUG_LVL0
       Write(6,"(1x,a)") "-----Entering scrnc_jj_rcc_lrspn------"
@@ -206,7 +211,7 @@ C to be. That's what broke JJ_lrespn's symmetry (record 1 ended up
 C holding Npert_count=Nao_pair's value instead of its own). Writing
 C directly to Npert_count (already known here) removes the collision.
 
-          Call Putlst(Work(Iwrk),Npert_count,1,1,Irrepx,374)
+          Call Putlst(Work(Iwrk),Npert_count,1,1,Irrepx,374+Loffset)
 
 C Dynamic (frequency-dependent) response, 2026-08-15: this routine now
 C runs once per +/-Freq pass of Scrnc_driver.F's Icount loop (Hbarinv
@@ -217,7 +222,8 @@ C list 376 -- the L-side counterpart of 375, mirroring the R-side save
 C in Scrnc_lrspn_rcc_main.F -- before the -Freq pass overwrites 374.
 
              If (Icount .EQ. 1 .AND. Itop .EQ. 2) Then
-                Call Putlst(Work(Iwrk),Npert_count,1,1,Irrepx,376)
+                Call Putlst(Work(Iwrk),Npert_count,1,1,Irrepx,
+     +                      376+Loffset)
              Endif
 
           Endif

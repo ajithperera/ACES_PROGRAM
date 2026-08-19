@@ -358,7 +358,16 @@ C Read in Hbar(ib,aj) elements; ordered as (bi,aj)
 
       DO ISPIN=1,1+IUHF
          IF(IUHF.EQ.0)THEN
-           ISIZE=ISYMSZ(ISYTYP(1,56),ISYTYP(1,56))
+C 2026-08-19: ISIZE must match whichever list (56 singlet, 54 triplet)
+C this Imult pass actually reads/writes -- was hardcoded to list 56's
+C type regardless of IMULT. Numerically harmless for H2/STO-3G (both
+C lists happen to share the same size there) but wrong in general, and
+C risky now that IMULT=2 also WRITES via this same ISIZE (see the
+C LISTDUMP fix below) -- an undersized/oversized PUTALL to list 54
+C would silently corrupt it. See SCRNC_DEBUG_LOG.md.
+           LISTHBAR = 56
+           IF (IMULT .EQ. 2) LISTHBAR = 54
+           ISIZE=ISYMSZ(ISYTYP(1,LISTHBAR),ISYTYP(1,LISTHBAR))
            I050=I040+ISIZE*IINTFP
            I060=I050+ISIZE*IINTFP
            IEND=I060
@@ -415,11 +424,18 @@ C Reorder (ab,ij) -> (ai,bj)
      
           IF (TDA) THEN
             LISTDUMP = 42
+          ELSE IF (IMULT .EQ. 2) THEN
+C 2026-08-19: the completed (Fock-diagonal-added) triplet Hbar must be
+C written back to its OWN list (54), matching the raw-W read at line
+C ~173 above -- previously this always wrote to list 56 regardless of
+C IMULT, clobbering the singlet Hbar and leaving list 54 stuck at its
+C raw, Fock-diagonal-incomplete state forever. See SCRNC_DEBUG_LOG.md.
+            LISTDUMP = 54
           ELSE
             LISTDUMP = 56
-          ENDIF 
-          IF (IUHF .NE. 0) LISTDUMP = LISTAA 
-          CALL PUTALL(ICORE(I040),ISIZE,1,LISTDUMP) 
+          ENDIF
+          IF (IUHF .NE. 0) LISTDUMP = LISTAA
+          CALL PUTALL(ICORE(I040),ISIZE,1,LISTDUMP)
 
       ENDDO 
 

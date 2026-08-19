@@ -10,15 +10,19 @@
 
 
       Subroutine Scrnc_jj_rcc_assemble(Work,Maxcor,Iuhf,JJ_lrespn,
-     +                                  Isympert,Ioffpert,Nao_pair)
+     +                                  Isympert,Ioffpert,Nao_pair,
+     +                                  Nmult)
 
       Implicit Double Precision (A-H,O-Z)
 
       Double Precision JJ_lrespn(Nao_pair,Nao_pair)
       Logical Realfreq
+      Logical Ccsd,Mbpt,Parteom,Nodavid,Aoladder,Rccd,Drccd
       Dimension Isympert(Nao_pair),Ioffpert(Nao_pair)
       Dimension Work(Maxcor)
 
+      Common /Eominfo/Ccsd,Mbpt,Parteom,Nodavid,Aoladder,Rccd,
+     +                Drccd
       COMMON/AOSYM/IAOPOP(8),IOFFAO(8),ioffv(8,2),ioffo(8,2),
      &             IRPDPDAO(8),IRPDPDAOMO_OCCBK(8,2),
      &             IRPDPDAOMO_VRTBK(8,2),IRPDPDAOMO_OCCKB(8,2),
@@ -112,13 +116,33 @@ C file's existing convention, rather than left permanently unguarded).
       I_pairs = Nao_pair
       J_pairs = Nao_pair
 
+C 2026-08-19 (Ajith's call, see SCRNC_DEBUG_LOG.md): for the genuine
+C 2-channel RHF RCCD case (Nmult=2, see Scrnc_driver.F), combine the
+C singlet (Imult=1) and triplet (Imult=2) channels' response
+C contributions with the standard 1-singlet/3-triplet spin-multiplicity
+C weight, exactly matching Check_rhf_rcc.F's
+C E_total=0.75*E_t+0.25*E_s reference formula. Loffset routes each
+C channel to its own Scrnc_lrspn_rcc_main.F/Scrnc_jj_rcc_lrspn.F list
+C numbers (373-376 singlet, 377-380 triplet). For Nmult=1 (UHF, or
+C RHF DRCCD, unresolved separately), Wt=1 and Loffset=0 reproduce the
+C original single-pass behavior exactly.
+
+      Do Imult = 1, Nmult
+
+      Wt = 1.0D0
+      If (Nmult .EQ. 2) Then
+         If (Imult .EQ. 1) Wt = 0.25D0
+         If (Imult .EQ. 2) Wt = 0.75D0
+      Endif
+      Loffset = 4*(Imult-1)
+
       Do Icount = 1, Itop
 
-      Listin_r = 373
-      Listin_l = 374
+      Listin_r = 373 + Loffset
+      Listin_l = 374 + Loffset
       If (Icount .EQ. 1 .AND. Itop .EQ. 2) Then
-         Listin_r = 375
-         Listin_l = 376
+         Listin_r = 375 + Loffset
+         Listin_l = 376 + Loffset
       Endif
 
       Do Iao_pair = 1, I_pairs
@@ -142,7 +166,24 @@ C file's existing convention, rather than left permanently unguarded).
          Call Getlst(Work(I000),Iao_pair,1,1,Irrepx,Listin_r)
          Write(6,"(a)") " <0|(1+L)M_bar and first-order e^T|0>"
          call checksum("373",work(i000),nsizec)
-         If (Iuhf .eq. 0) Then
+C 2026-08-19: RCCD vs DRCCD need DIFFERENT treatment here, confirmed
+C empirically (see SCRNC_DEBUG_LOG.md) -- removing Spntsing helped
+C RCCD (3.98%->2.45% vs UHF) but hurt DRCCD (1.44%->2.59%). Root
+C cause: rcc_dwmbej.F's RHF list 56 (RCCD, now the only channel used,
+C Scrnc_driver.F's Nmult=1) is the genuine, complete singlet RPA
+C matrix (2J-K, confirmed by matching its own construction against the
+C standard Casida singlet/triplet formulas) -- already fully spin-
+C adapted, no further Spntsing-style transform needed or wanted.
+C drcc_dwmbej.F's RHF list 56 (DRCCD) is different: direct-RPA drops
+C the exchange term entirely (2J only, no K), and its Hbar-eigenvalue
+C check (SCRNC_DEBUG_LOG.md) showed UHF's own direct-RPA Hbar still
+C carries a SECOND eigenvalue RHF's single list-56 channel doesn't
+C reproduce -- DRCCD's RHF response is missing real physics (an
+C unbuilt second channel), a bigger, separate, not-yet-fixed problem.
+C Spntsing was accidentally compensating for some of that gap, however
+C incorrectly -- restore it for DRCCD only until DRCCD's real fix
+C (a new Hbar piece) is built; RCCD never needs it.
+         If (Iuhf .eq. 0 .AND. Drccd) Then
             Call Spntsing(Isympert(Iao_pair),Work(I000),Work(Iend),
      +                    Memleft)
          Endif
@@ -154,7 +195,7 @@ C file's existing convention, rather than left permanently unguarded).
                Call Getlst(Work(I010),Jao_pair,1,1,Irrepx,
      +                     Listin_l)
                call checksum("374",work(i010),nsizec)
-               X = Fact*Ddot(Nsizec,Work(I010),1,Work(I000),1)
+               X = Wt*Fact*Ddot(Nsizec,Work(I010),1,Work(I000),1)
 
                JJ_lrespn(Iao_pair,Jao_pair) =
      +                  JJ_lrespn(Iao_pair,Jao_pair) + X
@@ -164,6 +205,8 @@ C file's existing convention, rather than left permanently unguarded).
       Enddo
 
       Enddo ! Enddo for Icount (dynamic +/-Freq loop)
+
+      Enddo ! Enddo for Imult (RHF RCCD singlet/triplet channels)
 
       Write(6,*)
       Write(6,"(a)") " Response-only JJ matrix (before bare v added)"

@@ -9,7 +9,7 @@
 
 
 
-      SUBROUTINE SCRNC_RCC_HBAR_READ(W,MAXCOR,IUHF,ILOC)
+      SUBROUTINE SCRNC_RCC_HBAR_READ(W,MAXCOR,IUHF,ILOC,IMULT)
 C
 C Reads the raw drCCD Hbar matrix (RHF, or UHF AA/BB/AABB/BBAA blocks)
 C into W, indexed per irrep via ILOC. Split out of the old
@@ -23,6 +23,18 @@ C reproducible across repeated calls even with Freq=0 throughout, see
 C SCRNC_DEBUG_LOG.md). Reading once into a pristine in-memory copy that
 C Scrnc_form_rcc_hbar_inv.F then only COPIES from (never re-reads)
 C avoids the issue entirely, whatever its root cause.
+C
+C 2026-08-19: added IMULT (unused before -- this routine always read
+C list 56, even during Scrnc_driver.F's Imult=2/triplet pass of its
+C RHF RCCD two-channel loop). Scrnc_form_rcc_hbar.F already writes the
+C singlet Hbar to list 56 (Imult=1) and the triplet Hbar to list 54
+C (Imult=2) -- this reader never picked up that distinction, so the
+C "triplet channel" response was actually being built from a second,
+C redundant read of the SINGLET Hbar, mislabeled as triplet. Confirmed
+C via a from-scratch Hbar-eigenvalue check (RHF's two separate
+C singlet/triplet diagonalizations match UHF's combined one to 7
+C decimal places -- see SCRNC_DEBUG_LOG.md), which proves list 54
+C itself is correct; this routine just never read it.
 C
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       INTEGER DIRPRD,DISSIZ
@@ -43,6 +55,8 @@ c flags.com : end
 
       IF (CIS) THEN
          LISTDIAG = 42
+      ELSE IF (IUHF.EQ.0 .AND. IMULT.EQ.2) THEN
+         LISTDIAG = 54
       ELSE
          LISTDIAG = 56
       ENDIF
@@ -50,7 +64,7 @@ c flags.com : end
       DO IRREP=1,NIRREP
 
          IF (IUHF.EQ.0)THEN
-            NUMDIS=IRPDPD(IRREP,ISYTYP(2,56))
+            NUMDIS=IRPDPD(IRREP,ISYTYP(2,LISTDIAG))
             I000=ILOC(IRREP)
             CALL GETLST(W(I000),1,NUMDIS,1,IRREP,LISTDIAG)
          ELSE
