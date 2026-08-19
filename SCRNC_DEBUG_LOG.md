@@ -6,7 +6,7 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
-## SESSION 2026-08-19 -- NEW THREAD: RHF-support question for scrnc raised, probed, and scoped -- not started, next planned step (RESUME HERE)
+## SESSION 2026-08-19 -- NEW THREAD: RHF-support question for scrnc raised, probed, and scoped; then RESOLVED for CCSD-LR (2 small bugs, not a 28-file rewrite) and verified against UHF to ~1e-8; RCCD/DRCCD left open with a real, separate ~1.2% gap (RESUME HERE, see "continued" below for the resolution)
 
 Ajith, mid-typing when the terminal froze (recovered next session):
 questioned whether scrnc needs `REF=UHF` at all, given ringcc/ringcl and
@@ -60,6 +60,74 @@ files actually need changes vs. already degrade correctly to `Iuhf=0`
 already sizes its beta blocks as `Iuhf*ND1BB` etc. -- may already be
 RHF-clean; the segfault is specifically in the spin-adaptation trio
 above, not necessarily everywhere).
+
+**2026-08-19, later same session -- RESOLVED for CCSD-LR, NOT a 28-file
+rewrite after all.** Rather than trust the morning's "real code changes
+needed, not a flag flip" diagnosis, actually traced it. Two narrow bugs,
+both found by reading the exact call path the segfault backtrace named:
+
+1. **`scrnc_jj_cc_lrspn.F:289`** (the CCSD-LR path): 
+   `Call Spntsing(Isympert(Iocc_pair),Work(I000),Work(Iend),Memleft)` --
+   `Iocc_pair` appears NOWHERE else in the entire file (never declared,
+   never assigned), so under Fortran implicit typing it's an
+   uninitialized garbage integer. Two lines earlier the same routine
+   correctly computes `Irrepx = Isympert(Iao_pair)`, and the sibling
+   ring-CC file `scrnc_jj_rcc_assemble.F:95` uses the correct
+   `Isympert(Iao_pair)` in the identical call -- classic copy/paste
+   typo. Feeding garbage as an irrep index into `Spntsing`->`Spinad3`
+   (which indexes symmetry COMMON blocks by that irrep) is exactly the
+   kind of thing that segfaults unpredictably. Fixed: `Iocc_pair` ->
+   `Iao_pair`.
+
+2. **`scrnc_newsize.F`'s `_DEBUG_LVL0` diagnostic print** (a SECOND,
+   independent bug, hit immediately after fixing #1): the real `Nsizec`
+   computation (lines 16-24) already correctly branches on `Iuhf` and
+   never touches the BB-specific list types (Idsymsz types 1,3/2,4)
+   when `Iuhf=0` -- but the diagnostic print two lines below
+   unconditionally evaluated `Idsymsz(Irrepx,2,4)` (and a second
+   `ISYTYP(list44/45/46)` block) regardless of `Iuhf`, and those list
+   types aren't registered under RHF, so `Idsymsz` itself asserts
+   (`@IDSYMSZ: Assertion failed, ITYPL=0 ITYPR=0`). Debug-print-only bug,
+   zero effect on actual results -- fixed by mirroring the same `Iuhf`
+   branch the real computation already uses.
+
+**Verified, not just "doesn't crash"**: with both fixed, H2/STO-3G CCSD
+ran cleanly end-to-end under `REF=RHF` through the full manual pipeline
+(`xjoda,xvmol,xvmol2ja,xvprops,xvscf,xvtran,xintprc,xvcc,xlambda,
+xscrnc`). Its final `LR JJ matrix` (`JJ(1,1)=JJ(4,4)=0.83435407686`,
+`JJ(1,4)=JJ(4,1)=0.50949592047`) agrees with a fresh same-build UHF
+rerun (`JJ(1,1)=0.83435406798`, `JJ(1,4)=0.50949591159`) to ~1e-8 --
+right at the `cc_conv=9`/`scf_conv=10` convergence floor. This is a
+genuine, positive UHF-vs-RHF consistency check on the CCSD-LR route --
+exactly what Ajith asked for, not just an absence-of-crash result.
+
+**RCCD/DRCCD (ring-CC) is a separate, still-open story.** Also stopped
+crashing once the trap was lifted, but its numbers do NOT agree with
+UHF: H2/STO-3G DRCCD gives RHF `JJ(1,1)=0.79307663018` vs a fresh UHF
+rerun's `JJ(1,1)=0.80469432450` -- ~1.2% off, far outside convergence
+noise. The bare-v contribution is bit-identical between the two runs
+(confirmed via the `ifile,I,J,K,L` checksum lines), which rules out a
+trivial cause and localizes the gap to the response (`v*chi*v`) piece
+specifically. NOT root-caused this session -- natural suspects are
+`ringcc/rcc_rng_4rhf_rccd.F`'s `IUHF=0` branch or
+`ringcc/rcc_trp_cntrct.F`'s triplet contraction, but neither actually
+inspected yet.
+
+**Action taken**: `scrnc_set_vars.F`'s `REF=UHF` trap is now selective
+-- allows RHF for CCSD (verified), still blocks it for RCCD/DRCCD
+(`Iuhf.EQ.0 .AND. (Rccd.OR.Drccd)`) with a specific error message,
+rather than either a blanket allow or blanket block. Test artifacts on
+disk (not in git): `/blue/ufhpc/perera/scrnc_test/
+h2_scrnc_ccsd_rhf_sto3g/`, `h2_scrnc_ccsd_uhf_sto3g_retest/`,
+`h2_scrnc_drccd_rhf_sto3g/`, `h2_scrnc_drccd_uhf_sto3g_retest/`.
+Committed: `scrnc_jj_cc_lrspn.F`, `scrnc_newsize.F`, `scrnc_set_vars.F`
+(+ their `.f` twins), this log entry.
+
+**Next step**: root-cause the ring-CC RHF response-piece gap (start by
+comparing `Response-only JJ matrix` -- i.e. before the bare-v add --
+between the RHF and UHF DRCCD runs above, isolating exactly which
+contraction diverges) -- not started, no urgency since CCSD-LR (the
+route actually used) is already solid.
 
 ---
 

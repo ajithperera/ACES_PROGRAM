@@ -306,7 +306,7 @@ C static code path exactly at Freq=0 (Itop=1, single Ddot, times 2).
 
          Call Getlst(Work(I000),Iao_pair,1,1,Irrepx,Listin)
          If (Iuhf .eq. 0) Then
-            Call Spntsing(Isympert(Iocc_pair),Work(I000),Work(Iend),
+            Call Spntsing(Isympert(Iao_pair),Work(I000),Work(Iend),
      +                    Memleft)
          Endif
 

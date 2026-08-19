@@ -286,7 +286,7 @@ C static code path exactly at Freq=0 (Itop=1, single Ddot, times 2).
          call checksum("373",work(i000),nsizec)
 #endif
          If (Iuhf .eq. 0) Then
-            Call Spntsing(Isympert(Iocc_pair),Work(I000),Work(Iend),
+            Call Spntsing(Isympert(Iao_pair),Work(I000),Work(Iend),
      +                    Memleft)
          Endif
 
