@@ -6,7 +6,64 @@ freezes / HPG outages and gets backed up on every `git push`. Read the
 
 ---
 
-## SESSION 2026-08-18 (continued 27) -- NEW THREAD, separate from the Nsel/Pade numerics arc below: scrnc_sigma_driver restructured to a static/per-frequency split, verified bit-identical on 3 cases (RESUME HERE)
+## SESSION 2026-08-19 -- NEW THREAD: RHF-support question for scrnc raised, probed, and scoped -- not started, next planned step (RESUME HERE)
+
+Ajith, mid-typing when the terminal froze (recovered next session):
+questioned whether scrnc needs `REF=UHF` at all, given ringcc/ringcl and
+the CCSD-LR route (what scrnc actually uses) don't inherently need it --
+his original reason for going UHF-throughout was that a plain RHF
+diagonalization only gets you the singlet ph-manifold, and
+ringcc=RPA-equivalence needs both singlet AND triplet channels summed
+into the response function.
+
+**Physics resolved**: he's right that this isn't fundamental. ringcc
+already has a live spin-adapted `IUHF=0` path --
+`ringcc/rcc_rng_4rhf_rccd.F` (explicit "SPIN-ADAPTED RHF CODE" branch,
+`IUHF.EQ.0`) and `ringcc/rcc_trp_cntrct.F` (triplet-channel contraction,
+header-commented "SPIN ADAPTED CODE", called from both
+`rcc_dwmbej.F` and `ringcl/dxrcl_dwmbej.F` -- i.e. wired into both the
+amplitude and Lambda sides, not dead code). So RHF-restricted
+ringcc/ringcl already produces both singlet and triplet contributions
+without full alpha/beta spin-orbitals.
+
+**Engineering status, already probed this morning (before the
+freeze)**: found an uncommitted comment in `scrnc_set_vars.F` dated
+2026-08-19 08:32 recording that the `REF=UHF` trap there had already
+been experimentally disabled and reverted. Result: NOT an artificial
+holdover -- removing it segfaults in scrnc's own spin-adaptation
+assembly layer (`spinad3.f`, via `spntsing.f`/
+`scrnc_jj_rcc_assemble.f`), which is `Iuhf`-branched throughout (28
+source files) and expects UHF-shaped spin-orbital lists. Real RHF
+support needs actual rewriting of that assembly layer to consume
+RHF-shaped (spin-adapted) lists, not a flag flip.
+
+**Decision (Ajith)**: worth doing. Two payoffs -- efficiency (RHF-only
+avoids carrying redundant alpha/beta copies) and, more importantly, an
+independent consistency check: run a closed-shell case through both the
+existing UHF path and a new RHF path and confirm the JJ-matrix/QP
+results agree, per his standard exhaust-every-consistency-check method
+([[feedback_consistency_check_debugging]]). Housekeeping committed
+first (`6ec22620`: keeps the `REF=UHF` trap in place with the
+2026-08-19 explanatory comment, plus an unrelated already-verified
+change disabling `scrnc_driver.F`'s infeasible brute-force AO2MO
+cross-check call). **Not started**: the actual RHF-support rewrite in
+`spinad3.f`/`spntsing.f`/`scrnc_jj_rcc_assemble.f`.
+
+**Next step**: scope exactly what shape `spinad3.f`/`spntsing.f`/
+`scrnc_jj_rcc_assemble.f` currently assume (probably paired AAAA/ABAB-
+style UHF list layouts) versus what ringcc's own `IUHF=0` routines
+already produce/consume, to find the smallest real change that lets
+scrnc's spin-adaptation layer read RHF-shaped lists instead of
+UHF-shaped ones. Not yet investigated which of the 28 Iuhf-branched
+files actually need changes vs. already degrade correctly to `Iuhf=0`
+(scrnc's own `scrnc_built_respn_den.F`, for instance, looks like it
+already sizes its beta blocks as `Iuhf*ND1BB` etc. -- may already be
+RHF-clean; the segfault is specifically in the spin-adaptation trio
+above, not necessarily everywhere).
+
+---
+
+## SESSION 2026-08-18 (continued 27) -- NEW THREAD, separate from the Nsel/Pade numerics arc below: scrnc_sigma_driver restructured to a static/per-frequency split, verified bit-identical on 3 cases
 
 This is a new architectural thread (see
 `project_scrnc_pipeline_restructure.md` memory), not a continuation of
