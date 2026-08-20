@@ -99,7 +99,19 @@ C add them here.
              ENDIF 
           ELSE
              CALL IZERO(ICORE(I000),I040-1)
-          ENDIF 
+C 2026-08-20 (Ajith's DCCSD-precedent port, see SCRNC_DEBUG_LOG.md):
+C this Hbar(i,j)/Hbar(a,b) one-particle block was PURE ZERO here for
+C RHF RCCD/DRCCD -- i.e. the naive bare-Fock-only Hbar the JCP2020
+C (d)rCCD paper explicitly says is wrong. Fill it with the Lagrangian-
+C derived quadratic Fmi/Fae correction (Scrnc_rcc_lagrangian_fix,
+C called once from Scrnc_driver, stores into list 91/92 sub-index 9).
+C TEMPORARILY DISABLED to isolate Part-1-only (two-particle) effect,
+C see rcc_lagrangian_fix.F. See SCRNC_DEBUG_LOG.md.
+C            IF (IUHF .EQ. 0) THEN
+C               CALL GETLST(ICORE(I000),1,1,1,9,91)
+C               CALL GETLST(ICORE(I020),1,1,1,9,92)
+C            ENDIF
+          ENDIF
        ENDIF
 
 C The Diagonal elements. First alpha occupied and followed by virtuals 
@@ -180,8 +192,22 @@ C would silently corrupt it. See SCRNC_DEBUG_LOG.md.
                  CALL GETALL(ICORE(I040),ISIZE,1,56)
               ELSE IF (IMULT .EQ. 2) THEN
                  CALL GETALL(ICORE(I040),ISIZE,1,54)
-              ENDIF 
-           ENDIF 
+              ENDIF
+#ifdef _DEBUG_LVL0
+C 2026-08-20 TEST (Ajith): raw W(ai,bj) straight off list 56, BEFORE
+C the (ai,bj)->(ab,ij) reorder and SCRNC_ADDONEH Fock-diagonal add
+C below -- same (ai,bj) index convention as the final "drCCD Hbar
+C matrix" dump in scrnc_form_rcc_hbar_inv.F, so row/col 9,10 here are
+C directly comparable to that dump's row/col 9,10. See SCRNC_DEBUG_LOG.md.
+              IF (IMULT .EQ. 1) THEN
+                MATDIMX = NINT(SQRT(DBLE(ISIZE)))
+                Write(6,"(a)") " TEST: raw W(ai,bj) pre-Fock-diag,"//
+     +                         " list 56 (singlet)"
+                call output(ICORE(I040),1,MATDIMX,1,MATDIMX,
+     +                      MATDIMX,MATDIMX,1)
+              ENDIF
+#endif
+           ENDIF
          ELSE
            IF (TDA) THEN
                LISTAA=22+ISPIN

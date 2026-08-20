@@ -281,7 +281,8 @@ C in cntract for the singlet spin-adpated path.
         Write(6,"(a,i2,a,i4,a,i4)") " RCC_DWMBEJ RHF IMULT=",IMULT,
      &        " irrep=",IRREP," T2 list=",
      &        MERGE(LISTTA,LISTTB,IMULT.EQ.1)
-        call checksum("T2-in", ICORE(I020), NMSYTA*DSSYTA)
+        call checksum("T2-in", ICORE(I020),
+     &        MERGE(NMSYTA*DSSYTA,NMSYTB*DSSYTB,IMULT.EQ.1))
         IF (IMULT .EQ. 1) THEN
             CALL CNTRCT(ICORE(I000),ICORE(I010),ICORE(I020),
      &                  DISSYQ,NUMSYQ,DSSYTA,NMSYTA,DSSYWA,NMSYWA,

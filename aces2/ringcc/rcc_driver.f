@@ -601,6 +601,17 @@ C
          CALL RCC_AMPSUM(WORK(INEXT),MAXCOR,IUHF,0,.FALSE.,'T')
          IF (IUHF.NE.0) CALL S2PROJ(WORK(INEXT),MAXCOR,IUHF,.FALSE.)
 C
+C Refresh the RNABIJ-derived T2 resorts (37/34/39/...) and the W(mb,ej)
+C Hbar-shaped lists (54/56/...) from the just-converged T2 on list 46,
+C then apply the Lagrangian-derived correction (see rcc_lagrangian_fix.F
+C / SCRNC_DEBUG_LOG.md) while list 18/21/37/34/46/16 still carry
+C RCC's own meaning -- must run here, inside xringcc, not later from
+C scrnc's own process.
+C
+         CALL RCC_RNABIJ(WORK(INEXT),MAXCOR,IUHF,'T')
+         CALL RCC_GENINT(WORK(INEXT),MAXCOR,IUHF)
+         CALL RCC_LAGRANGIAN_FIX(WORK(INEXT),MAXCOR,IUHF,RCCD,DRCCD)
+C
          CALL RCC_FINISH(ICYCLE+1)
          CALL DDMPTGSS(WORK(INEXT), MAXCOR/IINTFP, IUHF, 0, 'TGUESS  ')
          CALL ACES_FIN 

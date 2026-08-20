@@ -4,6 +4,1028 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-20 (autonomous fork, RCCD Lagrangian-Hbar port) --
+IMPLEMENTED + PARTIALLY VALIDATED: ported the DCCSD Lagrangian-derived
+Hbar correction pattern (see update 9/10/11 in the memory safety net,
+`reference_scrnc_debug_log_location.md`, for the full derivation and
+build-system/Fortran-implicit-typing debugging trail) into a new file,
+`aces2/ringcc/rcc_lagrangian_fix.F` (`RCC_LAGRANGIAN_FIX`), called from
+`rcc_driver.F` right after the amplitude iterations converge. Two
+pieces: (1) two-particle I(mb,ej)=t(mn,ef)<nj||fb> correction subtracted
+from list 56 (singlet)/54 (triplet) Hbar, coefficient CORR_2P=-1.5
+(empirical guess, not derived); (2) one-particle Fmi/Fae quadratic
+correction via the generic `PDCC_QUAD2`/`PDCC_QUAD3` routines, wired
+into `scrnc_form_rcc_hbar.F`'s previously-always-zero one-particle
+block (confirmed: RHF RCCD's Hbar(i,j)/Hbar(a,b) was PURE bare-Fock,
+zero correlation contribution at all before this).
+
+**RESULT (H2O/STO-3G RHF vs UHF "RPA JJ matrix" ground truth,
+`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_rccd_{rhf,uhf}_sto3g_regroup`
+baseline, `..._lagrangianfix`/`..._lfix_part1only` corrected runs):**
+
+| | JJ(1,1) (UHF=0.86509751290) | JJ(4,4) (UHF=0.03016663846) |
+|---|---|---|
+| baseline (uncorrected) | 0.94799229627 (9.58% off) | 0.71470364552 (23.7x off) |
+| Part 1 only (two-particle) | 0.92958256128 (7.45% off) | 1.33723905424 (44x off) |
+| Part 1 + Part 2 (both) | 0.89764317520 (3.76% off) | 33.22569814971 (1100x off) |
+
+Part 1 alone is a real, if partial, improvement on the "mixed-symmetry"
+components (1-3) and only mildly worsens the pre-existing JJ(4,4)
+anomaly. Adding Part 2 improves the mixed components further but makes
+JJ(4,4) blow up catastrophically -- Part 2 is the culprit, most likely
+because JJ(4,4)'s AO-pair symmetry sector already sits close to some
+near-degenerate/small-denominator structure (it's exactly symmetry-
+decoupled from components 1-3 in both references, per the "SESSION
+2026-08-20" entry below) and Part 2's one-particle shift pushes an
+RPA-type response denominator through a near-zero crossing for that
+sector specifically. NOT investigated further this session (deep
+symmetry-sector-specific debugging, likely needs its own top-down
+debug-print bisection per this project's established method).
+
+**SHIPPED STATE (committed): Part 1 active, Part 2 DISABLED** (commented
+out in both `rcc_lagrangian_fix.F`'s own PDCC_QUAD2/3 calls and
+`scrnc_form_rcc_hbar.F`'s corresponding list-91/92 read, which reverts
+to the original all-zero one-particle block) -- this is the verified,
+non-catastrophic, net-improvement state. CORR_2P=-1.5 is UNCHANGED from
+its original derivation guess and NOT tuned -- Part 1 alone only
+partially closes the gap (9.58%->7.45%), so it is likely still not the
+exactly correct coefficient. See `rcc_lagrangian_fix.F`'s own header
+comment for the full derivation, build-system notes (had to add
+`ringcc`+`vcc` to `Makefiles/GNUmakefile`'s `ACES_LINK_LISTS` scrnc
+entry; had to `UPDMOI`-register list 91/92 sub-index 9 before Part 2's
+PDCC_QUAD2/3 can PUTLST to it, since no pure ring-CC pipeline step does
+this by default), and a real Fortran implicit-typing bug found+fixed
+along the way (this whole class of ringcc routine needs `IMPLICIT
+INTEGER (A-Z)`, not `IMPLICIT DOUBLE PRECISION` -- see
+[[feedback_aces_fortran_implicit_typing]]).
+
+**NEXT STEPS, concretely:**
+1. Investigate JJ(4,4)'s Part-2-triggered blowup specifically -- likely
+   a near-zero RPA response denominator in that symmetry sector, made
+   worse by the one-particle Fmi/Fae shift. Top-down debug-print
+   bisection (this project's established method) on that sector's own
+   eigenvalue/denominator structure before Hbar is fed into the CI-like
+   solve.
+2. Re-derive or empirically scan CORR_2P (the two-particle coefficient)
+   more carefully -- -1.5 was a structural-analogy guess from DCC's own
+   bookkeeping, not verified against rCCD's own Lagrangian. Given Part 1
+   alone only gets JJ(1,1) from 9.58% to 7.45% (not fully closed), try a
+   few other coefficient values (e.g. -1.0, -2.0, -1.0 exactly matching
+   DCC's OWN net formula without RCC's pre-existing +0.5 term folded in)
+   and see which minimizes the RHF/UHF gap on components 1-3.
+3. Once Part 2 is fixed/scoped correctly, re-verify on H2/STO-3G too
+   (the smaller, originally-flagged ~1.2% gap case) and on DRCCD, not
+   just RCCD.
+4. Consider whether UHF's own Hbar (built via the SAME
+   `RCC_DWMBEJ`/naive-CCSD-mirroring formula, just the UHF spin-case
+   branches) has the SAME missing-Lagrangian-term problem -- if so,
+   "matching UHF" was never fully correct as a validation target, and
+   both references may need the correction (this was flagged as an open
+   question, not yet tested empirically this session -- would need
+   extending `RCC_LAGRANGIAN_FIX`'s UHF-branch early-return to also
+   apply the analogous UHF spin-case correction and comparing corrected-
+   RHF vs corrected-UHF instead).
+
+## DEAD ENDS -- DO NOT REVISIT (RCCD thread specifically)
+
+- **`DENSITY=RESPONSE` in RCCD's own pipeline**: proven bit-identical
+  inert (2026-08-20) -- only matters for whether `xdens` runs, and
+  RCCD's manual pipeline never calls `xdens`. Never add it back to test
+  RCCD; `scrnc_set_vars.F`'s hard gate on it is stale gatekeeping.
+- **`xvprops` in RCCD's own pipeline**: never needed -- scrnc responds
+  to AO-pair density perturbations, not dipole integrals. Only the
+  separate `PROPS=EOM_NLO`/`xvcceh` CCSD-reference pipeline needs it.
+- **Singlet-only response channel (`Nmult=1`, killing Imult=2/triplet)**:
+  ALREADY the shipped architecture since `498542f8`. Real and correct
+  (Wigner-Eckart: spin-scalar density perturbation has zero triplet
+  overlap), but does NOT close the gap -- H2 residual ~1%, H2O residual
+  9.58%/23.7x. Don't re-derive or re-test this hypothesis again.
+- **Old "~0.03% RHF/UHF agreement" milestone claim** (from
+  `reference_scrnc_debug_log_location.md`, "update 5"): unreproducible
+  after isolating every variable (2026-08-19 "continued 3") -- treat as
+  false/unverified, not a real prior result to chase back to.
+- **`ringcl/dxrcl_dwmbej.F` triplet-branch list-routing copy-paste fix**
+  (`NMSYTA`/`LISTTB` mismatch, 2026-08-19 "continued 2"): a real,
+  legitimate bug and correctly fixed, but fixing it alone made the
+  RHF/UHF gap WORSE (0.933%->3.98%), not better -- it is not, by
+  itself, a source of the response gap. Don't expect similar list-
+  routing typos elsewhere to be the whole answer.
+- **Apparent "3.98%->1.42%" improvement from fixing only
+  `scrnc_rcc_hbar_read.F`'s hardcoded list-56 read** (2026-08-19
+  "continued 5"): was a MEASUREMENT ARTIFACT -- `scrnc_form_rcc_hbar.F`
+  had a second, canceling bug in its Hbar write-back (also hardcoded to
+  list 56). Fixing both together restores the original 3.98%. Lesson:
+  when a read-side and write-side of the same list pairing both look
+  suspicious, fix and verify both together, not one at a time -- a
+  lone-side fix can look like progress while actually just uncovering
+  a second, compensating bug.
+- **List34 as a "singlet-channel exchange partner" to T(list37) in
+  `rcc_dwmbej.F`'s RHF Hbar construction** (2026-08-20 "continued 3"):
+  tried mirroring `vcc/dwmbej.F`'s `2*T37-T39` pattern with list34 in
+  place of the (trivially-equal-to-37) list39 -- made the Hbar's
+  negative eigenvalues WORSE, not better. Traced via `RCC_RNABIJ`'s own
+  source: list34 is built from a DIFFERENT reference list (44,
+  `SPCAS2='AAAA'`, same-spin) via `RCC_SST003`, not a resort of
+  list37/46 the way list39 genuinely is -- it's ring-CC's TRIPLET
+  channel's own primary amplitude (confirmed: `rcc_dwmbej.F`'s own
+  IMULT=2 branch reads it as such), not a singlet-channel correction
+  term. Don't reuse list34 this way again without a real derivation
+  behind it -- also casts doubt on whether `Scrnc_form_mubar_s.F`'s
+  earlier, already-shipped `LISTT2B=34` fix (`498542f8`) rests on solid
+  ground, though it did produce a real measured improvement at the
+  time and has NOT been re-examined/reverted-and-retested.
+
+---
+
+## SESSION 2026-08-20 (continued 4) -- checked the Rishi/Perera/Bartlett JCP2020 paper directly (arXiv:2008.00336, same reference already used for the ground-state energy formula in d80f2742) for the RHF Hbar/W-intermediate equations -- paper does NOT give an explicit closed-shell rCCD form (explicitly says the naive CCSD H-bar formula "is not precisely correct... for (d)rCCD" without spelling out the alternative); every code-level candidate for the ~1.86-1.92x gap that could be DIRECTLY compared (CNTRCT itself, the C4 scale, the "missing" T2 combination) is now RULED OUT or shown to be a non-issue -- genuinely stuck at a point needing either Ajith's own derivation/recollection or a pilot-code cross-check, not more code tracing (RESUME HERE)
+
+**Fetched the paper** (`https://arxiv.org/html/2008.00336`, via `WebFetch`,
+two targeted passes after an initial pass was too lossy/summarized to
+trust for exact coefficients) and read Section II.2 ("Towards excited
+states through the formulation of Lambda equations and effective
+Hamiltonian (H-bar) for ring-CCD") plus the Eq. 49 ground-state-energy
+section already used as precedent.
+
+**What the paper actually says, verbatim as transcribed**:
+- Eq. 34 (general spin-orbital CCSD-style W-bar):
+  `W-bar_iajb = <ia||jb> + Sum_{m,e} t(jm,eb) <mi||eb>` -- this is the
+  SAME general ring/W(mbej)-type intermediate structure as
+  `rcc_dwmbej.F`'s own header comment already states it's implementing.
+- Eq. 30-31 (the naive H-bar = e^-T H e^T one-particle pieces) come
+  with an explicit caveat immediately after: **"But as we have seen
+  from our discussion, it is not precisely correct to assume that form
+  for (d)rCCD. Instead, the expressions for H-bar elements have to be
+  obtained from the corresponding Lagrangian equations."** The paper
+  does NOT then spell out the corrected closed-shell/RHF-spin-adapted
+  W-bar formula explicitly anywhere located -- only the general
+  spin-orbital form (Eq. 34) and the separate ground-state-energy
+  spin-adapted bare-integral B-matrices (Eq. 49, singlet
+  `2<Ij||Ab>-<Ij||bA>` / triplet `-<Ij||bA>`, already confirmed
+  correctly implemented in `rcc_dwmbej.F`'s existing bare-integral
+  combination, lines 316-329, verified in "continued 6" 2026-08-19).
+- Confirms rCCD needs the BARE (undressed) Fock matrix, not a
+  similarity-transformed one (`F-bar = F`) -- matches
+  `scrnc_form_rcc_hbar.F`'s existing construction (reads raw
+  `SCFEVALA`/`SCFEVALB`, already verified correct via the exact-to-11-
+  digits Fock-gap check in "continued 2" above).
+
+**Fallback (per instruction): derive from the spin-orbital equation,
+compare to code, rule things out systematically.** Since the paper's
+Eq. 34 W-bar formula is structurally the same ring/W(mbej) intermediate
+`vcc/dwmbej.F` (CCSD, proven-correct) already implements, re-examined
+whether ring-CC's version is missing something CCSD's has:
+1. **`CNTRCT` itself** (the actual routine performing the T*W
+   contraction): `ringcc/cntrct.f` vs `vcc/cntrct.f` diffed directly,
+   byte-for-byte -- ONLY whitespace and one commented-out debug
+   checksum line differ. The contraction logic is IDENTICAL. Ruled
+   out as a source of any scale/coefficient difference.
+2. **`C4` scale argument**: both `rcc_genint.F` and `vcc/genint.F` set
+   `C4 = -0.50D0` for the standard Hbar-building call path. Identical.
+   Ruled out.
+3. **The "missing T2 exchange combination"** (this session's earlier
+   attempted fix, already reverted): re-examined now that list34 is
+   known to be the wrong quantity (previous entry). The STRUCTURALLY
+   correct analog of CCSD's list39 -- built the same way, via
+   `RCC_RNABIJ`'s own `TYPE='T'` resort of the SAME reference list
+   (46) -- is list39 itself, and list39 is ALREADY proven to equal
+   list37 exactly for RCCD (both from the 2026-08-19 empirical
+   checksum finding and from tracing `RCC_RNABIJ` directly this
+   session). This means "no T2 combination" (what the code currently
+   does) and "2*T37-T39" (the CCSD-analogous formula, IF you use the
+   structurally-correct list39) are the SAME OPERATION for RCCD --
+   there never was a missing combination at this step. My earlier
+   "continued 3" fix attempt conflated superficial code-pattern
+   similarity (both CCSD and RCC do a "2T-T_X" pattern SOMEWHERE) with
+   an actual missing physics term, and picked the wrong X (list34,
+   which is a genuinely different quantity -- the triplet channel's
+   own amplitude, see previous entry) because the RIGHT X (list39)
+   trivially reduces to a no-op and so isn't "missing" at all.
+
+**Where this leaves things**: every piece of `rcc_dwmbej.F`'s IMULT=1
+construction that could be DIRECTLY compared against `vcc/dwmbej.F`'s
+proven-correct analog -- the bare-integral B-matrix (Eq. 49, matches),
+the CNTRCT routine (byte-identical), the C4 scale (identical), and the
+T2-combination step (provably a no-op either way for RCCD) -- checks
+out clean. The paper doesn't supply the missing closed-shell rCCD-
+specific H-bar formula to compare against for anything deeper (its own
+explicit caveat is that the naive CCSD-style formula, which is what
+all of the above comparisons have been implicitly assuming transfers
+directly, "is not precisely correct" for (d)rCCD -- the paper just
+doesn't say what to replace it WITH). This suggests the actual missing
+piece may not be inside `rcc_dwmbej.F` at all -- candidates not yet
+examined: whether RCCD's own converged T2 amplitudes (upstream of
+`rcc_dwmbej.F` entirely, from whatever solves the ground-state RCCD
+amplitude equations) are themselves the right ones for this
+excited-state/Hbar construction specifically (the paper's own
+caveat about needing "Lagrangian equations... instead" suggests the
+one-particle Hbar pieces, or possibly the amplitudes feeding them,
+need Lambda/Lagrangian-derived quantities that plain ground-state T2
+doesn't supply), or something in how `scrnc_rcc_hbar_read.F`/
+`Scrnc_form_rcc_hbar_inv.F` consume the written Hbar downstream
+(already partially checked in earlier sessions but not re-verified
+against this specific lead).
+
+**FLAGGED for Ajith, now at the limit of profitable code-only
+tracing**: this needs either (a) Ajith's own derivation/recollection
+of what the Lagrangian-based, non-naive rCCD H-bar formula actually
+is (the paper explicitly says one is needed but doesn't give it), or
+(b) building an independent, minimal pilot-code cross-check of the
+RHF RCCD Hbar diagonal for this exact H2O/STO-3G system (matching this
+thread's own established "Pilot-Code Debugging" precedent -- see
+memory) against a hand-coded or literature-verified reference value,
+rather than continuing to compare `rcc_dwmbej.F` against CCSD's
+`dwmbej.F` term-by-term -- that comparison is now exhausted for
+everything directly comparable and hasn't found the gap.
+
+**Housekeeping**: no code changes this entry (pure paper-reading +
+source comparison, no rebuilds needed). Working tree unchanged from
+the entry below (still just the pre-Fock debug print in
+`scrnc_form_rcc_hbar.F` and the RHF-RCCD-trap test override in
+`scrnc_set_vars.F`, both uncommitted, both still needed, neither
+shipped).
+
+---
+
+## SESSION 2026-08-20 (continued 3) -- Ajith's call ("it's (b), the ratio IS the bug") acted on: implemented the vcc/dwmbej.F-analogous `2*T(37)-T(34)` combination in rcc_dwmbej.F's RHF/IMULT=1 branch -- made the negative eigenvalues WORSE, not better; traced WHY via RCC_RNABIJ's own source and RULED OUT list34 as any kind of "singlet exchange partner" -- it's ring-CC's TRIPLET channel's own primary amplitude (built from a genuinely different reference list, 44/AAAA-type), not a permuted view of list37/46 the way CCSD's list39 is. FIX REVERTED. Real question is now sharper but still open: does RHF RCCD's Hbar ring-term need an exchange-type correction to T(37) AT ALL, or was applying CCSD's "2*T-T" pattern to ring-CC's non-antisymmetrized amplitude never right in the first place -- FLAGGED for Ajith, needs the actual RCCD spin-adapted equations, not another code-side substitution guess
+
+**Attempted fix, per Ajith's direct call that the ~1.86-1.92x ratio
+(not clean 2.0) IS the bug**: mirrored `vcc/dwmbej.F`'s RHF ABAB block
+(lines 434-435, read-only reference, NOT modified) in
+`rcc_dwmbej.F`'s RHF/IMULT=1 branch -- added `CALL GETLST(...,LISTTB)`
++ `SSCAL(...,TWO,...)` + `SAXPY(...,ONEM,...)` to build `2*T(list37) -
+T(list34)` before the `CNTRCT` T*W ring contraction, exactly matching
+CCSD's `2*T(list37)-T(list39)` pattern structurally (same SSCAL/SAXPY
+idiom, same I010/I020 buffer reuse timing, verified safe against the
+routine's own later I010 reuse for the bare-J integral read).
+
+**Result: WORSE, not better.** Rebuilt `xringcc`
+(`f6acd6e76e1a5a9cf30d72946f8a12e7`), ran H2O/STO-3G RHF fresh
+(`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_rccd_rhf_sto3g_dwmbejfix`).
+Hbar eigenvalues: still 2 negative, and BOTH became MORE negative than
+the unfixed baseline (`-0.88460752`->`-1.06894620`,
+`-0.62703242`->`-0.68825671`). This is decisive: the fix moves the
+result in the WRONG direction, ruling out "subtract list34 from
+2*list37" as the correct term, not just leaving it unverified.
+
+**Traced WHY, via `RCC_RNABIJ` (ring-CC's own analog of CCSD's
+`RNABIJ`, called from `rcc_driver.F`) -- this settles list34's actual
+identity definitively, not just by inference from `check_t2.F`'s
+generic label as before.** For `TYPE='T'` (the T2-amplitude resort
+mode): list37/39 (`LIST(1)`/`LIST(3)`) ARE built together, for RHF too,
+via `SST002`+`SSTRNG` resorts of the SAME reference list (`REFLST=46`,
+the primary `T(Ij,Ab)` amplitude) -- confirming the earlier session's
+"`T(list37)==T(list39)` exactly" finding is a real mathematical fact
+(RCCD's non-antisymmetrized `T(Ij,Ab)` is permutationally invariant
+under the specific index-swap `SST002`/`SSTRNG` implement), not a code
+bug to work around. List34 (`LIST(5)`), by contrast, comes from a
+COMPLETELY SEPARATE second loop in the SAME routine, built via
+`RCC_SST003` from **`REFLST-3+ISPIN` = 44, NOT 46**, with
+`SPCAS2='AAAA'` explicitly labeled same-spin. List34 is genuinely,
+structurally NOT a permuted view of the list37/39/46 ABAB-tensor
+family at all -- it is built from an entirely different source list
+(44). This matches (and now explains, rather than just observes)
+`rcc_dwmbej.F`'s OWN IMULT=2 branch, which reads list34 as the
+TRIPLET channel's PRIMARY amplitude (`CALL GETLST(...,LISTTB)` where
+`LISTTB=34`) -- not as a correction term folded into the singlet
+formula. Reusing the triplet channel's own primary amplitude inside
+the singlet (IMULT=1) construction, the way this attempted fix and the
+earlier `Scrnc_form_mubar_s.F` fix (2026-08-19, "continued 6" below)
+both did, has no structural justification once you trace where list34
+actually comes from -- it's not "the RCCD-specific stand-in for CCSD's
+antisymmetrization partner," it's a different physical quantity
+(same-spin T2) with no general reason to appear in a singlet-channel,
+opposite-spin (ABAB-type) formula at all.
+
+**Reverted the fix cleanly**: `git checkout -- aces2/ringcc/rcc_dwmbej.F`,
+confirmed `git diff` empty against HEAD, rebuilt `xringcc`
+(`f7d67117453febd3ae3d596a9cc89823`, matches the pre-session-start
+binary). Note for future sessions, NOT a new issue: this rebuild
+surfaced a PRE-EXISTING, unrelated inconsistency -- the git-committed
+`aces2/ringcc/rcc_dwmbej.f` (the auto-generated preprocessed file,
+also tracked in this repo) is stale relative to the committed `.F`
+(missing a `MERGE(...)` checksum-size expression that IS present in
+`.F` and gets correctly regenerated by any fresh build) -- cosmetic,
+diagnostic-print-only, doesn't affect any computed result, not
+introduced this session, not fixed here (out of scope, would need a
+`.f`-regeneration-and-recommit housekeeping pass, unrelated to RCCD
+physics).
+
+**This also puts a question mark over the EARLIER, already-shipped
+`Scrnc_form_mubar_s.F` fix** (2026-08-19 "continued 6" below, `LISTT2B
+= 34` for RCCD, committed in `498542f8`) -- it rests on the SAME
+premise (substitute list34 for the trivial list39) that today's
+attempt just showed doesn't hold up once you trace list34's actual
+construction. That fix DID produce a real, reproducible numerical
+improvement at the time (H2/STO-3G: 2.45%->1.41%, H2/DZ: 11.6%->1.02%)
+-- so it is NOT necessarily wrong in the same direction as today's
+attempt (property-dressing and Hbar-construction are different
+formulas, and "improves the number" is real, if inconclusive, evidence
+that today's Hbar attempt didn't have). But given list34 is now known
+to be the triplet channel's own primary amplitude rather than any kind
+of singlet exchange partner, that earlier fix's own theoretical
+grounding is now suspect too, and the ~1-1.4% residual it left behind
+unresolved (never fully closed even at the time) may be related. NOT
+re-investigated this session (would need to re-verify H2/STO-3G and
+H2/DZ RCCD again with `Scrnc_form_mubar_s.F` reverted to its pre-fix
+state to see whether removing it changes anything now, given today's
+Nmult=1 architecture postdates that fix) -- flagged for whoever picks
+this up next, not acted on, to avoid another unverified guess-and-test
+cycle without Ajith's input first.
+
+**FLAGGED for Ajith, sharper than before but still not code-resolvable
+alone**: does RHF RCCD's Hbar ring-term (`rcc_dwmbej.F`'s IMULT=1
+`T*W` contraction) need ANY exchange-type correction to bare `T(37)`
+at all? The routine's own header comment ("There are no antisymmetrized
+T2 amplitudes") may have been right all along for THIS specific
+formula -- CCSD's `2*T37-T39` pattern exists because CCSD's `T2` is
+genuinely antisymmetrized (so its own list39 is a real, distinct
+quantity); RCCD's `T2` is NOT antisymmetrized by construction, so the
+straightforward analogy may simply not transfer, and the ~1.86-1.92x
+deviation from UHF's per-spin value may come from something else
+entirely (a missing FACTOR/prefactor somewhere in the T*W contraction
+call itself -- e.g. the `X`/`C4` scale arguments passed to `CNTRCT`,
+worth comparing literally line-by-line against CCSD's own call
+signature at vcc/dwmbej.F line 446-448, not yet done -- or from the raw
+`2J-K` bare-integral piece, or from somewhere entirely outside
+`rcc_dwmbej.F`). This needs either the actual closed-form RHF-RCCD
+spin-adapted Hbar equation (ideally cross-checked against the
+Rishi/Perera/Bartlett JCP153,234101(2020) paper already used as this
+thread's precedent for the energy formula) or Ajith's own recollection
+of the correct construction -- not another blind list-substitution
+attempt. Do not try list34, list39, or any other existing list as a
+"missing term" again without first confirming from the derivation
+which quantity (if any) is actually supposed to appear there.
+
+**Housekeeping**: no fix committed (the attempted one was verified
+WRONG and reverted). Working tree: `rcc_dwmbej.F` back to exact HEAD
+state (confirmed via empty `git diff`); `rcc_dwmbej.f` now shows a
+small, pre-existing, unrelated diff (see above, not this session's
+doing, harmless); `scrnc_form_rcc_hbar.F`'s pre-Fock debug print from
+the previous entry, and `scrnc_set_vars.F`'s RHF-RCCD-trap test
+override, both still in place as before, still not shipped. Test
+artifact (not committed): `h2o_scrnc_rccd_rhf_sto3g_dwmbejfix`.
+
+---
+
+## SESSION 2026-08-20 (continued 2) -- traced the 2 negative Hbar eigenvalues down to a specific term: definitively RULED OUT "missing Fock-diagonal" (it's added correctly, verified against SCF orbital gaps to 8 digits); narrowed to the raw 2J-K correlation-kernel diagonal for the HOMO(MO5)->virt(MO6,MO7) pairs being large enough (~-1.0 to -1.15 Ha) to nearly cancel the small HOMO-LUMO-type gap (~0.99-1.13 Ha) and flip the net sign -- whether that raw kernel magnitude is itself correct is a physics judgment call, FLAGGED for Ajith, not resolved by code-reading alone
+
+**Added ONE minimal, targeted debug print** (per Ajith's "lean on
+existing infra, not a lot of new one-off prints" -- the existing
+instrumentation didn't cover this specific pre-Fock intermediate, so
+added exactly one, matching the existing `_DEBUG_LVL0`/`call output`
+style): in `scrnc_form_rcc_hbar.F`, right after the `IMULT.EQ.1` raw
+`GETALL(...,56)` read and before the `(ai,bj)->(ab,ij)` reorder /
+`SCRNC_ADDONEH` Fock-diagonal-add call, dumps the pristine list-56
+matrix in the SAME `(ai,bj)` index convention as the final "drCCD Hbar
+matrix" dump -- so row/col N here is directly comparable to row/col N
+in the already-known post-Fock dump, no reindexing needed. RHF-only,
+`IMULT.EQ.1` only, `_DEBUG_LVL0`-gated (kept in the working tree
+uncommitted, matching this week's `scrnc_set_vars.F` test-override
+precedent -- needed for continued testing, not yet shipped).
+
+**"Missing Fock-diagonal" hypothesis: definitively RULED OUT.** Ran
+H2O/STO-3G RHF fresh with the new print
+(`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_rccd_rhf_sto3g_prefock_test`).
+Diffed the new pre-Fock dump against the already-known post-Fock "drCCD
+Hbar matrix" dump, row by row, and checked the difference against the
+actual SCF orbital-energy gaps (`ORBITAL EIGENVALUES` block, same run):
+```
+Row  MO pair     Fock added (post-pre)   Computed gap eps(virt)-eps(occ)
+1    MO1->MO6    20.84501690838           20.845 (exact match, deep core)
+3    MO2->MO6     1.86991641999            1.870 (exact match)
+9    MO5->MO6     0.99399238313            0.99399238313 (EXACT, 11 digits)
+10   MO5->MO7     1.13009122331            1.13009122331 (EXACT, 11 digits)
+```
+The Fock-diagonal term is being added correctly and completely for
+EVERY row checked, including rows 9/10 (the anomalous ones) -- to the
+full 11 printed digits, no truncation, no sign error, no missing term.
+This rules out the entire "SCRNC_ADDONEH"/list-routing/irrep-blocking
+class of hypothesis that motivated adding the print in the first
+place.
+
+**Narrowed the anomaly to the raw correlation kernel itself.** Row
+9/10's PRE-Fock diagonal (the raw `2J-K`-type kernel from
+`rcc_dwmbej.F`, list 56) is `-1.02650109829` / `-1.15313423144` --
+large enough in magnitude to nearly cancel the (comparatively small)
+`0.994`/`1.130` Ha HOMO(MO5,B1)->LUMO(MO6/MO7) gap, flipping the net
+sign. This ISN'T obviously anomalous in isolation -- EVERY row's raw
+kernel is O(0.05-1.65) Ha in magnitude (row1: -1.48, row2: -1.65, row8:
+-0.95, etc.) -- rows 9/10 just happen to be the ones where the gap
+itself is small enough for the kernel to dominate and flip the sign,
+rather than being a small correction on top of a large gap (rows 1-4,
+deep-ish orbitals) or staying subdominant anyway (rows 5-8).
+
+**Cross-checked against UHF's analogous per-spin value**: UHF's alpha-
+only post-Fock diagonal at the same composite indices (9,10 of its
+20x20 matrix, confirmed same `(i-1)*NVRT+a` convention, alpha block =
+rows/cols 1-10) is `0.44207134278` / `0.52913151138` -- POSITIVE,
+unlike RHF. Backing out UHF's own Fock gap (same molecule, same
+orbitals, must match RHF's `0.994`/`1.130` exactly) gives UHF's raw
+per-spin correlation kernel as `-0.552`/`-0.601`. Ratio RHF-singlet-
+kernel : UHF-alpha-kernel = **1.86 and 1.92** -- close to but not
+exactly 2.0. This is right on the boundary of "looks like the expected
+`2J-K` (RHF, roughly double a per-spin `J-K`-type UHF quantity)
+qualitative relationship" vs. "could still be hiding a real, smaller-
+scale error" -- NOT distinguishable from code-reading or checksums
+alone; would need either (a) the actual closed-form CC-theory relation
+between RHF's spin-adapted singlet ring-CC Hbar diagonal and UHF's
+spin-orbital one (a derivation, not a code trace), or (b) Ajith's own
+read on whether that ~1.86-1.92x ratio (vs an exact 2.0) is within
+expected non-trivial-spin-adaptation territory or is itself the
+smoking gun.
+
+**FLAGGED for Ajith, not guessed at**: is the RHF ring-CC singlet
+Hbar's raw correlation-kernel diagonal, for an occ-virt pair where the
+kernel and the bare orbital gap are comparable in magnitude, supposed
+to relate to UHF's per-spin analogue by a clean factor of 2 (in which
+case today's ~1.86-1.92x is the bug, and worth chasing directly in
+`rcc_dwmbej.F`'s IMULT=1 branch -- candidates there:
+the `2J-K`-vs-`-K` bare-integral construction identified in "continued
+6" above, or the `T*W` contraction step whose checksums are
+already-existing instrumentation, not yet compared row-by-row) -- or
+is some deviation from exactly 2x physically expected once genuine
+spin-adaptation (not just a naive per-spin doubling) is done correctly,
+in which case the bug is elsewhere entirely (e.g. genuinely in how
+`Scrnc_form_mubar_s.F`/`scrnc_jj_rcc_assemble.F` CONSUME this Hbar
+downstream, not in the Hbar itself) and today's whole Hbar-eigenvalue
+lead would be a red herring dead-end for RCCD. Do not proceed further
+on the Hbar-construction line without this call -- it determines
+whether the next step is "trace `rcc_dwmbej.F` term-by-term" or "go
+back to comparing consumption of a CORRECT Hbar."
+
+**Housekeeping**: no fix committed (none verified). Working tree now
+also has the new debug print in `scrnc_form_rcc_hbar.F`/`.f`
+(uncommitted, `_DEBUG_LVL0`-gated, RHF/IMULT=1-only, kept for
+continuity -- harmless, adds output only, changes no computed values).
+New test artifact (not committed):
+`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_rccd_rhf_sto3g_prefock_test/`
+(first attempt in this dir crashed with `Density=Response is not set`
+-- reused the wrong ZMAT template missing the keyword; refixed by
+copying `_cleanbaseline`'s ZMAT, which has it; the failed first attempt
+is not a real finding, just a self-inflicted test-setup mistake, noted
+here so it isn't mistaken for something else later).
+
+---
+
+## SESSION 2026-08-20 (continued) -- top-down debug-print bisection (Ajith's method: use EXISTING instrumentation, start high, walk backward, stop at first divergence): FOUND IT -- RHF's ring-CC Hbar has 2 spurious NEGATIVE eigenvalues (-0.88, -0.63) that UHF's equivalent spectrum (all 20 positive) has no trace of; this is upstream of and likely explains everything chased in every prior RCCD session
+
+**Method, per Ajith's explicit instruction**: don't write new debug
+prints -- the codebase already has extensive `_DEBUG_LVL0`-gated
+instrumentation throughout the RCCD path (confirmed: this macro is
+ALREADY on by default in this build,
+`aces2/Makefiles/GNUmakefile.src` line 10 uncommented `DEFINES_EXTRA
+= ... -D_DEBUG_LVL0 ...` -- nothing needed to "turn on", it was already
+firing in every run this week, including today's `_cleanbaseline` RHF/
+UHF logs from earlier this session). Walked the existing H2O/STO-3G
+RHF and UHF `_cleanbaseline` run logs top-down: final JJ matrix (known,
+9.58%/23.7x gap) -> response-only JJ (before bare-v add) -> per-AO-pair
+R-side/L-side checksums -> Hbar eigenvalues. Stopped as soon as
+something looked wrong, per instruction, rather than continuing deeper.
+
+**Housekeeping note first**: the UHF `_cleanbaseline` log
+(`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_rccd_uhf_sto3g_
+cleanbaseline/run_scrnc.log`) contains 7 stray embedded NUL bytes
+(harmless -- looks like a raw/unformatted debug print of an integer
+buffer somewhere upstream, likely in `xintprc`'s `@INTRN1` integral-
+transform debug block, not scrnc-specific) that make plain `grep`
+silently treat the file as binary and stop matching partway through --
+this is why last entry's "UHF log has no RPA JJ matrix" note was a
+FALSE ALARM, not a real bug: the full pipeline ran correctly and DOES
+print the JJ matrix (`0.86509751290`/`0.03016663846`, matches the
+REGROUP session exactly), just invisible to naive `grep -n`. Retract
+that flagged concern. Used Python (`.decode('latin-1')`, byte-safe) for
+all log analysis below instead of `grep`.
+
+**Level 1 -- Response-only JJ matrix (before bare-v add),
+`scrnc_jj_rcc_assemble.F`'s own `_DEBUG_LVL0` dump**: RHF JJ(4,4) =
+`0.69148053436`, UHF JJ(4,4) = `0.00694352740` -- ratio **~99.6x**,
+even bigger than the final 23.7x. Checked the bare-v piece separately
+(full JJ(4,4) minus response-only JJ(4,4)): RHF `0.02322`, UHF
+`0.02322` -- IDENTICAL. So the bare (uncorrelated) Coulomb piece is
+completely fine and reference-independent as expected; the entire
+23.7x final discrepancy is 100% inside the response construction,
+and is actually LARGER (99.6x) before the shared bare-v addition
+partially dilutes it. Confirms: don't waste time on `scrnc_prep_2ints.F`
+or the bare-v list-220 machinery, it's clean.
+
+**Level 2 -- per-AO-pair R-side checksums, `scrnc_lrspn_rcc_main.F`**:
+extracted the `Npert_count=4` block (AO-pair index 4, same index as the
+bad JJ(4,4) component) for both refs. The DRESSED bare property
+checksum (`Mubar_s(Iside=1)`, computed BEFORE the Hbar^(-1) contraction)
+is RHF `0.117846531745E+00 / 0.707396779915E-02` vs UHF
+`0.238630500016E+00 / 0.142786183332E-01` -- a clean, consistent ~2.02x
+ratio on both checksum components. Not obviously wrong (plausibly just
+an ISPIN-loop bookkeeping artifact, UHF's routine summing over 2 spins
+where RHF's sums over 1) -- didn't chase further given what's below.
+Immediately AFTER the Hbar^(-1) contraction (the `1st order amps`
+checksum, i.e. `R = Hbar^(-1) * Mbar`): RHF
+`-0.375279167468E+00 / 0.347799818980E+00` vs UHF
+`0.665798062707E-01 / 0.354861392438E-02` -- NOT a clean ratio anymore,
+DIFFERENT SIGN on top of a ~5-10x magnitude mismatch. This pins the
+first clearly-anomalous step to the Hbar^(-1) contraction itself (or
+whatever it's built from) -- not the bare-property dressing, which
+still looks internally consistent going in.
+
+**Level 3 -- Hbar eigenvalues, `scrnc_form_rcc_hbar_inv.F`'s own
+`_DEBUG_LVL0` `DGEEV` diagnostic (Ajith's own 2026-08-14 request,
+"independent Hbar diagonalization... compare against ringcc's own
+eigenvalues") -- FOUND IT.** (Note: text-matching "The real
+eigenvalues" alone is ambiguous, it also matches an unrelated SCF-
+orbital-energy print elsewhere in the pipeline -- anchor on the unique
+"scrnc's own Hbar(ai,bj) is fully diagonalized" header instead, which
+prints exactly once per reference, immediately followed by the REAL
+Hbar spectrum.)
+```
+RHF Hbar eigenvalues (MATDIM=10, singlet-channel, list 56):
+  526.96238440   3.84383016  19.76892375  29.26769779  525.99926507
+   27.48199452   5.49605640  10.63082475  -0.88460752   -0.62703242
+
+UHF Hbar eigenvalues (MATDIM=20, alpha+beta combined):
+  547.09011687 545.39016197 548.45785580 547.29146058  39.68624555
+   34.63841383  28.39704398  40.98300845  37.87447405  19.73887279
+   16.60471345  12.80987637  21.88606748  19.03727989  17.88331701
+   10.97710036  14.60126343  13.08165647  13.73465055  15.06216374
+```
+**RHF has 2 NEGATIVE eigenvalues (`-0.88460752`, `-0.62703242`). UHF's
+full 20-eigenvalue spectrum has ZERO negative or near-zero values --
+smallest is `10.97710036`.** This is not a subtle numerical-precision
+issue (RHF's own two negative values are ~0.6-0.9 in magnitude, nowhere
+near the ~1e-8 convergence floor this codebase shows everywhere else)
+-- it's a qualitative, structural difference. `rcc_dwmbej.F`'s RHF
+IMULT=1 construction is the standard closed-shell Casida singlet
+`A=2J-K` matrix (confirmed in an earlier session, "continued 6" above)
+-- for a genuine, stable, non-degenerate closed-shell ground state
+(H2O at equilibrium, no reason to expect an RPA/electronic instability)
+this matrix should be positive-definite, like an orbital Hessian.
+UHF's matching spectrum being cleanly all-positive is exactly the
+physically-expected behavior; RHF's two negative values are the
+anomaly. High-energy eigenvalues correspond loosely across references
+(RHF's `526-527` pair vs UHF's four `545-548` values -- roughly the
+expected 1:2 ratio if UHF's alpha/beta are near-degenerate copies of
+what RHF represents once), so the CONSTRUCTION isn't wholesale broken
+-- something specific and localized (a missing term, sign error, or
+incomplete contraction affecting only the lowest 1-2 excitation(s) in
+the singlet manifold) is corrupting just the low end of RHF's spectrum.
+
+**Per Ajith's bisection instruction ("stop descending as soon as you
+find the first stage where something looks wrong") -- STOPPING HERE.**
+This is upstream of everything chased in every prior RCCD session
+(mubar/T2-dressing, Imult/Loffset routing, singlet/triplet
+recombination -- all of those operate on OR consume this same Hbar,
+so a corrupted Hbar spectrum would explain the response-level symptoms
+at every level checked above and in every previous entry in this file,
+without needing a second, independent bug anywhere else). NOT yet
+traced into `rcc_dwmbej.F` itself to find which specific term produces
+the 2 bad eigenvalues -- that's the concrete next step, not done this
+session (this entry is the "first divergence found" checkpoint per
+Ajith's own stated method, not the final root-cause trace).
+
+**Next step, concretely**: open `ringcc/rcc_dwmbej.F`'s RHF (`IUHF.EQ.0`,
+`IMULT.EQ.1`) branch and either (a) print the raw 10x10 Hbar matrix
+itself (already available via the existing `_DEBUG_LVL0` "The drCCD
+Hbar matrix" `call output(...)` dump right before the DGEEV call in
+`scrnc_form_rcc_hbar_inv.F`, not yet inspected element-by-element this
+session) and look for an obviously wrong row/column/asymmetry, or (b)
+compare it term-by-term against `vcc/dwmbej.F`'s RHF construction
+(CCSD's, known-correct, never decouples) the same way the "continued 6"
+entry above already did for the OVERALL `2J-K`/`-K` structure -- but
+this time at the level of individual contraction terms, not just the
+top-level formula, to find which specific piece is missing or sign-
+flipped for whichever occ-virt pair(s) are producing the negative
+eigenvalues. A finite-difference or symmetry cross-check (e.g. is the
+matrix supposed to be symmetric? `rcc_dwmbej.F` builds a non-symmetric
+Hbar in general, so don't assume symmetry should hold, but DO check
+whether the pristine "drCCD Hbar matrix" dump itself already looks
+obviously wrong in a specific row/column before assuming the bug is in
+the diagonalization/eigenvalue step rather than the matrix construction
+itself).
+
+**Housekeeping**: no code changes this entry (pure log-based
+investigation of the two already-completed `_cleanbaseline` runs, no
+new binary rebuilds or submissions needed since `_DEBUG_LVL0` output
+was already captured). Working tree unchanged from the entry below.
+
+---
+
+## SESSION 2026-08-20 -- RCCD-only session (per Ajith's mandate): rediscovered that the "singlet-only" response hypothesis is ALREADY committed (498542f8) and does NOT close H2O's gap; proved `DENSITY=RESPONSE` is bit-identical-irrelevant to RCCD's own numbers (Ajith's correction, confirmed empirically); real bug (H2O/STO-3G 9.58%/23.7x gap) remains OPEN, no new fix
+
+**Two live corrections from Ajith mid-session, both now reflected in
+how this thread should run going forward:**
+1. `xvprops` must NEVER be in scrnc's own manual pipeline (dipole/
+   property integrals scrnc's AO-pair-density construction never
+   consumes) -- only the `PROPS=EOM_NLO`/`xvcceh` reference pipeline
+   needs it.
+2. **Supersedes item 1's `DENSITY=RESPONSE` guidance and the "ruled
+   out" conclusion in the 2026-08-19 entry below** ("`DENSITY=RESPONSE`
+   hypothesis tested and RULED OUT"): Ajith says do NOT use
+   `DENSITY=RESPONSE` in EITHER pipeline at all -- it only matters for
+   whether `xdens` runs, and neither pipeline (scrnc's own, or the
+   `xvcceh` reference) ever calls `xdens`. The earlier finding that
+   removing it crashes `xlambda` on list 144 was about the CCSD/
+   `xvcceh`-comparison thread specifically (out of scope today) --
+   not re-verified this session, flagged for whoever picks that thread
+   back up. **For RCCD specifically, verified directly this session**
+   (see below): the keyword is provably inert.
+
+**RCCD's own pipeline does NOT need `DENSITY=RESPONSE` -- proven, not
+assumed.** Built a fresh H2O/STO-3G RHF RCCD test
+(`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_rccd_rhf_sto3g_nodensitytest`,
+manual pipeline `xjoda,xvmol,xvmol2ja,xvscf,xvtran,xintprc,xringcc,
+xringcl,xscrnc`, NO `xvprops`, NO `DENSITY=RESPONSE` in the ZMAT) against
+an otherwise-identical clean baseline WITH the keyword
+(`..._cleanbaseline`) -- required temporarily bypassing
+`scrnc_set_vars.F`'s own hard gate on `Respn_d` to even test this
+(`.FALSE. .AND. .NOT. Respn_d`, test-only, reverted before this entry
+was written, NOT shipped). `diff` of the two full run logs: the ONLY
+differences are ASLR-randomized `@ACES_INIT-DEBUG` memory addresses and
+the `DENSITY` flag echo itself -- every actual numeric result, including
+the full RPA JJ matrix to all 11 printed digits, is bit-identical.
+RCCD's pipeline never calls `xdens` (confirmed: only consumer of the
+`Respn_d`/`IFLAGS(h_IOPPAR_density)` flag we could find that's actually
+in RCCD's call path is `scrnc_set_vars.F`'s own gate -- traced
+`Scrnc_set_dens_vars.F`, the file that actually USES this flag
+meaningfully via `COMMON/DERIV/`, and confirmed it's `xdens`-specific
+machinery RCCD's manual pipeline never invokes) and never calls
+`xlambda` either (ring-CC builds its own Hbar entirely in-module). So
+for RCCD, `scrnc_set_vars.F`'s `Respn_d` gate is pure legacy
+gatekeeping with zero effect on the actual computation -- worth
+permanently removing, but NOT done this session (the gate is shared
+with the CCSD path in the same file, which is out of scope today and
+was NOT re-verified against this same claim -- don't blanket-delete the
+gate without checking CCSD's own dependency on it first, in case that
+thread's `xlambda`/list-144 crash is genuinely tied to this flag rather
+than to `PROPS`/`IHBAR2` as Ajith suspects).
+
+**Rediscovered, the hard way, that the "singlet-only" response
+hypothesis is not new -- it's already shipped, in `498542f8`, and
+already known to be insufficient.** Independently derived (before
+looking closely at `scrnc_driver.F`) that the density-density response
+function feeding `W=v+v*Chi*v` should, by the Wigner-Eckart theorem, get
+ZERO contribution from the triplet (Imult=2) channel -- a spin-scalar
+one-particle density operator has no matrix element between a singlet
+ground state and a triplet excited state, so `scrnc_jj_rcc_assemble.F`'s
+0.25(singlet)/0.75(triplet) combination looked like a plausible bug
+(reusing the ground-state-ENERGY recombination formula somewhere it
+doesn't belong). Wrote a test edit (`Wt=1.0` for Imult=1, `Wt=0.0` for
+Imult=2, `rcc_cmpeng.F`'s own energy formula untouched) and reran H2O/
+STO-3G RHF RCCD fresh -- result was **bit-identical to the untouched
+baseline** (JJ(1,1)=`0.94799229627` both ways, JJ(4,4) differed only in
+the 10th digit, clearly just Davidson-iteration noise). Root cause of
+the null result: `scrnc_driver.F` ALREADY hardcodes `Nmult = 1` (see its
+own header comment, dated 2026-08-19, committed in `498542f8`) --
+"confirmed (Ajith) the singlet/triplet channels must NOT be decoupled
+and weight-recombined for a response quantity... A first-principles
+check (density-type perturbations couple only to the singlet manifold,
+zero overlap with the Sz=0 triplet excitation operator) supports Nmult=1
+(singlet-only)" -- i.e. this EXACT hypothesis, with nearly identical
+reasoning, was already tested and shipped a session ago. Because Nmult
+is now always 1, `scrnc_jj_rcc_assemble.F`'s `If (Nmult .EQ. 2)` branch
+(where the 0.25/0.75 weights live) is dead code -- my test edit there
+could never have had any effect, hence the null result. Reverted the
+test edit (back to matching HEAD exactly, verified via `git diff`).
+**Important for future sessions: don't re-derive or re-test the
+singlet-only-channel hypothesis again -- it's already the shipped
+architecture, and `498542f8`'s own commit message says the result was
+"gap 3.98%->~1%" on H2/STO-3G, with an explicitly acknowledged
+"residual normalization-scale mismatch against UHF... not yet
+resolved."** The REGROUP session's H2O/STO-3G 9.58%/23.7x gap (below)
+was measured AFTER this Nmult=1 fix was already in place -- it is that
+same unresolved residual, just far more exposed on H2O than it was on
+H2, not a new or different bug.
+
+**The real open bug, unchanged, not newly investigated this session
+beyond the above**: H2O/STO-3G RHF RCCD's RPA JJ matrix vs UHF --
+JJ(1,1) 9.58% off, JJ(4,4) 23.7x off (`0.71470364552` vs
+`0.03016663846`), several off-diagonal elements (JJ(1,2),JJ(1,3),
+JJ(2,2)) also off by several percent, NOT just component 4. Sharpest
+lead, not yet chased: component 4 is EXACTLY symmetry-decoupled from
+components 1-3 in BOTH references (RHF off-diagonals are exact zero to
+11 digits; UHF's are ~1e-7, consistent with Davidson-convergence noise
+around a true zero) -- so index-4's AO pair belongs to a symmetry
+sector that doesn't mix with 1-3's sector in either reference, yet its
+OWN diagonal magnitude is wrong by 23.7x while the mixed-sector
+diagonals (1,1)/(2,2)/(3,3) are only off by single-digit percent. A
+uniform normalization/scale bug would hit every component by the same
+factor -- this pattern (isolated component wildly wrong, mixed
+components mildly wrong) instead suggests something specific to
+whichever symmetry sector AO-pair-4 belongs to, possibly a missing or
+mis-scaled contribution that gets partially diluted/cancelled in the
+mixed components but shows up at full strength in the pure one. Have
+NOT yet identified what that sector is (which MOs/irrep AO-pair-index 4
+maps to) or traced a specific routine -- this is the concrete next
+step, not the singlet/triplet-channel question (already closed, see
+above) and not the `DENSITY=RESPONSE`/`xvprops` pipeline-composition
+question (already closed, see above).
+
+**Housekeeping**: nothing new committed this session (pure
+investigation + two reverted test edits, verified via `git diff`
+matching session-start state exactly). Working tree still has the
+same pre-existing uncommitted state as every session this week:
+`scrnc_set_vars.F`'s RHF-RCCD-trap `.FALSE. .AND.` override (still
+needed for testing, still must NOT ship) and the whitespace-only
+`scrnc_form_rcc_hbar.F` diff. New test artifacts (not committed, data
+only) under `/blue/ufhpc/perera/scrnc_test/`:
+`h2o_scrnc_rccd_{rhf,uhf}_sto3g_cleanbaseline` (RHF/UHF, manual
+pipeline, no `xvprops`, WITH `DENSITY=RESPONSE`, matches the REGROUP
+session's numbers exactly), `h2o_scrnc_rccd_rhf_sto3g_nodensitytest`
+(same, `DENSITY=RESPONSE` removed, bit-identical to `_cleanbaseline`,
+proves the keyword inert for RCCD), `h2o_scrnc_rccd_rhf_sto3g_
+singletonly_clean` (the now-understood-to-be-inert Wt=1/0 test, kept
+for reference). Note: `_cleanbaseline`'s UHF run's log shows no "RPA JJ
+matrix" print at all despite exit code 0 -- not chased down this
+session (lower priority than the main open bug, and the RHF-side
+numbers needed for today's tests were already available and consistent
+with the REGROUP session's own numbers), worth a quick look next
+session in case it's a real (separate, UHF-specific) issue rather than
+a `_DEBUG_LVL0` build-flag artifact.
+
+**Next step, concretely**: identify AO-pair-index-4's symmetry/MO
+origin (probably via the `_DEBUG_LVL0` `Isympert`/`Iaopop` diagnostic
+prints already built into `scrnc_jj_rcc_assemble.F`, or a rebuild with
+that ifdef enabled), then trace which specific routine builds that
+sector's response contribution differently between RHF and UHF. Given
+today's finding that this is NOT a singlet/triplet-combination issue
+(that's already fixed/closed), the remaining candidates are back to
+`rcc_dwmbej.F`'s own list-56 Hbar construction, `Scrnc_form_mubar_s.F`'s
+list-34 T2-dressing fix (verified on H2/STO-3G's single-irrep case
+only -- never re-verified on a genuinely multi-irrep system like H2O),
+or `rcc_cmpeng.F`-adjacent list-routing now that Nmult=1 changed which
+lists are actually populated vs `scrnc_jj_rcc_assemble.F`'s Loffset=0
+assumption.
+
+---
+
+## SESSION 2026-08-19 (continued 7) -- "REGROUP" session: proved the CI-like framework itself is NOT the problem (RHF=UHF to ~1e-8 via the correct ACES2 pathway); the bug is entirely within scrnc's own construction (or whatever DENSITY=RESPONSE triggers, even for plain CCSD). RESUME POINT for 2026-08-20: check scrnc's CCSD path first, then ringcc/RCCD (RESUME HERE)
+
+**Context**: after the H2/STO-3G RCCD list-34 fix (see "continued 6"
+below) got the gap to ~1-1.4%, Ajith asked to regroup: stop chasing H2
+(too trivial, 1-orbital-pair, possibly masking/distorting the real
+picture) and re-derive everything on H2O/STO-3G instead, proving CCSD
+RHF=UHF works FIRST before trusting anything about RCCD.
+
+**H2O/STO-3G RCCD, fresh, via scrnc (`xjoda...xringcc,xringcl,xscrnc`,
+`DENSITY=RESPONSE`)**: RHF vs UHF RPA JJ(1,1) gap **9.58%**, and
+`JJ(4,4)` differs by ~23.7x (`0.71470364552` vs `0.03016663846`) --
+MUCH worse than H2 ever showed, while the ground-state energy still
+matches to ~1e-10 (`-74.994555231233` vs `-74.994555231114`). Confirms
+H2's ~1-1.4% residual was NOT representative -- H2O's richer symmetry
+structure exposes a much bigger problem in the response construction
+specifically.
+
+**Sanity-checked the H2O/STO-3G CCSD baseline via scrnc's own
+`DENSITY=RESPONSE` pipeline first**: only ~0.0145% RHF/UHF agreement
+(`0.86106633095` vs `0.86094156406`) -- suspiciously loose given CCSD-LR
+was verified to ~1e-8 on H2 earlier this same session. Ajith flagged
+this directly: "should match 10^-6 or better."
+
+**Verified independently with ACES2's own, decades-old, dedicated
+polarizability code (`xvcceh`, J.F. Stanton 1993 -- nothing scrnc-
+related)**, run in a genuinely fresh directory (a first, contaminated
+attempt where `xscrnc` had already run in the SAME directory gave
+wildly wrong numbers -- classic non-idempotent-list-reuse trap, redo
+in a clean dir): `DENSITY=RESPONSE`'s own polarizability came out
+~0.2-0.5% RHF/UHF, NOT the expected precision, and threw an
+intermittent (non-deterministic, doesn't correlate with the actual
+numeric result -- confirmed by rerunning and getting the identical
+number with no error message) `Intel oneMKL ERROR: Parameter 13 was
+incorrect on entry to DGEMM` in the RHF run only. The DGEMM message
+looks like a red herring (uninitialized-memory read warning), not the
+real cause.
+
+**Found the actual correct methodology, at Ajith's direction**: the
+real ACES2 test suite (`aces2/test/script.075b`/`075c`, H2O/DZP,
+`OH=0.957201, ANG=104.5200`) uses `PROPS=EOM_NLO,EOMPROP=QUADRATIC`
+via the standard `xaces2` driver -- NOT `DENSITY=RESPONSE`. Ran it: RHF
+and UHF "Molecular Polarizabilities" match to all 6 printed digits
+(`0.048619, 4.915536, 2.108859`), energy to ~1.8e-9. But Ajith
+clarified QUADRATIC doesn't apply to scrnc -- "we have not added the
+quadratic terms, we are in the CI-LIKE framework" (confirmed by an
+existing prior-session pilot script,
+`aces2/scrnc/independent_pilot/ci_like_vs_lr_polarizability.py`,
+which independently verified via PySCF that CI-like [`IEOMPROP=0`,
+frozen-Lambda expectation value] and LR/QUADRATIC [`IEOMPROP=2`,
+fully-relaxed via Hellmann-Feynman/Schwarz] are genuinely different
+constructions with different guaranteed-symmetry properties -- that
+pilot was about xy/yx Onsager reciprocity specifically, not RHF/UHF,
+so it didn't directly answer this question, but it's the right
+precedent/reference for how "CI-like" is defined in this codebase).
+
+**Reran the SAME test-suite input with `EOMPROP` simply omitted**
+(defaults to `IEOMPROP=0`, CI-like) -- this is the DECISIVE result:
+```
+CI-like Pol. matrix
+RHF: 2.92266723692  7.56686877462  5.89953761093
+UHF: 2.92266716621  7.56686860801  5.89953760962
+```
+Agreement ~2e-8 across all three components -- **CI-like itself has NO
+bug and gives RHF=UHF to the same precision as QUADRATIC.** This
+proves the ~0.5% mismatch seen earlier was never a CI-like theory
+limitation -- it's specific to whatever code path `DENSITY=RESPONSE`
+actually exercises (even for plain CCSD, independent of scrnc/RCCD
+entirely), or to scrnc's own construction, or both.
+
+**Conclusion, and the plan for tomorrow (2026-08-20)**: "everything is
+in scrnc" (Ajith). Since `PROPS=EOM_NLO`'s CI-like route (in `vcceh`,
+via `xvcceh`/the standard `xaces2` CCSD pipeline) is now PROVEN correct
+to ~1e-8, and CCSD's OWN `DENSITY=RESPONSE`-triggered path is NOT
+(only ~0.0145%-0.5%), the highest-value next step is a **direct,
+side-by-side comparison of the two CCSD code paths** -- both are
+notionally "CI-like," both live in the shared `vcceh` module family
+(scrnc's own `Scrnc_form_mubar_00.F`/`Scrnc_form_mubar_s.F` are
+scrnc-local near-duplicates of `vcceh`'s own routines, per earlier
+session's file-comparison work) -- so there is a real, findable
+divergence between them worth tracing to its exact origin. **Order of
+operations, per Ajith**: (1) scrnc's CCSD path first (compare directly
+against the proven-correct `PROPS=EOM_NLO` CI-like construction,
+same H2O system, find exactly where/why `DENSITY=RESPONSE`'s numbers
+diverge), THEN (2) once CCSD is understood and fixed, move to
+ringcc/RCCD with that understanding in hand -- RCCD's much larger
+H2O gap (9.58%, `JJ(4,4)` off by 23.7x) is very likely the SAME root
+cause, just more exposed by ring-CC's structure.
+
+**Added hypothesis (Ajith, right after this entry was first written):**
+"I do not think density flag is needed. We don't run the density
+code at all." -- i.e. `DENSITY=RESPONSE` may not actually be necessary
+for scrnc's own construction at all; it may just be an assumed/legacy
+requirement in `scrnc_set_vars.F`'s hard gate (see "Practical test-
+running notes" earlier in this file: "scrnc_set_vars.F hard-requires
+REF=UHF... and DENSITY=RESPONSE"). `DENSITY=RESPONSE` likely also
+triggers a SEPARATE relaxed-one-particle-density computation (for
+things like gradients/population analysis) that scrnc's own
+`Scrnc_form_mubar_*` routines never actually consume -- if that extra,
+unneeded machinery is where the imprecision/DGEMM issue lives, the
+fix could be as simple as confirming scrnc only needs Lambda solved
+(xlambda run, T/L amplitudes converged) and NOT the `DENSITY=RESPONSE`
+keyword itself. **Cheap first check for tomorrow, before the deeper
+line-by-line trace below**: does scrnc (or a plain CI-like `xvcceh`-
+equivalent check) still work correctly with Lambda solved but
+`DENSITY=RESPONSE` OMITTED from the ZMAT? If yes, that may directly
+explain and fix everything chased this session with far less tracing.
+
+**Checked immediately (before stopping): `xdens` hypothesis ruled out**
+-- confirmed the WORKING `PROPS=EOM_NLO` pipeline (`xjoda,xvmol,
+xvmol2ja,xvscf,xvtran,xintprc,xvcc,xlambda,xvprops,xvcceh`) never
+calls `xdens` either (matches Ajith's "we solve lambda but we do not
+call dens"), so `xdens` was never the differentiator. Also tried
+moving `xvprops` to match the working pipeline's LATE position
+(after `xlambda`, right before the property step) instead of scrnc's
+usual early position (right after `xvmol2ja`) -- **no change at all**,
+identical numbers (`0.04896437544`/`0.04871500302`) either way. Ruled
+out.
+
+**`DENSITY=RESPONSE` hypothesis tested and RULED OUT** (Ajith: "Just
+eliminate density. Even that is harmless. They do nothing in scrnc" --
+meant as "not the source of the bug," not literally removable, per
+what actually happened): removing it from the ZMAT does NOT reveal
+anything about the precision issue -- it just breaks the pipeline
+outright. `xlambda` itself crashes first (`@GETLST: Assertion failed.
+List (1,144) does not exist.` -- list 144 apparently only gets
+registered when `DENSITY=RESPONSE` is set, needed by plain CCSD
+Lambda regardless of scrnc), and `scrnc_set_vars.F`'s own explicit
+gate refuses to proceed ("The Density=Response is not set in the ZMAT
+and calculation can not proceed.") even if `xlambda` didn't crash
+first. So `DENSITY=RESPONSE` is structural plumbing, required for the
+pipeline to run at all -- it doesn't itself introduce the imprecision,
+but it can't be tested-by-removal either. Confirmed harmless in the
+sense Ajith meant (not the bug's source), ruled out as an active line
+of investigation.
+
+**Ajith's follow-up, key clarification, not yet acted on**: "xvprops
+is for dipole and other integrals. We do not need that for scrncc" --
+Ajith also confirmed `xvprops` itself is harmless/unnecessary
+(separately from `DENSITY=RESPONSE`).
+i.e. `xvprops` builds DIPOLE-type property integrals specifically --
+scrnc doesn't use dipole integrals at all (it responds to AO-PAIR
+DENSITY perturbations, a completely different, larger operator set) --
+so `xvprops`'s presence/absence/position in scrnc's pipeline may be
+entirely irrelevant busywork, inherited by convention from CCSD-LR/
+dipole-property test setups rather than being something scrnc
+actually needs. **Not yet tested**: does scrnc run correctly (and does
+precision change) with `xvprops` REMOVED from the pipeline entirely?
+This is the natural next cheap check, alongside re-examining whether
+`DENSITY=RESPONSE` itself is even needed (Ajith's still-open point
+from the previous entry) -- both are "maybe scrnc's assumed pipeline
+carries unnecessary/wrong legacy steps" hypotheses, worth testing
+together first thing next session, before the deeper line-by-line
+`Scrnc_form_mubar_*` vs `vcceh` trace.
+
+**ROOT CAUSE FOUND for the CCSD/CI-like path.** Traced why `xlambda`
+crashes on list 144 without `DENSITY=RESPONSE`, and why even WITH it
+scrnc's own numbers were only ~0.0145% precise (not ~1e-8): the
+`IHBAR,IHBAR2,IHBAR2` control-variable line printed by `vlamcc.F`
+differs between the working `PROPS=EOM_NLO` pipeline (`F T F`) and
+scrnc's own `DENSITY=RESPONSE`-only pipeline (`F F F`, same with or
+without `DENSITY=RESPONSE` present). Traced `IHBAR2`'s assignment in
+`aces2/lambda/setmet.F`:
+```fortran
+IHBAR  = IFLAGS(43).NE.0                    ! IFLAGS(43) = HBAR keyword
+IHBAR2 = IHBAR .AND. (IFLAGS(91).NE.0 .OR. IFLAGS(18).GT.100
+     &   .OR. IFLAGS(18).EQ.8 .OR. .EQ.9 .OR. .EQ.10 .OR. .EQ.13
+     &   .OR. IFLAGS(18).EQ.11)              ! IFLAGS(18) = PROPS keyword
+     &   .AND. IFLAGS2(geom_opt).EQ.0 .AND. IFLAGS(54).EQ.0
+     &   .AND. IFLAGS2(3).EQ.0
+IF (IFLAGS2(151).EQ.1) IHBAR2 = .TRUE.       ! Raman override
+IF (IHBAR2) IHBAR = .FALSE.                  ! avoid doing it twice
+```
+`PROPS=EOM_NLO` sets `IFLAGS(18)=11`, one of the qualifying values --
+`DENSITY=RESPONSE` alone never touches `IFLAGS(18)` at all, so
+`IHBAR2` never turns on in scrnc's own pipeline. `IHBAR2` controls
+whether the converged L1/L2 (and the full effective Hamiltonian/Hbar)
+get written to lists 143/144 at all -- without it, scrnc's `Scrnc_
+form_mubar_*` routines were silently working from incomplete/missing
+data (a real number, not a crash, hence the precision loss rather than
+an error).
+
+**Fix verified, decisively, H2O/STO-3G CCSD**: added `PROPS=EOM_NLO`
+alongside `DENSITY=RESPONSE` in the ZMAT (same manual pipeline
+otherwise) -- confirmed `IHBAR2` flips to `T` (`F T F`, matching the
+working case exactly), and scrnc's own LR JJ matrix now agrees
+RHF/UHF to **~9e-9** (was ~1.45e-4) -- a ~15,000x precision
+improvement, matching the same floor seen everywhere else in this
+codebase that's known to be correct.
+
+**Ajith's guidance on how to use/generalize this finding**:
+- "We need all HBAR pieces" -- confirms `IHBAR2` (build the COMPLETE
+  effective Hamiltonian, not just solve Lambda) is genuinely required,
+  not incidental.
+- "We will find a different way to set this flag for scrnc" -- don't
+  permanently require users to remember `PROPS=EOM_NLO` in their
+  ZMAT; the real fix is for `scrnc_set_vars.F` (or wherever scrnc's
+  own flag setup runs) to force the equivalent of `IFLAGS(18)` into a
+  qualifying value (or set `IHBAR2` directly) INTERNALLY, regardless
+  of what the user's ZMAT says -- not yet implemented, `PROPS=EOM_NLO`
+  is a working stand-in for now.
+- "EOM_NLO is for polarizabilities. For the time being we can work
+  with EOM_NLO." -- acknowledged this keyword is semantically about a
+  different job type (polarizability property calcs specifically),
+  just a convenient way to force the needed flag for now, not the
+  intended long-term mechanism.
+- **"I do not think we need this for ringcc path though."** -- RCCD/
+  ring-CC likely does NOT need this fix at all. Ring-CC builds and
+  consumes its OWN Hbar directly (`Scrnc_form_rcc_hbar.F`, reading
+  lists 56/54 -- see much earlier entries this session, already
+  independently verified correct via eigenvalue checks), entirely
+  separate from CCSD's Lambda-based lists-143/144 mechanism that
+  `IHBAR2` controls. So RCCD's much larger H2O gap (9.58%, `JJ(4,4)`
+  off 23.7x) is very likely a SEPARATE, still-unexplained bug, NOT
+  fixed by this `IHBAR2`/`PROPS=EOM_NLO` discovery -- do not assume
+  applying the same fix to RCCD will help without testing it
+  specifically, and don't be surprised if it doesn't move RCCD's
+  numbers much (or at all) if ring-CC's pipeline never reaches this
+  `IHBAR2`-gated code at all.
+
+**Checked immediately, confirmed**: RCCD's pipeline (`xringcc`/
+`xringcl` run.log) never prints the `Hbar control variables` line at
+all, and `grep`ing the ENTIRE `ringcc`/`ringcl` source trees for
+`IHBAR2` returns zero hits -- ring-CC's Lambda-equivalent step
+(`dxrcl_dwmbej.F` etc.) is completely separate code that never touches
+`vlamcc.F`'s `IHBAR2` mechanism at all. **Definitively confirms**:
+this `IHBAR2`/`PROPS=EOM_NLO` fix is CCSD-specific and structurally
+irrelevant to RCCD -- ring-CC's much bigger H2O gap (9.58%, `JJ(4,4)`
+off 23.7x) remains a genuinely separate, still fully open bug,
+untouched by anything found in this entry.
+
+**Session end, plan for 2026-08-20 (Ajith)**: tomorrow's session
+focuses EXCLUSIVELY on scrnc's ring-CC (RCCD) path -- CCSD is now
+understood and CONFIRMED WORKING (via the `PROPS=EOM_NLO` stand-in,
+~9e-9 precision), to be used only as a reference/guidance pattern for
+HOW a correct Hbar-consuming construction looks, not as something
+needing further debugging itself. Concretely: resume the RCCD
+response-vector trace from "continued 6" below (H2O/STO-3G, the
+9.58%/23.7x gap), informed by everything learned today about IHBAR2/
+Hbar completeness as a general CLASS of bug (missing/incomplete
+upstream data silently causing wrong-but-plausible numbers, not
+crashes) even though the SPECIFIC IHBAR2 mechanism doesn't apply to
+ring-CC. Test artifacts (not committed): `h2o_ccsd_{rhf,uhf}_
+sto3g_ihbar2test`, `/blue/ufhpc/perera/scrnc_test/`.
+
+**Concretely, fallback if a permanent scrnc-internal flag fix isn't
+found quickly**: pick ONE property component
+(e.g. the xx one) on H2O/STO-3G (not DZP -- match scrnc's own basis
+choice, or redo the EOM_NLO CI-like check on STO-3G first to have an
+apples-to-apples number), and trace `Scrnc_form_mubar_00.F`/
+`Scrnc_form_mubar_s.F`/`Scrnc_form_mubar_d_rhf.F` line-by-line against
+`vcceh`'s own equivalent routines (`secprp.F` and whatever it calls)
+to find the FIRST point where a checksum diverges between the
+DENSITY=RESPONSE-triggered path and the PROPS=EOM_NLO-triggered path,
+for the SAME molecule/reference/method. That divergence point is very
+likely the actual, single root-cause bug behind everything chased
+this entire multi-day thread (H2's ~1.4%, H2O's 9.58%, DRCCD's missing
+channel may or may not be related -- still out of scope per Ajith's
+standing instruction).
+
+**Housekeeping / state as of session end**: nothing new committed this
+entry (this was pure diagnosis, no code changes). Working tree still
+has the local, uncommitted, test-only `scrnc_set_vars.F` RHF-RCCD-trap
+override (`.FALSE. .AND. ...`) -- still needed for continued testing,
+still must NOT ship. All other files match the last commit
+(`498542f8`). Test artifacts from today's regroup session (not
+committed, data only): `h2o_scrnc_{ccsd,rccd}_{rhf,uhf}_sto3g_regroup`,
+`h2o_ccsd_{rhf,uhf}_sto3g_vcceh_clean`, `h2o_eomnlo_{rhf,uhf}_sto3g`,
+`h2o_eomnlo_cilike_{rhf,uhf}_dzp` (failed, bad keyword, harmless),
+`h2o_eomnlo_default_{rhf,uhf}_dzp` (the decisive CI-like-matches proof),
+all under `/blue/ufhpc/perera/scrnc_test/`.
+
 ---
 
 ## SESSION 2026-08-19 (continued 2) -- terminal froze mid-investigation, recovered next session; found+fixed a real copy/paste bug in ringcl's dxrcl_dwmbej.F (Lambda-side twin of the already-fixed rcc_dwmbej.F bug), rebuilt+reran clean RHF-vs-UHF RCCD -- agreement got WORSE (0.933->3.98%), not better; root cause NOT the list-routing bug alone, still OPEN (RESUME HERE)

@@ -983,7 +983,7 @@ ACES_LINK_LISTS = \
    dkh:a3ecp:oed:erd:${LIST_DEF_LIBS} \
    tdcc2:hbar:vcceh:libr2:${LIST_DEF_LIBS} \
    tdee:vee:vcceh:lnczos:libr2:${LIST_DEF_LIBS} \
-   scrnc:vcceh:libr2:${LIST_DEF_LIBS} \
+   scrnc:ringcc:vcc:vcceh:libr2:${LIST_DEF_LIBS} \
    ringcc:vcc:libr2:${LIST_DEF_LIBS} \
    pccd:libpccd:trp:vcc:dens:lambda:libr2:liboo:${LIST_DEF_LIBS} \
    pccd_drpmo:pccd:libpccd:vcc:dens:lambda:libr2:liboo:${LIST_DEF_LIBS} \

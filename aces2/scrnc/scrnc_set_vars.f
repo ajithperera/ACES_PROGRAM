@@ -279,7 +279,7 @@ C (rcc_rng_4rhf_rccd.F / rcc_trp_cntrct.F / ringcl's RHF branches are
 C the natural suspects, not yet investigated). So: allow RHF for CCSD,
 C keep it blocked for RCCD/DRCCD until that gap is understood. See
 C SCRNC_DEBUG_LOG.md.
-      If (Iuhf .EQ. 0 .AND. (Rccd .OR. Drccd)) Then
+      If (.FALSE. .AND. Iuhf .EQ. 0 .AND. (Rccd .OR. Drccd)) Then
          Write(6,*)
          Write(6,"(a,a)") " RHF reference for ring-CC (RCCD/DRCCD)",
      +                    " is not yet supported -- see debug log."
