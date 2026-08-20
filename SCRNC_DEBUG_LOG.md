@@ -4,6 +4,149 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-20 (autonomous fork, independent-reference cross-check
+per Ajith's direction, RESUME HERE) -- MAJOR REDIRECTION: reproduced the
+2026-08-14 UHF Hbar-eigenvalue cross-check methodology for RHF and found
+scrnc's own Hbar genuinely disagrees with ringcc/ringcl's independent
+Hbar for RHF -- but traced WHY, and it is NOT the "missing Lagrangian
+term" this whole thread has been chasing. It looks instead like a
+**pipeline-ordering bug**: scrnc may be reading the Lambda-equation's
+OWN dressed intermediate off lists 54/56, not the plain ground-state
+Hbar `RCC_DWMBEJ`/`RCC_GENINT` built, because `xringcl`'s Lambda solver
+(`rcl_driver.F`) runs between `xringcc` and `xscrnc` and overwrites
+those same lists.
+
+**Setup**: built the RHF counterpart of the existing UHF verify pair
+(H2/STO-3G, `h2_scrnc_rccd_uhf_sto3g` + `h2_rpa_verify_rccd_uhf_sto3g`,
+2026-08-14) -- `h2_scrnc_rccd_rhf_sto3g_verify` (scrnc's own production
+pipeline, `CALC=RCCD,DENSITY=RESPONSE,REF=RHF`, ending in `xscrnc`) and
+`h2_rpa_verify_rccd_rhf_sto3g[_noprops]` (pure `excite=EOM(Sf)-RCCD,
+eomref=RCCD,REF=RHF`, ending in `xringcl`, no `xscrnc`/no
+`DENSITY=RESPONSE`). Confirmed `xvprops` inclusion/exclusion makes zero
+difference to the eigenvalues (ruled out as a confound).
+
+**Read `aces2/ringcc/check_rhf_rcc.F` first, per Ajith's lead -- it is
+NOT an Hbar/eigenvalue check.** It's a ground-state singlet/triplet
+spin-adapted ENERGY consistency check (already-superseded machinery
+from the `rcc_cmpeng.F` energy-formula fix in `d80f2742`), unrelated to
+Hbar diagonalization. Did not pursue further.
+
+**Key finding 1 -- `RCL_ADDONEH`/`SCRNC_ADDONEH` are byte-identical**
+(diffed directly, only the subroutine name/line-wrap differs) -- ruled
+out the Fock-diagonal-add step itself as a source of any RHF-specific
+discrepancy.
+
+**Key finding 2 -- `RCL_HEFFXC.F`'s own `LISTDUMP` is hardcoded to 56
+regardless of `IMULT`** (unlike `scrnc_form_rcc_hbar.F`, which THIS
+session's earlier work -- committed before this thread even started,
+2026-08-19 -- already fixed to route `IMULT=2` to its own list 54). For
+RHF RCCD, `Rcl_check_rcchbar` sets `Nmult=2` and calls `Rcl_heffxc`
+twice (singlet then triplet), and the triplet call's `PUTALL` briefly
+clobbers list 56 with the triplet's own Fock-added Hbar -- harmless
+here only because `Rcl_drvrpa` diagonalizes immediately after each call
+inside the same loop, before the next iteration's overwrite. Still a
+real, unfixed bug in `RCL_HEFFXC.F` (should mirror scrnc's own
+IMULT-aware `LISTDUMP` fix) -- flagged, not fixed this session (doesn't
+explain the discrepancy found below, but is a latent risk for any other
+consumer that reads list 56 between the two `Rcl_heffxc` calls).
+
+**Key finding 3 (the real one) -- `rcl_dwmbej_r.F`'s own header comment
+says exactly what it builds: `W(mbej) = 2 W'(mbej) - <mb||ej>`, "the
+ring intermediates... appropriate for the CCD LAMBDA EQUATIONS,"
+EXPLICITLY DIFFERENT from `W'(mbej)`, "the intermediate used in the
+energy calculation."** `Rcl_dwmbej_r`/`_u` run unconditionally
+whenever `.NOT. Solve_4lambda` inside `rcl_hbar.F` (i.e. for the
+"verify" EOM(Sf) pathway too) and overwrite lists 54/56 with this
+Lambda-specific combination BEFORE `Rcl_check_rcchbar`'s own diagnostic
+runs -- meaning the 2026-08-14 "bit-identical" UHF result validated
+that scrnc's and ringcl's DIAGONALIZATION ROUTINES agree when fed
+IDENTICAL (already Lambda-transformed) input, not that the raw,
+untransformed ground-state Hbar is itself what either program
+diagonalizes. This alone isn't the bug (both UHF and RHF go through
+the same transform) -- but combined with finding 4 below, it's the key
+that unlocks the real mechanism.
+
+**Key finding 4 -- `rcl_driver.F` (the ACTUAL Lambda-equation ITERATIVE
+solver) runs AFTER `Rcl_hbar`/`Rcl_check_rcchbar`'s diagnostic, and
+FURTHER modifies lists 54/56**, confirmed via a same-run checksum
+comparison on H2O/STO-3G: `Rcl_dwmbej_r`'s own pre-iteration checksum
+of list 56 (added this session, matches the diagnostic's own restored
+value) vs. list 56's checksum printed later in the SAME run (after
+`rcl_driver.F`'s "Ring coupled cluster doubles (rCCD) lambda equations
+are solved" message) differ measurably, and scrnc's own EVENTUAL read
+of list 56 (in the separate `xscrnc` process, after `xringcl` has fully
+exited) differs again, roughly 2x in checksum norm from the
+pre-iteration value in one specific comparison. `rcl_driver.F` only
+runs a REAL iterative Lambda solve when `Solve_4lambda=.True.`, which
+`DENSITY=RESPONSE` triggers regardless of the `excite=` keyword
+(confirmed: even the "clean" EOM(Sf)-RCCD ZMAT, with `DENSITY=RESPONSE`
+added just to let `xscrnc` run per its own hard requirement, printed
+"lambda equations are solved").
+
+**Decisive same-run comparison** (H2/STO-3G RHF RCCD,
+`h2_rpa_verify_rccd_rhf_sto3g_withscrnc`: `excite=EOM(Sf)-RCCD,
+eomref=RCCD,DENSITY=RESPONSE,REF=RHF`, full 10-step pipeline through
+`xscrnc`, WITH this session's Part-1 Lagrangian correction active
+(CORR_2P=-1.5, the currently-committed dabea903/aa22a7ea state) --
+same ZMAT/keywords used for BOTH diagnostics, zero pipeline-config
+confound):
+- ringcl's own independent Hbar diagonalization (printed EARLIER in
+  the SAME `xringcl` run, BEFORE `rcl_driver.F`'s Lambda solve):
+  **26.22164379 eV (singlet), 16.66249500 eV (triplet)**
+- scrnc's own Hbar diagonalization (`xscrnc`, reading lists 54/56
+  AFTER `xringcl` has fully exited, i.e. AFTER the Lambda solve ran):
+  **19.47037548 eV** (only one value -- scrnc's `Nmult=1` architecture
+  only ever reports the singlet channel)
+
+19.47 matches NEITHER of ringcl's own numbers -- and the relevant
+comparison (scrnc reports singlet only) is 19.47 vs 26.22, a ~26% gap,
+LARGER than any of the JJ-matrix percentage gaps this whole thread has
+been chasing. A separate, cleaner run with NO `DENSITY=RESPONSE` (so no
+Lambda solve at all, `h2_rpa_verify_rccd_rhf_sto3g[_noprops]`) gives
+ringcl's truly pre-Lambda-solve reference: **26.69888286 eV (singlet),
+17.44865788 eV (triplet)** -- close to but not identical to the
+same-run 26.22/16.66 (confirming the Lambda solve DOES perturb list
+54/56 measurably even before scrnc gets to read it, consistent with
+finding 4).
+
+**Working hypothesis, NOT yet proven, needs Ajith's physics read or
+further tracing**: scrnc's Hbar-consuming machinery may be structurally
+wrong to read lists 54/56 AFTER `xringcl` at all, in a pipeline where
+`Solve_4lambda` triggers -- it may need the PRE-Lambda-solve
+`RCC_GENINT`/`RCC_DWMBEJ` output specifically (the true ground-state
+`W'(mbej)`), but by pipeline construction
+(`...,xringcc,xringcl,xscrnc`) can only ever see whatever `xringcl`'s
+Lambda solve leaves behind. **Why UHF apparently didn't show this
+problem in the 2026-08-14 cross-check is unexplained** -- either UHF's
+own Lambda-equation solve happens to leave list 54/55 unchanged/
+equivalent to the pre-solve Hbar for this specific method (a real
+possibility for some CC variants, not verified), or the 2026-08-14 UHF
+"bit-identical" match was itself not as clean a test as assumed (worth
+re-verifying with the SAME same-run-comparison technique used here for
+RHF, not yet done for UHF this session).
+
+**This REDIRECTS the whole Lagrangian-correction thread**: if scrnc is
+reading a Lambda-dressed intermediate instead of the ground-state Hbar,
+then CORR_2P/Part 1/Part 2 (all built to patch the TWO-particle/
+one-particle pieces of what was ASSUMED to be the plain ground-state
+Hbar) may have been tuning a correction on top of an already-wrong
+input. **NOT yet resolved: whether fixing the list-consumption/pipeline
+ordering issue alone closes some/all of the RHF/UHF gap, making the
+Lagrangian-correction work partially or wholly unnecessary, or whether
+both issues are real and compounding.** Next session should: (1) try
+scrnc reading the pre-Lambda-solve lists directly (e.g. via a
+save/restore around `rcl_driver.F`'s call, mirroring the existing
+save/restore already used around the diagnostic itself, OR by having
+scrnc's own driver re-run `RCC_GENINT` fresh right before reading, the
+same "call it a second time, cheaply" pattern this session's Part 1 fix
+already uses elsewhere) and re-check the JJ-matrix gap WITHOUT any
+Lagrangian correction active at all; (2) reproduce this exact same-run
+comparison for UHF to confirm/rule out whether it has the same
+underlying issue, just coincidentally invisible in the JJ-matrix
+metric.
+
+---
+
 ## SESSION 2026-08-20 (autonomous fork, continued past dabea903, per
 coordinator instruction) -- DIAGNOSED the Part-2/JJ(4,4) blowup
 mechanism (near-pole crossing, not a bug), scanned Part 1's CORR_2P

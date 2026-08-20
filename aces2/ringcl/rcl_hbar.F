@@ -156,6 +156,7 @@ C around the diagnostic call so it stays side-effect-free.
          Call Putall(Work(I910),Isz55,1,55)
       Else
          Call Putall(Work(I900),Isz56,1,56)
+         Call Checksum('rcl_hbar-restored-List-56:',Work(I900),Isz56)
       Endif
 #endif
 

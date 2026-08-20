@@ -396,6 +396,7 @@ C would silently corrupt it. See SCRNC_DEBUG_LOG.md.
            ELSE 
               IF (IMULT .EQ. 1) THEN
                  CALL GETALL(ICORE(I040),ISIZE,1,56)
+                 CALL CHECKSUM('scrnc-raw-List-56:',ICORE(I040),ISIZE)
               ELSE IF (IMULT .EQ. 2) THEN
                  CALL GETALL(ICORE(I040),ISIZE,1,54)
               ENDIF
