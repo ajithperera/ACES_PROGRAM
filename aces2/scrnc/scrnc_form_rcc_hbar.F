@@ -105,8 +105,11 @@ C RHF RCCD/DRCCD -- i.e. the naive bare-Fock-only Hbar the JCP2020
 C (d)rCCD paper explicitly says is wrong. Fill it with the Lagrangian-
 C derived quadratic Fmi/Fae correction (Scrnc_rcc_lagrangian_fix,
 C called once from Scrnc_driver, stores into list 91/92 sub-index 9).
-C TEMPORARILY DISABLED to isolate Part-1-only (two-particle) effect,
-C see rcc_lagrangian_fix.F. See SCRNC_DEBUG_LOG.md.
+C Part 2 (one-particle Fmi/Fae correction) disabled while Part 1's own
+C coefficient is tuned in isolation -- see rcc_lagrangian_fix.F /
+C SCRNC_DEBUG_LOG.md. Re-enable this read together with re-enabling
+C PDCC_QUAD2/3 there (list 91/92 sub-index 9 would otherwise be
+C uninitialized garbage, not zero).
 C            IF (IUHF .EQ. 0) THEN
 C               CALL GETLST(ICORE(I000),1,1,1,9,91)
 C               CALL GETLST(ICORE(I020),1,1,1,9,92)

@@ -4,6 +4,123 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-20 (autonomous fork, continued past dabea903, per
+coordinator instruction) -- DIAGNOSED the Part-2/JJ(4,4) blowup
+mechanism (near-pole crossing, not a bug), scanned Part 1's CORR_2P
+coefficient (0 to -12), and found a decisive negative result: no
+single scalar CORR_2P improves all 3 "well-behaved" JJ components at
+once. Full detail:
+
+**Item 1 (JJ(4,4) blowup, resolved -- not a bug):** `scrnc_form_
+rcc_hbar_inv.F` already has a `_DEBUG_LVL0`-gated real-eigenvalue dump
+of scrnc's own Hbar(ai,bj) matrix (10x10 for H2O/STO-3G's singlet
+channel) right before it's explicitly inverted via `MINV` -- this ties
+DIRECTLY into the older, already-documented "2 spurious negative Hbar
+eigenvalues" thread (see "SESSION 2026-08-20 (continued)"/"(continued
+2)" further below, from BEFORE this whole DCC-precedent investigation
+started: RHF's baseline ring-CC Hbar has 2 negative eigenvalues,
+-0.88/-0.63, that UHF's all-positive spectrum has no trace of). Traced
+the SAME 2 eigenvalues across correction strength:
+- baseline (no correction): -0.88, -0.63
+- Part 1 only (CORR_2P=-1.5, the committed dabea903 state): -0.633,
+  -0.540 -- still negative, but shrinking toward zero
+- Part 1 + Part 2 (both, full strength): +0.122, +0.256 -- crossed
+  zero, now positive, matching the SIGN UHF's reference spectrum says
+  is correct, but landing very close to zero
+- Part 1 + Part 2 (Part 2 at half strength, FACT2=0.5): -0.255, -0.142
+  -- confirms the crossing is LINEAR in Part-2 strength, not a jump
+
+A near-zero eigenvalue in a matrix being explicitly inverted for a
+static response blows the inverse up in exactly the observed way (the
+Part-1-only inverse's rows/cols 9-10, corresponding to these 2 small
+eigenvalues, already show anomalous -43/-50 values against an O(0.01-1)
+scale everywhere else) -- textbook near-pole response-theory
+sensitivity (chi ~ 1/(Omega-Omega_pole) for a static Omega=0 property),
+not evidence of a Part-2 implementation defect. JJ(4,4) itself tracks
+this exactly: 1.34 (Part 1 only) -> 8.86 (Part 2 half strength) -> 33.2
+(Part 2 full strength), growing monotonically worse as the eigenvalues
+approach the crossing. **Conclusion: both corrections push these 2
+eigenvalues in the physically-correct direction (toward UHF's all-
+positive spectrum); the blowup is the expected numerical signature of
+passing near/through a genuine near-degenerate excitation channel in
+this specific system+basis, not proof Part 2 is wrong.** Whether a
+near-zero static response is itself physically plausible here (i.e.
+whether STO-3G/RHF/RCCD is close to an actual instability threshold for
+this mode) is a genuine physics question, not resolved by code-reading
+or further coefficient scanning -- flagged for Ajith if it becomes
+relevant again, but NOT a reason to distrust Part 2's direction.
+
+**Item 2 (tune CORR_2P, decisive NEGATIVE result):** scanned CORR_2P in
+{0,-1,-1.5,-2,-3,-6,-10,-12} with Part 2 OFF (clear of the pole above).
+JJ(1,1)'s RHF/UHF gap shrinks monotonically and crosses zero near
+CORR_2P~-10.5 (0:+9.58% -> -1:+8.12% -> -2:+6.83% -> -3:+5.69% ->
+-6:+2.91% -> -10:+0.26% -> -12:-0.75%). But JJ(2,2) and JJ(3,3)'s gaps
+get monotonically WORSE over the exact same range (JJ(2,2): 0:-7.78% ->
+-1:-11.26% -> -2:-13.09% -> -3:-14.14% -> -6:-15.43% -> -10:-15.85% ->
+-12:-15.91%; JJ(3,3): 0:+0.46% -> -1:-1.47% -> ... -> -12:-6.33%) --
+CORR_2P=0 (no correction at all) is their own individual best value.
+**No single scalar CORR_2P is a strict improvement across all 3
+components** -- this means Part 1's functional form (one uniformly-
+scaled self-referential T*W contraction, same shape for every matrix
+element) is structurally incomplete, not just wrongly-scaled. Further
+blind coefficient scanning will not fix this; it needs either a real
+re-derivation of rCCD's own Lagrangian H-bar (not a DCC-analogy guess)
+or a genuinely different functional form (e.g. matrix-element- or
+symmetry-block-dependent weighting, since DCC's own formula keeps a
+disconnected/exchange term that rCCD's Lagrangian drops -- see the
+original task framing). CORR_2P is LEFT AT -1.5 (unchanged from its
+original guess) purely because no other single value is a strict
+improvement -- not because -1.5 is validated.
+
+**Item 3 (does UHF need the same correction? -- partially answered by
+existing evidence, not newly tested):** UHF's own baseline (uncorrected)
+ring-CC Hbar spectrum, already documented in the "(continued)" session
+below, has NO negative eigenvalues at all (~20, all positive) --
+unlike RHF's 2 negative ones. This is evidence that UHF's naive Hbar
+does NOT show the same instability RHF's does, which is at least
+consistent with (though doesn't strictly prove) UHF being a reasonable
+comparison target as-is. Did NOT attempt a full UHF-side port of
+RCC_LAGRANGIAN_FIX this session (UHF needs all 6 spin cases -- AAAA/
+BBBB/ABAB/BABA for the two-particle piece, more list-number bookkeeping
+than the RHF singlet/triplet pair -- a substantial separate effort, not
+a quick extension of the existing RETURN-on-IUHF.NE.0 guard). Whether
+UHF's ABSOLUTE JJ values are fully correct (as opposed to merely self-
+consistent/non-unstable) is a genuinely open question this session did
+not resolve -- would need an independent reference (finite-field
+numerical check, literature value, or higher-level theory), not just
+an eigenvalue-sign check.
+
+**Working tree**: left in a state functionally IDENTICAL to the
+committed dabea903 checkpoint (CORR_2P=-1.5, Part 2 disabled) -- only
+comments/documentation changed, plus a small refactor (FACT2 scale
+variable with an `IF(FACT2.NE.0)` guard, replacing hard-commented-out
+Part-2 calls, so re-enabling/scaling Part 2 for future testing is a
+one-line change instead of un-commenting code). See
+`rcc_lagrangian_fix.F`'s own header for the fully updated STATUS block.
+
+**NEXT STEPS, concretely, superseding the dabea903 list:**
+1. Either re-derive rCCD's Lagrangian H-bar properly (the actual ask
+   from the start of this thread) or find/construct a genuinely
+   different functional form for the two-particle correction -- a
+   single global scalar on the current self-referential contraction is
+   now DISPROVEN as sufficient (item 2 above).
+2. Once a better two-particle form exists, re-examine whether the same
+   near-pole sensitivity (item 1) still shows up, and if so, whether
+   that's an acceptable/expected feature of this specific system+basis
+   or a sign that basis (STO-3G) or geometry needs revisiting for this
+   particular test case.
+3. Attempt the full UHF-side port (6 spin cases) IF the RHF-vs-UHF
+   comparison target itself starts looking suspect -- not urgent given
+   item 3's existing (partial) evidence UHF's spectrum is already
+   well-behaved.
+4. Re-verify on H2/STO-3G (the originally-flagged smaller ~1.2% gap
+   case) and DRCCD once a functional-form fix exists worth testing
+   broadly -- not done this session, deliberately, since H2O's richer
+   4-component JJ matrix was more diagnostic for finding the component-
+   dependent tradeoff in item 2.
+
+---
+
 ## SESSION 2026-08-20 (autonomous fork, RCCD Lagrangian-Hbar port) --
 IMPLEMENTED + PARTIALLY VALIDATED: ported the DCCSD Lagrangian-derived
 Hbar correction pattern (see update 9/10/11 in the memory safety net,

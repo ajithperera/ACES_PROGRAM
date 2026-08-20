@@ -40,23 +40,42 @@ C     is not registered by any pure ring-CC pipeline step by default --
 C     UPDMOI'd here first (see below), mirroring post_dcc_mods.F.
 C
 C STATUS (2026-08-20, H2O/STO-3G RHF vs UHF "RPA JJ matrix" ground
-C truth, see SCRNC_DEBUG_LOG.md for full numbers): Part 1 ALONE is a
-C real, if partial, improvement on the 3 "mixed-symmetry" JJ components
-C (9.58% RHF/UHF gap on JJ(1,1) -> 7.45%) and only mildly worsens the
-C pre-existing JJ(4,4) anomaly (0.71 -> 1.34 vs UHF's 0.030, was already
-C 23.7x off at baseline). Part 1+Part 2 COMBINED improves the mixed
-C components further (JJ(1,1) gap -> 3.76%) but makes JJ(4,4) blow up
-C catastrophically (33.2, vs 1.34 with Part 1 alone) -- Part 2 is
-C therefore DISABLED below pending investigation into why (leading
-C guess: JJ(4,4)'s AO-pair symmetry sector already sits close to some
-C near-degenerate/small-denominator structure at baseline -- see the
-C dead-ends section's note that this component is exactly symmetry-
-C decoupled from 1-3 in both references -- and Part 2's one-particle
-C shift pushes an RPA-type response denominator through a near-zero
-C crossing for that sector specifically). CORR_2P's -1.5 value is
-C UNCHANGED from its original derivation guess -- not yet tuned; given
-C Part 1 alone only partially closes the gap, it is likely still not
-C the exactly correct coefficient, just directionally right.
+C truth, see SCRNC_DEBUG_LOG.md for full numbers, findings below and
+C the CORR_2P scan/JJ(4,4)-blowup investigation are from a later
+C session than the original -1.5 derivation): Part 1 ALONE is a real,
+C if partial and INCOMPLETE, improvement on JJ(1,1) specifically
+C (9.58% RHF/UHF gap -> 7.45% at CORR_2P=-1.5) and only mildly worsens
+C the pre-existing JJ(4,4) anomaly. Part 1+Part 2 COMBINED improves
+C JJ(1,1) further but makes JJ(4,4) blow up catastrophically --
+C DIAGNOSED (not just observed): this is a genuine near-pole crossing,
+C not a Part-2 coding bug -- a FACT2 strength scan (0/0.5/1.0) showed
+C the ring-CC Hbar's 2 smallest eigenvalues (the SAME pre-existing
+C "2 negative eigenvalues" bug documented earlier in this file, see the
+C "SESSION 2026-08-20 (continued)" entries in SCRNC_DEBUG_LOG.md) cross
+C zero LINEARLY and monotonically as Part 2 strength increases
+C (-0.633/-0.540 -> -0.255/-0.142 -> +0.122/+0.256), landing very close
+C to (not comfortably past) zero at full strength -- exactly the
+C signature of a static response function passing near an excitation
+C pole, not an implementation defect. Both corrections move these
+C eigenvalues the SAME direction UHF's own all-positive spectrum
+C implies is correct.
+C
+C A separate CORR_2P scan (Part 2 OFF, to stay away from that pole) at
+C -1,-2,-3,-6,-10,-12 found JJ(1,1)'s gap shrinks monotonically toward
+C 0 as CORR_2P becomes more negative (crossing zero near ~-10.5) --
+C BUT JJ(2,2) and JJ(3,3)'s gaps get monotonically WORSE over the exact
+C same range (baseline, CORR_2P=0, is their own best value). No single
+C scalar CORR_2P improves all 3 "well-behaved" JJ components at once --
+C this means the correction's FUNCTIONAL FORM (a single uniformly-
+C scaled self-referential T*W contraction), not just its magnitude, is
+C structurally incomplete; further coefficient scanning alone will not
+C fix this. CORR_2P is left at -1.5 (its original derivation guess) --
+C not because it is confirmed correct, but because no single scalar
+C value is a strict improvement across all components, so there is no
+C better single number to prefer. NEXT: needs either an actual
+C Lagrangian re-derivation (not a DCC-analogy guess) or a genuinely
+C different functional form (e.g. matrix-element/symmetry-block-
+C dependent weighting) rather than more scalar tuning.
 C
 CEND
 C 2026-08-20: this whole class of ringcc routine (rcc_dwmbej.F,
@@ -75,7 +94,7 @@ C into an INTEGER local (DISSYQ) but came out as reinterpreted-bit
 C garbage into a same-valued but DOUBLE-PRECISION-typed local,
 C DSSYWA). See SCRNC_DEBUG_LOG.md and [[feedback_aces_fortran_implicit_typing]].
       IMPLICIT INTEGER (A-Z)
-      DOUBLE PRECISION ZERO,ONE,ONEM,CORR_2P
+      DOUBLE PRECISION ZERO,ONE,ONEM,CORR_2P,FACT2
       LOGICAL RCCD,DRCCD
       DIMENSION ICORE(MAXCOR)
       COMMON /MACHSP/ IINTLN,IFLTLN,IINTFP,IALONE,IBITWD
@@ -187,12 +206,19 @@ C own `Call Updmoi(1,IHHA_LENGTH,9,91,0,0)` pattern exactly.
       CALL UPDMOI(1,IHHA_LENGTH,9,91,0,0)
       CALL UPDMOI(1,IPPA_LENGTH,9,92,0,0)
 C
-C TEMPORARILY DISABLED to isolate which piece (this one-particle Fmi/
-C Fae correction, or the two-particle I(mb,ej) piece above) is
-C responsible for JJ(4,4)'s blowup (0.71 -> 33.2) after the first full
-C test. See SCRNC_DEBUG_LOG.md.
-C     CALL PDCC_QUAD2(ICORE,MAXCOR,IUHF,ONE,8,0)
-C     CALL PDCC_QUAD3(ICORE,MAXCOR,IUHF,ONE,8,0)
+C 2026-08-20: FACT2 scan (0, 0.5, 1.0) confirmed the 2 small Hbar
+C eigenvalues cross zero LINEARLY and monotonically as Part-2 strength
+C increases (-0.633/-0.540 -> -0.255/-0.142 -> +0.122/+0.256), with
+C JJ(4,4) growing monotonically worse approaching the crossing
+C (1.34 -> 8.86 -> 33.2) -- a clean near-pole signature, not a
+C coefficient-tuning problem. DISABLED again (FACT2=0) while Part 1's
+C own coefficient (CORR_2P) is tuned in isolation, away from this
+C pole. See SCRNC_DEBUG_LOG.md.
+      FACT2 = 0.0D0
+      IF (FACT2 .NE. 0.0D0) THEN
+        CALL PDCC_QUAD2(ICORE,MAXCOR,IUHF,FACT2,8,0)
+        CALL PDCC_QUAD3(ICORE,MAXCOR,IUHF,FACT2,8,0)
+      ENDIF
 C
       RETURN
       END
