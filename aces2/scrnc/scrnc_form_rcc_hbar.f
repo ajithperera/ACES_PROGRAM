@@ -380,8 +380,13 @@ C lists happen to share the same size there) but wrong in general, and
 C risky now that IMULT=2 also WRITES via this same ISIZE (see the
 C LISTDUMP fix below) -- an undersized/oversized PUTALL to list 54
 C would silently corrupt it. See SCRNC_DEBUG_LOG.md.
-           LISTHBAR = 56
-           IF (IMULT .EQ. 2) LISTHBAR = 54
+C 2026-08-20: read from 156/154 (RCL_DRIVER_HBARSAFE's protected
+C snapshot, taken before xringcl's Lambda solve overwrites 54/56 --
+C see SCRNC_DEBUG_LOG.md), not 56/54 directly. Only the READ side
+C changes here -- LISTDUMP below still writes back to 56/54, scrnc's
+C own internal working copy for the rest of ITS OWN pipeline.
+           LISTHBAR = 156
+           IF (IMULT .EQ. 2) LISTHBAR = 154
            ISIZE=ISYMSZ(ISYTYP(1,LISTHBAR),ISYTYP(1,LISTHBAR))
            I050=I040+ISIZE*IINTFP
            I060=I050+ISIZE*IINTFP
@@ -395,10 +400,10 @@ C would silently corrupt it. See SCRNC_DEBUG_LOG.md.
               CALL SAXPY (ISIZE,ONE,ICORE(I050),1,ICORE(I040),1)
            ELSE 
               IF (IMULT .EQ. 1) THEN
-                 CALL GETALL(ICORE(I040),ISIZE,1,56)
-                 CALL CHECKSUM('scrnc-raw-List-56:',ICORE(I040),ISIZE)
+                 CALL GETALL(ICORE(I040),ISIZE,1,156)
+                 CALL CHECKSUM('scrnc-raw-List-156:',ICORE(I040),ISIZE)
               ELSE IF (IMULT .EQ. 2) THEN
-                 CALL GETALL(ICORE(I040),ISIZE,1,54)
+                 CALL GETALL(ICORE(I040),ISIZE,1,154)
               ENDIF
 C 2026-08-20 TEST (Ajith): raw W(ai,bj) straight off list 56, BEFORE
 C the (ai,bj)->(ab,ij) reorder and SCRNC_ADDONEH Fock-diagonal add

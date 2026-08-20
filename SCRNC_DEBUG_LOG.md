@@ -4,6 +4,95 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-20 (autonomous fork, e48b5cc0's fix corrected and
+RIGOROUSLY VALIDATED, RESUME HERE) -- per Ajith's own caution ("confirm
+at the eigenvalue level before re-tuning"), re-ran the independent-
+reference eigenvalue check against e48b5cc0's committed fix and found
+it BROKEN for H2 (gave an exact zero Hbar), then found and fixed the
+real architectural problem, then CONFIRMED the new fix bit-identical
+against ringcl's own independent diagonalization.
+
+**e48b5cc0 was broken**: its fix re-ran `RCC_RNABIJ`+`RCC_GENINT`
+fresh from INSIDE `xscrnc`'s own, separate process. Worked (by
+coincidence, not by correctness) for H2O/STO-3G but gave scrnc's own
+Hbar as an EXACT ZERO MATRIX for H2/STO-3G (`@CHECKSUM: scrnc-raw-
+List-56: 0.0 0.0`, confirmed printed "0ZERO MATRIX." directly) even
+though list 46 (T2) itself had correct, non-zero content at that point
+-- calling ringcc's own W-construction machinery from a DIFFERENT
+process than the one that built its list registrations is not reliably
+safe (exact mechanism not fully root-caused, dimension/system-size
+dependent).
+
+**First replacement attempt also failed, differently**: tried wrapping
+`RCL_DRIVER` (inside xringcl, the actual iterative Lambda-equation
+solver -- confirmed the real culprit, see previous session entry below)
+with a save-before/restore-after pattern, mirroring the existing
+(working) save/restore already used around `Rcl_check_rcchbar`'s own
+diagnostic in `rcl_hbar.F`. Failed silently: **`RCL_DRIVER` itself
+calls `CALL ACES_FIN` + `CALL ACES_EXIT(0)` internally upon completing
+the Lambda solve** (confirmed via `grep` on `rcl_driver.F`, same
+pattern `RCC_DRIVER.F` uses in xringcc) -- it never returns to its
+caller, so "restore after the call" is architecturally impossible.
+Confirmed empirically: a checksum placed immediately after `CALL
+RCL_DRIVER` never printed in the log, while a checksum placed
+immediately before it did.
+
+**Working fix**: new file `aces2/ringcl/rcl_driver_hbarsafe.F`
+(`RCL_DRIVER_HBARSAFE`, wired into `rcl_main.F` in place of the direct
+`Call Rcl_driver(...)`) snapshots lists 54(-59) to NEW, dedicated list
+numbers 154(-159) via `INIPCK`+`GETALL`+`PUTALL` **BEFORE** calling
+`RCL_DRIVER` (not after -- sidesteps the no-return problem entirely,
+since the snapshot doesn't depend on the call ever returning).
+`Scrnc_form_rcc_hbar.F`'s RHF read (`GETALL(...,156)`/`GETALL(...,154)`
+instead of the live `56`/`54`) now reads this protected snapshot
+instead of whatever `RCL_DRIVER` leaves behind -- only the READ side
+changes, the later `LISTDUMP` write-back still targets `56`/`54`
+(scrnc's own internal working copy for the rest of its own pipeline,
+unaffected by anything outside its own process). `Scrnc_driver.F`'s
+broken rebuild-based attempt was fully reverted.
+
+**Rigorous validation (item 1, Ajith's explicit ask -- confirmed at the
+eigenvalue level, not just "looks more coherent"):** H2/STO-3G RHF
+RCCD, same-run comparison: scrnc's own Hbar eigenvalue = **25.50578519
+eV**; ringcl's own independent diagonalization (computed earlier in the
+SAME xringcl run) = **25.50578519 eV** -- BIT-IDENTICAL to all 9
+printed significant figures. (For reference, the earlier BROKEN
+rebuild-based fix gave scrnc 16.60694108 eV for this same system --
+clearly wrong, confirming this new snapshot-based fix is a genuinely
+different, correct mechanism, not a lucky coincidence.)
+
+**H2O/STO-3G JJ-matrix result, snapshot fix (even better than the
+earlier broken rebuild-based attempt's numbers):**
+
+| | baseline (buggy) | broken rebuild-fix (e48b5cc0) | snapshot-fix (this commit) |
+|---|---|---|---|
+| JJ11 | +9.58% | -8.57% | -6.16% |
+| JJ22 | -7.78% | -14.39% | -12.91% |
+| JJ33 | +0.46% | -7.64% | -6.49% |
+| JJ44 | +2269.19% | -20.71% | **-13.20%** |
+
+All 4 components now sit in an even tighter, more coherent -6% to -13%
+undershoot band (vs the broken fix's -8% to -21%) -- consistent with
+this being the architecturally-correct fix, not a coincidence that
+happened to work for one system.
+
+**NOT yet done (coordinator's items 2-4, continue from here)**: (2)
+re-attempt the Lagrangian correction (Part 1/2) against this NOW-
+validated baseline -- the four components moving in a coherent,
+same-direction band (unlike the old, corrupted-pipeline coefficient
+scan's contradictory per-component directions) means a single
+coefficient may actually work uniformly this time; (3) UHF re-
+verification -- `RCL_DRIVER_HBARSAFE`'s snapshot logic already covers
+the UHF branch (lists 154/155/157/158/159), but `Scrnc_form_rcc_hbar.F`
+was ONLY updated to read the snapshot for the RHF (`IUHF.EQ.0`) branch
+-- UHF still reads directly from `LISTAA=53+ISPIN` (54/55), unchanged
+from before this whole session, so UHF's results should be completely
+unaffected, but this needs an actual rerun to confirm rather than
+assume; (4) H2/DRCCD generalization beyond what's already covered by
+the H2/STO-3G RCCD check above.
+
+---
+
 ## SESSION 2026-08-20 (autonomous fork, independent-reference cross-check
 per Ajith's direction, RESUME HERE) -- MAJOR REDIRECTION: reproduced the
 2026-08-14 UHF Hbar-eigenvalue cross-check methodology for RHF and found

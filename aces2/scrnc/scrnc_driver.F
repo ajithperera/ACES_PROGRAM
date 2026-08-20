@@ -94,21 +94,18 @@ C If Rccd or DrCCD is used form T1 and L1 lists and set them to zero,
          Call Scrnc_form_rccd_g2(Work,Maxmem,Iuhf)
       Endif 
 
-C 2026-08-20 EXPERIMENT (Ajith's independent-reference-check redirect,
-C see SCRNC_DEBUG_LOG.md): lists 54/56 as read here may not be the
-C ground-state Hbar RCC_GENINT/RCC_DWMBEJ built in xringcc at all --
-C xringcl's Lambda-equation machinery (rcl_dwmbej_r.F's own
-C "appropriate for the CCD LAMBDA EQUATIONS" 2W'-bare transform, then
-C rcl_driver.F's real iterative Lambda solve, both triggered whenever
-C DENSITY=RESPONSE is set) runs between xringcc and xscrnc and
-C overwrites those same lists. Rebuild them fresh here, from the
-C converged T2 still on list 46 (untouched by the Lambda solve, which
-C only touches T with T already held fixed), bypassing whatever
-C xringcl left behind. Test-only, RHF-only for now.
-      IF (IUHF .EQ. 0 .AND. (RCCD .OR. DRCCD)) THEN
-         CALL RCC_RNABIJ(WORK,MAXMEM,IUHF,'T')
-         CALL RCC_GENINT(WORK,MAXMEM,IUHF)
-      ENDIF
+C 2026-08-20 (see SCRNC_DEBUG_LOG.md): a first fix attempt here
+C (re-running RCC_RNABIJ+RCC_GENINT fresh, from inside xscrnc's own
+C process, right before reading lists 54/56) worked for H2O/STO-3G but
+C gave an outright ZERO Hbar for the minimal H2/STO-3G case -- calling
+C ringcc's own W-construction machinery from the SEPARATE xscrnc
+C process is not reliably safe. REVERTED (see git history for the
+C attempted code) in favor of a safer fix at the actual source: lists
+C 54/56 are now protected inside xringcl itself
+C (Rcl_driver_hbarsafe.F, wraps the real culprit -- RCL_DRIVER's own
+C iterative Lambda solve -- with a save/restore, so scrnc's plain read
+C here sees the correct, unmodified ground-state Hbar without needing
+C to reconstruct anything).
 
       If (Iuhf.eq.0) Call Spinad56(Work,Maxmem,Iuhf)
 
