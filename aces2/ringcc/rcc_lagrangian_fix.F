@@ -115,7 +115,22 @@ C current "+0.5*contraction" to DCC's analogous "-1.0*contraction"
 C (0.5 + (-1.5) = -1.0) -- see SCRNC_DEBUG_LOG.md for the derivation.
 C NOT yet empirically confirmed against the JJ-matrix ground truth.
 C
-      PARAMETER (CORR_2P = -1.5D0)
+C 2026-08-20: SUPERSEDED by the pipeline-ordering fix in
+C Scrnc_driver.F (re-runs RCC_RNABIJ+RCC_GENINT fresh right before
+C scrnc reads lists 54/56, bypassing whatever xringcl's Lambda
+C machinery left behind). That fix alone collapsed JJ(4,4)'s 23.7x
+C baseline error to a normal ~-20%, and made Part 1's own two-particle
+C correction here functionally INERT (confirmed: CORR_2P=-1.5 combined
+C with the pipeline fix gave results within 0.04% of CORR_2P=0 with
+C the pipeline fix -- because Scrnc_driver.F's fresh RCC_GENINT rebuild
+C runs AFTER this routine and overwrites whatever Part 1 wrote to list
+C 56, discarding it). Left at 0 rather than removing the routine/call
+C entirely -- keeps the (still real, still potentially useful for a
+C FUTURE correction built the right way round, i.e. applied after any
+C pipeline-ordering fix, not before it) two-particle/one-particle
+C machinery available without it silently fighting the newer fix. See
+C SCRNC_DEBUG_LOG.md for the full comparison.
+      PARAMETER (CORR_2P = 0.0D0)
 C
       IF (IUHF .NE. 0) RETURN
       IF (.NOT. (RCCD .OR. DRCCD)) RETURN

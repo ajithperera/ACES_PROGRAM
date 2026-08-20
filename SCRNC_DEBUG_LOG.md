@@ -125,25 +125,68 @@ possibility for some CC variants, not verified), or the 2026-08-14 UHF
 re-verifying with the SAME same-run-comparison technique used here for
 RHF, not yet done for UHF this session).
 
-**This REDIRECTS the whole Lagrangian-correction thread**: if scrnc is
-reading a Lambda-dressed intermediate instead of the ground-state Hbar,
-then CORR_2P/Part 1/Part 2 (all built to patch the TWO-particle/
-one-particle pieces of what was ASSUMED to be the plain ground-state
-Hbar) may have been tuning a correction on top of an already-wrong
-input. **NOT yet resolved: whether fixing the list-consumption/pipeline
-ordering issue alone closes some/all of the RHF/UHF gap, making the
-Lagrangian-correction work partially or wholly unnecessary, or whether
-both issues are real and compounding.** Next session should: (1) try
-scrnc reading the pre-Lambda-solve lists directly (e.g. via a
-save/restore around `rcl_driver.F`'s call, mirroring the existing
-save/restore already used around the diagnostic itself, OR by having
-scrnc's own driver re-run `RCC_GENINT` fresh right before reading, the
-same "call it a second time, cheaply" pattern this session's Part 1 fix
-already uses elsewhere) and re-check the JJ-matrix gap WITHOUT any
-Lagrangian correction active at all; (2) reproduce this exact same-run
-comparison for UHF to confirm/rule out whether it has the same
-underlying issue, just coincidentally invisible in the JJ-matrix
-metric.
+**This REDIRECTS the whole Lagrangian-correction thread** -- confirmed,
+not just hypothesized: implemented the fix (`Scrnc_driver.F`, guarded
+`IF (IUHF.EQ.0 .AND. (RCCD.OR.DRCCD))`, right before `Spinad56`):
+re-run `RCC_RNABIJ`+`RCC_GENINT` fresh, rebuilding lists 54/56 from the
+converged T2 still on list 46 (untouched by the Lambda solve, which
+only touches T with T already held fixed), bypassing whatever
+`xringcl` left behind. Both routines already link into `xscrnc` fine
+(this session's earlier `ringcc:vcc` addition to `ACES_LINK_LISTS`
+covers it).
+
+**H2O/STO-3G RHF-vs-UHF JJ-matrix result, pipeline fix ALONE (Part 1/2
+Lagrangian correction fully off, CORR_2P=0):**
+
+| | baseline (old, buggy pipeline) | pipeline-fix-only |
+|---|---|---|
+| JJ11 | +9.58% | -8.57% |
+| JJ22 | -7.78% | -14.39% |
+| JJ33 | +0.46% | -7.64% |
+| JJ44 | **+2269.19%** (23.7x off) | **-20.71%** |
+
+**JJ44's catastrophic 23.7x baseline error collapses to a normal,
+sane -20.71%.** This is the headline result: the near-pole/negative-
+eigenvalue instability chased via CORR_2P tuning in the PRIOR session
+entry (below) was very likely primarily a symptom of scrnc reading the
+WRONG (Lambda-solve-contaminated) Hbar all along, not a genuine
+missing-Lagrangian-term physics issue. All 4 JJ components now
+undershoot UHF by a moderate, coherent ~8-20% -- a plausible real
+residual gap, nothing like baseline's wildly inconsistent sign pattern.
+
+**Tested combining this fix with the OLD Part-1 correction
+(CORR_2P=-1.5) on top of it: essentially no additional effect** (JJ11
+0.79092 -> 0.79126, ~0.04% shift, similarly negligible on the other 3
+components). Root cause: `RCC_LAGRANGIAN_FIX` (Part 1) runs inside
+`xringcc`, modifying list 56 there -- but `Scrnc_driver.F`'s NEW fresh
+`RCC_GENINT` rebuild runs AFTER that, in `xscrnc`, and OVERWRITES list
+56 from scratch, discarding whatever Part 1 had written. **Part 1 is
+now functionally inert with this fix in place.** Set `CORR_2P` back to
+0 in `rcc_lagrangian_fix.F` (documented as superseded, not deleted --
+the machinery may still be useful for a future correction applied
+AFTER the pipeline-ordering fix rather than before/underneath it).
+
+**SHIPPED**: the pipeline-ordering fix in `Scrnc_driver.F`, CORR_2P=0
+(Part 1/2 Lagrangian correction off). This is a clear, unambiguous,
+large improvement over the previous best state (aa22a7ea) and doesn't
+carry aa22a7ea's own open problems (JJ(4,4) near-pole instability,
+component-dependent CORR_2P tradeoff) at all.
+
+**NOT yet done, next steps**: (1) the remaining ~8-20% undershoot is
+now a much cleaner, single-signed residual -- worth a FRESH
+investigation (not blind coefficient tuning on the old, now-obsolete
+CORR_2P machinery) once this checkpoint is stable; (2) reproduce the
+same-run ringcl-vs-scrnc comparison for UHF to confirm/rule out whether
+UHF has the identical underlying pipeline issue, just coincidentally
+invisible in the JJ-matrix metric so far (the 2026-08-14 UHF
+cross-check predates this fix and was not re-verified with it); (3)
+re-verify on H2/STO-3G (the originally-flagged smaller-gap case) and
+DRCCD, not just H2O/RCCD, to confirm this generalizes -- not done this
+session, deliberately, to get this large a result documented and
+committed before spending more budget; (4) the still-real, unfixed
+`RCL_HEFFXC.F` `LISTDUMP`-always-56 bug (finding 2 above) is worth
+fixing on its own even though it didn't explain this particular
+discrepancy.
 
 ---
 
