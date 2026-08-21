@@ -4,7 +4,96 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
-## SESSION 2026-08-21 (Ajith, judgment call, RESUME HERE) -- resolved
+## SESSION 2026-08-21 (autonomous fork, null-hypothesis evaluation per
+Ajith's explicit redirect, RESUME HERE) -- Ajith pushed back on the
+previous entry's framing: rather than assume a corrective spin-adapted
+response formula exists and go hunting for it (the energy case as
+template), first seriously evaluate the NULL HYPOTHESIS -- is exact
+RHF=UHF response identity for rCCD/drCCD *structurally impossible*,
+full stop, regardless of spin-adaptation? Verdict: **NOT supported.**
+Found concrete, structured evidence the residual is still an
+unexplained bug, not a physical floor -- do not close this thread as
+"expected/unfixable."
+
+**Evidence against the null hypothesis:**
+
+1. The non-antisymmetric-amplitude issue (paper Appendix VII.1) breaks
+   the *naive* CCD-style RHF/UHF argument, but for the closely-related
+   ground-state energy, an EXACT spin-adapted fix was found and
+   independently verified to 8 decimal places (`rcc_cmpeng.F`'s
+   `E_flip`). That's a real, in-repo existence proof that non-
+   antisymmetric amplitudes do NOT by themselves prevent exact RHF/UHF
+   agreement when the spin-adaptation is done correctly -- it's not a
+   free pass to assume the response case is unfixable too.
+
+2. For DRCCD specifically, `scrnc_jj_rcc_assemble.F`'s own header
+   comment (2026-08-19, already in the code, apparently not carried
+   forward into recent sessions' framing) names a CONCRETE missing
+   piece: UHF's direct-RPA Hbar has a second eigenvalue that RHF's
+   single response channel never builds ("DRCCD's RHF response is
+   missing real physics (an unbuilt second channel)"), currently
+   papered over by an admittedly-wrong patch (`Spntsing`). That's an
+   engineering gap with a named fix path, not a physical limit.
+
+3. For RCCD, re-tested the obvious hypothesis (singlet/triplet channel
+   decoupling, `Wt=0.25/0.75` in `scrnc_jj_rcc_assemble.F`, matching
+   `Check_rhf_rcc.F`'s ground-state-energy formula that `rcc_cmpeng.F`
+   later proved WRONG for energy) by flipping it to `Wt=0.25/0.25`
+   (matching the verified `E_flip` shape), rebuilt, reran H2O/STO-3G
+   RHF RCCD fresh. **Bit-identical to baseline** -- turned out this is
+   dead code: `scrnc_driver.F` hardcodes `Nmult=1` (singlet-only, since
+   `498542f8`, 2026-08-19) on its own solid first-principles grounds
+   (Wigner-Eckart: a density-type perturbation has zero matrix element
+   between a singlet ground state and a triplet excited state). Edit
+   reverted, binary rebuilt back to original md5
+   (`8f4b8dcc5ad7dfb88eac350126bf22cf`), no functional change shipped.
+   **This exact test (and null result) was already run before**, per
+   this log's own "continued 6"-era entry -- confirms nothing new here,
+   but importantly that same entry recorded `498542f8`'s commit message
+   as explicitly flagging "gap 3.98%->~1%, residual normalization-scale
+   mismatch against UHF... not yet resolved" -- i.e. even the FIRST-
+   PRINCIPLES-JUSTIFIED fix only partially closed the gap, and what's
+   left was already named a *scale* mismatch, not a physical floor.
+   That thread was apparently dropped when the investigation later
+   pivoted to the Hbar-term hunt (CORR_2P/FACT2) -- picking it back up
+   here.
+
+4. **New structural clue**: today's fresh H2O/STO-3G RHF-vs-UHF RCCD
+   numbers (current HEAD, e6c42b62, `_wtcheck_baseline`/`_wtcheck`
+   test dirs) --
+   JJ11: 0.81143686559 vs 0.86408930080 (-6.09%)
+   JJ22: 0.00774638191 vs 0.00888750357 (-12.84%)
+   JJ33: 0.16664661741 vs 0.17814706433 (-6.46%)
+   JJ44: 0.02642713724 vs 0.03041635736 (-13.11%)
+   -- split cleanly into TWO groups: {JJ11,JJ33}~6.1-6.5% low,
+   {JJ22,JJ44}~12.8-13.1% low, and the second group's gap is close to
+   **2x** the first group's in both pairs (12.84/6.09=2.11,
+   13.11/6.46=2.03). A genuine physical floor from non-antisymmetric
+   amplitudes would not be expected to produce a clean ~2x split
+   between two specific components and not others -- this smells like
+   a real, findable factor-of-2-type omission specific to whichever
+   symmetry/MO sector components 2 and 4 belong to. This directly
+   continues (never followed up) the earlier "continued 6" session's
+   own flagged next step: identify AO-pair-index 2/4's symmetry/MO
+   origin and trace which routine treats it differently RHF vs UHF.
+   Not chased further this session (time-boxed single-pass fork task)
+   -- concrete next step for whoever picks this up.
+
+**Conclusion**: do NOT record this as a closed/expected-residual
+thread. No fix implemented this session (nothing safely derivable in
+scope -- per this project's own discipline, not shipping an unverified
+coefficient). Recommend next session start from the {1,3}-vs-{2,4}
+~2x-ratio pattern above rather than either (a) more Hbar-formula
+guessing (already closed, see entries below) or (b) accepting the
+non-antisymmetry argument as a blanket explanation (evidence above
+argues against it).
+
+No code changes committed -- edit tested and reverted, binary
+confirmed restored to original md5. Doc-only commit.
+
+---
+
+## SESSION 2026-08-21 (Ajith, judgment call) -- resolved
 the "FLAGGED FOR AJITH" item from the previous entry below. Ajith's
 conclusion: **option (b)** is the answer -- rCCD/drCCD RHF/UHF closed-
 shell identity is NOT assured in this code, and isn't expected to be.
