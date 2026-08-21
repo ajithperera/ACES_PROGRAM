@@ -4,6 +4,35 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-21 (Ajith, judgment call, RESUME HERE) -- resolved
+the "FLAGGED FOR AJITH" item from the previous entry below. Ajith's
+conclusion: **option (b)** is the answer -- rCCD/drCCD RHF/UHF closed-
+shell identity is NOT assured in this code, and isn't expected to be.
+The 2020 paper's Appendix VII.A already proves rCCD amplitudes are
+non-antisymmetric, so the ordinary-CCD guarantee that RHF and UHF
+agree for closed shells doesn't transfer to (d)rCCD automatically --
+it required a specific, non-obvious spin-adapted combination just for
+the ground-state energy (`rcc_cmpeng.F`, already fixed/committed). The
+response-property (JJ-matrix) analog of that same subtlety is the most
+likely explanation for the remaining 6-13% (RCCD) / 0.3-2.1% (DRCCD)
+residual -- i.e. this is plausibly the physically-correct answer, not
+a bug to keep chasing toward exact RHF/UHF equality. Option (a) (JJ-
+matrix might not be the same object as the paper's omega_k / might need
+the R=A+BT alternate route) is NOT ruled out by this and remains a
+loose end if the residual ever needs to be explained more precisely,
+but is no longer the leading hypothesis.
+
+**Status**: this closes the "keep hunting for a missing Hbar term"
+thread (CORR_2P and FACT2 both confirmed non-starters, previous entry).
+Not yet done: an actual derivation of the correct spin-adapted RHF/UHF
+response-property formula (the response-quantity analog of Eq 46/49/65
+that fixed the ground-state energy) has NOT been worked out -- this
+would be needed to know exactly what residual size IS expected/correct,
+as opposed to just "some nonzero gap is expected." Left as a future
+step, not started this session.
+
+---
+
 ## SESSION 2026-08-21 (autonomous fork, literature-derivation session,
 per Ajith's explicit invitation while busy with nursing school --
 MAJOR REFRAME, RESUME HERE) -- went back to the actual source
