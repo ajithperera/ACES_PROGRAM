@@ -4,6 +4,158 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-21 (autonomous fork, literature-derivation session,
+per Ajith's explicit invitation while busy with nursing school --
+MAJOR REFRAME, RESUME HERE) -- went back to the actual source
+literature instead of continuing to guess at borrowed DCCSD
+coefficients. Result: the whole "naive Hbar is missing a Lagrangian
+term, port DCCSD's fix" premise driving the last several sessions was
+built on a misidentified analogy. Found the real governing equations,
+and they retroactively EXPLAIN (not just re-confirm) why CORR_2P and
+FACT2 both failed -- they were never supposed to help this
+calculation. No code changes this session; this is a theory-grounding
+result, not a fix. Full derivation trail below; TL;DR at the end.
+
+**Citation correction**: `rcc_driver.F`'s own header cites "JCP 139,
+104113 (2013)" for rCCD/drCCD. Fetched it (arXiv:1306.6360, Scuseria/
+Henderson/Bulik) -- it's actually about the PARTICLE-PARTICLE
+(ladder-CCD/pp-RPA) channel, a different connection. The real rCCD/
+drCCD/ph-RPA paper it's a follow-up to is Scuseria, Henderson,
+Sorensen, JCP 129, 231101 (2008) (arXiv:0810.3433) -- fetched and read
+in full. That 2008 paper only covers the GROUND-STATE energy
+equivalence (rCCD's T-amplitude Riccati equation <-> RPA's symplectic
+eigenvalue problem, T=YX^-1) -- no Lagrangian, no Hbar, no excited-
+state/response formalism at all. Not directly useful for the Hbar
+question, but establishes the T=YX^-1, R=A+BT machinery used below.
+
+**The actually-relevant paper is Ajith's own** (already used once in
+this codebase for the RCCD ground-state energy formula fix,
+`rcc_cmpeng.F`): Rishi, Perera, Bartlett, JCP 153, 234101 (2020)
+(arXiv:2008.00336). Fetched and read the FULL text (both PDFs
+downloaded via WebFetch, converted with `pypdf` since no
+`pdftotext`/poppler is installed on this machine -- `python3 -m pip
+install --user pypdf` worked fine, no sudo needed). This paper is
+*exactly* about deriving the Lagrangian-based Hbar for (d)rCCD's
+excited-state/EOM formalism -- precisely the open question.
+
+**What the paper actually says (Section II.B, Eq 14-27, 30-34)**:
+
+1. The paper explicitly confirms the naive `e^-T H e^T`-mirrored form
+   for the one-particle Hbar block -- Eq (30)-(31): `H̄i_m = f_im +
+   1/2 t^fa_nm<ni||fa>`, `H̄a_e = f_ae - 1/2 t^fa_mn<mn||fe>` -- is
+   **"not precisely correct"** for (d)rCCD. This is structurally the
+   SAME quadratic Fmi/Fae dressing that FACT2/PDCC_QUAD2/PDCC_QUAD3
+   implements. The paper's own numerical Table I shows this
+   "Fock-dressing" makes excitation energies WORSE by
+   ~0.3-3.9 eV (their `EOM(S)` vs `EOM(Sf)` comparison) -- dressing
+   the one-particle block is empirically harmful, not just
+   theoretically suspect. **This is an exact, independent match to
+   this session's own FACT2=1.0 test result (update 22 above): clean,
+   coherent worsening, no exception.** FACT2 should stay OFF -- now
+   confirmed correct by both an independent code test AND the source
+   literature, not just empirically.
+
+2. The CORRECT one-particle block, per the paper, is the **BARE,
+   UNDRESSED Fock matrix**: `H̄a_e = f_ae`, `H̄i_m = f_mi` (Eq 18) --
+   exactly what scrnc's Hbar(i,j)/Hbar(a,b) block already is (already
+   noted in an earlier session as "PURE BARE-FOCK, zero correlation
+   correction"). **scrnc's existing one-particle block was already
+   theoretically correct, unmodified, this whole time.**
+
+3. For the two-particle block, the paper's Lambda-equation derivation
+   (Eq 17-18) DOES define an Hbar element with an extra term beyond
+   the plain ring-CC W: `H̄mb_ej = W^mb_ej + 1/2 t^nj_fb<mn||ef>`.
+   This LOOKS like exactly what CORR_2P was trying to port from DCCSD
+   (same T^2-quadratic structure). **But this is the wrong block.**
+   Eq 17-18 is deriving H̄ AS USED IN THE Λ2 (ground-state Lagrange
+   multiplier) EQUATION -- a separate, ground-state-only solve, not
+   the excited-state diagonalization block.
+
+4. When the paper writes out the actual excited-state block that gets
+   diagonalized to produce excitation energies -- H̄_SS (Eq 34) and
+   the explicit matrix element used in `[H̄SS R]` (Eq 26) -- **it has
+   NO extra term**: `[H̄SS R]ai,bj = (εe-εm)δaeδim + <ia||bj> +
+   t^ae_im<mj||eb>` (Eq 26), and the paper states outright (Eq 27)
+   that this equals **exactly `A + BT`**, matching the canonical RPA
+   matrix construction (Eq 11) term-for-term, with T being the plain
+   ring-CC amplitude and no additional quadratic dressing anywhere.
+   **The extra `+1/2 t<mn||ef>` term belongs only to the Λ2/ground-
+   state-multiplier solve, never to the H̄_SS block that excitation
+   energies (and, presumably, scrnc's JJ-matrix response quantity)
+   are actually diagonalized from.**
+
+**Conclusion: CORR_2P was targeting the wrong Hbar block.** Its
+correction term structurally resembles a real term from this paper's
+own Lagrangian derivation, but that term lives in the ground-state Λ2
+equation, not in the H̄_SS block scrnc actually reads/diagonalizes.
+Applying it there was never going to help, regardless of coefficient
+-- explains why every CORR_2P value tried (-1.5, -10) either did
+nothing or made things worse, and retroactively validates leaving it
+at 0. **Both of this multi-session thread's "borrowed DCCSD term"
+correction attempts (CORR_2P, FACT2) are now understood, not just
+observed, to be non-starters for this specific Hbar block** -- the
+paper's own math says the correct H̄_SS for (d)rCCD is *exactly* the
+bare-Fock + plain-W construction scrnc had *before any of this
+thread's correction attempts began*.
+
+**One more striking, unplanned confirmation**: checked
+`scrnc_jj_rcc_assemble.F`'s own singlet/triplet weighting (`Wt=0.25D0`
+for Imult=1/singlet, `Wt=0.75D0` for Imult=2/triplet, line 81-82) --
+this is an EXACT match to the paper's own spin-adapted RHF rCCD
+ground-state-energy weighting formula, Eq (65): `E = 1/4(3*(3B*3T) +
+1B*1T)`, i.e. 3/4 triplet + 1/4 singlet (the spin-flip-consistent,
+degeneracy-weighted form, not the simpler non-degenerate Eq 49 which
+splits 1/4:1/4). scrnc's existing weighting is independently confirmed
+correct against this paper too, not a suspect.
+
+**What this DOESN'T resolve**: if H̄_SS is provably just A+BT and both
+its blocks (bare Fock, plain W) are already exactly what scrnc
+computes, then per this paper's own math there should be NO missing
+term left to find in the Hbar formula at all -- yet the RHF/UHF
+residual (6-13% RCCD / 0.3-2.1% DRCCD) is real and reproducible. Two
+honest possibilities, neither chased further this session (needs
+either more of scrnc's own architecture understood, or Ajith's
+judgment):
+(a) scrnc's "JJ-matrix" is not literally the same object as this
+    paper's excitation energies ωk (it's a GW/self-energy-pipeline
+    response quantity, not benchmarked in this paper at all) -- it
+    may need a DIFFERENT construction than H̄_SS-diagonalization
+    entirely, e.g. the paper's own "alternate route" (Eq 28-29:
+    reconstruct R=A+BT from the converged T amplitudes directly and
+    diagonalize R, bypassing an EOM-CC-style Hbar object altogether --
+    the paper itself uses this route whenever ring-CCD fails to
+    converge, section III/E). Untested whether scrnc's JJ-matrix
+    formula is equivalent to this or genuinely different.
+(b) rCCD/drCCD's amplitudes are proven NON-antisymmetric (paper's
+    Appendix VII.A, Eq 43-49) -- RHF and UHF rCCD ground-state
+    energies are NOT automatically identical for closed shells the
+    way ordinary CCD's are; matching them at all required a specific,
+    non-obvious correct spin-adapted combination (already worked out
+    and committed for the ENERGY via `rcc_cmpeng.F`, per the earlier
+    "continued 4" session). It is plausible the RESPONSE-property
+    (JJ-matrix) analog of this same non-antisymmetry subtlety is what
+    the current 6-13%/0.3-2.1% residual actually reflects -- i.e. a
+    real, structurally-expected small RHF/UHF difference for this
+    specific derived quantity, not a bug to chase to exactly 0. This
+    paper doesn't give the response-property formula directly, so
+    this can't be confirmed or ruled out from it alone.
+
+**FLAGGED FOR AJITH**: given (a)/(b) above, the next productive step
+isn't more Hbar-term guessing (that avenue is now closed on solid
+theoretical grounds, not just empirical failure) -- it's pinning down
+exactly what scrnc's JJ-matrix quantity is meant to represent
+physically and whether an exact RHF/UHF identity is even the right
+expectation for it, the same way it wasn't a given for rCCD's
+ground-state energy until Eq 46/49/65's specific spin-adapted
+combination was worked out. This is a judgment call about what the
+GW/Sigma_c pipeline's ground-truth check *should* be measuring, not
+a code bug hunt.
+
+No commits with code changes -- this entry (`SCRNC_DEBUG_LOG.md` only)
+committed as a documentation-only commit, same pattern as 64f69be6.
+
+---
+
 ## SESSION 2026-08-21 (autonomous fork, downstream-of-Hbar audit per
 Ajith's explicit direction to stop guessing at more Hbar-formula
 correction terms, RESUME HERE) -- audited the whole Hbar-to-JJ-matrix
