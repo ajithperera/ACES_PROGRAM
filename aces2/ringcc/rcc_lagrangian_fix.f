@@ -320,21 +320,23 @@ C current "+0.5*contraction" to DCC's analogous "-1.0*contraction"
 C (0.5 + (-1.5) = -1.0) -- see SCRNC_DEBUG_LOG.md for the derivation.
 C NOT yet empirically confirmed against the JJ-matrix ground truth.
 C
-C 2026-08-20: SUPERSEDED by the pipeline-ordering fix in
-C Scrnc_driver.F (re-runs RCC_RNABIJ+RCC_GENINT fresh right before
-C scrnc reads lists 54/56, bypassing whatever xringcl's Lambda
-C machinery left behind). That fix alone collapsed JJ(4,4)'s 23.7x
-C baseline error to a normal ~-20%, and made Part 1's own two-particle
-C correction here functionally INERT (confirmed: CORR_2P=-1.5 combined
-C with the pipeline fix gave results within 0.04% of CORR_2P=0 with
-C the pipeline fix -- because Scrnc_driver.F's fresh RCC_GENINT rebuild
-C runs AFTER this routine and overwrites whatever Part 1 wrote to list
-C 56, discarding it). Left at 0 rather than removing the routine/call
-C entirely -- keeps the (still real, still potentially useful for a
-C FUTURE correction built the right way round, i.e. applied after any
-C pipeline-ordering fix, not before it) two-particle/one-particle
-C machinery available without it silently fighting the newer fix. See
-C SCRNC_DEBUG_LOG.md for the full comparison.
+C 2026-08-20: the ORIGINAL "SUPERSEDED" note here (see git history)
+C referred to the BROKEN rebuild-based pipeline fix (e48b5cc0), since
+C corrected (c4169bec, snapshot-based, validated bit-identical against
+C ringcl's independent Hbar diagonalization). This routine still runs
+C INSIDE xringcc, BEFORE the snapshot is taken in xringcl -- so unlike
+C the broken rebuild-based fix, THIS correction's edits to list 56 DO
+C survive into the snapshot scrnc reads. Re-tested against the
+C validated baseline at CORR_2P=-1.5 and -10: NEITHER helps. JJ11 is
+C nearly insensitive to CORR_2P now (-6.16% -> -6.22% from 0 to -10),
+C while JJ22/JJ33/JJ44 all get WORSE as CORR_2P goes more negative
+C (JJ22: -12.91% -> -14.71%; JJ33: -6.49% -> -7.21%; JJ44: -13.20% ->
+C -13.63%) -- a DIFFERENT pattern than the old pre-pipeline-fix scan
+C (where JJ11 was the dominant, sensitive mover). CORR_2P=0 (no
+C correction at all) is the best available value against the validated
+C baseline -- left at 0. The residual ~6-13% undershoot needs a
+C genuinely different fix (real Lagrangian re-derivation, not scalar
+C tuning on this formula) -- see SCRNC_DEBUG_LOG.md.
       PARAMETER (CORR_2P = 0.0D0)
 C
       IF (IUHF .NE. 0) RETURN
@@ -426,14 +428,27 @@ C own `Call Updmoi(1,IHHA_LENGTH,9,91,0,0)` pattern exactly.
       CALL UPDMOI(1,IHHA_LENGTH,9,91,0,0)
       CALL UPDMOI(1,IPPA_LENGTH,9,92,0,0)
 C
-C 2026-08-20: FACT2 scan (0, 0.5, 1.0) confirmed the 2 small Hbar
-C eigenvalues cross zero LINEARLY and monotonically as Part-2 strength
-C increases (-0.633/-0.540 -> -0.255/-0.142 -> +0.122/+0.256), with
-C JJ(4,4) growing monotonically worse approaching the crossing
-C (1.34 -> 8.86 -> 33.2) -- a clean near-pole signature, not a
-C coefficient-tuning problem. DISABLED again (FACT2=0) while Part 1's
-C own coefficient (CORR_2P) is tuned in isolation, away from this
-C pole. See SCRNC_DEBUG_LOG.md.
+C 2026-08-20: original FACT2 scan (0, 0.5, 1.0) against the OLD,
+C corrupted (pre-pipeline-fix) baseline found the 2 small Hbar
+C eigenvalues crossing zero LINEARLY as Part-2 strength increases, with
+C JJ(4,4) blowing up catastrophically near the crossing (1.34 -> 33.2).
+C
+C 2026-08-21: re-tested FACT2=1.0 against the NOW-VALIDATED (c4169bec)
+C baseline -- and discovered the FIRST attempt at this re-test (same
+C day) was itself a false negative: scrnc_form_rcc_hbar.F's read of
+C list 91/92 sub-index 9 (Part 2's actual output) was commented out
+C (dead wire, see that file's own history), so EVERY prior FACT2 test,
+C including the ORIGINAL pre-pipeline-fix blowup scan above, may never
+C have actually exercised Part 2's effect on Hbar(i,j)/Hbar(a,b) at
+C all -- unresolved which of PDCC_QUAD2/3's other side effects (if any)
+C produced that original blowup instead; flagged, not chased further.
+C Re-enabled the read (this session) and re-ran FACT2=1.0 for real: NO
+C blowup, no near-zero eigenvalue crossing this time -- instead a
+C clean, coherent WORSENING of all 4 JJ components (JJ11 -6.16%->
+C -6.62%, JJ22 -12.91%->-13.32%, JJ33 -6.49%->-6.75%, JJ44 -13.20%->
+C -14.24%). Unambiguous negative result, same conclusion as CORR_2P's
+C own scan: Part 2 in its current form does not help. FACT2 left at 0.
+C See SCRNC_DEBUG_LOG.md.
       FACT2 = 0.0D0
       IF (FACT2 .NE. 0.0D0) THEN
         CALL PDCC_QUAD2(ICORE,MAXCOR,IUHF,FACT2,8,0)

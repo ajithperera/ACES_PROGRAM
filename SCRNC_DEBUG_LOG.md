@@ -4,6 +4,112 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-21 (autonomous fork, coordinator's items 2-4 off the
+c4169bec resume point, RESUME HERE) -- closed out CORR_2P (already
+decided, just needed committing), found and fixed a real dead-wire bug
+that made every prior FACT2 test a no-op, ran the REAL FACT2=1.0 test
+for the first time (clean negative result, no pole), confirmed UHF is
+untouched by all of today's changes, and confirmed the c4169bec
+snapshot fix generalizes to DRCCD (both the eigenvalue-level and
+JJ-matrix-level checks).
+
+**Item 2a (CORR_2P, already done, just landing it here):** re-scanned
+at -1.5 and -10 against the validated c4169bec baseline. JJ11 nearly
+insensitive (-6.16%->-6.22% from 0 to -10); JJ22/JJ33/JJ44 all get
+WORSE as CORR_2P goes more negative (JJ22 -12.91%->-14.71%, JJ33
+-6.49%->-7.21%, JJ44 -13.20%->-13.63%). CORR_2P=0 (no correction) is
+still the best value. Left at 0.
+
+**Item 2b (FACT2, the real work this session) -- found a dead wire,
+fixed it, then got a clean negative result:** the working tree already
+had FACT2 re-enabled (=1.0D0) from a prior (uncommitted) attempt at
+re-testing Part 2 against the validated baseline, per the coordinator's
+brief. Rebuilt and ran H2O/STO-3G RHF/UHF JJ-matrix with it -- got
+numbers **bit-identical to FACT2=0** (JJ11 -6.16%, JJ22 -12.91%, JJ33
+-6.49%, JJ44 -13.20%, matching the shipped baseline to 3+ sig figs).
+That's not a coincidence-free pass, it's a red flag: traced it and
+found `scrnc_form_rcc_hbar.F`'s read of list 91/92 sub-index 9 (Part
+2's actual output, written by `PDCC_QUAD2`/`PDCC_QUAD3`) was **commented
+out** -- a dead wire. `PDCC_QUAD2`/`3` only ever write list 91/92 (confirmed
+by reading the routines directly: `GETLST`/`PUTLST` on 91, nothing
+else) and nothing reads it back for RHF, so every prior FACT2 test,
+**including the ORIGINAL pre-pipeline-fix blowup scan** (the one that
+found the 2 small Hbar eigenvalues crossing zero and JJ(4,4) exploding
+1.34->8.86->33.2), may never have actually exercised Part 2's
+contribution to Hbar(i,j)/Hbar(a,b) at all. Unresolved what actually
+produced that original blowup, if not this -- flagged, not chased
+further, see "NOT YET DONE" below.
+
+Re-enabled the read (`scrnc_form_rcc_hbar.F`, guarded `IF (IUHF.EQ.0)`,
+mirroring the pre-existing commented-out code exactly) and re-ran
+FACT2=1.0 for real. Verified the fix is safe first: with FACT2=0 (no
+write), the now-unconditional read still reproduces the exact baseline
+bit-for-bit (`UPDMOI` zero-initializes list 91/92 sub-index 9 before
+any write, so reading it back unwritten gives clean zeros, not
+garbage) -- confirmed empirically, not assumed. Then the real FACT2=1.0
+result: **no blowup, no near-zero eigenvalue crossing -- a clean,
+coherent WORSENING of all 4 components** (JJ11 -6.16%->-6.62%, JJ22
+-12.91%->-13.32%, JJ33 -6.49%->-6.75%, JJ44 -13.20%->-14.24%).
+Unambiguous negative result, same shape as CORR_2P's own scan. FACT2
+left at 0 -- Part 2, in its current empirically-tuned form, does not
+help either component of the Lagrangian-correction thread. Both
+`CORR_2P=0` and `FACT2=0` are now the validated, tested-for-real (not
+just inert-by-bug) shipped state.
+
+**Item 3 (UHF re-verification, CONFIRMED, not just assumed):** reran
+H2O/STO-3G UHF RCCD JJ-matrix with the current binaries (post-c4169bec
+AND post today's `scrnc_form_rcc_hbar.F` read-wiring fix, which is
+gated `IUHF.EQ.0` and so should be structurally RHF-only). Result: JJ
+diagonal **bit-identical** to the pre-existing `h2o_scrnc_rccd_uhf_sto3g_cleanbaseline`
+reference (0.86509751290, 0.00876833114, 0.17666365478, 0.03016663846
+-- all 4 components to 11 sig figs). UHF is confirmed completely
+unaffected by everything done in this thread since c4169bec.
+
+**Item 4 (generalization beyond H2/STO-3G RCCD):**
+- **DRCCD, eigenvalue-level:** H2/STO-3G DRCCD, same-run ringcl-vs-scrnc
+  cross-check (the same methodology that validated c4169bec for RCCD):
+  ringcl's own independent diagonalization = **43.23234947 eV**;
+  scrnc's own Hbar diagonalization = **43.23234947 eV** -- bit-identical.
+  The snapshot fix generalizes cleanly to DRCCD, not just RCCD.
+- **DRCCD, JJ-matrix-level:** H2O/STO-3G DRCCD RHF-vs-UHF (runs already
+  present in the tree from before this session, dated within the
+  c4169bec-validated window): JJ11 -0.34%, JJ22 -1.93%, JJ33 -0.80%,
+  JJ44 -2.14% -- MUCH tighter than RCCD's -6% to -13% band, and still
+  coherent (all undershooting, no sign flips, no blowups). Suggests
+  DRCCD's RHF/UHF response agreement is intrinsically better-behaved
+  than full RCCD's, which is at least physically plausible (dRPA-type
+  ring diagrams vs the fuller RCCD Hbar) but not independently confirmed
+  this session.
+- **DZ (H2/DZ RCCD): attempted, NOT completed.** SCF itself failed
+  (`@MINV Singular Matrix` inside `xvscf`, before ever reaching
+  ringcc/ringcl/scrnc) -- an SCF/geometry-basis convergence problem
+  unrelated to anything under test here (H2 at R=0.742 with DZ may just
+  need a different starting geometry/guess). Not chased further this
+  session; a real gap in the generalization evidence, not a finding.
+
+**NOT YET DONE, next steps:** (1) what actually produced the ORIGINAL
+FACT2 blowup (session "(continued 2)", CORR_2P/Part-1-only + Part-2 at
+various strengths) if the read-side dead wire meant Part 2's Hbar(i,j)/
+Hbar(a,b) contribution was never live -- either `PDCC_QUAD2`/`3` have an
+undocumented side effect beyond list 91/92 (worth a direct read of
+those two routines' full bodies, not just their `GETLST`/`PUTLST`
+calls), or that particular historical scan was run against a
+DIFFERENT, since-superseded code state where the read WAS wired in and
+someone commented it out later without re-testing -- git-blame/history
+on `scrnc_form_rcc_hbar.F`'s comment-out would settle this quickly; (2)
+H2/DZ RCCD generalization still open (SCF convergence issue, not a
+scrnc issue); (3) the residual, now cleanly-measured ~6-13% RCCD /
+~0.3-2% DRCCD RHF-vs-UHF undershoot itself is still open and needs
+either a real Lagrangian re-derivation or an independent (e.g.
+finite-field) ground truth, not more scalar tuning -- this is a
+genuine physics question for Ajith, not something further code-reading
+will resolve; (4) the still-unfixed `RCL_HEFFXC.F` `LISTDUMP`-always-56
+bug (finding 2, "SESSION 2026-08-20 (autonomous fork, independent-
+reference cross-check..." entry below) remains a latent risk, not
+touched this session either.
+
+---
+
 ## SESSION 2026-08-20 (autonomous fork, e48b5cc0's fix corrected and
 RIGOROUSLY VALIDATED, RESUME HERE) -- per Ajith's own caution ("confirm
 at the eigenvalue level before re-tuning"), re-ran the independent-

@@ -308,15 +308,18 @@ C RHF RCCD/DRCCD -- i.e. the naive bare-Fock-only Hbar the JCP2020
 C (d)rCCD paper explicitly says is wrong. Fill it with the Lagrangian-
 C derived quadratic Fmi/Fae correction (Scrnc_rcc_lagrangian_fix,
 C called once from Scrnc_driver, stores into list 91/92 sub-index 9).
-C Part 2 (one-particle Fmi/Fae correction) disabled while Part 1's own
-C coefficient is tuned in isolation -- see rcc_lagrangian_fix.F /
-C SCRNC_DEBUG_LOG.md. Re-enable this read together with re-enabling
-C PDCC_QUAD2/3 there (list 91/92 sub-index 9 would otherwise be
-C uninitialized garbage, not zero).
-C            IF (IUHF .EQ. 0) THEN
-C               CALL GETLST(ICORE(I000),1,1,1,9,91)
-C               CALL GETLST(ICORE(I020),1,1,1,9,92)
-C            ENDIF
+C 2026-08-21: this read was left commented out (dead wire) while Part
+C 1's own coefficient was tuned in isolation -- meaning every prior
+C FACT2 scan/test (both the pre-pipeline-fix one AND the first re-test
+C against the validated c4169bec baseline) actually tested NOTHING:
+C list 91/92 sub-index 9 was written by PDCC_QUAD2/3 whenever FACT2!=0
+C but never read back here, so Hbar(i,j)/Hbar(a,b) stayed exactly zero
+C regardless of FACT2. Re-enabled for real this session -- see
+C SCRNC_DEBUG_LOG.md for the first actual FACT2=1.0 result.
+             IF (IUHF .EQ. 0) THEN
+                CALL GETLST(ICORE(I000),1,1,1,9,91)
+                CALL GETLST(ICORE(I020),1,1,1,9,92)
+             ENDIF
           ENDIF
        ENDIF
 
