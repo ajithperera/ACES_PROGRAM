@@ -4,6 +4,78 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-21 (autonomous fork, downstream-of-Hbar audit per
+Ajith's explicit direction to stop guessing at more Hbar-formula
+correction terms, RESUME HERE) -- audited the whole Hbar-to-JJ-matrix
+chain in `aces2/scrnc/` (`scrnc_form_rcc_hbar_inv.F`,
+`scrnc_jj_rcc_assemble.F`, `scrnc_form_mubar_s.F`,
+`scrnc_form_mubar_00.F`) for plumbing/indexing/formula bugs,
+independent of whether the Hbar formula itself is complete. **No new
+code bug found** -- but found and resolved a real, previously-
+unexplained puzzle: why did the RHF/UHF gap apparently GROW (1.02-1.41%
+on 2026-08-19 -> 6-13% now) after MORE fixes landed, not shrink?
+
+**Answer: the two numbers were never measuring the same thing.**
+`git log --follow` on `scrnc_form_mubar_s.F` shows its list34/list39
+T2-dressing fix (498542f8, 2026-08-19, "gap 3.98%->~1%") was committed
+and validated a full day BEFORE the pipeline-ordering Hbar-
+contamination bug was even discovered (9843aa74/e48b5cc0/c4169bec, all
+2026-08-20). So that "~1%" agreement was necessarily measured against
+the OLD, since-proven-corrupted Hbar (contaminated by xringcl's Lambda
+solve, per c4169bec's fix) -- not the current, independently-eigenvalue-
+validated one. This is the exact "two bugs partially cancel, looks like
+a real partial fix" trap this same log already flagged as a lesson
+earlier in the 2026-08-19 thread (see the "Lesson for next time" note
+in the entry below) -- just not recognized as applying to itself until
+now.
+
+**Confirmed the list34/list39 fix is still correctly present and
+untouched**: `scrnc_form_mubar_s.F` was never touched by any of the
+2026-08-20 pipeline-fix commits (confirmed via `git log --follow`),
+and its `LISTT2B = 34` branch for `RCCD` is still active in the current
+build -- its underlying physical justification (RCCD's un-
+antisymmetrized T2 makes list39's RNABIJ resort degenerate to an exact
+copy of list37, silently zeroing CCSD's inherited "2*T37-T39" dressing
+formula; list34 is the genuine distinct exchange partner) never
+depended on the pipeline bug at all and is independently sound. So this
+fix is not suspect -- it's just that its apparent "closes the gap to
+~1%" success was, in hindsight, likely inflated by an accidental
+cancellation with the (at-the-time-unknown) pipeline bug.
+
+**Rest of the downstream chain reviewed, clean**:
+- `scrnc_jj_rcc_assemble.F`'s singlet/triplet `Wt` combination
+  (0.25 singlet / 0.75 triplet) matches BOTH the standard closed-shell
+  Casida RPA construction (Ajith-confirmed 2026-08-19, "NO, they should
+  not decouple") AND `rcc_cmpeng.F`'s independently-validated
+  `E_no_flip` energy-formula shape -- no mismatch found between the two
+  already-separately-validated 0.25/0.75 usages.
+- `scrnc_form_rcc_hbar_inv.F`'s RHF branch correctly switches
+  `LISTDIAG` (56 singlet / 54 triplet) with `IMULT`, and already carries
+  its own internal `(A^-1)^T = (A^T)^-1` consistency check (pure linear-
+  algebra identity, `_DEBUG_LVL0`-gated) -- no asymmetry found.
+- `Symmet2` (the missing-final-symmetrization fix from 35cdb853,
+  2026-08-15) is confirmed still wired into the RCCD-specific assembly
+  path (`scrnc_jj_rcc_assemble.F:229`), not just the older CCSD path
+  (`scrnc_jj_cc_lrspn.F:385`).
+- `scrnc_form_mubar_00.F` re-confirmed clean per the existing
+  2026-08-19 note (T1 read is naturally zero for RCCD's singles-free
+  amplitude structure, no bug).
+
+**No code changes made this session** -- per Ajith's direction, did not
+retune/re-enable CORR_2P or FACT2, and found no mechanical bug to fix
+in this chain. **Net effect: strengthens, doesn't weaken, the case that
+the current 6-13% (RCCD) / 0.3-2.1% (DRCCD) residual is a real, honest
+number against the now-correctly-validated Hbar** -- not an artifact of
+a plumbing bug hiding downstream, and not explained by the apparently-
+better-but-baseline-mismatched 2026-08-19 number. **FLAGGED FOR AJITH**:
+the remaining lever is a genuine Lagrangian re-derivation for the
+missing Hbar terms (2 of 3 DCCSD-precedent terms already tried and
+ruled out, the 3rd structurally inapplicable to RCCD's singles-free
+amplitudes, see the b27388de/2026-08-21 entry below) -- this is a
+physics-derivation task, not something to keep guessing at in code.
+
+---
+
 ## SESSION 2026-08-21 (autonomous fork, coordinator's items 2-4 off the
 c4169bec resume point, RESUME HERE) -- closed out CORR_2P (already
 decided, just needed committing), found and fixed a real dead-wire bug
