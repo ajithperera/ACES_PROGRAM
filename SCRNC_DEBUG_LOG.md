@@ -4,6 +4,177 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-22 (autonomous fork #5, R-side/Iside=1 list37-34
+identity chase -- the concrete next step flagged by fork #4 below --
+TRACED, CROSS-CHECKED, DIAGNOSTIC-TESTED, NOT A BUG: R-side's list37/34
+pair is confirmed self-consistent with its own Hbar (no corruption),
+confirmed structurally DIFFERENT from list61/63 (T_S/T_T) by a real
+0.94%/2.5%, but an empirical substitution test shows that gap barely
+moves the response ratio (1.878x->1.883x, wrong direction) -- so the
+already-shipped `(T37-T34)/2` formula is left AS-IS, no fix made,
+1.88x/12.5% residual UNCHANGED, RESUME HERE) -- picked up fork #4's
+own flagged loose end ("was the R-side formula ever independently
+derived, or just symmetric-by-construction") and settled it by tracing
++ checksums + a throwaway diagnostic rebuild, per the project's
+"test, don't theorize" doctrine.
+
+**Traced Iside=1 vs Iside=2's physical meaning first** (`Scrnc_form_mubar_s.F`
+in full, plus its two callers). `Iside=1` is the R(ket)-side, driven
+by `Scrnc_lrspn_rcc_main.F` (`Do ISide = 1, 1` -- this file only ever
+calls Iside=1); `Iside=2` is the L(bra)-side, driven by the analogous
+`Scrnc_jj_rcc_lrspn.F`. Both build the similarity-transformed property
+operator `Mbar = exp(-T) M exp(T)` (the routine's own header) that
+becomes the RHS ("Y") of the `Hbar*C=Y` linear-response solve --
+Iside=2 additionally folds in G-intermediates (lists 191/192, one-particle
+density-matrix-type pieces) that Iside=1 does not, consistent with the
+bra side needing extra Lambda-CC-style terms the ket side doesn't.
+`LISTT1=90+100*(ISIDE-1)` (T1 list 90 for Iside=1, "L1" list 190 for
+Iside=2) and `LISTT2AB/LISTT2B` follow the identical `100*(ISIDE-1)+...`
+offset pattern, giving lists 37/34 for Iside=1 and 137/134 for Iside=2 --
+same offset convention on both sides, not an accident of the fix.
+
+**Confirmed, via a cross-checksum, that R-side's list37/34 are
+self-consistent with the R-side's OWN Hbar (no staleness/corruption
+bug -- this codebase's most common failure mode in this exact
+pipeline).** `rcc_dwmbej.F`'s RHF-only ABAB block (lines 217-289) is
+where the response Hbar itself gets built: `IMULT=1` reads `LISTTA=37`
+into singlet Hbar (list 56), `IMULT=2` reads `LISTTB=34` into triplet
+Hbar (list 54) -- the EXACT SAME list numbers `Scrnc_form_mubar_s.F`
+reads for Iside=1's dressing. That routine already carries an existing
+`_DEBUG_LVL0` checksum ("T2-in") at exactly this read, so no new
+instrumentation was needed -- just a fresh run with the existing prints
+on. Ran H2/STO-3G RHF RCCD fresh
+(`/blue/ufhpc/perera/scrnc_test/h2_scrnc_rccd_rhf_sto3g_rside_trace_0822`,
+current HEAD 67a4ed6b, `xringcc`/`xscrnc` confirmed up-to-date via
+`make install`). Final-iteration checksums:
+```
+RCC_DWMBEJ RHF IMULT=1 (list 37): T2-in  -0.967238661727E-01   0.935550628739E-02
+RCC_DWMBEJ RHF IMULT=2 (list 34): T2-in   0.159334637447E+00   0.253875266903E-01
+Scrnc_form_mubar_s.F LEADB_RAW37 Iside=1 LISTT2AB=37 val=-0.0967238662
+Scrnc_form_mubar_s.F LEADB_RAW34 Iside=1 LISTT2B =34 val= 0.1593346374
+```
+Exact match to every printed digit. **Settles the "was list37/34
+maybe a different intermediate by the time mubar_s reads it" question
+definitively: no, it's the identical, fully-converged (12-digit-stable
+over ~25 DIIS-type iterations, watched the full convergence trace) T2
+amplitude pair that builds the R-side's own singlet/triplet Hbar.**
+Internally coherent -- not a plumbing bug.
+
+**But confirmed list37/34 (R-side) are genuinely, structurally NOT
+the same numbers as list61/63 (T_S/T_T, the ground-state-energy
+formula's own channel decomposition from `RCC_RHF_CMPENEG`,
+independently cross-validated against UHF's raw ABAB amplitude to
+~4e-10 in fork #3's Finding 1)** -- list37=-0.0967238661727 vs
+T_S=-0.0976373126652 (0.94% off); list34=+0.159334637447 vs
+T_T=+0.163485120840 (2.5% off). Both pairs are separately converged to
+12+ digit stability, so this is a real, reproducible structural fact,
+not iteration noise or a stale read -- it means ACES's own RCCD
+machinery independently converges TWO not-quite-identical
+representations of what should be "the same" physical singlet/triplet
+channel decomposition: one inside `rcc_cmpeng.F`'s energy path (lists
+61/63), a separate one inside `rcc_dwmbej.F`'s response-Hbar path
+(lists 37/34, via `RCC_RNABIJ`'s `SST002/SST003/SSTRNG` resorts of
+primary reference lists 46/44 -- already traced in "continued 3"
+below). This is very plausibly the SAME phenomenon fork #3's Finding 2
+already flagged approximately (a from-scratch textbook Casida-form
+Riccati solve reproduced ACES's own T_S/T_T to only ~0.9-2.5%, "not
+tight enough," blamed vaguely on "DPD-packed contraction convention")
+-- now pinned down to an exact, named pair of ACES's own internal
+lists, not merely a textbook-derivation artifact.
+
+**Consequence for the R-side formula**: applying the same
+`(T37-T34)/2` identity used for the L-side fix to the R-side's OWN
+pair gives `(-0.0967238661727-0.159334637447)/2 = -0.128029251810` --
+which itself is ~1.94% off from UHF's independently-converged TRUE
+spin-orbital ABAB amplitude (-0.130561216326), unlike the L-side's
+essentially-exact (~4e-10) reconstruction. So the formula's underlying
+identity is sound, but on the R-side it's being fed an input pair
+that's itself ~1-2.5% off from the most-accurate available
+representation.
+
+**Empirical diagnostic test (per the project's own doctrine -- test,
+don't theorize): does that ~1-2% input imprecision actually matter for
+the final response ratio?** Temporarily edited `Scrnc_form_mubar_s.F`
+to overwrite list37/34 with list61/63 for `RCCD .AND. ISIDE.EQ.1` only
+(clearly marked "TEMP DIAGNOSTIC, NOT FOR SHIPPING" in the source),
+rebuilt `xscrnc` (`a35b4ffc4e20791c071d792a8675d109`), reran H2/STO-3G
+RHF RCCD fresh
+(`/blue/ufhpc/perera/scrnc_test/h2_scrnc_rccd_rhf_sto3g_rsidediag_0822`).
+**Result: the ratio got very slightly WORSE, not better** -- response-only
+diagonal 0.032051820282 (list37/34, current shipped) ->
+0.031970932279 (list61/63 substituted); UHF/RHF ratio 1.8784x ->
+1.8831x, a 0.25% change in the RHF value, in the wrong direction. This
+is decisive: **list37/34's ~1-2.5% amplitude-level gap from list61/63
+is NOT a meaningful driver of the 1.88x residual** -- ruling out the
+one concrete, testable hypothesis this session could point to, despite
+initially looking like a plausible, comparably-sized culprit.
+
+**Reverted the diagnostic edit cleanly**: `git checkout --
+aces2/scrnc/scrnc_form_mubar_s.F`, confirmed empty `git diff`, rebuilt
+`xscrnc` and confirmed its md5 (`0e188fe2576a8a8eea874a35e7078f5a`)
+exactly matches the pre-diagnostic, HEAD-committed (67a4ed6b) binary.
+Reconfirmed with a plain rerun of the same fresh test dir (the
+`_rside_trace_0822` run above, done BEFORE the diagnostic edit) that
+the committed binary reproduces the exact known baseline
+(`0.032051820282`, 1.88x) -- no drift.
+
+**Verdict: no code fix this session, and this is the right outcome,
+not a cop-out.** Fork #4's loose end ("was the R-side formula ever
+independently derived, or just symmetric-by-construction") is now
+RESOLVED, not left open: the R-side pair is confirmed self-consistent
+with its own Hbar (no bug), the shared `(T37-T34)/2` formula is
+confirmed to be the theoretically-correct spin-adaptation identity for
+whichever self-consistent singlet/triplet pair a side actually uses
+(not specifically tied to matching list61/63's numeric values), and an
+empirical test rules out "R-side amplitude imprecision" as a
+meaningful lever on the residual gap. **The 1.88x (H2/STO-3G RCCD) and
+up-to-12.5% (H2O/STO-3G RCCD) residuals from 67a4ed6b are UNCHANGED
+and remain genuinely open.** The list37/34-vs-list61/63 discrepancy
+itself is real and now precisely characterized, but appears to be a
+separate, upstream (`rcc_rngdrv.F`/`RCC_RNABIJ`-level) ring-CC
+amplitude-solver inconsistency, not a `scrnc`-level bug and not (per
+today's test) the source of the response-ratio gap -- flagged for
+whoever eventually wants to understand it, but explicitly NOT the next
+lead to chase for closing the residual.
+
+**Concrete next step, sharper than before**: mechanism (b) (Lead B,
+the whole list37/39/34-substitution line of investigation across
+fork #3, #4, "continued 3", and this session) now looks exhausted --
+every testable variant of "which list should the RHF dressing formula
+combine" has been tried, and none narrows the gap further than the
+already-shipped fix. Fork #3's mechanism (a) -- `Scrnc_driver.F:251`'s
+`Nmult=1` hardcode, which uses ONLY the singlet-channel Hbar for the
+response and structurally discards the triplet-channel information
+that both amplitude representations (list61/63 AND list37/34) agree is
+non-negligible (~63% of T_T's weight in the ground-state energy
+formula) -- was explicitly closed as "not to be re-litigated" earlier
+in this thread on Ajith's own physics argument (spin-scalar
+perturbation, Sz=0 triplet manifold, zero overlap), but given mechanism
+(b) is now exhausted without closing the gap, that argument (not just
+the code) may be worth Ajith revisiting directly: does a spin-scalar
+perturbation's response TRULY have zero triplet-channel contribution
+once you're computing a MATRIX response property (JJ matrix, built
+from Hbar eigenstructure) rather than a scalar (ground-state energy),
+or could the matrix-vs-scalar distinction from fork #2's own
+"Interpretation" section reopen this specific point? Needs Ajith's
+judgment call, not another code-side test -- this session found no new
+code-level lead to chase.
+
+**Housekeeping**: `git diff`-clean at end of session (only the
+pre-existing, unrelated dirty files noted at session start:
+`aces2/vcc/.bwcc.F.swp`/`.drrng.f.swp`/`.rngdrv.f.swp` deleted,
+`aces3/config.log`/`config.status` modified, plus untracked
+`aces2/scrnc/scrnc_sigma_driver` and two `aces3` make logs -- none of
+this session's doing, not touched). `aces2/bin/xscrnc` confirmed
+md5-matched back to the exact 67a4ed6b committed state
+(`0e188fe2576a8a8eea874a35e7078f5a`). New test dirs (not committed,
+data only), both under `/blue/ufhpc/perera/scrnc_test/`:
+`h2_scrnc_rccd_rhf_sto3g_rside_trace_0822` (checksum cross-check,
+clean binary), `h2_scrnc_rccd_rhf_sto3g_rsidediag_0822` (throwaway
+list61/63-substitution diagnostic, code since reverted).
+
+---
+
 ## SESSION 2026-08-22 (autonomous fork #4, empirical Lead A/Lead B test
 per fork #3's own handoff -- REAL BUG FOUND AND FIXED: RHF's
 `Scrnc_form_mubar_s.F` mubar T2-dressing formula was reconstructing the
