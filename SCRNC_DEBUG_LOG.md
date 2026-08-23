@@ -4,6 +4,162 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-22 (autonomous fork #3, from-scratch analytic/symbolic
+H2/STO-3G RCCD+DRCCD derivation, the flagged next step off fork #2 below
+-- gets a genuine THIRD independent number, RESUME HERE) -- Ajith's own
+"Pilot-Code Debugging" doctrine applied for real this time: derived the
+single-amplitude RCCD/DRCCD Riccati equations and the A+BT Hbar_SS block
+by hand/in a standalone script, using REAL ACES MO integrals (not
+invented numbers) pulled from the existing H2/STO-3G RHF/UHF RCCD/DRCCD
+run logs. **Result: one exact, unambiguous independent confirmation at
+the amplitude level; the response-MAGNITUDE ratio (5.18x/1.15x) is NOT
+cleanly reproduced from scratch, but this session pins down two
+concrete, line-numbered code mechanisms (not a vague "matrix vs scalar"
+argument) that plausibly drive it, one of which was already flagged and
+half-investigated in this project's own history (2026-08-20 "continued
+3" below) and never followed up. Genuinely still open**, per the task's
+explicit allowance for an honest "not fully closed" verdict -- but with
+a much narrower, more actionable "what's blocking closure" than before.
+
+**Setup / real numbers used** (pulled from `run_scrnc.log` in
+`h2_scrnc_rccd_{rhf,uhf}_sto3g_{verify3,reverify}` and
+`h2_scrnc_drccd_{rhf,uhf}_sto3g_pilot0822`, H2/STO-3G, R=0.742 Angstrom,
+sym=off): RHF SCF gives 1 occ MO (eps_i=-0.5777270364 Ha) + 1 virt MO
+(eps_a=+0.6690811064 Ha), and the printed 4-index MO integrals give
+(ii|aa)=0.66336391034632 (J), (ia|ia)=0.18132242419990 (K) -- the only
+two two-electron integrals that matter for a 1-occ/1-virt system.
+**Confirmed UHF's alpha and beta orbitals are BIT-IDENTICAL to RHF's**
+(same eigenvalues to 10 digits, `<S**2>=0.0000000` exactly) -- i.e. UHF
+does NOT break spin-symmetry for H2/STO-3G at this bond length (well
+inside the Coulson-Fischer stability radius). This is an important,
+previously-unstated clarification: the RHF/UHF response gap under study
+is NOT caused by different mean-field solutions -- it is purely about
+how the two pipelines construct/diagonalize the response Hbar from
+IDENTICAL orbitals/integrals.
+
+**Finding 1 (exact, clean success) -- the spin-adaptation amplitude
+identity holds to ~4e-10**: RHF's RCCD run internally solves for TWO
+spin-adapted "channel" amplitudes (singlet, list 63 in
+`RCC_RHF_CMPENEG`, converged T_S=-0.0976373126652; triplet, list 61,
+converged T_T=+0.163485120840), used together (Wt=0.25/0.75) ONLY for
+the ground-state energy. The standard closed-shell CI/CC spin-orbital
+reconstruction identity `T(ABAB) = (T_S - T_T)/2` predicts
+-0.130561216753. **ACES's own UHF run, converging the spin-orbital ABAB
+amplitude completely independently (different code path, different
+process), gives -0.130561216326 -- and RHF's own internal
+`Rcl_check_uhf` diagnostic reconstruction gives -0.130561216375.** All
+three agree to ~4e-10, a clean, non-ACES-derived, textbook-identity
+confirmation that RHF's two channel amplitudes and UHF's spin-orbital
+amplitude are exactly consistent representations of the same physical
+ground state. Nothing is wrong with the underlying amplitude solve,
+RHF vs UHF -- confirms (again, now via an exact match rather than a
+plausibility argument) that the already-known ground-state identity
+(`rcc_cmpeng.F`) is the correct, complete picture at the amplitude
+level.
+
+**Finding 2 (partial, ~1-3% not exact) -- textbook closed-shell RPA/TDHF
+(Casida-form) A,B built from these same real integrals**: solving the
+scalar Riccati equation `B*t^2 + 2*A*t + B = 0` with the standard
+closed-shell singlet (A=Delta+2K-J, B=K), triplet (A=Delta-J, B=-K), and
+direct-RPA/dRPA (A=Delta+2K, B=K) forms reproduces ACES's own converged
+T_S, T_T, T_dRPA and their ringcl-diagonalized Hbar eigenvalues (singlet
+25.50578519 eV, triplet 15.48325067 eV, dRPA 43.23234947 eV) to the
+right sign, right order of magnitude, and correct qualitative pattern,
+but only to ~0.9-2.5% precision -- NOT machine precision. Good enough to
+validate the basic single-amplitude Riccati/A+BT STRUCTURE (Eq 26/27 of
+the Rishi/Perera/Bartlett paper, already established as correct in this
+log), not tight enough to trust a downstream high-precision numeric
+prediction of the exact 5.18x/1.15x response ratio from these
+coefficients alone. The residual few-percent mismatch most likely
+reflects ACES's actual DPD-packed RCCD contraction (`rcc_newt2.F` et
+al.) using some normalization/intermediate convention not identical to
+the plain textbook formula -- tracing that exactly, line by line, was
+out of scope for this session.
+
+**Finding 3 (the actual response-construction mechanism, read directly
+from the Fortran, not guessed) -- TWO concrete, quantifiable asymmetries
+between how RHF's and UHF's JJ-matrix pipelines are built**:
+
+(a) `scrnc_driver.F:251` hardcodes `Nmult=1` -- RHF's production
+JJ-matrix uses ONLY the singlet-channel Hbar/amplitude (T_S), never
+combining in the triplet channel (T_T) the way the ground-state energy
+formula does (0.25/0.75 weighted). Given Finding 1's now-EXACT identity
+`T(ABAB)=(T_S-T_T)/2`, the TRUE spin-orbital ground-state amplitude that
+should dress any T2-based property/transition-moment construction is
+NOT recoverable from T_S alone -- it structurally requires T_T too.
+This upgrades the prior sessions' vague "scalar vs matrix, no a priori
+reason the reconciliation should extend" argument (see the 2026-08-22
+fork #2 entry below) into a precise statement of WHAT specific
+information is being discarded and why that's expected to matter.
+
+(b) `scrnc_form_mubar_s.F` lines 286-306: the transition-moment (mubar)
+T2-dressing contraction is genuinely DIFFERENT for RHF vs UHF, not just
+differently-normalized. For RHF (`IUHF.EQ.0`), it builds
+`SCR = 2*T2AB(list 37) - T2(list 34)` before contracting into MAIBAR(ai)
+(RCCD only; a leftover from the already-shipped 2026-08-19/`498542f8`
+fix). For UHF, it uses the raw `T2AB` (list 37) alone, no combination,
+no factor of 2. **Critically, this project's OWN prior session
+(2026-08-20 "continued 3" below) already traced list 34's construction
+via `RCC_RNABIJ`/`RCC_SST003` and found it is NOT a permuted/exchange
+view of the singlet-channel ABAB tensor family at all -- it is built
+from a completely separate reference list (44, `SPCAS2='AAAA'`) and is
+literally "ring-CC's TRIPLET channel's own primary amplitude."** That
+session found substituting list34 into the Hbar CONSTRUCTION itself
+(not mubar) made a different symptom (2 negative eigenvalues) WORSE,
+and explicitly flagged that the ALREADY-SHIPPED `Scrnc_form_mubar_s.F`
+fix rests on the same now-suspect premise -- a loose end raised then and
+never revisited (log lines ~1373-1393 as of this writing). This session
+reconnects that dangling thread to the present investigation: the
+"2*T37-T34" RHF-only mubar dressing is, in effect, mixing the triplet
+channel's own amplitude into the (supposedly singlet-only, Nmult=1)
+response construction, via a different, unaudited code path than the
+Hbar block that already rejected the analogous substitution.
+
+**Quantitative probe of mechanism (b)** (script `Section 4`, flagged
+UNCONFIRMED -- did not independently verify list 34's actual numeric
+value equals T_T bit-for-bit in the same run, would need an instrumented
+rerun or a direct checksum comparison): taking list34 ~ T_T at face
+value, RHF's effective dressing factor is `2*T_S - T_T = -0.358760`
+vs UHF's raw `T_ABAB = -0.130561`. Using `[(1+T_ABAB)/(1+2T_S-T_T)]^2`
+as a crude proxy for the mubar-squared response-magnitude ratio gives
+**1.84x** -- right DIRECTION (UHF bigger, matching the real 5.18x's
+sign) and the right order of magnitude, but undershoots substantially
+(~35% of the observed ratio). Consistent with mechanism (b) being A
+real, contributing effect, not the WHOLE story -- mechanism (a) (the
+Nmult=1 restriction itself, which this crude proxy does not separately
+model) plausibly contributes independently on top of it.
+
+**Verdict: genuinely still open, narrower than before.** This session
+does NOT close the RHF/UHF response-gap question either direction --
+did not reproduce 5.18x/1.15x to convincing precision from first
+principles, so this is not a clean "confirmed real physics" result; but
+it also identifies two SPECIFIC, real, code-located mechanisms (not
+speculative) that plausibly drive at least part of the gap, one of which
+(list 34's true identity, and the shipped mubar fix's now-questionable
+theoretical grounding) is a previously-flagged, never-resolved loose end
+in this project's own history. **Concrete next steps, sharper than "do
+the derivation" (now done, partially)**: (1) instrument
+`Scrnc_form_mubar_s.F` (or add a `_DEBUG_LVL0` checksum) to print list
+34's actual numeric value for H2/STO-3G RHF RCCD and directly compare
+against T_T=+0.163485120840 -- settles whether the "list34~T_T" premise
+used in the quantitative probe above is exactly right or only
+qualitatively suggestive; (2) re-derive what the CORRECT closed-shell
+RHF mubar dressing formula should be (a real, from-the-paper-or-
+literature spin-adapted transition-moment construction, analogous to
+Eq 46/49/65 for the energy) rather than reusing/rejecting CCSD's
+antisymmetrized-amplitude pattern by trial and error; (3) trace why the
+textbook Casida-form Riccati equation (Finding 2) is off by 1-3% against
+ACES's own numbers -- either accept this as expected (real convention
+difference) or find the source, since it currently blocks a fully
+precise from-scratch numeric prediction of the response ratio.
+
+Script: `aces2/scrnc/independent_pilot/h2_sto3g_analytic_rccd.py`
+(matches this directory's existing "Pilot-Code Debugging" convention,
+e.g. `reciprocity_pilot.py`). No ACES code changes this session --
+derivation/analysis only. Doc + script commit.
+
+---
+
 ## SESSION 2026-08-22 (autonomous fork #2, minimal-case pilot test per
 Ajith's own approved next step -- confirms the effect is real, gives a
 concrete physical/mathematical reason ground-state energy matches but
