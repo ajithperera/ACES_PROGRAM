@@ -484,10 +484,30 @@ C
       Parameter (Nsel0=6, Nselstep=2, Nselmax=20)
       Dimension Isel(Nselmax), Dsel(Nselmax)
 C
+C 2026-08-23 (SCRNC_DEBUG_LOG.md, MO5/HOMO Pade-instability fix):
+C bracket+bisect convergence (Iconverged=1) alone is NOT sufficient
+C evidence the root is trustworthy -- H2O/STO-3G MO5 bracketed cleanly
+C at Nsel0=6 points but the root was pure fit noise (drop-one-point
+C refits moved it up to 3.1 eV; a 6->13 point sweep gave 16.18 -> 9.74
+C -> ~12.5 eV, no convergence trend), while the well-behaved control
+C MOs (3,6,7) stayed within a 0.11-0.33 eV band under the identical
+C procedure. Fix: require the bracketed root to also be STABLE across
+C two successive escalation levels (agree within Tol_stable) before
+C accepting it -- a root that keeps moving as more points are added is
+C rejected and escalation continues even though each individual bracket
+C "converged". Tol_stable=2.0D-2 Hartree (~0.54 eV) is set ABOVE the
+C observed natural scatter of the trustworthy control MOs (max 0.33 eV)
+C and BELOW the anomalous MOs' scatter (>2 eV) -- chosen from that data,
+C not reverse-engineered from the answer; re-verify it still separates
+C them cleanly on any new system before trusting it there too.
+C
+      Parameter (Tol_stable=2.0D-2)
+C
       Open(Unit=26,File="qp_energies.dat",Form="Formatted",
      +     Status="UNKNOWN")
       Write(26,"(a)") "  p      eps_HF          eps_QP     "//
-     +                 "  Im[Sigma_c(eps_QP)]   iters  converged"
+     +                 "  Im[Sigma_c(eps_QP)]   iters  converged"//
+     +                 "  stable  npade"
 C
       Istatic = 1
       Do J = 2, Nomega
@@ -498,9 +518,12 @@ C
 C
          Anchor = Abs(Eps(Ip))
          Iconverged = 0
+         Istable = 0
+         Ihaveprev = 0
+         Eps_qp_prev = 0.0D0
          Nseltry = Nsel0
 C
-         Do While (Iconverged.EQ.0 .AND. Nseltry.LE.Nselmax .AND.
+         Do While (Istable.EQ.0 .AND. Nseltry.LE.Nselmax .AND.
      +             Nseltry.LE.Nomega)
 C
             Nuse = Min(Nseltry,Nomega)
@@ -572,7 +595,22 @@ C
      +                                    Maxomega,Eps_qp,Fval,
      +                                    Iconverged,Iter)
 C
-            If (Iconverged .EQ. 0) Nseltry = Nseltry + Nselstep
+            If (Iconverged .EQ. 0) Then
+C              A failed bracket invalidates any stability chain already
+C              in progress -- the next successful bracket needs its own
+C              fresh second opinion before being trusted.
+               Ihaveprev = 0
+               Nseltry = Nseltry + Nselstep
+            Else If (Ihaveprev .EQ. 0) Then
+               Eps_qp_prev = Eps_qp
+               Ihaveprev = 1
+               Nseltry = Nseltry + Nselstep
+            Else If (Dabs(Eps_qp-Eps_qp_prev) .LE. Tol_stable) Then
+               Istable = 1
+            Else
+               Eps_qp_prev = Eps_qp
+               Nseltry = Nseltry + Nselstep
+            Endif
 C
          Enddo
 C
@@ -581,14 +619,21 @@ C
      +         " @-Scrnc_sigma_qp_solve: WARNING -- no bracketed root"
      +         //" found for MO",Ip," even after escalating to",
      +         Min(Nseltry,Nselmax)," points"
-         Else If (Nseltry .GT. Nsel0) Then
+         Else If (Istable .EQ. 0) Then
+            Write(6,"(a,i3,a,i3,a)")
+     +         " @-Scrnc_sigma_qp_solve: WARNING -- MO",Ip," bracket"//
+     +         "s cleanly but root is UNSTABLE (Pade fit not"//
+     +         " converged) even at",Nuse," points -- eps_QP is NOT"//
+     +         " trustworthy, see 'stable' column"
+         Else If (Nuse .GT. Nsel0+Nselstep) Then
             Write(6,"(a,i3,a,i3,a)")
      +         " @-Scrnc_sigma_qp_solve: MO",Ip," needed escalation"//
-     +         " to",Nuse," points to find a clean bracket"
+     +         " to",Nuse," points for a stable root"
          Endif
 C
-         Write(26,"(I3,2(1x,1PD15.6),1x,1PD15.6,3x,I3,5x,I3)")
-     +      Ip,Eps(Ip),Eps_qp,Dimag(Fval),Iter,Iconverged
+         Write(26,"(I3,2(1x,1PD15.6),1x,1PD15.6,3x,I3,5x,I3,6x,I3,"//
+     +          "2x,I3)")
+     +      Ip,Eps(Ip),Eps_qp,Dimag(Fval),Iter,Iconverged,Istable,Nuse
 C
       Enddo
 C
@@ -903,58 +948,92 @@ C     used inside a given Ip0's scan is a LOCAL interpolation near
 C     the z-range actually being solved in -- the same principle the
 C     diagonal solve already uses for its own (Ip0,Ip0) element.
 C     Same static+nearest-to-anchor selection (Scrnc_sigma_select_
-C     nodes) as the diagonal solve; escalation beyond Nsel0=6 (as
-C     the diagonal solve does for hard-to-bracket MOs) is NOT
-C     implemented here -- not needed for the systems checked so far,
-C     flagged as a real follow-up if a future system needs it, not
-C     guessed at.
+C     nodes) as the diagonal solve. 2026-08-23 (SCRNC_DEBUG_LOG.md,
+C     MO5/HOMO Pade-instability fix): escalation beyond Nsel0=6, WITH
+C     a genuine stability check (not just "did the bracket converge"),
+C     is now implemented -- see Scrnc_sigma_qp_solve's header for the
+C     full rationale (H2O/STO-3G MO5 bracketed cleanly at 6 points but
+C     the root was pure fit noise). Same Tol_stable=2.0D-2 Hartree.
+C
+      Parameter (Nsel0=6, Nselstep=2, Nselmax=20, Tol_stable=2.0D-2)
 C
       Open(Unit=27,File="qp_energies_matrix.dat",Form="Formatted",
      +     Status="UNKNOWN")
       Write(27,"(a)") "  p      eps_HF        eps_QP(matrix)   "//
-     +                 "maxOverlap   iters  converged"
+     +                 "maxOverlap   iters  converged  stable  npade"
       Open(Unit=28,File="qp_orbitals.dat",Form="Formatted",
      +     Status="UNKNOWN")
       Write(28,"(a)") "# converged quasiparticle eigenvector per "//
      +                "starting HF orbital Ip0 (HF-MO mixing coefs)"
 C
-      Npade = Min(6,Nomega)
-C
       Do Ip0 = 1, Nmo
 C
          Anchor0 = Abs(Eps(Ip0))
-         Do Iq = 1, Nmo
-          Do Ip = 1, Iq
-            Ipair = Ip + Iq*(Iq-1)/2
-            Call Scrnc_sigma_select_nodes(Nomega,Omega_ext,Npade,
-     +                                       Anchor0,Isel)
-            Do Jj = 1, Npade
-               J = Isel(Jj)
-               Zpt_mat(Jj,Ipair) = Dcmplx(0.0D0,Omega_ext(J))
-               Fpt(Jj) = Dcmplx(Sigma_re(Ip,Iq,J),Sigma_im(Ip,Iq,J))
+         Iconverged = 0
+         Istable = 0
+         Ihaveprev = 0
+         Eps_qp_prev = 0.0D0
+         Npadetry = Nsel0
+C
+         Do While (Istable.EQ.0 .AND. Npadetry.LE.Nselmax .AND.
+     +             Npadetry.LE.Nomega)
+C
+            Npade = Min(Npadetry,Nomega)
+C
+            Do Iq = 1, Nmo
+             Do Ip = 1, Iq
+               Ipair = Ip + Iq*(Iq-1)/2
+               Call Scrnc_sigma_select_nodes(Nomega,Omega_ext,Npade,
+     +                                          Anchor0,Isel)
+               Do Jj = 1, Npade
+                  J = Isel(Jj)
+                  Zpt_mat(Jj,Ipair) = Dcmplx(0.0D0,Omega_ext(J))
+                  Fpt(Jj) = Dcmplx(Sigma_re(Ip,Iq,J),Sigma_im(Ip,Iq,J))
+               Enddo
+               Call Scrnc_sigma_pade_coeff(Npade,Zpt_mat(1,Ipair),
+     +                                  Fpt,Acoef_mat(1,Ipair),Maxomega)
+             Enddo
             Enddo
-            Call Scrnc_sigma_pade_coeff(Npade,Zpt_mat(1,Ipair),Fpt,
-     +                                    Acoef_mat(1,Ipair),Maxomega)
-          Enddo
-         Enddo
 C
-         Fscale = 0.0D0
-         Do J = 1, Nomega
-            Fscale = Max(Fscale,Abs(Sigma_re(Ip0,Ip0,J)))
-         Enddo
+            Fscale = 0.0D0
+            Do J = 1, Nomega
+               Fscale = Max(Fscale,Abs(Sigma_re(Ip0,Ip0,J)))
+            Enddo
 C
-         Call Scrnc_sigma_qp_matrix_bracket(Nmo,Npade,Ip0,Eps,
-     +           Eps(Ip0),Fscale,Maxmo,Maxomega,Maxpair,Acoef_mat,
-     +           Zpt_mat,Eps_qp,Overlap,Vec,Iconverged,Iter)
+            Call Scrnc_sigma_qp_matrix_bracket(Nmo,Npade,Ip0,Eps,
+     +              Eps(Ip0),Fscale,Maxmo,Maxomega,Maxpair,Acoef_mat,
+     +              Zpt_mat,Eps_qp,Overlap,Vec,Iconverged,Iter)
+C
+            If (Iconverged .EQ. 0) Then
+               Ihaveprev = 0
+               Npadetry = Npadetry + Nselstep
+            Else If (Ihaveprev .EQ. 0) Then
+               Eps_qp_prev = Eps_qp
+               Ihaveprev = 1
+               Npadetry = Npadetry + Nselstep
+            Else If (Dabs(Eps_qp-Eps_qp_prev) .LE. Tol_stable) Then
+               Istable = 1
+            Else
+               Eps_qp_prev = Eps_qp
+               Npadetry = Npadetry + Nselstep
+            Endif
+C
+         Enddo
 C
          If (Iconverged.EQ.0) Then
             Write(6,"(a,I3)")
      +        " @-Scrnc_sigma_qp_matrix_solve: WARNING -- no "//
      +        "bracketed matrix-branch root found for MO ",Ip0
+         Else If (Istable.EQ.0) Then
+            Write(6,"(a,I3,a,I3,a)")
+     +        " @-Scrnc_sigma_qp_matrix_solve: WARNING -- MO",Ip0,
+     +        " brackets cleanly but root is UNSTABLE even at",
+     +        Npade," points -- eps_QP(matrix) is NOT trustworthy"
          Endif
 C
-         Write(27,"(I3,2(1x,1PD15.6),1x,1PD12.4,3x,I3,5x,I3)")
-     +      Ip0,Eps(Ip0),Eps_qp,Overlap,Iter,Iconverged
+         Write(27,"(I3,2(1x,1PD15.6),1x,1PD12.4,3x,I3,5x,I3,6x,I3,"//
+     +          "2x,I3)")
+     +      Ip0,Eps(Ip0),Eps_qp,Overlap,Iter,Iconverged,Istable,Npade
 C
          Write(28,"(a,I3)") "# Ip0=",Ip0
          Write(28,"(20(1x,1PD12.4))") (Vec(Ii),Ii=1,Nmo)

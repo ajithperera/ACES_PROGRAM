@@ -4,6 +4,117 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-23 (later still, fork, Pade STABILITY-BASED
+ESCALATION implemented + verified, MO5/MO4 recomputed with trustworthy
+numbers -- RESUME HERE, this is now the authoritative top entry):
+fixed the root cause diagnosed in the entry immediately below (commit
+c72e7988) and reran the H2O/STO-3G comparison.
+
+**The fix** (`aces2/scrnc/scrnc_sigma_driver.F`, both
+`Scrnc_sigma_qp_solve` and `Scrnc_sigma_qp_matrix_solve`): a bracketed/
+bisected root is no longer accepted on the first clean convergence.
+After a successful bracket at the current point count, the solver now
+escalates ONE MORE TIME (reusing the existing Nsel0/Nselstep/Nselmax
+machinery) and compares the two estimates; only if they agree within
+`Tol_stable=2.0D-2` Hartree (~0.54 eV) is the root accepted. Otherwise
+escalation continues. New `stable`/`npade` columns added to
+`qp_energies.dat`/`qp_energies_matrix.dat` so a caller can see exactly
+how many points were needed and whether the stability check actually
+passed, instead of only seeing bracket-`converged`. Tol_stable was
+picked from the diagnosis fork's own data (control MOs 3/6/7 scattered
+0.11-0.33 eV under the identical point-count-sweep procedure; MO5
+scattered >2 eV) -- sits above the former, below the latter, not
+reverse-engineered from wanting a particular answer.
+
+**Rebuilt** (`ifx -i8`, `module load intel/2025.1.0` -- `intel/2020.
+0.166`, this repo's other default module, only ships `ifort`, not
+`ifx`), installed to `aces2/bin/xscrncsigma`, md5
+`235c65cbc4b936641034a781e98dd790` (confirmed different from the
+pre-fix build).
+
+**Reran** H2O/STO-3G CCSD/UHF/sym=off (identical ZMAT/GENBAS to
+`h2o_scrnc_sigma_matrix_dyson_0823`, fresh dir `h2o_scrnc_sigma_
+matrix_dyson_stable_0823`, sbatch job 40037569, exit 0). **All 7 MOs
+now converge AND pass the stability check** (`stable=1` for every MO,
+zero `WARNING -- UNSTABLE` lines) -- no MO needed to be flagged
+untrustworthy outright, but several needed real escalation (MO2/MO5
+needed 10 points, not the base 6; MO1/MO4/MO6/MO7 needed 8).
+
+**Independent re-verification, not just trusting the Fortran's own
+internal check**: reimplemented the exact Thiele-fit + bracket/bisect
+algorithm standalone in Python, reading `sigma_c_output.dat` directly,
+and swept `npade`=6,8,10,12,13 for MO3/4/5 by hand. Confirms: (1) the
+Fortran and Python roots agree exactly at matching `npade` (e.g. MO5
+`npade=10`: both give -0.461084 Ha), so this is validating the real
+algorithm, not a different toy; (2) MO3 stays in a tight ~0.07 eV band
+across the whole 6-13 range (16.78-16.85 eV) -- genuinely converged;
+(3) MO5, which used to swing 16.18->9.74->~12.5 eV with NO trend
+across that same range, now lands in a real, bounded ~0.3 eV band
+(12.26-12.55 eV) across npade=8-13 -- a qualitatively different,
+genuinely convergent situation, not just a different-looking wild
+swing; (4) MO4 similarly bounds to a ~0.28 eV band (13.33-13.61 eV)
+across the same range. **Honest caveat**: the shipped criterion only
+requires 2 CONSECUTIVE escalation levels to agree, and both MO4/MO5
+happened to pass that check slightly before fully settling into their
+tightest band (e.g. MO4 accepted at npade=8, 13.564 eV, vs the
+npade=12/13 band's 13.33 eV -- a further ~0.23 eV drift past
+acceptance) -- the fix converts "unbounded, trendless noise" into "a
+real, bounded, mostly-but-not-perfectly-pinned-down number," not
+pixel-perfect convergence. A 3-consecutive-level criterion would
+tighten this further; not implemented, flagged as a real, cheap future
+refinement rather than guessed at now.
+
+**Updated comparison vs. the already-computed, still-valid IP/EA-EOM-
+CCSD reference** (`h2o_scrnc_ipeomcc_sto3g_0823`/`_eaeomcc_sto3g_0823`,
+jobs 40036429/40036430 -- independent of this fix, not rerun):
+
+| MO | Koopmans | QP-diag (new) | QP-matrix (new) | EOM-CCSD | new err |
+|----|---------:|--------------:|-----------------:|---------:|--------:|
+| 1 (core) | 550.81 | 555.23 | 555.23 | not attempted | -- |
+| 2 (O2s) | 34.52 | 35.68 | 35.69 | ambiguous (shake-up) | -- |
+| 3 | 16.82 | 16.84 | 16.85 | 16.63 | +0.21 |
+| 4 | 12.33 | 13.56 | 13.54 | 10.91 | +2.65 |
+| 5 (HOMO) | 10.65 | 12.55 | 12.55 | 8.42 | **+4.13** |
+| 6 | 16.49 | 16.21 | 16.21 | 16.43 | -0.22 |
+| 7 | 20.21 | 19.73 | 19.73 | 19.83 | -0.10 |
+
+**Read, per Ajith's "ab initio DFT-equivalent" thesis**: MO5's error
+shrank from 7.76 eV to 4.13 eV -- still large, but now this is a real
+number, not noise. Two independent signals confirm the old 7.76 eV
+figure was itself corrupted by the Pade instability, not evidence of
+anything physical: (a) the root itself moved by ~3.6 eV once escalated
+past the base 6 points and then landed in a genuinely bounded band;
+(b) `Im[Sigma_c(eps_QP)]` at the new MO5 root is `+1.880D-02`, squarely
+inside the 0.01-0.05 range every other (trustworthy) MO shows -- the
+old outlier value (`-0.1976`, 4-20x every other MO, previously flagged
+as a possible "quasiparticle breakdown" signature) is GONE. **That
+specific worry -- that MO5 might be a genuine QP-picture breakdown --
+is now disfavored by this evidence**, though not 100% excluded (the
+band-vs-single-value caveat above means there's still ~0.3 eV of
+this-fit's-own uncertainty on top of the 4.13 eV gap). MO4's error
+also barely moved (2.55 -> 2.65 eV) -- it was never as numerically
+wild as MO5, and is now clearly a real, reproducible, non-trivial
+discrepancy too. MO3/6/7 (the previously-trustworthy states) shifted
+by only 0.01-0.06 eV -- confirms no regression from the fix.
+
+**Where this leaves things**: the numerical-artifact explanation for
+MO5 is now ruled OUT (or at least strongly disfavored) rather than
+just unresolved -- what's left is a real ~4 eV (MO5) / ~2.6 eV (MO4)
+gap between this on-shell, no-vertex, non-self-consistent G0W0-with-
+CC-screening level and independent EOM-CCSD, concentrated on the two
+states nearest the Fermi level (HOMO and HOMO-1). Whether that's an
+expected limitation of this specific approximation level for frontier
+orbitals (plausible -- vertex/self-consistency corrections are known
+to matter most there) or something else is a genuine physics judgment
+call for Ajith, not a numerics question anymore -- this is the natural
+next thing to discuss with him, not another autonomous fork.
+
+**Committed**: `aces2/scrnc/scrnc_sigma_driver.F`, this file. New job
+dir left in place: `/blue/ufhpc/perera/scrnc_test/h2o_scrnc_sigma_
+matrix_dyson_stable_0823` (job 40037569). Not pushed.
+
+---
+
 ## SESSION 2026-08-23 (later still, fork, MO5/HOMO ANOMALY DIAGNOSED --
 PADE CONTINUATION ROBUSTNESS FAILURE, NOT a missed root and not yet
 established as new physics, RESUME HERE): Ajith asked to look into the
