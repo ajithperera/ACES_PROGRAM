@@ -4,9 +4,94 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-23 (later, fork, FIRST IP/EA-EOM-CCSD VALIDATION of
+scrnc's QP energies -- MIXED RESULT, one large unresolved outlier,
+RESUME HERE -- this is now the authoritative top entry): Ajith's
+thesis this session: if scrnc's correlated QP orbital energies really
+are correlated IPs/EAs, that's "abinito equivalent of DFT... what Rod
+Bartlett wants but never really did." First real test of that, on the
+same H2O/STO-3G/UHF/sym=off case the matrix-Dyson solve was verified
+on (`h2o_scrnc_sigma_matrix_dyson_0823`, commit 2cd42cb9 below).
+
+**Method**: ran independent, standard ACES2 IP-EOM-CCSD (`IP_CALC=
+IP_EOMCC,IP_SYM=5`) and EA-EOM-CCSD (`EA_CALC=EA_EOMCC,EA_SYM=2`) on
+the IDENTICAL ZMAT/GENBAS/REF (just swapping `DENSITY=RESPONSE` for
+the IP/EA keyword), via the standard `xaces2` driver -- new dirs
+`h2o_scrnc_ipeomcc_sto3g_0823`/`h2o_scrnc_eaeomcc_sto3g_0823` under
+`/blue/ufhpc/perera/scrnc_test/`, sbatch jobs 40036429/40036430, both
+exit 0. Mapped each EOM-CCSD root to its originating HF MO by dominant
+R1 (single) amplitude -- did NOT force a mapping where none was clean
+(see MO1/MO2 below).
+
+**Comparison table** (all eV; QP-diag/QP-mat = -eps_QP for occupied,
++eps_QP for virtual, from `qp_energies.dat`/`qp_energies_matrix.dat`
+in `h2o_scrnc_sigma_matrix_dyson_0823`):
+
+| MO | Koopmans (HF) | QP-diag | QP-matrix | EOM-CCSD | diag err | mat err |
+|----|--------------:|--------:|----------:|---------:|---------:|--------:|
+| 1 (O1s core) | 550.81 | 555.14 | 555.14 | -- (not attempted, needs `IP_SEARCH=COREIP`, far outside the 5 requested roots' range) | -- | -- |
+| 2 (O2s-like) | 34.52 | 37.73 | 37.75 | -- (AMBIGUOUS: IP roots 4/5, 26.70/29.74 eV, print NO dominant single-IP amplitude at all -- pure 2h1p/doubles character, consistent with water's well-known O(2s) shake-up breakdown of the single-particle picture, but not characterized further here) | -- | -- |
+| 3 | 16.82 | 16.78 | 16.78 | 16.63 (IP root 3, R1=0.9885) | **+0.14** | +0.15 |
+| 4 | 12.33 | 13.46 | 13.43 | 10.91 (IP root 2, R1=-0.9752) | +2.55 | +2.52 |
+| 5 (HOMO) | 10.65 | 16.18 | 16.18 | 8.42 (IP root 1, R1=0.9712) | **+7.76** | +7.76 |
+| 6 | 16.49 | 16.37 | 16.37 | 16.43 (EA root 1, R1=0.9891) | **-0.06** | -0.06 |
+| 7 | 20.21 | 19.91 | 19.91 | 19.83 (EA root 2, R1=-0.9803) | +0.07 | +0.07 |
+
+**Read**: genuinely mixed, not a clean "it works" result. The two EA
+states (virtual MOs 6/7) and IP root 3 agree with independent
+EOM-CCSD to 0.06-0.15 eV -- that's real evidence the diagonal QP shift
+is tracking correlated electron affinities/IPs correctly for those
+states, all of which also have clean, nearly-pure (>98%) single-
+particle character in BOTH the EOM-CCSD R1 amplitude and scrnc's own
+`qp_orbitals.dat` mixing coefficients. MO4 is off by 2.5 eV -- worse,
+but not wildly so. **MO5 (the HOMO, the state with the single
+CLEANEST EOM-CCSD root, R1=0.9712) is off by 7.76 eV -- badly wrong,
+and the matrix solve does not fix it** (0% orbital mixing for MO5 per
+`qp_orbitals.dat`'s maxOverlap=1.0000, so there's no off-diagonal
+coupling to absorb). This is NOT a Padé/bracket failure in the
+ordinary sense -- the solver converged cleanly (21 iterations,
+`converged=1`) -- but MO5's `Im[Sigma_c(eps_QP)]=-0.1976` is a stark
+outlier: every other MO's converged Im[Sigma_c] is in the 0.01-0.05
+range, roughly 4-20x smaller. That large imaginary part at the
+converged pole is a real, internally-flagged signal that this
+particular "quasiparticle" solution sits somewhere the self-energy is
+NOT behaving like a sharp, well-defined pole -- consistent with either
+a genuine physical limitation of the current G0W0-with-CC-screening
+level (missing vertex corrections/self-consistency) specifically for
+this state, or an artifact in the Padé continuation/quadrature for
+this one MO's frequency dependence. Did not chase which -- this is
+exactly the kind of judgment call that needs Ajith's read, not another
+autonomous guess, especially since MO5 is the HOMO -- the single state
+most people would look at first in any "correlated Koopmans" claim.
+
+**Also flagged, not resolved**: MO1 (core) and MO2 (inner-valence)
+have no clean independent reference from this session's roots at all
+-- MO1 needs a dedicated core-targeted EOM-IP search (well outside
+this cheap 5-root scan's energy range), and MO2's likely genuine
+shake-up/multi-configurational character (IP roots 4/5 show no
+dominant single amplitude) would need either many more roots or a
+dedicated satellite-state analysis to even define what "the" MO2 IP
+comparison target should be -- not attempted, not guessed at.
+
+**Bottom line for Ajith's "ab initio DFT-equivalent" thesis**: real,
+non-trivial partial support (2 clean EA states + 1 IP state agree to
+<0.2 eV) but NOT yet a clean demonstration -- MO5's 7.76 eV outlier
+and MO4's 2.5 eV gap are real open problems, not noise, and 2 of 7 MOs
+(core + inner-valence) aren't even comparable yet with what's been run
+so far. Needs Ajith's physics judgment on MO5 specifically before
+this becomes a positive result to build on.
+
+Setup left in place (not cleaned up) for follow-up: `/blue/ufhpc/
+perera/scrnc_test/h2o_scrnc_ipeomcc_sto3g_0823` and `_eaeomcc_sto3g_
+0823`, jobs 40036429/40036430. No code changes this session --
+comparison/documentation only.
+
+---
+
 ## SESSION 2026-08-23 (fork, full matrix Dyson/QP solve BUILT +
-VERIFIED, CCSD path, RESUME HERE -- this is now the authoritative top
-entry): Ajith explicitly authorized building the real thing ("we can
+VERIFIED, CCSD path -- superseded as top entry by the validation
+session above, still the reference for the matrix-solve implementation
+itself): Ajith explicitly authorized building the real thing ("we can
 make the full dyson. We have everything.") -- the goal is the actual
 correlated-orbital-theory step: solve the MATRIX quasiparticle/Dyson
 equation `[eps_HF(p) delta_pq + Re(Sigma_c(p,q;z))] C = z C`
