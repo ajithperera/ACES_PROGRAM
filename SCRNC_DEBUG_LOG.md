@@ -4,9 +4,178 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-23 (fork, full matrix Dyson/QP solve BUILT +
+VERIFIED, CCSD path, RESUME HERE -- this is now the authoritative top
+entry): Ajith explicitly authorized building the real thing ("we can
+make the full dyson. We have everything.") -- the goal is the actual
+correlated-orbital-theory step: solve the MATRIX quasiparticle/Dyson
+equation `[eps_HF(p) delta_pq + Re(Sigma_c(p,q;z))] C = z C`
+self-consistently, giving correlated orbital ENERGIES *and*
+EIGENVECTORS (genuine HF-orbital mixing/relaxation under the
+self-energy), not just the existing diagonal on-shell G0W0-style
+shift. This is the prerequisite for the IP/EA-EOM-CCSD comparison
+Ajith wants next (are these correlated orbital energies real IPs/EAs
+-- the ab initio COT analog of Kohn-Sham eigenvalues).
+
+**Built in `aces2/scrnc/scrnc_sigma_driver.F`** (same file as the
+existing diagonal solve, `Scrnc_sigma_qp_solve`, left untouched):
+four new subroutines --
+`Scrnc_sigma_qp_matrix_solve` (orchestrates, one starting HF orbital
+`Ip0` at a time), `Scrnc_sigma_qp_matrix_bracket` (same expanding-
+window-scan-then-bisect strategy as the diagonal solve's own
+`Scrnc_sigma_qp_bracket`, generalized to `F(z)=z-lambda_branch(z)`),
+`Scrnc_sigma_matrix_branch` (builds `M(z)_pq=eps_HF(p)delta_pq+
+Re[Sigma_c(p,q;z)]` via the existing Thiele Pade machinery, unmodified,
+diagonalizes it, returns the eigenpair with max overlap `|C(Ip0)|^2`
+-- the branch continuously tracked as "belonging to" orbital Ip0),
+and `Scrnc_sigma_jacobi_eig` (self-contained classic cyclic Jacobi
+eigensolver, textbook algorithm, no external LAPACK linkage --
+matches this driver's existing standalone-build convention). New
+helper `Scrnc_sigma_select_nodes` factors out the diagonal solve's
+inline static+nearest-to-anchor Thiele-node selection so the matrix
+code can reuse it without touching/risking the already-verified
+diagonal routine.
+
+**First real consistency check, before writing any solve code**:
+verified `Sigma_c(p,q)=Sigma_c(q,p)` to ~1e-16 relative to the
+diagonal scale, directly on the existing (already-computed) H2O/
+STO-3G CCSD `sigma_c_output.dat`, over all 13 `Omega_ext` points --
+confirmed real, not assumed, before trusting the off-diagonal
+machinery at all.
+
+**Three real bugs found and fixed, each confirmed by an independent
+check before being accepted as the explanation** (per this project's
+"test, don't theorize" doctrine -- every one of these was caught by
+comparing against independently-reproduced numbers, not by
+inspection alone):
+
+1. **`Ip0` implicit-typing bug.** Named the starting-orbital loop
+   index `P0` -- `P` falls in `O-Z`, which this file's `Implicit
+   Double Precision (A-H,O-Z)` statement makes DOUBLE PRECISION, not
+   INTEGER, so `Do P0=1,Nmo` and `Eps(P0)`/`Evec(P0,K)` array
+   indexing were using a real-valued "integer." Exactly the failure
+   mode [[feedback_aces_fortran_implicit_typing]] warns about.
+   Symptom: `***` in `I3`-formatted output. Fixed by renaming to
+   `Ip0` (I-N range, correctly integer) throughout.
+
+2. **Column-major array-slicing bug.** Declared `Acoef_mat(Maxpair,
+   Maxomega)` and passed slices like `Acoef_mat(Ipair,1)` expecting
+   a contiguous `Maxomega`-length block for that pair -- but Fortran
+   is column-major, so the contiguous dimension is the FIRST index,
+   not the second. Each pair's Pade data was silently reading/
+   writing into neighboring pairs' memory. Fixed by swapping to
+   `Acoef_mat(Maxomega,Maxpair)` / `Zpt_mat(Maxomega,Maxpair)`,
+   indexing `(J,Ipair)`/`(1,Ipair)`.
+
+3. **`Elam`/`Lam*` implicit-typing bug -- the actual root cause of
+   the garbage output** (found only after (1) and (2) were fixed and
+   the output was STILL wrong -- exact suspicious round numbers like
+   `eps_QP=-20.0000000000` and `-1.0000000000` for MOs 1/2, and
+   persistent Jacobi "did not converge" warnings). Independently
+   reproduced the ENTIRE `M(z)` construction in Python/numpy
+   (faithfully mirroring the Thiele fit and node selection) and
+   confirmed the matrix itself was perfectly well-conditioned and
+   sane at the relevant z -- ruling out the Pade/matrix-building side
+   entirely. Unit-tested `Scrnc_sigma_jacobi_eig` standalone on a
+   known 3x3 matrix -- exact eigenvalues/eigenvectors, ruling out the
+   diagonalizer itself. Built a fast local test harness
+   (`matrix_test.F` + extracted subroutines, reading back the
+   already-computed `sigma_c_output.dat`/`qp_energies.dat` instead of
+   rerunning the full HPC pipeline each iteration) and added targeted
+   debug prints -- found `Lam1`/`Lam2` printing as literal `NaN`
+   immediately after being assigned from a normal double-precision
+   eigenvalue. Root cause: `Lam1`, `Lam2`, `Lammid`, `Lamfin`, and the
+   dummy `Lam` in `Scrnc_sigma_matrix_branch` all start with `L` --
+   in `I-N`, defaulting to INTEGER (this file's `Implicit Double
+   Precision (A-H,O-Z)` does not cover `I-N`) -- so every
+   `Elam=Eval(Kbest)` assignment silently TRUNCATED a real eigenvalue
+   like -20.394 to the integer -20. Exactly the same bug class as (1),
+   just missed a second time in new code. Fixed by renaming to
+   `Elam`/`Elam1`/`Elam2`/`Elammid`/`Elamfin` (E-initial, correctly
+   double) throughout.
+
+**Also found and fixed, empirically (not by inspection), a real
+DESIGN flaw distinct from the three coding bugs above**: the first
+working version anchored each (p,q) pair's Thiele node selection at
+a fixed `Anchor(p,q)=0.5*(|eps_p|+|eps_q|)`. Direct comparison
+against the diagonal solve's own already-converged root for MO 1
+showed this reproduces a visibly WRONG `Sigma_c(1,1;z)` -- an
+off-diagonal pair's fit anchored at ITS OWN average energy is a
+large, unreliable extrapolation when evaluated during a DIFFERENT
+orbital's bracket scan, far from that pair's anchor (confirmed via
+direct `Amat` debug dumps showing near-pole blow-up specifically at
+scan points far from each pair's own anchor). Fixed by rebuilding
+ALL pairs' Pade fits INSIDE the `Ip0` loop, anchored uniformly at
+the CURRENT `Ip0`'s own `eps_HF` -- every `Sigma_c(p,q;z)` evaluation
+used inside a given orbital's bracket search is then a local
+interpolation near the z-range actually being solved in, mirroring
+what the diagonal solve already does for its own `(Ip0,Ip0)`
+element. (Before this fix was correctly identified, an even cruder
+uniform-full-13-point-grid Thiele fit was tried first and also found
+wrong by the same direct-comparison technique -- the well-known
+"more points does not mean a better fit" Pade-robustness pitfall
+already documented elsewhere in this file. Escalation beyond the
+fixed `Nsel0=6` points, the way the diagonal solve escalates for
+hard-to-bracket deep-core MOs, is NOT implemented for the matrix
+solve -- not needed for the systems checked so far; flagged as a
+real follow-up if a future system needs it, not guessed at.)
+
+**Final verification, H2O/STO-3G CCSD** (same system/config as the
+existing verified diagonal `qp_energies.dat`,
+`aces2/scrnc/independent_pilot`-style same-run comparison, full
+end-to-end HPC run via `xscrncsigma`, `/blue/ufhpc/perera/scrnc_test/
+h2o_scrnc_sigma_matrix_dyson_0823`, sbatch job 40036125, exit 0):
+**all 7 MOs converged, ZERO Jacobi non-convergence warnings** (the
+457 warnings seen during debugging were transient scan-window
+artifacts from the anchor-choice bug now fixed, not a residual
+robustness gap). `eps_QP(matrix)` tracks the diagonal solve's
+`eps_QP` closely everywhere -- MO1 and MO5 are IDENTICAL to the
+diagonal answer to all printed digits (`-20.40109`/`-0.5947574`),
+the rest agree to 3-4 significant figures (MO2: `-1.387418` vs
+diagonal `-1.386381`; MO3: `-0.6167836` vs `-0.6164859`; MO4:
+`-0.4935048` vs `-0.4946629`; MO6: `0.6017173` vs `0.6015863`; MO7:
+`0.7315916` vs `0.7315002`) -- exactly the expected regression
+behavior (small, off-diagonal-driven corrections on top of the
+diagonal answer, not a wholesale disagreement). `maxOverlap` for
+every MO is 0.998-1.000 (dominant HF character preserved, as
+physically expected for a perturbative self-energy), while
+`qp_orbitals.dat` shows real, non-trivial, symmetry-consistent
+orbital mixing -- e.g. MO2 mixes 3.2% with MO4 (and MO4 mixes back
+4.25% with MO2, 1.76% with MO6), while MO3 and MO7 mix ~0.85-1.5%
+with each other in a SEPARATE symmetry block, matching the two
+internally-coupled AO-pair blocks already visible in
+`sigma_c_output.dat`'s own off-diagonal structure (`{1,2,4,6}` and
+`{3,7}`, zero cross-block coupling to ~1e-16). This is genuine,
+physically sensible correlated-orbital relaxation, not noise --
+believed to be the actual COT signal Ajith is after.
+
+**Not yet done, for whoever picks this up next**: (1) only tested on
+H2O/STO-3G CCSD -- H2/STO-3G and other systems/bases not yet
+re-verified with the matrix solve; (2) escalation-beyond-Nsel0=6 for
+hard-to-bracket orbitals, flagged above, not implemented; (3) the
+actual next step Ajith wants -- compare `qp_energies_matrix.dat`'s
+`eps_QP(matrix)` against ACES's own IP/EA-EOM-CCSD for the same
+system, the concrete test of whether these are real correlated IPs/
+EAs (the ab initio COT/Kohn-Sham analog) -- not started this session,
+this was explicitly building the prerequisite machinery first per
+Ajith's own sequencing ("before that we should complete the code").
+
+Committed: `aces2/scrnc/scrnc_sigma_driver.F` only (the four new
+subroutines + helper + the `Program Scrnc_sigma_driver` call-site
+wiring). `xscrncsigma` rebuilt and reinstalled to `aces2/bin/`,
+md5 `68e700e53e5f8b9b6d28484354eff421`. NOT pushed (per
+[[feedback_no_need_to_push_backed_up_homedir]]). Test dir left at
+`/blue/ufhpc/perera/scrnc_test/h2o_scrnc_sigma_matrix_dyson_0823/`
+with the final verified `qp_energies_matrix.dat`/`qp_orbitals.dat`/
+`sigma_c_output.dat` in place.
+
+---
+
 ## SESSION 2026-08-23 (later) -- Ajith's own scope call: RCC/DRCC RHF/UHF
-response-gap thread SET ASIDE, project focus moves to CCSD. RESUME HERE
-if scrnc/RCC/DRCC work resumes; this is now the authoritative top entry.
+response-gap thread SET ASIDE, project focus moves to CCSD (superseded
+as the top/authoritative entry by the matrix-Dyson session above, but
+still the standing scope decision for RCC/DRCC specifically -- resume
+there if RCC/DRCC work resumes).
 
 Ajith reviewed the Nmult=1 re-close (entry immediately below) and made a
 final scope decision rather than continue chasing the residual:
