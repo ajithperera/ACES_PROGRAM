@@ -4,9 +4,139 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
-## SESSION 2026-08-22 (autonomous fork, chasing the {JJ11,JJ33}-vs-
+## SESSION 2026-08-22 (autonomous fork #2, minimal-case pilot test per
+Ajith's own approved next step -- confirms the effect is real, gives a
+concrete physical/mathematical reason ground-state energy matches but
+response doesn't, RESUME HERE) -- Ajith, still skeptical that exact
+RHF/UHF response identity is achievable, approved a cheap independent
+pilot-case test (this project's own "Pilot-Code Debugging" doctrine)
+before committing to a full Lagrangian re-derivation: use the smallest
+possible tractable system to either (a) confirm the gap is generic
+rCCD physics, or (b) discover it vanishes in the minimal case, reopening
+a tractable bug hunt.
+
+**Note on process**: the fork initially assigned this task did ZERO
+actual work on its first turn (0 tool calls, just echoed a status
+line back after apparently getting confused inheriting the
+coordinator's own "fork is running" message) -- had to be explicitly
+resumed/corrected before real investigation started. Flagging this as
+a recurring failure mode for future forked sub-investigations on this
+thread.
+
+**Setup**: H2/STO-3G is about as minimal as this pipeline supports --
+Nao_pair=4 (2 AOs), 1 occ + 1 virt spatial MO for RHF; for UHF, 1
+occ-alpha/1 occ-beta/1 virt-alpha/1 virt-beta, with AA and BB doubles
+channels trivially zero (confirmed in the log output: "The AA/BB
+contribution to the correlation energy is: 0.0000000" -- Pauli
+exclusion, only 1 electron per spin, so ALL of UHF's rCCD correlation
+comes from the single ABAB channel). Ran fresh RHF+UHF pairs for BOTH
+RCCD (reused existing validated `h2_scrnc_rccd_{rhf,uhf}_sto3g_verify3`/
+`_reverify` dirs, current HEAD 42663467) and DRCCD (new dirs built this
+session, `h2_scrnc_drccd_{rhf,uhf}_sto3g_pilot0822`, since no post-fix
+H2 DRCCD UHF run existed yet -- needed a fresh GENBAS/ZMAT.BAS copy
+into a clean dir, first attempt crashed at xjoda with those files
+missing, fixed by copying from an existing validated dir).
+
+**Ground-state confirms EXACT RHF/UHF identity, cleanly, in the
+minimal case**: E(SCF) bit-identical (-1.116651278229 a.u., both
+methods, both RCCD/DRCCD). Converged correlation energy: DRCCD
+bit-identical to all 12 printed digits (-1.137618408411 a.u., RHF AND
+UHF); RCCD agrees to 10 sig figs (-1.128488116359 vs -1.128488116293,
+diff ~6.6e-11, consistent with cc_conv=9 convergence-threshold noise,
+not a real discrepancy). This is the cleanest confirmation yet of the
+already-known `rcc_cmpeng.F` ground-state identity, now demonstrated
+in the smallest possible system.
+
+**Response property (JJ matrix) does NOT match, and the raw
+correlation-only piece differs by a LARGE factor, not just a few
+percent**: the `jjlrespn_resp_packed.dat` (response-only, before bare
+added) diagonal element for RCCD is 0.01161070026110285 (RHF) vs
+0.06020595989104796 (UHF) -- **UHF's raw correlation response is
+5.18x LARGER than RHF's**, same system, same converged ground-state
+amplitudes' underlying physics, same SCF orbitals. For the final
+"plusbare" metric this dilutes down to the historically-quoted ~-5.8%
+(RHF-vs-UHF on the 0.786/0.835 diagonal element), because the bare
+(uncorrelated) piece is much bigger than the response piece and is
+identical between methods -- but the underlying CORRELATION
+contribution itself is off by a factor of >5, not a small percentage.
+DRCCD shows the same direction, much smaller: response-only piece
+0.026120509141200 (RHF) vs 0.030088499441843 (UHF), a 1.15x ratio
+(-0.49% on the final plusbare diagonal) -- consistent with the
+already-established ~5-7x-smaller-than-RCCD pattern from the H2O full-
+diagonal check above, confirming that pattern generalizes down to the
+minimal 2-orbital case too.
+
+**A genuine independent check DID pass, and it's informative**: the
+response-only matrix's (1,1) and (1,4) [the two AO-pair indices
+corresponding to the two on-atom, "gerade"/"ungerade"-type density
+combinations for homonuclear H2] are numerically exact negatives of
+each other in BOTH RHF and UHF, BOTH RCCD and DRCCD (e.g. RHF-RCCD:
++0.01161070026110285 / -0.01161070026110285). This is a real physical
+sum rule -- the response matrix's row for a given AO-pair index must
+sum to zero under this specific combination (a particle-number-type
+conservation constraint on the density-density response), and it is
+satisfied exactly, independently, by both RHF's and UHF's converged
+solution. This does NOT resolve the RHF/UHF question (it holds
+separately and identically for each method, it isn't a cross-method
+identity), but it's a real, passed consistency check confirming
+neither method's response calculation is producing nonsense -- both
+are internally physically consistent, they just disagree with each
+other in magnitude.
+
+**Interpretation / likely mechanism (a genuine reason, not just
+another empirical pattern-match)**: the ground-state energy is a
+SCALAR contraction (T2 dotted into the integrals) that Ajith's own
+paper (`rcc_cmpeng.F`, Eq 46/49/65) proved can be exactly reconciled
+between the spin-adapted (RHF, singlet/triplet channels) and
+spin-orbital (UHF, AAAA/BBBB/ABAB/BABA channels) parameterizations of
+rCCD's non-antisymmetric amplitudes. The JJ-matrix / response property
+is NOT a scalar -- it's a full matrix built from diagonalizing the
+Hbar operator, i.e. it depends on the amplitudes' and Hbar's detailed
+MATRIX/operator structure, not just one contracted scalar. There is no
+a priori reason a reconciliation that works for one specific scalar
+contraction of a non-antisymmetric-amplitude object should also hold
+for every matrix element built from that same object's eigenstructure
+-- this is a plausible, mechanistically-grounded reason the ground
+state can match exactly while the response doesn't, rather than
+requiring either "there's still a missing correction term" or "no
+identity should be expected anywhere at all."
+
+**Verdict: strengthens Ajith's skepticism with a mechanism, but does
+NOT fully close the case.** The gap is real, large in the fundamental
+correlation-only quantity (not a small numerical artifact), present
+even in the most minimal possible system, and now has a plausible
+mathematical reason to exist (scalar-vs-matrix reconciliation) rather
+than just an empirical "smooth spread" observation. It does not
+prove no correction is possible -- only that if the ground-state
+scalar trick doesn't automatically extend to the response matrix,
+finding out whether ANY exact spin-adapted response formula exists
+requires the derivation itself, not more numerical fishing. **No
+coefficient/correction implemented or attempted** (nothing here
+suggests a specific term to test, consistent with the project's
+standing rule against unvalidated guessing).
+
+**What would move this forward next, if picked up again**: this
+minimal H2/1-occ/1-virt case is now FAR more tractable than H2O ever
+was for an actual from-scratch analytic or symbolic derivation of the
+ring-CCD/RPA response equations (per this project's own "Pilot-Code
+Debugging" doctrine) -- with only a single ABAB doubles amplitude in
+play for UHF and one spin-adapted singlet amplitude for RHF, it may be
+possible to write out the full A/B RPA-type equations by hand or in a
+short standalone script and get a THIRD, fully independent number to
+compare against both ACES numbers, which would definitively show which
+(if either) is "correct" rather than just observing they disagree.
+NOT attempted this session (out of scope/time for a single pass) --
+flagged as the concrete next step, not started.
+
+Test dirs: `h2_scrnc_rccd_{rhf,uhf}_sto3g_{verify3,reverify}` (existing,
+reused), `h2_scrnc_drccd_{rhf,uhf}_sto3g_pilot0822` (new this session).
+Committed doc-only.
+
+---
+
+## SESSION 2026-08-22 (autonomous fork #1, chasing the {JJ11,JJ33}-vs-
 {JJ22,JJ44} ~2x-ratio lead from the 2026-08-21/5dbee126 entry below,
-RESULT: THAT LEAD DOES NOT HOLD UP, RESUME HERE) -- Ajith expressed
+RESULT: THAT LEAD DOES NOT HOLD UP, superseded by entry above) -- Ajith expressed
 renewed skepticism that exact RHF/UHF response identity is achievable
 here at all. Went back to the concrete "clean 2x split" clue flagged as
 the next step and tested it rigorously rather than assuming it pointed
