@@ -4,6 +4,98 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-23 (later still, fork, LITERATURE CHECK on the
+MO4/MO5 gap -- verdict: ANOMALOUS, not expected G0W0@HF behavior --
+RESUME HERE, this is now the authoritative top entry): Ajith's read on
+the just-reported b4501c52 numbers (MO5/HOMO +4.13 eV, MO4 +2.65 eV vs
+independent EOM-CCSD, after the Pade stability fix): "I doubt that this
+is expected behavior." Dispatched to pull real literature numbers
+rather than assume either way.
+
+**Web-search literature findings (real search, not recalled from
+memory):**
+
+1. **Normal G0W0@HF error range**: multiple independent benchmark
+   studies (GW100-derived) report G0W0@HF mean absolute error for
+   molecular ionization energies vs CCSD(T)/experiment around
+   **0.30-0.35 eV** -- "Molecular Ionization Energies from GW and
+   Hartree-Fock Theory: Polarizability, Screening, and Self-Energy
+   Vertex Corrections," J. Chem. Theory Comput. 2024 (acs.jctc.4c00795)
+   gives G0W0@HF MAE 0.30 eV; the GW100 benchmark lineage (van Setten
+   et al., and "Benchmark of GW Approaches for the GW100 Test Set,"
+   JCTC, arXiv:1609.04665) is the standard reference point this whole
+   sub-field calibrates against, with more self-consistent variants
+   (scGW/qsGW) tightening to <0.2-0.3 eV vs CCSD(T).
+2. **Documented pathological outliers are still far smaller than
+   ours**: one study found G0W0's worst-case MAE reaching ~1.0 eV
+   overall with a largest single-molecule error of ~1.5 eV, for
+   tetracarbon (C4) -- explicitly flagged in that literature as an
+   outlier driven by C4's unusual multi-reference/four-unpaired-electron
+   character, not typical behavior. Even this named worst-case-in-the-
+   literature (1.5 eV) is well under half of scrnc's MO5 gap (4.13 eV).
+   (Caution: one search result also surfaced a very different number --
+   G0W0@HF MAE of "1.89 eV" for band GAPS in a solid-state/periodic
+   context -- that is a different observable (fundamental gap, not a
+   single IP) in a different physical setting (solids, not molecules)
+   and is not a like-for-like comparison; not used as the benchmark
+   here.)
+3. **Basis-set-incompleteness is a real, separately quantified effect,
+   but not remotely eV-scale in the literature that exists**: GW
+   quasiparticle energies converge slowly with basis size (unlike HF/DFT
+   total energies), but quantified corrections are small even at modest
+   basis levels -- double-zeta-quality GW HOMO-LUMO gaps sit within
+   ~60 meV of the complete-basis-set limit in one study, and a 2025
+   triple-zeta-to-CBS extrapolation scheme (arXiv:2511.22462, also
+   published J. Phys. Chem. Lett. 2025) reports residual CBS-limit
+   errors of only 20-30 meV once a linear correction is applied.
+   **No literature was found running GW at STO-3G specifically** --
+   this basis size is essentially never used for GW-type calculations
+   in the field (STO-3G's own well-documented general inaccuracy is
+   ~1 hartree in absolute total energies, i.e. tens of eV -- it is
+   understood across quantum chemistry as too crude for correlated
+   post-HF work generally, not GW-specific). This is a genuine unknown,
+   not resolved by direct precedent either way -- but the *trend* from
+   every basis level actually studied (double-zeta and up) shows
+   convergence corrections shrinking toward tens-of-meV, giving no
+   support for expecting a jump to eV-scale error purely from basis
+   incompleteness.
+
+**Verdict: ANOMALOUS, not an expected consequence of the
+on-shell/no-vertex/HF-reference approximation stack.** MO5's 4.13 eV
+gap is ~12x the typical G0W0@HF MAE (0.30-0.35 eV) and ~2.7x even the
+most pathological single-case outlier found in the literature (1.5 eV,
+itself an explicitly-flagged anomaly for a multi-reference system, not
+a normal molecule like water). MO4's 2.65 eV gap is smaller but still
+~7-9x the typical MAE. The STO-3G minimal-basis choice is a genuine,
+un-precedented confound (nobody publishes GW/STO-3G numbers to check
+against directly) and can't be fully ruled out as a contributor -- but
+nothing in the basis-convergence literature that DOES exist (which
+uniformly shows sub-0.1 eV effects even at coarse-but-real basis
+levels) supports a jump to multi-eV purely from basis size. **Net
+call: Ajith's skepticism is literature-supported. This should be
+treated as still pointing at real missing physics or a real remaining
+issue in scrnc's self-energy/QP construction for these two
+near-Fermi-level states, not accepted as approximation-level-consistent
+noise.** Concrete candidates for what's still missing, not yet
+investigated this session: (a) STO-3G's minimal virtual space may be
+starving the CC-response screening W(omega) itself (too few virtuals
+for the ring/CC amplitude equations to build a meaningful correlation
+hole) in a way that's distinct from ordinary GW basis-incompleteness,
+worth testing by rerunning the same H2O comparison in a bigger basis
+(DZ, already used elsewhere in this project) before concluding anything
+about scrnc's physics vs. this specific STO-3G setup; (b) missing vertex
+corrections in Sigma_c itself, expected to matter most for frontier
+(near-Fermi) states, consistent with the gap being concentrated on
+MO4/MO5 specifically and not the other five MOs.
+
+No code changes this session (literature research only, per directive).
+Sources (also listed inline above): "Molecular Ionization Energies from
+GW and Hartree-Fock Theory..." JCTC 2024 (acs.jctc.4c00795);
+"Benchmark of GW Approaches for the GW100 Test Set," JCTC, arXiv:
+1609.04665; "Predicting Complete Basis Set Limit Quasiparticle Energies
+from Triple-zeta Calculations," J. Phys. Chem. Lett. 2025, arXiv:
+2511.22462; GW100 project lineage (van Setten et al.).
+
 ## SESSION 2026-08-23 (later still, fork, Pade STABILITY-BASED
 ESCALATION implemented + verified, MO5/MO4 recomputed with trustworthy
 numbers -- RESUME HERE, this is now the authoritative top entry):
