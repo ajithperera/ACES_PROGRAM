@@ -1,0 +1,12 @@
+H2, CCSD RHF/UHF identity check, STO-3G, SYM=ON.
+H
+H 1 R
+
+R=0.742
+
+*ACES2(BASIS=STO-3G
+CALC=CCSD
+REF=RHF,MEM_SIZE=1gb
+sym=on
+CC_EXTRAP=OFF
+cc_conv=9,scf_conv=10)
