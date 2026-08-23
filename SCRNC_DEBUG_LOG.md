@@ -4,6 +4,142 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-23 -- Nmult=1 (singlet-only) decision REVISITED per
+Ajith's explicit authorization ("you can revisit... need to wrap this
+and move forward"), RE-CONFIRMED as correct on the NEW (post-L-side-fix)
+baseline via a fresh empirical test, not just re-argued theoretically:
+no single Imult=1/Imult=2 recombination weight reconciles RHF with UHF
+-- the weight that would be needed varies from 0.32 to 0.70 across just
+three tested diagonal elements (2 systems). **FORMALLY CLOSED as
+understood, not-a-bug, not further pursued -- the 1.88x (H2/STO-3G) and
+up-to-12.5% (H2O/STO-3G) residuals remain OPEN but are now definitively
+NOT a singlet/triplet-decoupling/Nmult problem, on this or any prior
+baseline. RESUME HERE if picking the residual back up -- next lead is
+elsewhere, see bottom of this entry.**
+
+**Re-derived the Wigner-Eckart argument from first principles, checking
+specifically whether it depends on anything the L-side mubar fix
+(`67a4ed6b`/`8ec738fa`) touched.** The argument: the perturbation this
+whole pipeline builds the response to is a one-body, spin-summed,
+density-type operator `V = Sum_pq v_pq (a+_pa a_qa + a+_pb a_qb)` -- a
+spin-scalar (S=0) under spin rotations. For a closed-shell (S=0)
+reference, Wigner-Eckart forbids ANY matrix element of a spin-scalar
+operator between the S=0 ground state and an S=1 (triplet-coupled)
+excited configuration, full stop -- this is an exact statement about
+the OPERATOR's symmetry, not about how the T-amplitudes that go into
+building Hbar or dressing the property vector happen to be computed.
+Checked the actual dependency chain to make sure the fix couldn't have
+changed this premise anyway: `Scrnc_form_mubar_s.F`'s RHF-only dressing
+branch (the thing the L-side fix touched) is gated behind
+`IF(IUHF.EQ.0)` at line 298, and the RCCD-specific `(list37-list34)/2`
+fix sits INSIDE that branch (line 341) -- entirely separate machinery
+from `Scrnc_driver.F`'s `Nmult`/`Imult` channel-selection loop and
+`Scrnc_jj_rcc_assemble.F`'s `Wt`-weighted recombination, which is what
+actually decides whether the triplet channel contributes at all. The
+mubar fix changes the MAGNITUDE of what the (already triplet-excluded)
+singlet-only channel computes; it has no mechanism to change whether a
+second channel's contribution is physically zero. **Conclusion: the
+L-side fix could not have invalidated the Wigner-Eckart premise, by
+construction -- but per Ajith's mandate this needed empirical
+reconfirmation, not just re-reading the same argument, so did the test
+anyway.**
+
+**Empirical test, per the project's "test, don't theorize" doctrine.**
+Temporarily edited `Scrnc_driver.F` (`Nmult=2` for `Iuhf.EQ.0 .AND.
+Rccd`, clearly marked "TEMP DIAGNOSTIC 2026-08-23, NOT FOR SHIPPING")
+and `Scrnc_jj_rcc_assemble.F` (added a `_DEBUG_LVL0`-gated print of the
+RAW, unweighted per-channel (`Imult=1`/singlet, `Imult=2`/triplet)
+contribution to every diagonal JJ element, before the existing
+0.25/0.75 `Wt` combination is applied) -- the existing two-channel
+machinery from the 2026-08-19 era is still fully intact in the source
+(dead code only because `Nmult` is hardcoded to 1), so no new physics
+code was written, just instrumentation. Rebuilt `xscrnc`
+(`ccfd4721547d193a14f0aeb57aa50575` after the second, all-diagonal-
+elements revision of the print), md5-confirmed the binary actually
+changed and contains the new debug strings. Ran four fresh manual
+pipelines (`xjoda,xvmol,xvmol2ja,xvscf,xvtran,xintprc,xringcc,xringcl,
+xscrnc`, no `xvprops`, per this file's 2026-08-20 correction) via
+sbatch: `/blue/ufhpc/perera/scrnc_test/h2_scrnc_rccd_{rhf,uhf}_sto3g_
+nmultdiag_0823` and `h2o_scrnc_rccd_{rhf,uhf}_sto3g_nmultdiag_0823`
+(plus a `_nmultdiag2_0823` pair for the broadened per-element print),
+all exit 0.
+
+**Result: for every element tested, solved for the weight `w` that
+WOULD make `Xraw(singlet) + w*Xraw(triplet) = UHF's true response-only
+value` (computed from UHF's long-established, fix-independent full-JJ
+reference values minus the bare-v piece, which is confirmed
+bit-identical between RHF and UHF to 11 digits, both in this run and
+every prior session's):**
+```
+                          Xraw(Imult=1)   Xraw(Imult=2)   UHF target   fitted w
+H2/STO-3G   JJ(1,1)=(4,4) 0.032051820282  0.086977276510  0.06020595989   0.324
+H2O/STO-3G  JJ(1,1)       0.049479347675  0.101942615519  0.09049168785   0.402
+H2O/STO-3G  JJ(4,4)       0.003496540181  0.004931653338  0.00694352740   0.699
+```
+(UHF targets: H2's `0.06020595989` is this thread's long-standing
+established response-only value; H2O's come from `UHF full JJ(1,1)=
+0.86509751290`/`JJ(4,4)=0.03016663846` -- both established independently
+of any RHF-side fix in this thread, since UHF's own construction never
+enters `Scrnc_form_mubar_s.F`'s `IUHF.EQ.0` branch or `Scrnc_driver.F`'s
+`Nmult` logic at all -- minus this run's own freshly-measured bare-v
+diagonal, back-solved from `RHF_full - RHF_response(Nmult=2,weighted)`
+and cross-checked against the raw AO integral print for element (1,1)
+to 9 digits.)
+
+**This is decisive, and it's the same verdict as every prior attempt in
+this thread to fit a weight, just with new numbers because the baseline
+moved: no single weight works.** `0.324`, `0.402`, and `0.699` span more
+than a factor of 2 across just 3 diagonal elements from 2 systems -- if
+a real triplet-channel admixture were the missing physics, the SAME
+weight (a property of the perturbation operator's symmetry, not of
+which AO pair you're looking at) would have to work everywhere. It
+doesn't, on this baseline any more than it did on the old one (which
+gave equally scattered, equally non-physical fits: 0.406, then
+`Wt_S~2.2,Wt_T~-1.2`, see the 2026-08-19 entries below). **Both the
+theoretical re-derivation and the fresh empirical retest agree: the
+Nmult=1/singlet-only architecture is still correct, is NOT what the
+L-side fix put in question, and this specific hypothesis is closed for
+good -- not to be re-litigated again without a genuinely new reason to
+doubt the operator symmetry argument itself (as opposed to "the residual
+didn't go away").**
+
+**Verdict for Ajith's "wrap this and move forward" mandate: (B).** The
+Nmult=1 architecture is confirmed correct, not changed. The 1.88x
+(H2/STO-3G) and up-to-12.5% (H2O/STO-3G) response-ratio residuals are
+NOT fixed by this round and are not expected to be fixable by any
+Nmult/weight change -- formally closing out the "is it a singlet/triplet
+decoupling problem" question as understood, not-a-bug, exhausted from
+both the theory side and the empirical side. The residual gap ITSELF
+remains open as a separate problem for whoever picks it up next -- per
+fork #5's own list, the concrete remaining candidates are (a) the still-
+uncharacterized R-side (Iside=1) list37/34 vs list61/63 discrepancy
+(traced but ruled a non-driver by fork #5's own substitution test), or
+(b) something entirely un-isolated yet, given H2O's JJ(4,4) sector (the
+"exactly symmetry-decoupled from components 1-3" one, previously the
+23.7x-off pre-e48b5cc0 outlier) needing the largest, most different
+fitted weight (0.699) of the three tested -- consistent with the
+already-flagged, not-yet-root-caused observation that whatever is wrong
+concentrates disproportionately in that one symmetry sector.
+
+**Housekeeping**: both temporary edits (`Scrnc_driver.F`'s `Nmult=2`
+line, `Scrnc_jj_rcc_assemble.F`'s diagnostic print) reverted via `git
+checkout --`, confirmed empty `git diff` on both files. `xscrnc`
+rebuilt and md5-reconfirmed to the exact pre-session value
+(`0e188fe2576a8a8eea874a35e7078f5a`), matching fork #5's own
+end-of-session checksum -- no drift. New test dirs (not committed, data
+only), all under `/blue/ufhpc/perera/scrnc_test/`:
+`h2_scrnc_rccd_{rhf,uhf}_sto3g_nmultdiag_0823`, `h2o_scrnc_rccd_
+{rhf,uhf}_sto3g_nmultdiag_0823`, `h2_scrnc_rccd_rhf_sto3g_nmultdiag2_0823`,
+`h2o_scrnc_rccd_rhf_sto3g_nmultdiag2_0823` (the broadened, all-
+diagonal-elements rerun). Also reconfirmed, in passing, the pre-existing
+"UHF's own log never prints the RPA JJ matrix" quirk (flagged
+2026-08-20, still not chased -- irrelevant to today's conclusion since
+all UHF numbers used here came from long-established prior values plus
+today's directly-measured bare-v, not from parsing a UHF run's own JJ
+print).
+
+---
+
 ## SESSION 2026-08-22 (autonomous fork #5, R-side/Iside=1 list37-34
 identity chase -- the concrete next step flagged by fork #4 below --
 TRACED, CROSS-CHECKED, DIAGNOSTIC-TESTED, NOT A BUG: R-side's list37/34
