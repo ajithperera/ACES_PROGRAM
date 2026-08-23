@@ -4,6 +4,96 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-22 (autonomous fork, chasing the {JJ11,JJ33}-vs-
+{JJ22,JJ44} ~2x-ratio lead from the 2026-08-21/5dbee126 entry below,
+RESULT: THAT LEAD DOES NOT HOLD UP, RESUME HERE) -- Ajith expressed
+renewed skepticism that exact RHF/UHF response identity is achievable
+here at all. Went back to the concrete "clean 2x split" clue flagged as
+the next step and tested it rigorously rather than assuming it pointed
+to a findable missing term.
+
+**First: sym=off, so there is no code-level symmetry-irrep story to
+tell.** Both `_wtcheck` test dirs' ZMATs use `sym=off` (C1) --
+confirmed via the `_DEBUG_LVL0` "Isympert(1..Nao_pair)" diagnostic
+dump: every one of the 49 AO-pair entries is Irrepx=1. `Iao_pair`
+in `Scrnc_jj_rcc_assemble.F`/`Scrnc_lrspn_rcc_main.F` is a flat AO-pair
+list position (Nao_pair=49=7x7 for H2O/STO-3G, all (mu,nu) AO index
+pairs, not a triangular/unique-pair count), not a molecular-symmetry
+irrep index. So "JJ11/22/33/44" are just diagonal entries #1-4 of a
+49-entry list -- there was never an Isympert-level irrep to bipartition
+by in the first place.
+
+**Extracted all 49 diagonal RHF-vs-UHF %-differences (not just the 4
+historically tracked ones), from the `jjlrespn_plusbare_packed.dat`
+dumps in the `h2o_scrnc_rccd_{rhf,uhf}_sto3g_wtcheck*` dirs.** Result:
+the %-differences do NOT split into two discrete populations at all --
+they form a smooth, continuous spread from -1.14% to -14.42% across 22
+distinct AO-pair-equivalence classes (repeated values across e.g.
+indices {2,8,14,44} or {4,22,28,46} simply reflect water's real,
+still-numerically-present C2v symmetry equivalences, unexploited by
+`sym=off` but not erased from the integrals). The apparent clean ~2x,
+two-group split reported previously was an artifact of the historical
+convention of only ever quoting the FIRST four diagonal elements
+(JJ11-JJ44) -- a 4-point sample that happened to land near a bimodal
+pattern by chance, not a real structural signature. Checked the
+obvious confound (large relative error only because of a small
+denominator on a small-magnitude element) too: correlation between
+log|UHF magnitude| and |%diff| across all 49 points is ~0.10 --
+essentially uncorrelated, ruling that out as well.
+
+**Cross-checked against DRCCD (`h2o_scrnc_drccd_{rhf,uhf}_sto3g_postfix`,
+whose `jjlrespn_plusbare_packed.dat` files exist even though UHF's own
+`xscrnc.out`/`run_scrnc.log` prints no final "RPA JJ matrix" table --
+same pre-Symmet2 packed dump is written regardless).** Same result:
+a smooth continuum, -0.02% to -1.96%, same 49-AO-pair-equivalence-class
+structure (identical index groupings to RCCD, confirming the
+underlying AO-pair symmetry bookkeeping is shared and correct across
+both methods) -- but critically, the *ranking* of which class has the
+worst %-error is DIFFERENT between RCCD and DRCCD. The index-4
+class ({4,22,28,46}) is one of the worst offenders in RCCD (-13.12%,
+2nd-worst class) but sits mid-pack in DRCCD (-0.21%, actually BETTER
+than the index-1 class's -0.34%). A single shared missing term tied to
+one AO-pair/symmetry sector should produce the same relative ranking in
+both methods, just scaled -- it doesn't. This is a second, independent
+line of evidence against the "one findable omission in one sector"
+reading of the original lead.
+
+**Verdict: (c), leaning toward (b)/Ajith's skepticism, not (a).** The
+specific concrete lead from 5dbee126 (clean {1,3}-vs-{2,4}, ~2x ratio)
+does not survive being checked against the full 49-point diagonal or
+against DRCCD -- it was a small-sample artifact, not a real bimodal
+symmetry-sector split. What actually replaces it is a smoothly graded,
+pervasive RHF/UHF difference across essentially the WHOLE AO-pair
+response space (not concentrated in one or two components), roughly
+5-7x larger in absolute % terms for RCCD than DRCCD but with a
+similar-shaped (not identically-ranked) spread in both. A smooth,
+pervasive spread is much more consistent with a graded consequence of
+rCCD/drCCD's proven non-antisymmetric amplitude structure (paper
+Appendix VII.A, `rcc_cmpeng.F` precedent) than with a single missing
+Hbar term that would be expected to show up as a sharp discontinuity
+isolated to a specific sector. This does not *prove* Ajith's null
+hypothesis (a graded spread is also what a genuinely-derivable but
+not-yet-derived spin-adapted response correction might look like, the
+same way the ground-state energy fix was smooth once found) but it
+does remove the one concrete piece of evidence that had been cited
+FOR "this is still a findable bug" -- that evidence no longer holds up.
+
+**No code changes.** Per this project's own repeated lesson (CORR_2P's
+-1.5 guess, FACT2's borrowed DCCSD value, both later shown not to
+work), did not attempt to prototype any correction from this data --
+a smooth 49-point spread with no clean discontinuity gives no natural
+coefficient or term to test. **What would actually move this forward
+next, if picked up again**: the still-not-done real spin-adapted
+RHF/UHF *response*-property derivation (the response analog of Eq
+46/49/65 that fixed the ground-state energy) is the only lever left
+that isn't just more empirical pattern-hunting -- everything findable
+by inspecting existing numbers has now been checked (Hbar formula
+literature-matched and correct per the paper, downstream JJ-assembly
+chain audited clean, pipeline/Hbar-read validated at the eigenvalue
+level, and now this full-diagonal/DRCCD cross-check). Doc-only commit.
+
+---
+
 ## SESSION 2026-08-21 (autonomous fork, null-hypothesis evaluation per
 Ajith's explicit redirect, RESUME HERE) -- Ajith pushed back on the
 previous entry's framing: rather than assume a corrective spin-adapted
