@@ -27,7 +27,7 @@ C
       LOGICAL PRINT
       LOGICAL Ccsd,Mbpt,Parteom,Nodavid,Aoladder,Rccd,Drccd
       DOUBLE PRECISION ONE,ONEM,ZILCH,SNRM2,TWO,SCR,SDOT,
-     &                 SIGN1, SIGN2
+     &                 SIGN1, SIGN2, HALF, HALFM
       DOUBLE PRECISION MIJ(*),MAB(*),MAI(*),MEXPECT,MBAR00
       DOUBLE PRECISION MIJBAR(*),MABBAR(*),MAIBAR(*),MIABAR(*)
       DIMENSION SCR(MAXCOR)
@@ -40,6 +40,7 @@ C
       COMMON/SYMLOC/ISYMOFF(8,8,25)
 C
       DATA ONE,ONEM,ZILCH,TWO /1.0D0,-1.0D0,0.0D0,2.0D0/
+      DATA HALF,HALFM /0.5D0,-0.5D0/
 C
       LISTT1=90+100*(ISIDE-1)
 C
@@ -284,6 +285,16 @@ C
           ENDIF
 C
           CALL GETLST(SCR(I010),1,NT2DISAB,1,IRREPX,LISTT2AB)
+#ifdef _DEBUG_LVL0
+C 2026-08-22: raw, pre-combination T(list37-family) checksum -- settles
+C whether LISTT2AB (Iside-dependent, =37 R-side/=137 L-side for RCCD
+C ISPIN=1) actually equals the converged singlet channel amplitude
+C T_S, independent of the 2*T37-T34 combination done below. See
+C SCRNC_DEBUG_LOG.md, 2026-08-22 (Lead B empirical checksum test).
+      Write(6,"(a,I2,a,I5,a,20F15.10)")
+     +     " LEADB_RAW37 Iside=",Iside," LISTT2AB=",LISTT2AB," val=",
+     +     (SCR(I010-1+I),I=1,MIN(NT2DSZAB*NT2DISAB,20))
+#endif
           IF(IUHF.EQ.0)THEN
 C 2026-08-19: RCCD's own T2(Ij,Ab) (list 37, read above as LISTT2AB)
 C is never antisymmetrized (rcc_dwmbej.F's own comment) -- unlike
@@ -301,8 +312,41 @@ C CCSD (and DRCCD, deferred separately, not fixed here) keep list 39.
              LISTT2B = 100*(ISIDE-1) + 39
              IF (RCCD) LISTT2B = 100*(ISIDE-1) + 34
              CALL GETLST(SCR(I020),1,NT2DISAA,1,IRREPX,LISTT2B)
-             CALL SSCAL(NT2DSZAB*NT2DISAB,TWO,SCR(I010),1)
-             CALL SAXPY(NT2DSZAB*NT2DISAB,ONEM,SCR(I020),1,SCR(I010),1)
+#ifdef _DEBUG_LVL0
+C 2026-08-22: raw list34 (RCCD's "exchange partner", flagged in
+C SCRNC_DEBUG_LOG.md 2026-08-20 "continued 3" as actually being ring-CC's
+C TRIPLET channel's own primary amplitude, REFLST=44/SPCAS2='AAAA') --
+C print BEFORE the SAXPY combination below so it can be compared
+C directly against T_T=+0.163485120840 (H2/STO-3G RHF RCCD, list 61).
+      Write(6,"(a,I2,a,I5,a,20F15.10)")
+     +     " LEADB_RAW34 Iside=",Iside," LISTT2B =",LISTT2B," val=",
+     +     (SCR(I020-1+I),I=1,MIN(NT2DSZAA*NT2DISAA,20))
+#endif
+C 2026-08-22 FIX (see SCRNC_DEBUG_LOG.md "Lead B" test): the empirical
+C checksum test above confirms list34/list134 EXACTLY equals the
+C converged triplet-channel amplitude T_T (RCC_RHF_CMPENEG list 61) and
+C list37/list137 EXACTLY equals the converged singlet-channel amplitude
+C T_S (list 63) -- both to ~8 printed digits. Finding 1's proven
+C spin-adaptation identity T(ABAB) = (T_S - T_T)/2 (see log -- this is
+C the SAME quantity UHF's raw, un-dressed list37 IS) therefore predicts
+C the correct RHF reconstruction of that spin-orbital ABAB amplitude is
+C (T37-T34)/2, NOT the CCSD-style 2*T37-T34 previously shipped here
+C (empirically tuned, not derived, in 498542f8 -- see 2026-08-20
+C "continued 3", which already cast doubt on its theoretical grounding).
+C VERIFIED: H2/STO-3G RCCD response-only ratio (UHF/RHF) improved
+C 5.18x->1.88x; H2O/STO-3G RCCD improved on ALL 49 diagonal JJ elements,
+C no regressions. Guarded to RCCD only; CCSD's own list-39
+C antisymmetrized-amplitude formula (2*T37-T39) is untouched; DRCCD
+C (separate flag) also untouched, reconfirmed bit-identical.
+             IF (RCCD) THEN
+                CALL SSCAL(NT2DSZAB*NT2DISAB,HALF,SCR(I010),1)
+                CALL SAXPY(NT2DSZAB*NT2DISAB,HALFM,SCR(I020),1,
+     &                     SCR(I010),1)
+             ELSE
+                CALL SSCAL(NT2DSZAB*NT2DISAB,TWO,SCR(I010),1)
+                CALL SAXPY(NT2DSZAB*NT2DISAB,ONEM,SCR(I020),1,
+     &                     SCR(I010),1)
+             ENDIF
           ENDIF
 #ifdef _DEBUG_LVL0
       call checksum("T2AB(pre-xgemm)              :",SCR(I010),

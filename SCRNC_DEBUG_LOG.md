@@ -4,6 +4,139 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-22 (autonomous fork #4, empirical Lead A/Lead B test
+per fork #3's own handoff -- REAL BUG FOUND AND FIXED: RHF's
+`Scrnc_form_mubar_s.F` mubar T2-dressing formula was reconstructing the
+WRONG spin-orbital quantity; fixing it cuts the H2/STO-3G RCCD
+response-only RHF/UHF ratio from 5.18x to 1.88x and improves EVERY ONE
+of H2O/STO-3G's 49 diagonal JJ elements, no regressions -- committed,
+RESUME HERE) -- picked up fork #3's two concrete leads and tested both
+empirically (checksums + real pipeline reruns via sbatch), per the
+project's own "test, don't theorize" doctrine, rather than reasoning
+about the code further.
+
+**Lead A (`scrnc_driver.F:251`'s `Nmult=1` hardcode) -- NOT a fresh
+lead, already tested and closed by Ajith himself; did not re-test
+blindly.** Reading the full prior history (this log, 2026-08-19
+"continued 6" and "continued 7") shows `Nmult=2` (singlet+triplet
+Hbar-diagonalization, 0.25/0.75-recombined) was the ORIGINAL
+architecture, was tried, and was explicitly reverted after Ajith's
+direct call: *"NO, they should not decouple. We do not do that in CCSD
+route"* -- backed by a first-principles Wigner-Eckart argument (a
+spin-scalar density-type perturbation has zero overlap with the Sz=0
+triplet excitation manifold, so the RESPONSE must come from the singlet
+channel alone). A LATER session (2026-08-19 "continued 7") independently
+re-derived this exact same hypothesis from scratch, wrote a `Wt=1.0/0.0`
+test edit, and got a null result -- because `Nmult` was already
+hardcoded to 1, making the weighted-recombination branch dead code.
+Both routes converge on the same closed verdict. Also checked the
+`RCL_HEFFXC.F` `LISTDUMP`-hardcoded-to-56 bug flagged in the task: it
+lives in `ringcl` (a SEPARATE diagnostic executable, `Rcl_check_rcchbar`
++ `Rcl_heffxc`), not in `scrnc_driver.F`'s own production `Imult` loop --
+scrnc's own equivalent write-back (`scrnc_form_rcc_hbar.F`) was already
+fixed to be `Imult`-aware in this same thread's earlier work, so the two
+bugs don't interact. **Verdict: Lead A is a settled, closed physics
+question (Nmult=1/singlet-only-diagonalization is correct), not
+re-litigated -- consistent with "Stay on Agreed Debug Path."** No code
+changes, no test run for this lead.
+
+**Lead B (`scrnc_form_mubar_s.F:286-306`'s RHF-only `2*list37-list34`
+mubar dressing) -- tested empirically via `_DEBUG_LVL0` checksum print,
+CONFIRMED and FIXED.** Added two guarded prints (`LEADB_RAW37`/
+`LEADB_RAW34`) right before the existing SSCAL/SAXPY combination, then
+rebuilt `xscrnc` (`make install` in `aces2/scrnc/`, confirmed via
+`md5sum` the installed binary actually changed and contains the new
+debug strings -- `aces2/bin` is NOT auto-updated by a plain `make`, only
+`make install`, a new trap worth remembering alongside the existing
+`aces2/bin` PATH one) and reran H2/STO-3G RHF RCCD fresh
+(`/blue/ufhpc/perera/scrnc_test/h2_scrnc_rccd_rhf_sto3g_leadb_0822`).
+Result, decisive:
+```
+Iside=2 (L-side, lists 137/134): list37=-0.0976373127, list34=+0.1634851201
+  -- EXACTLY matches RCC_RHF_CMPENEG's converged T_S=-0.0976373126652 (list 63)
+     and T_T=+0.163485120840 (list 61), to ~8 printed digits.
+Iside=1 (R-side, lists 37/34):   list37=-0.0967238662, list34=+0.1593346374
+  -- a DIFFERENT, related-but-distinct pair (matches the raw numbers already
+     printed in the 2026-08-19 "continued 6" entry -- not T_S/T_T themselves).
+```
+This settles the "list34~T_T" premise flagged UNCONFIRMED in fork #3's
+entry: **exactly true for the L-side (Iside=2) amplitudes actually used
+in the property construction**, not just approximately. Combined with
+Finding 1's already-proven exact identity `T(ABAB) = (T_S - T_T)/2`
+(the SAME quantity UHF's own raw, undressed list37 amplitude directly
+IS), this makes a precise, derivable prediction: the physically correct
+RHF reconstruction of that spin-orbital quantity is **`(list37 -
+list34)/2`**, not the CCSD-style `2*list37 - list34` currently shipped
+(a formula empirically tuned to improve H2O in `498542f8`, 2026-08-19,
+never actually derived -- and already flagged as suspect once list34's
+true identity was traced in "continued 3"). Numerically:
+`(T_S-T_T)/2 = -0.130561216753`, matching UHF's raw `T_ABAB =
+-0.130561216326` to 9 significant figures (vs. the shipped formula's
+`2*T_S-T_T = -0.358759746`, which matches nothing UHF actually has).
+
+**Implemented and verified the fix** in `Scrnc_form_mubar_s.F`: guarded
+`IF (RCCD)` (mirroring the existing list-selection guard) to scale by
+`HALF`/`SAXPY` by `HALFM` instead of `TWO`/`ONEM`; CCSD's own
+`2*T37-T39` formula (for its genuinely antisymmetrized amplitudes) is
+completely untouched, still using the original `TWO`/`ONEM` path.
+Rebuilt, reran three systems fresh via sbatch:
+- **H2/STO-3G RHF RCCD** (`h2_scrnc_rccd_rhf_sto3g_leadbfix_0822`):
+  response-only diagonal `0.01161070026` (old) -> `0.03205182028`
+  (new), vs UHF's `0.06020595989` -- **ratio 5.18x -> 1.88x**. Final
+  plusbare diagonal gap -5.82% -> -3.37%.
+- **H2O/STO-3G RHF RCCD** (`h2o_scrnc_rccd_rhf_sto3g_leadbfix_0822` vs
+  fresh baseline `h2o_scrnc_rccd_rhf_sto3g_leadbbase_0822`, both against
+  `h2o_scrnc_rccd_uhf_sto3g_cleanbaseline`): **every single one of the
+  49 diagonal JJ elements improved**, none regressed -- e.g. JJ(1,1)
+  -6.16%->-4.74%, JJ(9,9) -7.95%->-5.47%, JJ(17,17) -12.79%->-8.78%,
+  JJ(41,41) -13.54%->-9.39%; smallest improvements on the
+  already-nearly-converged elements (JJ(7,7) -1.25%->-0.96%), largest on
+  the worst-offending ones -- a systematic, monotonic improvement
+  pattern, not noise.
+- **H2/STO-3G RHF DRCCD** (`h2_scrnc_drccd_rhf_sto3g_leadbfix_0822` vs
+  `h2_scrnc_drccd_rhf_sto3g_pilot0822`): **bit-identical**, confirming
+  the `IF (RCCD)` guard correctly excludes DRCCD (which keeps list 39,
+  never reaches the list-34 branch) -- no regression, as expected.
+
+**Verdict: real, substantial, empirically-verified partial fix,
+committed. Residual gap (1.88x on H2, up to ~12.5% on H2O) NOT fully
+closed -- genuinely open.** The clean match between this session's
+from-scratch-derived prediction (1.88x) and fork #3's independent
+"crude proxy" estimate (1.84x, using the WRONG `2*T_S-T_T` combination
+by coincidence landing close) is a striking cross-validation that this
+mechanism is real and correctly identified, not a fluke. What's left
+unexplained: (1) the Iside=1 (R-side) amplitude pair (list37/34, NOT
+equal to T_S/T_T) was left using the SAME `(T37-T34)/2` formula as
+Iside=2 by symmetry of the guard, but its numeric identity was never
+independently confirmed to be the analogous "R-side" spin-orbital
+reconstruction -- if it's actually a different physical object (e.g. an
+unrelaxed intermediate), applying the same halved-combination formula
+there may be only incidentally reasonable, not derived; (2) H2's
+residual 1.88x and H2O's up-to-12.5% residuals are NOT accounted for by
+this mechanism alone -- something else is still contributing,
+consistent with fork #3's own point that Lead B was "a real,
+contributing effect, not the whole story."
+
+**Housekeeping**: fix is `git diff`-clean (only
+`aces2/scrnc/scrnc_form_mubar_s.F`/`.f`, the debug prints kept
+`_DEBUG_LVL0`-gated per convention, matching this thread's existing
+instrumentation style). `aces2/bin/xscrnc` and `aces2/scrnc/xscrnc`
+rebuilt and md5-matched to the new source (final binary
+`0e188fe2576a8a8eea874a35e7078f5a`). New test dirs (not committed, data
+only), all under `/blue/ufhpc/perera/scrnc_test/`:
+`h2_scrnc_rccd_rhf_sto3g_leadb_0822` (checksum-only probe run),
+`h2_scrnc_rccd_rhf_sto3g_leadbfix_0822` + `_finalcheck` (fixed, H2),
+`h2o_scrnc_rccd_rhf_sto3g_leadbfix_0822` + `_leadbbase_0822` (fixed +
+matched-fresh-baseline, H2O), `h2_scrnc_drccd_rhf_sto3g_leadbfix_0822`
+(DRCCD regression check). **Next step, concretely**: instrument the
+R-side (Iside=1) list37/34 pair the same way L-side was just settled
+here -- identify what physical quantity they actually are (not yet
+determined) -- before trusting the fix's Iside=1 branch as fully
+derived rather than just symmetric-by-construction; then re-attack the
+remaining ~1.88x/~12.5% residual with that clarified.
+
+---
+
 ## SESSION 2026-08-22 (autonomous fork #3, from-scratch analytic/symbolic
 H2/STO-3G RCCD+DRCCD derivation, the flagged next step off fork #2 below
 -- gets a genuine THIRD independent number, RESUME HERE) -- Ajith's own
