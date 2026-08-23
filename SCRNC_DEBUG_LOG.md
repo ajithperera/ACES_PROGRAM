@@ -4,6 +4,129 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-23 (even later, fork, VERTEX-CORRECTION DIAGNOSIS --
+confirmed missing, but NOT implementable as a small addition; literature
+says the "obvious" fix this project already tried (CC-vertex-corrected
+W, vertex-less Sigma) independently does NOT close gaps like this --
+NO CODE CHANGED, doc-only, RESUME HERE): per Ajith's direction ("check
+that and if it is missing implement it"), following on from the H2O/DZ
+cross-check below (MO4/MO5 anomaly confirmed real, basis-independent).
+
+**Diagnosis (step 1) CONFIRMED from the actual code, not just the
+docstring.** `Scrnc_sigma_prep.F`/`Scrnc_sigma_driver.F`'s formula,
+Sigma_c(p,q;iw) = -(1/2pi) Integral dw' Sum_m [1/(iw+iw'-eps_m)] *
+Wc(p,m,q,m;iw'), is EXACTLY Hedin's Sigma=i*G*W*Gamma with Gamma=1 (the
+bare/GW-level vertex) and G=G0 (the propagator uses bare HF eps_m
+directly, no self-consistent dressing). This is true regardless of how
+W itself is built -- the vertex lives in the Sigma=GW*Gamma relation
+itself, not in W. Confirmed by reading `scrnc_sigma_driver.F` lines
+338-370 (the two-propagator-denominator fold) and `scrnc_sigma_prep.F`
+in full -- no Gamma function, no G-dressing, anywhere in this pipeline.
+
+**Literature research (step 2), real citations, not guessed:**
+
+1. **Lewis & Berkelbach, JCTC 15, 3273 (2019), arXiv:1810.00456**,
+   "Vertex corrections to the polarizability do not improve the GW
+   approximation for the ionization potential of molecules" --
+   DIRECTLY on point: they tested EXACTLY this project's own strategy
+   (vertex-corrected/EOM-CCSD polarizability feeding an otherwise
+   ordinary, vertex-less GW self-energy) and found it does NOT help.
+   RPA-polarizability GW/HF-reference IPs: MAE 0.3 eV, systematically
+   OVER-estimated. Vertex-corrected-polarizability GW IPs: MAE 0.5 eV
+   (WORSE), systematically UNDER-estimated. Eigenvalue self-consistency
+   makes it worse still. This is real, independent, quantitative
+   evidence that "upgrade W, leave Sigma's own Gamma=1" -- this
+   project's entire G0W_CC architecture as currently built -- has a
+   real, literature-documented ceiling, not just an implementation bug.
+   Doesn't by itself explain a multi-eV gap (their MAE swing is only
+   0.3->0.5 eV) but confirms the qualitative mechanism and direction:
+   this path was already tried in the literature and doesn't close
+   gaps like this, it can even move the wrong way.
+
+2. **Nooijen & Snijders, Int. J. Quantum Chem. 44, 55 (1992)** (CCGF,
+   Coupled-Cluster Green's-Function method) and follow-up working-
+   equations papers: builds the ionization/attachment parts of the
+   Green's function DIRECTLY (not via first approximating an
+   irreducible self-energy then solving Dyson's equation) and is
+   explicitly stated in the literature to be intimately connected to
+   CC linear-response theory (CCLRT) -- i.e. IP/EA-EOM-CCSD. This is a
+   known equivalence: CCGF's ionization-part poles converge onto
+   IP-EOM-CCSD's own eigenvalues. Practically: chasing a genuine
+   CC-consistent vertex correction down this route would, AT
+   CONVERGENCE, reproduce numbers this project ALREADY HAS directly
+   and far more cheaply, in `h2o_scrnc_ipeomcc_sto3g_0823`/
+   `h2o_scrnc_eaeomcc_sto3g_0823`.
+
+3. **"Uncovering relationships between the electronic self-energy and
+   coupled-cluster doubles theory," arXiv:2505.18910 (JPCA 2025)** --
+   the paper that actually derives CCD's own amplitude equations FROM
+   a self-energy construction (a "particle-hole-time decoupled" self-
+   energy). Fetched the full HTML text, not just the abstract: their
+   Eq. 7 self-energy is Sigma_IJ(w) = Sum U_{i,kab} *
+   [(w+i*eta)*1 - (K_2p1h + C_2p1h)]^-1_{kab,lcd} * U_{lcd,j} -- a
+   frequency-dependent quantity built by INVERTING a full 2p1h/2h1p
+   coupling matrix (built from <ab||cd>-type integrals and the T2-
+   dressed Fock operator), not a simple integral/sum like scrnc's
+   current Sigma_c. The 2p1h/2h1p configuration space this inverts IS
+   the same excitation manifold IP/EA-EOM-CCSD's own sigma-vector
+   machinery already spans -- structurally, implementing this is
+   equivalent in complexity to building IP/EA-EOM-CCSD's own matrix
+   machinery a second time, inside the self-energy pipeline, NOT an
+   additive correction term on top of the existing frequency integral.
+   Also, per point 2, its converged answer is the same IP/EA-EOM-CCSD
+   number already sitting on disk.
+
+4. Also identified but not deep-dived (Bintrim/Berkelbach-adjacent,
+   Tolle/Chan-adjacent): "The coupled-cluster self-energy" (arXiv
+   2309.10451, Phys. Rev. B) and "Connection between GW and Extended
+   Coupled Cluster" (arXiv 2602.10887) -- both build a genuine
+   irreducible CC self-energy diagrammatically, unifying RPA/GW-BSE/CC.
+   Real, citable, correct-direction literature, but both are full
+   diagrammatic theory papers requiring substantial new machinery
+   (irreducible self-energy diagram evaluation, not a drop-in term) --
+   out of one-session scope, consistent with points 2/3's conclusion.
+
+**Verdict on step 5/6 of the directive: STOPPING HERE, NOT implementing,
+per this project's own explicit "don't force an unjustified correction"
+doctrine (the CORR_2P/FACT2 precedent).** No tractable, well-defined,
+additive-to-the-existing-pipeline vertex correction exists in this
+literature -- every real option (Nooijen-Snijders CCGF, the CCD-
+self-energy Riccati equation, the diagrammatic irreducible CC self-
+energy) requires building genuinely new frequency-dependent matrix
+machinery over the 2p1h/2h1p manifold, comparable in scope to
+implementing IP/EA-EOM-CCSD's own working equations a second time
+inside this pipeline -- not a term addable to
+`Scrnc_sigma_driver.F`'s existing frequency-integral loop. And critically,
+per point 2, the thing being chased would converge to numbers this
+project can already get directly and cheaply via ACES2's existing
+IP/EA-EOM-CCSD. **No code changed this session.**
+
+**What this means strategically, for Ajith's actual decision, not just
+the technical dead end:** the current G0W_CC architecture (CC-response
+screening + vertex-less Sigma) has a real, literature-confirmed
+ceiling on near-Fermi-level states -- this project's own novelty
+hierarchy (G0W_RPA -> G0W_CC -> G0W_CC*Gamma_CC, "continued 15" above)
+correctly anticipated Gamma_CC would be needed, but Gamma_CC turns out
+to be AS EXPENSIVE AS EOM-CCSD ITSELF, not a light correction on top of
+G0W_CC. Three honest paths forward, needing Ajith's own call, not
+another autonomous guess: (a) accept the current on-shell G0W_CC as
+useful specifically for LARGER systems where full IP/EA-EOM-CCSD is
+too expensive but G0W_CC is affordable, with the well-behaved MOs
+(3/6/7, matching EOM-CCSD to ~0.1-0.5 eV even at DZ) as the
+demonstrated regime of validity, and the near-Fermi-level MO4/MO5 gap
+as a known, documented, literature-consistent limitation rather than a
+bug to keep chasing; (b) invest in genuinely implementing a CC-
+consistent Gamma (Nooijen-Snijders CCGF or the irreducible-self-energy
+route) as a real, multi-session methods-development project in its own
+right, understanding it essentially means building IP/EA-EOM-CCSD-
+equivalent machinery into the self-energy; (c) reconsider whether the
+manuscript's novelty claim should rest on G0W_CC's frontier-orbital IPs/
+EAs specifically (where this session's evidence says it's weakest) or
+on some other observable/regime where CC-response screening's
+advantage over RPA is real without needing the vertex fix.
+
+Not committed as code -- `SCRNC_DEBUG_LOG.md` doc-only, commit next.
+
 ## SESSION 2026-08-23 (later still, fork, H2O/DZ CROSS-CHECK of the
 MO4/MO5 anomaly -- verdict: PERSISTS, NOT a STO-3G/minimal-basis
 artifact -- RESUME HERE, this is now the authoritative top entry):
