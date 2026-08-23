@@ -4,6 +4,104 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-23 (later still, fork, H2O/DZ CROSS-CHECK of the
+MO4/MO5 anomaly -- verdict: PERSISTS, NOT a STO-3G/minimal-basis
+artifact -- RESUME HERE, this is now the authoritative top entry):
+per Ajith's approved sequencing (chase the cheaper basis-size test
+before vertex corrections), reran the full scrnc-vs-EOM-CCSD
+comparison on H2O/DZ (same geometry/UHF reference, same b4501c52
+stability-checked Pade solver) to test whether the literature-confirmed
+anomalous gap (70415f08 below) is a STO-3G minimal-virtual-space
+pathology or persists at larger basis.
+
+**Setup**: `h2o_scrnc_sigma_matrix_dyson_dz_0823` (CCSD/UHF/DZ/DENSITY=
+RESPONSE, sigma_input N=4/Omega_c=1.0, same as the STO-3G run), sbatch
+job 40044564, exit 0, all 14 MOs converged AND passed the stability
+check (`stable=1` in both `qp_energies.dat`/`qp_energies_matrix.dat`).
+One new code-robustness note, not chased further (out of scope for
+this comparison): the self-contained Jacobi eigensolver
+(`Scrnc_sigma_jacobi_eig`) printed 18 "did not converge in Maxsweep
+sweeps" warnings during the matrix branch-tracking search on this
+larger 14x14 problem (STO-3G's 7x7 never triggered this) -- the
+stability check still accepted only self-consistent, cross-validated
+roots, so this did not silently corrupt the final numbers, but it's a
+real latent robustness gap in the diagonalizer worth fixing before this
+is pushed to bigger systems.
+
+Independent `h2o_scrnc_ipeomcc_dz_0823` (`IP_CALC=IP_EOMCC,IP_SYM=5`)
+and `h2o_scrnc_eaeomcc_dz_0823` (`EA_CALC=EA_EOMCC,EA_SYM=9` -- 9
+roots to cover DZ's 9 virtuals, vs STO-3G's EA_SYM=2 for its 2
+virtuals), jobs 40044558/40044559, both exit 0. Mapped each root to
+its HF MO via the `SINGLE IP/EA COEFFICIENTS` block ACES2 prints per
+converged root (`A [A_IRREP]; <coeff>` -- this is the actual raw-R1
+printout, confirmed by reproducing the STO-3G session's exact
+previously-quoted R1 values, e.g. root1->MO5/R1=0.971205, character
+for character); did NOT force weak/absent single-amplitude roots into
+a mapping.
+
+**IP mapping (DZ)**: root1->MO5 (R1=-0.972, clean), root2->MO4
+(R1=-0.973, clean), root3->MO3 (R1=0.981, clean), root4->MO2
+(R1=-0.423 only -- weak, NOT clean, flagged not trusted), root5 no
+single-IP character at all (pure 2h1p, unmapped, same shake-up
+pattern as STO-3G's MO2 roots). MO1 (core) not attempted, same as
+STO-3G. **EA mapping (DZ)**: root1->MO6 (R1=0.991, clean), root2->MO7
+(R1=0.986, clean); roots 3,5,6,8,9 are dominated by 2p1h character
+(no SINGLE EA line at all) and roots 4,7 have only weak single-particle
+character (R1=0.15,-0.15) -- so MO8 through MO14 have NO clean
+EOM-CCSD single-particle reference in this 9-root scan, not forced.
+
+**Comparison table** (eV; Koopmans=-eps_HF occ/+eps_HF virt,
+QP-diag/QP-mat from the b4501c52-stable solver, DZ eps_HF/eps_QP
+values converted from the Hartree-unit `qp_energies*.dat` files at
+27.211386245988 eV/Ha):
+
+| MO | Koopmans | QP-diag | QP-matrix | EOM-CCSD | diag err | STO-3G diag err (70415f08) |
+|----|---------:|--------:|----------:|---------:|---------:|----------------------------:|
+| 3  | 19.52 | 19.23 | 19.24 | 18.76 | **+0.47** | +0.21 |
+| 4  | 15.43 | 16.96 | 16.94 | 13.76 | **+3.20** | +2.65 |
+| 5 (HOMO) | 13.78 | 15.78 | 15.80 | 11.74 | **+4.04** | +4.13 |
+
+(EA-side MO6/MO7 QP energies not pulled into this table -- see "Not
+done" below. Both EA roots exist and are clean, R1=0.99/0.99.)
+
+**Verdict: the anomaly is NOT a minimal-basis/STO-3G artifact.** Going
+from STO-3G (2 virtuals) to DZ (9 virtuals) -- more than 4x the virtual
+space the CC-response screening has to build W from -- MO5/HOMO's
+error is unchanged within ~0.1 eV (4.13 -> 4.04 eV) and MO4's error
+got WORSE, not better (2.65 -> 3.20 eV). If STO-3G's starved virtual
+space were the driver, DZ should have shown substantial improvement;
+instead the near-Fermi-level gap is stable-to-slightly-worse under a
+4x larger virtual space. MO3 (a well-behaved state at both basis
+sizes) also drifted slightly (+0.21 -> +0.47 eV) but stayed an order
+of magnitude smaller than MO4/MO5's gap at both basis sizes -- the
+qualitative pattern (near-Fermi states specifically anomalous, deeper
+valence states fine) is basis-independent too.
+
+**This rules in favor of candidate (b) from 70415f08's two flagged
+next steps**: real missing physics (most likely missing vertex
+corrections/self-consistency, absent from this on-shell,
+diagonal-approximation-adjacent G0W0-with-CC-screening level),
+concentrated on the two states nearest the Fermi level, not a basis-
+convergence issue. Candidate (a) (STO-3G-specific virtual-space
+starvation) is now disfavored by this direct test.
+
+**Not done / next steps**: (1) MO2's DZ mapping (root4, R1=-0.42) and
+the EA-side MO6/MO7 comparison were not folded into the table above --
+worth doing for completeness but not central to the near-Fermi-level
+question this session targeted; (2) the Jacobi eigensolver robustness
+gap (18 warnings on the 14x14 case) should get its own look before any
+larger system is attempted; (3) whether to now chase vertex corrections
+directly, or run one more basis size (e.g. DZP/TZ) to confirm the
+plateau, is Ajith's call, not something to keep escalating
+autonomously.
+
+**Committed**: `SCRNC_DEBUG_LOG.md`, this entry. Not pushed. New job
+dirs under `/blue/ufhpc/perera/scrnc_test/`: `h2o_scrnc_sigma_matrix_
+dyson_dz_0823` (40044564), `h2o_scrnc_ipeomcc_dz_0823` (40044558),
+`h2o_scrnc_eaeomcc_dz_0823` (40044559).
+
+---
+
 ## SESSION 2026-08-23 (later still, fork, LITERATURE CHECK on the
 MO4/MO5 gap -- verdict: ANOMALOUS, not expected G0W0@HF behavior --
 RESUME HERE, this is now the authoritative top entry): Ajith's read on
