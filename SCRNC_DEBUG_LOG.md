@@ -4,6 +4,28 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-23 (later) -- Ajith's own scope call: RCC/DRCC RHF/UHF
+response-gap thread SET ASIDE, project focus moves to CCSD. RESUME HERE
+if scrnc/RCC/DRCC work resumes; this is now the authoritative top entry.
+
+Ajith reviewed the Nmult=1 re-close (entry immediately below) and made a
+final scope decision rather than continue chasing the residual:
+**RCC/DRCC's role in this project is comparison-with-literature and
+debugging, not the main line of work -- CCSD is.** UHF RCC/DRCC is
+already trusted (multiple independent consistency checks in this log
+confirm it). The RHF/UHF response-property identity gap (1.88x H2/
+STO-3G, up to ~12.5% H2O/STO-3G) is left OPEN AND UNPURSUED, not because
+it's understood to be correct physics, but because closing it properly
+is now believed to need a genuinely DIFFERENT kind of code for the RHF
+identity (not further patching of the current dressing/Hbar/Nmult
+pipeline, all of which are now confirmed correct as-is via 8ec738fa/
+eea48bcc). **No further autonomous work on this thread unless/until
+Ajith explicitly reopens it or commissions the separate RHF-identity
+code.** Nothing to fix, nothing pending -- working tree for scrnc/
+aces2/scrnc left exactly as eea48bcc committed it.
+
+---
+
 ## SESSION 2026-08-23 -- Nmult=1 (singlet-only) decision REVISITED per
 Ajith's explicit authorization ("you can revisit... need to wrap this
 and move forward"), RE-CONFIRMED as correct on the NEW (post-L-side-fix)
