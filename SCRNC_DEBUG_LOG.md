@@ -4,6 +4,117 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-08-23 (later still, fork, MO5/HOMO ANOMALY DIAGNOSED --
+PADE CONTINUATION ROBUSTNESS FAILURE, NOT a missed root and not yet
+established as new physics, RESUME HERE): Ajith asked to look into the
+7.76 eV MO5-vs-EOM-CCSD outlier flagged in the entry immediately below.
+Used the already-computed `sigma_c_output.dat` from
+`h2o_scrnc_sigma_matrix_dyson_0823` directly (no new pipeline runs
+needed -- all 13 Omega_ext points' Sigma_c(5,5;i*omega') were already on
+disk) plus a standalone Python re-implementation of the exact Thiele
+reciprocal-difference algorithm `Scrnc_sigma_pade_coeff`/`_eval` use, to
+test both hypotheses independently of the Fortran code itself.
+
+**Symmetry note first (not a bug, just context):** `qp_orbitals.dat`
+shows MO5 has EXACTLY zero mixing with every other orbital in the
+matrix solve (`maxOverlap=1.0000` to the printed precision) -- this is
+expected, not evidence the matrix generalization is broken: this is
+`sym=off` STO-3G water, and MO5 (the b1 out-of-plane O lone pair, the
+HOMO) is the only MO of its symmetry in this minimal basis, so it is
+exactly integral-forbidden from mixing with anything, by construction.
+
+**Hypothesis 1 (bracket search skipped a root nearer the EOM-CCSD
+answer) -- TESTED, RULED OUT for the shipped 6-point fit.** A brute-
+force scan of `F(z)=z-eps_HF-Re[Sigma_c(z)]` over z in [-3,3] Hartree,
+built from the exact same 6 selected points
+(`Scrnc_sigma_qp_bracket`'s own anchor-nearest-point selection,
+Nsel0=6) the production run used, found **exactly one** sign change in
+that whole range, at z=-0.5945 Ha -- the same root scrnc converged to.
+There is no second root near z=-0.3094 Ha (the EOM-CCSD-equivalent
+energy) being skipped by the pole-proximity rejection guard; `F(z)` at
+the EOM-CCSD target evaluates to +0.19, not near zero, at this
+particular 6-point fit. So: not a case of the bracket search picking
+the wrong one of two genuine roots.
+
+**Hypothesis 2 (Pade fit instability) -- CONFIRMED, decisively, and
+this is the real story.** Drop-one-point refits (removing one of the 5
+non-static selected points, refitting with the next-nearest
+replacement, exactly mirroring what the code's own escalation path
+would do) move MO5's root by up to **3.10 eV** -- vs. 0.16 eV (MO3) and
+0.33 eV (MO6, the two well-agreeing control states) under the identical
+procedure, roughly an order of magnitude worse. Even more telling: an
+escalating-Nuse sweep (6 through all 13 available points) has MO3's
+root pinned to a 0.11 eV band the whole way (16.77->16.88 eV, stable),
+while **MO5's "root" wanders from 16.18 eV (6pt) down to 9.74 eV (7pt),
+back up to ~12.5 eV (8-13pt), never settling anywhere close to either
+scrnc's shipped 16.18 eV answer or the EOM-CCSD 8.42 eV target.** The
+7pt fit (9.74 eV) actually lands closest to the EOM-CCSD value of any
+tested point count -- pure happenstance given how much the answer
+swings, not evidence 7 points is "the right" choice.
+
+**Root cause identified, not just symptomatic instability:** the
+existing escalation logic in `Scrnc_sigma_qp_solve`/
+`Scrnc_sigma_qp_matrix_solve` only escalates to more points when
+`Iconverged==0` (no bracket found at all) -- for MO5, the 6-point fit
+DOES cleanly bracket-and-bisect (`Iconverged=1`, `iters=21`), so
+escalation never triggers, and the code has no way to notice that the
+answer it accepted is wildly fit-dependent. This is a genuine, novel
+finding (a gap in the escalation TRIGGER condition itself, not just
+"MO5 happens to need more points" -- more points doesn't even fix it
+here, see above), on top of, and now understood to be a *specific case
+of*, the already-documented 2026-08-18 "continued 23"/"continued 25"
+Pade robustness finding (H2O/DZ core orbital, also confirmed via
+independent arbitrary-precision arithmetic to be genuine ill-
+posedness of high-order exact-interpolation continuation, not
+double-precision roundoff -- not re-verified with mpmath this session,
+but the qualitative signature -- large swings with point count, no
+convergence trend -- matches exactly).
+
+**Verdict: NOT resolved as "numerical artifact, safe to discard" vs.
+"real physics" -- genuinely still open, but now for a precise reason.**
+The wide swing with point count means the current pipeline cannot
+actually determine MO5's QP energy reliably AT ALL with this
+quadrature/continuation scheme -- the 7.76 eV EOM-CCSD discrepancy
+reported in the entry below is not a trustworthy number to react to
+(it could equally well have been quoted as ~4 eV using the 7-point fit,
+or ~2 eV using 8-13 points), and the previously-flagged large
+`Im[Sigma_c(eps_QP)]=-0.1976` at the shipped root is consistent with
+being a genuine symptom of a nearby pole/branch point in the true
+Sigma_c(z) making ANY sparse-sample Pade continuation ill-conditioned
+in this region -- which is itself physically suggestive (satellite/
+shake-up structure near this state, plausible for an out-of-plane lone
+pair in a minimal basis) but NOT established here; that would need a
+genuinely denser omega' quadrature or an independent continuation
+method (e.g. a constrained/regularized Pade variant, or many more
+imaginary-axis points concentrated near this MO's own energy) to
+settle, not more re-fitting of the same 13 points already in hand.
+
+**Not done, concrete next steps for whoever picks this up:** (1) add a
+fit-stability CHECK to the escalation trigger itself (e.g. refit with
+one point dropped as a matter of course, escalate if the root moves by
+more than some tolerance, not just when no bracket is found at all) --
+this is a real, general robustness gap, not MO5-specific, worth fixing
+regardless of what MO5's true answer turns out to be; (2) a genuinely
+denser omega' quadrature run (more inner quadrature nodes than this
+job's N=4) specifically to see whether finer sampling near MO5's own
+energy scale stabilizes the fit, before concluding anything about
+physics; (3) hypothesis 4 (H2/STO-3G HOMO cross-check) from the
+original directive was NOT reached this session, deliberately, once
+hypothesis 2 turned decisive -- still open, would help distinguish
+"generic on-shell-G0W0-with-CC-screening limitation at this level" from
+"specific to this one calculation," but only meaningful once the
+continuation itself is trustworthy. Scratch analysis scripts (not
+committed, throwaway): `thiele_scan.py`, `stability.py` in this
+session's scratchpad, reproducible from `sigma_c_output.dat` alone if
+needed again.
+
+No source-code changes this session (diagnosis only, per directive --
+did not force a fit-stability heuristic without Ajith's input on the
+right tolerance/escalation policy). This finding also means: hold off
+trusting the MO4 (2.55 eV off) number too, from the entry below, until
+its own fit stability is checked the same way -- not done this session,
+flagged for next.
+
 ## SESSION 2026-08-23 (later, fork, FIRST IP/EA-EOM-CCSD VALIDATION of
 scrnc's QP energies -- MIXED RESULT, one large unresolved outlier,
 RESUME HERE -- this is now the authoritative top entry): Ajith's
