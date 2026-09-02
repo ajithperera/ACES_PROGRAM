@@ -12,6 +12,7 @@ Usage:
 """
 import argparse
 import concurrent.futures
+import functools
 import os
 import re
 import shutil
@@ -172,6 +173,24 @@ def compare_gtensor(name, ref_text, actual_text):
     return rms <= tol, rms, f"g-tensor RMS error {rms:.3e} (tol {tol:.1e})"
 
 
+@functools.lru_cache(maxsize=1)
+def mpirun_extra_args():
+    """--oversubscribe is an OpenMPI flag: it is required there whenever the
+    suite runs more ranks than the box has cores, but Intel MPI's Hydra
+    launcher rejects it outright (it oversubscribes by default), so hardcoding
+    it makes every case fail with an argument error on an Intel MPI build.
+    Ask mpirun which one it is."""
+    try:
+        out = subprocess.run(["mpirun", "--version"], capture_output=True,
+                             text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return []
+    banner = (out.stdout or "") + (out.stderr or "")
+    if "Intel(R) MPI" in banner or "Intel MPI" in banner:
+        return []
+    return ["--oversubscribe"]
+
+
 def run_case(name, np):
     case_dir = os.path.join(CASES_DIR, name)
     zmat = os.path.join(case_dir, "ZMAT")
@@ -189,7 +208,7 @@ def run_case(name, np):
         t0 = time.time()
         try:
             run = subprocess.run(
-                ["mpirun", "--oversubscribe", "-np", str(np), XACES3],
+                ["mpirun", *mpirun_extra_args(), "-np", str(np), XACES3],
                 cwd=scratch, env=env, capture_output=True, text=True,
                 timeout=timeout,
             )
@@ -204,7 +223,7 @@ def run_case(name, np):
 
         env["ACES_EXE_PATH"] = FAST_DIR
         cmp_run = subprocess.run(
-            ["mpirun", "--oversubscribe", "-np", "1", XTEST_COMPARE, name],
+            ["mpirun", *mpirun_extra_args(), "-np", "1", XTEST_COMPARE, name],
             cwd=scratch, env=env, capture_output=True, text=True, timeout=60,
         )
 

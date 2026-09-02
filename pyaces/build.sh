@@ -5,8 +5,16 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 SHIM=$SCRIPT_DIR/tools/compat_bin
 export PATH=$SHIM:$PATH
+# Driven from ../build.sh this must use the module set ./configure recorded
+# (this script purges the environment build.sh already set up, so it has to
+# be told); run standalone it falls back to the HiPerGator set.
 module purge
-module load intel/2025.1.0 openmpi/5.0.7 python/3.12
+if ! module load ${ACES_PROGRAM_MODULES:-intel/2025.1.0 openmpi/5.0.7 python/3.12}; then
+    echo "module load failed: ${ACES_PROGRAM_MODULES:-intel/2025.1.0 openmpi/5.0.7 python/3.12}" >&2
+    echo "Set ACES_PROGRAM_MODULES, or run ../configure --modules=\"...\" and ../build.sh pyaces" >&2
+    exit 1
+fi
+: "${MKLROOT:?is unset -- the loaded modules provide no Intel MKL}"
 
 WORK=$SCRIPT_DIR
 MAIN=$WORK/Main
@@ -14,8 +22,12 @@ PYF=$WORK/a2_pyf
 ACES=$SCRIPT_DIR/../aces2
 NUMPY_INC=$(python3 -c "import numpy; print(numpy.get_include())")
 PY_INC=$(python3 -c "import sysconfig; print(sysconfig.get_path('include'))")
-F2PY_SRC=/apps/python/3.12/lib/python3.12/site-packages/numpy/f2py/src
+# fortranobject.c/.h ship inside numpy itself, so ask the interpreter that is
+# actually being built against rather than hardcoding one site's install path.
+F2PY_SRC=$(python3 -c "import numpy, os; print(os.path.join(os.path.dirname(numpy.__file__), 'f2py', 'src'))")
 MKL=$MKLROOT/lib/intel64
+# oneAPI's own layout has the libraries directly under lib/ on some installs.
+[ -d "$MKL" ] || MKL=$MKLROOT/lib
 
 cd $MAIN
 rm -rf gen build
@@ -66,7 +78,7 @@ mpicc -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC \
     -c $F2PY_SRC/fortranobject.c -o build/fortranobject.o
 
 echo "=== step 3: compile Fortran sources ==="
-FFLAGS="-i8 -fPIC -fp-model strict -O1 -assume minus0 -qopenmp -D__fortran -D__fortran77 -D_INTEL -D_RECL_IS_WORDS_ -I$ACES/include -I$ACES/acescore/include -I. -FI"
+FFLAGS="-diag-disable=10448 -i8 -fPIC -fp-model strict -O1 -assume minus0 -qopenmp -D__fortran -D__fortran77 -D_INTEL -D_RECL_IS_WORDS_ -I$ACES/include -I$ACES/acescore/include -I. -FI"
 
 for f in $SOURCES; do
     base=$(basename "$f" .F)
