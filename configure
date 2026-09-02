@@ -3,50 +3,72 @@
 #
 # This is a THIN orchestrator, not a from-scratch build system: it does not
 # replace any subsystem's own build machinery (aces2's GNUmakefile, aces3's
-# autotools, pyaces's build.sh) -- it only records the shared toolchain
-# (Intel compilers + Intel MKL, the choice already baked into all three
-# subsystems independently) and module set so build.sh/run_tests.sh can
-# drive them consistently instead of each needing its own manual `module
-# load` + invocation remembered separately.
+# autotools, pyaces's build.sh) -- it only works out how to put the shared
+# toolchain (Intel compilers + Intel MKL + MPI, the choice already baked into
+# all three subsystems independently) on PATH, and records that in
+# build_config.sh so build.sh/run_tests.sh can drive them consistently.
+#
+# Nothing here is HiPerGator-specific any more. With no arguments it probes
+# the host and picks, in order:
+#   1. environment modules, if the module command exists and a usable set is
+#      installed (HiPerGator's own set first, then any local intel/* module)
+#   2. an Intel oneAPI setvars.sh, if one is installed in a usual location
+#   3. whatever compilers are already on PATH
+# and derives the two settings that differ per host from there (aces2's
+# MACHNAME lookup key and which aces3 configure wrapper matches the local MPI).
 set -euo pipefail
 
-MODULES="intel/2025.1.0 openmpi/5.0.7 python/3.12"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+HPG_MODULES="intel/2025.1.0 openmpi/5.0.7 python/3.12"
+
+MODULES=""
+SETVARS=""
+ENV_MODE=""
 NP=4
 MACHNAME=""
-ACES3_CONFIG="configure_line.ufhpc"
+MACHNAME_SET=0
+ACES3_CONFIG=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --modules=*) MODULES="${1#*=}" ;;
+    --modules=*) MODULES="${1#*=}"; ENV_MODE=modules ;;
+    --setvars=*) SETVARS="${1#*=}"; ENV_MODE=setvars ;;
+    --no-modules) ENV_MODE=path ;;
     --np=*) NP="${1#*=}" ;;
-    --machname=*) MACHNAME="${1#*=}" ;;
+    --machname=*) MACHNAME="${1#*=}"; MACHNAME_SET=1 ;;
     --aces3-config=*) ACES3_CONFIG="${1#*=}" ;;
     -h|--help)
       cat <<EOF
-Usage: ./configure [--modules="mod1 mod2 ..."] [--np=N] [--machname=NAME]
-                   [--aces3-config=FILE]
+Usage: ./configure [--modules="mod1 mod2 ..." | --setvars=SCRIPT | --no-modules]
+                   [--np=N] [--machname=NAME] [--aces3-config=FILE]
 
-Records the shared module/toolchain set used to build and test aces2,
-aces3, and pyaces consistently (Intel compilers + Intel MKL). Does not
-replace any subsystem's own build system -- see ./build.sh and
-./run_tests.sh, which drive aces2/aces3/pyaces's existing build/test
-scripts using this config.
+Works out how to put the shared toolchain (Intel compilers + Intel MKL + MPI)
+on PATH and records it in build_config.sh. Does not replace any subsystem's own
+build system -- see ./build.sh and ./run_tests.sh, which drive aces2's,
+aces3's and pyaces's existing build/test scripts using this config.
 
-  --modules   modules to 'module load' before any build/test step
-              (default: "$MODULES")
-  --np        default MPI rank / parallel-job count for test suites
-              (default: $NP)
-  --machname  value to pass to aces2's gmake as MACHNAME. aces2's
-              Makefiles/GNUmakefile picks ARCH/OPSYS/CMPLR out of a table
-              keyed on \`uname -n\`, and dies with "The compiler is
-              undefined" on any host not listed there; this overrides the
-              lookup key without editing that table. Use "hipergator" for a
-              generic Intel x86_64 host, "xxx" for a GNU one.
-              (default: unset -- let the table decide, as on HiPerGator)
+With no arguments everything below is probed automatically.
+
+  --modules     'module load' this set before any build/test step
+                (HiPerGator: "$HPG_MODULES")
+  --setvars     source this script instead (e.g. an Intel oneAPI
+                /opt/intel/oneapi/setvars.sh) -- for hosts with no modules
+  --no-modules  set nothing up; the toolchain is already on PATH
+  --np          default MPI rank / parallel-job count for test suites
+                (default: $NP)
+  --machname    lookup key passed to aces2's gmake as MACHNAME. aces2's
+                Makefiles/GNUmakefile picks ARCH/OPSYS/CMPLR out of a table
+                keyed on \`uname -n\` and dies with "The compiler is undefined"
+                on any host not in it. Probed by default: "hipergator" (=
+                em64t:linux:intel) for an Intel toolchain, "xxx" (=
+                X86_64:linux:gnu) for a GNU one, and left unset when this
+                host is in aces2's table on its own merits.
   --aces3-config
-              aces3 configure wrapper to run, relative to aces3/
-              (default: $ACES3_CONFIG; use configure_line.local for a
-              local oneAPI box, where the MPI wrappers have different names)
+                aces3 configure wrapper to run, relative to aces3/. Probed by
+                default: configure_line.local when the Intel MPI wrappers
+                (mpiifort) are present, configure_line.ufhpc when mpif77 is an
+                Intel-backed OpenMPI as on HiPerGator.
 EOF
       exit 0 ;;
     *) echo "unknown option: $1 (see --help)" >&2; exit 1 ;;
@@ -54,26 +76,167 @@ EOF
   shift
 done
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+have_module() {
+  command -v module >/dev/null 2>&1 || [ "$(type -t module 2>/dev/null || true)" = function ]
+}
+
+# Try a module set in a subshell so a failed load cannot pollute this one.
+modules_load_ok() {
+  ( module purge >/dev/null 2>&1 || true
+    # shellcheck disable=SC2086
+    module load $1 >/dev/null 2>&1 ) 
+}
+
+# ---------------------------------------------------------------- environment
+if [ -z "$ENV_MODE" ]; then
+  if have_module && modules_load_ok "$HPG_MODULES"; then
+    MODULES="$HPG_MODULES"; ENV_MODE=modules
+  elif have_module && \
+       LOCAL_INTEL=$(module -t avail intel 2>&1 | grep -E '^intel/' | sort -r | head -1) && \
+       [ -n "${LOCAL_INTEL:-}" ] && modules_load_ok "$LOCAL_INTEL"; then
+    MODULES="$LOCAL_INTEL"; ENV_MODE=modules
+  else
+    for s in "${ONEAPI_ROOT:-/nonexistent}/setvars.sh" \
+             /opt/intel/oneapi/setvars.sh \
+             "$HOME/intel/oneapi/setvars.sh"; do
+      if [ -f "$s" ]; then SETVARS="$s"; ENV_MODE=setvars; break; fi
+    done
+    [ -n "$ENV_MODE" ] || ENV_MODE=path
+  fi
+fi
+
+# Run a probe with the selected toolchain loaded, exactly as build.sh will.
+probe() {
+  (
+    set +u
+    case "$ENV_MODE" in
+      modules) module purge >/dev/null 2>&1 || true
+               # shellcheck disable=SC2086
+               module load $MODULES >/dev/null 2>&1 || true ;;
+      setvars) . "$SETVARS" --force >/dev/null 2>&1 || . "$SETVARS" >/dev/null 2>&1 || true ;;
+    esac
+    eval "$1" 2>/dev/null
+  )
+}
+
+FC_FOUND=$(probe 'for f in ifx ifort gfortran; do command -v $f && break; done' || true)
+CMPLR_KIND=none
+case "$(basename "${FC_FOUND:-none}")" in
+  ifx|ifort) CMPLR_KIND=intel ;;
+  gfortran)  CMPLR_KIND=gnu ;;
+esac
+
+# ------------------------------------------------------------------- machname
+if [ "$MACHNAME_SET" = "0" ]; then
+  HOST_SHORT=$(uname -n | cut -d. -f1)
+  # aces2's table lists entries as "<name>:<arch>:<os>:<compiler>".
+  if grep -qE "(^|[[:space:]\\\\])${HOST_SHORT}:[a-zA-Z0-9_]+:[a-zA-Z0-9_]+:[a-zA-Z0-9_]+" \
+       "$ROOT/aces2/Makefiles/GNUmakefile" 2>/dev/null; then
+    MACHNAME=""     # this host is in aces2's own table; let it decide
+  elif [ "$CMPLR_KIND" = "intel" ]; then
+    MACHNAME=hipergator
+  elif [ "$CMPLR_KIND" = "gnu" ]; then
+    MACHNAME=xxx
+  fi
+fi
+
+# --------------------------------------------------------------- aces3 config
+if [ -z "$ACES3_CONFIG" ]; then
+  if [ -n "$(probe 'command -v mpiifort')" ]; then
+    ACES3_CONFIG=configure_line.local          # Intel MPI: mpiifort/mpiicx/mpiicpx
+  elif probe 'mpif77 -show' | grep -qE '(^|/)(ifort|ifx)( |$)'; then
+    ACES3_CONFIG=configure_line.ufhpc          # Intel-built OpenMPI, as on HiPerGator
+  else
+    ACES3_CONFIG=configure_line.ufhpc
+    ACES3_WARN=1
+  fi
+fi
 
 cat > "$ROOT/build_config.sh" <<EOF
 # generated by ./configure on $(date -u +%Y-%m-%dT%H:%M:%SZ) -- do not edit by hand,
 # re-run ./configure instead.
 ACES_PROGRAM_ROOT="$ROOT"
+ACES_PROGRAM_ENV_MODE="$ENV_MODE"
 ACES_PROGRAM_MODULES="$MODULES"
+ACES_PROGRAM_SETVARS="$SETVARS"
 ACES_PROGRAM_NP=$NP
 ACES_PROGRAM_MACHNAME="$MACHNAME"
 ACES_PROGRAM_ACES3_CONFIG="$ACES3_CONFIG"
+
+# Put the toolchain on PATH the same way for build.sh and run_tests.sh.
+# Returns nonzero with an explanation rather than letting a half-set-up
+# environment reach gmake, where it only shows up as "ifx: command not found"
+# once per source file.
+aces_program_load_env() {
+  case "\$ACES_PROGRAM_ENV_MODE" in
+    modules)
+      if ! command -v module >/dev/null 2>&1 && \\
+         [ "\$(type -t module 2>/dev/null || true)" != function ]; then
+        echo "configured for environment modules, but this host has no 'module' command" >&2
+        echo "re-run ./configure here" >&2
+        return 1
+      fi
+      module purge
+      # shellcheck disable=SC2086
+      if ! module load \$ACES_PROGRAM_MODULES; then
+        echo "module load failed: \$ACES_PROGRAM_MODULES" >&2
+        echo "re-run ./configure, or pass --modules=\"...\" / --setvars=<script>" >&2
+        return 1
+      fi
+      ;;
+    setvars)
+      if [ ! -f "\$ACES_PROGRAM_SETVARS" ]; then
+        echo "toolchain script not found: \$ACES_PROGRAM_SETVARS" >&2
+        echo "re-run ./configure here" >&2
+        return 1
+      fi
+      # Vendor toolchain scripts reference plenty of variables they have not
+      # set yet, so sourcing one under 'set -u' kills the whole shell (no
+      # error, no exit code -- build.sh just vanishes). Drop -u across the
+      # source and put it back afterwards.
+      _aces_u=0
+      case "\$-" in *u*) _aces_u=1; set +u ;; esac
+      # oneAPI's setvars.sh declines a second run unless forced; other
+      # toolchain scripts do not take the flag at all.
+      . "\$ACES_PROGRAM_SETVARS" --force >/dev/null 2>&1 || \\
+        . "\$ACES_PROGRAM_SETVARS" >/dev/null 2>&1 || {
+          [ "\$_aces_u" = 1 ] && set -u
+          echo "failed to source \$ACES_PROGRAM_SETVARS" >&2; return 1; }
+      [ "\$_aces_u" = 1 ] && set -u
+      ;;
+    path)
+      : # already on PATH by whatever means the user arranged
+      ;;
+    *)
+      echo "unknown ACES_PROGRAM_ENV_MODE: \$ACES_PROGRAM_ENV_MODE" >&2
+      return 1 ;;
+  esac
+  return 0
+}
 EOF
 
 echo "Wrote $ROOT/build_config.sh"
-echo "  modules:  $MODULES"
-echo "  np:       $NP"
-echo "  machname: ${MACHNAME:-<unset: aces2 uname table decides>}"
-echo "  aces3:    $ACES3_CONFIG"
+case "$ENV_MODE" in
+  modules) echo "  toolchain: module load $MODULES" ;;
+  setvars) echo "  toolchain: source $SETVARS" ;;
+  path)    echo "  toolchain: whatever is already on PATH" ;;
+esac
+echo "  compiler:  ${FC_FOUND:-<none found>} ($CMPLR_KIND)"
+echo "  np:        $NP"
+echo "  machname:  ${MACHNAME:-<unset: host is listed in the aces2 table>}"
+echo "  aces3:     $ACES3_CONFIG"
+if [ "$CMPLR_KIND" != "intel" ]; then
+  echo
+  echo "WARNING: no Intel Fortran compiler found. All three subsystems expect"
+  echo "         Intel compilers + MKL; pyaces requires ifort AND ifx by name."
+fi
+if [ "${ACES3_WARN:-0}" = "1" ]; then
+  echo
+  echo "WARNING: no Intel-backed MPI wrapper found -- falling back to"
+  echo "         aces3/$ACES3_CONFIG. Write an aces3/configure_line.<host> for"
+  echo "         this machine and pass --aces3-config=configure_line.<host>."
+fi
 echo
 echo "Next:"
 echo "  ./build.sh [aces2] [aces3] [pyaces]      (default: all three, dependency order)"
 echo "  ./run_tests.sh [aces2] [aces3] [pyaces]  (default: all three, unified rollup table)"
-echo "  sbatch build_logs/submit_unified_build.sh"
-echo "  sbatch build_logs/submit_unified_tests.sh"

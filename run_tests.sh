@@ -16,14 +16,18 @@ fi
 # shellcheck source=/dev/null
 source "$ROOT/build_config.sh"
 
-module purge
-# shellcheck disable=SC2086
-if ! module load $ACES_PROGRAM_MODULES; then
-  echo "module load failed: $ACES_PROGRAM_MODULES" >&2
-  echo "Same toolchain as ./build.sh -- re-run ./configure --modules=\"...\" if this" >&2
-  echo "host names them differently. Running the suites against a partially loaded" >&2
-  echo "environment produces a rollup table that means nothing." >&2
-  exit 1
+# How the toolchain gets onto PATH (modules / a setvars script / nothing at
+# all) is whatever ./configure probed on this host; build_config.sh carries the
+# loader itself. Older build_config.sh files predate it and were modules-only.
+if type aces_program_load_env >/dev/null 2>&1; then
+  aces_program_load_env || exit 1
+else
+  module purge
+  # shellcheck disable=SC2086
+  if ! module load $ACES_PROGRAM_MODULES; then
+    echo "module load failed: $ACES_PROGRAM_MODULES -- re-run ./configure" >&2
+    exit 1
+  fi
 fi
 
 mkdir -p "$ROOT/build_logs"

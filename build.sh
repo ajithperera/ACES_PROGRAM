@@ -24,14 +24,18 @@ ACES_PROGRAM_ACES3_CONFIG="${ACES_PROGRAM_ACES3_CONFIG:-configure_line.ufhpc}"
 # which module set this build is using rather than inheriting the loaded one.
 export ACES_PROGRAM_MODULES
 
-module purge
-# shellcheck disable=SC2086
-if ! module load $ACES_PROGRAM_MODULES; then
-  echo "module load failed: $ACES_PROGRAM_MODULES" >&2
-  echo "This tree's toolchain is Intel compilers + Intel MKL + MPI, provided by those" >&2
-  echo "modules on HiPerGator. If this host names them differently, re-run" >&2
-  echo "  ./configure --modules=\"...\"" >&2
-  exit 1
+# How the toolchain gets onto PATH (modules / a setvars script / nothing at
+# all) is whatever ./configure probed on this host; build_config.sh carries the
+# loader itself. Older build_config.sh files predate it and were modules-only.
+if type aces_program_load_env >/dev/null 2>&1; then
+  aces_program_load_env || exit 1
+else
+  module purge
+  # shellcheck disable=SC2086
+  if ! module load $ACES_PROGRAM_MODULES; then
+    echo "module load failed: $ACES_PROGRAM_MODULES -- re-run ./configure" >&2
+    exit 1
+  fi
 fi
 
 # `module load` succeeding is not by itself proof the toolchain is usable: a
@@ -48,7 +52,7 @@ require_tools() {
     command -v "$tool" >/dev/null 2>&1 || missing="$missing $tool"
   done
   if [ -n "$missing" ]; then
-    echo "  cannot build $target -- not on PATH after 'module load $ACES_PROGRAM_MODULES':$missing" >&2
+    echo "  cannot build $target -- not on PATH after loading the configured toolchain:$missing" >&2
     return 1
   fi
   return 0
