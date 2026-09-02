@@ -18,7 +18,13 @@ source "$ROOT/build_config.sh"
 
 module purge
 # shellcheck disable=SC2086
-module load $ACES_PROGRAM_MODULES
+if ! module load $ACES_PROGRAM_MODULES; then
+  echo "module load failed: $ACES_PROGRAM_MODULES" >&2
+  echo "Same toolchain as ./build.sh -- re-run ./configure --modules=\"...\" if this" >&2
+  echo "host names them differently. Running the suites against a partially loaded" >&2
+  echo "environment produces a rollup table that means nothing." >&2
+  exit 1
+fi
 
 mkdir -p "$ROOT/build_logs"
 
