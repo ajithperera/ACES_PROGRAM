@@ -14,6 +14,7 @@ import argparse
 import concurrent.futures
 import functools
 import os
+import resource
 import re
 import shutil
 import subprocess
@@ -180,6 +181,27 @@ def compare_gtensor(name, ref_text, actual_text):
     return rms <= tol, rms, f"g-tensor RMS error {rms:.3e} (tol {tol:.1e})"
 
 
+def raise_stack_limit():
+    """Give the ranks the stack the SOC superinstructions need.
+
+    steom_so_diag.F (and the other aces_instructions_extnd routines it is
+    modelled on) declares its working matrices as automatic arrays --
+    AAA/BBB/CMATR/VL/VR are all msize x msize, and msize is 4 * nocc * nvirt --
+    so case steom_so alone wants a few hundred MB of *stack* per rank. Under a
+    login shell's default 8MB that is an immediate SIGSEGV inside
+    steom_so_diag at line 32, which looks like a code bug and is not one; a
+    batch environment like HiPerGator's simply has no such limit, which is why
+    the baseline never saw it. Children of this process inherit the limit, so
+    raising it here covers every mpirun the suite launches.
+    """
+    try:
+        soft, hard = resource.getrlimit(resource.RLIMIT_STACK)
+        if soft != hard:
+            resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))
+    except (ValueError, OSError):
+        pass  # not fatal: only the SOC cases care
+
+
 @functools.lru_cache(maxsize=1)
 def mpirun_extra_args():
     """--oversubscribe is an OpenMPI flag: it is required there whenever the
@@ -297,6 +319,8 @@ def main():
                          help="run only these case names (repeatable); "
                               "default is all cases in tests/fast/cases/")
     args = parser.parse_args()
+
+    raise_stack_limit()
 
     if args.timeout_scale is not None:
         global TIMEOUT_SCALE
