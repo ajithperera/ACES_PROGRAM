@@ -390,3 +390,12 @@ ifx -shared -nofor-main -o build/aces2py.cpython-312-x86_64-linux-gnu.so \
 echo "=== step 5: test import ==="
 cd build
 python3 -c "import aces2py; print('IMPORT OK')"
+
+# Which copy of a multiply-defined routine won this link is not something the
+# linker will ever complain about -- it just picks one and everybody lives with
+# it. Every collision fixed above was found by a test failing, several of them
+# by an energy quietly coming out wrong. Report the ones that are still there,
+# and shout if a new one appeared (a re-enabled .skip module is the usual
+# cause). Advisory only: it must not fail a build that otherwise linked.
+echo "=== step 6: link-resolution audit ==="
+python3 $WORK/tools/collision_audit.py || true
