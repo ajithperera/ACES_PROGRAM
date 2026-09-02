@@ -13,6 +13,9 @@ src/sial_compiler/compiler/sial
 bin/
 make.error
 make.output
+# the a2driver subtree's own makefiles write these two spellings instead
+make.err
+make.out
 # NOTE: this pattern covers ONLY the configure-generated Makefiles (the ones
 # named in configure.ac's AC_CONFIG_FILES). The recursive driver Makefiles --
 # src/Makefile, src/aces/Makefile, src/sia/Makefile, tests/Makefile and the
@@ -44,7 +47,6 @@ Makefile
 /config.h
 /config.log
 /config.status
-/make.err
 /nohup.out
 *.swp
 *.swo
