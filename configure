@@ -12,14 +12,19 @@ set -euo pipefail
 
 MODULES="intel/2025.1.0 openmpi/5.0.7 python/3.12"
 NP=4
+MACHNAME=""
+ACES3_CONFIG="configure_line.ufhpc"
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --modules=*) MODULES="${1#*=}" ;;
     --np=*) NP="${1#*=}" ;;
+    --machname=*) MACHNAME="${1#*=}" ;;
+    --aces3-config=*) ACES3_CONFIG="${1#*=}" ;;
     -h|--help)
       cat <<EOF
-Usage: ./configure [--modules="mod1 mod2 ..."] [--np=N]
+Usage: ./configure [--modules="mod1 mod2 ..."] [--np=N] [--machname=NAME]
+                   [--aces3-config=FILE]
 
 Records the shared module/toolchain set used to build and test aces2,
 aces3, and pyaces consistently (Intel compilers + Intel MKL). Does not
@@ -31,6 +36,17 @@ scripts using this config.
               (default: "$MODULES")
   --np        default MPI rank / parallel-job count for test suites
               (default: $NP)
+  --machname  value to pass to aces2's gmake as MACHNAME. aces2's
+              Makefiles/GNUmakefile picks ARCH/OPSYS/CMPLR out of a table
+              keyed on \`uname -n\`, and dies with "The compiler is
+              undefined" on any host not listed there; this overrides the
+              lookup key without editing that table. Use "hipergator" for a
+              generic Intel x86_64 host, "xxx" for a GNU one.
+              (default: unset -- let the table decide, as on HiPerGator)
+  --aces3-config
+              aces3 configure wrapper to run, relative to aces3/
+              (default: $ACES3_CONFIG; use configure_line.local for a
+              local oneAPI box, where the MPI wrappers have different names)
 EOF
       exit 0 ;;
     *) echo "unknown option: $1 (see --help)" >&2; exit 1 ;;
@@ -46,11 +62,15 @@ cat > "$ROOT/build_config.sh" <<EOF
 ACES_PROGRAM_ROOT="$ROOT"
 ACES_PROGRAM_MODULES="$MODULES"
 ACES_PROGRAM_NP=$NP
+ACES_PROGRAM_MACHNAME="$MACHNAME"
+ACES_PROGRAM_ACES3_CONFIG="$ACES3_CONFIG"
 EOF
 
 echo "Wrote $ROOT/build_config.sh"
-echo "  modules: $MODULES"
-echo "  np:      $NP"
+echo "  modules:  $MODULES"
+echo "  np:       $NP"
+echo "  machname: ${MACHNAME:-<unset: aces2 uname table decides>}"
+echo "  aces3:    $ACES3_CONFIG"
 echo
 echo "Next:"
 echo "  ./build.sh [aces2] [aces3] [pyaces]      (default: all three, dependency order)"

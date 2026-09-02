@@ -45,6 +45,13 @@ for t in $TARGETS; do
         > "$LOG" 2>&1
       ;;
     pyaces)
+      # The suite gives every case its own working directory under a scratch
+      # filesystem; the runner's built-in default is HiPerGator's /blue path.
+      # Off HiPerGator, keep the cases inside build_logs/ instead -- unless the
+      # caller already named somewhere better.
+      if [ -z "${PYACES_RUN_DIR:-}" ] && [ ! -d /blue/ufhpc ]; then
+        export PYACES_RUN_DIR="$ROOT/build_logs/pyaces_suite_run"
+      fi
       ( cd "$ROOT/pyaces" && python3 pyaces_suite_runner.py ) \
         > "$LOG" 2>&1
       ;;
