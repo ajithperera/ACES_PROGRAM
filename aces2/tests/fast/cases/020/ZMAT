@@ -1,4 +1,4 @@
-RHF CCSD(TQ) SINGLE POINT ENERGY CALCULATION
+UHF CCSD(TQ) SINGLE POINT ENERGY CALCULATION
 H
 O 1 R
 H 2 R 1 A
@@ -8,5 +8,14 @@ A=104.
 
 *ACES2
 BASIS=DZP
-CALC=CCSD(TQ),SPHERICAL=OFF
+CALC=CCSD(TQ),SPHERICAL=OFF,REF=UHF
 
+REF=UHF rather than RHF because the fifth-order triples/quadruples code has
+no RHF path: TRPS14, the all-alpha spin case, is skipped for IUHF=0, so the
+2*(X1+X2) assembly in vcc5t/nonit3.F would silently drop about half of each
+fifth-order term -- 2.24e-04 hartree here. xvcc5t now refuses that
+combination outright; the comment at that assembly says what an RHF fix
+would need. UHF is the same closed-shell solution for this molecule (CCSD
+and CCSD(T) agree with the RHF run to 2e-09) and reproduces this case's
+archive reference to 3.8e-09, so the quadruples code keeps real coverage --
+it is the only case in the suite that exercises vcc5q at all.
