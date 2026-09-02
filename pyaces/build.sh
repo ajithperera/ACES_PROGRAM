@@ -313,8 +313,17 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 # 10 is LDB, passed as zero. Let crust's win: it is the strictly more
 # defensive of the two and identical on every non-degenerate call, so the
 # modules that used to get tools' see no change.
-EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_ tools:xgemm_"
-EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens tools"
+# 17th instance, and the first one the audit script called before the test did:
+# CHECK_T2 is trp's (33 lines, checks the T2 amplitudes against a stored copy)
+# and ringcc's (115 lines, its own ring-CC variant). vcc's ACES_LINK_LISTS entry
+# is vcc:trp:librt3:..., with no ringcc anywhere in it, so xvcc has always meant
+# trp's; in the .so ringcc's won and vcc -> check_t2 -> getall asked for list 34,
+# which does not exist under SINGLE_STORE=ON (clmoio.F builds that layout with
+# INIT_NOREDNT_LIST instead of INIPCK). Cases 116a/b/c died on
+# "@GETLST: List (1,34) does not exist". ccsdtqf, ccsdtqf_mm and pccd resolve to
+# trp's as well, so trp wins globally and ringcc keeps its own by the rename.
+EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_ tools:xgemm_ ringcc:check_t2_"
+EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens tools ringcc"
 
 # a2mix, aux, rpa and scrnc were .skip module directories until 723989ab /
 # aff1dc3c re-enabled them. Their archives only began competing in THIS link
