@@ -75,6 +75,33 @@ aces2_missing_binaries() {
     <(ls "$ROOT/aces2/bin" 2>/dev/null | grep '^x' | sort -u)
 }
 
+# aces2's makefile makes each module's binary depend on that module's OWN
+# library and nothing else -- not on the shared libraries it links against
+# (acescore, libr, tools, ...). Editing one of those therefore rebuilds the
+# archive and leaves all ~76 executables in place, silently linked against the
+# old code: the build reports OK, the binary set is complete, and the suite
+# quietly tests yesterday's build. (Hit for real while fixing the BW-CC
+# file-name bug in acescore/aces_io_init.F -- libacescore.a had the fix, xvcc
+# was five hours old, and the case still failed exactly as before.)
+#
+# A from-scratch build trips this too, and legitimately: modules link in
+# alphabetical order, so an early module's binary can be linked before a later
+# module's library that it needs even exists (pdens needs libvmol2ja.a).
+#
+# List the binaries older than the newest installed library.
+aces2_stale_binaries() {
+  local newest_lib lib_mtime b
+  newest_lib=$(ls -t "$ROOT/aces2/lib"/*.a 2>/dev/null | head -1)
+  [ -n "$newest_lib" ] || return 0
+  lib_mtime=$(stat -c %Y "$newest_lib" 2>/dev/null) || return 0
+  for b in "$ROOT/aces2/bin"/x*; do
+    [ -f "$b" ] || continue
+    if [ "$(stat -c %Y "$b" 2>/dev/null || echo 0)" -lt "$lib_mtime" ]; then
+      basename "$b"
+    fi
+  done
+}
+
 mkdir -p "$ROOT/build_logs"
 
 TARGETS="$*"
@@ -131,6 +158,21 @@ for t in $TARGETS; do
           [ "$N" = "$PREV_N" ] && break
           PREV_N=$N
         done
+        # Relink whatever the shared-library dependency gap left behind (see
+        # aces2_stale_binaries). One pass is enough: relink is binclean + all +
+        # install, so afterwards every binary post-dates every library, and an
+        # otherwise-unchanged rebuild finds nothing to do here.
+        STALE=$(aces2_stale_binaries)
+        if [ -n "$STALE" ]; then
+          echo "=== aces2: $(echo "$STALE" | wc -w) binaries older than the libraries -- relinking ===" >> "$LOG"
+          # shellcheck disable=SC2086
+          ( cd "$ROOT/aces2" && \
+            gmake -k $MACHNAME_ARG FFLAGS_EXTRA=-fPIC F9XFLAGS_EXTRA=-fPIC CFLAGS_EXTRA=-fPIC CXXFLAGS_EXTRA=-fPIC relink \
+          ) >> "$LOG" 2>&1
+          MISSING=$(aces2_missing_binaries)
+          STALE=$(aces2_stale_binaries)
+          [ -n "$STALE" ] && echo "  aces2: still older than the libraries after relink: $STALE" >&2
+        fi
         if [ -z "$MISSING" ]; then
           RESULT[$t]=0
         else
