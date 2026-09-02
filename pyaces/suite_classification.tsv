@@ -33,12 +33,12 @@ name	category	reason	entrypoint	iuhf	record	ref_value
 015d	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-1.477117789120E+02
 015e	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-1.477117789140E+02
 015f	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-1.276720488480E+02
-020	CC	CALC=CCSD(TQ)	Runcc	0	TOTENERG	-7.627396912090E+01
+020	EXCLUDED	CCSD(TQ): post_scf_eneg.F runs xvcc5t then xvcc5q after xvcc; pyaces has no entry point for either		0	TOTENERG	-7.627396912090E+01
 021	CC	CALC=CCSDT	Runcc	0	TOTENERG	-7.627365941870E+01
-022	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.627235464170E+01
-022a	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.625706706060E+01
-022b	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.625713390230E+01
-022c	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.626025819440E+01
+022	EXCLUDED	Brueckner: the driver repeats vscf/vtran/intprc/vcc until the orbitals settle (4 passes for this case)		0	TOTENERG	-7.627235464170E+01
+022a	EXCLUDED	Brueckner: the driver repeats vscf/vtran/intprc/vcc until the orbitals settle		0	TOTENERG	-7.625706706060E+01
+022b	EXCLUDED	Brueckner: the driver repeats vscf/vtran/intprc/vcc until the orbitals settle		0	TOTENERG	-7.625713390230E+01
+022c	EXCLUDED	Brueckner: the driver repeats vscf/vtran/intprc/vcc until the orbitals settle		0	TOTENERG	-7.626025819440E+01
 023	CC	CALC=MBPT(4)	Runcc	1	TOTENERG	-5.575743308530E+01
 023a	CC	CALC=SDQ-MBPT(4)	Runcc	1	TOTENERG	-5.575500714330E+01
 024	CC	CALC=CCSDT-1	Runcc	0	TOTENERG	-7.627542356790E+01
@@ -67,18 +67,18 @@ name	category	reason	entrypoint	iuhf	record	ref_value
 065	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-1.084765190360E+02
 074	EXCLUDED	VIB=FINDIF (Hessian/gradient path)		0	SCFENEG	-0.760236063946E+02
 078	CC	CALC=CCSD	Runcc	1	TOTENERG	-2.796269751240E+02
-083	CC	CALC=CCSD(T)	Runcc	1	TOTENERG	-1.001536027730E+02
-103.ks	SCF	CALC=SCF	Runscf	0	TOTENERG	-7.473262543670E+01
-104.ks	SCF	CALC=SCF	Runscf	0	TOTENERG	-7.698740074120E+01
-105.ks	SCF	CALC=SCF	Runscf	0	TOTENERG	-5.610011648550E+01
+083	EXCLUDED	HFSTABILITY=FOLLOW: precc.F re-runs vtran/intprc off the SCFKICK record after the SCF is rotated		1	TOTENERG	-1.001536027730E+02
+103.ks	EXCLUDED	KS: the total energy is produced by xintgrt, a program pyaces never runs (Runscf faults in vscf setnumint first)		0	TOTENERG	-7.473262543670E+01
+104.ks	EXCLUDED	KS: the total energy is produced by xintgrt, a program pyaces never runs (Runscf faults in vscf setnumint first)		0	TOTENERG	-7.698740074120E+01
+105.ks	EXCLUDED	KS: the total energy is produced by xintgrt, a program pyaces never runs (Runscf faults in vscf setnumint first)		0	TOTENERG	-5.610011648550E+01
 109	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.626976984660E+01
 110	EOM	CALC=CCSD EXCITE=EOMEE ESTATE_PROP=EXPECTATION	Runee	0	TOTENERG	-7.627250892780E+01
 116a	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.632195661350E+01
 116b	CC	CALC=CCSD	Runcc	1	TOTENERG	-5.579160823390E+01
 116c	CC	CALC=CCSD	Runcc	1	TOTENERG	-5.579155039900E+01
-117a	CC	CALC=MBPT(2)	Runcc	0	TOTENERG	-7.570070948730E+01
-117b	CC	CALC=MBPT(2)	Runcc	1	TOTENERG	-7.570070948730E+01
-117c	CC	CALC=MBPT(2)	Runcc	1	TOTENERG	-7.570070948730E+01
+117a	EXCLUDED	direct MBPT(2): the driver runs xdirmp2, not xvcc; no pyaces entry point		0	TOTENERG	-7.570070948730E+01
+117b	EXCLUDED	direct MBPT(2): the driver runs xdirmp2, not xvcc; no pyaces entry point		1	TOTENERG	-7.570070948730E+01
+117c	EXCLUDED	direct MBPT(2): the driver runs xdirmp2, not xvcc; no pyaces entry point		1	TOTENERG	-7.570070948730E+01
 118a	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-7.627254832660E+01
 118b	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.575627852320E+01
 118c	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.575624009370E+01
