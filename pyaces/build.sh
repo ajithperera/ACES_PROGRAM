@@ -281,8 +281,24 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 # else here. (trp/grad_trps.f calls it with only THREE arguments, which is a
 # separate pre-existing arity bug in a path this suite does not reach; left
 # alone deliberately rather than papered over from here.)
-EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_"
-EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens"
+# 15th instance, and the first one this tree created rather than inherited:
+# rpa was a .skip module until 723989ab re-enabled it, so its archive only
+# started competing in this link after that commit -- which is why the
+# zero-point baseline never saw it. CMPENG ("compute energy") exists in libr
+# (0xb37 = 2871 bytes) and rpa (0xc79 = 3193), same 9-argument signature, so
+# nothing crashes: rpa's simply won and vcc/eucc.f quietly got RPA's variant.
+# They are not interchangeable -- libr's has the singles block
+#   IF((METHOD.GT.9.AND.SING1.AND.METHOD.NE.21.AND.METHOD.NE.23)
+#  &    .OR.NONHF.AND.SING1)THEN
+# that accumulates ESING from the T1 amplitudes, while rpa's drops it and
+# zeroes ESING_KEEP/EDBLS_KEEP instead. Caught on suite case 025 (CALC=UCC(4)):
+# the correlation energy came out -0.227165476 against the serial run's
+# -0.227215217, 4.97e-05 adrift before the UCC(4) correction even started, and
+# the final energy missed the archive reference by 2.49e-05. vcc, lambda, pccd,
+# ccsdtqf and ccsdtqf_mm all call CMPENG expecting libr's, so libr wins
+# globally and rpa's own callers (mkt1at2.f, t2int1.f) follow the rename.
+EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_ rpa:cmpeng_"
+EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens rpa"
 
 PATCHED_LIBDIR=$WORK/build/patched_libs
 mkdir -p $PATCHED_LIBDIR
