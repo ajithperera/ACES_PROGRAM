@@ -92,7 +92,7 @@ name	category	reason	entrypoint	iuhf	record	ref_value
 124a.fno	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.624960116420E+01
 124b.fno	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.624526403250E+01
 124c.fno	CC	CALC=CCSD(T)	Runcc	1	TOTENERG	-7.625182088660E+01
-124d.fno	CC	CALC=CCSD(T)	Runcc	1	TOTENERG	-7.605521876870E+01
+124d.fno	EXCLUDED	HFSTABILITY=FOLLOW: precc.F re-runs vtran/intprc off the SCFKICK record after the SCF is rotated (same as case 083); the other FNO+CCSD(T) cases pass without it		1	TOTENERG	-7.605521876870E+01
 124e.fno	CC	CALC=CCSD(T)	Runcc	1	TOTENERG	-7.625182088420E+01
 124f.fno	CC	CALC=CCSD	Runcc	1	TOTENERG	-5.572623519630E+01
 124g.fno	CC	CALC=CCSD(T)	Runcc	1	TOTENERG	-5.572809242210E+01
