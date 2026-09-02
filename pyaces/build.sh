@@ -322,7 +322,18 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 # INIT_NOREDNT_LIST instead of INIPCK). Cases 116a/b/c died on
 # "@GETLST: List (1,34) does not exist". ccsdtqf, ccsdtqf_mm and pccd resolve to
 # trp's as well, so trp wins globally and ringcc keeps its own by the rename.
-EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_ tools:xgemm_ ringcc:check_t2_"
+# 18th instance, and the one that showed the audit script was only looking
+# half way: a module that DEFINES a routine and calls it can still lose to
+# somebody else's copy here, which the classic build makes impossible (the
+# linker satisfies the call from the archive member it is already pulling in).
+# vcc owns INITIN (252 bytes), INITSN, DIISLST and DODIIS0; lambda has its own
+# larger versions (INITIN is 688 there) and won all four, so vcc ran lambda's
+# initialisation and then asked for list 1, which the FNO run has not built:
+# cases 124c/d/e/g.fno (FNO with CCSD(T)) died on "@GETLST: List (1,1) does not
+# exist" while the five FNO cases that stop at CCSD were fine. ccsdtqf,
+# ccsdtqf_mm, copt, pccd, psi4dbg, ringcc and ringcl all resolve these to vcc's
+# in the classic link too, so vcc wins and lambda follows the rename.
+EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_ tools:xgemm_ ringcc:check_t2_ lambda:initin_ lambda:initsn_ lambda:diislst_ lambda:dodiis0_"
 EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens tools ringcc"
 
 # a2mix, aux, rpa and scrnc were .skip module directories until 723989ab /

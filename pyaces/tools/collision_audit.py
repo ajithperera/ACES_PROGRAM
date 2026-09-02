@@ -134,9 +134,15 @@ def audit():
             continue                     # cannot tell them apart by size
         win = next(iter(winners))
         for caller in refs.get(sym, ()):
-            if caller in owners or caller not in links:
+            if caller not in links:
                 continue
-            serial = next((m for m in links[caller] if m in owners), None)
+            # A module that defines the routine AND calls it means its own copy;
+            # the classic build guarantees that, because the linker satisfies the
+            # reference from the archive it is already pulling the caller out of.
+            # In one .so it can lose to another module's copy just like anyone
+            # else -- that is how vcc ended up running lambda's INITIN.
+            serial = caller if caller in owners else \
+                next((m for m in links[caller] if m in owners), None)
             if serial is None or serial == win:
                 continue
             if code_of(source_of(win, sym)) == code_of(source_of(serial, sym)):
