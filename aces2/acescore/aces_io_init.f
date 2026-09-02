@@ -367,6 +367,51 @@ c        (sets /filspc/iprcln needed by aces_io_open)
          nslots = iflags(44)
          call aces_cache_init(iCore,i0,iMem,nprcwd,nslots)
 
+c      o BW-CC per-reference file names: fall back when the plain name is gone
+c
+c        A multi-reference BW-CC run keeps one set of list files per reference
+c        -- MOINTS.01, MOINTS.02, ... -- and gfname appends that ".nn" suffix
+c        only when /bwccint/isbwcc is set (gfname.F, "add the process id to the
+c        end of various files"). But isbwcc is set by bwread, which every member
+c        executable calls from its OWN main body: xvcc at vcc.F:74, xintprc at
+c        intproc.F:44 -- i.e. AFTER aces_init has already run this routine. So on
+c        entry here isbwcc is still false, gfname hands back the unsuffixed
+c        "MOINTS", and the open below dies with
+c        '@ACES_IO_INIT: "MOINTS" - file not found' before the program body ever
+c        starts. xintprc survives only because the plain MOINTS still exists when
+c        it starts; xvcc, running once the per-reference files have taken over,
+c        does not. Reproduced by tests/fast case s_122a.bw (NON-HF=ON with a
+c        2-determinant bwdata).
+c
+c        This is the narrow fix: if the plain name is absent but the reference-1
+c        name is present, adopt the BW-CC naming here and say so. It can only
+c        trigger where the alternative was a hard exit.
+c
+c        The proper fix is to make the BW-CC state known BEFORE the I/O layer
+c        opens anything -- have aces_init read bwdata (or a flag-only variant of
+c        bwread that sets isbwcc/nref/iref and nothing else) ahead of its
+c        aces_io_init call, and delete this block. That was left alone here
+c        because aces_init is shared by every member executable and has a history
+c        of order-sensitive defects (the ICRSIZ-on-reentrant-calls fix), so it
+c        deserves its own change with the whole suite behind it rather than
+c        riding along with a single case.
+         if (.not.isbwcc) then
+            call gfname('MOINTS',szFile,iLength)
+            inquire(file=szFile(1:iLength),exist=bExist,
+     &              err=666,iostat=iStat)
+            if (.not.bExist) then
+               inquire(file=szFile(1:iLength)//'.01',exist=bExist,
+     &                 err=666,iostat=iStat)
+               if (bExist) then
+                  isbwcc = .true.
+                  masik  = .false.
+                  iref   = 1
+                  print *, '@ACES_IO_INIT: using BW-CC name ',
+     &                     szFile(1:iLength),'.01'
+               end if
+            end if
+         end if
+
 c      o open the list files
          do ihFile = 1, 5
             iUnit = 50-1 + ihFile
