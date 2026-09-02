@@ -31,6 +31,13 @@ XTEST_COMPARE = os.path.join(REPO_DIR, "bin", "xtest_compare")
 DEFAULT_TOLERANCE = 1e-6  # a.u., RMS error gate
 DEFAULT_TIMEOUT = 600  # seconds, per-case xaces3 wall-clock budget
 
+# The budgets below are sized for a HiPerGator compute node. A slower or
+# busier machine (a workstation running several cases at once, say) needs the
+# same runs to be allowed more wall clock before they count as a failure --
+# a timeout says nothing about correctness. Scale them all with --timeout-scale
+# rather than editing the table per machine.
+TIMEOUT_SCALE = float(os.environ.get("ACES3_TIMEOUT_SCALE", "1"))
+
 # Per-case timeout overrides. The gten_* cases are full CCSD g-tensor
 # property runs (SCF+transform+CCSD+lambda+response, np=4) that measured
 # ~454s/~358s wall clock end-to-end on a dedicated reference run -- close
@@ -204,7 +211,7 @@ def run_case(name, np):
         env = os.environ.copy()
         env["ACES_EXE_PATH"] = os.path.join(REPO_DIR, "bin")
 
-        timeout = TIMEOUT_OVERRIDES.get(name, DEFAULT_TIMEOUT)
+        timeout = int(TIMEOUT_OVERRIDES.get(name, DEFAULT_TIMEOUT) * TIMEOUT_SCALE)
         t0 = time.time()
         try:
             run = subprocess.run(
@@ -282,10 +289,18 @@ def main():
                          help="MPI ranks per case (default 4 -- 2 ranks was "
                               "found unreliable for gradient/EOM cases, "
                               "crashing inside the SIP block-server layer)")
+    parser.add_argument("--timeout-scale", type=float, default=None,
+                        help="multiply every per-case timeout by this factor "
+                             "(also settable as ACES3_TIMEOUT_SCALE); use >1 on "
+                             "a machine slower than a HiPerGator node")
     parser.add_argument("--case", action="append", dest="cases",
                          help="run only these case names (repeatable); "
                               "default is all cases in tests/fast/cases/")
     args = parser.parse_args()
+
+    if args.timeout_scale is not None:
+        global TIMEOUT_SCALE
+        TIMEOUT_SCALE = args.timeout_scale
 
     if not os.path.isfile(XACES3):
         sys.exit(f"bin/xaces3 not found at {XACES3} -- build it first")
