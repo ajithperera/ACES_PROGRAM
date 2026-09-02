@@ -267,7 +267,21 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 # self-caller trap as every other instance today. Same two-context split
 # as draolad/t2toao/getaoinf (vee's own iabcont.f also calls its own
 # z2tomo internally) -- rename vcceh/lambda/vee's copies, let libr2 win.
-EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_"
+# 14th instance, found by gdb on suite case 021 (CALC=CCSDT) rather than by
+# reading: runcc_ -> vcc_ -> trps_ -> w45t3drv_ -> SIGSEGV. W45T3DRV exists in
+# trp (CORE,MAXCOR,IUHF,EXTRNL_CCSD -- 4 args, what trp/trps.f:599 and
+# ccsdtqf/trps_pccd.f pass) and in lambda (CORE,MAXCOR,IUHF,LZOOFF,LZVOFF,
+# LWOFF,LT3OFF,INIT -- 8 args, what lambda/vlamcc.f passes). lambda's copy was
+# winning the link, confirmed by size: nm -S gives 0x2a74 = 10868 bytes in the
+# linked .so, matching liblambda.a exactly, against libtrp.a's 0x22ee = 8942.
+# So trp's 4-argument call landed in an 8-argument routine and the four
+# missing argument addresses came from whatever was on the stack. Rename
+# lambda's so trp's -- the one two different modules call -- wins globally;
+# lambda/vlamcc.f keeps reaching its own through the rename, as everywhere
+# else here. (trp/grad_trps.f calls it with only THREE arguments, which is a
+# separate pre-existing arity bug in a path this suite does not reach; left
+# alone deliberately rather than papered over from here.)
+EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_"
 EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens"
 
 PATCHED_LIBDIR=$WORK/build/patched_libs
