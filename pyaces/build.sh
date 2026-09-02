@@ -297,8 +297,50 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 # the final energy missed the archive reference by 2.49e-05. vcc, lambda, pccd,
 # ccsdtqf and ccsdtqf_mm all call CMPENG expecting libr's, so libr wins
 # globally and rpa's own callers (mkt1at2.f, t2int1.f) follow the rename.
-EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_ rpa:cmpeng_"
-EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens rpa"
+EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_"
+EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens"
+
+# a2mix, aux, rpa and scrnc were .skip module directories until 723989ab /
+# aff1dc3c re-enabled them. Their archives only began competing in THIS link
+# afterwards -- the classic per-executable builds never link them next to the
+# modules below -- and each arrived carrying same-named copies of routines
+# other modules own: a2mix alone shadows setptr, zero, seeklb, makmap, header,
+# factor, piksr2, prntlo, setlmn, loadint, aainer, civpt and fmc; aux shadows
+# runit; rpa shadows cmpeng, t2t1aa1, t2t1ab1, sinden, srteval and the
+# dmptgss pair. Two of those were already caught the expensive way this
+# session: rpa:cmpeng_ (case 025 lost the singles term and came out 2.49e-05
+# wrong, silently) and a2mix:setptr_ -- a2mix's takes (last,max,type,num) while
+# the 658 call sites in intgrt/vksdint/sbtools/intpack/vscf/oeptools pass
+# sbtools' (stack,type,num), so the KS cases died with "setptr received
+# invalid data type" and a2mix does not even call its own copy.
+#
+# Rather than keep discovering these one failing case at a time, rename every
+# symbol these four share with any other module. --redefine-sym rewrites the
+# definition AND that module's own callers together, so each keeps using its
+# own copy while everyone else goes back to the module they resolved to before
+# these four joined the link. MAIN__ is left to the mechanism below.
+NEWLY_LINKED_MODULES="a2mix aux rpa scrnc"
+
+ALLSYMS=$(mktemp)
+for a in $ACES/lib/lib*.a; do
+    b=$(basename "$a" .a)
+    nm --defined-only "$a" 2>/dev/null | awk -v m="${b#lib}" '$2=="T"{print $3, m}'
+done | sort -u > $ALLSYMS
+for mod in $NEWLY_LINKED_MODULES; do
+    shared=$(awk -v m="$mod" '$2==m{mine[$1]=1} $2!=m{other[$1]=1}
+                              END{for (s in mine) if (s in other) print s}' $ALLSYMS |
+             grep -v '^MAIN__$' | sort)
+    [ -z "$shared" ] && continue
+    echo "shadowed by $mod, renaming: $(echo $shared | tr '\n' ' ')"
+    for sym in $shared; do
+        EXTRA_LOCALIZE_SYMBOLS="$EXTRA_LOCALIZE_SYMBOLS $mod:$sym"
+    done
+    case " $EXTRA_LOCALIZE_MODULES " in
+        *" $mod "*) ;;
+        *) EXTRA_LOCALIZE_MODULES="$EXTRA_LOCALIZE_MODULES $mod" ;;
+    esac
+done
+rm -f $ALLSYMS
 
 PATCHED_LIBDIR=$WORK/build/patched_libs
 mkdir -p $PATCHED_LIBDIR
