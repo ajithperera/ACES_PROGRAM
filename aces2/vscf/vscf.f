@@ -1310,7 +1310,21 @@ c           buffer for MPI_ALLREDUCE
          imemget = imemget + iTmp
       end if
 
-      If (IFLAGS(45) .EQ. 5) imemget=Max(imemget,Maxcor)
+C 2026-09-02: GUESS=READ_AO_MOS (45.EQ.5) used to raise IMEMGET to
+C MAXCOR, i.e. to the whole MEMORY keyword value (IFLAGS(36), set at line 264).
+C But the check two lines below compares IMEMGET against ICRSIZ, the core left
+C at THIS point -- always smaller than MAXCOR, since earlier stages have already
+C taken their share (~1.5M words in the H2O/DZP cases). So the test was
+C unconditionally true and every READ_AO_MOS job aborted with a bogus
+C "@scf: Insufficient memory available", no matter how large MEMORY was set:
+C raising MEMORY raised the demand by exactly the same amount. Found via
+C tests/fast cases s_108 and s_119b, whose only distinguishing feature is this
+C keyword (s_119a, identical but GUESS=READ_SO_MOS, always passed). Keep the
+C original intent -- take as much as this path can get -- but never ask for
+C more than is actually left. The genuine requirement here is what SYMSIZ
+C computed into IMEMGET above (1,506,805 words in those cases).
+      If (IFLAGS(45) .EQ. 5)
+     &   imemget=Max(imemget,Min(Maxcor,ICRSIZ))
      
 cwc0
 C
