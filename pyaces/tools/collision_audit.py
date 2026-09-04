@@ -51,6 +51,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ACES2 = os.path.normpath(os.path.join(HERE, '..', '..', 'aces2'))
 SO_GLOB = os.path.normpath(os.path.join(HERE, '..', 'Main', 'build'))
 BASELINE = os.path.join(HERE, 'collision_baseline.txt')
+COMMON_BASELINE = os.path.join(HERE, 'common_shadow_baseline.txt')
 
 
 def find_so():
@@ -159,6 +160,76 @@ def renamed_pairs(defs):
                     pairs.add((mod, sym))
     return pairs
 
+
+def common_block_shadows(so):
+    """Find subroutines shadowed by a same-named Fortran COMMON block.
+
+    A DIFFERENT failure mode from the rest of this file. Everything above
+    compares two subroutines that share a name and asks which implementation
+    won. Here the competitor is not code at all: `common /abcd/` emits a
+    global data symbol abcd_, the same name Fortran gives SUBROUTINE ABCD.
+
+    A tentative (C) symbol loses to a strong (T) definition only if the
+    linker has already pulled in the member holding it. When the commons
+    come first they satisfy the reference outright, the archive member
+    defining the subroutine is never extracted, and the name ends up in BSS.
+    Calling it then jumps into zero-filled data -- an instruction-fetch
+    fault, si_addr == $pc, not a wrong answer. There is no reading of this
+    under which the program is correct, so anything reported here with a
+    live caller is a real defect, not a judgement call.
+
+    Found the expensive way: this is what blocked every KS case. vscf ->
+    setnumint -> abcd faulted because seven modules (anti, eompccd, intprc,
+    lcct, nmr, tdee, vee) declare `common /abcd/` and intgrt/abcd.F defines
+    the 8-line SUBROUTINE ABCD that vscf actually wanted.
+
+    Reported separately from the audit above because the fix differs. When
+    the defining module is also the only caller, rename it (build.sh's
+    EXTRA_LOCALIZE_SYMBOLS moves definition and caller together). When some
+    OTHER module calls it, renaming the definition orphans that caller --
+    the common blocks are what have to move instead.
+    """
+    text, common, refs = (collections.defaultdict(set) for _ in range(3))
+    for f in archives():
+        mod = f[3:-2]
+        for line in nm(f'{ACES2}/lib/{f}').split('\n'):
+            p = line.split()
+            if len(p) == 2 and p[0] == 'U':
+                refs[p[1]].add(mod)
+            elif len(p) == 3:
+                if p[1] == 'T':
+                    text[p[2]].add(mod)
+                elif p[1] == 'C':
+                    common[p[2]].add(mod)
+
+    won = {}
+    for line in nm(so, '--defined-only').split('\n'):
+        p = line.split()
+        if len(p) == 3:
+            won.setdefault(p[2], p[1])
+
+    out = []
+    for sym in sorted(set(text) & set(common)):
+        if won.get(sym, '') not in ('B', 'b', 'D', 'd'):
+            continue
+        # A definer build.sh has already renamed is out of the collision: its
+        # definition and its own callers both moved to pyaces_<mod>_<sym>, so
+        # the plain name being data no longer costs anybody a call.
+        definers = sorted(m for m in text[sym]
+                          if f'pyaces_{m}_{sym}' not in won)
+        if not definers:
+            continue
+        callers = sorted(m for m in refs[sym]
+                         if f'pyaces_{m}_{sym}' not in won)
+        if not callers:
+            continue
+        verdict = ('rename-definer' if set(callers) <= set(definers)
+                   else 'rename-commons')
+        out.append('%s %s %s %s' % (sym, ','.join(definers),
+                                    ','.join(callers), verdict))
+    return out
+
+
 def audit():
     so = find_so()
     links = link_lists()
@@ -207,12 +278,45 @@ def main():
     args = ap.parse_args()
 
     current = audit()
+    shadows = common_block_shadows(find_so())
+    if args.update:
+        with open(COMMON_BASELINE, 'w') as fh:
+            fh.write('# symbol  defined-in  callers  verdict\n')
+            fh.write('\n'.join(shadows) + '\n')
     if args.update:
         with open(BASELINE, 'w') as fh:
             fh.write('# symbol  winner-in-so  what-the-classic-link-gives  caller\n')
             fh.write('\n'.join(current) + '\n')
         print(f'baseline updated: {len(current)} entries')
         return 0
+
+    known_shadows = set()
+    if os.path.isfile(COMMON_BASELINE):
+        known_shadows = {l.strip() for l in open(COMMON_BASELINE)
+                         if l.strip() and not l.startswith('#')}
+    new_shadows = [l for l in shadows if l not in known_shadows]
+    live = [l for l in shadows if l.split()[-1] != 'no-caller']
+    print(f'@COLLISION_AUDIT: {len(shadows)} subroutines shadowed by a '
+          f'same-named COMMON block '
+          f'({len(live)} with a live caller)')
+    if new_shadows:
+        print()
+        print('@COLLISION_AUDIT: NEW common-block shadows -- a CALL now lands in '
+              'BSS, which')
+        print('                  faults on instruction fetch the moment it is '
+              'reached.')
+        for l in new_shadows:
+            sym, definers, callers, verdict = l.split()
+            print(f'    {sym:22s} subroutine in {definers}, called by {callers}'
+                  f' -- {verdict}')
+        print()
+        print('                  rename-definer: add "<definer>:<symbol>" to '
+              'EXTRA_LOCALIZE_SYMBOLS.')
+        print('                  rename-commons: the callers are outside the '
+              'defining module, so')
+        print('                  renaming the definition would orphan them -- '
+              'move the commons.')
+        print()
 
     known = set()
     if os.path.isfile(BASELINE):
