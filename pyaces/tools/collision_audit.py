@@ -27,6 +27,19 @@ implementations is a live wrong-answer risk on whatever path reaches it.
   python3 tools/collision_audit.py                 # report against the baseline
   python3 tools/collision_audit.py --update        # accept the current state
 
+WHAT THIS LIST IS NOT: a work queue. Every collision fixed so far started from a
+test that failed and was verified one at a time against the tree's own reference
+values. An attempt to go the other way -- take 42 entries the script judged
+"safe" (single agreed-on owner, winner is not it) and rename the winners in one
+pass -- dropped the pyaces suite from 45 passing to 31. The caller model here is
+incomplete: ACES_LINK_LISTS only has entries for modules that build an
+executable, so every reference from a pure library module (libr, libr2, librt3,
+crust, tools, acescore ...) is invisible to it, and a "nobody else wants the
+winner" verdict can simply be wrong. Modelling it properly means reproducing
+what the linker does. Treat an entry as a lead worth checking when something
+misbehaves on that path -- that is how CHECK_T2 was found before its test was
+investigated -- not as a defect to fix on sight.
+
 The baseline is the set of disagreements known and accepted at the time it was
 written -- either already handled in build.sh's rename list, or on a path
 nothing exercises yet. New entries appearing there mean a module (or a .skip
@@ -120,22 +133,54 @@ def code_of(path):
             if l[:1] not in ('c', 'C', '*', '!') and l.strip()]
 
 
+
+def renamed_pairs(defs):
+    """(module, symbol) pairs that build.sh renames out of the way.
+
+    Without this the audit reports its own fixes back as problems: build.sh
+    renames lambda's DIISLST so vcc keeps its own, and an audit that only reads
+    the archives then sees "the .so gives vcc's, but lambda wants lambda's" --
+    true of the archives, false of the shared object lambda is actually linked
+    into, where its calls go to pyaces_lambda_diislst_.
+    """
+    txt = open(os.path.join(HERE, '..', 'build.sh'), errors='ignore').read()
+    pairs = set()
+    m = re.search(r'EXTRA_LOCALIZE_SYMBOLS="([^"]*)"', txt, re.S)
+    if m:
+        for tok in m.group(1).split():
+            if ':' in tok:
+                mod, sym = tok.split(':', 1)
+                pairs.add((mod, sym))
+    m = re.search(r'NEWLY_LINKED_MODULES="([^"]*)"', txt)
+    if m:
+        for mod in m.group(1).split():
+            for sym, owners in defs.items():
+                if mod in owners and len(owners) > 1 and sym != 'MAIN__':
+                    pairs.add((mod, sym))
+    return pairs
+
 def audit():
     so = find_so()
     links = link_lists()
     defs, refs, sizes = symbol_tables()
     linked = linked_sizes(so)
+    renamed = renamed_pairs(defs)
     found = set()
     for sym, owners in defs.items():
         if len(owners) < 2 or sym == 'MAIN__' or sym not in linked:
             continue
-        winners = {m for m in owners if sizes[m].get(sym) == linked[sym]}
+        live = {m for m in owners if (m, sym) not in renamed}
+        if not live:
+            continue
+        winners = {m for m in live if sizes[m].get(sym) == linked[sym]}
         if len(winners) != 1:
             continue                     # cannot tell them apart by size
         win = next(iter(winners))
         for caller in refs.get(sym, ()):
             if caller not in links:
                 continue
+            if (caller, sym) in renamed:
+                continue                 # keeps its own through the rename
             # A module that defines the routine AND calls it means its own copy;
             # the classic build guarantees that, because the linker satisfies the
             # reference from the archive it is already pulling the caller out of.
@@ -143,6 +188,10 @@ def audit():
             # else -- that is how vcc ended up running lambda's INITIN.
             serial = caller if caller in owners else \
                 next((m for m in links[caller] if m in owners), None)
+            if serial is not None and (serial, sym) in renamed:
+                # the classic answer is a copy this build renames away; the
+                # caller now gets whatever else won, which is the point of it
+                serial = next((m for m in links[caller] if m in live), None)
             if serial is None or serial == win:
                 continue
             if code_of(source_of(win, sym)) == code_of(source_of(serial, sym)):
