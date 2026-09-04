@@ -45,7 +45,7 @@ PYF_SOURCES="$MAIN/init.F $PYF/dgetrecpy.F $PYF/igetrecpy.F $PYF/dputrecpy.F \
     $PYF/putlstpy.F $PYF/getallpy.F $PYF/putallpy.F $PYF/getreclenpy.F \
     $PYF/get1ehpy.F $PYF/get2ehpy.F $PYF/buildhbar.F $PYF/runints.F \
     $PYF/runscf.F $PYF/runcc.F $PYF/runhbar.F $PYF/runprops.F $PYF/runpccd.F \
-    $PYF/runee.F $PYF/rundirmp2.F $PYF/acesjafin.F $PYF/acesjainit.F"
+    $PYF/runee.F $PYF/rundirmp2.F $PYF/runintgrt.F $PYF/acesjafin.F $PYF/acesjainit.F"
 
 # Full source list for compilation+linking (everything the above call, plus
 # their internal Fortran-level dependencies, actually need at link time).
@@ -379,6 +379,15 @@ done
 rm -f $ALLSYMS
 
 PATCHED_LIBDIR=$WORK/build/patched_libs
+# Wipe it first. This directory is linked with -L ahead of aces2's own lib/,
+# so anything left here from a previous build shadows the real archive -- and
+# it is only ever repopulated for the modules in the lists above, so dropping a
+# module from them leaves its stale patched copy in the link line forever.
+# That is not hypothetical: an experiment that briefly added intgrt to the list
+# left a libintgrt.a here from before intgrt_run.F existed, and the next build
+# linked that instead, failing at import with "undefined symbol: intgrt_run_"
+# while nm showed the symbol sitting in aces2/lib/libintgrt.a all along.
+rm -rf $PATCHED_LIBDIR
 mkdir -p $PATCHED_LIBDIR
 for mod in $MAIN_COLLISION_MODULES $EXTRA_LOCALIZE_MODULES; do
     src_a=$ACES/lib/lib${mod}.a
