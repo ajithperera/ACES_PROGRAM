@@ -76,9 +76,9 @@ name	category	reason	entrypoint	iuhf	record	ref_value
 116a	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.632195661350E+01
 116b	CC	CALC=CCSD	Runcc	1	TOTENERG	-5.579160823390E+01
 116c	CC	CALC=CCSD	Runcc	1	TOTENERG	-5.579155039900E+01
-117a	EXCLUDED	direct MBPT(2): the driver runs xdirmp2, not xvcc; no pyaces entry point		0	TOTENERG	-7.570070948730E+01
-117b	EXCLUDED	direct MBPT(2): the driver runs xdirmp2, not xvcc; no pyaces entry point		1	TOTENERG	-7.570070948730E+01
-117c	EXCLUDED	direct MBPT(2): the driver runs xdirmp2, not xvcc; no pyaces entry point		1	TOTENERG	-7.570070948730E+01
+117a	CC	CALC=MBPT(2) direct (fock=ao,direct)	Rundirmp2	0	TOTENERG	-7.570070948730E+01
+117b	CC	CALC=MBPT(2) direct (fock=ao,direct)	Rundirmp2	1	TOTENERG	-7.570070948730E+01
+117c	CC	CALC=MBPT(2) direct (fock=ao,direct)	Rundirmp2	1	TOTENERG	-7.570070948730E+01
 118a	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		0	TOTENERG	-7.627254832660E+01
 118b	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.575627852320E+01
 118c	EXCLUDED	starred Z-matrix variable(s) (implicit GEOM_OPT, needs gradients)		1	TOTENERG	-5.575624009370E+01

@@ -172,6 +172,8 @@ python module aces2py ! in
         end subroutine runprops
         subroutine runee       ! in :runee:runee.F
         end subroutine runee
+        subroutine rundirmp2   ! in :rundirmp2:rundirmp2.F
+        end subroutine rundirmp2
         subroutine acesjafin   ! in :acesjafin:acesjafin.F
         end subroutine acesjafin
         subroutine acesjainit  ! in :acesjainit:acesjainit.F

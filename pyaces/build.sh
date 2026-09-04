@@ -45,7 +45,7 @@ PYF_SOURCES="$MAIN/init.F $PYF/dgetrecpy.F $PYF/igetrecpy.F $PYF/dputrecpy.F \
     $PYF/putlstpy.F $PYF/getallpy.F $PYF/putallpy.F $PYF/getreclenpy.F \
     $PYF/get1ehpy.F $PYF/get2ehpy.F $PYF/buildhbar.F $PYF/runints.F \
     $PYF/runscf.F $PYF/runcc.F $PYF/runhbar.F $PYF/runprops.F $PYF/runpccd.F \
-    $PYF/runee.F $PYF/acesjafin.F $PYF/acesjainit.F"
+    $PYF/runee.F $PYF/rundirmp2.F $PYF/acesjafin.F $PYF/acesjainit.F"
 
 # Full source list for compilation+linking (everything the above call, plus
 # their internal Fortran-level dependencies, actually need at link time).
