@@ -68,9 +68,9 @@ name	category	reason	entrypoint	iuhf	record	ref_value
 074	EXCLUDED	VIB=FINDIF (Hessian/gradient path)		0	SCFENEG	-0.760236063946E+02
 078	CC	CALC=CCSD	Runcc	1	TOTENERG	-2.796269751240E+02
 083	EXCLUDED	HFSTABILITY=FOLLOW: precc.F re-runs vtran/intprc off the SCFKICK record after the SCF is rotated		1	TOTENERG	-1.001536027730E+02
-103.ks	EXCLUDED	KS: the total energy is produced by xintgrt, a program pyaces never runs (Runscf faults in vscf setnumint first)		0	TOTENERG	-7.473262543670E+01
-104.ks	EXCLUDED	KS: the total energy is produced by xintgrt, a program pyaces never runs (Runscf faults in vscf setnumint first)		0	TOTENERG	-7.698740074120E+01
-105.ks	EXCLUDED	KS: the total energy is produced by xintgrt, a program pyaces never runs (Runscf faults in vscf setnumint first)		0	TOTENERG	-5.610011648550E+01
+103.ks	KS	KS via Runintgrt: SCF then intgrt_run, same order as the classic driver	Runintgrt	0	TOTENERG	-7.473262543670E+01
+104.ks	KS	KS via Runintgrt: SCF then intgrt_run, same order as the classic driver	Runintgrt	0	TOTENERG	-7.698740074120E+01
+105.ks	KS	KS via Runintgrt: SCF then intgrt_run, same order as the classic driver	Runintgrt	0	TOTENERG	-5.610011648550E+01
 109	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.626976984660E+01
 110	EOM	CALC=CCSD EXCITE=EOMEE ESTATE_PROP=EXPECTATION	Runee	0	TOTENERG	-7.627250892780E+01
 116a	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.632195661350E+01

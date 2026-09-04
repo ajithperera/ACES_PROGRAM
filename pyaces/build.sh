@@ -333,8 +333,39 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 # exist" while the five FNO cases that stop at CCSD were fine. ccsdtqf,
 # ccsdtqf_mm, copt, pccd, psi4dbg, ringcc and ringcl all resolve these to vcc's
 # in the classic link too, so vcc wins and lambda follows the rename.
-EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_ tools:xgemm_ ringcc:check_t2_ lambda:initin_ lambda:initsn_ lambda:diislst_ lambda:dodiis0_"
-EXTRA_LOCALIZE_MODULES="molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens tools ringcc"
+# 19th instance, and the first of a DIFFERENT KIND: the shadowing definition is
+# not another subroutine, it is a Fortran COMMON block. `common /abcd/` in anti,
+# eompccd, intprc, lcct, nmr, tdee and vee emits a global data symbol abcd_,
+# exactly the name of intgrt/abcd.F's 8-line SUBROUTINE ABCD. A tentative (C)
+# symbol only loses to a strong (T) definition if the linker has already pulled
+# the member defining it; here the commons satisfied the reference first, so
+# abcd.o was never extracted and abcd_ ended up in BSS (nm on the .so: "B abcd_").
+# vscf -> setnumint -> abcd then jumped into zero-filled data. Confirmed under
+# gdb: si_addr == $pc (an instruction-fetch fault, not a bad data address),
+# landing just past sympop2_. This is what blocked every KS case -- 103.ks and
+# friends died in vscf long before Runintgrt could reach xintgrt's own work.
+# Renaming intgrt's copy is safe and complete: libintgrt.a holds the only T
+# definition and the only U reference (setnumint.o), and no intgrt file declares
+# a /abcd/ common of its own, so the rename moves definer and caller together
+# and leaves the seven commons alone.
+#
+# Auditing the whole class (T in one archive, C in another) turns up 17 names,
+# 10 of which the linker currently resolves to the common block: abcd, deriv,
+# energy, grid, guess, local, one, polar, sym2 and tab. Only abcd is fixed here,
+# because only abcd is on a call path this suite reaches; the rest are recorded
+# in tools/collision_audit.py rather than renamed on speculation.
+# 19b. Renaming intgrt's abcd_ has a second-order effect worth recording: once
+# abcd.o is actually extracted, libintgrt.a satisfies more of the link than it
+# used to, and intgrt's intpath_ and primvecint_ started winning over intpack's
+# and vksdint's. Both are genuine two-context symbols, the same shape as
+# draolad/t2toao above. ACES_LINK_LISTS settles each: xintpack is
+# "intpack:oeptools:intgrt:..." so intpack means intpack's own 1701-line
+# intpath, while xintgrt ("intgrt:libr:...") and xvksdint ("vksdint:intgrt:...")
+# both mean intgrt's 619-line one; and primvecint is each module's own in both
+# xintgrt and xvksdint. Renaming intpack's intpath and vksdint's primvecint
+# leaves intgrt's as the global winner and reproduces every classic answer.
+EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_ tools:xgemm_ ringcc:check_t2_ lambda:initin_ lambda:initsn_ lambda:diislst_ lambda:dodiis0_ intgrt:abcd_ intpack:intpath_ vksdint:primvecint_"
+EXTRA_LOCALIZE_MODULES="intgrt intpack vksdint molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens tools ringcc"
 
 # a2mix, aux, rpa and scrnc were .skip module directories until 723989ab /
 # aff1dc3c re-enabled them. Their archives only began competing in THIS link

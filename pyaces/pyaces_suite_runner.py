@@ -30,7 +30,7 @@ def main():
     with open(CLASSIFICATION) as f:
         rows = list(csv.DictReader(f, delimiter="\t"))
 
-    candidates = [r for r in rows if r["category"] in ("SCF", "CC", "EOM", "PCCD")]
+    candidates = [r for r in rows if r["category"] in ("SCF", "CC", "EOM", "PCCD", "KS")]
     if CASE_FILTER:
         candidates = [r for r in candidates if r["name"] in CASE_FILTER]
 
