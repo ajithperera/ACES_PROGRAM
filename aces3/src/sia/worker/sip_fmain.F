@@ -301,9 +301,15 @@ c--------------------------------------------------------------------------
 c   Determine the amount of memory needed for the block_map_table.
 c--------------------------------------------------------------------------
 
+c   isegtable, not isegbase: isegbase is the absolute address c_loc64
+c   handed back, isegtable the index derived from it. The other five
+c   segment_table call sites in this file already pass isegtable; this
+c   one passed the address as a subscript, which only stayed harmless
+c   because block_map_table_setup declares segment_table and never
+c   reads it.
       call block_map_table_setup(array_table(iarray), narray_table,
      *                     index_table(iindex), nindex_table,
-     *                     segment_table(isegbase), nsegment_table,
+     *                     segment_table(isegtable), nsegment_table,
      *                     nblock_map_table)
 
 c----------------------------------------------------------------------------
