@@ -51,8 +51,6 @@ C  in the file COPYRIGHT.
       include 'sheap.h'
 #endif
 
-      integer mx_proctab
-      parameter (mx_proctab = 1000)
 
       integer*8 ixx
       integer nindex_table, narray_table, noptable, nsegment_table

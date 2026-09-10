@@ -72,7 +72,11 @@ C  in the file COPYRIGHT.
       integer exp_index_table(1)
       integer segment_table(1)
       integer*8 address_table(2)
-      integer proctab(200)
+c   2 words per proc -- build_proctab writes a (target, last) pair each.
+c   Was a bare 200 (=100 procs) while vtdemo_init.F and build_proctab.f
+c   both assumed mx_proctab=1000, so any SIAL program with more than 100
+c   distinct proc call targets overran this into stack_blocksizes below.
+      integer proctab(2*mx_proctab)
       double precision scalar_table(1)
       integer block_map_table(1)
       integer nblkmgr, nblkmgr_ints

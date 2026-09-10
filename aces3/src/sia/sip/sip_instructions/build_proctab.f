@@ -57,6 +57,12 @@ c   This is a call to a new proc.  Add it to the proctab.
 c--------------------------------------------------------------------------
 
             nproctab = nproctab + 1
+            if (nproctab .gt. mx_proctab) then
+               print *,'Error: this SIAL program calls more than ',
+     *            mx_proctab,' distinct procs, the capacity of proctab.'
+               print *,'Raise mx_proctab in interpreter.h and rebuild.'
+               call abort_job()
+            endif
             proctab(1,nproctab) = target
             proctab(2,nproctab)   = last
   100       continue
