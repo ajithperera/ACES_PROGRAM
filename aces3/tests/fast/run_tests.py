@@ -220,6 +220,40 @@ def mpirun_extra_args():
     return ["--oversubscribe"]
 
 
+
+# xaces3 says why it died in a diagnostic line on stdout, then calls
+# dump_block_ids()/array_block_summary(), which print hundreds of lines of
+# block tables before mpi_abort finally exits. Keeping only the stdout tail
+# therefore keeps only the dump and throws the reason away -- that is how the
+# gten_* "will not fit on any stack" abort stayed invisible for a month --
+# and stderr, which carries the Fortran traceback, was dropped entirely.
+# Pull out the diagnostic lines by name, then the tail, then stderr.
+ABORT_LINE_RE = re.compile(
+    r"error|cannot|will not fit|abort|assertion|insufficient|exceeds",
+    re.IGNORECASE)
+
+
+def summarize_failure(stdout, stderr, ncontext=2, nmatch=12, ntail=8):
+    out = []
+    lines = (stdout or "").splitlines()
+    hits = [i for i, l in enumerate(lines) if ABORT_LINE_RE.search(l)]
+    if hits:
+        out.append("-- diagnostics --")
+        shown = set()
+        for i in hits[:nmatch]:
+            for j in range(i, min(i + 1 + ncontext, len(lines))):
+                if j not in shown:
+                    shown.add(j)
+                    out.append(lines[j])
+    if lines:
+        out.append("-- last %d stdout lines --" % ntail)
+        out.extend(lines[-ntail:])
+    err = (stderr or "").splitlines()
+    if err:
+        out.append("-- last %d stderr lines --" % ntail)
+        out.extend(err[-ntail:])
+    return "\n".join(out)
+
 def run_case(name, np):
     case_dir = os.path.join(CASES_DIR, name)
     zmat = os.path.join(case_dir, "ZMAT")
@@ -247,8 +281,10 @@ def run_case(name, np):
         elapsed = time.time() - t0
 
         if run.returncode != 0:
-            tail = "\n".join(run.stdout.splitlines()[-15:])
-            return name, False, elapsed, f"xaces3 exited {run.returncode}\n{tail}"
+            return name, False, elapsed, (
+                f"xaces3 exited {run.returncode}\n"
+                + summarize_failure(run.stdout, run.stderr)
+            )
 
         env["ACES_EXE_PATH"] = FAST_DIR
         cmp_run = subprocess.run(
