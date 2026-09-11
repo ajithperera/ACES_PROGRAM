@@ -102,6 +102,7 @@ getdiag_ vee vcceh vcceh
 gformg2_ vee hcmult hcmult
 gformg2_ vee lcct lcct
 gformg2_ vee vcceh vcceh
+gformg_ vee ccsdtqf ccsdtqf
 gformg_ vee dens dens
 gformg_ vee lcct lcct
 gformg_ vee pdens pdens
@@ -109,6 +110,7 @@ gformg_ vee vcceh vcceh
 gformg_ vee vdint vdint
 ginc2l_ vee lcct lcct
 ginc2l_ vee vcceh vcceh
+gsden_ vee ccsdtqf ccsdtqf
 gsden_ vee dens dens
 gsden_ vee vdint vdint
 gsorthog_ vee vea vea

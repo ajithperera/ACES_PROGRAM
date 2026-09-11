@@ -1,10 +1,1 @@
 # symbol  defined-in  callers  verdict
-deriv_ mopac mopac rename-definer
-energy_ aces2,ccd_light aces2,ccd_light rename-definer
-grid_ mopac mopac rename-definer
-guess_ nddo nddo rename-definer
-local_ mopac,nddo mopac,nddo rename-definer
-one_ pdens pdens rename-definer
-polar_ mopac mopac rename-definer
-sym2_ vdint vdint rename-definer
-tab_ vmol2ja pdens rename-commons

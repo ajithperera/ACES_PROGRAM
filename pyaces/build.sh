@@ -351,9 +351,9 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 #
 # Auditing the whole class (T in one archive, C in another) turns up 17 names,
 # 10 of which the linker currently resolves to the common block: abcd, deriv,
-# energy, grid, guess, local, one, polar, sym2 and tab. Only abcd is fixed here,
-# because only abcd is on a call path this suite reaches; the rest are recorded
-# in tools/collision_audit.py rather than renamed on speculation.
+# energy, grid, guess, local, one, polar, sym2 and tab. abcd is fixed here
+# because it is on a call path this suite reaches; the other nine are recorded
+# in tools/common_shadow_baseline.txt and all nine are handled in 20 below.
 # 19b. Renaming intgrt's abcd_ has a second-order effect worth recording: once
 # abcd.o is actually extracted, libintgrt.a satisfies more of the link than it
 # used to, and intgrt's intpath_ and primvecint_ started winning over intpack's
@@ -364,8 +364,41 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 # both mean intgrt's 619-line one; and primvecint is each module's own in both
 # xintgrt and xvksdint. Renaming intpack's intpath and vksdint's primvecint
 # leaves intgrt's as the global winner and reproduces every classic answer.
-EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_ tools:xgemm_ ringcc:check_t2_ lambda:initin_ lambda:initsn_ lambda:diislst_ lambda:dodiis0_ intgrt:abcd_ intpack:intpath_ vksdint:primvecint_"
-EXTRA_LOCALIZE_MODULES="intgrt intpack vksdint molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens tools ringcc"
+# 20th instance, and the first fixed BEFORE a test reached it. The audit's
+# common-block class (19 above) leaves nine names whose subroutine is shadowed.
+# Eight of them -- deriv, grid, local and polar (mopac), guess and local (nddo),
+# energy (aces2 and ccd_light), one (pdens), sym2 (vdint) -- are
+# "rename-definer", meaning the defining archive holds the ONLY U reference as
+# well, so a rename moves definition and caller together exactly as abcd's did.
+# Checked one by one with nm over all 107 archives: each definer has T=1/C=0
+# for its own name (no module renames a common out from under itself), and no
+# pyaces-side .o references any of the nine, so no orphaned caller of the
+# vprops:props_ kind.
+#
+# Unlike abcd these are LATENT, not live: none of the six defining archives
+# currently contributes a single symbol to the .so (unique-symbol count in
+# aces2py.so: mopac 0/123, nddo 0/141, ccd_light 0/16, pdens 0/19, vdint 0/225,
+# aces2 1/43), so nothing calls them yet and the rename is a no-op for every
+# path the suite exercises today -- which is the point: it must leave 51/51
+# untouched. What makes it worth doing now rather than on speculation is where
+# the next work goes. vdint (derivative integrals), pdens (perturbed density)
+# and mopac/nddo (semiempirical guess) are precisely the modules a gradient or
+# GEOM_OPT entry point has to pull in, and the 59 EXCLUDED cases are gradient
+# and Hessian paths. The moment one of those archives is extracted, its own
+# internal call lands in BSS and faults on instruction fetch -- the abcd
+# signature, which cost a full gdb session to read the first time.
+#
+# tab is the ninth and arrived by a different route: the baseline recorded it
+# as "rename-commons" (defined in vmol2ja, called from pdens -- renaming the
+# definition would have orphaned that caller), but 09abd13f gave pdens its own
+# pdens/tab.f, so pdens now defines and calls its own and the verdict flips to
+# rename-definer. vmol2ja's copy keeps the plain name and has no caller left.
+# That same commit is also why the collision baseline gains gformg_ and gsden_:
+# ccsdtqf got its own copies for the classic xccsdtqf link, vee's still win
+# here, and ccsdtqf contributes nothing to this .so -- accepted into the
+# baseline as "on a path nothing exercises yet", not renamed on speculation.
+EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_ tools:xgemm_ ringcc:check_t2_ lambda:initin_ lambda:initsn_ lambda:diislst_ lambda:dodiis0_ intgrt:abcd_ intpack:intpath_ vksdint:primvecint_ mopac:deriv_ mopac:grid_ mopac:local_ mopac:polar_ nddo:guess_ nddo:local_ aces2:energy_ ccd_light:energy_ pdens:one_ pdens:tab_ vdint:sym2_"
+EXTRA_LOCALIZE_MODULES="intgrt intpack vksdint molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens tools ringcc mopac nddo aces2 ccd_light pdens vdint"
 
 # a2mix, aux, rpa and scrnc were .skip module directories until 723989ab /
 # aff1dc3c re-enabled them. Their archives only began competing in THIS link
