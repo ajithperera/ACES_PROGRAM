@@ -188,6 +188,13 @@ def common_block_shadows(so):
     EXTRA_LOCALIZE_SYMBOLS moves definition and caller together). When some
     OTHER module calls it, renaming the definition orphans that caller --
     the common blocks are what have to move instead.
+
+    A name build.sh already renames is out of the collision whether or not
+    the rename is visible in the .so. Most of these definers (mopac, nddo,
+    vdint, pdens, ccd_light, aces2) contribute nothing to this link, so
+    pyaces_<mod>_<sym> never appears there to be found -- reading only the
+    .so would keep reporting a fix that is in place, and would have made
+    the whole 20th-instance batch unverifiable. Read build.sh's list too.
     """
     text, common, refs = (collections.defaultdict(set) for _ in range(3))
     for f in archives():
@@ -207,20 +214,22 @@ def common_block_shadows(so):
         p = line.split()
         if len(p) == 3:
             won.setdefault(p[2], p[1])
+    renamed = renamed_pairs(text)
+
+    def moved(mod, sym):
+        # A definer build.sh has already renamed is out of the collision: its
+        # definition and its own callers both moved to pyaces_<mod>_<sym>, so
+        # the plain name being data no longer costs anybody a call.
+        return (mod, sym) in renamed or f'pyaces_{mod}_{sym}' in won
 
     out = []
     for sym in sorted(set(text) & set(common)):
         if won.get(sym, '') not in ('B', 'b', 'D', 'd'):
             continue
-        # A definer build.sh has already renamed is out of the collision: its
-        # definition and its own callers both moved to pyaces_<mod>_<sym>, so
-        # the plain name being data no longer costs anybody a call.
-        definers = sorted(m for m in text[sym]
-                          if f'pyaces_{m}_{sym}' not in won)
+        definers = sorted(m for m in text[sym] if not moved(m, sym))
         if not definers:
             continue
-        callers = sorted(m for m in refs[sym]
-                         if f'pyaces_{m}_{sym}' not in won)
+        callers = sorted(m for m in refs[sym] if not moved(m, sym))
         if not callers:
             continue
         verdict = ('rename-definer' if set(callers) <= set(definers)
@@ -280,14 +289,14 @@ def main():
     current = audit()
     shadows = common_block_shadows(find_so())
     if args.update:
-        with open(COMMON_BASELINE, 'w') as fh:
-            fh.write('# symbol  defined-in  callers  verdict\n')
-            fh.write('\n'.join(shadows) + '\n')
-    if args.update:
-        with open(BASELINE, 'w') as fh:
-            fh.write('# symbol  winner-in-so  what-the-classic-link-gives  caller\n')
-            fh.write('\n'.join(current) + '\n')
-        print(f'baseline updated: {len(current)} entries')
+        for path, header, rows in (
+                (COMMON_BASELINE, '# symbol  defined-in  callers  verdict', shadows),
+                (BASELINE, '# symbol  winner-in-so  what-the-classic-link-gives'
+                           '  caller', current)):
+            with open(path, 'w') as fh:
+                fh.write('\n'.join([header, *rows]) + '\n')
+        print(f'baseline updated: {len(current)} entries, '
+              f'{len(shadows)} common-block shadows')
         return 0
 
     known_shadows = set()
@@ -295,10 +304,8 @@ def main():
         known_shadows = {l.strip() for l in open(COMMON_BASELINE)
                          if l.strip() and not l.startswith('#')}
     new_shadows = [l for l in shadows if l not in known_shadows]
-    live = [l for l in shadows if l.split()[-1] != 'no-caller']
     print(f'@COLLISION_AUDIT: {len(shadows)} subroutines shadowed by a '
-          f'same-named COMMON block '
-          f'({len(live)} with a live caller)')
+          f'same-named COMMON block that build.sh does not rename out of the way')
     if new_shadows:
         print()
         print('@COLLISION_AUDIT: NEW common-block shadows -- a CALL now lands in '
