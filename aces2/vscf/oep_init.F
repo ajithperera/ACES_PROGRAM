@@ -40,6 +40,13 @@ c
             call errex
          endif
 
+c 2026-10-02: I000/I010/MAXMEM used to be the caller's VSCF locals when
+c this block lived inline in VSCF; here they were uninitialized (MAXMEM=0
+c -> bogus "@NOMEM-F ... Parse the OEP ASV list"). IWORK already starts at
+c the caller's ICORE(I010) and holds IMEMLEFT words, so index from 1.
+         i000   = 1
+         i010   = 1
+         maxmem = imemleft
          i020 = i010 + iintfp * itriln(nirrep+1)
          i030 = i020 + 10000
          i040 = i030 + 500*20

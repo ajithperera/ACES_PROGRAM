@@ -1338,9 +1338,14 @@ c keep the number of modified VSCF files at minimum. So let's ignore
 c SYMSIZ's efforts and simply ask for as much memory as specified
 c via the MEMORY ASV.
 
+C 2026-10-02: same defect as the READ_AO_MOS case above. OEP_MEM_INIT
+C sized IMEMGET from IFLAGS(36) (the whole MEMORY value), but the check
+C below compares it against ICRSIZ, the core left at this point, so every
+C OEPX/OEP2 job aborted with "@scf: Insufficient memory available" no
+C matter how large MEMORY was. Take as much as is actually left instead.
       if (iflags2 (153).eq.3 .or. iflags2 (153).eq.4) then
-         if (imemget .lt. iflags (36)) then
-            call oep_mem_init(MAXMEM, IRPPMEM, IMEMGET)
+         if (imemget .lt. Min(iflags (36),ICRSIZ)) then
+            call oep_mem_init(MAXMEM, IRPPMEM, IMEMGET, ICRSIZ)
          endif
       endif
 C
