@@ -1,4 +1,5 @@
-      subroutine oep_init(petite_list, iuhf, iwork, imemleft,loslater)
+      subroutine oep_init(petite_list, iuhf, iwork, imemleft,loslater,
+     &                    tol)
 
       implicit double precision (a-h, o-z)
 
@@ -81,6 +82,10 @@ c the caller's ICORE(I010) and holds IMEMLEFT words, so index from 1.
          close (unit=luoep)
          write (6, 5936) naux
 c
+c 2026-10-02: TOL used to be a local here (and in OEP_DOWORK), so neither
+c the hold below nor its release reached VSCF's convergence test. It is
+c now VSCF's TOL passed in, and OEPTOL lives in /OEPCONFIG/. Hold off
+c convergence until OEP_DOWORK releases it on an OEP2-updated iteration.
          if (OEP2) then
             OEPTOL = tol
             tol = 1.d-99

@@ -457,7 +457,7 @@ c
      &     OEPSVDTHR, OEPSVDTHRDEF, OEP1HYBRIDINT, OEP1HYBRIDDEF,
      &     R12ONTHR, R12ONTHRDEF
 c
-      double precision OEP1HYBRID
+      double precision OEP1HYBRID, OEPTOL
 c     
       character*(50)
      &     OEPH0, OEPH0DEF, OEPAXP, OEPAXPDEF
@@ -469,7 +469,7 @@ c
      &     OEP1, OEP2, OEP1ON, OEP2ON, OEP2ALWAYS, OEP2ITR,
      &     BOEPR12, R12ON, OEPDFF, OEPDFW, OEPDWW, OEPFDF, OEPWDW,
      &     OEP1ONTHR, OEP2ONTHR, OEP2OFFTHR, OEP2ALWAYSTHR, 
-     &     OEPSVDTHR, NAUX, OEP2UPDATE, R12ONTHR,OEP1HYBRID, 
+     &     OEPSVDTHR, NAUX, OEP2UPDATE, R12ONTHR,OEP1HYBRID, OEPTOL,
      &     OEPH0, OEPAXP
 c     
       parameter (OEP1ONTHRDEF  = 1)
@@ -1483,7 +1483,7 @@ c threshold into OEPTOL and set the threshold ridiculously small. <>
 c Set the iteration type to ' '.
       if (iflags2 (153).eq.3 .or. iflags2 (153).eq.4) then
          call oep_init(petite_list,iuhf,icore(i010),
-     &                 (maxmem-i010+i000),loslater)
+     &                 (maxmem-i010+i000),loslater,tol)
       endif
 C
 C PICK UP THE CORE HAMILTONIAN AND OVERLAP MATRICES
@@ -1798,7 +1798,7 @@ C
      &                     icore (i010), icore (i050), 
      &                     icore (i060), icore (i030), icore (i040), 
      &                     etot, MAX_ERROR, itertype, transfer,
-     &                     slater,loslater,iSlaterON)
+     &                     slater,loslater,iSlaterON,tol)
        endif
        if (transfer) go to 5899
 C

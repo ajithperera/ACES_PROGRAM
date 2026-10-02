@@ -782,7 +782,7 @@ c threshold into OEPTOL and set the threshold ridiculously small. <>
 c Set the iteration type to ' '.
       if (iflags2 (153).eq.3 .or. iflags2 (153).eq.4) then
          call oep_init(petite_list,iuhf,icore(i010),
-     &                 (maxmem-i010+i000),loslater)
+     &                 (maxmem-i010+i000),loslater,tol)
       endif
 C
 C PICK UP THE CORE HAMILTONIAN AND OVERLAP MATRICES
@@ -1170,7 +1170,7 @@ C
      &                     icore (i010), icore (i050), 
      &                     icore (i060), icore (i030), icore (i040), 
      &                     etot, MAX_ERROR, itertype, transfer,
-     &                     slater,loslater,iSlaterON)
+     &                     slater,loslater,iSlaterON,tol)
 #ifdef _BUILD_KSPOT
         if(transfer) then 
          Call buildKSpot(dcore(izkspot),kscore(iz1),

@@ -12,7 +12,7 @@
       subroutine oep_dowork(iter, iuhf, nbas, nocc, icore, maxmem,  
      &                      usdmem, scfh1e, scfevl, scfevc, scfden, 
      &                      scfham, scfenr, dmax, itertype, 
-     &                      transfer,slat,Zslater,islaterON)
+     &                      transfer,slat,Zslater,islaterON,tol)
 c
       implicit none
 c
@@ -36,7 +36,7 @@ c
      &     OEPSVDTHR, OEPSVDTHRDEF, OEP1HYBRIDINT, OEP1HYBRIDDEF,
      &     R12ONTHR, R12ONTHRDEF
 c
-      double precision OEP1HYBRID
+      double precision OEP1HYBRID, OEPTOL
 c     
       character*(50)
      &     OEPH0, OEPH0DEF, OEPAXP, OEPAXPDEF
@@ -48,7 +48,7 @@ c
      &     OEP1, OEP2, OEP1ON, OEP2ON, OEP2ALWAYS, OEP2ITR,
      &     BOEPR12, R12ON, OEPDFF, OEPDFW, OEPDWW, OEPFDF, OEPWDW,
      &     OEP1ONTHR, OEP2ONTHR, OEP2OFFTHR, OEP2ALWAYSTHR, 
-     &     OEPSVDTHR, NAUX, OEP2UPDATE, R12ONTHR,OEP1HYBRID, 
+     &     OEPSVDTHR, NAUX, OEP2UPDATE, R12ONTHR,OEP1HYBRID, OEPTOL,
      &     OEPH0, OEPAXP
 c     
       parameter (OEP1ONTHRDEF  = 1)
@@ -146,7 +146,7 @@ c
       parameter (lnbuf=600)
       parameter (luint=10, luout=6)
 c
-      double precision homo, OEPTOL, au2ev, dmax, tol, etot
+      double precision homo, au2ev, dmax, tol, etot
 c
 c     Define the one- and two-electron integrals array sizes.
 c     
@@ -219,7 +219,11 @@ C
      &        OEP2UPDATE = 9999
          if (OEP2ALWAYS.or.iter - (iter/OEP2UPDATE)*OEP2UPDATE .eq. 0)
      &        OEP2ITR = .TRUE.
-         if (dmax.le.0.0000) then
+c 2026-10-02: release the convergence hold set in OEP_INIT once the
+c density is converged to the requested SCF_CONV (OEPTOL), and force an
+c OEP2 update on this iteration so convergence is never declared on a
+c stale (xc') potential. The old test, DMAX.LE.0, could never fire.
+         if (tol.lt.OEPTOL .and. dmax.le.OEPTOL) then
             tol = OEPTOL
             OEP2ITR = .TRUE. 
          endif
@@ -231,10 +235,13 @@ c
            
          i010 = i000 + (iuhf+1) * isqrln (nirrep+1) * iintfp
          if (.not.OEP2ITR) then
+c           Between OEP2 updates keep the stored correlation potential.
+            addoep2 = OEP2ON
             call oep1iter (
      &           nbas, nocc (1),  
      &           icore (i000), maxmem, usdmem,  
-     &           scfh1e, scfevl, scfevc, scfden, scfham, scfenr)
+     &           scfh1e, scfevl, scfevc, scfden, scfham, scfenr,
+     &           addoep2)
          else
             call oep2iter (
      &           nbas, nocc (1), 

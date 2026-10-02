@@ -9,7 +9,8 @@
 
 
 
-      subroutine oep_init(petite_list, iuhf, iwork, imemleft,loslater)
+      subroutine oep_init(petite_list, iuhf, iwork, imemleft,loslater,
+     &                    tol)
 
       implicit double precision (a-h, o-z)
 
@@ -33,7 +34,7 @@ c
      &     OEPSVDTHR, OEPSVDTHRDEF, OEP1HYBRIDINT, OEP1HYBRIDDEF,
      &     R12ONTHR, R12ONTHRDEF
 c
-      double precision OEP1HYBRID
+      double precision OEP1HYBRID, OEPTOL
 c     
       character*(50)
      &     OEPH0, OEPH0DEF, OEPAXP, OEPAXPDEF
@@ -45,7 +46,7 @@ c
      &     OEP1, OEP2, OEP1ON, OEP2ON, OEP2ALWAYS, OEP2ITR,
      &     BOEPR12, R12ON, OEPDFF, OEPDFW, OEPDWW, OEPFDF, OEPWDW,
      &     OEP1ONTHR, OEP2ONTHR, OEP2OFFTHR, OEP2ALWAYSTHR, 
-     &     OEPSVDTHR, NAUX, OEP2UPDATE, R12ONTHR,OEP1HYBRID, 
+     &     OEPSVDTHR, NAUX, OEP2UPDATE, R12ONTHR,OEP1HYBRID, OEPTOL,
      &     OEPH0, OEPAXP
 c     
       parameter (OEP1ONTHRDEF  = 1)
@@ -187,6 +188,10 @@ c the caller's ICORE(I010) and holds IMEMLEFT words, so index from 1.
          close (unit=luoep)
          write (6, 5936) naux
 c
+c 2026-10-02: TOL used to be a local here (and in OEP_DOWORK), so neither
+c the hold below nor its release reached VSCF's convergence test. It is
+c now VSCF's TOL passed in, and OEPTOL lives in /OEPCONFIG/. Hold off
+c convergence until OEP_DOWORK releases it on an OEP2-updated iteration.
          if (OEP2) then
             OEPTOL = tol
             tol = 1.d-99
