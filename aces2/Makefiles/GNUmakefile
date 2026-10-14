@@ -794,8 +794,12 @@ ifeq (${CMPLR},intel) ##########################################################
    F9XC = ifx -c -Wall -traceback #-shared -fPIC
    LD   = ifx
  # make sure the other compilers f9x, cc, and CC all get double alignment
-   CFLAGS   = -Zp8 
-   F9XFLAGS = -Zp8 -zero 
+   CFLAGS   = -Zp8
+ # -assume dummy_aliases: callers routinely pass several slices of one work
+ # array (even an INTEGER slice of a REAL one) as separate dummies, e.g.
+ # vmol's CALL VGAMMA2(F,F(1+IGAM),...). ifx 2023.2 -O2 assumes they cannot
+ # alias and miscompiles vgamma2 (H2O/6-31G** SCF 0.2 Eh too low).
+   F9XFLAGS = -Zp8 -zero -assume dummy_aliases
    LDFLAGS  = -Zp8
    ifneq (,$(findstring ${ARCH},em64t itanium2))
       64BIT = 1
