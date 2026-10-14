@@ -15,6 +15,10 @@ if ! module load ${ACES_PROGRAM_MODULES:-intel/2025.1.0 openmpi/5.0.7 python/3.1
     exit 1
 fi
 : "${MKLROOT:?is unset -- the loaded modules provide no Intel MKL}"
+# The globs and sorts below set archive member and -l order, and with them which
+# copy of a multiply-defined routine the link picks. Collate bytewise so that
+# does not change with the caller's locale (PBS jobs often run with none).
+export LC_ALL=C
 
 WORK=$SCRIPT_DIR
 MAIN=$WORK/Main
@@ -397,7 +401,14 @@ MAIN_COLLISION_MODULES="hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vt
 # ccsdtqf got its own copies for the classic xccsdtqf link, vee's still win
 # here, and ccsdtqf contributes nothing to this .so -- accepted into the
 # baseline as "on a path nothing exercises yet", not renamed on speculation.
-EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_ tools:xgemm_ ringcc:check_t2_ lambda:initin_ lambda:initsn_ lambda:diislst_ lambda:dodiis0_ intgrt:abcd_ intpack:intpath_ vksdint:primvecint_ mopac:deriv_ mopac:grid_ mopac:local_ mopac:polar_ nddo:guess_ nddo:local_ aces2:energy_ ccd_light:energy_ pdens:one_ pdens:tab_ vdint:sym2_"
+#
+# getdt1, fndmaxs, t2l2rng and r1l2y2c were won by link order alone: vcc's
+# getdt1 differs from the identical copies in lcct/lhbar/tdcc2/vcceh/vee, vee's
+# fndmaxs from vea's (also called by vip), and lcct's t2l2rng/r1l2y2c from vee's.
+# Which copy won flipped between make 4.2's unsorted wildcards on ccsd and make
+# 4.3's locale-sorted ones here. Renaming the odd copy out gives every caller
+# the code it was written against whatever the member order.
+EXTRA_LOCALIZE_SYMBOLS="lambda:finish_ molcas:finish_ joda:gschmidt_ libr:gschmidt_ vcceh:gschmidt_ vea:gschmidt_ lambda:modf_ fsip:modf_ vcceh:modf_ hcmult:modf_ vea:modf_ lcct:modf_ props:expden_ vcceh:expden_ vprops:props_ vprops:setrhf_ vprops:rhftce_ vprops:fmc_ vprops:aainer_ vprops:civpt_ vcceh:hbarxc_ lcct:hbarxc_ vcceh:dt2int2_ hcmult:dt2int2_ lcct:dt2int2_ vcceh:draolad_ lambda:draolad_ vee:draolad_ vcceh:t2toao_ vee:t2toao_ dens:getaoinf_ vee:getaoinf_ vcceh:z2tomo_ lambda:z2tomo_ vee:z2tomo_ lambda:w45t3drv_ tools:xgemm_ ringcc:check_t2_ lambda:initin_ lambda:initsn_ lambda:diislst_ lambda:dodiis0_ intgrt:abcd_ intpack:intpath_ vksdint:primvecint_ mopac:deriv_ mopac:grid_ mopac:local_ mopac:polar_ nddo:guess_ nddo:local_ aces2:energy_ ccd_light:energy_ pdens:one_ pdens:tab_ vdint:sym2_ vcc:getdt1_ vee:fndmaxs_ lcct:t2l2rng_ lcct:r1l2y2c_"
 EXTRA_LOCALIZE_MODULES="intgrt intpack vksdint molcas libr vcceh vea fsip hcmult lcct vprops libr2 dens tools ringcc mopac nddo aces2 ccd_light pdens vdint"
 
 # a2mix, aux, rpa and scrnc were .skip module directories until 723989ab /

@@ -185,7 +185,6 @@ quad2_ vcc vcc5q vcc5q
 quad3_ vcc vcc5q vcc5q
 r1l1y2_ vee lcct lcct
 r1l2y2_ vee lcct lcct
-r1l2y2c_ vee lcct lcct
 r1l2y2d_ vee lcct lcct
 r1l2y2e_ vee lcct lcct
 r1l2y2f_ vee lcct lcct
