@@ -4,6 +4,48 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-10-15 (later): LEHMANN W FROM ACES II EOM -- VALIDATED;
+## PIPELINE W_c HAS THE WRONG OVERALL SIGN. RESUME HERE.
+
+Option (i) per Ajith (ACES II only). Step 1 (27e7c57f): xvee
+EE_ROOT_FIND=FULL_DIAG gives all EOM-EE-CCSD roots plus full MO
+left/right TDMs (eom_tdm.dat). Step 2 (this commit): Scrnc_lehmann.F,
+run by xscrnc when lehmann_input exists. It builds
+W_c = Sum_s [V^R V^L/(w-Omega) - V^L V^R/(w+Omega)] through the
+pipeline's own bare-AO/ao2mo/reduce routines, plus Sigma_c exactly
+(contour closed analytically) and through the pipeline's own 4-node
+quadrature. Test: /blue/ufhpc/perera/scrnc_test/
+h2o_eomee_fulldiag_sto3g_1015 vs h2o_scrnc_sigma_matrix_dyson_stable_0823
+(same H2O/STO-3G/UHF/sym=off).
+
+1. **Magnitude agrees.** Sigma_quad(Lehmann) = -sigma_c_output.dat to
+   <=1.7e-4 abs (max|Sigma| 7.3e-2, ~0.2%) for every p,q and all 13
+   Omega_ext. W_c at w'=13.4 vs wcreduc.dat: same 0.1-0.2% agreement.
+   Max|Im W_c(iw')| <= 3.5e-5, so treating W as real/even is fine.
+2. **Sign is opposite, and the pipeline's is the unphysical one.** The
+   Lehmann chi(iw) is negative definite (M_R*M_L > 0, fixed by
+   <L|R>=1; ACES prints positive dipole strengths), so the diagonal of
+   W_c = v chi v is negative. The pipeline's is positive. Physical
+   check with ACES's own IP-EOM-CCSD (h2o_scrnc_ipeomcc_sto3g_0823):
+   HOMO IP 8.42 eV < Koopmans 10.65 eV, so correlation must raise
+   occupied levels. Pipeline eps_QP(HOMO) = -0.461 (12.5 eV) moves it
+   DOWN; MO4: EOM 10.91, Koopmans 12.33, pipeline 13.56, same pattern.
+   Lehmann Sigma_c(5,5;0) = +0.070 has the right sign.
+   Likely origin: scrnc_jj_cc_lrspn.F adds X = Fact*<374|373>
+   (vcceh/secprp polarizability pairing, i.e. -chi, positive at w=0)
+   as "v chi v", so W = v - v chi_phys v.
+   **Consequence: every pipeline QP energy and Sigma_c to date has the
+   correlation self-energy with flipped sign.** This very likely IS the
+   "MO4/MO5 QP-vs-EOM anomaly" (70415f08, 22d93da9) and undercuts the
+   missing-vertex diagnosis (79093679), which was built to explain it.
+3. **The 4-node quadrature (N=4, Omega_c=1) is badly unconverged**:
+   exact vs quadrature Sigma_c differ by up to ~3x at mid-axis (HOMO,
+   w=1.5: Im -0.0377 vs -0.0133).
+
+Next, needs Ajith's OK: flip the sign in the pipeline's W, rerun
+stable_0823 and confirm it matches Lehmann; real-axis Lehmann
+Sigma(w+i*eta) -> QP energies vs IP/EA-EOM; then satellites.
+
 ## SESSION 2026-10-15 (GW+CUMULANT SATELLITE-WEIGHT RESULT RETRACTED --
 it is a Pade/quadrature artifact, not physics. RESUME HERE.)
 

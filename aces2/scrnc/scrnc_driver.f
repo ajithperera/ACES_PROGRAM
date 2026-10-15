@@ -209,7 +209,7 @@
       Implicit Double Precision (A-H,O-Z)
 
       Logical Ccsd,Mbpt,Parteom,Nodavid,Rccd,Drccd
-      Logical Realfreq
+      Logical Realfreq,Lehmann
       Dimension Work(Maxmem)
       Dimension Iloc(8)
       Common /Freqinfo/Freq,Realfreq,Xfreq(200),No_freqs
@@ -279,8 +279,22 @@ c info.com : end
      +                Drccd
 
       Irrepx = 1
+
+C Sum-over-states (Lehmann) W_c/Sigma_c from the full EOM-EE-CCSD
+C spectrum (xvee EE_ROOT_FIND=FULL_DIAG -> eom_tdm.dat) replaces the
+C linear-response route when lehmann_input is present. See
+C Scrnc_lehmann.F and SCRNC_DEBUG_LOG.md 2026-10-15. Ahead of
+C Scrnc_set_vars, which demands DENSITY=RESPONSE (not needed here).
+
+      Inquire(File="lehmann_input",Exist=Lehmann)
+      If (Lehmann) Then
+         Call Scrnc_lehmann(Work,Maxmem,Iuhf)
+         Return
+      Endif
+
       Call scrnc_set_vars(Iuhf)
       Call Scrnc_getaoinf(Iuhf,Irrepx)
+
 
       Call Scrnc_bcktran_test(Work,Maxmem,Iuhf)
 
