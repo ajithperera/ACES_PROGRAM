@@ -4,6 +4,75 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-10-15 (GW+CUMULANT SATELLITE-WEIGHT RESULT RETRACTED --
+it is a Pade/quadrature artifact, not physics. RESUME HERE.)
+
+**Background (2026-08-23, never logged here before, only in memory):**
+after the vertex diagnosis below, the novelty framing moved to "G0W_CC
+gives a different OUTPUT than IP/EA-EOM-CCSD: spectral weight and
+satellites". Plain Dyson root search finds one peak per orbital (fine
+for a vertex-less Sigma). A GW+cumulant on H2O/cc-pVDZ MO2 (2a1),
+runs `h2o_scrnc_sigma_matrix_dyson_ccpvdz_0823` (CCSD, job 40048032)
+and `..._drccd_ccpvdz_0823` (DRCCD, job 40048620) in
+/blue/ufhpc/perera/scrnc_test, gave ~15% incoherent weight for CCSD
+screening vs ~3.6% for DRCCD, a "4x CC-vs-RPA" result. The literature
+check had already noted that a smooth single-channel cumulant cannot
+reproduce 2a1's known multi-line breakdown.
+
+**This session (Ajith chose option (a): caveat it and extend to more
+orbitals):** the throwaway scripts were lost, so I rebuilt them as
+`aces2/scrnc/analysis/scrnc_cumulant.py`. It is a line-by-line port of
+the Pade, node selection and bracket logic in scrnc_sigma_driver.F.
+`--check` reproduces every converged eps_QP and Im[Sigma_c(eps_QP)] in
+qp_energies.dat to <=2e-6 Ha (the bisection tolerance), for both runs.
+
+**Finding: the cumulant satellite weight comes almost entirely from
+Im[Sigma_c(eps_QP)], and that number is not physical.**
+1. |Im Sigma_c(eps_QP - w')| is LARGEST at w'=0, at the QP itself, and
+   decays monotonically (CCSD MO2: 0.050 -> 0.034 -> 0.013 Ha at w' =
+   0, 0.5, 6). The constant beta(0) part of C(t) is pure lifetime
+   broadening (QP HWHM 0.69 eV for CCSD, 0.24 eV for DRCCD). The
+   Lorentzian tail outside the +/-3 eV window, 1-(2/pi)atan(3/HWHM) =
+   13.9% / 5.1%, accounts for most of the old 15% / 3.6% (window
+   method gives 11.6->9.8% and 5.6->4.2% for eta = 0.005->0.0025).
+   With beta(0) subtracted, the remaining frequency-dependent part
+   gives a NEGATIVE "satellite weight". There is no satellite.
+2. HOMO consistency check FAILS: MO5 (1b1) lies below every 2h1p pole
+   (eps_i - Omega_s), so the physical Im Sigma_c(eps_QP) = 0. The
+   pipeline gives -0.032 Ha (CCSD) / -0.014 (DRCCD), stable across
+   Pade node counts 6..13. The same artifact, with the same CCSD/DRCCD
+   ratio (~2.3x vs ~2.8x for MO2), is present where the physics says 0.
+3. Mechanism: each quadrature node contributes
+   1/(z-eps_m+iw'_k) + 1/(z-eps_m-iw'_k) = 2(z-eps_m)/((z-eps_m)^2+w'_k^2),
+   which is PURELY REAL on the real axis. The discretized Sigma has
+   Im=0 there exactly, so every bit of real-axis Im Sigma comes from
+   the 8-point Thiele fit. N=4 Gauss-Legendre with Omega_c=1 puts the
+   smallest node at w'=0.075 Ha, giving ~2 eV-wide structure at every
+   eps_m, including eps_p itself.
+4. Toy confirmation: exact quadrature-form Sigma with this run's eps_m,
+   the same 4 nodes, the same Omega_ext grid and the same 8-node
+   selection. The Pade gives Im Sigma(eps_p) of -0.01 to -0.02 Ha for
+   MO2-MO4 where the exact value is 0, the same order as the "real"
+   numbers.
+
+**Verdict:** the ~15%/~3.6% "satellite weight" and the "4x CC-vs-RPA"
+claim are RETRACTED. They measure how strongly the Pade smears each
+Sigma's imaginary-axis curvature onto the real axis, not satellite
+physics. The Im[Sigma_c(eps_QP)] column of qp_energies.dat has no
+physical meaning as a lifetime either. The eps_QP column is
+unaffected: it is a Re-only root.
+
+**Implication:** any spectral-function/satellite observable from this
+pipeline needs a real-axis Sigma(w+i*eta) with controlled eta, not a
+Pade continuation from a 4-node quadrature. Options for Ajith: (i) a
+pole-resolved (sum-over-states/Lehmann) Sigma_c built from the
+EOM-CC excitation poles of W, the usual route in molecular GW for
+satellites; (ii) contour deformation; (iii) drop the
+satellite/novelty thread and return to QP energies (CC-vs-RPA
+QP-energy differences up to 0.33 eV, 2026-08-17).
+Orbital broadening (option (a)'s second half) was NOT done: it would
+only extend an artifact.
+
 ## SESSION 2026-08-23 (even later, fork, VERTEX-CORRECTION DIAGNOSIS --
 confirmed missing, but NOT implementable as a small addition; literature
 says the "obvious" fix this project already tried (CC-vertex-corrected
