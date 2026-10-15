@@ -1199,7 +1199,8 @@ void asv_handle_proc(const f_int * index, const char * value)
 
         case h_IOPPAR_ee_root_find:
         {
-            const char *handles[] = { "DAVIDSON","BLOCK_DAVIDSON","LANCZOS"};
+            const char *handles[] = { "DAVIDSON","BLOCK_DAVIDSON","LANCZOS",
+                                      "FULL_DIAG", ""};
             asv_update_handle(index,value,handles);
             break;
         }

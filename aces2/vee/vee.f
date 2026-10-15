@@ -461,6 +461,13 @@ C
      &      CALL DOBWPT2(IUHF, ICORE(I0), MAXCOR/IINTFP)
           IF (IFLAGS(87) .EQ. 7)
      &      CALL DOPARTEOM(IUHF, ICORE(I0), MAXCOR/IINTFP)
+       ELSE IF (IFLAGS2(177) .EQ. 3) THEN
+C
+C EE_ROOT_FIND=FULL_DIAG: explicit H-bar build + full diagonalization,
+C all roots with left/right transition densities (eom_tdm.dat). Small
+C systems only -- the H-bar matrix is NSIZEC x NSIZEC in core.
+C
+            CALL DIAGALL(ICORE(I0),MAXCOR/IINTFP,IUHF)
        ELSE
             IF (DAVID) THEN
                CALL DOEOMEE_DAVID(ICORE(I0),MAXCOR,IUHF)
