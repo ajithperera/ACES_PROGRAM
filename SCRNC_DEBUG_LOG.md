@@ -4,6 +4,26 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## >>> START HERE (end of 2026-10-15) <<<
+
+State: Lehmann (sum-over-states) G0W_CC from ACES II EOM-EE-CCSD works
+end to end on H2O/STO-3G (xvee EE_ROOT_FIND=FULL_DIAG -> eom_tdm.dat ->
+xscrnc with lehmann_input). Pipeline W_c sign bug fixed (4255017e).
+QPs agree with EOM-CCSD to 0.02-0.18 eV; 2a1 shows real satellites.
+Test dir: /blue/ufhpc/perera/scrnc_test/h2o_eomee_fulldiag_sto3g_1015
+(run_lehmann.sbatch, qp_lehmann.dat). Details in the entries below.
+
+Next, in order:
+1. Assign IP-EOM-CCSD roots 4/5 (26.70/29.74 eV, h2o_scrnc_ipeomcc_sto3g_0823):
+   2a1 main line vs 2h1p, and compare with the Lehmann 2a1 spectrum
+   (QP 31.40 eV Z=0.63; satellites 41.81/36.48/22.62 eV...).
+2. CC-vs-RPA satellite comparison: needs a DRCCD EOM full-diag path in
+   vee producing eom_tdm.dat.
+3. Larger basis: DZ (~2800 roots, full diag OK); cc-pVDZ needs another
+   route.
+Also: the 4-node quadrature (N=4, Omega_c=1) is badly unconverged; any
+remaining pipeline (non-Lehmann) results need a converged grid.
+
 ## SESSION 2026-10-15 (later): LEHMANN W FROM ACES II EOM -- VALIDATED;
 ## PIPELINE W_c HAS THE WRONG OVERALL SIGN. RESUME HERE.
 
