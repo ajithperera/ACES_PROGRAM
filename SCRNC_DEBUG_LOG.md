@@ -56,6 +56,24 @@ quadrature + Pade; the exact real-axis Lehmann QP is the clean test.
 Pre-fix pipeline results (incl. the DZ/cc-pVDZ 0823 runs and DRCCD runs)
 are all invalid for Sigma_c sign.
 
+**EXACT REAL-AXIS LEHMANN QP + SATELLITES (same day):**
+Scrnc_lehmann_qp solves the diagonal Dyson equation with the exact
+rational Lehmann Sigma: one root between each pair of neighbouring poles,
+Z = 1/(1-Sigma'). There is no Pade and no quadrature. Sum Z =
+0.994-1.000 per MO (shortfall from tiny negative residues, >= -1.4e-6,
+allowed by the non-Hermitian EOM). H2O/STO-3G, G0W_CC vs EOM-CCSD (eV):
+MO5 8.248 vs 8.419 (-0.17); MO4 10.767 vs 10.912 (-0.15); MO3 16.549 vs
+16.635 (-0.09); MO6 -16.449 vs -16.430 (-0.02); MO7 -20.015 vs -19.834
+(-0.18). The earlier virtual-side mismatch (quad+Pade: -16.78/-20.75)
+was quadrature/Pade error. **MO2 (2a1): QP 31.40 eV with Z=0.633, plus
+discrete satellites holding ~37% of the weight** (41.81 eV Z=0.116,
+36.48 Z=0.074, 22.62 Z=0.046, 28.53 Z=0.026, 39.76 Z=0.024, 43.61
+Z=0.024, ...). That is a genuine multi-line 2a1 spectrum, qualitatively
+the known breakdown picture, which the Pade/cumulant route could not
+produce. Core MO1: QP 543.3 eV, Z=0.842. Open: which IP-EOM-CCSD roots
+(26.70/29.74 eV) are 2a1-main vs 2h1p; the CC-vs-DRCCD satellite
+comparison (needs a DRCCD FULL_DIAG/EOM path); DZ/cc-pVDZ.
+
 ## SESSION 2026-10-15 (GW+CUMULANT SATELLITE-WEIGHT RESULT RETRACTED --
 it is a Pade/quadrature artifact, not physics. RESUME HERE.)
 

@@ -41,6 +41,8 @@ C lehmann_input (list-directed):
 C   Nwp, w'(1..Nwp)          w' values for W_c dumps
 C   Nquad, Omega_c           pipeline quadrature (sigma_input)
 C   Next, w(1..Next)         imaginary-axis points for Sigma_c
+C   Zprint                   (optional, default 1.0D-3) smallest pole
+C                            strength listed in qp_lehmann.dat
 C
       Implicit Double Precision (A-H,O-Z)
       Dimension Work(Maxcor)
@@ -58,6 +60,9 @@ C
       Read(84,*) Nwp,(Wprime(I),I=1,Nwp)
       Read(84,*) Nquad,Omega_c
       Read(84,*) Next,(Wext(I),I=1,Next)
+      Zprint = 1.0D-3
+      Read(84,*,End=5) Zprint
+    5 Continue
       Close(Unit=84)
 C
       Call Getrec(20,"JOBARC","NBASTOT ",1,Nao)
@@ -218,8 +223,24 @@ C
       Enddo
       Close(Unit=88)
 C
+C
+C Real-axis diagonal Dyson solve, all roots (QP + satellites), reusing
+C the (now free) W_c/Sigma scratch from I_wre on.
+C
+      Npole = Nroot*Nmo
+      I_pp  = I_wre
+      I_pc  = I_pp + Npole
+      I_ix  = I_pc + Npole
+      Iend  = I_ix + Npole
+      If (Iend .GT. Maxcor) Call Insmem("Scrnc_lehmann_qp",Iend,
+     +                                  Maxcor)
+      Call Scrnc_lehmann_qp(Nmo,Nocc,Nmo_pairs,Nroot,Npole,Zprint,
+     +                      Work(I_vr),Work(I_vl),Work(I_om),
+     +                      Work(I_eps),Work(I_pp),Work(I_pc),
+     +                      Work(I_ix))
+C
       Write(6,"(a)") " @-Scrnc_lehmann: wrote wcreduc_lehmann.dat,"//
-     +               " sigma_lehmann_imag.dat"
+     +               " sigma_lehmann_imag.dat, qp_lehmann.dat"
 C
       Return
       End
@@ -337,5 +358,227 @@ C
          Enddo
       Enddo
 C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_lehmann_qp(Nmo,Nocc,Nmo_pairs,Nroot,Npole,
+     +                            Zprint,Vr,Vl,Om,Eps,Pole,Res,Ix)
+C
+C Diagonal Dyson equation on the real axis with the exact Lehmann
+C self-energy, Sigma_pp(w) = Sum_k c_k/(w-P_k):
+C   P = eps_m - Omega_s, c = V^R_s(pm)V^L_s(pm)   (m occupied)
+C   P = eps_m + Omega_s, c = V^L_s(pm)V^R_s(pm)   (m virtual)
+C F(w) = w - eps_p - Sigma_pp(w) is rational, so every root is found
+C by bracketing between neighbouring poles (plus one below the lowest
+C and one above the highest); each gets the pole strength
+C Z = 1/(1 + Sum_k c_k/(w-P_k)^2). For c_k >= 0 there is exactly one
+C root per interval and Sum Z = 1 exactly -- printed as a check. Roots
+C with Z >= Zprint go to qp_lehmann.dat; the largest-Z root per MO is
+C its quasiparticle, the rest are satellites. No Pade, no quadrature.
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Vr(Nmo_pairs,Nroot),Vl(Nmo_pairs,Nroot),Om(Nroot)
+      Dimension Eps(Nmo),Pole(Npole),Res(Npole)
+      Integer Ix(Npole)
+C
+      Parameter (Tiny=1.0D-14, Wout=50.0D0, Tol=1.0D-11)
+C
+      Open(Unit=89,File="qp_lehmann.dat",Form="FORMATTED",
+     +     Status="UNKNOWN")
+      Write(89,"(a)") "# p   eps_HF        root (Ha)      root (eV)"//
+     +   "     Z         [QP = largest Z per p]"
+      Write(6,"(a)") " @-Scrnc_lehmann_qp: p  eps_HF   eps_QP(Ha)"//
+     +   "   Z_QP    Sum Z   Nroots  min c"
+C
+      Do Ip = 1, Nmo
+C
+C        Collect the non-negligible poles, sorted ascending.
+C
+         Np = 0
+         Cmin = 0.0D0
+         Do Is = 1, Nroot
+            Do Im = 1, Nmo
+               Ipm = (Ip-1)*Nmo + Im
+               C = Vr(Ipm,Is)*Vl(Ipm,Is)
+               If (Abs(C) .GT. Tiny) Then
+                  Np = Np + 1
+                  Res(Np) = C
+                  If (Im .LE. Nocc) Then
+                     Pole(Np) = Eps(Im) - Om(Is)
+                  Else
+                     Pole(Np) = Eps(Im) + Om(Is)
+                  Endif
+                  Cmin = Min(Cmin,C)
+               Endif
+            Enddo
+         Enddo
+         Call Scrnc_lehmann_sort(Np,Pole,Res,Ix)
+C
+         Zsum  = 0.0D0
+         Zbest = -1.0D0
+         Ebest = Eps(Ip)
+         Nfound = 0
+         Do Iint = 0, Np
+            If (Iint .EQ. 0) Then
+               A = Pole(1) - Wout
+            Else
+               A = Pole(Iint)
+            Endif
+            If (Iint .EQ. Np) Then
+               B = Pole(Np) + Wout
+            Else
+               B = Pole(Iint+1)
+            Endif
+            Gap = B - A
+            If (Gap .LT. 1.0D-12) Goto 100
+            Xa = A + 1.0D-9*Gap
+            Xb = B - 1.0D-9*Gap
+            If (Iint .EQ. 0)  Xa = A
+            If (Iint .EQ. Np) Xb = B
+            Fa = Scrnc_lehmann_f(Xa,Eps(Ip),Np,Pole,Res,Dum)
+            Fb = Scrnc_lehmann_f(Xb,Eps(Ip),Np,Pole,Res,Dum)
+            If ((Fa.LT.0.0D0) .EQV. (Fb.LT.0.0D0)) Goto 100
+            Do Iter = 1, 200
+               Xm = 0.5D0*(Xa+Xb)
+               Fm = Scrnc_lehmann_f(Xm,Eps(Ip),Np,Pole,Res,Dum)
+               If ((Fm.LT.0.0D0) .EQV. (Fa.LT.0.0D0)) Then
+                  Xa = Xm
+                  Fa = Fm
+               Else
+                  Xb = Xm
+               Endif
+               If (Xb-Xa .LT. Tol) Goto 50
+            Enddo
+   50       Continue
+            Xr = 0.5D0*(Xa+Xb)
+            Fm = Scrnc_lehmann_f(Xr,Eps(Ip),Np,Pole,Res,Dsig)
+            Z  = 1.0D0/(1.0D0+Dsig)
+            Zsum = Zsum + Z
+            Nfound = Nfound + 1
+            If (Z .GT. Zbest) Then
+               Zbest = Z
+               Ebest = Xr
+            Endif
+            If (Z .GE. Zprint) Write(89,"(I4,1x,F12.6,1x,F14.8,1x,"//
+     +         "F12.5,1x,F10.6)") Ip,Eps(Ip),Xr,Xr*27.2113957D0,Z
+  100       Continue
+         Enddo
+         Write(6,"(a,I3,2F10.5,2F9.5,I7,1PD10.2)")
+     +      " @-Scrnc_lehmann_qp:",Ip,Eps(Ip),Ebest,Zbest,Zsum,
+     +      Nfound,Cmin
+      Enddo
+      Close(Unit=89)
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Double Precision Function Scrnc_lehmann_f(W,Ep,Np,Pole,Res,
+     +                                          Dsig)
+C
+C F(w) = w - eps_p - Sum_k c_k/(w-P_k); Dsig = Sum_k c_k/(w-P_k)^2
+C (= -dSigma/dw), so the pole strength is 1/(1+Dsig).
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Pole(Np),Res(Np)
+      Sig  = 0.0D0
+      Dsig = 0.0D0
+      Do K = 1, Np
+         D    = 1.0D0/(W-Pole(K))
+         Sig  = Sig  + Res(K)*D
+         Dsig = Dsig + Res(K)*D*D
+      Enddo
+      Scrnc_lehmann_f = W - Ep - Sig
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_lehmann_sort(N,Pole,Res,Ix)
+C
+C Ascending sort of Pole (Res carried along) via an index heapsort,
+C then exact-coincidence merge is unnecessary: equal poles give a
+C zero-width interval, skipped by the caller.
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Pole(N),Res(N)
+      Integer Ix(N)
+      Do I = 1, N
+         Ix(I) = I
+      Enddo
+      If (N .LT. 2) Return
+      L  = N/2 + 1
+      Ir = N
+   10 Continue
+      If (L .GT. 1) Then
+         L = L - 1
+         Indxt = Ix(L)
+         Q = Pole(Indxt)
+      Else
+         Indxt = Ix(Ir)
+         Q = Pole(Indxt)
+         Ix(Ir) = Ix(1)
+         Ir = Ir - 1
+         If (Ir .EQ. 1) Then
+            Ix(1) = Indxt
+            Goto 30
+         Endif
+      Endif
+      I = L
+      J = L + L
+   20 If (J .LE. Ir) Then
+         If (J .LT. Ir) Then
+            If (Pole(Ix(J)) .LT. Pole(Ix(J+1))) J = J + 1
+         Endif
+         If (Q .LT. Pole(Ix(J))) Then
+            Ix(I) = Ix(J)
+            I = J
+            J = J + J
+         Else
+            J = Ir + 1
+         Endif
+         Goto 20
+      Endif
+      Ix(I) = Indxt
+      Goto 10
+   30 Continue
+C     Apply the permutation (Res/Pole copies via the tail of Ix order).
+      Call Scrnc_lehmann_perm(N,Pole,Ix)
+      Call Scrnc_lehmann_perm(N,Res,Ix)
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_lehmann_perm(N,A,Ix)
+C
+C A <- A(Ix(:)), in place, by cycle-following with a visited mark
+C (Ix restored afterwards).
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension A(N)
+      Integer Ix(N)
+      Do I = 1, N
+         If (Ix(I) .GT. 0) Then
+            Tmp = A(I)
+            J = I
+   10       Continue
+            K = Ix(J)
+            Ix(J) = -K
+            If (K .EQ. I) Then
+               A(J) = Tmp
+            Else
+               A(J) = A(K)
+               J = K
+               Goto 10
+            Endif
+         Endif
+      Enddo
+      Do I = 1, N
+         Ix(I) = -Ix(I)
+      Enddo
       Return
       End
