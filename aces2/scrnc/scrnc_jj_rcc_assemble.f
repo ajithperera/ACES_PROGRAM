@@ -95,10 +95,20 @@ C driver's Icount loop negates it once per pass, an even number of
 C times total for Itop=2).
 
       Itop = 1
-      Fact = 2.0D0
+C
+C SIGN (2026-10-15, SCRNC_DEBUG_LOG.md): secprp's pairing gives the
+C polarizability-convention response, -chi (positive at w=0), but the
+C bare-v add below forms W = v + v*chi*v and needs the physical
+C chi(iw) <= 0. Fact is therefore negated. Before this fix every W_c,
+C Sigma_c and QP energy had the correlation part with flipped sign
+C (occupied QPs moved down while IP-EOM-CCSD moves them up); found by
+C the Lehmann cross-check (Scrnc_lehmann.F), which matched the old
+C W_c to ~0.2% in magnitude with opposite sign.
+C
+      Fact = -2.0D0
       If (Freq .NE. 0.0D0 .AND. Realfreq) Then
          Itop = 2
-         Fact = 1.0D0
+         Fact = -1.0D0
       Endif
 
       Call Dzero(JJ_lrespn,Nao_pair*Nao_pair)

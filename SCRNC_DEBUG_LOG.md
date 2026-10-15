@@ -42,9 +42,19 @@ h2o_eomee_fulldiag_sto3g_1015 vs h2o_scrnc_sigma_matrix_dyson_stable_0823
    exact vs quadrature Sigma_c differ by up to ~3x at mid-axis (HOMO,
    w=1.5: Im -0.0377 vs -0.0133).
 
-Next, needs Ajith's OK: flip the sign in the pipeline's W, rerun
-stable_0823 and confirm it matches Lehmann; real-axis Lehmann
-Sigma(w+i*eta) -> QP energies vs IP/EA-EOM; then satellites.
+**SIGN FIX APPLIED (same day, Ajith OK'd):** Fact negated in
+scrnc_jj_cc_lrspn.F and scrnc_jj_rcc_assemble.F (ring-CC path, same
+secprp convention). Rerun h2o_scrnc_sigma_signfix_sto3g_1015 (xscrncsigma,
+same inputs as stable_0823): Sigma_new = -Sigma_old to 3e-17 (pure sign
+flip), Sigma_new = Sigma_quad(Lehmann) to 1.7e-4. QPs vs IP/EA-EOM-CCSD
+(eV): HOMO IP 8.65 (EOM 8.42, old 12.55); MO4 11.12 (10.91, old 13.56);
+MO3 16.79 (16.63, old 16.84) -- **the MO4/MO5 anomaly was this sign.**
+Virtuals: MO6 -16.78 (EOM -16.43, old -16.21); MO7 -20.75 (-19.83, old
+-19.73), now 0.35/0.92 eV off. Sign is fixed by chi<=0, not by fitting.
+STO-3G has 2 virtuals and these still go through the unconverged 4-node
+quadrature + Pade; the exact real-axis Lehmann QP is the clean test.
+Pre-fix pipeline results (incl. the DZ/cc-pVDZ 0823 runs and DRCCD runs)
+are all invalid for Sigma_c sign.
 
 ## SESSION 2026-10-15 (GW+CUMULANT SATELLITE-WEIGHT RESULT RETRACTED --
 it is a Pade/quadrature artifact, not physics. RESUME HERE.)
