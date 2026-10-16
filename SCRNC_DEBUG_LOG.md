@@ -24,6 +24,40 @@ Next, in order:
 Also: the 4-node quadrature (N=4, Omega_c=1) is badly unconverged; any
 remaining pipeline (non-Lehmann) results need a converged grid.
 
+## SESSION 2026-10-16: IP-EOM-CCSD ROOT ASSIGNMENT (START-HERE item 1).
+## RESUME HERE.
+
+Roots 4/5 of h2o_scrnc_ipeomcc_sto3g_0823 (26.70/29.74 eV) are NOT the
+2a1 main line; both are 2h1p. Reran with IP_SYM=25
+(h2o_scrnc_ipeomcc_25roots_sto3g_1016: 9 roots, then stalled at
+EOM_MAXCYC=50) and IP_SYM=25,EOM_MAXCYC=300
+(h2o_scrnc_ipeomcc_25roots_maxcyc300_sto3g_1016: 13 roots, then quit;
+roots 12/13 are the SAME root, 31.83532 eV twice). 1h (R1) components:
+  1  8.420  0.971 MO5   1b1 main          8  30.677  0         2h1p
+  2 10.912  0.975 MO4   3a1 main          9  29.776  0.484 MO2 2a1-bearing:
+  3 16.635  0.989 MO3   1b2 main                     dominant 2h1p = 1b1^-2 4a1
+  4 26.696  0         2h1p (exactly 0,              (AB 5,5;1 = -0.78), 3a1^-2
+                       spin-forbidden type)           4a1 (0.29)
+  5 29.740  0.023 MO5   2h1p shake-up    10  30.839  ~0
+  6 27.684  0         2h1p               11  31.747  ~0
+  7 30.391  0         2h1p               12/13 31.835 ~0 (duplicate)
+Conclusions:
+- In IP-EOM-CCSD the 2a1 line already breaks down: the first root with
+  2a1 character has |R1|^2 ~ 0.23 and is mostly 1b1^-2 shake-up. The
+  rest of the 2a1 weight lies above 31.8 eV and was never reached.
+- There is NO IP-EOM doublet with 2a1 weight below 29.78 eV (and no
+  root at all between 16.63 and 26.70 eV), so the Lehmann G0W_CC 2a1
+  satellites at 22.62 eV (Z=0.046) and 28.52 eV (Z=0.026) have no
+  counterpart. They are most likely the standard G0W satellite artifact
+  (poles at eps_i - Omega_s rather than at true 2h1p energies). The
+  "~37% satellite weight" must not be quoted as physics.
+- The vip root-by-root Davidson is unreliable in this dense, strongly
+  mixed region (stalls, LIN. DEP. restarts, duplicate roots). Proposed
+  next step (awaiting Ajith's OK): an IP full-diag path in vip like
+  vee's EE_ROOT_FIND=FULL_DIAG (dimension 75/spin block for STO-3G),
+  with L and R eigenvectors, to get every root and its true L.R 1h
+  spectral weight for a line-by-line comparison with qp_lehmann.dat.
+
 ## SESSION 2026-10-15 (later): LEHMANN W FROM ACES II EOM -- VALIDATED;
 ## PIPELINE W_c HAS THE WRONG OVERALL SIGN. RESUME HERE.
 
