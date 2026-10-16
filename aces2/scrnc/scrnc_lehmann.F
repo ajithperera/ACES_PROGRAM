@@ -43,6 +43,11 @@ C   Nquad, Omega_c           pipeline quadrature (sigma_input)
 C   Next, w(1..Next)         imaginary-axis points for Sigma_c
 C   Zprint                   (optional, default 1.0D-3) smallest pole
 C                            strength listed in qp_lehmann.dat
+C   Isrc                     (optional, default 0) spectrum source:
+C                            0 = eom_tdm.dat (xvee FULL_DIAG)
+C                            1 = closed-shell direct RPA solved here
+C                                (Scrnc_lehmann_drpa), the dRPA/DRCCD
+C                                screening; eom_tdm.dat is not read
 C
       Implicit Double Precision (A-H,O-Z)
       Dimension Work(Maxcor)
@@ -61,7 +66,9 @@ C
       Read(84,*) Nquad,Omega_c
       Read(84,*) Next,(Wext(I),I=1,Next)
       Zprint = 1.0D-3
+      Isrc   = 0
       Read(84,*,End=5) Zprint
+      Read(84,*,End=5) Isrc
     5 Continue
       Close(Unit=84)
 C
@@ -72,6 +79,16 @@ C
       Nmo_pairs = Nmo*Nmo
       Write(6,"(a,3I6)") " @-Scrnc_lehmann: Nao, Nmo, Nocc = ",
      +                   Nao,Nmo,Nocc
+C
+C dRPA: one singlet root per (i,a) pair; triplets carry no spin-summed
+C density and drop out of W_c exactly as in the EOM route.
+C
+      If (Isrc .EQ. 1) Then
+         Nroot = Nocc*(Nmo-Nocc)
+         Write(6,"(a,I6)") " @-Scrnc_lehmann: direct RPA spectrum,"//
+     +                     " singlet roots ",Nroot
+         Go To 20
+      Endif
 C
 C First pass over eom_tdm.dat: count the roots.
 C
@@ -98,6 +115,7 @@ C
       Endif
       Write(6,"(a,I6,a,I3)") " @-Scrnc_lehmann: roots read ",Nroot,
      +                       "  IUHF of EOM run ",Iuhf_t
+   20 Continue
 C
       I_c    = 1
       I_eps  = I_c    + Nao*Nmo
@@ -133,6 +151,26 @@ C
      +                     Work(I_vao),Nao,Nao_pairs,
      +                     Work(I_c),Nmo,Work(I_vmo),Nmo_pairs)
 C
+C dRPA source: V^R_s = V^L_s from the direct RPA X+Y, in the I_scr
+C scratch (free again after the AO->MO transform).
+C
+      If (Isrc .EQ. 1) Then
+         Nov    = Nroot
+         Lwork  = 64*Nov
+         I_zm   = I_scr
+         I_gm   = I_zm + Nov*Nov
+         I_dq   = I_gm + Nmo_pairs
+         I_wk   = I_dq + Nov
+         If (I_wk+Lwork .GT. Maxcor) Call Insmem("Scrnc_lehmann_drpa",
+     +                                           I_wk+Lwork,Maxcor)
+         Call Scrnc_lehmann_drpa(Nmo,Nocc,Nmo_pairs,Work(I_vmo),
+     +                           Work(I_eps),Nov,Work(I_om),
+     +                           Work(I_vr),Work(I_vl),Work(I_zm),
+     +                           Work(I_gm),Work(I_dq),Work(I_wk),
+     +                           Lwork)
+         Go To 30
+      Endif
+C
 C Second pass: spin-summed gamma^R_s, gamma^L_s -> V^R_s, V^L_s.
 C
       Rewind(83)
@@ -162,6 +200,7 @@ C        Closed-shell RHF-based EOM stores one spin case only.
      +              Nmo_pairs,Work(I_gl),1,0.0D0,Work(I_vl+Ioff),1)
       Enddo
       Close(Unit=83)
+   30 Continue
 C
 C W_c dumps at the requested w'.
 C
@@ -580,5 +619,100 @@ C
       Do I = 1, N
          Ix(I) = -Ix(I)
       Enddo
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_lehmann_drpa(Nmo,Nocc,Nmo_pairs,Vmo,Eps,Nov,
+     +                              Om,Vr,Vl,Zm,Gam,Dsq,Work,Lwork)
+C
+C Closed-shell direct RPA (no exchange) in the spatial MO basis, i.e.
+C the screening of the dRPA/DRCCD pipeline. With D(ia) = eps_a-eps_i
+C and K(ia,jb) = (ia|jb), singlet A = D + 2K, B = 2K, so A-B = D is
+C diagonal and the problem reduces to the symmetric
+C   D^1/2 (D + 4K) D^1/2 Z = Omega^2 Z,   (X+Y) = D^1/2 Z Omega^-1/2
+C (X^T X - Y^T Y = 1). The spin-summed transition density of root s is
+C sqrt(2)(X+Y)(ia); it is split evenly over the (i,a) and (a,i) pairs
+C ((pq|rs) is symmetric in r,s), and V^R_s = V^L_s = (pq|gamma_s).
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Vmo(Nmo_pairs,Nmo_pairs),Eps(Nmo),Om(Nov)
+      Dimension Vr(Nmo_pairs,Nov),Vl(Nmo_pairs,Nov)
+      Dimension Zm(Nov,Nov),Gam(Nmo_pairs),Dsq(Nov),Work(Lwork)
+C
+      Nvrt = Nmo - Nocc
+      Do Ia = 1, Nvrt
+         Do I = 1, Nocc
+            Iov      = (Ia-1)*Nocc + I
+            Dsq(Iov) = Sqrt(Eps(Nocc+Ia) - Eps(I))
+         Enddo
+      Enddo
+C
+      Do Jb = 1, Nvrt
+         Do J = 1, Nocc
+            Jov  = (Jb-1)*Nocc + J
+            Jpr  = (Nocc+Jb-1)*Nmo + J
+            Do Ia = 1, Nvrt
+               Do I = 1, Nocc
+                  Iov = (Ia-1)*Nocc + I
+                  Ipr = (Nocc+Ia-1)*Nmo + I
+                  Zm(Iov,Jov) = 4.0D0*Dsq(Iov)*Vmo(Ipr,Jpr)*Dsq(Jov)
+               Enddo
+            Enddo
+            Zm(Jov,Jov) = Zm(Jov,Jov) + Dsq(Jov)**4
+         Enddo
+      Enddo
+C
+C
+C Tr A = Sum_ia [D(ia) + 2K(ia,ia)], for the plasmon-formula check
+C E_c(dRPA) = (Sum_s Omega_s - Tr A)/2 = E(drCCD) below.
+C
+      Tra = 0.0D0
+      Do Iov = 1, Nov
+         D   = Dsq(Iov)**2
+         Tra = Tra + D + 2.0D0*(Zm(Iov,Iov)-D*D)/(4.0D0*D)
+      Enddo
+C
+      Call Dsyev("V","U",Nov,Zm,Nov,Om,Work,Lwork,Info)
+      If (Info .NE. 0) Then
+         Write(6,"(a,I6)") " @-Scrnc_lehmann_drpa: DSYEV info ",Info
+         Call Errex
+      Endif
+      If (Om(1) .LE. 0.0D0) Then
+         Write(6,"(a,1PD12.4)") " @-Scrnc_lehmann_drpa: unstable,"//
+     +                          " lowest Omega^2 = ",Om(1)
+         Call Errex
+      Endif
+C
+      Write(6,"(a)") " @-Scrnc_lehmann_drpa: singlet dRPA excitation"//
+     +               " energies (eV)"
+      Do Is = 1, Nov
+         Om(Is) = Sqrt(Om(Is))
+      Enddo
+      Write(6,"(5(1x,F14.8))") (Om(Is)*27.2113957D0,Is=1,Nov)
+      Ec = -0.5D0*Tra
+      Do Is = 1, Nov
+         Ec = Ec + 0.5D0*Om(Is)
+      Enddo
+      Write(6,"(a,F20.12)") " @-Scrnc_lehmann_drpa: plasmon-formula"//
+     +                      " E_c(dRPA) = ",Ec
+C
+      Do Is = 1, Nov
+         Call Zero(Gam,Nmo_pairs)
+         Fac = Sqrt(2.0D0/Om(Is))*0.5D0
+         Do Ia = 1, Nvrt
+            Do I = 1, Nocc
+               Iov = (Ia-1)*Nocc + I
+               X   = Fac*Dsq(Iov)*Zm(Iov,Is)
+               Gam((Nocc+Ia-1)*Nmo + I) = X
+               Gam((I-1)*Nmo + Nocc+Ia) = X
+            Enddo
+         Enddo
+         Call Dgemv("N",Nmo_pairs,Nmo_pairs,1.0D0,Vmo,Nmo_pairs,
+     +              Gam,1,0.0D0,Vr(1,Is),1)
+         Call Dcopy(Nmo_pairs,Vr(1,Is),1,Vl(1,Is),1)
+      Enddo
+C
       Return
       End

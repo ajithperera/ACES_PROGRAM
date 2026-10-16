@@ -24,8 +24,59 @@ Next, in order:
 Also: the 4-node quadrature (N=4, Omega_c=1) is badly unconverged; any
 remaining pipeline (non-Lehmann) results need a converged grid.
 
+## SESSION 2026-10-16 (evening): dRPA LEHMANN SOURCE; CC-vs-RPA 2a1
+## SATELLITES; PIPELINE DRCCD W_c DISAGREES WITH EXACT dRPA. RESUME HERE.
+
+Scrnc_lehmann now takes an optional 5th lehmann_input record Isrc
+(0 = eom_tdm.dat, default; 1 = closed-shell direct RPA solved in
+Scrnc_lehmann_drpa from the pipeline's own MO (pq|rs)). Reduced form
+D^1/2(D+4K)D^1/2 Z = Omega^2 Z, gamma_s = sqrt(2)(X+Y), V^R = V^L.
+Why not a vee DRCCD full-diag path: the EOM-drCCD moments that
+reproduce exact dRPA residues are (1+T)R (right) and (1-T)^-1 L (left)
+(numpy check on random A,B: 1e-14; the naive (1+T)L is off by 1e-2),
+which would need T in ph-ph layout from vee's lists.
+Validation (H2O/STO-3G, h2o_drpa_lehmann_sto3g_1016):
+- all 10 singlet dRPA energies = xvee EOM(SF)-DRCCD singlet
+  eigenvalues (h2o_eomsfdrccd_rhf_sto3g_1016, manual pipeline -- xaces2
+  routes CALC=DRCCD to xvcc and dies) to 4e-7 eV (= the two codes'
+  Hartree->eV constants);
+- plasmon E_c = (Sum Omega - Tr A)/2 = -0.0522447522 vs xringcc drCCD
+  E_c = -0.0522447516 (RHF and UHF, any DAMP/DENSITY keywords:
+  h2o_drccd_energy_keyword_scan_1016).
+  NB the -0.053013 "drCCD energy" in DRCCD pipeline logs is xringcl's
+  Lambda pseudo-energy (Lambda != T for drCCD), not a UHF bug.
+
+**Open: the DRCCD screening pipeline is NOT dRPA.** Sign-fixed rerun
+h2o_scrnc_sigma_drccd_signfix_sto3g_1016 vs the validated dRPA Lehmann:
+W_c(w'=13.4) pipeline/Lehmann ratio ~1/44 (max 3.8e-4 vs 1.66e-2;
+CCSD pipeline vs CCSD Lehmann agree to 0.1% in the same comparison);
+Sigma_c(iw=0) diagonal 0.33-0.71x of dRPA. Ground state is fine, so
+the fault is in the ring-CC response build (scrnc_jj_rcc_lrspn /
+scrnc_jj_rcc_assemble / scrnc_form_rcc_hbar_inv: moments and/or
+Lambda usage). Not yet debugged. Every DRCCD-pipeline Sigma/QP number
+to date (incl. the 0823 "CC vs dRPA up to 0.33 eV") is invalid.
+
+**CC-vs-RPA result (all Lehmann, exact real axis), IP in eV (weight):**
+  orb   IP-EOM-CCSD     G0W_CC          G0W_dRPA
+  1b1   8.42 (0.934)    8.25 (0.929)    9.00 (0.967)
+  3a1  10.91 (0.946)   10.77 (0.928)   11.35 (0.969)
+  1b2  16.63 (0.975)   16.55 (0.953)   16.78 (0.980)
+  2a1  33.06 (0.472)   31.40 (0.633)   32.29 (0.874)
+2a1 lines >= 0.01 (centroids 34.87 / 34.68 / 34.80 eV):
+  IP-EOM-CCSD 29.78 .243 | 33.06 .472 | 38.42 .206 | ...
+  G0W_CC      22.62 .046 | 28.52 .026 | 31.40 .633 | 36.48 .074 |
+              41.81 .116 | ...
+  G0W_dRPA    32.29 .874 | 40.40 .067 | 56.72 .026 | 92.85 .013
+Reading: CC screening (a) brings the valence QPs within 0.08-0.17 eV of
+IP-EOM-CCSD where dRPA screening is 0.15-0.58 eV off, and (b) moves
+2a1 weight into satellites (main-line Z 0.87 -> 0.63) toward
+IP-EOM-CCSD's three-way breakdown (0.47); dRPA screening gives almost
+none. But the CC satellite positions are wrong (22.6/28.5 eV have no
+EOM counterpart). STO-3G only; a basis check (DZ) is the next step,
+plus debugging the pipeline's DRCCD response if it is still needed.
+
 ## SESSION 2026-10-16 (later): IP_ROOT_FIND=FULL_DIAG IN vip; FULL 2a1
-## SPECTRUM, EOM-CCSD vs LEHMANN G0W_CC. RESUME HERE.
+## SPECTRUM, EOM-CCSD vs LEHMANN G0W_CC.
 
 New keyword IP_ROOT_FIND=DAVIDSON|FULL_DIAG (joda slot 286, IFLAGS2
 186). vip/ip_fulldiag.F builds the IP-EOM H-bar column by column with
