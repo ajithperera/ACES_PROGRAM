@@ -85,7 +85,8 @@ C is achieved before computing orbital gradients.
 C Unconverged amplitudes: with OO_METHOD=RFO the step that led here is
 C rejected (no lambda, densities or gradient at this point); otherwise
 C stop.
-               If (Opt_orbs .And.
+               Call Getrec(0,"JOBARC","RFO_NITR",Length,Itcv)
+               If (Opt_orbs .And. Length .Gt. 0 .And.
      +             Iflags2(h_IFLAGS2_oo_method) .Eq. 6) Then
                   Call Putrec(20,"JOBARC","RFO_FAIL",1,1)
                   Call Pccd_do_orbrots(Icore(I0),icrsiz/iintfp,Iuhf,
@@ -93,8 +94,9 @@ C stop.
      +                              OOmicroItr,OOmacroItr,OOtotalItr)
                   Go to 10
                Endif
-               Write(6,"(2a)") " @-PCCD: the pCCD amplitude equations",
-     +                         " did not converge."
+               Write(6,"(3a)") " @-PCCD: the pCCD amplitude equations",
+     +                         " did not converge (at the starting",
+     +                         " orbitals if OO_METHOD=RFO)."
                Call Errex
             Endif
             Call Pccd_rfo_tguess(Icore(i0),icrsiz/iintfp,"SAVE ")

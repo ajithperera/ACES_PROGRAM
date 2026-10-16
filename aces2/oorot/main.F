@@ -7,6 +7,9 @@ C   SAVE  : SCFEVCA0 (AO x MO)            -> c0.dat
 C   APPLY : C = C0*U, C0 from c0.dat,
 C           U (MO x MO) from u.dat         -> SCFEVCA0, SCFEVCB0
 C   DUMP  : OBRTGRDA (MO x MO), TOTENERG   -> grad.dat
+C   SAVEAB: SCFEVCA0, SCFEVCB0            -> ca.dat, cb.dat
+C   LOADAB: ca.dat, cb.dat -> SCFEVCA0/B0, SCFEVCAS/BS (UHF guess)
+C   LOAD  : c0.dat -> SCFEVCA0/B0 + non-HF flags (OO-pCCD guess)
 C All text files are column-major with a "nrow ncol" header line.
 C
       Implicit Double Precision (A-H,O-Z)
