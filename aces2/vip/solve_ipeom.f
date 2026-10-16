@@ -204,6 +204,7 @@
 
 
 
+
 C
 C ***************************************************************
 C FOLLOWING ARE A LARGE NUMBER OF SUBROUTINES THAT RELATE TO THE DIRECT 
@@ -331,6 +332,19 @@ C
      &                                     " EQUATIONS ARE SOLVED"
          WRITE(6,*)
 C
+C IP_ROOT_FIND=FULL_DIAG: explicit H-bar build + full diagonalization
+C of this block instead of the Davidson root search (small systems).
+C
+         IF (IFLAGS2(186) .EQ. 1) THEN
+            IF (IUHF .EQ. 0) THEN
+               WRITE(6,"(2a)") " @SOLVE_IPEOM-F, IP_ROOT_FIND=FULL_DIAG",
+     &                         " requires REF=UHF"
+               CALL ERREX
+            ENDIF
+            CALL IP_FULLDIAG(ICORE, MAXCOR, IUHF, ISPIN, NIP, NROOT)
+            GO TO 2
+         ENDIF
+C
  1       IF ((IROOT.LT. NROOT) .AND. (NDIMR .LE. NIP)) THEN
 C
 C  FORM C_new using Hbar(IP_EOM)C_old = C_new 
@@ -363,7 +377,7 @@ C
 C
          ENDIF
 C
-         NUMROOT(SIRREP, ISPIN) = IROOT
+ 2       NUMROOT(SIRREP, ISPIN) = IROOT
 C
          ENDIF
 C

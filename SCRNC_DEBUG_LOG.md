@@ -24,8 +24,39 @@ Next, in order:
 Also: the 4-node quadrature (N=4, Omega_c=1) is badly unconverged; any
 remaining pipeline (non-Lehmann) results need a converged grid.
 
+## SESSION 2026-10-16 (later): IP_ROOT_FIND=FULL_DIAG IN vip; FULL 2a1
+## SPECTRUM, EOM-CCSD vs LEHMANN G0W_CC. RESUME HERE.
+
+New keyword IP_ROOT_FIND=DAVIDSON|FULL_DIAG (joda slot 286, IFLAGS2
+186). vip/ip_fulldiag.F builds the IP-EOM H-bar column by column with
+HC_MULT (ISIDE=1 and, independently, ISIDE=2), DGEEV, left vectors =
+rows of R**-1, and writes P_p(k) = R1_p*L1_p (Lambda-free 1h pole
+strength) to ip_eom_fulldiag.dat. UHF only. Test
+h2o_scrnc_ipeom_fulldiag_sto3g_1016 (H2O/STO-3G, dim 75):
+max|H_L - H_R^T| = 0 exactly, max|Im w| = 0, left residual 2.2e-13,
+Sum_k P_p = 1.0000000000 for every p. All 12 distinct Davidson roots
+reproduced (8.41950049 vs 8.41950053 eV); the Davidson "roots 12/13"
+were one root found twice.
+
+2a1 (p=2) lines with weight >= 0.01 (eV, weight):
+  EOM-CCSD : 29.78 0.243 | 32.30 0.023 | 33.06 0.472 | 38.42 0.206 |
+             66.57 0.027
+  G0W_CC   : 22.62 0.046 | 28.52 0.026 | 31.40 0.633 | 36.48 0.074 |
+  (Lehmann)  39.76 0.024 | 41.81 0.116 | 43.61 0.024 | 74.38 0.013
+Strength centroids (<100 eV) agree: 2a1 34.87 vs 34.68; 1b2 17.53 vs
+17.35; 3a1 12.78 vs 12.63; 1b1 10.80 vs 10.40 eV (EOM vs G0W_CC).
+Reading: IP-EOM-CCSD splits 2a1 into three strong lines (24/47/21%);
+G0W_CC puts 63% in one line between them, and puts 7% below 29 eV
+(22.62, 28.52) where IP-EOM-CCSD has no 2a1 strength at all. G0W_CC
+gets the first moment right but not the shape of the breakdown. The
+earlier "~37% in satellites" is real in total, but its distribution is
+wrong. Caveat: P_p leaves out the Lambda terms, so these are not the
+exact EOM spectroscopic factors.
+Next: (2) CC-vs-DRCCD satellite comparison (needs DRCCD EOM full diag
+-> eom_tdm.dat), now with this IP reference; (3) DZ (IP dim ~320,
+trivial for this path).
+
 ## SESSION 2026-10-16: IP-EOM-CCSD ROOT ASSIGNMENT (START-HERE item 1).
-## RESUME HERE.
 
 Roots 4/5 of h2o_scrnc_ipeomcc_sto3g_0823 (26.70/29.74 eV) are NOT the
 2a1 main line; both are 2h1p. Reran with IP_SYM=25

@@ -399,9 +399,10 @@ const ASV_nl_t ASV_nl[] =
 {/*283*/ "IOO_DIIS",     "OO_DIIS#"     ,h_ICHAR_handle, 1,     ""},
 {/*284*/ "IOV_CONSTRAIN","OV_CONSTR#AIN",h_ICHAR_handle, 0,     ""},
 {/*285*/ "IGENRLIZD_TDENS" ,"GENRLIZD_TDENS",h_ICHAR_handle,0,  ""},
-{/*286*/ "","",0,0,""},
+{/*286*/ "IIP_ROOT_FND","IP_ROOT_FIND#",h_ICHAR_handle, 0,      ""},
+{/*287*/ "","",0,0,""},
 }; /* end ASV_nl[] definition */
-#define MAX_ASVs 285
+#define MAX_ASVs 286
 
 /******************************************************************************/
 
@@ -1193,6 +1194,13 @@ void asv_handle_proc(const f_int * index, const char * value)
         case h_IOPPAR_rpa_solve:
         {
             const char *handles[] = { "FULL_DIAG", "DAVIDSON" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_ip_root_find:
+        {
+            const char *handles[] = { "DAVIDSON","FULL_DIAG", ""};
             asv_update_handle(index,value,handles);
             break;
         }

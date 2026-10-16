@@ -603,6 +603,9 @@
 #define h_IOPPAR_genrlizd_tdens    285
 #define h_IFLAGS2_genrlizd_tdens   185
 
+#define h_IOPPAR_ip_root_find    286
+#define h_IFLAGS2_ip_root_find   186
+
 
 #endif /* _FLAGS_H_ */
 
