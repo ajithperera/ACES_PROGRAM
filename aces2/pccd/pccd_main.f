@@ -213,7 +213,7 @@
       Integer IHess_calc
       Integer Pccd_refr,Itest
       Integer OOmicroItr,OOmacroItr,OOtotalItr
-      Integer Length,Idrop
+      Integer Length,Idrop,Itcv
       Double Precision Scale 
       Character*80 Fname
       Character*6 Status
@@ -308,6 +308,24 @@ C is achieved before computing orbital gradients.
          If (Iuhf .Eq. 0 .AND. All_mos) Then 
             Call Pccd_banner(6,Status)
             Call Pccd_rdriver(Icore(i0),icrsiz/iintfp,Iuhf)
+            Call Getrec(20,"JOBARC","PCCD_TCV",1,Itcv)
+            If (Itcv .Ne. 1) Then
+C Unconverged amplitudes: with OO_METHOD=RFO the step that led here is
+C rejected (no lambda, densities or gradient at this point); otherwise
+C stop.
+               If (Opt_orbs .And.
+     +             Iflags2(178) .Eq. 6) Then
+                  Call Putrec(20,"JOBARC","RFO_FAIL",1,1)
+                  Call Pccd_do_orbrots(Icore(I0),icrsiz/iintfp,Iuhf,
+     +                              Igrad_calc,IHess_calc,Scale,
+     +                              OOmicroItr,OOmacroItr,OOtotalItr)
+                  Go to 10
+               Endif
+               Write(6,"(2a)") " @-PCCD: the pCCD amplitude equations",
+     +                         " did not converge."
+               Call Errex
+            Endif
+            Call Pccd_rfo_tguess(Icore(i0),icrsiz/iintfp,"SAVE ")
 
             Pccd_refr = Iflags2(179)
             Call Getrec(-20, 'JOBARC', 'BRUKTEST', 1, Itest)

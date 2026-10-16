@@ -10,7 +10,7 @@
 
 
       Subroutine Pccd_rfo_step(Work,Maxcor,Nbas,Nocc,Iuhf,Grdcnv,Tol,
-     +                         Gmax,Grms,Ncycle)
+     +                         Etol,Gmax,Grms,Ncycle)
 C
 C OO_METHOD=RFO: trust-region rational-function (augmented Hessian)
 C orbital step with an SR1-updated model Hessian over all orbital pairs
@@ -103,7 +103,10 @@ c machsp.com : end
      +                 Work(I120),Work(I130),Lwork,Work(I140),
      +                 Work(I150),Work(I160),Work(I170),Work(I180),
      +                 Work(I190),Work(I200),Mxhv,Nbas,Nocc,Npar,
-     +                 Grdcnv,Tol,Gmax,Grms,Ncycle)
+     +                 Grdcnv,Tol,Etol,Gmax,Grms,Ncycle)
+C The T2 guess of the next macro iterations follows accepted points only.
+      Call Getrec(20,"JOBARC","RFO_ACPT",1,Iacpt)
+      If (Iacpt .Eq. 1) Call Pccd_rfo_tguess(Work,Maxcor,"PROMO")
       Return
       End
 

@@ -59,6 +59,15 @@
       CALL PUTLST(SCR(I000),IDIMR,1,1,1,LSTERR)
       CALL SAXPY (LENVEC,ONEM,SCR(I000),1,SCR(I010),1)
       RESMITER=SCR(I010-1+ISAMAX(LENVEC,SCR(I010),1))
+C Damped update T = T(old) + Alpha*(T(new)-T(old)); the DIIS error
+C vectors are the damped increments, so the extrapolation is that of
+C the damped map. Convergence is still tested on the undamped one.
+      CALL PCCD_SOLVCTL(ALPHA,NODIIS)
+      IF (ALPHA .NE. ONE .AND. .NOT. SING) THEN
+         CALL SSCAL(LENVEC,ALPHA,SCR(I010),1)
+         CALL SAXPY(LENVEC,ONE,SCR(I010),1,SCR(I000),1)
+         CALL PUTALL(SCR(I000),NSIZE,IRREPX,LISTT21+2)
+      ENDIF
       CALL PUTLST(SCR(I010),IDIMR,1,1,2,LSTERR)
       DO 100 I=1,NDIMR
        CALL GETLST(SCR(I000),I,1,1,2,LSTERR)
@@ -69,7 +78,20 @@
         R(INDXF(J,I,MAXDIM))=X
 101    CONTINUE
 100   CONTINUE 
-      CALL DODIIS(R,SCR(I000),SCR(I020),MAXDIM,NDIMR)
+      CALL PCCD_DIISCOEF(R,SCR(I000),SCR(I020),MAXDIM,NDIMR,INFO)
+      IF (INFO .NE. 0) THEN
+C Singular DIIS matrix: restart the subspace with the current vector
+C (moved to slot 1) and take the plain update this cycle.
+         WRITE(6,"(a,i4,a)") " @-PCCD_DODIIS0: singular DIIS matrix",
+     &                       INFO,", subspace restarted."
+         CALL GETLST(SCR(I000),IDIMR,1,1,1,LSTERR)
+         CALL PUTLST(SCR(I000),1,1,1,1,LSTERR)
+         CALL GETLST(SCR(I000),IDIMR,1,1,2,LSTERR)
+         CALL PUTLST(SCR(I000),1,1,1,2,LSTERR)
+         IDIMR = 1
+         NDIMR = 1
+         SCR(I020) = ONE
+      ENDIF
 C      IF(IFLAGS(1).GE.1)THEN
        WRITE(6,1000)
        CALL PRVECR(SCR(I020),NDIMR)
@@ -120,6 +142,11 @@ C      ENDIF
       NDIMR=MIN(MAXDIM,NDIMR+1)
       IDIMR=IDIMR+1
       IF(IDIMR.GT.MAXDIM) IDIMR=1
+C No extrapolation: keep a one-vector subspace (plain damped Jacobi).
+      IF (NODIIS .NE. 0) THEN
+         NDIMR=1
+         IDIMR=1
+      ENDIF
       RETURN
 1000  FORMAT(T3,'Current DIIS expansion coefficients : ')
 1001  FORMAT(T3,'Convergence information after ',I5,' iterations: ')

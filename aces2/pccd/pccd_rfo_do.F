@@ -1,8 +1,9 @@
       Subroutine Pccd_rfo_do(G,C,Cprv,F,U,Scr,Gv,Gp,Sp,Step,H,Ah,Ev,
      +                       Wk,Lwork,Vb,Sb,Am,Wm,Cs,Gs,Res,Mxhv,
-     +                       Nbas,Nocc,Npar,Grdcnv,Tol,Gmax,Grms,Ncycle)
+     +                       Nbas,Nocc,Npar,Grdcnv,Tol,Etol,Gmax,Grms,
+     +                       Ncycle)
       Implicit Double Precision(A-H,O-Z)
-      Logical Grdcnv,Reject,Escape
+      Logical Grdcnv,Reject,Escape,Jump
       Dimension Vb(Npar,Mxhv),Sb(Npar,Mxhv),Am(Mxhv,Mxhv),Wm(Mxhv)
       Dimension Cs(Nbas*Nbas),Gs(Npar),Res(Npar)
       Dimension G(Nbas,Nbas),C(Nbas,Nbas),Cprv(Nbas,Nbas)
@@ -12,6 +13,10 @@
 #include "machsp.com"
       Parameter (Hoovv=0.05D0, Trust0=0.1D0, Trstmx=0.5D0)
       Parameter (Mxstb=5)
+C Branch jump: an energy drop far beyond the model prediction means the
+C amplitudes left the solution branch being followed (seen for stretched
+C N2: a branch with |T2| ~ 30 and 0.23 Eh lower energy).
+      Parameter (Rhojmp=10.0D0, Ejmp=1.0D-4)
       Data Zero,Half,One,Two,Four /0.0D0,0.5D0,1.0D0,2.0D0,4.0D0/
 
       Nsq = Nbas*Nbas
@@ -42,6 +47,22 @@
       If (Length .Gt. 0) Call Getrec(20,"JOBARC","RFO_PHAS",1,Iphase)
       Reject = .False.
       Escape = .False.
+      Jump   = .False.
+C RFO_FAIL = 1: the pCCD amplitude equations did not converge at these
+C orbitals (set in Pccd); E and G are not available.
+      Call Getrec(0,"JOBARC","RFO_FAIL",Length,Junk)
+      Ifail = 0
+      If (Length .Gt. 0) Call Getrec(20,"JOBARC","RFO_FAIL",1,Ifail)
+      If (Ifail .Eq. 1) Then
+         Call Putrec(20,"JOBARC","RFO_FAIL",1,0)
+         If (Iphase .Eq. 1 .Or. Nit .Eq. 0) Then
+            Write(6,"(2a)") " @-Pccd_rfo_do: pCCD amplitudes not",
+     +           " converged at an accepted/stability point; stopping."
+            Call Errex
+         Endif
+      Endif
+      Iacpt  = 0
+      Call Putrec(20,"JOBARC","RFO_ACPT",1,Iacpt)
       Rho    = Zero
 
       If (Iphase .Eq. 1) Then
@@ -96,6 +117,7 @@ C curvature is purely correlation (orders of magnitude below 4*de).
             Enddo
          Enddo
          Trust = Trust0
+         Iacpt = 1
       Else
          Call Getrec(20,"JOBARC","RFO_HESS",Npar*Npar*Iintfp,H)
          Call Getrec(20,"JOBARC","RFO_GPRV",Npar*Iintfp,Gp)
@@ -104,26 +126,35 @@ C curvature is purely correlation (orders of magnitude below 4*de).
          Call Getrec(20,"JOBARC","RFO_PRED",Iintfp,Pred)
          Call Getrec(20,"JOBARC","RFO_TRST",Iintfp,Trust)
          Call Getrec(20,"JOBARC","RFO_CPRV",Nsq*Iintfp,Cprv)
-C SR1 update with s = previous step, y = g(new) - g(old); Step is
-C used as scratch for r = y - H*s.
-         Do K = 1, Npar
-            Step(K) = Gv(K) - Gp(K)
-         Enddo
-         Call Dgemv("N",Npar,Npar,-One,H,Npar,Sp,1,One,Step,1)
-         Den   = Ddot(Npar,Step,1,Sp,1)
-         Rnrm  = Dsqrt(Ddot(Npar,Step,1,Step,1))
          Snrm  = Dsqrt(Ddot(Npar,Sp,1,Sp,1))
-         If (Dabs(Den) .Gt. 1.0D-8*Rnrm*Snrm) Call Dger(Npar,Npar,
-     +       One/Den,Step,1,Step,1,H,Npar)
-         Dele = E - Eprv
-         If (Pred .Ne. Zero) Rho = Dele/Pred
-         If (Dele .Gt. 1.0D-11) Then
+         Dele  = Zero
+         If (Ifail .Eq. 0) Then
+            Dele = E - Eprv
+            If (Pred .Ne. Zero) Rho = Dele/Pred
+            Jump = (Dele .Lt. -Ejmp) .And. (Rho .Gt. Rhojmp)
+         Endif
+C SR1 update with s = previous step, y = g(new) - g(old); Step is
+C used as scratch for r = y - H*s. Not with the gradient of a failed
+C or branch-jumped point.
+         If (Ifail .Eq. 0 .And. .Not. Jump) Then
+            Do K = 1, Npar
+               Step(K) = Gv(K) - Gp(K)
+            Enddo
+            Call Dgemv("N",Npar,Npar,-One,H,Npar,Sp,1,One,Step,1)
+            Den   = Ddot(Npar,Step,1,Sp,1)
+            Rnrm  = Dsqrt(Ddot(Npar,Step,1,Step,1))
+            If (Dabs(Den) .Gt. 1.0D-8*Rnrm*Snrm) Call Dger(Npar,Npar,
+     +          One/Den,Step,1,Step,1,H,Npar)
+         Endif
+C Etol sits above the energy noise of the amplitude solution.
+         If (Dele .Gt. Etol .Or. Ifail .Eq. 1 .Or. Jump) Then
             Reject = .True.
             Trust  = Half*Min(Trust,Snrm)
             Call Dcopy(Nsq,Cprv,1,C,1)
             Call Dcopy(Npar,Gp,1,Gv,1)
             E = Eprv
          Else
+            Iacpt = 1
             If (Rho .Gt. 0.75D0 .And. Snrm .Gt. 0.8D0*Trust) Then
                Trust = Min(Two*Trust,Trstmx)
             Elseif (Rho .Lt. 0.25D0) Then
@@ -132,6 +163,7 @@ C used as scratch for r = y - H*s.
          Endif
       Endif
 
+      Call Putrec(20,"JOBARC","RFO_ACPT",1,Iacpt)
       Gmax = Zero
       Grms = Zero
       Do K = 1, Npar
@@ -148,7 +180,14 @@ C Number of negative model-Hessian eigenvalues (diagnostic).
          If (Ev(K) .Lt. Zero) Nneg = Nneg + 1
       Enddo
 
-      If (Reject) Then
+      If (Ifail .Eq. 1) Then
+         Write(6,"(a,i4,2a)") " @-RFO it",Nit," step rejected:",
+     +      " pCCD amplitude equations did not converge."
+      Elseif (Jump) Then
+         Write(6,"(a,i4,a,1p,E10.3,a,E10.3,0p,a,F9.2)")
+     +      " @-RFO it",Nit," step rejected (amplitude branch jump):"//
+     +      " dE =",Dele,"  pred =",Pred,"  rho =",Rho
+      Elseif (Reject) Then
          Write(6,"(a,i4,a,F18.12,a,1p,E10.3,a,E10.3)")
      +      " @-RFO it",Nit," step rejected: E =",E+Dele,
      +      "  dE =",Dele,"  pred =",Pred

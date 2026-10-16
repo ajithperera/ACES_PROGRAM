@@ -268,8 +268,15 @@ c flags2.com : end
       Grdcnv = .False.
       Ncycle = 0
       Call Getrec(20,"JOBARC",'NDROPGEO',1,Idrop)
-       
-      If (Iuhf .EQ. 0 .AND. Idrop .EQ. 0) Then
+C RFO_FAIL: unconverged amplitudes, no densities; Pccd_rfo_step only
+C rejects the step.
+      Call Getrec(0,"JOBARC","RFO_FAIL",Length,Junk)
+      Ifail = 0
+      If (Length .Gt. 0) Call Getrec(20,"JOBARC","RFO_FAIL",1,Ifail)
+
+      If (Ifail .Eq. 1) Then
+         Continue
+      Else If (Iuhf .EQ. 0 .AND. Idrop .EQ. 0) Then
          If(.Not. ONEP_only) Call Pccd_form_htau_pqrs(Work,Maxcor,Iuhf)
          Call Pccd_form_htau_pq(Work,Maxcor,Iuhf,Igrad_calc,
      +                          IHess_calc,Scale)
@@ -293,9 +300,10 @@ C Uhf only or UHF and RHF for forzen core orbitals.
           call Drive_AMSgrad(Work,Maxcor,Iuhf,OOmicroItr,OOmacroItr,
      +                        nocca,nvrta,nvecDim)
       else if (Iflags2(178) .EQ. 6) then !RFO
-          Tol = 10.0D0**(-Iflags(76))
+          Tol  = 10.0D0**(-Iflags(76))
+          Etol = 10.0D0**(1-Iflags(4))
           Call Pccd_rfo_step(Work,Maxcor,Nbas,Nocca,Iuhf,Grdcnv,Tol,
-     +                       Grd_max,Grd_rms,Ncycle)
+     +                       Etol,Grd_max,Grd_rms,Ncycle)
       else if (Iflags2(178) .EQ. 5) then !AMSgrad
           Call Getrec(-20,'JOBARC','ORBOPITR',Ione,Ncycle)
           Call Pccd_rotgrd(Work,Maxcor,Nbas,Nocca,Noccb,Nvrta,Nvrtb,
