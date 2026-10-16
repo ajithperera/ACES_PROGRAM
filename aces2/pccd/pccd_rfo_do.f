@@ -10,10 +10,12 @@
 
 
       Subroutine Pccd_rfo_do(G,C,Cprv,F,U,Scr,Gv,Gp,Sp,Step,H,Ah,Ev,
-     +                       Wk,Lwork,Nbas,Nocc,Npar,Grdcnv,Tol,Gmax,
-     +                       Grms,Ncycle)
+     +                       Wk,Lwork,Vb,Sb,Am,Wm,Cs,Gs,Res,Mxhv,
+     +                       Nbas,Nocc,Npar,Grdcnv,Tol,Gmax,Grms,Ncycle)
       Implicit Double Precision(A-H,O-Z)
-      Logical Grdcnv,Reject
+      Logical Grdcnv,Reject,Escape
+      Dimension Vb(Npar,Mxhv),Sb(Npar,Mxhv),Am(Mxhv,Mxhv),Wm(Mxhv)
+      Dimension Cs(Nbas*Nbas),Gs(Npar),Res(Npar)
       Dimension G(Nbas,Nbas),C(Nbas,Nbas),Cprv(Nbas,Nbas)
       Dimension F(Nbas,Nbas),U(Nbas,Nbas),Scr(Nbas,Nbas)
       Dimension Gv(Npar),Gp(Npar),Sp(Npar),Step(Npar)
@@ -39,6 +41,7 @@ c machsp.com : end
 
 
       Parameter (Hoovv=0.05D0, Trust0=0.1D0, Trstmx=0.5D0)
+      Parameter (Mxstb=5)
       Data Zero,Half,One,Two,Four /0.0D0,0.5D0,1.0D0,2.0D0,4.0D0/
 
       Nsq = Nbas*Nbas
@@ -58,10 +61,50 @@ c machsp.com : end
       Call Getrec(0,"JOBARC","RFO_NITR",Length,Junk)
       Nit = 0
       If (Length .Gt. 0) Call Getrec(20,"JOBARC","RFO_NITR",1,Nit)
+      Call Getrec(0,"JOBARC","RFO_NTOT",Length,Junk)
+      Ntot = 0
+      If (Length .Gt. 0) Call Getrec(20,"JOBARC","RFO_NTOT",1,Ntot)
+      Ntot = Ntot + 1
+      Call Putrec(20,"JOBARC","RFO_NTOT",1,Ntot)
+      Ncycle = Ntot
+      Call Getrec(0,"JOBARC","RFO_PHAS",Length,Junk)
+      Iphase = 0
+      If (Length .Gt. 0) Call Getrec(20,"JOBARC","RFO_PHAS",1,Iphase)
       Reject = .False.
+      Escape = .False.
       Rho    = Zero
 
-      If (Nit .Eq. 0) Then
+      If (Iphase .Eq. 1) Then
+C Stability phase: this gradient belongs to a displaced point of the
+C Davidson iterations.
+         Call Getrec(20,"JOBARC","RFO_HESS",Npar*Npar*Iintfp,H)
+         Call Getrec(20,"JOBARC","RFO_TRST",Iintfp,Trust)
+         Call Pccd_rfo_stab("CONT ",Iact,Alam,C,Gv,E,H,Vb,Sb,Am,Wm,Cs,
+     +                      Gs,Step,Res,F,U,Scr,G,Wk,Lwork,Nbas,Npar,
+     +                      Mxhv)
+         Grdcnv = .False.
+         If (Iact .Eq. 0) Then
+            Call Putrec(20,"JOBARC","GRADTEST",1,0)
+            Return
+         Elseif (Iact .Eq. 1) Then
+            Grdcnv = .True.
+            Call Putrec(20,"JOBARC","SCFEVCA0",Nsq*Iintfp,C)
+            Call Putrec(20,"JOBARC","SCFEVCB0",Nsq*Iintfp,C)
+            Call Putrec(20,"JOBARC","GRADTEST",1,1)
+            Write(6,"(2a,i5,a)") " @-RFO orbital optimization",
+     +             " converged to a minimum in",Ntot," gradients."
+            Return
+         Endif
+C Negative curvature: put the measured eigenvalue into the model Hessian
+C along the mode and take a trust-region step from the stationary point.
+         Call Dgemv("N",Npar,Npar,One,H,Npar,Step,1,Zero,Gp,1)
+         Vhv = Ddot(Npar,Step,1,Gp,1)
+         Call Dger(Npar,Npar,Alam-Vhv,Step,1,Step,1,H,Npar)
+         Trust  = Trust0
+         Escape = .True.
+         Write(6,"(a,1p,E12.4,a)") " @-RFO negative Hessian eigenvalue",
+     +        Alam," found: following the mode."
+      Elseif (Nit .Eq. 0) Then
 C Initial model Hessian: 4|f(q,q)-f(p,p)| for ov pairs (close to the
 C exact pCCD values), a small constant for oo and vv pairs whose
 C curvature is purely correlation (orders of magnitude below 4*de).
@@ -145,14 +188,31 @@ C Number of negative model-Hessian eigenvalues (diagnostic).
      +      " @-RFO it",Nit,"  E =",E,"  max|g| =",Gmax,"  rms =",Grms,
      +      "  trust =",Trust,"  rho =",Rho,"  #neg(H) =",Nneg
 
-      Grdcnv = (Gmax .Lt. Tol)
-      Ncycle = Nit + 1
+      Grdcnv = (Gmax .Lt. Tol) .And. .Not. Escape
       If (Grdcnv) Then
+         Call Getrec(0,"JOBARC","RFO_NSTB",Length,Junk)
+         Nstb = 0
+         If (Length .Gt. 0) Call Getrec(20,"JOBARC","RFO_NSTB",1,Nstb)
+         If (Nstb .Lt. Mxstb) Then
+C Stationary point: start the stability (lowest eigenvalue) check.
+            Write(6,"(a,i5,a)") " @-RFO gradient converged after",Ntot,
+     +            " gradient evaluations; checking the Hessian."
+            Call Putrec(20,"JOBARC","RFO_NSTB",1,Nstb+1)
+            Call Putrec(20,"JOBARC","RFO_HESS",Npar*Npar*Iintfp,H)
+            Call Putrec(20,"JOBARC","RFO_TRST",Iintfp,Trust)
+            Call Putrec(20,"JOBARC","RFO_NITR",1,Nit+1)
+            Call Pccd_rfo_stab("START",Iact,Alam,C,Gv,E,H,Vb,Sb,Am,Wm,
+     +                         Cs,Gs,Step,Res,F,U,Scr,G,Wk,Lwork,Nbas,
+     +                         Npar,Mxhv)
+            Grdcnv = .False.
+            Call Putrec(20,"JOBARC","GRADTEST",1,0)
+            Return
+         Endif
          Call Putrec(20,"JOBARC","SCFEVCA0",Nsq*Iintfp,C)
          Call Putrec(20,"JOBARC","SCFEVCB0",Nsq*Iintfp,C)
          Call Putrec(20,"JOBARC","GRADTEST",1,1)
-         Write(6,"(a,i4,a)") " @-RFO orbital optimization converged in",
-     +                       Nit+1," gradient evaluations."
+         Write(6,"(2a,i5,a)") " @-RFO orbital optimization converged",
+     +         " (stability check limit reached) in",Ntot," gradients."
          Return
       Endif
       Call Putrec(20,"JOBARC","GRADTEST",1,0)
@@ -194,23 +254,8 @@ C Save the state at the current (accepted) point.
       Call Putrec(20,"JOBARC","RFO_TRST",Iintfp,Trust)
       Call Putrec(20,"JOBARC","RFO_NITR",1,Nit+1)
 
-C U = exp(K) by scaling and squaring of the Taylor series, then
-C C(new) = C*U, re-orthonormalized (modified Gram-Schmidt in the
-C MO metric, i.e. on the columns of U).
-      Call Dzero(F,Nsq)
-      K = 0
-      Do Ip = 1, Nbas
-         Do Iq = Ip+1, Nbas
-            K = K + 1
-            F(Ip,Iq) =  Step(K)
-            F(Iq,Ip) = -Step(K)
-         Enddo
-      Enddo
-      Call Pccd_rfo_expm(F,U,Scr,G,Nbas)
-      Call Dgemm("N","N",Nbas,Nbas,Nbas,One,C,Nbas,U,Nbas,Zero,
-     +           Scr,Nbas)
-      Call Putrec(20,"JOBARC","SCFEVCA0",Nsq*Iintfp,Scr)
-      Call Putrec(20,"JOBARC","SCFEVCB0",Nsq*Iintfp,Scr)
+C C(new) = C*exp(K(step)).
+      Call Pccd_rfo_disp(C,Step,One,F,U,Scr,G,Nbas,Npar)
       Write(6,"(a,1p,E10.3,a,E11.3)") " @-RFO step |s| =",Snrm,
      +                                "  predicted dE =",Pred
       Return

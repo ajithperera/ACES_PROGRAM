@@ -342,6 +342,131 @@ def qn_rfo(wd, ratio, h_oovv=0.05, trust=0.1, maxit=200, update="SR1"):
     np.save(os.path.join(wd, "U_final.npy"), Ucur)
 
 
+def lowest_mode(wd, tag, Ucur, g0, pairs, n, Hmodel, ratio, delta=1e-3,
+                maxhv=40, neg_stop=-1e-3, rtol=1e-3, seed=11):
+    """Davidson for the lowest eigenpair of the exact orbital Hessian using
+    forward-difference Hessian-vector products of the analytic gradient.
+    Returns (lam, v, n_hv)."""
+    npar = len(pairs)
+    D = np.diag(Hmodel).copy()
+    rng = np.random.default_rng(seed)
+    guess = [rng.standard_normal(npar)]
+    for k in np.argsort(D)[:2]:
+        e = np.zeros(npar); e[k] = 1.0; guess.append(e)
+    Vb, Sb = [], []
+    def add(b):
+        for v in Vb:
+            b = b - (v @ b) * v
+        nb = np.linalg.norm(b)
+        if nb < 1e-6:
+            return False
+        b = b / nb
+        K = np.zeros((n, n))
+        for (p, q), x in zip(pairs, b):
+            K[p, q] = delta * x; K[q, p] = -delta * x
+        _, G, _ = run_point(wd, f"{tag}_hv{len(Vb)}", Ucur @ expm(K))
+        Vb.append(b); Sb.append((ratio * gvec(G, pairs) - g0) / delta)
+        return True
+    for b in guess:
+        add(b)
+    lam, v = 0.0, None
+    while len(Vb) < maxhv:
+        V = np.array(Vb).T; S = np.array(Sb).T
+        A = V.T @ S; A = 0.5 * (A + A.T)
+        w, Y = np.linalg.eigh(A)
+        lam, y = w[0], Y[:, 0]
+        v = V @ y; r = S @ y - lam * v
+        rn = np.linalg.norm(r)
+        print(f"      Davidson {len(Vb):3d} Hv: lowest = {lam: .6e}  |r| = {rn:.2e}",
+              flush=True)
+        if rn < rtol or (lam < neg_stop and rn < 0.3 * abs(lam)):
+            break
+        den = D - lam
+        den[np.abs(den) < 1e-2] = 1e-2 * np.sign(den[np.abs(den) < 1e-2] + 1e-30)
+        if not add(-r / den):
+            if not add(r):
+                break
+    return lam, v, len(Vb)
+
+
+def qn_rfo_stab(wd, ratio, h_oovv=0.05, maxit=300, lam_thr=-1e-4):
+    """QN-RFO (SR1) + stability check at each convergence; follow negative
+    modes until the stationary point is a minimum."""
+    E0, G0 = setup_base(wd)
+    n = G0.shape[0]
+    nocc = int(open(os.path.join(wd, "nocc")).read())
+    pairs = [(p, q) for p in range(n) for q in range(p+1, n)]
+    lines = [l for l in open(os.path.join(wd, "base", "base.log"), errors="replace")]
+    for i, l in enumerate(lines):
+        if "ORBITAL EIGENVALUES (ALPHA)" in l:
+            eps = [float(m.split()[2]) for m in lines[i+4:i+4+n+3]
+                   if len(m.split()) >= 4 and m.split()[0].isdigit()][:n]
+    eps = np.array(eps)
+    H = np.diag([4*abs(eps[q]-eps[p]) if (p < nocc <= q) else h_oovv
+                 for p, q in pairs])
+    Ucur, E, g = np.eye(n), E0, ratio * gvec(G0, pairs)
+    trust, ngrad, nstab = 0.1, 1, 0
+    print(f"QN-RFO + stability: nmo={n}, start E = {E0:.12f}")
+    for it in range(maxit):
+        if np.abs(g).max() < GTOL:
+            print(f"it {it:3d}  converged: E = {E:.12f}  |g|max = "
+                  f"{np.abs(g).max():.2e}  (gradients so far {ngrad})", flush=True)
+            lam, v, nhv = lowest_mode(wd, f"st{nstab}", Ucur, g, pairs, n, H, ratio)
+            ngrad += nhv; nstab += 1
+            if lam > lam_thr:
+                print(f"      stable: lowest Hessian eigenvalue {lam:.3e}")
+                break
+            # inject the measured curvature and step along the mode
+            H = H + (lam - v @ H @ v) * np.outer(v, v)
+            best = None
+            for sgn in (1.0, -1.0):
+                step = sgn * 0.1 * v
+                K = np.zeros((n, n))
+                for (p, q), x in zip(pairs, step):
+                    K[p, q] = x; K[q, p] = -x
+                En, Gn, _ = run_point(wd, f"esc{nstab}_{int(sgn)}", Ucur @ expm(K))
+                ngrad += 1
+                if best is None or En < best[0]:
+                    best = (En, Gn, Ucur @ expm(K))
+            print(f"      negative mode {lam:.3e}: escape step dE = {best[0]-E: .3e}")
+            Ucur, E, g = best[2], best[0], ratio * gvec(best[1], pairs)
+            trust = 0.1
+            continue
+        npar = len(g)
+        AH = np.zeros((npar+1, npar+1))
+        AH[:npar, :npar] = H; AH[:npar, npar] = g; AH[npar, :npar] = g
+        a, Bv = np.linalg.eigh(AH)
+        step = Bv[:npar, 0] / Bv[npar, 0]
+        if np.linalg.norm(step) > trust:
+            step *= trust / np.linalg.norm(step)
+        pred = g @ step + 0.5 * step @ H @ step
+        K = np.zeros((n, n))
+        for (p, q), x in zip(pairs, step):
+            K[p, q] = x; K[q, p] = -x
+        Unew = Ucur @ expm(K)
+        En, Gn, _ = run_point(wd, f"q{it}", Unew)
+        ngrad += 1
+        gn = ratio * gvec(Gn, pairs)
+        r = (gn - g) - H @ step
+        den = r @ step
+        if abs(den) > 1e-8 * np.linalg.norm(r) * np.linalg.norm(step):
+            H = H + np.outer(r, r) / den
+        rho = (En - E) / pred if pred != 0 else 0.0
+        if En > E + 1e-11:
+            trust = 0.5 * min(trust, np.linalg.norm(step))
+            continue
+        if rho > 0.75 and np.linalg.norm(step) > 0.8 * trust:
+            trust = min(2 * trust, 0.5)
+        elif rho < 0.25:
+            trust *= 0.5
+        Ucur, E, g = Unew, En, gn
+        if it % 5 == 0:
+            print(f"it {it:3d}  E = {E:.12f}  |g|max = {np.abs(g).max():.3e}"
+                  f"  trust = {trust:.3f}", flush=True)
+    print(f"final E = {E:.12f}   gradient evaluations = {ngrad}")
+    np.save(os.path.join(wd, "U_final.npy"), Ucur)
+
+
 def hesscmp(wd, ratio, ufile=None):
     """Exact vs frozen-amplitude FD Hessian at U=I (HF) or at U from file."""
     E0, G0 = setup_base(wd)
@@ -403,6 +528,8 @@ if __name__ == "__main__":
     elif mode == "qnrfo":
         qn_rfo(wd, float(sys.argv[3]), h_oovv=float(sys.argv[4]),
                update=sys.argv[5] if len(sys.argv) > 5 else "SR1")
+    elif mode == "qnstab":
+        qn_rfo_stab(wd, float(sys.argv[3]))
     elif mode == "hesscmp":
         hesscmp(wd, float(sys.argv[3]), sys.argv[4] if len(sys.argv) > 4 else None)
     elif mode == "gradcheck":
