@@ -204,6 +204,7 @@
 
 
 
+
       Subroutine Pccd_do_orbrots(Work,Maxcor,Iuhf,IGrad_calc,IHess_calc,
      +                           Scale,OOmicroItr,OOmacroItr,OOtotalItr)
 
@@ -264,6 +265,8 @@ c flags2.com : end
 
       Data Ione,Itwo,Izero,One,Half /1,2,0,1.0D0,0.50D0/
 
+      Grdcnv = .False.
+      Ncycle = 0
       Call Getrec(20,"JOBARC",'NDROPGEO',1,Idrop)
        
       If (Iuhf .EQ. 0 .AND. Idrop .EQ. 0) Then
@@ -289,6 +292,10 @@ C Uhf only or UHF and RHF for forzen core orbitals.
       else if (Iflags2(178) .EQ. 4) then !AMSgrad
           call Drive_AMSgrad(Work,Maxcor,Iuhf,OOmicroItr,OOmacroItr,
      +                        nocca,nvrta,nvecDim)
+      else if (Iflags2(178) .EQ. 6) then !RFO
+          Tol = 10.0D0**(-Iflags(76))
+          Call Pccd_rfo_step(Work,Maxcor,Nbas,Nocca,Iuhf,Grdcnv,Tol,
+     +                       Grd_max,Grd_rms,Ncycle)
       else if (Iflags2(178) .EQ. 5) then !AMSgrad
           Call Getrec(-20,'JOBARC','ORBOPITR',Ione,Ncycle)
           Call Pccd_rotgrd(Work,Maxcor,Nbas,Nocca,Noccb,Nvrta,Nvrtb,

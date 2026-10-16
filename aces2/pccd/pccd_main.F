@@ -88,6 +88,7 @@ C is achieved before computing orbital gradients.
      +           Itest .Ne. 1) Go to 10
 
             Call Pccd_ldriver(Icore(i0),icrsiz/iintfp,Iuhf)
+            Call Pccd_frzamp(Icore(i0),icrsiz/iintfp,Iuhf)
 
             If (Opt_orbs) Then
                Call Pccd_init_2pdens_lists(Icore(i0),icrsiz/iintfp,Iuhf)

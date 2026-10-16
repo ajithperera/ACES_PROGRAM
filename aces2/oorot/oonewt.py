@@ -78,11 +78,15 @@ def read_point(d):
     return float(lines[0]), read_mat(lines[1:])
 
 
-def run_point(wd, tag, U):
+def run_point(wd, tag, U, frz=None, amps=None):
     d = os.path.join(wd, "pts", tag)
     if os.path.isdir(d):
         shutil.rmtree(d)
     shutil.copytree(os.path.join(wd, "snap"), d)
+    if frz:
+        open(os.path.join(d, "pccd_frzamp.in"), "w").write(frz + "\n")
+        if frz == "LOAD":
+            shutil.copy(amps, os.path.join(d, "pccd_amps.dat"))
     for junk in ["Energy", "base.log", "grad.dat"]:
         if os.path.exists(os.path.join(d, junk)):
             os.remove(os.path.join(d, junk))
@@ -101,7 +105,7 @@ def run_point(wd, tag, U):
     # keep only small records; drop the big integral files
     for f in glob.glob(os.path.join(d, "*")):
         if os.path.basename(f) not in ("pt.log", "grad.dat", "u.dat",
-                                       "fock.dat"):
+                                       "fock.dat", "pccd_amps.dat"):
             if os.path.isfile(f):
                 os.remove(f)
     return E, G, (scf[-1].strip() if scf else "")
@@ -189,12 +193,17 @@ def newton(wd, ratio):
     print("final E = %.12f" % E)
 
 
-def fd_hessian(wd, it, Uacc, pairs, ratio, n):
+def fd_hessian(wd, it, Uacc, pairs, ratio, n, frozen=False):
     npar = len(pairs)
     H = np.zeros((npar, npar))
+    kw = {}
+    if frozen:
+        run_point(wd, f"h{it}_c", Uacc, frz="SAVE")
+        kw = dict(frz="LOAD",
+                  amps=os.path.join(wd, "pts", f"h{it}_c", "pccd_amps.dat"))
     for k, (p, q) in enumerate(pairs):
-        _, Gp, _ = run_point(wd, f"h{it}_{k}p", Uacc @ expm(kmat(n, p, q, DELTA_H)))
-        _, Gm, _ = run_point(wd, f"h{it}_{k}m", Uacc @ expm(kmat(n, p, q, -DELTA_H)))
+        _, Gp, _ = run_point(wd, f"h{it}_{k}p", Uacc @ expm(kmat(n, p, q, DELTA_H)), **kw)
+        _, Gm, _ = run_point(wd, f"h{it}_{k}m", Uacc @ expm(kmat(n, p, q, -DELTA_H)), **kw)
         H[:, k] = ratio * (gvec(Gp, pairs) - gvec(Gm, pairs)) / (2 * DELTA_H)
     return H
 
@@ -209,21 +218,22 @@ def mode_report(w, V, pairs, nocc, nneg=3):
         print(f"      neg mode {m}: {w[m]: .5f}  [{desc}]")
 
 
-def rfo(wd, ratio, trust=0.1):
+def rfo(wd, ratio, trust=0.1, frozen=False):
     """Trust-region augmented-Hessian (RFO) minimization, exact FD Hessian."""
     E0, G0 = setup_base(wd)
     n = G0.shape[0]
     nocc = int(open(os.path.join(wd, "nocc")).read())
     pairs = [(p, q) for p in range(n) for q in range(p+1, n)]
     Uacc, E, G = np.eye(n), E0, G0
-    print(f"RFO: nmo={n}, {len(pairs)} parameters, start E = {E0:.12f}")
+    print(f"RFO: nmo={n}, {len(pairs)} parameters, start E = {E0:.12f}"
+          f"  Hessian = {'frozen-amplitude' if frozen else 'exact'}")
     for it in range(40):
         g = ratio * gvec(G, pairs)
         print(f"it {it:2d}  E = {E:.12f}  |g|max = {np.abs(g).max():.3e}"
               f"  trust = {trust:.3f}", flush=True)
         if np.abs(g).max() < GTOL:
             break
-        H = fd_hessian(wd, it, Uacc, pairs, ratio, n)
+        H = fd_hessian(wd, it, Uacc, pairs, ratio, n, frozen=frozen)
         H = 0.5 * (H + H.T)
         w, V = np.linalg.eigh(H)
         np.save(os.path.join(wd, f"hess_{it}.npy"), H)
@@ -263,6 +273,94 @@ def rfo(wd, ratio, trust=0.1):
     mode_report(w, V, pairs, nocc)
 
 
+def qn_rfo(wd, ratio, h_oovv=0.05, trust=0.1, maxit=200, update="SR1"):
+    """Production prototype: one gradient per iteration, quasi-Newton
+    (SR1 or BFGS) Hessian, trust-region RFO step, step rejection."""
+    E0, G0 = setup_base(wd)
+    n = G0.shape[0]
+    nocc = int(open(os.path.join(wd, "nocc")).read())
+    pairs = [(p, q) for p in range(n) for q in range(p+1, n)]
+    lines = [l for l in open(os.path.join(wd, "base", "base.log"), errors="replace")]
+    eps = []
+    for i, l in enumerate(lines):
+        if "ORBITAL EIGENVALUES (ALPHA)" in l:
+            eps = []
+            for m in lines[i+4:i+4+n+3]:
+                t = m.split()
+                if len(t) >= 4 and t[0].isdigit():
+                    eps.append(float(t[2]))
+            eps = eps[:n]
+    eps = np.array(eps)
+    H = np.diag([4*abs(eps[q]-eps[p]) if (p < nocc <= q) else h_oovv
+                 for p, q in pairs])
+    Ucur, E, g = np.eye(n), E0, ratio * gvec(G0, pairs)
+    print(f"QN-RFO ({update}): nmo={n}, start E = {E0:.12f}, h_oovv = {h_oovv}")
+    ngrad = 1
+    for it in range(maxit):
+        print(f"it {it:3d}  E = {E:.12f}  |g|max = {np.abs(g).max():.3e}"
+              f"  trust = {trust:.3f}  #neg(H) = {(np.linalg.eigvalsh(H)<0).sum()}",
+              flush=True)
+        if np.abs(g).max() < GTOL:
+            break
+        npar = len(g)
+        AH = np.zeros((npar+1, npar+1))
+        AH[:npar, :npar] = H; AH[:npar, npar] = g; AH[npar, :npar] = g
+        a, Bv = np.linalg.eigh(AH)
+        step = Bv[:npar, 0] / Bv[npar, 0]
+        if np.linalg.norm(step) > trust:
+            step *= trust / np.linalg.norm(step)
+        pred = g @ step + 0.5 * step @ H @ step
+        K = np.zeros((n, n))
+        for (p, q), x in zip(pairs, step):
+            K[p, q] = x; K[q, p] = -x
+        Unew = Ucur @ expm(K)
+        En, Gn, _ = run_point(wd, f"q{it}", Unew)
+        ngrad += 1
+        gn = ratio * gvec(Gn, pairs)
+        y = gn - g
+        if update == "SR1":
+            r = y - H @ step
+            den = r @ step
+            if abs(den) > 1e-8 * np.linalg.norm(r) * np.linalg.norm(step):
+                H = H + np.outer(r, r) / den
+        else:
+            sy = step @ y
+            if sy > 1e-10:
+                Hs = H @ step
+                H = H + np.outer(y, y)/sy - np.outer(Hs, Hs)/(step @ Hs)
+        rho = (En - E) / pred if pred != 0 else 0.0
+        if En > E + 1e-11:
+            trust = 0.5 * min(trust, np.linalg.norm(step))
+            print(f"      reject: dE = {En-E: .3e} pred = {pred: .3e}")
+            continue
+        if rho > 0.75 and np.linalg.norm(step) > 0.8 * trust:
+            trust = min(2 * trust, 0.5)
+        elif rho < 0.25:
+            trust *= 0.5
+        Ucur, E, g = Unew, En, gn
+    print(f"final E = {E:.12f}   gradient evaluations = {ngrad}")
+    np.save(os.path.join(wd, "U_final.npy"), Ucur)
+
+
+def hesscmp(wd, ratio, ufile=None):
+    """Exact vs frozen-amplitude FD Hessian at U=I (HF) or at U from file."""
+    E0, G0 = setup_base(wd)
+    n = G0.shape[0]
+    pairs = [(p, q) for p in range(n) for q in range(p+1, n)]
+    U = np.load(ufile) if ufile else np.eye(n)
+    He = fd_hessian(wd, "ex", U, pairs, ratio, n)
+    Hf = fd_hessian(wd, "fz", U, pairs, ratio, n, frozen=True)
+    np.save(os.path.join(wd, "H_exact.npy"), He)
+    np.save(os.path.join(wd, "H_frozen.npy"), Hf)
+    for name, H in (("exact", He), ("frozen", Hf)):
+        print(f"{name:7s} asym = {np.abs(H-H.T).max():.2e}  eig: "
+              f"{np.array2string(np.linalg.eigvalsh(0.5*(H+H.T))[:6], precision=5)}")
+    D = 0.5*(He+He.T) - 0.5*(Hf+Hf.T)
+    print(f"max|He-Hf| = {np.abs(D).max():.3e}   max|He| = {np.abs(He).max():.3e}")
+    print(f"diag ratio Hf/He (pairs with |He_kk|>1e-3): "
+          f"{np.array2string(np.array([Hf[k,k]/He[k,k] for k in range(len(pairs)) if abs(He[k,k])>1e-3]), precision=3)}")
+
+
 def gradcheck(wd, ratio, scale=0.05, seed=7, block="all", tag="gc"):
     """Full FD-energy vs analytic-gradient check at a rotated point;
     the displacement is restricted to one block (oo, vv, ov) or all."""
@@ -300,6 +398,13 @@ if __name__ == "__main__":
         check(wd)
     elif mode == "rfo":
         rfo(wd, float(sys.argv[3]))
+    elif mode == "rfo_frozen":
+        rfo(wd, float(sys.argv[3]), frozen=True)
+    elif mode == "qnrfo":
+        qn_rfo(wd, float(sys.argv[3]), h_oovv=float(sys.argv[4]),
+               update=sys.argv[5] if len(sys.argv) > 5 else "SR1")
+    elif mode == "hesscmp":
+        hesscmp(wd, float(sys.argv[3]), sys.argv[4] if len(sys.argv) > 4 else None)
     elif mode == "gradcheck":
         gradcheck(wd, float(sys.argv[3]))
     elif mode == "gradov":

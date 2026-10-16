@@ -395,7 +395,7 @@ const ASV_nl_t ASV_nl[] =
 {/*279*/ "IPCC_REFERENCE","PCCD_REF#"  ,h_ICHAR_handle, 0,      ""},
 {/*280*/ "IEOM_SOLVE",  "EOM_SOLVE#"   ,h_ICHAR_handle, 0,      ""},
 {/*281*/ "IOO_CONSTRAIN","OO_CONSTR#AIN",h_ICHAR_handle, 0,     ""},
-{/*282*/ "IOO_MAXCYC",   "OO_MAXCYC#"   ,h_ICHAR_handle, 50,    ""},
+{/*282*/ "IOO_MAXCYC",   "OO_MAXCYC#"   ,h_ICHAR_f_int,  50,    ""},
 {/*283*/ "IOO_DIIS",     "OO_DIIS#"     ,h_ICHAR_handle, 1,     ""},
 {/*284*/ "IOV_CONSTRAIN","OV_CONSTR#AIN",h_ICHAR_handle, 0,     ""},
 {/*285*/ "IGENRLIZD_TDENS" ,"GENRLIZD_TDENS",h_ICHAR_handle,0,  ""},
@@ -1228,7 +1228,7 @@ void asv_handle_proc(const f_int * index, const char * value)
         case h_IOPPAR_oo_method:
         {
             const char *handles[] = { "NONE","BB-SD", "BFGS", "FULL-NR",
-                                      "AMSGRAD","ROTGRAD"};
+                                      "AMSGRAD","ROTGRAD","RFO"};
             asv_update_handle(index,value,handles);
             break;
         }
