@@ -24,8 +24,42 @@ Next, in order:
 Also: the 4-node quadrature (N=4, Omega_c=1) is badly unconverged; any
 remaining pipeline (non-Lehmann) results need a converged grid.
 
+## SESSION 2026-10-16 (night): DZ BASIS CHECK -- THE STO-3G CC-vs-RPA
+## PICTURE DOES NOT SURVIVE. RESUME HERE.
+
+Runs (H2O, same geometry, UHF sym=off): h2o_scrnc_ipeom_fulldiag_dz_1016
+(IP dim 320; |H_L-H_R^T| 1e-17, Im 0, left resid 4e-13, sum rules 1;
+roots = 0823 DZ Davidson to 1e-6 eV), h2o_eomee_fulldiag_dz_1016 (EE dim
+2835 -> eom_tdm.dat -> Lehmann CC), h2o_drpa_lehmann_dz_1016 (Isrc=1;
+plasmon E_c -0.1564667328 vs xringcc DZ -0.1564667341). Caveat: DZ
+EE full diag has ONE complex pair (64.69 eV, Im 3.9e-4 Ha, non-small
+TDMs); DIAGALL keeps its Re/Im columns as two real roots at the real
+part (exact invariant subspace, only the +-0.011 eV coupling dropped;
+this is the 5.5e-4 left residual). Affects only poles ~75+ eV.
+
+Main lines, IP eV (weight), G0W error vs IP-EOM-CCSD:
+        IP-EOM-CCSD    G0W_CC               G0W_dRPA
+  1b1  11.74 (.934)   11.37 (.916) -0.38   12.05 (.953) +0.31
+  3a1  13.76 (.937)   13.40 (.914) -0.35   14.02 (.953) +0.26
+  1b2  18.76 (.955)   18.35 (.922) -0.42   18.81 (.960) +0.05
+  2a1  34.53 (.556)   31.78 (.424) -2.75   35.20 (.504) +0.67
+2a1 lines >= 0.02 (centroids 37.79 / 36.64 / 36.78 eV):
+  IP-EOM-CCSD 32.21 .183 | 34.53 .556 | 35.71 .080 | 39.93 .101
+  G0W_CC      31.78 .424 | 34.06 .120 | 35.20 .125 | 35.73 .177 | 73.98 .024
+  G0W_dRPA    33.36 .411 | 35.20 .504
+(STO-3G for comparison: CC -0.09..-0.17, dRPA +0.14..+0.58 eV;
+2a1 Z: EOM .47, CC .63, dRPA .87.)
+Reading: at DZ, (a) CC screening no longer beats dRPA on valence QPs
+(CC underbinds-by -0.35..-0.42 eV, dRPA is +0.05..+0.31), and (b) dRPA
+screening ALSO splits 2a1 (two lines .41/.50), so "CC moves weight into
+satellites, dRPA does not" was a minimal-basis effect. Both G0W
+centroids now sit ~1 eV below IP-EOM-CCSD. Odd coincidence, not
+explained: a 2a1 line at 35.196 (CC) / 35.198 (dRPA) eV in both.
+No conclusion about CC vs RPA screening is basis-converged yet;
+cc-pVDZ (EE dim ~ 2.3e4, too big for DIAGALL) needs another route.
+
 ## SESSION 2026-10-16 (evening): dRPA LEHMANN SOURCE; CC-vs-RPA 2a1
-## SATELLITES; PIPELINE DRCCD W_c DISAGREES WITH EXACT dRPA. RESUME HERE.
+## SATELLITES; PIPELINE DRCCD W_c DISAGREES WITH EXACT dRPA.
 
 Scrnc_lehmann now takes an optional 5th lehmann_input record Isrc
 (0 = eom_tdm.dat, default; 1 = closed-shell direct RPA solved in
