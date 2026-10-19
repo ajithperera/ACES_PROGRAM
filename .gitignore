@@ -1,2 +1,4 @@
 build_logs/
 build_config.sh
+# vim swap files
+.*.sw[a-p]
