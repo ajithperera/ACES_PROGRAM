@@ -397,3 +397,11 @@ TOTENERG 1
 h2_ccsd_uhf_sto3g_symon zmat.h2_ccsd_uhf_sto3g_symon
 TOTENERG 1
 -1.1372633595310E+00
+
+pccd_oo_rfo_h2o_symoff
+TOTENERG 1
+-7.500566550373600E+01
+
+pccd_oo_rfo_h2o_symon
+TOTENERG 1
+-7.499206590503000E+01
