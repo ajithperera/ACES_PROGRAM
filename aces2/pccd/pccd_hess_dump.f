@@ -15,7 +15,8 @@ C Debug (pccd_hess.in, see Pccd_do_orbrots): Tag = "ZERO" zeroes the
 C orbital Hessian lists; any other Tag writes each of them to
 C hess_<Tag>_<list>.dat: a header line (list, row type, column type,
 C rows, columns) and the irrep-1 block, rows fastest. RHF, SYMMETRY=OFF
-C intended (one irrep block).
+C intended (one irrep block). Tag "GA" writes the two-particle density
+C lists (100-160, those that exist) the same way.
 C
       Implicit Double Precision(A-H,O-Z)
       Character*4 Tag
@@ -28,8 +29,19 @@ c sympop.com : end
       Data Lists /213,234,216,217,210,211,230,231,223,225,218/
 
       Irrepx = 1
-      Do Il = 1, 11
-         List  = Lists(Il)
+C Tag "GA": the two-particle density lists 100-160 instead.
+C Tag "AL": all lists 30-199 that exist.
+      Nl = 11
+      If (Tag .Eq. "GA  ") Nl = 61
+      If (Tag .Eq. "AL  ") Nl = 170
+      Do Il = 1, Nl
+         List = Lists(Min(Il,11))
+         If (Tag .Eq. "GA  " .Or. Tag .Eq. "AL  ") Then
+            List = 99 + Il
+            If (Tag .Eq. "AL  ") List = 29 + Il
+            If (Isytyp(1,List) .Eq. 0 .Or. Isytyp(2,List) .Eq. 0)
+     +         Go to 10
+         Endif
          Nrow  = Irpdpd(Irrepx,Isytyp(1,List))
          Ncol  = Irpdpd(Irrepx,Isytyp(2,List))
          Nsize = Idsymsz(Irrepx,Isytyp(1,List),Isytyp(2,List))
@@ -48,6 +60,7 @@ c sympop.com : end
             Write(43,"(4(1x,E25.17))") (Work(I),I=1,Nsize)
             Close(43)
          Endif
+ 10      Continue
       Enddo
       Return
       End

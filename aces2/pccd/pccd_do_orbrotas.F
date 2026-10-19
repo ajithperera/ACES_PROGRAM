@@ -50,6 +50,8 @@ C one-particle terms only (hess_1P_*) and in full (hess_FU_*).
             Mxc = Maxcor
             Call Pccd_form_htau_pq(Work,Mxc,Iuhf,Igrad_calc,1,Scale)
             Call Pccd_hess_dump(Work,Maxcor,"FU  ")
+            Call Pccd_hess_dump(Work,Maxcor,"GA  ")
+            Call Pccd_hess_dump(Work,Maxcor,"AL  ")
             ONEP_only = Onep_save
          Endif
          If(.Not. ONEP_only) Call Pccd_form_htau_pqrs(Work,Maxcor,Iuhf)

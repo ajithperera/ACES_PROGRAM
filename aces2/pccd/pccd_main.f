@@ -329,6 +329,7 @@ C is achieved before computing orbital gradients.
                Call Pccd_init_2pdens_lists(Icore(i0),icrsiz/iintfp,Iuhf)
                Call Pccd_init_orbhes_lists(Icore(i0),icrsiz/iintfp,Iuhf)
 
+               Call Pccd_zt1(Icore(i0),icrsiz/iintfp)
                Call Pccd_dens(Icore(i0),icrsiz/iintfp,Iuhf)
                Call Pccd_do_orbrots(Icore(I0),icrsiz/iintfp,Iuhf,
      +                              Igrad_calc,IHess_calc,Scale,
