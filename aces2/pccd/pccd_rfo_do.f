@@ -117,9 +117,11 @@ C Davidson iterations.
          If (Iact .Eq. 0) Then
             Call Putrec(20,"JOBARC","GRADTEST",1,0)
             Return
-         Elseif (Iact .Eq. 1) Then
+         Elseif (Iact .Eq. 1 .Or. Iact .Eq. 3) Then
 C The last xpccd run was at a displaced point: put the energy and the
 C gradient statistics of the stationary point back for Pccd_finalize.
+C Iact = 3: the Davidson budget ran out without a negative eigenvalue;
+C the stationary point is not verified to be a minimum.
             Grdcnv = .True.
             Gmax = Zero
             Grms = Zero
@@ -132,8 +134,14 @@ C gradient statistics of the stationary point back for Pccd_finalize.
             Call Putrec(20,"JOBARC","SCFEVCA0",Nsq*Iintfp,C)
             Call Putrec(20,"JOBARC","SCFEVCB0",Nsq*Iintfp,C)
             Call Putrec(20,"JOBARC","GRADTEST",1,1)
+            If (Iact .Eq. 1) Then
             Write(6,"(2a,i5,a)") " @-RFO orbital optimization",
      +             " converged to a minimum in",Ntot," gradients."
+            Else
+            Write(6,"(2a,i5,a)") " @-RFO orbital optimization",
+     +             " converged in",Ntot," gradients; stability check"//
+     +             " INCONCLUSIVE (possibly a saddle point)."
+            Endif
             Return
          Endif
 C Negative curvature: put the measured eigenvalue into the model Hessian
@@ -278,6 +286,8 @@ C accepted as a minimum).
             Call Dsyev("V","U",Npar,Ah,Npar,Ev,Wk,Lwork,Info)
             Ng = Min(Ngvec,Npar)
             Call Putrec(20,"JOBARC","RFO_GVEC",Npar*Ng*Iintfp,Ah)
+            Call Pccd_rfo_pdia(Gp,C,F,Scr,Wk,Lwork,Irp,Nbas,Nocc,Npar)
+            Call Putrec(20,"JOBARC","RFO_PDIA",Npar*Iintfp,Gp)
             Call Putrec(20,"JOBARC","RFO_HESS",Npar*Npar*Iintfp,H)
             Call Putrec(20,"JOBARC","RFO_TRST",Iintfp,Trust)
             Call Putrec(20,"JOBARC","RFO_NITR",1,Nit+1)

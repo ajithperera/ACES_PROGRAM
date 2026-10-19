@@ -33,6 +33,13 @@ C saddle with lowest eigenvalue -3.6e-4 (full FD Hessian) estimated as
 C +1.4e-4. Central differences (Hessian asymmetry ~1e-5 there) allow
 C Rtol=5e-4. The lowest three Ritz pairs are tracked so that a nearly
 C converged positive root cannot mask a negative one that enters late.
+C When the subspace is full (Mxhv) it is collapsed onto the lowest
+C Mkeep Ritz vectors (thick restart), up to Mxtot Hv products in all;
+C at the 60-product cap the N2 1.1016 A symmetric saddle was accepted
+C as a minimum while the second root was still falling toward the
+C exact -3.6e-4. Iact=3: budget exhausted with no eigenvalue below
+C Xlamth and unconverged roots (inconclusive). The preconditioner is
+C RFO_PDIA (Pccd_rfo_pdia), not the model Hessian diagonal.
 C
       Implicit Double Precision(A-H,O-Z)
       Character*5 Mode
@@ -64,6 +71,7 @@ c machsp.com : end
 
       Parameter (Delta=1.0D-3, Rtol=5.0D-4, Xnegst=-1.0D-3,
      +           Xlamth=-1.0D-4, Nguess=4, Mxroot=3)
+      Parameter (Mxtot=200, Mkeep=Mxroot+2)
       Data Zero,Half,One,Two /0.0D0,0.5D0,1.0D0,2.0D0/
 
       Nsq  = Nbas*Nbas
@@ -87,6 +95,7 @@ c machsp.com : end
          Call Putrec(20,"JOBARC","RFO_ESTB",Iintfp,Es)
          Call Putrec(20,"JOBARC","RFO_VB  ",Npar*Mxhv*Iintfp,Vb)
          Call Putrec(20,"JOBARC","RFO_NHV ",1,Nhv)
+         Call Putrec(20,"JOBARC","RFO_NHVT",1,0)
          Call Putrec(20,"JOBARC","RFO_HVPH",1,1)
          Call Putrec(20,"JOBARC","RFO_PHAS",1,1)
          Return
@@ -114,6 +123,9 @@ C Gradient at +Delta: keep it and go to the -Delta point.
          Sb(K,Nhv) = (Res(K) - Gv(K))/(Two*Delta)
       Enddo
       Call Putrec(20,"JOBARC","RFO_SB  ",Npar*Nhv*Iintfp,Sb)
+      Call Getrec(20,"JOBARC","RFO_NHVT",1,Nhvt)
+      Nhvt = Nhvt + 1
+      Call Putrec(20,"JOBARC","RFO_NHVT",1,Nhvt)
 
       Ng = Min(Nguess-1,Npar)
       If (Nhv .Le. Ng) Then
@@ -149,22 +161,46 @@ C Rayleigh-Ritz in the current subspace.
       Enddo
       Alam = Wm(1)
       Call Dgemv("N",Npar,Nhv,One,Vb,Npar,Am(1,1),1,Zero,Vec,1)
-      Write(6,"(a,i4,a,1p,3E12.4,a,3E9.2)") " @-RFO Davidson",Nhv,
+      Write(6,"(a,i4,a,1p,3E12.4,a,3E9.2)") " @-RFO Davidson",Nhvt,
      +      " Hv: lowest roots",(Wm(Ir),Ir=1,Nroot),"  |r|",
      +      (Rn(Ir),Ir=1,Nroot)
 
       If (Alam .Lt. Xnegst .And. Rn(1) .Lt. 0.3D0*Dabs(Alam)) Then
          Iact = 2
-      Elseif (Iunc .Eq. 0 .Or. Nhv .Ge. Mxhv) Then
+      Elseif (Iunc .Eq. 0) Then
          Iact = 1
          If (Alam .Lt. Xlamth) Iact = 2
+      Elseif (Nhvt .Ge. Mxtot) Then
+         Iact = 3
+         If (Alam .Lt. Xlamth) Iact = 2
       Else
+         If (Nhv .Ge. Mxhv) Then
+C Thick restart: keep the lowest Mkeep Ritz vectors and their H*b.
+            M = Min(Mkeep,Nhv)
+            Call Dgemm("N","N",Npar,M,Nhv,One,Vb,Npar,Am,Mxhv,Zero,
+     +                 Wk,Npar)
+            Call Dcopy(Npar*M,Wk,1,Vb,1)
+            Call Dgemm("N","N",Npar,M,Nhv,One,Sb,Npar,Am,Mxhv,Zero,
+     +                 Wk,Npar)
+            Call Dcopy(Npar*M,Wk,1,Sb,1)
+            Nhv = M
+            Do J = 1, M
+               Do I = 1, M
+                  Am(I,J) = Zero
+               Enddo
+               Am(J,J) = One
+            Enddo
+            Call Putrec(20,"JOBARC","RFO_SB  ",Npar*Nhv*Iintfp,Sb)
+            Write(6,"(a,i4,a)") " @-RFO Davidson restart after",Nhvt,
+     +            " Hv products."
+         Endif
 C Expand with the preconditioned residual of the lowest unconverged root.
          Call Dgemv("N",Npar,Nhv,One,Sb,Npar,Am(1,Iunc),1,Zero,Res,1)
          Call Dgemv("N",Npar,Nhv,-Wm(Iunc),Vb,Npar,Am(1,Iunc),1,One,
      +              Res,1)
+         Call Getrec(20,"JOBARC","RFO_PDIA",Npar*Iintfp,Wk(Npar+1))
          Do K = 1, Npar
-            Den = H(K,K) - Wm(Iunc)
+            Den = Wk(Npar+K) - Wm(Iunc)
             If (Dabs(Den) .Lt. 1.0D-2) Den = Dsign(1.0D-2,Den)
             Wk(K) = -Res(K)/Den
          Enddo
@@ -177,12 +213,15 @@ C Expand with the preconditioned residual of the lowest unconverged root.
             Call Putrec(20,"JOBARC","RFO_NHV ",1,Nhv)
             Return
          Endif
-         Iact = 1
+         Iact = 3
          If (Alam .Lt. Xlamth) Iact = 2
       Endif
 
       If (Iact .Eq. 1) Write(6,"(a,1p,E12.4,a)")
      +   " @-RFO lowest Hessian eigenvalue",Alam,": minimum."
+      If (Iact .Eq. 3) Write(6,"(a,i4,a,1p,E12.4,a)")
+     +   " @-RFO stability check not converged after",Nhvt,
+     +   " Hv products (lowest Ritz value",Alam,"): inconclusive."
       Call Dcopy(Nsq,Cs,1,C,1)
       Call Dcopy(Npar,Gs,1,Gv,1)
       E = Es
