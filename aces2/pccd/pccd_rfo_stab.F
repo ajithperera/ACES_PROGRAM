@@ -3,10 +3,12 @@
      +                         Npar,Mxhv)
 C
 C Lowest eigenpair of the exact orbital Hessian at a stationary point
-C (Cs, Gs, Es) by Davidson iterations with forward-difference
+C (Cs, Gs, Es) by Davidson iterations with central-difference
 C Hessian-vector products of the analytic gradient,
-C     H*b = (g(Cs*exp(Delta*b)) - g(Cs))/Delta ,
-C one per xpccd run (macro iteration). Mode:
+C     H*b = (g(Cs*exp(Delta*b)) - g(Cs*exp(-Delta*b)))/(2*Delta) ,
+C one displaced point per xpccd run (macro iteration), two per Hv.
+C RFO_HVPH = 1 (2): the next gradient belongs to the +Delta (-Delta)
+C point of the newest trial vector. Mode:
 C   "START": store the stationary point, displace along the first
 C            (pseudo-random, all-symmetry) trial vector.        Iact=0
 C   "CONT ": Gv is the gradient at the last displaced point. Either
@@ -14,10 +16,12 @@ C            displace along a new trial vector (Iact=0), or finish:
 C            Iact=1 stable (lowest eigenvalue > Xlamth), Iact=2 a
 C            negative eigenvalue Alam with eigenvector Vec was found.
 C            For Iact=1,2 C, Gv and E are reset to the stationary point.
-C Rtol=5e-3 sits above the forward-difference noise floor of the Hv
-C products (~1e-3 for Delta=1e-3). The lowest three Ritz pairs are
-C tracked so that a nearly converged
-C positive root cannot mask a negative one that enters late.
+C Forward differences (noise ~1e-3 for Delta=1e-3, Rtol 5e-3) could
+C not resolve curvatures below ~1e-3: N2 cc-pVDZ 1.1016 A, symmetric
+C saddle with lowest eigenvalue -3.6e-4 (full FD Hessian) estimated as
+C +1.4e-4. Central differences (Hessian asymmetry ~1e-5 there) allow
+C Rtol=5e-4. The lowest three Ritz pairs are tracked so that a nearly
+C converged positive root cannot mask a negative one that enters late.
 C
       Implicit Double Precision(A-H,O-Z)
       Character*5 Mode
@@ -28,9 +32,9 @@ C
       Dimension F(Nbas,Nbas),U(Nbas,Nbas),Scr(Nbas,Nbas),G(Nbas,Nbas)
       Dimension Wk(Lwork),Rn(3),Irp(Nbas)
 #include "machsp.com"
-      Parameter (Delta=1.0D-3, Rtol=5.0D-3, Xnegst=-1.0D-3,
+      Parameter (Delta=1.0D-3, Rtol=5.0D-4, Xnegst=-1.0D-3,
      +           Xlamth=-1.0D-4, Nguess=4, Mxroot=3)
-      Data Zero,Half,One /0.0D0,0.5D0,1.0D0/
+      Data Zero,Half,One,Two /0.0D0,0.5D0,1.0D0,2.0D0/
 
       Nsq  = Nbas*Nbas
       Iact = 0
@@ -53,6 +57,7 @@ C
          Call Putrec(20,"JOBARC","RFO_ESTB",Iintfp,Es)
          Call Putrec(20,"JOBARC","RFO_VB  ",Npar*Mxhv*Iintfp,Vb)
          Call Putrec(20,"JOBARC","RFO_NHV ",1,Nhv)
+         Call Putrec(20,"JOBARC","RFO_HVPH",1,1)
          Call Putrec(20,"JOBARC","RFO_PHAS",1,1)
          Return
       Endif
@@ -62,10 +67,21 @@ C
       Call Getrec(20,"JOBARC","RFO_ESTB",Iintfp,Es)
       Call Getrec(20,"JOBARC","RFO_VB  ",Npar*Mxhv*Iintfp,Vb)
       Call Getrec(20,"JOBARC","RFO_NHV ",1,Nhv)
+      Call Getrec(20,"JOBARC","RFO_HVPH",1,Ihvph)
+      If (Ihvph .Eq. 1) Then
+C Gradient at +Delta: keep it and go to the -Delta point.
+         Call Putrec(20,"JOBARC","RFO_GPLS",Npar*Iintfp,Gv)
+         Call Pccd_rfo_disp(Cs,Vb(1,Nhv),-Delta,F,U,Scr,G,Irp,Nbas,
+     +                      Npar)
+         Call Putrec(20,"JOBARC","RFO_HVPH",1,2)
+         Return
+      Endif
+      Call Putrec(20,"JOBARC","RFO_HVPH",1,1)
+      Call Getrec(20,"JOBARC","RFO_GPLS",Npar*Iintfp,Res)
       If (Nhv .Gt. 1) Call Getrec(20,"JOBARC","RFO_SB  ",
      +                            Npar*(Nhv-1)*Iintfp,Sb)
       Do K = 1, Npar
-         Sb(K,Nhv) = (Gv(K) - Gs(K))/Delta
+         Sb(K,Nhv) = (Res(K) - Gv(K))/(Two*Delta)
       Enddo
       Call Putrec(20,"JOBARC","RFO_SB  ",Npar*Nhv*Iintfp,Sb)
 
