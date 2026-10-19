@@ -196,8 +196,8 @@ C better but makes the stretched-N2 runs (1.5-3.0 A) fail.)
             Write(6,"(2a)") " @-RFO starting Hessian: analytic",
      +                      " frozen-amplitude Hessian."
          Elseif (Ih0 .Ge. 1) Then
-            Write(6,"(2a)") " @-RFO analytic frozen-amplitude Hessian",
-     +           " not available; constant starting Hessian."
+            Write(6,"(2a)") " @-RFO no analytic frozen Hessian (pCCD",
+     +           " only, memory); constant starting Hessian."
          Endif
          Trust = Trust0
          Iacpt = 1

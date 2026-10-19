@@ -281,7 +281,7 @@ C Analytic frozen-amplitude orbital Hessian (pCCD): reads Gamma lists
 C 123/125 before Pccd_form_htau_pq reorders them. Debug switch
 C pccd_ohess.in (gradient check and pccd_ohess.dat).
          Inquire(File="pccd_ohess.in",Exist=Ohess)
-C OO_METHOD=RFO with pccd_rfo_h0.in FRZ0/FRZ (not at the displaced
+C OO_METHOD=RFO unless pccd_rfo_h0.in says CONST (not at the displaced
 C points of the stability check).
          Ih0 = 0
          If (Iflags2(178) .Eq. 6) Then

@@ -23,12 +23,15 @@ C parameters (Irp(p) = irrep of MO p; SCFEVCA0 columns and OBRTGRDA
 C are both ordered occupied by irrep, then virtual by irrep). With
 C SYMMETRY=OFF all Irp(p) = 1.
 C
-C Starting/model Hessian (file pccd_rfo_h0.in, see Pccd_rfo_h0mode):
-C default 4|df| (ov) and a constant (oo, vv); FRZ0: the analytic
-C frozen-amplitude Hessian (Pccd_ohess, OHESFRZ) at the first point;
-C FRZ: at every accepted point the model is the frozen Hessian of that
-C point plus a correction (the amplitude response) built by the SR1
-C updates.
+C Model Hessian (file pccd_rfo_h0.in, see Pccd_rfo_h0mode): default
+C (FRZ) at every accepted point the analytic frozen-amplitude Hessian
+C of that point (Pccd_ohess, OHESFRZ; pCCD only) plus a correction
+C (the amplitude response) built by the SR1 updates; FRZ0: the frozen
+C Hessian at the first point only; CONST: 4|df| (ov) and a constant
+C (oo, vv) at the first point. Without OHESFRZ (OO-CCD/LCCD, too
+C little memory) the constant start is used. Benchmark 10/2026 (H2O,
+C N2 cc-pVDZ 1.1-2.5 A): FRZ needs 2-12x fewer gradients than CONST,
+C same minima except N2 2.5 A (another local minimum).
 C
 C RHF, no dropped MOs.
 C
@@ -152,16 +155,17 @@ C Number of orbital rotation parameters: pairs p<q of the same irrep.
 
       Subroutine Pccd_rfo_h0mode(Ih0)
 C Model Hessian of OO_METHOD=RFO from the first word of the file
-C pccd_rfo_h0.in: FRZ0 -> 1, FRZ -> 2; 0 (constant H0) without it.
+C pccd_rfo_h0.in: CONST -> 0, FRZ0 -> 1; FRZ or no file -> 2.
       Character*8 Word
       Logical Exist
-      Ih0 = 0
+      Ih0 = 2
       Inquire(File="pccd_rfo_h0.in",Exist=Exist)
       If (.Not. Exist) Return
       Word = " "
       Open(Unit=44,File="pccd_rfo_h0.in",Status="Old")
       Read(44,*,End=10,Err=10) Word
  10   Close(44)
+      If (Word .Eq. "CONST") Ih0 = 0
       If (Word .Eq. "FRZ0") Ih0 = 1
       If (Word .Eq. "FRZ") Ih0 = 2
       Return

@@ -1,8 +1,8 @@
 test -n "$USERDIR" || exit 1
 # OO-pCCD, OO_METHOD=RFO from HF orbitals (xjoda + xrunpccd driver).
-# SYMMETRY=OFF: passes a symmetric saddle and follows its negative mode
-# (stability check) to the broken-symmetry minimum; SYMMETRY=ON: the C2v
-# minimum. TOTENERG is the energy of the stationary point.
+# SYMMETRY=OFF: the broken-symmetry minimum (with the default frozen-
+# Hessian model the symmetric saddle is not visited; with CONST it is
+# passed and left along its negative mode); SYMMETRY=ON: the C2v minimum. TOTENERG is the energy of the stationary point.
 cat <<. >ZMAT
 H2O OO-pCCD RFO STO-3G
 H
