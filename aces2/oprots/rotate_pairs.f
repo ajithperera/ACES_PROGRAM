@@ -20,12 +20,14 @@
       Cos_eps = Cos(Eps)
       Sin_eps = Sin(EPs)
 
-C For p' = cos (eps) p + Sin (eps) q (p and q are original MOs. Here the
-C the number of rows goes over rhe number of function but this can
-C easily change go over only the number of orbitals per irrep. Just a
-C lot of work to gain nothing!
+C p' = cos(eps) p + sin(eps) q, q' = sin(eps) p - cos(eps) q for every
+C pair type (OO, VV, OV, VO); Get_orbsym sets which of p, q is occupied.
+C OV used to store the two results in swapped columns, so eps = 0
+C exchanged the occupied and virtual orbitals. p and q are orthonormal
+C SCF orbitals and the 2x2 transformation is orthogonal, so p' and q'
+C stay orthonormal (no normalization needed). The rows run over all
+C functions rather than only those of the pair's irrep.
 
-      If (Type .EQ. "OO" .or. Type .EQ. "VV" .OR. Type .EQ. "VO") Then
       Do Irow = 1, Nbasis
 
          P = Scf_mos(Irow,Index1)
@@ -39,22 +41,5 @@ C lot of work to gain nothing!
 
       Enddo
 
-      ELse if (Type .EQ. "OV") Then
-
-      Do Irow = 1, Nbasis
-
-         P = Scf_mos(Irow,Index1)
-         Q = Scf_mos(Irow,Index2)
-
-         Scf_mos(Irow,Index2) = Cos_eps*P +
-     +                          Sin_eps*Q 
-
-         Scf_mos(Irow,Index1) =  Sin_eps*P -
-     +                           Cos_eps*Q 
-
-      Enddo
-      Endif 
-
       Return
       End
-
