@@ -204,6 +204,7 @@
 
 
 
+
       Subroutine Pccd_form_htau_1d_pqrs_2(H_pq,D_pq,H_oo,H_vv,H_ov,H_vo,
      +                                    D_oo,D_vv,D_ov,D_vo,Work,
      +                                    Ioffo,Ioffv,Maxcor,Nocc,
@@ -264,6 +265,9 @@ c flags.com : end
 
       Cc_conv = Iflags(4)
       Thres   = Cc_con*1.0D-03
+C NOTE (10/2026, not fixed: this Hessian code is unfinished and unused):
+C Cc_con is undefined (typo for Cc_conv), so Thres = 0 and no term is
+C skipped; Cc_conv is also the exponent, not the threshold itself.
 
       Do_oo    = .True.
       Do_vv    = .True.
@@ -284,6 +288,9 @@ c flags.com : end
 
       Do_hovoo = .True.
       Do_hovoo = .True.
+C NOTE (10/2026, not fixed): the second line was meant to set Do_Dovoo;
+C Do_Dovoo is never set .True. (only .False. below), so it is undefined
+C when the test below does not set it.
 
       Do_hvooo = .True.
       Do_dvooo = .True.

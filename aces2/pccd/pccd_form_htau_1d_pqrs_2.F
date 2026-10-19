@@ -47,6 +47,9 @@
 
       Cc_conv = Iflags(h_IFLAGS_cc_conv)
       Thres   = Cc_con*1.0D-03
+C NOTE (10/2026, not fixed: this Hessian code is unfinished and unused):
+C Cc_con is undefined (typo for Cc_conv), so Thres = 0 and no term is
+C skipped; Cc_conv is also the exponent, not the threshold itself.
 
       Do_oo    = .True.
       Do_vv    = .True.
@@ -67,6 +70,9 @@
 
       Do_hovoo = .True.
       Do_hovoo = .True.
+C NOTE (10/2026, not fixed): the second line was meant to set Do_Dovoo;
+C Do_Dovoo is never set .True. (only .False. below), so it is undefined
+C when the test below does not set it.
 
       Do_hvooo = .True.
       Do_dvooo = .True.
