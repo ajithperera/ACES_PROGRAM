@@ -1,0 +1,26 @@
+test -n "$USERDIR" || exit 1
+# OO-CCD, OO_METHOD=RFO from HF orbitals (xjoda + xrunpccd driver),
+# SYMMETRY=OFF. Exercises the non-HF D(a,i) = 0 path for CCD (pccd_dens.F);
+# OO_METHOD=ROTGRAD reaches the same minimum. TOTENERG is the energy of the
+# stationary point.
+cat <<. >ZMAT
+H2O OO-CCD RFO STO-3G
+H
+O 1 R
+H 2 R 1 A
+
+R=0.957
+A=104.5
+
+*ACES2(BASIS=STO-3G
+CALC=OO-CCD,PROGRAM=PCCD
+REF=RHF,MEM_SIZE=2gb
+sym=off
+PCCD_REF=OPTIMIZED,OO_METHOD=RFO
+BRUCK_CONV=6,OO_MAXCYC=300
+cc_conv=10,scf_conv=10)
+
+.
+ln -s $GENBAS . || exit 1
+xjoda || exit 1
+xrunpccd || exit 1
