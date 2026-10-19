@@ -7,7 +7,7 @@
       Dimension Work(Maxcor)
       Logical Grdcnv
       Logical pCCD,CCD,LCCD
-      Logical OneP_ONLY
+      Logical OneP_ONLY,Hdump,Onep_save
 
       Common /CALC/pCCD,CCD,LCCD
       Common /ORBR_HESS/ONEP_ONLY
@@ -34,6 +34,24 @@ C rejects the step.
       If (Ifail .Eq. 1) Then
          Continue
       Else If (Iuhf .EQ. 0 .AND. Idrop .EQ. 0) Then
+C Debug (file pccd_hess.in): dump the analytic orbital Hessian lists,
+C one-particle terms only (hess_1P_*) and in full (hess_FU_*).
+         Inquire(File="pccd_hess.in",Exist=Hdump)
+         If (Hdump) Then
+            Onep_save = ONEP_only
+            ONEP_only = .True.
+            Mxc = Maxcor
+            Call Pccd_form_htau_pq(Work,Mxc,Iuhf,Igrad_calc,1,Scale)
+            Call Pccd_hess_dump(Work,Maxcor,"1P  ")
+            Call Pccd_hess_dump(Work,Maxcor,"ZERO")
+            ONEP_only = .False.
+            Mxc = Maxcor
+            Call Pccd_form_htau_pqrs(Work,Mxc,Iuhf)
+            Mxc = Maxcor
+            Call Pccd_form_htau_pq(Work,Mxc,Iuhf,Igrad_calc,1,Scale)
+            Call Pccd_hess_dump(Work,Maxcor,"FU  ")
+            ONEP_only = Onep_save
+         Endif
          If(.Not. ONEP_only) Call Pccd_form_htau_pqrs(Work,Maxcor,Iuhf)
 C OO_METHOD=RFO does not use the (unfinished, undebugged) analytic
 C Hessian lists that Pccd_form_htau_1D_pqrs builds after the gradient.
