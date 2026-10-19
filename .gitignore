@@ -2,3 +2,6 @@ build_logs/
 build_config.sh
 # vim swap files
 .*.sw[a-p]
+# configure outputs
+aces3/config.status
+aces3/config.log
