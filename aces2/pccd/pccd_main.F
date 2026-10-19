@@ -123,10 +123,11 @@ C stop.
             Call Pccd_banner(6,Status)
             Call Pccd_urdriver(Icore(i0),icrsiz/iintfp,Iuhf)
 
-            If ((Pccd_refr .Eq. 2) .And. 
-     +           Itest .Ne. 1) Go to 10
             Pccd_refr = Iflags2(h_IFLAGS2_pccd_reference)
             Call Getrec(-20, 'JOBARC', 'BRUKTEST', 1, Itest)
+
+            If ((Pccd_refr .Eq. 2) .And. 
+     +           Itest .Ne. 1) Go to 10
 
             Call Pccd_uldriver(Icore(i0),icrsiz/iintfp,Iuhf)
 

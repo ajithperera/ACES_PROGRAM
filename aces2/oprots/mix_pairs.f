@@ -25,11 +25,12 @@ C lot of work to gain nothing!
       If (Type .EQ. "OO" .or. Type .EQ. "VV" .OR. Type .EQ. "VO") Then
       Do Irow = 1, Nbasis
 
-         Scf_mos(Irow,Index1) = Eps*(Scf_mos(Irow,INdex1) +
-     +                               Scf_mos(Irow,INdex2))
+         P = Scf_mos(Irow,Index1)
+         Q = Scf_mos(Irow,Index2)
 
-         Scf_mos(Irow,Index2) = Eps*(Scf_mos(Irow,INdex1) -
-     +                               Scf_mos(Irow,INdex2))
+         Scf_mos(Irow,Index1) = Eps*(P + Q)
+
+         Scf_mos(Irow,Index2) = Eps*(P - Q)
 
       Enddo
 
@@ -37,11 +38,12 @@ C lot of work to gain nothing!
 
       Do Irow = 1, Nbasis
 
-         Scf_mos(Irow,Index2) = Eps*(Scf_mos(Irow,INdex1) +
-     +                               Scf_mos(Irow,INdex2))
+         P = Scf_mos(Irow,Index1)
+         Q = Scf_mos(Irow,Index2)
 
-         Scf_mos(Irow,Index1) = Eps*(Scf_mos(Irow,INdex1) -
-     +                               Scf_mos(Irow,INdex2))
+         Scf_mos(Irow,Index2) = Eps*(P + Q)
+
+         Scf_mos(Irow,Index1) = Eps*(P - Q)
 
       Enddo
       Endif 
