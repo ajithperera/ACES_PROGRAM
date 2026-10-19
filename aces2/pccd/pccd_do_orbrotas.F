@@ -7,7 +7,7 @@
       Dimension Work(Maxcor)
       Logical Grdcnv
       Logical pCCD,CCD,LCCD
-      Logical OneP_ONLY,Hdump,Onep_save
+      Logical OneP_ONLY,Hdump,Onep_save,Ohess
 
       Common /CALC/pCCD,CCD,LCCD
       Common /ORBR_HESS/ONEP_ONLY
@@ -34,6 +34,11 @@ C rejects the step.
       If (Ifail .Eq. 1) Then
          Continue
       Else If (Iuhf .EQ. 0 .AND. Idrop .EQ. 0) Then
+C Analytic frozen-amplitude orbital Hessian (pCCD): reads Gamma lists
+C 123/125 before Pccd_form_htau_pq reorders them. Debug switch
+C pccd_ohess.in (gradient check and pccd_ohess.dat).
+         Inquire(File="pccd_ohess.in",Exist=Ohess)
+         If (pCCD .And. Ohess) Call Pccd_ohess(Work,Maxcor,Iok)
 C Debug (file pccd_hess.in): dump the two-particle density and all
 C other lists 1-250 as they are (GA, AL), then form the gradient and
 C the analytic orbital Hessian lists once, in the production order
@@ -61,6 +66,7 @@ C Hessian lists that Pccd_form_htau_1D_pqrs builds after the gradient.
          Call Pccd_form_htau_pq(Work,Maxcor,Iuhf,Igrad_calc,
      +                          Ihess,Scale)
          Endif
+         If (pCCD .And. Ohess) Call Pccd_ohess_chk(Work,Maxcor)
       Else
 
 C Uhf only or UHF and RHF for forzen core orbitals.
