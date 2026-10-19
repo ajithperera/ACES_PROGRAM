@@ -34,26 +34,25 @@ C rejects the step.
       If (Ifail .Eq. 1) Then
          Continue
       Else If (Iuhf .EQ. 0 .AND. Idrop .EQ. 0) Then
-C Debug (file pccd_hess.in): dump the analytic orbital Hessian lists,
-C one-particle terms only (hess_1P_*) and in full (hess_FU_*).
+C Debug (file pccd_hess.in): dump the two-particle density and all
+C other lists 1-250 as they are (GA, AL), then form the gradient and
+C the analytic orbital Hessian lists once, in the production order
+C (Pccd_form_htau_pq reorders Gamma lists 123/125 in place, so it must
+C not run twice), and dump the Hessian lists (FU).
          Inquire(File="pccd_hess.in",Exist=Hdump)
          If (Hdump) Then
-            Onep_save = ONEP_only
-            ONEP_only = .True.
-            Mxc = Maxcor
-            Call Pccd_form_htau_pq(Work,Mxc,Iuhf,Igrad_calc,1,Scale)
-            Call Pccd_hess_dump(Work,Maxcor,"1P  ")
+            Call Pccd_hess_dump(Work,Maxcor,"GA  ")
+            Call Pccd_hess_dump(Work,Maxcor,"AL  ")
             Call Pccd_hess_dump(Work,Maxcor,"ZERO")
+            Onep_save = ONEP_only
             ONEP_only = .False.
             Mxc = Maxcor
             Call Pccd_form_htau_pqrs(Work,Mxc,Iuhf)
             Mxc = Maxcor
             Call Pccd_form_htau_pq(Work,Mxc,Iuhf,Igrad_calc,1,Scale)
             Call Pccd_hess_dump(Work,Maxcor,"FU  ")
-            Call Pccd_hess_dump(Work,Maxcor,"GA  ")
-            Call Pccd_hess_dump(Work,Maxcor,"AL  ")
             ONEP_only = Onep_save
-         Endif
+         Else
          If(.Not. ONEP_only) Call Pccd_form_htau_pqrs(Work,Maxcor,Iuhf)
 C OO_METHOD=RFO does not use the (unfinished, undebugged) analytic
 C Hessian lists that Pccd_form_htau_1D_pqrs builds after the gradient.
@@ -61,6 +60,7 @@ C Hessian lists that Pccd_form_htau_1D_pqrs builds after the gradient.
          If (Iflags2(h_IFLAGS2_oo_method) .Eq. 6) Ihess = 0
          Call Pccd_form_htau_pq(Work,Maxcor,Iuhf,Igrad_calc,
      +                          Ihess,Scale)
+         Endif
       Else
 
 C Uhf only or UHF and RHF for forzen core orbitals.

@@ -16,15 +16,15 @@ C
 
       Irrepx = 1
 C Tag "GA": the two-particle density lists 100-160 instead.
-C Tag "AL": all lists 30-199 that exist.
+C Tag "AL": all lists 1-250 that exist.
       Nl = 11
       If (Tag .Eq. "GA  ") Nl = 61
-      If (Tag .Eq. "AL  ") Nl = 170
+      If (Tag .Eq. "AL  ") Nl = 250
       Do Il = 1, Nl
          List = Lists(Min(Il,11))
          If (Tag .Eq. "GA  " .Or. Tag .Eq. "AL  ") Then
             List = 99 + Il
-            If (Tag .Eq. "AL  ") List = 29 + Il
+            If (Tag .Eq. "AL  ") List = Il
             If (Isytyp(1,List) .Eq. 0 .Or. Isytyp(2,List) .Eq. 0)
      +         Go to 10
          Endif
