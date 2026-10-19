@@ -5,7 +5,8 @@
       Logical Converged,Bca,Bfc,Occnums_file,Move
       Character*80 Fname 
       Integer Icycle 
-      Logical porbrot_in
+      Logical porbrot_in,Oorot_load
+      Character*8 Oorot_mode
       Logical Xpccd 
 #include "flags.com"
 #include "flags2.com"
@@ -21,6 +22,18 @@ C
       No_diis   = Iflags2(h_IFLAGS2_oo_diis)
 
       Inquire(file="porbrot.info",exist=porbrot_in)
+C oorot.in = LOAD: start from the restricted guess MOs in c0.dat. The
+C guess must be installed after the cycle-1 SCF, because xjoda (run
+C first by xrunpccd) resets the flags xoorot LOAD sets; the second
+C xvscf then builds the Fock matrix of the guess MOs without iterating,
+C as in the later orbital optimization cycles.
+      Inquire(file="oorot.in",exist=Oorot_load)
+      If (Oorot_load) Then
+         Open(Unit=77,File="oorot.in",Status="Old")
+         Read(77,"(a)") Oorot_mode
+         Close(77)
+         Oorot_load = (Oorot_mode .Eq. "LOAD    ")
+      Endif
       Icycle = 1
       Do while (.NOT. Converged)
           If (Icycle .EQ. 1) Then
@@ -33,6 +46,12 @@ C
      +                         " orbital rotations are performed!"
                 Call Runit("xoprots")
              Endif 
+             If (Oorot_load) Then
+                Write(6,"(2a)") " oorot.in: the guess MOs in c0.dat",
+     +                          " replace the SCF MOs."
+                Call Runit("xoorot")
+                Call Runit("xvscf")
+             Endif
           Else
              Call Runit("xvscf")
           Endif

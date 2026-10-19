@@ -309,6 +309,9 @@ C Brueckner, HFSTABILITY=FOLLOW or OO_METHOD is set: write both pairs.
 C Restricted guess orbitals from c0.dat -> SCFEVCA0, SCFEVCB0, and the
 C flags Pccd_do_orbrots sets for non-HF orbitals, so that the next
 C xvscf (no iterations, MOs from JOBARC) builds the matching Fock.
+C With xrunpccd, do not run this beforehand: xjoda resets the flags.
+C Put c0.dat and oorot.in (LOAD) in the job directory; do_brueckner
+C runs xoorot and xvscf after the cycle-1 SCF.
          Open(Unit=32,File="c0.dat",Status="Old")
          Read(32,*) N1, N2
          If (N1 .Ne. Nao .Or. N2 .Ne. Nmo) Call Errex
