@@ -43,11 +43,16 @@ c machsp.com : end
 
 
       Parameter (Hoovv=0.05D0, Trust0=0.1D0, Trstmx=0.5D0)
+      Parameter (Ngvec=3)
       Parameter (Mxstb=5)
 C Branch jump: an energy drop far beyond the model prediction means the
 C amplitudes left the solution branch being followed (seen for stretched
 C N2: a branch with |T2| ~ 30 and 0.23 Eh lower energy).
       Parameter (Rhojmp=10.0D0, Ejmp=1.0D-4)
+C No step can be accepted once the trust radius has collapsed (N2
+C cc-pVDZ 3.0 A from RHF orbitals: 600 macro iterations at trust 0,
+C every point rejected by Pccd_rfo_ampchk); stop instead.
+      Parameter (Trmin=1.0D-10)
       Data Zero,Half,One,Two,Four /0.0D0,0.5D0,1.0D0,2.0D0,4.0D0/
 
       Nsq = Nbas*Nbas
@@ -81,8 +86,9 @@ C N2: a branch with |T2| ~ 30 and 0.23 Eh lower energy).
       Reject = .False.
       Escape = .False.
       Jump   = .False.
-C RFO_FAIL = 1: the pCCD amplitude equations did not converge at these
-C orbitals (set in Pccd); E and G are not available.
+C RFO_FAIL = 1: the pCCD amplitude or lambda equations did not converge
+C at these orbitals or reached an unphysical solution (Pccd_rfo_ampchk);
+C set in Pccd. E and G are not available.
       Call Getrec(0,"JOBARC","RFO_FAIL",Length,Junk)
       Ifail = 0
       If (Length .Gt. 0) Call Getrec(20,"JOBARC","RFO_FAIL",1,Ifail)
@@ -90,7 +96,8 @@ C orbitals (set in Pccd); E and G are not available.
          Call Putrec(20,"JOBARC","RFO_FAIL",1,0)
          If (Iphase .Eq. 1 .Or. Nit .Eq. 0) Then
             Write(6,"(2a)") " @-Pccd_rfo_do: pCCD amplitudes not",
-     +           " converged at an accepted/stability point; stopping."
+     +           " converged or unphysical at an accepted/stability"//
+     +           " point; stopping."
             Call Errex
          Endif
       Endif
@@ -142,6 +149,9 @@ C along the mode and take a trust-region step from the stationary point.
 C Initial model Hessian: 4|f(q,q)-f(p,p)| for ov pairs (close to the
 C exact pCCD values), a small constant for oo and vv pairs whose
 C curvature is purely correlation (orders of magnitude below 4*de).
+C (Tried 10/2026: the occupation-difference diagonal
+C 2|D(p,p)-D(q,q)||f(q,q)-f(p,p)| fits the H2O STO-3G FD diagonal
+C better but makes the stretched-N2 runs (1.5-3.0 A) fail.)
          Call Getrec(20,"JOBARC","FOCKA   ",Nsq*Iintfp,F)
          Call Dgemm("N","N",Nbas,Nbas,Nbas,One,F,Nbas,C,Nbas,Zero,
      +              Scr,Nbas)
@@ -227,7 +237,7 @@ C Number of negative model-Hessian eigenvalues (diagnostic).
 
       If (Ifail .Eq. 1) Then
          Write(6,"(a,i4,2a)") " @-RFO it",Nit," step rejected:",
-     +      " pCCD amplitude equations did not converge."
+     +      " pCCD amplitudes unconverged or unphysical."
       Elseif (Jump) Then
          Write(6,"(a,i4,a,1p,E10.3,a,E10.3,0p,a,F9.2)")
      +      " @-RFO it",Nit," step rejected (amplitude branch jump):"//
@@ -242,6 +252,13 @@ C Number of negative model-Hessian eigenvalues (diagnostic).
      +      " @-RFO it",Nit,"  E =",E,"  max|g| =",Gmax,"  rms =",Grms,
      +      "  trust =",Trust,"  rho =",Rho,"  #neg(H) =",Nneg
 
+      If (Reject .And. Trust .Lt. Trmin) Then
+         Write(6,"(2a,F18.12)") " @-RFO trust radius collapsed: every",
+     +        " step is rejected; stopping at E =",E
+         Write(6,"(2a)") " @-RFO the orbital optimization did not",
+     +        " converge (see the rejection reasons above)."
+         Call Errex
+      Endif
       Grdcnv = (Gmax .Lt. Tol) .And. .Not. Escape
       If (Grdcnv) Then
          Call Getrec(0,"JOBARC","RFO_NSTB",Length,Junk)
@@ -252,6 +269,15 @@ C Stationary point: start the stability (lowest eigenvalue) check.
             Write(6,"(a,i5,a)") " @-RFO gradient converged after",Ntot,
      +            " gradient evaluations; checking the Hessian."
             Call Putrec(20,"JOBARC","RFO_NSTB",1,Nstb+1)
+C Davidson start vectors (after a random one): the lowest eigenvectors
+C of the SR1 model Hessian, which carries the curvature seen along the
+C path (unit vectors of its lowest diagonal elements can miss a
+C negative mode entirely: N2 cc-pVDZ 1.1016 A, symmetric saddle
+C accepted as a minimum).
+            Call Dcopy(Npar*Npar,H,1,Ah,1)
+            Call Dsyev("V","U",Npar,Ah,Npar,Ev,Wk,Lwork,Info)
+            Ng = Min(Ngvec,Npar)
+            Call Putrec(20,"JOBARC","RFO_GVEC",Npar*Ng*Iintfp,Ah)
             Call Putrec(20,"JOBARC","RFO_HESS",Npar*Npar*Iintfp,H)
             Call Putrec(20,"JOBARC","RFO_TRST",Iintfp,Trust)
             Call Putrec(20,"JOBARC","RFO_NITR",1,Nit+1)
@@ -314,4 +340,5 @@ C C(new) = C*exp(K(step)).
      +                                "  predicted dE =",Pred
       Return
       End
+
 

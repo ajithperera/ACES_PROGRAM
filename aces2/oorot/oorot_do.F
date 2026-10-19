@@ -106,6 +106,18 @@ C AO Fock matrix (Nao x Nao, Nao = Nmo assumed) and current MOs
          Write(35,*) Nao, Nmo
          Write(35,"(4(1x,E25.17))") ((C(I,J),I=1,Nao),J=1,Nmo)
          Close(35)
+      Elseif (Mode(1:5) .Eq. "DUMPD") Then
+C Correlation one-particle density blocks DENSOO, DENSVV (normal ordered)
+         Call Getrec(20,"JOBARC","NOCCORB ",1,Nocc)
+         Nvrt = Nmo - Nocc
+         Call Getrec(20,"JOBARC","DENSOO  ",Nocc*Nocc*Iintfp,U)
+         Call Getrec(20,"JOBARC","DENSVV  ",Nvrt*Nvrt*Iintfp,C)
+         Open(Unit=36,File="dens.dat",Status="Unknown")
+         Write(36,*) Nocc, Nocc
+         Write(36,"(4(1x,E25.17))") (U(I,1),I=1,Nocc*Nocc)
+         Write(36,*) Nvrt, Nvrt
+         Write(36,"(4(1x,E25.17))") (C(I,1),I=1,Nvrt*Nvrt)
+         Close(36)
       Else
          Write(6,"(2a)") " @-oorot: unknown mode ", Mode
          Call Errex

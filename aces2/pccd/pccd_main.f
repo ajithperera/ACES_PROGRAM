@@ -213,7 +213,7 @@
       Integer IHess_calc
       Integer Pccd_refr,Itest
       Integer OOmicroItr,OOmacroItr,OOtotalItr
-      Integer Length,Idrop,Itcv
+      Integer Length,Idrop,Itcv,Ibad
       Double Precision Scale 
       Character*80 Fname
       Character*6 Status
@@ -309,25 +309,10 @@ C is achieved before computing orbital gradients.
             Call Pccd_banner(6,Status)
             Call Pccd_rdriver(Icore(i0),icrsiz/iintfp,Iuhf)
             Call Getrec(20,"JOBARC","PCCD_TCV",1,Itcv)
-            If (Itcv .Ne. 1) Then
-C Unconverged amplitudes: with OO_METHOD=RFO the step that led here is
-C rejected (no lambda, densities or gradient at this point); otherwise
-C stop.
-               Call Getrec(0,"JOBARC","RFO_NITR",Length,Itcv)
-               If (Opt_orbs .And. Length .Gt. 0 .And.
-     +             Iflags2(178) .Eq. 6) Then
-                  Call Putrec(20,"JOBARC","RFO_FAIL",1,1)
-                  Call Pccd_do_orbrots(Icore(I0),icrsiz/iintfp,Iuhf,
-     +                              Igrad_calc,IHess_calc,Scale,
-     +                              OOmicroItr,OOmacroItr,OOtotalItr)
-                  Go to 10
-               Endif
-               Write(6,"(3a)") " @-PCCD: the pCCD amplitude equations",
-     +                         " did not converge (at the starting",
-     +                         " orbitals if OO_METHOD=RFO)."
-               Call Errex
-            Endif
+            If (Itcv .Ne. 1) Go to 20
             Call Pccd_rfo_tguess(Icore(i0),icrsiz/iintfp,"SAVE ")
+            Call Pccd_rfo_ampchk(Icore(i0),icrsiz/iintfp,46,"T2",Ibad)
+            If (Ibad .Eq. 1) Go to 20
 
             Pccd_refr = Iflags2(179)
             Call Getrec(-20, 'JOBARC', 'BRUKTEST', 1, Itest)
@@ -336,6 +321,8 @@ C stop.
      +           Itest .Ne. 1) Go to 10
 
             Call Pccd_ldriver(Icore(i0),icrsiz/iintfp,Iuhf)
+            Call Pccd_rfo_ampchk(Icore(i0),icrsiz/iintfp,146,"L2",Ibad)
+            If (Ibad .Eq. 1) Go to 20
             Call Pccd_frzamp(Icore(i0),icrsiz/iintfp,Iuhf)
 
             If (Opt_orbs) Then
@@ -369,6 +356,26 @@ C stop.
             Call Pccd_form_nmrcl_grad_hess(Icore(I0),icrsiz/iintfp,Iuhf,
      +                                  Igrad_calc,IHess_calc,Scale)
       Endif
+
+      Go to 10
+
+C Unconverged or unphysical (Pccd_rfo_ampchk) amplitudes: with
+C OO_METHOD=RFO the step that led here is rejected (no lambda,
+C densities or gradient at this point); otherwise stop.
+ 20   Continue
+      Call Getrec(0,"JOBARC","RFO_NITR",Length,Itcv)
+      If (Opt_orbs .And. Length .Gt. 0 .And.
+     +    Iflags2(178) .Eq. 6) Then
+         Call Putrec(20,"JOBARC","RFO_FAIL",1,1)
+         Call Pccd_do_orbrots(Icore(I0),icrsiz/iintfp,Iuhf,
+     +                        Igrad_calc,IHess_calc,Scale,
+     +                        OOmicroItr,OOmacroItr,OOtotalItr)
+         Go to 10
+      Endif
+      Write(6,"(3a)") " @-PCCD: the pCCD amplitude equations did not",
+     +                " converge or have an unphysical solution (at",
+     +                " the starting orbitals if OO_METHOD=RFO)."
+      Call Errex
 
  10   Continue
 

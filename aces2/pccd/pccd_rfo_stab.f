@@ -59,7 +59,7 @@ c machsp.com : end
 
 
       Parameter (Delta=1.0D-3, Rtol=5.0D-3, Xnegst=-1.0D-3,
-     +           Xlamth=-1.0D-4, Nguess=3, Mxroot=3)
+     +           Xlamth=-1.0D-4, Nguess=4, Mxroot=3)
       Data Zero,Half,One /0.0D0,0.5D0,1.0D0/
 
       Nsq  = Nbas*Nbas
@@ -99,27 +99,12 @@ c machsp.com : end
       Enddo
       Call Putrec(20,"JOBARC","RFO_SB  ",Npar*Nhv*Iintfp,Sb)
 
-      If (Nhv .Lt. Nguess) Then
-C Further start vectors: the unit vectors of the lowest model-Hessian
-C diagonal elements (the Nhv-th smallest, ties broken by index).
-         Kprev = 0
-         Do Ig = 1, Nhv
-            Dmin  = 1.0D30
-            Kbest = 0
-            Do K = 1, Npar
-               If (K .Ne. Kprev .And. H(K,K) .Lt. Dmin) Then
-                  If (Ig .Eq. 1 .Or. H(K,K) .Gt. Dprev .Or.
-     +               (H(K,K) .Eq. Dprev .And. K .Gt. Kprev)) Then
-                     Dmin  = H(K,K)
-                     Kbest = K
-                  Endif
-               Endif
-            Enddo
-            Kprev = Kbest
-            Dprev = Dmin
-         Enddo
-         Call Dzero(Vec,Npar)
-         Vec(Kbest) = One
+      Ng = Min(Nguess-1,Npar)
+      If (Nhv .Le. Ng) Then
+C Further start vectors: the lowest eigenvectors of the model Hessian
+C (RFO_GVEC, from Pccd_rfo_do), the Nhv-th one now.
+         Call Getrec(20,"JOBARC","RFO_GVEC",Npar*Ng*Iintfp,Wk)
+         Call Dcopy(Npar,Wk((Nhv-1)*Npar+1),1,Vec,1)
          Call Pccd_rfo_addvec(Vec,Vb,Npar,Mxhv,Nhv,Ok)
          If (Ok) Then
             Call Pccd_rfo_disp(Cs,Vb(1,Nhv),Delta,F,U,Scr,G,Irp,Nbas,
