@@ -262,7 +262,7 @@ def main():
 
     if shutil.which("xrpa") is None:
         sys.exit("xrpa not found on PATH -- module load intel/2025.1.0 "
-                  "openmpi/5.0.7 first, and make sure aces2/bin is on PATH")
+                  "openmpi/5.0.7 first, and make sure ~/Develop/bin is on PATH")
 
     env = os.environ.copy()
     ld = env.get("LD_LIBRARY_PATH", "")

@@ -30,7 +30,7 @@ for t in $TARGETS; do
   LOG="$ROOT/build_logs/unified_test_$t.log"
   case "$t" in
     aces2)
-      PATH="$ROOT/aces2/bin:$PATH" bash -c \
+      PATH="$HOME/Develop/bin:$PATH" bash -c \
         "cd '$ROOT/aces2' && python3 tests/fast/run_tests.py --jobs $ACES_PROGRAM_NP" \
         > "$LOG" 2>&1
       ;;

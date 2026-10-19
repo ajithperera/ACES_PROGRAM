@@ -36,7 +36,7 @@ CFLAGS_EXTRA += -fPIC
 # must build+install fully standalone"). Copied verbatim here they instead
 # pointed ACES_PROGRAM/aces2 AT acesii_build_pic's install dirs, making this
 # tree parasitic on the other one instead of standalone. 2026-08-10: repointed
-# at this tree's own aces2/bin, aces2/lib so ACES_PROGRAM builds+installs
+# at this tree's own aces2/bin (bin: ~/Develop/bin since 2026-10-19, below), aces2/lib so ACES_PROGRAM builds+installs
 # fully within itself -- do not point these back at acesii_build_pic again.
 # 2026-10-19: binaries install to the installation directory ~/Develop/bin
 # (A2DEV_PATH, first on PATH), so the binaries run are the ones built here.
