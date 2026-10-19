@@ -281,7 +281,21 @@ C Analytic frozen-amplitude orbital Hessian (pCCD): reads Gamma lists
 C 123/125 before Pccd_form_htau_pq reorders them. Debug switch
 C pccd_ohess.in (gradient check and pccd_ohess.dat).
          Inquire(File="pccd_ohess.in",Exist=Ohess)
-         If (pCCD .And. Ohess) Call Pccd_ohess(Work,Maxcor,Iok)
+C OO_METHOD=RFO with pccd_rfo_h0.in FRZ0/FRZ (not at the displaced
+C points of the stability check).
+         Ih0 = 0
+         If (Iflags2(178) .Eq. 6) Then
+            Call Pccd_rfo_h0mode(Ih0)
+            Call Getrec(0,"JOBARC","RFO_PHAS",Length,Junk)
+            Iphase = 0
+            If (Length .Gt. 0) Call Getrec(20,"JOBARC","RFO_PHAS",1,
+     +                                     Iphase)
+            If (Iphase .Eq. 1) Ih0 = 0
+         Endif
+         Iok = 0
+         If (pCCD .And. (Ohess .Or. Ih0 .Ge. 1))
+     +      Call Pccd_ohess(Work,Maxcor,Iok)
+         Call Putrec(20,"JOBARC","OHESOK  ",1,Iok)
 C Debug (file pccd_hess.in): dump the two-particle density and all
 C other lists 1-250 as they are (GA, AL), then form the gradient and
 C the analytic orbital Hessian lists once, in the production order

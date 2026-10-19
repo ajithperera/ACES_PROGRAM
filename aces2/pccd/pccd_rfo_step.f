@@ -34,6 +34,13 @@ C parameters (Irp(p) = irrep of MO p; SCFEVCA0 columns and OBRTGRDA
 C are both ordered occupied by irrep, then virtual by irrep). With
 C SYMMETRY=OFF all Irp(p) = 1.
 C
+C Starting/model Hessian (file pccd_rfo_h0.in, see Pccd_rfo_h0mode):
+C default 4|df| (ov) and a constant (oo, vv); FRZ0: the analytic
+C frozen-amplitude Hessian (Pccd_ohess, OHESFRZ) at the first point;
+C FRZ: at every accepted point the model is the frozen Hessian of that
+C point plus a correction (the amplitude response) built by the SR1
+C updates.
+C
 C RHF, no dropped MOs.
 C
       Implicit Double Precision(A-H,O-Z)
@@ -104,16 +111,19 @@ c machsp.com : end
       I180 = I170 + Mxhv
       I190 = I180 + Nsq
       I200 = I190 + Npar
-      Iend = I200 + Npar
+      I210 = I200 + Npar
+      Iend = I210 + Npar*Npar
       If (Iend .Gt. Maxcor) Call Insmem("Pccd_rfo_step",Iend,Maxcor)
 
+      Call Pccd_rfo_h0mode(Ih0)
       Call Pccd_rfo_do(Work(I000),Work(I010),Work(I020),Work(I030),
      +                 Work(I040),Work(I050),Work(I060),Work(I070),
      +                 Work(I080),Work(I090),Work(I100),Work(I110),
      +                 Work(I120),Work(I130),Lwork,Work(I140),
      +                 Work(I150),Work(I160),Work(I170),Work(I180),
-     +                 Work(I190),Work(I200),Work(Iirp),Mxhv,Nbas,
-     +                 Nocc,Npar,Grdcnv,Tol,Etol,Gmax,Grms,Ncycle)
+     +                 Work(I190),Work(I200),Work(I210),Work(Iirp),
+     +                 Ih0,Mxhv,Nbas,Nocc,Npar,Grdcnv,Tol,Etol,Gmax,
+     +                 Grms,Ncycle)
 C The T2 guess of the next macro iterations follows accepted points only.
       Call Getrec(20,"JOBARC","RFO_ACPT",1,Iacpt)
       If (Iacpt .Eq. 1) Call Pccd_rfo_tguess(Work,Maxcor,"PROMO")
@@ -167,5 +177,22 @@ C Number of orbital rotation parameters: pairs p<q of the same irrep.
             If (Irp(Ip) .Eq. Irp(Iq)) Npar = Npar + 1
          Enddo
       Enddo
+      Return
+      End
+
+      Subroutine Pccd_rfo_h0mode(Ih0)
+C Model Hessian of OO_METHOD=RFO from the first word of the file
+C pccd_rfo_h0.in: FRZ0 -> 1, FRZ -> 2; 0 (constant H0) without it.
+      Character*8 Word
+      Logical Exist
+      Ih0 = 0
+      Inquire(File="pccd_rfo_h0.in",Exist=Exist)
+      If (.Not. Exist) Return
+      Word = " "
+      Open(Unit=44,File="pccd_rfo_h0.in",Status="Old")
+      Read(44,*,End=10,Err=10) Word
+ 10   Close(44)
+      If (Word .Eq. "FRZ0") Ih0 = 1
+      If (Word .Eq. "FRZ") Ih0 = 2
       Return
       End

@@ -1,16 +1,16 @@
       Subroutine Pccd_rfo_do(G,C,Cprv,F,U,Scr,Gv,Gp,Sp,Step,H,Ah,Ev,
-     +                       Wk,Lwork,Vb,Sb,Am,Wm,Cs,Gs,Res,Irp,Mxhv,
-     +                       Nbas,Nocc,Npar,Grdcnv,Tol,Etol,Gmax,Grms,
-     +                       Ncycle)
+     +                       Wk,Lwork,Vb,Sb,Am,Wm,Cs,Gs,Res,Hf,Irp,
+     +                       Ih0,Mxhv,Nbas,Nocc,Npar,Grdcnv,Tol,Etol,
+     +                       Gmax,Grms,Ncycle)
       Implicit Double Precision(A-H,O-Z)
-      Logical Grdcnv,Reject,Escape,Jump
+      Logical Grdcnv,Reject,Escape,Jump,Accept
       Dimension Vb(Npar,Mxhv),Sb(Npar,Mxhv),Am(Mxhv,Mxhv),Wm(Mxhv)
       Dimension Cs(Nbas*Nbas),Gs(Npar),Res(Npar)
       Dimension G(Nbas,Nbas),C(Nbas,Nbas),Cprv(Nbas,Nbas)
       Dimension F(Nbas,Nbas),U(Nbas,Nbas),Scr(Nbas,Nbas)
       Dimension Gv(Npar),Gp(Npar),Sp(Npar),Step(Npar)
       Dimension H(Npar,Npar),Ah(Npar+1,Npar+1),Ev(Npar+1),Wk(Lwork)
-      Dimension Irp(Nbas)
+      Dimension Irp(Nbas),Hf(Npar,Npar)
 #include "machsp.com"
       Parameter (Hoovv=0.05D0, Trust0=0.1D0, Trstmx=0.5D0)
       Parameter (Ngvec=3)
@@ -74,6 +74,16 @@ C set in Pccd. E and G are not available.
       Iacpt  = 0
       Call Putrec(20,"JOBARC","RFO_ACPT",1,Iacpt)
       Rho    = Zero
+C Analytic frozen-amplitude Hessian of this point (Pccd_ohess), when
+C the model uses it (Ih0 = 1: first point only; 2: every accepted
+C point) and it was formed (not at failed or Davidson points).
+      Ifrz = 0
+      If (Ih0 .Ge. 1 .And. Ifail .Eq. 0 .And. Iphase .Ne. 1) Then
+         Call Getrec(0,"JOBARC","OHESOK  ",Length,Junk)
+         If (Length .Gt. 0) Call Getrec(20,"JOBARC","OHESOK  ",1,Ifrz)
+         If (Ifrz .Eq. 1) Call Getrec(20,"JOBARC","OHESFRZ ",
+     +                                Npar*Npar*Iintfp,Hf)
+      Endif
 
       If (Iphase .Eq. 1) Then
 C Stability phase: this gradient belongs to a displaced point of the
@@ -149,6 +159,16 @@ C better but makes the stretched-N2 runs (1.5-3.0 A) fail.)
                Endif
             Enddo
          Enddo
+         If (Ifrz .Eq. 1) Then
+            Call Dcopy(Npar*Npar,Hf,1,H,1)
+            If (Ih0 .Eq. 2) Call Putrec(20,"JOBARC","RFO_HFRZ",
+     +                                  Npar*Npar*Iintfp,Hf)
+            Write(6,"(2a)") " @-RFO starting Hessian: analytic",
+     +                      " frozen-amplitude Hessian."
+         Elseif (Ih0 .Ge. 1) Then
+            Write(6,"(2a)") " @-RFO analytic frozen-amplitude Hessian",
+     +           " not available; constant starting Hessian."
+         Endif
          Trust = Trust0
          Iacpt = 1
       Else
@@ -165,6 +185,15 @@ C better but makes the stretched-N2 runs (1.5-3.0 A) fail.)
             Dele = E - Eprv
             If (Pred .Ne. Zero) Rho = Dele/Pred
             Jump = (Dele .Lt. -Ejmp) .And. (Rho .Gt. Rhojmp)
+         Endif
+C Ih0 = 2: the model at an accepted point is its frozen Hessian plus
+C the correction carried so far, H - Hf(old) + Hf(new) (Ah: scratch).
+         Accept = .Not. (Dele .Gt. Etol .Or. Ifail .Eq. 1 .Or. Jump)
+         If (Ih0 .Eq. 2 .And. Accept .And. Ifrz .Eq. 1) Then
+            Call Getrec(20,"JOBARC","RFO_HFRZ",Npar*Npar*Iintfp,Ah)
+            Call Daxpy(Npar*Npar,-One,Ah,1,H,1)
+            Call Daxpy(Npar*Npar,One,Hf,1,H,1)
+            Call Putrec(20,"JOBARC","RFO_HFRZ",Npar*Npar*Iintfp,Hf)
          Endif
 C SR1 update with s = previous step, y = g(new) - g(old); Step is
 C used as scratch for r = y - H*s. Not with the gradient of a failed
