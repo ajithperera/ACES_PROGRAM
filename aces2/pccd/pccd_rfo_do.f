@@ -10,7 +10,7 @@
 
 
       Subroutine Pccd_rfo_do(G,C,Cprv,F,U,Scr,Gv,Gp,Sp,Step,H,Ah,Ev,
-     +                       Wk,Lwork,Vb,Sb,Am,Wm,Cs,Gs,Res,Mxhv,
+     +                       Wk,Lwork,Vb,Sb,Am,Wm,Cs,Gs,Res,Irp,Mxhv,
      +                       Nbas,Nocc,Npar,Grdcnv,Tol,Etol,Gmax,Grms,
      +                       Ncycle)
       Implicit Double Precision(A-H,O-Z)
@@ -21,6 +21,7 @@
       Dimension F(Nbas,Nbas),U(Nbas,Nbas),Scr(Nbas,Nbas)
       Dimension Gv(Npar),Gp(Npar),Sp(Npar),Step(Npar)
       Dimension H(Npar,Npar),Ah(Npar+1,Npar+1),Ev(Npar+1),Wk(Lwork)
+      Dimension Irp(Nbas)
 
 
 c machsp.com : begin
@@ -58,8 +59,10 @@ C N2: a branch with |T2| ~ 30 and 0.23 Eh lower energy).
       K = 0
       Do Ip = 1, Nbas
          Do Iq = Ip+1, Nbas
-            K = K + 1
-            Gv(K) = -Two*(G(Ip,Iq) - G(Iq,Ip))
+            If (Irp(Ip) .Eq. Irp(Iq)) Then
+               K = K + 1
+               Gv(K) = -Two*(G(Ip,Iq) - G(Iq,Ip))
+            Endif
          Enddo
       Enddo
 
@@ -101,14 +104,24 @@ C Davidson iterations.
          Call Getrec(20,"JOBARC","RFO_HESS",Npar*Npar*Iintfp,H)
          Call Getrec(20,"JOBARC","RFO_TRST",Iintfp,Trust)
          Call Pccd_rfo_stab("CONT ",Iact,Alam,C,Gv,E,H,Vb,Sb,Am,Wm,Cs,
-     +                      Gs,Step,Res,F,U,Scr,G,Wk,Lwork,Nbas,Npar,
-     +                      Mxhv)
+     +                      Gs,Step,Res,F,U,Scr,G,Wk,Lwork,Irp,Nbas,
+     +                      Npar,Mxhv)
          Grdcnv = .False.
          If (Iact .Eq. 0) Then
             Call Putrec(20,"JOBARC","GRADTEST",1,0)
             Return
          Elseif (Iact .Eq. 1) Then
+C The last xpccd run was at a displaced point: put the energy and the
+C gradient statistics of the stationary point back for Pccd_finalize.
             Grdcnv = .True.
+            Gmax = Zero
+            Grms = Zero
+            Do K = 1, Npar
+               Gmax = Max(Gmax,Dabs(Gv(K)))
+               Grms = Grms + Gv(K)*Gv(K)
+            Enddo
+            Grms = Dsqrt(Grms/Dble(Npar))
+            Call Putrec(20,"JOBARC","TOTENERG",Iintfp,E)
             Call Putrec(20,"JOBARC","SCFEVCA0",Nsq*Iintfp,C)
             Call Putrec(20,"JOBARC","SCFEVCB0",Nsq*Iintfp,C)
             Call Putrec(20,"JOBARC","GRADTEST",1,1)
@@ -136,6 +149,7 @@ C curvature is purely correlation (orders of magnitude below 4*de).
          K = 0
          Do Ip = 1, Nbas
             Do Iq = Ip+1, Nbas
+               If (Irp(Ip) .Eq. Irp(Iq)) Then
                K = K + 1
                If (Ip .Le. Nocc .And. Iq .Gt. Nocc) Then
                   Fpp = Ddot(Nbas,C(1,Ip),1,Scr(1,Ip),1)
@@ -143,6 +157,7 @@ C curvature is purely correlation (orders of magnitude below 4*de).
                   H(K,K) = Four*Dabs(Fqq-Fpp)
                Else
                   H(K,K) = Hoovv
+               Endif
                Endif
             Enddo
          Enddo
@@ -241,8 +256,8 @@ C Stationary point: start the stability (lowest eigenvalue) check.
             Call Putrec(20,"JOBARC","RFO_TRST",Iintfp,Trust)
             Call Putrec(20,"JOBARC","RFO_NITR",1,Nit+1)
             Call Pccd_rfo_stab("START",Iact,Alam,C,Gv,E,H,Vb,Sb,Am,Wm,
-     +                         Cs,Gs,Step,Res,F,U,Scr,G,Wk,Lwork,Nbas,
-     +                         Npar,Mxhv)
+     +                         Cs,Gs,Step,Res,F,U,Scr,G,Wk,Lwork,Irp,
+     +                         Nbas,Npar,Mxhv)
             Grdcnv = .False.
             Call Putrec(20,"JOBARC","GRADTEST",1,0)
             Return
@@ -294,7 +309,7 @@ C Save the state at the current (accepted) point.
       Call Putrec(20,"JOBARC","RFO_NITR",1,Nit+1)
 
 C C(new) = C*exp(K(step)).
-      Call Pccd_rfo_disp(C,Step,One,F,U,Scr,G,Nbas,Npar)
+      Call Pccd_rfo_disp(C,Step,One,F,U,Scr,G,Irp,Nbas,Npar)
       Write(6,"(a,1p,E10.3,a,E11.3)") " @-RFO step |s| =",Snrm,
      +                                "  predicted dE =",Pred
       Return

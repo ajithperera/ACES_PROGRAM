@@ -204,6 +204,7 @@
 
 
 
+
       Subroutine Pccd_finalize(Work,Maxcor,Iuhf,Tol,Grd_max,Grd_rms)
 
       Implicit Double Precision(A-H,O-Z)
@@ -216,6 +217,10 @@ c flags.com : begin
       integer        iflags(100)
       common /flags/ iflags
 c flags.com : end
+c flags2.com : begin
+      integer         iflags2(500)
+      common /flags2/ iflags2
+c flags2.com : end
 
 
 c machsp.com : begin
@@ -263,8 +268,13 @@ c machsp.com : end
 
       Write(6,*) 
 
+      If (Iflags2(178) .Eq. 6) Then
+      Write(6,"(2a)") " The orbital rotation algorithm :",
+     +                " RFO (trust-region, SR1)"
+      Else
       Write(6,"(3a)") " The orbital rotation algorithm :", " Newton",
      +                "-Raphson with Diis" 
+      Endif
       Write(6,*) 
 
       Write(6,"(a,E12.6)")  " The maximum gradient at convergence: ",

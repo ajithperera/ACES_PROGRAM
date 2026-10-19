@@ -1,6 +1,6 @@
       Subroutine Pccd_rfo_stab(Mode,Iact,Alam,C,Gv,E,H,Vb,Sb,Am,Wm,Cs,
-     +                         Gs,Vec,Res,F,U,Scr,G,Wk,Lwork,Nbas,Npar,
-     +                         Mxhv)
+     +                         Gs,Vec,Res,F,U,Scr,G,Wk,Lwork,Irp,Nbas,
+     +                         Npar,Mxhv)
 C
 C Lowest eigenpair of the exact orbital Hessian at a stationary point
 C (Cs, Gs, Es) by Davidson iterations with forward-difference
@@ -26,7 +26,7 @@ C
       Dimension Vb(Npar,Mxhv),Sb(Npar,Mxhv),Am(Mxhv,Mxhv),Wm(Mxhv)
       Dimension Cs(Nbas*Nbas),Gs(Npar),Vec(Npar),Res(Npar)
       Dimension F(Nbas,Nbas),U(Nbas,Nbas),Scr(Nbas,Nbas),G(Nbas,Nbas)
-      Dimension Wk(Lwork),Rn(3)
+      Dimension Wk(Lwork),Rn(3),Irp(Nbas)
 #include "machsp.com"
       Parameter (Delta=1.0D-3, Rtol=5.0D-3, Xnegst=-1.0D-3,
      +           Xlamth=-1.0D-4, Nguess=3, Mxroot=3)
@@ -46,7 +46,8 @@ C
             Vec(K) = X - Aint(X) - Half*Dsign(One,X)
          Enddo
          Call Pccd_rfo_addvec(Vec,Vb,Npar,Mxhv,Nhv,Ok)
-         Call Pccd_rfo_disp(Cs,Vb(1,Nhv),Delta,F,U,Scr,G,Nbas,Npar)
+         Call Pccd_rfo_disp(Cs,Vb(1,Nhv),Delta,F,U,Scr,G,Irp,Nbas,
+     +                        Npar)
          Call Putrec(20,"JOBARC","RFO_CSTB",Nsq*Iintfp,Cs)
          Call Putrec(20,"JOBARC","RFO_GSTB",Npar*Iintfp,Gs)
          Call Putrec(20,"JOBARC","RFO_ESTB",Iintfp,Es)
@@ -91,7 +92,8 @@ C diagonal elements (the Nhv-th smallest, ties broken by index).
          Vec(Kbest) = One
          Call Pccd_rfo_addvec(Vec,Vb,Npar,Mxhv,Nhv,Ok)
          If (Ok) Then
-            Call Pccd_rfo_disp(Cs,Vb(1,Nhv),Delta,F,U,Scr,G,Nbas,Npar)
+            Call Pccd_rfo_disp(Cs,Vb(1,Nhv),Delta,F,U,Scr,G,Irp,Nbas,
+     +                        Npar)
             Call Putrec(20,"JOBARC","RFO_VB  ",Npar*Mxhv*Iintfp,Vb)
             Call Putrec(20,"JOBARC","RFO_NHV ",1,Nhv)
             Return
@@ -138,7 +140,8 @@ C Expand with the preconditioned residual of the lowest unconverged root.
          Call Pccd_rfo_addvec(Wk,Vb,Npar,Mxhv,Nhv,Ok)
          If (.Not. Ok) Call Pccd_rfo_addvec(Res,Vb,Npar,Mxhv,Nhv,Ok)
          If (Ok) Then
-            Call Pccd_rfo_disp(Cs,Vb(1,Nhv),Delta,F,U,Scr,G,Nbas,Npar)
+            Call Pccd_rfo_disp(Cs,Vb(1,Nhv),Delta,F,U,Scr,G,Irp,Nbas,
+     +                        Npar)
             Call Putrec(20,"JOBARC","RFO_VB  ",Npar*Mxhv*Iintfp,Vb)
             Call Putrec(20,"JOBARC","RFO_NHV ",1,Nhv)
             Return
