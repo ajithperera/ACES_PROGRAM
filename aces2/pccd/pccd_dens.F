@@ -44,12 +44,23 @@ C first orbital step) T1 holds the f(i,a)/D(i,a) initial guess, which
 C never enters the pCCD energy. Including it made the orbital gradient
 C wrong at every non-Brillouin point (verified against finite-difference
 C energies, H2O/STO-3G, 10/2026).
+C The same holds for CCD and LCCD unless the T1 equations are solved,
+C which happens only in a _T1ON build (pccd_rdriver.F). Without it T1
+C is the same unused guess, and D(a,i) from it gave ov-block gradient
+C errors of 1.9 (CCD) and 3.8 (LCCD); with D(a,i) = 0 both agree with
+C finite differences to 4e-6 and the energies are unchanged (H2O/STO-3G,
+C 10/2026).
+#ifdef _T1ON
       If (Nonhf_ref .And. .Not. pCCD) Then
          Call Pccd_densvo(Work(IDOV),Work(I0),Maxcor,Iuhf)
       Elseif (Nonhf_ref) Then
          Call Putrec(20,"JOBARC","DENSVO  ",(Nt(1)+Iuhf*Nt(2))*Iintfp,
      +               Work(IDOV))
       Endif
+#else
+      If (Nonhf_ref) Call Putrec(20,"JOBARC","DENSVO  ",
+     +                           (Nt(1)+Iuhf*Nt(2))*Iintfp,Work(IDOV))
+#endif
 
 C G(ij,ab) + G(ab,ij)
 #ifdef _DEBUG_LVL0
