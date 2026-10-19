@@ -29,6 +29,12 @@ C as a minimum while the second root was still falling toward the
 C exact -3.6e-4. Iact=3: budget exhausted with no eigenvalue below
 C Xlamth and unconverged roots (inconclusive). The preconditioner is
 C RFO_PDIA (Pccd_rfo_pdia), not the model Hessian diagonal.
+C Exact invariances (e.g. rotation about the axis of a linear molecule)
+C give zero eigenvalues; converged Ritz pairs with |lambda| < Xzero
+C are set aside and Mxroot further roots must converge. Without that,
+C three zero modes (start vectors from the frozen-Hessian model share
+C them) converged after 4 Hv and hid an eigenvalue of -0.056 (full FD
+C Hessian): N2 cc-pVDZ 2.52 A, accepted as a minimum.
 C
       Implicit Double Precision(A-H,O-Z)
       Character*5 Mode
@@ -37,11 +43,12 @@ C
       Dimension Vb(Npar,Mxhv),Sb(Npar,Mxhv),Am(Mxhv,Mxhv),Wm(Mxhv)
       Dimension Cs(Nbas*Nbas),Gs(Npar),Vec(Npar),Res(Npar)
       Dimension F(Nbas,Nbas),U(Nbas,Nbas),Scr(Nbas,Nbas),G(Nbas,Nbas)
-      Dimension Wk(Lwork),Rn(3),Irp(Nbas)
+      Dimension Wk(Lwork),Rn(8),Irp(Nbas)
 #include "machsp.com"
       Parameter (Delta=1.0D-3, Rtol=5.0D-4, Xnegst=-1.0D-3,
      +           Xlamth=-1.0D-4, Nguess=4, Mxroot=3)
-      Parameter (Mxtot=200, Mkeep=Mxroot+2)
+      Parameter (Mxtot=200, Mxr=8, Xzero=1.0D-8)
+C Mxr: size of Rn.
       Data Zero,Half,One,Two /0.0D0,0.5D0,1.0D0,2.0D0/
 
       Nsq  = Nbas*Nbas
@@ -121,21 +128,46 @@ C Rayleigh-Ritz in the current subspace.
          Enddo
       Enddo
       Call Dsyev("V","U",Nhv,Am,Mxhv,Wm,Wk,Lwork,Info)
-      Nroot = Min(Mxroot,Nhv)
+C Ritz pairs in ascending order: converged zero modes are skipped
+C (Nzero), the next Mxroot must converge (Iunc: lowest unconverged,
+C Nphys: physical roots available in the subspace).
+      Nroot = Min(Mxr,Nhv)
       Iunc  = 0
-      Do Ir = Nroot, 1, -1
+      Nzero = 0
+      Nphys = 0
+      Do Ir = 1, Nroot
          Call Dgemv("N",Npar,Nhv,One,Sb,Npar,Am(1,Ir),1,Zero,Res,1)
          Call Dgemv("N",Npar,Nhv,-Wm(Ir),Vb,Npar,Am(1,Ir),1,One,Res,1)
          Rn(Ir) = Dsqrt(Ddot(Npar,Res,1,Res,1))
-         If (Rn(Ir) .Gt. Rtol) Iunc = Ir
       Enddo
-      Alam = Wm(1)
-      Call Dgemv("N",Npar,Nhv,One,Vb,Npar,Am(1,1),1,Zero,Vec,1)
-      Write(6,"(a,i4,a,1p,3E12.4,a,3E9.2)") " @-RFO Davidson",Nhvt,
-     +      " Hv: lowest roots",(Wm(Ir),Ir=1,Nroot),"  |r|",
-     +      (Rn(Ir),Ir=1,Nroot)
+      Iphys = 0
+      Do Ir = 1, Nroot
+         If (Nphys .Lt. Mxroot) Then
+            If (Dabs(Wm(Ir)) .Lt. Xzero .And. Rn(Ir) .Le. Rtol) Then
+               Nzero = Nzero + 1
+            Else
+               Nphys = Nphys + 1
+               If (Iphys .Eq. 0) Iphys = Ir
+               If (Rn(Ir) .Gt. Rtol .And. Iunc .Eq. 0) Iunc = Ir
+            Endif
+         Endif
+      Enddo
+C Too few physical roots in the subspace: expand (new random vector).
+      If (Iunc .Eq. 0 .And. Nphys .Lt. Min(Mxroot,Npar-Nzero))
+     +   Iunc = -1
+C The lowest eigenvalue: a negative root (never a zero mode) is Wm(1);
+C otherwise the lowest physical root.
+      Ilam = 1
+      If (Wm(1) .Ge. Xlamth .And. Iphys .Gt. 0) Ilam = Iphys
+      Alam = Wm(Ilam)
+      Call Dgemv("N",Npar,Nhv,One,Vb,Npar,Am(1,Ilam),1,Zero,Vec,1)
+      Nw = Min(Nroot,Nzero+Mxroot)
+      Write(6,"(a,i4,a,i2,a,1p,8E11.3)") " @-RFO Davidson",Nhvt,
+     +      " Hv (",Nzero," zero): lowest roots",(Wm(Ir),Ir=1,Nw)
+      Write(6,"(a,1p,8E9.2)") " @-RFO Davidson residuals",
+     +      (Rn(Ir),Ir=1,Nw)
 
-      If (Alam .Lt. Xnegst .And. Rn(1) .Lt. 0.3D0*Dabs(Alam)) Then
+      If (Alam .Lt. Xnegst .And. Rn(Ilam) .Lt. 0.3D0*Dabs(Alam)) Then
          Iact = 2
       Elseif (Iunc .Eq. 0) Then
          Iact = 1
@@ -145,8 +177,9 @@ C Rayleigh-Ritz in the current subspace.
          If (Alam .Lt. Xlamth) Iact = 2
       Else
          If (Nhv .Ge. Mxhv) Then
-C Thick restart: keep the lowest Mkeep Ritz vectors and their H*b.
-            M = Min(Mkeep,Nhv)
+C Thick restart: keep the lowest Ritz vectors (zero modes, the tracked
+C roots and two more) and their H*b.
+            M = Min(Nzero+Mxroot+2,Nhv)
             Call Dgemm("N","N",Npar,M,Nhv,One,Vb,Npar,Am,Mxhv,Zero,
      +                 Wk,Npar)
             Call Dcopy(Npar*M,Wk,1,Vb,1)
@@ -163,6 +196,22 @@ C Thick restart: keep the lowest Mkeep Ritz vectors and their H*b.
             Call Putrec(20,"JOBARC","RFO_SB  ",Npar*Nhv*Iintfp,Sb)
             Write(6,"(a,i4,a)") " @-RFO Davidson restart after",Nhvt,
      +            " Hv products."
+         Endif
+         If (Iunc .Lt. 0) Then
+C All physical roots in the subspace converged but too few of them.
+            Do K = 1, Npar
+               X = Dsin(Dble(K+97*Nhvt)*12.9898D0+0.7D0)*43758.5453D0
+               Wk(K) = X - Aint(X) - Half*Dsign(One,X)
+            Enddo
+            Call Pccd_rfo_addvec(Wk,Vb,Npar,Mxhv,Nhv,Ok)
+            If (Ok) Then
+               Call Pccd_rfo_disp(Cs,Vb(1,Nhv),Delta,F,U,Scr,G,Irp,
+     +                            Nbas,Npar)
+               Call Putrec(20,"JOBARC","RFO_VB  ",Npar*Mxhv*Iintfp,Vb)
+               Call Putrec(20,"JOBARC","RFO_NHV ",1,Nhv)
+               Return
+            Endif
+            Iunc = Ilam
          Endif
 C Expand with the preconditioned residual of the lowest unconverged root.
          Call Dgemv("N",Npar,Nhv,One,Sb,Npar,Am(1,Iunc),1,Zero,Res,1)
@@ -187,8 +236,9 @@ C Expand with the preconditioned residual of the lowest unconverged root.
          If (Alam .Lt. Xlamth) Iact = 2
       Endif
 
-      If (Iact .Eq. 1) Write(6,"(a,1p,E12.4,a)")
-     +   " @-RFO lowest Hessian eigenvalue",Alam,": minimum."
+      If (Iact .Eq. 1) Write(6,"(a,1p,E12.4,a,i2,a)")
+     +   " @-RFO lowest Hessian eigenvalue",Alam,": minimum (",Nzero,
+     +   " zero modes skipped)."
       If (Iact .Eq. 3) Write(6,"(a,i4,a,1p,E12.4,a)")
      +   " @-RFO stability check not converged after",Nhvt,
      +   " Hv products (lowest Ritz value",Alam,"): inconclusive."
