@@ -35,8 +35,12 @@ C rejects the step.
          Continue
       Else If (Iuhf .EQ. 0 .AND. Idrop .EQ. 0) Then
          If(.Not. ONEP_only) Call Pccd_form_htau_pqrs(Work,Maxcor,Iuhf)
+C OO_METHOD=RFO does not use the (unfinished, undebugged) analytic
+C Hessian lists that Pccd_form_htau_1D_pqrs builds after the gradient.
+         Ihess = IHess_calc
+         If (Iflags2(h_IFLAGS2_oo_method) .Eq. 6) Ihess = 0
          Call Pccd_form_htau_pq(Work,Maxcor,Iuhf,Igrad_calc,
-     +                          IHess_calc,Scale)
+     +                          Ihess,Scale)
       Else
 
 C Uhf only or UHF and RHF for forzen core orbitals.
