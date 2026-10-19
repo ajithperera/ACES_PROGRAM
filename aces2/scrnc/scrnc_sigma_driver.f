@@ -110,6 +110,7 @@ C
 C
       Implicit Double Precision (A-H,O-Z)
       Parameter (Maxfreq=200, Maxomega=50, Maxmo=64)
+      Parameter (Maxpair=Maxmo*(Maxmo+1)/2)
 C
       Dimension Xnode(Maxfreq), Wnode(Maxfreq)
       Dimension Omega_ext(Maxomega)
@@ -117,6 +118,8 @@ C
       Dimension Eps(Maxmo)
       Dimension Sigma_re(Maxmo,Maxmo,Maxomega)
       Dimension Sigma_im(Maxmo,Maxmo,Maxomega)
+      Double Complex Acoef_mat(Maxomega,Maxpair)
+      Double Complex Zpt_mat(Maxomega,Maxpair)
 C
       Character*500 Cmdline, Staticcmd
       Logical Fexist
@@ -424,6 +427,14 @@ C
      +                        Omega_ext,Sigma_re,Sigma_im,Eps,Maxmo,
      +                        Maxomega)
 C
+C     Full matrix Dyson/quasiparticle solve -- see that routine's own
+C     header comment for the physics/method. Same Nomega>=2 guard as
+C     the diagonal solve above.
+C
+      If (Nomega .GE. 2) Call Scrnc_sigma_qp_matrix_solve(Nmo,Nomega,
+     +                        Omega_ext,Sigma_re,Sigma_im,Eps,Maxmo,
+     +                        Maxomega,Maxpair,Acoef_mat,Zpt_mat)
+C
       Write(6,"(a)")
      +   " @-Scrnc_sigma_driver: done, see sigma_c_output.dat"
 C
@@ -484,10 +495,30 @@ C
       Parameter (Nsel0=6, Nselstep=2, Nselmax=20)
       Dimension Isel(Nselmax), Dsel(Nselmax)
 C
+C 2026-08-23 (SCRNC_DEBUG_LOG.md, MO5/HOMO Pade-instability fix):
+C bracket+bisect convergence (Iconverged=1) alone is NOT sufficient
+C evidence the root is trustworthy -- H2O/STO-3G MO5 bracketed cleanly
+C at Nsel0=6 points but the root was pure fit noise (drop-one-point
+C refits moved it up to 3.1 eV; a 6->13 point sweep gave 16.18 -> 9.74
+C -> ~12.5 eV, no convergence trend), while the well-behaved control
+C MOs (3,6,7) stayed within a 0.11-0.33 eV band under the identical
+C procedure. Fix: require the bracketed root to also be STABLE across
+C two successive escalation levels (agree within Tol_stable) before
+C accepting it -- a root that keeps moving as more points are added is
+C rejected and escalation continues even though each individual bracket
+C "converged". Tol_stable=2.0D-2 Hartree (~0.54 eV) is set ABOVE the
+C observed natural scatter of the trustworthy control MOs (max 0.33 eV)
+C and BELOW the anomalous MOs' scatter (>2 eV) -- chosen from that data,
+C not reverse-engineered from the answer; re-verify it still separates
+C them cleanly on any new system before trusting it there too.
+C
+      Parameter (Tol_stable=2.0D-2)
+C
       Open(Unit=26,File="qp_energies.dat",Form="Formatted",
      +     Status="UNKNOWN")
       Write(26,"(a)") "  p      eps_HF          eps_QP     "//
-     +                 "  Im[Sigma_c(eps_QP)]   iters  converged"
+     +                 "  Im[Sigma_c(eps_QP)]   iters  converged"//
+     +                 "  stable  npade"
 C
       Istatic = 1
       Do J = 2, Nomega
@@ -498,9 +529,12 @@ C
 C
          Anchor = Abs(Eps(Ip))
          Iconverged = 0
+         Istable = 0
+         Ihaveprev = 0
+         Eps_qp_prev = 0.0D0
          Nseltry = Nsel0
 C
-         Do While (Iconverged.EQ.0 .AND. Nseltry.LE.Nselmax .AND.
+         Do While (Istable.EQ.0 .AND. Nseltry.LE.Nselmax .AND.
      +             Nseltry.LE.Nomega)
 C
             Nuse = Min(Nseltry,Nomega)
@@ -572,7 +606,22 @@ C
      +                                    Maxomega,Eps_qp,Fval,
      +                                    Iconverged,Iter)
 C
-            If (Iconverged .EQ. 0) Nseltry = Nseltry + Nselstep
+            If (Iconverged .EQ. 0) Then
+C              A failed bracket invalidates any stability chain already
+C              in progress -- the next successful bracket needs its own
+C              fresh second opinion before being trusted.
+               Ihaveprev = 0
+               Nseltry = Nseltry + Nselstep
+            Else If (Ihaveprev .EQ. 0) Then
+               Eps_qp_prev = Eps_qp
+               Ihaveprev = 1
+               Nseltry = Nseltry + Nselstep
+            Else If (Dabs(Eps_qp-Eps_qp_prev) .LE. Tol_stable) Then
+               Istable = 1
+            Else
+               Eps_qp_prev = Eps_qp
+               Nseltry = Nseltry + Nselstep
+            Endif
 C
          Enddo
 C
@@ -581,14 +630,21 @@ C
      +         " @-Scrnc_sigma_qp_solve: WARNING -- no bracketed root"
      +         //" found for MO",Ip," even after escalating to",
      +         Min(Nseltry,Nselmax)," points"
-         Else If (Nseltry .GT. Nsel0) Then
+         Else If (Istable .EQ. 0) Then
+            Write(6,"(a,i3,a,i3,a)")
+     +         " @-Scrnc_sigma_qp_solve: WARNING -- MO",Ip," bracket"//
+     +         "s cleanly but root is UNSTABLE (Pade fit not"//
+     +         " converged) even at",Nuse," points -- eps_QP is NOT"//
+     +         " trustworthy, see 'stable' column"
+         Else If (Nuse .GT. Nsel0+Nselstep) Then
             Write(6,"(a,i3,a,i3,a)")
      +         " @-Scrnc_sigma_qp_solve: MO",Ip," needed escalation"//
-     +         " to",Nuse," points to find a clean bracket"
+     +         " to",Nuse," points for a stable root"
          Endif
 C
-         Write(26,"(I3,2(1x,1PD15.6),1x,1PD15.6,3x,I3,5x,I3)")
-     +      Ip,Eps(Ip),Eps_qp,Dimag(Fval),Iter,Iconverged
+         Write(26,"(I3,2(1x,1PD15.6),1x,1PD15.6,3x,I3,5x,I3,6x,I3,"//
+     +          "2x,I3)")
+     +      Ip,Eps(Ip),Eps_qp,Dimag(Fval),Iter,Iconverged,Istable,Nuse
 C
       Enddo
 C
@@ -837,5 +893,494 @@ C
          W(I)     = 2.D0*Xl/((1.D0-Z*Z)*Pp*Pp)
          W(N+1-I) = W(I)
       Enddo
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+C 2026-08-23 (full matrix Dyson generalization -- see
+C SCRNC_DEBUG_LOG.md): generalizes the diagonal-only on-shell QP
+C solve above (Scrnc_sigma_qp_solve) to the FULL matrix
+C quasiparticle/Dyson equation
+C    [eps_HF(p) delta(p,q) + Re(Sigma_c(p,q;z))] C = z C
+C solved self-consistently in z for each starting HF orbital Ip0,
+C tracked across z by the eigenvector branch with maximum overlap
+C |C(Ip0,k)|^2 -- this is the actual correlated-orbital step (mixing/
+C relaxation of the HF orbitals under the correlated self-energy),
+C not just a diagonal energy shift. Off-diagonal Sigma_c(p,q) is
+C Pade-continued with the SAME Thiele algorithm as the diagonal
+C solve (Scrnc_sigma_pade_coeff/eval, unmodified), using the FULL
+C Omega_ext grid uniformly for every (p,q) pair -- deliberately NOT
+C the diagonal solve's adaptive per-MO Nsel0/escalation logic: the
+C systems this has been checked on (H2/H2O, STO-3G) only ever needed
+C that same small Omega_ext count for their well-behaved valence
+C MOs, so a uniform full-grid fit is the simplest principled choice;
+C if a future larger/harder system needs escalation the way the
+C diagonal solve did for deep-core orbitals, that's a real follow-up
+C -- not guessed at here.
+C
+C Verified BEFORE writing this: Sigma_c(p,q)=Sigma_c(q,p) to ~1e-16
+C relative to the diagonal scale, on the existing (already-computed)
+C H2O/STO-3G CCSD sigma_c_output.dat, over all 13 Omega_ext points --
+C confirmed real, not assumed -- see SCRNC_DEBUG_LOG.md.
+C
+      Subroutine Scrnc_sigma_qp_matrix_solve(Nmo,Nomega,Omega_ext,
+     +              Sigma_re,Sigma_im,Eps,Maxmo,Maxomega,Maxpair,
+     +              Acoef_mat,Zpt_mat)
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Omega_ext(Maxomega)
+      Dimension Sigma_re(Maxmo,Maxmo,Maxomega)
+      Dimension Sigma_im(Maxmo,Maxmo,Maxomega)
+      Dimension Eps(Maxmo)
+      Double Complex Acoef_mat(Maxomega,Maxpair)
+      Double Complex Zpt_mat(Maxomega,Maxpair)
+      Double Complex Fpt(Maxomega)
+      Dimension Vec(Maxmo)
+      Dimension Isel(Maxomega)
+C
+C     Self-consistent branch solve, one starting HF orbital Ip0 at a
+C     time. Pade fits for EVERY (p,q) pair are (re)built INSIDE this
+C     loop, anchored at Ip0's OWN eps_HF -- NOT a fixed per-pair
+C     anchor (0.5*(|eps_p|+|eps_q|), tried first and found to blow
+C     up (Jacobi non-convergence, garbage eigenvalues): an off-
+C     diagonal pair's fit anchored at ITS OWN average energy is a
+C     large, unreliable extrapolation when evaluated during a
+C     DIFFERENT orbital's bracket scan, far from that pair's anchor
+C     -- confirmed by direct debug dump, see SCRNC_DEBUG_LOG.md.
+C     Also NOT a uniform full-Omega_ext-grid fit -- tried even
+C     earlier and found, by direct comparison against the diagonal
+C     solve's own already-verified root for MO 1, to reproduce a
+C     visibly WRONG Sigma_c(1,1;z) (the same Pade-robustness pitfall
+C     already documented in this file's header/SCRNC_DEBUG_LOG.md,
+C     "more points does not mean a better fit"). Anchoring every
+C     pair at the CURRENT Ip0 means every Sigma_c(p,q;z) evaluation
+C     used inside a given Ip0's scan is a LOCAL interpolation near
+C     the z-range actually being solved in -- the same principle the
+C     diagonal solve already uses for its own (Ip0,Ip0) element.
+C     Same static+nearest-to-anchor selection (Scrnc_sigma_select_
+C     nodes) as the diagonal solve. 2026-08-23 (SCRNC_DEBUG_LOG.md,
+C     MO5/HOMO Pade-instability fix): escalation beyond Nsel0=6, WITH
+C     a genuine stability check (not just "did the bracket converge"),
+C     is now implemented -- see Scrnc_sigma_qp_solve's header for the
+C     full rationale (H2O/STO-3G MO5 bracketed cleanly at 6 points but
+C     the root was pure fit noise). Same Tol_stable=2.0D-2 Hartree.
+C
+      Parameter (Nsel0=6, Nselstep=2, Nselmax=20, Tol_stable=2.0D-2)
+C
+      Open(Unit=27,File="qp_energies_matrix.dat",Form="Formatted",
+     +     Status="UNKNOWN")
+      Write(27,"(a)") "  p      eps_HF        eps_QP(matrix)   "//
+     +                 "maxOverlap   iters  converged  stable  npade"
+      Open(Unit=28,File="qp_orbitals.dat",Form="Formatted",
+     +     Status="UNKNOWN")
+      Write(28,"(a)") "# converged quasiparticle eigenvector per "//
+     +                "starting HF orbital Ip0 (HF-MO mixing coefs)"
+C
+      Do Ip0 = 1, Nmo
+C
+         Anchor0 = Abs(Eps(Ip0))
+         Iconverged = 0
+         Istable = 0
+         Ihaveprev = 0
+         Eps_qp_prev = 0.0D0
+         Npadetry = Nsel0
+C
+         Do While (Istable.EQ.0 .AND. Npadetry.LE.Nselmax .AND.
+     +             Npadetry.LE.Nomega)
+C
+            Npade = Min(Npadetry,Nomega)
+C
+            Do Iq = 1, Nmo
+             Do Ip = 1, Iq
+               Ipair = Ip + Iq*(Iq-1)/2
+               Call Scrnc_sigma_select_nodes(Nomega,Omega_ext,Npade,
+     +                                          Anchor0,Isel)
+               Do Jj = 1, Npade
+                  J = Isel(Jj)
+                  Zpt_mat(Jj,Ipair) = Dcmplx(0.0D0,Omega_ext(J))
+                  Fpt(Jj) = Dcmplx(Sigma_re(Ip,Iq,J),Sigma_im(Ip,Iq,J))
+               Enddo
+               Call Scrnc_sigma_pade_coeff(Npade,Zpt_mat(1,Ipair),
+     +                                  Fpt,Acoef_mat(1,Ipair),Maxomega)
+             Enddo
+            Enddo
+C
+            Fscale = 0.0D0
+            Do J = 1, Nomega
+               Fscale = Max(Fscale,Abs(Sigma_re(Ip0,Ip0,J)))
+            Enddo
+C
+            Call Scrnc_sigma_qp_matrix_bracket(Nmo,Npade,Ip0,Eps,
+     +              Eps(Ip0),Fscale,Maxmo,Maxomega,Maxpair,Acoef_mat,
+     +              Zpt_mat,Eps_qp,Overlap,Vec,Iconverged,Iter)
+C
+            If (Iconverged .EQ. 0) Then
+               Ihaveprev = 0
+               Npadetry = Npadetry + Nselstep
+            Else If (Ihaveprev .EQ. 0) Then
+               Eps_qp_prev = Eps_qp
+               Ihaveprev = 1
+               Npadetry = Npadetry + Nselstep
+            Else If (Dabs(Eps_qp-Eps_qp_prev) .LE. Tol_stable) Then
+               Istable = 1
+            Else
+               Eps_qp_prev = Eps_qp
+               Npadetry = Npadetry + Nselstep
+            Endif
+C
+         Enddo
+C
+         If (Iconverged.EQ.0) Then
+            Write(6,"(a,I3)")
+     +        " @-Scrnc_sigma_qp_matrix_solve: WARNING -- no "//
+     +        "bracketed matrix-branch root found for MO ",Ip0
+         Else If (Istable.EQ.0) Then
+            Write(6,"(a,I3,a,I3,a)")
+     +        " @-Scrnc_sigma_qp_matrix_solve: WARNING -- MO",Ip0,
+     +        " brackets cleanly but root is UNSTABLE even at",
+     +        Npade," points -- eps_QP(matrix) is NOT trustworthy"
+         Endif
+C
+         Write(27,"(I3,2(1x,1PD15.6),1x,1PD12.4,3x,I3,5x,I3,6x,I3,"//
+     +          "2x,I3)")
+     +      Ip0,Eps(Ip0),Eps_qp,Overlap,Iter,Iconverged,Istable,Npade
+C
+         Write(28,"(a,I3)") "# Ip0=",Ip0
+         Write(28,"(20(1x,1PD12.4))") (Vec(Ii),Ii=1,Nmo)
+C
+      Enddo
+C
+      Close(Unit=27)
+      Close(Unit=28)
+C
+      Write(6,"(a)") " @-Scrnc_sigma_driver: matrix QP solve done, "//
+     +               "see qp_energies_matrix.dat/qp_orbitals.dat"
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_sigma_qp_matrix_bracket(Nmo,Nomega,Ip0,Eps,
+     +              Eps_hf,Fscale,Maxmo,Maxomega,Maxpair,Acoef_mat,
+     +              Zpt_mat,Eps_qp,Overlap,Vec,Iconverged,Iter)
+C
+C Same expanding-window-scan-then-bisect strategy as
+C Scrnc_sigma_qp_bracket above (see its header for the fixed-point-
+C vs-bisection rationale -- identical reasoning applies here),
+C generalized to F(z) = z - lambda_branch(z), where lambda_branch(z)
+C is the eigenvalue of M(z) = eps_HF*I + Re[Sigma_c(z)] whose
+C eigenvector has maximum overlap with starting HF orbital Ip0,
+C re-identified at every scan/bisection point via
+C Scrnc_sigma_matrix_branch.
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Eps(Maxmo)
+      Double Complex Acoef_mat(Maxomega,Maxpair)
+      Double Complex Zpt_mat(Maxomega,Maxpair)
+      Dimension Vec(Maxmo), Vec1(Maxmo), Vec2(Maxmo)
+C
+      Parameter (Nscan=200, Maxdoubling=8, Tol=1.0D-8,
+     +           Whalf0=2.0D0, Rejfac=20.0D0, Fmaxfloor=1.0D-2)
+C
+      Iconverged = 0
+      Eps_qp = Eps_hf
+      Overlap = 0.0D0
+      Iter = 0
+      Whalf = Whalf0
+      Fmax = Max(Rejfac*Fscale,Fmaxfloor)
+C
+      Do Idbl = 1, Maxdoubling
+C
+         Dz = 2.0D0*Whalf/Nscan
+         Z1 = Eps_hf - Whalf
+         Call Scrnc_sigma_matrix_branch(Nmo,Nomega,Ip0,Eps,Z1,Maxmo,
+     +           Maxomega,Maxpair,Acoef_mat,Zpt_mat,Elam1,Ov1,Vec1)
+         F1 = Z1 - Elam1
+         Bestdist = 1.0D30
+         Zbrlo = 0.0D0
+         Zbrhi = 0.0D0
+         Ifound = 0
+C
+         Do Iscan = 1, Nscan
+            Z2 = Z1 + Dz
+            Call Scrnc_sigma_matrix_branch(Nmo,Nomega,Ip0,Eps,Z2,
+     +              Maxmo,Maxomega,Maxpair,Acoef_mat,Zpt_mat,Elam2,
+     +              Ov2,Vec2)
+            F2 = Z2 - Elam2
+C
+            If ((F1.LT.0.0D0) .NEQV. (F2.LT.0.0D0)) Then
+               If (Abs(Elam1-Eps_hf).LT.Fmax .AND.
+     +             Abs(Elam2-Eps_hf).LT.Fmax) Then
+                  Dist = Min(Abs(Z1-Eps_hf),Abs(Z2-Eps_hf))
+                  If (Dist .LT. Bestdist) Then
+                     Bestdist = Dist
+                     Zbrlo = Z1
+                     Zbrhi = Z2
+                     Ifound = 1
+                  Endif
+               Endif
+            Endif
+C
+            Z1 = Z2
+            F1 = F2
+            Elam1 = Elam2
+C
+         Enddo
+C
+         If (Ifound .EQ. 1) Goto 200
+C
+         Whalf = Whalf * 2.0D0
+C
+      Enddo
+C
+      Return
+C
+  200 Continue
+C
+      Call Scrnc_sigma_matrix_branch(Nmo,Nomega,Ip0,Eps,Zbrlo,Maxmo,
+     +        Maxomega,Maxpair,Acoef_mat,Zpt_mat,Elam1,Ov1,Vec1)
+      Fone = Zbrlo - Elam1
+C
+      Do Iter = 1, 200
+         Zmid = 0.5D0*(Zbrlo+Zbrhi)
+         Call Scrnc_sigma_matrix_branch(Nmo,Nomega,Ip0,Eps,Zmid,Maxmo,
+     +           Maxomega,Maxpair,Acoef_mat,Zpt_mat,Elammid,Ovmid,Vec)
+         Fmid = Zmid - Elammid
+         If ((Fmid.LT.0.0D0) .EQV. (Fone.LT.0.0D0)) Then
+            Zbrlo = Zmid
+            Fone = Fmid
+         Else
+            Zbrhi = Zmid
+         Endif
+         If (Abs(Zbrhi-Zbrlo) .LT. Tol) Goto 300
+      Enddo
+C
+  300 Continue
+C
+      Eps_qp = 0.5D0*(Zbrlo+Zbrhi)
+      Call Scrnc_sigma_matrix_branch(Nmo,Nomega,Ip0,Eps,Eps_qp,Maxmo,
+     +        Maxomega,Maxpair,Acoef_mat,Zpt_mat,Elamfin,Ovfin,Vec)
+      Overlap = Ovfin
+      Iconverged = 1
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_sigma_matrix_branch(Nmo,Nomega,Ip0,Eps,Z,Maxmo,
+     +              Maxomega,Maxpair,Acoef_mat,Zpt_mat,Elam,Overlap,
+     +              Vec)
+C
+C Builds M(z)_pq = eps_HF(p) delta(p,q) + Re[Sigma_c(p,q;z)] (Pade-
+C evaluated at the real point Z from the stored per-pair Thiele
+C fits), diagonalizes it (Scrnc_sigma_jacobi_eig), and returns the
+C eigenpair with maximum overlap |Vec(Ip0)|^2 -- the branch
+C continuously connected to starting HF orbital Ip0.
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Eps(Maxmo)
+      Double Complex Acoef_mat(Maxomega,Maxpair)
+      Double Complex Zpt_mat(Maxomega,Maxpair)
+      Double Complex Zeval, Fval
+      Dimension Vec(Maxmo)
+      Dimension Amat(Maxmo,Maxmo), Evec(Maxmo,Maxmo), Eval(Maxmo)
+C
+      Zeval = Dcmplx(Z,0.0D0)
+C
+      Do Iq = 1, Nmo
+       Do Ip = 1, Iq
+         Ipair = Ip + Iq*(Iq-1)/2
+         Call Scrnc_sigma_pade_eval(Nomega,Zpt_mat(1,Ipair),
+     +           Acoef_mat(1,Ipair),Zeval,Fval,Maxomega)
+         Amat(Ip,Iq) = Dble(Fval)
+         Amat(Iq,Ip) = Dble(Fval)
+       Enddo
+      Enddo
+C
+      Do Ip = 1, Nmo
+         Amat(Ip,Ip) = Amat(Ip,Ip) + Eps(Ip)
+      Enddo
+C
+      Call Scrnc_sigma_jacobi_eig(Nmo,Amat,Maxmo,Evec,Eval)
+C
+      Kbest = 1
+      Ovbest = Evec(Ip0,1)*Evec(Ip0,1)
+      Do K = 2, Nmo
+         Ovtry = Evec(Ip0,K)*Evec(Ip0,K)
+         If (Ovtry .GT. Ovbest) Then
+            Ovbest = Ovtry
+            Kbest = K
+         Endif
+      Enddo
+C
+      Elam = Eval(Kbest)
+      Overlap = Ovbest
+      Do Ip = 1, Nmo
+         Vec(Ip) = Evec(Ip,Kbest)
+      Enddo
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_sigma_jacobi_eig(N,A,Maxmo,V,D)
+C
+C Classic cyclic Jacobi eigenvalue/eigenvector solver for a real
+C symmetric N x N matrix A (textbook algorithm, e.g. Press et al.
+C "Numerical Recipes" ch. 11 -- self-contained, no external LAPACK
+C linkage, matching this driver's existing standalone-build
+C convention, same reasoning as its own header comment). On exit,
+C D(1:N) holds the eigenvalues and V(1:N,1:N) their corresponding
+C eigenvectors (columns). A is destroyed (off-diagonal rotated to
+C zero).
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension A(Maxmo,Maxmo), V(Maxmo,Maxmo), D(Maxmo)
+      Parameter (Maxsweep=100, Tolzero=1.0D-14)
+C
+      Do Ip = 1, N
+       Do Iq = 1, N
+         V(Ip,Iq) = 0.0D0
+       Enddo
+       V(Ip,Ip) = 1.0D0
+       D(Ip) = A(Ip,Ip)
+      Enddo
+C
+      If (N .LE. 1) Return
+C
+      Do Isweep = 1, Maxsweep
+C
+         Sm = 0.0D0
+         Do Ip = 1, N-1
+          Do Iq = Ip+1, N
+            Sm = Sm + Abs(A(Ip,Iq))
+          Enddo
+         Enddo
+         If (Sm .LT. Tolzero) Goto 100
+C
+         Do Ip = 1, N-1
+          Do Iq = Ip+1, N
+            If (Abs(A(Ip,Iq)) .GT. Tolzero) Then
+               Theta = 0.5D0*(D(Iq)-D(Ip))/A(Ip,Iq)
+               If (Theta .GE. 0.0D0) Then
+                  Tt =  1.0D0/(Theta+Sqrt(1.0D0+Theta*Theta))
+               Else
+                  Tt = -1.0D0/(-Theta+Sqrt(1.0D0+Theta*Theta))
+               Endif
+               Cc = 1.0D0/Sqrt(1.0D0+Tt*Tt)
+               Ss = Tt*Cc
+               Tau = Ss/(1.0D0+Cc)
+               Hh = Tt*A(Ip,Iq)
+               D(Ip) = D(Ip) - Hh
+               D(Iq) = D(Iq) + Hh
+               A(Ip,Iq) = 0.0D0
+               Do Ir = 1, Ip-1
+                  G = A(Ir,Ip)
+                  H = A(Ir,Iq)
+                  A(Ir,Ip) = G - Ss*(H+G*Tau)
+                  A(Ir,Iq) = H + Ss*(G-H*Tau)
+               Enddo
+               Do Ir = Ip+1, Iq-1
+                  G = A(Ip,Ir)
+                  H = A(Ir,Iq)
+                  A(Ip,Ir) = G - Ss*(H+G*Tau)
+                  A(Ir,Iq) = H + Ss*(G-H*Tau)
+               Enddo
+               Do Ir = Iq+1, N
+                  G = A(Ip,Ir)
+                  H = A(Iq,Ir)
+                  A(Ip,Ir) = G - Ss*(H+G*Tau)
+                  A(Iq,Ir) = H + Ss*(G-H*Tau)
+               Enddo
+               Do Ir = 1, N
+                  G = V(Ir,Ip)
+                  H = V(Ir,Iq)
+                  V(Ir,Ip) = G - Ss*(H+G*Tau)
+                  V(Ir,Iq) = H + Ss*(G-H*Tau)
+               Enddo
+            Endif
+          Enddo
+         Enddo
+C
+      Enddo
+C
+      Write(6,"(a)")
+     +   " @-Scrnc_sigma_jacobi_eig: WARNING -- did not converge "//
+     +   "in Maxsweep sweeps"
+C
+  100 Continue
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_sigma_select_nodes(Nomega,Omega_ext,Nuse,
+     +                                       Anchor,Isel)
+C
+C Selects Nuse Omega_ext node indices: the static (nearest-to-zero)
+C point ALWAYS kept, plus the Nuse-1 remaining indices nearest to
+C Anchor, returned in Isel(1:Nuse) SORTED BY Omega_ext ASCENDING
+C (standard Thiele-fit node ordering). Same selection algorithm as
+C Scrnc_sigma_qp_solve's inline diagonal node-selection above,
+C factored out here so the matrix solve can reuse it per (p,q) pair
+C without touching/risking that already-verified diagonal routine.
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Omega_ext(Nomega)
+      Dimension Isel(Nuse)
+      Dimension Dsel(Nomega)
+C
+      Istatic = 1
+      Do J = 2, Nomega
+         If (Omega_ext(J) .LT. Omega_ext(Istatic)) Istatic = J
+      Enddo
+C
+      Isel(1) = Istatic
+      Dsel(1) = Abs(Omega_ext(Istatic)-Anchor)
+      Nfound = 1
+      Do J = 1, Nomega
+         If (J .EQ. Istatic) Goto 50
+         Dist = Abs(Omega_ext(J)-Anchor)
+         If (Nfound .LT. Nuse) Then
+            Nfound = Nfound + 1
+            Isel(Nfound) = J
+            Dsel(Nfound) = Dist
+            Islot = Nfound
+         Else If (Dist .LT. Dsel(Nuse)) Then
+            Isel(Nuse) = J
+            Dsel(Nuse) = Dist
+            Islot = Nuse
+         Else
+            Islot = 0
+         Endif
+         Do While (Islot .GT. 2)
+            If (Dsel(Islot) .GE. Dsel(Islot-1)) Goto 40
+            Dtmp = Dsel(Islot)
+            Itmp = Isel(Islot)
+            Dsel(Islot) = Dsel(Islot-1)
+            Isel(Islot) = Isel(Islot-1)
+            Dsel(Islot-1) = Dtmp
+            Isel(Islot-1) = Itmp
+            Islot = Islot - 1
+         Enddo
+   40    Continue
+   50    Continue
+      Enddo
+C
+      Do Ii = 1, Nuse-1
+         Do Jj = Ii+1, Nuse
+            If (Omega_ext(Isel(Jj)).LT.Omega_ext(Isel(Ii))) Then
+               Itmp = Isel(Ii)
+               Isel(Ii) = Isel(Jj)
+               Isel(Jj) = Itmp
+            Endif
+         Enddo
+      Enddo
+C
       Return
       End
