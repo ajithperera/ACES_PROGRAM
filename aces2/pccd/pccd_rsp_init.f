@@ -9,11 +9,12 @@
 
 
 
-      Subroutine Pccd_rsp_init(Wr,Lwr,Nbas,Nocc,Npar,Irp,Gv,Iok)
+      Subroutine Pccd_rsp_init(Wr,Lwr,Nbas,Nocc,Npar,Irp,Gv,Iok,Iprt)
 C Read h, (pq|yy), (py|qy) and T2 (list 46), form the pair parameters,
 C polish t by Newton steps on the pair equations, factor A = dr/dt,
 C solve A^T lam = -K. Checks: |r| of the ACES amplitudes and the orbital
 C gradient of L against Gv (Pccd_rfo_do convention). Iok = 1: ready.
+C Iprt = 1: print the checks (otherwise only when they fail).
       Implicit Double Precision(A-H,O-Z)
       Dimension Wr(Lwr),Irp(Nbas),Gv(Npar),Nfzo(8),Nfzv(8)
 
@@ -54,6 +55,7 @@ c sympop.com : end
       Data Zero,One /0.0D0,1.0D0/
 
       Iok = 0
+      If (Nbas .Gt. 1000) Return
       Nb  = Nbas
       No  = Nocc
       Nv  = Nbas - Nocc
@@ -144,7 +146,8 @@ C Residual of the ACES amplitudes, then Newton polish.
          Call Daxpy(Nov,-One,Wr(Lr1),1,Wr(Lt),1)
       Enddo
  10   Continue
-      Write(6,"(2a,1p,E10.3,a,E10.3)") " @-RFO exact Hessian: pair",
+      If (Iprt .Eq. 1 .Or. Rn .Gt. 1.0D-8)
+     +   Write(6,"(2a,1p,E10.3,a,E10.3)") " @-RFO exact Hessian: pair",
      +   " equations |r(T2)| =",R0,", after Newton",Rn
       If (Rn .Gt. 1.0D-8) Return
       Call Pccd_rsp_jac(Wr(Lt),Wr(Le),Wr(Lw),Wr(Lk),Wr(Lmk),Wr(La),
@@ -168,8 +171,9 @@ C Consistency: orbital gradient of L(t, lam) vs the ACES gradient.
          Dg = Max(Dg,Dabs(Wr(Ixs+K-1)-Gv(K)))
          Gm = Max(Gm,Dabs(Gv(K)))
       Enddo
-      Write(6,"(2a,1p,E10.3,a,E10.3,a)") " @-RFO exact Hessian: pair",
-     +   "-form gradient vs RFO gradient",Dg," (max|g|",Gm,")"
+      If (Iprt .Eq. 1 .Or. Dg .Gt. 1.0D-6)
+     +   Write(6,"(2a,1p,E10.3,a,E10.3,a)") " @-RFO exact Hessian:",
+     +   " pair-form gradient vs RFO gradient",Dg," (max|g|",Gm,")"
       If (Dg .Gt. 1.0D-6) Return
       Iok = 1
       Return

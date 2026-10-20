@@ -29,7 +29,7 @@ C   A t1 = -r(t; dP/dx b),  A^T l1 = -(L_tx b + L_tt t1),  A = dr/dt,
 C L_xx b from the analytic frozen Hessian (OHESFRZ, Pccd_ohess). The
 C relaxation part is the orbital gradient of a functional sum G.P whose
 C "densities" G come from Pccd_rsp_gphi; dP/dx b and the gradient need
-C h, (pq|yy) and (py|qy) only (O(n**3), saved by Pccd_rsp_save).
+C h, (pq|yy) and (py|qy) only (O(n**3), saved by Pccd_ohess).
 C Python pilot (pccd_oo_survey_1016/pilot_resp*.py, 10/2026): pair
 C energy = ACES pCCD to 2e-11; H b vs the full central-difference
 C Hessian of ACES gradients: 1e-6 (N2 cc-pVDZ 1.2 A), 1e-5 (2.52 A,
@@ -41,6 +41,16 @@ C Workspace layout (Pccd_rsp_init) in Common /Pccdrsp/.
 C Y = H X, H the exact orbital Hessian (frozen part Hf + relaxation).
       Implicit Double Precision(A-H,O-Z)
       Dimension Hf(Npar,Npar),Wr(*),X(Npar),Y(Npar)
+      Data Zero,One /0.0D0,1.0D0/
+      Call Dgemv("N",Npar,Npar,One,Hf,Npar,X,1,Zero,Y,1)
+      Call Pccd_rsp_rlx(Wr,Npar,X,Y)
+      Return
+      End
+
+      Subroutine Pccd_rsp_rlx(Wr,Npar,X,Y)
+C Y = Y + (amplitude relaxation part of the exact Hessian) X.
+      Implicit Double Precision(A-H,O-Z)
+      Dimension Wr(*),X(Npar),Y(Npar)
       Common /Pccdrsp/ Nb,No,Nv,Nov,Npr,Lh,Ljx,Lkx,Le,Lw,Lk,Lde,Ldw,
      +                 Ldk,Lg1,Lg2,Lg3,Lz,Lbm,Lt,Llm,Lmk,Lt1,Ll1,Lvw,
      +                 Lr1,Lr2,La,Lpv,Lsc,Ldv,Ldvl,Ixs,Ievs
@@ -48,7 +58,6 @@ C Y = H X, H the exact orbital Hessian (frozen part Hf + relaxation).
       Data Zero,Half,One /0.0D0,0.5D0,1.0D0/
       Nsq = Nb*Nb
       Np  = Nb + 2*Nsq
-      Call Dgemv("N",Npar,Npar,One,Hf,Npar,X,1,Zero,Y,1)
 C dP/dx X (the parameter derivatives along X)
       Call Pccd_rsp_bmat(X,Wr(Lbm),Irpr,Nb)
       Call Pccd_rsp_d1(Wr(Lbm),Wr(Lh),Wr(Ljx),Wr(Lkx),Wr(Lde),Wr(Ldw),
@@ -518,13 +527,14 @@ C integrals of F replaced by orbital p.
       End
 
       Subroutine Pccd_rsp_stab(Hf,Gv,Wr,Lwr,X,Ev,Irp,Nbas,Nocc,Npar,
-     +                         Iact,Alam,Vec)
+     +                         Iact,Alam,Vec,Init)
 C Stability check with the exact Hessian (Pccd_rsp_hv) at a stationary
 C point, all within this xpccd run: the lowest Nroot eigenpairs by
 C Davidson. Exact invariance zero modes (|lambda| < Xzero) are skipped.
 C Iact = 1: minimum (Alam = lowest nonzero eigenvalue); 2: negative
 C eigenvalue Alam < Xlamth with eigenvector Vec; -1: not available
 C (use the finite-difference check). X(Npar,Nroot), Ev(Nroot): scratch.
+C Init = 0: Pccd_rsp_init was already done at this point.
       Implicit Double Precision(A-H,O-Z)
       Dimension Hf(Npar,Npar),Gv(Npar),Wr(Lwr),X(Npar,*),Ev(*),
      +          Irp(Nbas),Vec(Npar)
@@ -537,7 +547,9 @@ C (use the finite-difference check). X(Npar,Nroot), Ev(Nroot): scratch.
       Iact = -1
       Alam = 0.0D0
       If (Nbas .Gt. 1000) Return
-      Call Pccd_rsp_init(Wr,Lwr,Nbas,Nocc,Npar,Irp,Gv,Iok)
+      Iok = 1
+      If (Init .Eq. 1) Call Pccd_rsp_init(Wr,Lwr,Nbas,Nocc,Npar,Irp,Gv,
+     +                                    Iok,1)
       If (Iok .Ne. 1) Then
          Write(6,"(2a)") " @-RFO exact Hessian not available; finite",
      +                   "-difference stability check."
@@ -560,10 +572,11 @@ C frozen part and the relaxation, to pccd_rsp_test.out.
       If (Npar .Le. Ndns) Then
 C Small: the exact Hessian column by column (Npar products), dense
 C diagonalization (fits in the Davidson workspace for Npar <= 2*40).
+         Call Dcopy(Npar*Npar,Hf,1,Wr(Ldv),1)
          Do K = 1, Npar
             Call Dzero(Vec,Npar)
             Vec(K) = 1.0D0
-            Call Pccd_rsp_hv(Hf,Wr,Npar,Vec,Wr(Ldv+(K-1)*Npar))
+            Call Pccd_rsp_rlx(Wr,Npar,Vec,Wr(Ldv+(K-1)*Npar))
          Enddo
          Call Pccd_rsp_sym(Wr(Ldv),Npar)
          Lwk = Ldvl - Npar*Npar
@@ -577,7 +590,7 @@ C diagonalization (fits in the Davidson workspace for Npar <= 2*40).
             Call Dcopy(Npar,Wr(Ldv+(Ir-1)*Npar),1,X(1,Ir),1)
          Enddo
       Else
-      Call Pccd_rfo_dav(Hf,Wr,Npar,2,Nroot,X,Ev,Rtol,Wr(Ldv),Ldvl,
+      Call Pccd_rfo_dav(Hf,Gv,Wr,Npar,2,Nroot,X,Ev,Rtol,Wr(Ldv),Ldvl,
      +                  Iconv,Nmv)
       Endif
       If (Iconv .Ne. 1) Then

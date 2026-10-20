@@ -39,6 +39,7 @@ C
       Anrm = Dsqrt(Anrm)
       Write(6,"(a,a2,a,F12.6,a,F12.6)") " @-RFO ",Name," max|amp| =",
      +      Amax,"  norm =",Anrm
+      If (List .Eq. 46) Call Putrec(20,"JOBARC","RFO_T2MX",Iintfp,Amax)
       If (Amax .Gt. Ampcap) Then
          Ibad = 1
          Write(6,"(a,a2,a,F6.2,a)") " @-RFO ",Name," amplitudes exceed",

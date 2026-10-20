@@ -9,8 +9,8 @@
 
 
 
-      Subroutine Pccd_rfo_dav(H,Gv,Npar,Iaug,Nroot,X,Ev,Rtol,Wk,Lwk,
-     +                        Iconv,Niter)
+      Subroutine Pccd_rfo_dav(H,Gv,Wr,Npar,Iaug,Nroot,X,Ev,Rtol,Wk,
+     +                        Lwk,Iconv,Niter)
 C
 C Lowest Nroot eigenpairs of the RFO model by Davidson iterations, for
 C large Npar where the dense diagonalizations (9 Npar**3 flops with
@@ -23,19 +23,21 @@ C             diagonal Newton step);
 C   Iaug = 0: H itself, start vectors the unit vectors of the lowest
 C             diagonal elements plus one pseudo-random vector.
 C   Iaug = 2: as 0, but the operator is the exact orbital Hessian
-C             (Pccd_rsp_hv: H = frozen Hessian, Gv = its workspace).
-C X(Npar+Iaug,Nroot): normalized eigenvectors, Ev: eigenvalues,
+C             (Pccd_rsp_hv: H = frozen Hessian, Wr = its workspace);
+C   Iaug = 3: as 1 with the exact orbital Hessian.
+C X(N,Nroot) (N = Npar+1 for Iaug = 1, 3, else Npar): normalized
+C eigenvectors, Ev: eigenvalues,
 C converged when every residual norm is below Rtol. Wk(Lwk): workspace
 C (the dense scratch Ah of Pccd_rfo_do). Iconv = 1 converged, 0 not
 C converged within Maxit, -1 workspace too small; Niter = number of
 C matrix-vector products.
 C
       Implicit Double Precision(A-H,O-Z)
-      Dimension H(Npar,Npar),Gv(*),X(*),Ev(Nroot),Wk(Lwk)
+      Dimension H(Npar,Npar),Gv(*),Wr(*),X(*),Ev(Nroot),Wk(Lwk)
       Parameter (Mx=40)
 
       N    = Npar
-      If (Iaug .Eq. 1) N = Npar + 1
+      If (Iaug .Eq. 1 .Or. Iaug .Eq. 3) N = Npar + 1
       Lsw  = 64*Mx
       Iv   = 1
       Iav  = Iv  + N*Mx
@@ -49,16 +51,16 @@ C
       Iconv = -1
       Niter = 0
       If (Iend .Gt. Lwk .Or. 2*Nroot+1 .Gt. Mx .Or. Nroot .Gt. N) Return
-      Call Pccd_rfo_dav1(H,Gv,Npar,Iaug,N,Nroot,X,Ev,Rtol,Wk(Iv),
+      Call Pccd_rfo_dav1(H,Gv,Wr,Npar,Iaug,N,Nroot,X,Ev,Rtol,Wk(Iv),
      +                   Wk(Iav),Wk(Idg),Wk(Ir),Wk(Iam),Wk(Iam2),
      +                   Wk(Iwm),Wk(Isw),Lsw,Mx,Iconv,Niter)
       Return
       End
 
-      Subroutine Pccd_rfo_dav1(H,Gv,Npar,Iaug,N,Nroot,X,Ev,Rtol,V,Av,
-     +                         Dg,R,Am,Am2,Wm,Sw,Lsw,Mx,Iconv,Niter)
+      Subroutine Pccd_rfo_dav1(H,Gv,Wr,Npar,Iaug,N,Nroot,X,Ev,Rtol,V,
+     +                         Av,Dg,R,Am,Am2,Wm,Sw,Lsw,Mx,Iconv,Niter)
       Implicit Double Precision(A-H,O-Z)
-      Dimension H(Npar,Npar),Gv(*),X(N,Nroot),Ev(Nroot),V(N,Mx),
+      Dimension H(Npar,Npar),Gv(*),Wr(*),X(N,Nroot),Ev(Nroot),V(N,Mx),
      +          Av(N,Mx),Dg(N),R(N),Am(Mx,Mx),Am2(Mx,Mx),Wm(Mx),
      +          Sw(Lsw)
       Parameter (Maxit=600, Dmin=1.0D-4)
@@ -67,11 +69,11 @@ C
       Do K = 1, Npar
          Dg(K) = H(K,K)
       Enddo
-      If (Iaug .Eq. 1) Dg(N) = Zero
+      If (N .Gt. Npar) Dg(N) = Zero
 
 C Start vectors.
       Call Dzero(V,N*Mx)
-      If (Iaug .Eq. 1) Then
+      If (N .Gt. Npar) Then
          V(N,1) = One
          Nv = 1
       Else
@@ -103,10 +105,9 @@ C V(.,Mx) marks the used unit vectors until the subspace gets there.
       Do It = 1, Maxit
 C Products for the new subspace vectors and the new rows/columns of
 C the projected matrix.
-         Do J = Nb+1, Nv
-            Call Pccd_rfo_dmv(H,Gv,Npar,Iaug,N,V(1,J),Av(1,J))
-            Niter = Niter + 1
-         Enddo
+         Call Pccd_rfo_dmv(H,Gv,Wr,Npar,Iaug,N,Nv-Nb,V(1,Nb+1),
+     +                     Av(1,Nb+1))
+         Niter = Niter + Nv - Nb
          Do J = Nb+1, Nv
             Do I = 1, J
                Am(I,J) = Ddot(N,V(1,I),1,Av(1,J),1)
@@ -191,20 +192,22 @@ C new corrections, if any fit) and recompute their products.
       Return
       End
 
-      Subroutine Pccd_rfo_dmv(H,Gv,Npar,Iaug,N,Xv,Yv)
-C Yv = A Xv, A = H or [[H,g],[g^T,0]], or (Iaug = 2) the exact Hessian.
+      Subroutine Pccd_rfo_dmv(H,Gv,Wr,Npar,Iaug,N,Nc,Xv,Yv)
+C Yv = A Xv for Nc vectors, A = H or [[H,g],[g^T,0]]; Iaug = 2, 3: H
+C is the frozen Hessian and the amplitude relaxation is added (exact
+C Hessian, Pccd_rsp_rlx). One DGEMM for the block: H is read once.
       Implicit Double Precision(A-H,O-Z)
-      Dimension H(Npar,Npar),Gv(*),Xv(N),Yv(N)
+      Dimension H(Npar,Npar),Gv(*),Wr(*),Xv(N,Nc),Yv(N,Nc)
       Data Zero,One /0.0D0,1.0D0/
-      If (Iaug .Eq. 2) Then
-         Call Pccd_rsp_hv(H,Gv,Npar,Xv,Yv)
-         Return
-      Endif
-      Call Dgemv("N",Npar,Npar,One,H,Npar,Xv,1,Zero,Yv,1)
-      If (Iaug .Eq. 1) Then
-         Call Daxpy(Npar,Xv(N),Gv,1,Yv,1)
-         Yv(N) = Ddot(Npar,Gv,1,Xv,1)
-      Endif
+      If (Nc .Le. 0) Return
+      Call Dgemm("N","N",Npar,Nc,Npar,One,H,Npar,Xv,N,Zero,Yv,N)
+      Do J = 1, Nc
+         If (Iaug .Ge. 2) Call Pccd_rsp_rlx(Wr,Npar,Xv(1,J),Yv(1,J))
+         If (N .Gt. Npar) Then
+            Call Daxpy(Npar,Xv(N,J),Gv,1,Yv(1,J),1)
+            Yv(N,J) = Ddot(Npar,Gv,1,Xv(1,J),1)
+         Endif
+      Enddo
       Return
       End
 

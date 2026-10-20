@@ -279,7 +279,7 @@ C minimum, exact-Hessian check) the starting orbitals are the final ones.
 
       If (Iflags2(178) .Eq. 6) Then
       Write(6,"(2a)") " The orbital rotation algorithm :",
-     +                " RFO (trust-region, SR1)"
+     +                " RFO (trust-region)"
       Else
       Write(6,"(3a)") " The orbital rotation algorithm :", " Newton",
      +                "-Raphson with Diis" 
