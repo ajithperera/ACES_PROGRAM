@@ -22,6 +22,8 @@ C             start vector e(Npar+1) (its first correction is the
 C             diagonal Newton step);
 C   Iaug = 0: H itself, start vectors the unit vectors of the lowest
 C             diagonal elements plus one pseudo-random vector.
+C   Iaug = 2: as 0, but the operator is the exact orbital Hessian
+C             (Pccd_rsp_hv: H = frozen Hessian, Gv = its workspace).
 C X(Npar+Iaug,Nroot): normalized eigenvectors, Ev: eigenvalues,
 C converged when every residual norm is below Rtol. Wk(Lwk): workspace
 C (the dense scratch Ah of Pccd_rfo_do). Iconv = 1 converged, 0 not
@@ -29,11 +31,11 @@ C converged within Maxit, -1 workspace too small; Niter = number of
 C matrix-vector products.
 C
       Implicit Double Precision(A-H,O-Z)
-      Dimension H(Npar,Npar),Gv(Npar),X(Npar+Iaug,Nroot),Ev(Nroot),
-     +          Wk(Lwk)
+      Dimension H(Npar,Npar),Gv(*),X(*),Ev(Nroot),Wk(Lwk)
       Parameter (Mx=40)
 
-      N    = Npar + Iaug
+      N    = Npar
+      If (Iaug .Eq. 1) N = Npar + 1
       Lsw  = 64*Mx
       Iv   = 1
       Iav  = Iv  + N*Mx
@@ -56,7 +58,7 @@ C
       Subroutine Pccd_rfo_dav1(H,Gv,Npar,Iaug,N,Nroot,X,Ev,Rtol,V,Av,
      +                         Dg,R,Am,Am2,Wm,Sw,Lsw,Mx,Iconv,Niter)
       Implicit Double Precision(A-H,O-Z)
-      Dimension H(Npar,Npar),Gv(Npar),X(N,Nroot),Ev(Nroot),V(N,Mx),
+      Dimension H(Npar,Npar),Gv(*),X(N,Nroot),Ev(Nroot),V(N,Mx),
      +          Av(N,Mx),Dg(N),R(N),Am(Mx,Mx),Am2(Mx,Mx),Wm(Mx),
      +          Sw(Lsw)
       Parameter (Maxit=600, Dmin=1.0D-4)
@@ -190,10 +192,14 @@ C new corrections, if any fit) and recompute their products.
       End
 
       Subroutine Pccd_rfo_dmv(H,Gv,Npar,Iaug,N,Xv,Yv)
-C Yv = A Xv, A = H or [[H,g],[g^T,0]].
+C Yv = A Xv, A = H or [[H,g],[g^T,0]], or (Iaug = 2) the exact Hessian.
       Implicit Double Precision(A-H,O-Z)
-      Dimension H(Npar,Npar),Gv(Npar),Xv(N),Yv(N)
+      Dimension H(Npar,Npar),Gv(*),Xv(N),Yv(N)
       Data Zero,One /0.0D0,1.0D0/
+      If (Iaug .Eq. 2) Then
+         Call Pccd_rsp_hv(H,Gv,Npar,Xv,Yv)
+         Return
+      Endif
       Call Dgemv("N",Npar,Npar,One,H,Npar,Xv,1,Zero,Yv,1)
       If (Iaug .Eq. 1) Then
          Call Daxpy(Npar,Xv(N),Gv,1,Yv,1)

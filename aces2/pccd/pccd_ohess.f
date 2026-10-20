@@ -178,6 +178,8 @@ C h = f - (2J - K), f = C^T FOCKA C at the current orbitals.
      +                    Work(Ism),Work(Ion),Work(Iwy),Work(Ihs),
      +                    Work(Iscr),Work(Iirp),Nbas,Nocc,Npar)
       Call Putrec(20,"JOBARC","OHESFRZ ",Npar*Npar*Iintfp,Work(Ihs))
+C h and the integral classes of the exact-Hessian response (Pccd_rsp).
+      Call Pccd_rsp_save(Work(Igg),Work(Ihh),Work(Iwy),Nbas)
       Call Putrec(20,"JOBARC","OHESGRAD",Nsq*Iintfp,Work(Iscr))
       Iok = 1
       Return

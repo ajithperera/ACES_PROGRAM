@@ -12,7 +12,7 @@
       Subroutine Pccd_rfo_do(G,C,Cprv,F,U,Scr,Gv,Gp,Sp,Step,H,Ah,Ev,
      +                       Wk,Lwork,Vb,Sb,Am,Wm,Cs,Gs,Res,Hf,Irp,
      +                       Ih0,Mxhv,Nbas,Nocc,Npar,Grdcnv,Tol,Etol,
-     +                       Gmax,Grms,Ncycle)
+     +                       Gmax,Grms,Ncycle,Wr,Lrsp)
       Implicit Double Precision(A-H,O-Z)
       Logical Grdcnv,Reject,Escape,Jump,Accept
       Dimension Vb(Npar,Mxhv),Sb(Npar,Mxhv),Am(Mxhv,Mxhv),Wm(Mxhv)
@@ -21,7 +21,7 @@
       Dimension F(Nbas,Nbas),U(Nbas,Nbas),Scr(Nbas,Nbas)
       Dimension Gv(Npar),Gp(Npar),Sp(Npar),Step(Npar)
       Dimension H(Npar,Npar),Ah(Npar+1,Npar+1),Ev(Npar+1),Wk(Lwork)
-      Dimension Irp(Nbas),Hf(Npar,Npar)
+      Dimension Irp(Nbas),Hf(Npar,Npar),Wr(*)
 
 
 c machsp.com : begin
@@ -312,6 +312,32 @@ C Stationary point: start the stability (lowest eigenvalue) check.
             Write(6,"(a,i5,a)") " @-RFO gradient converged after",Ntot,
      +            " gradient evaluations; checking the Hessian."
             Call Putrec(20,"JOBARC","RFO_NSTB",1,Nstb+1)
+C Exact Hessian (frozen Hessian of this point + amplitude response,
+C Pccd_rsp): no displaced points. Iact = -1: finite differences below.
+            Iact = -1
+            If (Ifrz .Eq. 1 .And. Lrsp .Gt. 0)
+     +         Call Pccd_rsp_stab(Hf,Gv,Wr,Lrsp,Sb,Wm,Irp,Nbas,Nocc,
+     +                            Npar,Iact,Alam,Step)
+            If (Iact .Eq. 1) Then
+               Call Putrec(20,"JOBARC","SCFEVCA0",Nsq*Iintfp,C)
+               Call Putrec(20,"JOBARC","SCFEVCB0",Nsq*Iintfp,C)
+               Call Putrec(20,"JOBARC","GRADTEST",1,1)
+               Write(6,"(2a,i5,a)") " @-RFO orbital optimization",
+     +             " converged to a minimum in",Ntot," gradients."
+               Return
+            Elseif (Iact .Eq. 2) Then
+C Negative exact eigenvalue: into the model along the mode, then a
+C trust-region step from the stationary point (as after the FD check).
+               Call Dgemv("N",Npar,Npar,One,H,Npar,Step,1,Zero,Gp,1)
+               Vhv = Ddot(Npar,Step,1,Gp,1)
+               Call Dger(Npar,Npar,Alam-Vhv,Step,1,Step,1,H,Npar)
+               Trust  = Trust0
+               Escape = .True.
+               Grdcnv = .False.
+               Write(6,"(a,1p,E12.4,a)") " @-RFO negative Hessian"//
+     +              " eigenvalue",Alam," found: following the mode."
+               Go to 400
+            Endif
 C Davidson start vectors (after a random one): the lowest eigenvectors
 C of the SR1 model Hessian, which carries the curvature seen along the
 C path (unit vectors of its lowest diagonal elements can miss a
@@ -358,6 +384,7 @@ C 200 Hv, INCONCLUSIVE; 1e-10: 60 Hv here).
      +         " (stability check limit reached) in",Ntot," gradients."
          Return
       Endif
+ 400  Continue
       Call Putrec(20,"JOBARC","GRADTEST",1,0)
 
 C RFO step: lowest eigenvector of [[H,g],[g^T,0]], scaled to the trust

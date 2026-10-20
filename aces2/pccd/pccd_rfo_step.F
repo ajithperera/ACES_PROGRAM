@@ -85,8 +85,12 @@ C
       I190 = I180 + Nsq
       I200 = I190 + Npar
       I210 = I200 + Npar
-      Iend = I210 + Npar*Npar
+      I220 = I210 + Npar*Npar
+      Iend = I220
       If (Iend .Gt. Maxcor) Call Insmem("Pccd_rfo_step",Iend,Maxcor)
+C Workspace of the exact-Hessian stability check (Pccd_rsp), if it fits.
+      Call Pccd_rsp_size(Nbas,Nocc,Npar,Lrsp)
+      If (I220+Lrsp .Gt. Maxcor) Lrsp = 0
 
       Call Pccd_rfo_h0mode(Ih0)
       Call Pccd_rfo_do(Work(I000),Work(I010),Work(I020),Work(I030),
@@ -96,7 +100,7 @@ C
      +                 Work(I150),Work(I160),Work(I170),Work(I180),
      +                 Work(I190),Work(I200),Work(I210),Work(Iirp),
      +                 Ih0,Mxhv,Nbas,Nocc,Npar,Grdcnv,Tol,Etol,Gmax,
-     +                 Grms,Ncycle)
+     +                 Grms,Ncycle,Work(I220),Lrsp)
 C The T2 guess of the next macro iterations follows accepted points only.
       Call Getrec(20,"JOBARC","RFO_ACPT",1,Iacpt)
       If (Iacpt .Eq. 1) Call Pccd_rfo_tguess(Work,Maxcor,"PROMO")

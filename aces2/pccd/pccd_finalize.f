@@ -246,8 +246,17 @@ c machsp.com : end
       Write(6,*) 
       Status ="Finish"  
       Call Pccd_banner(6,Status)
-      Call Getrec(20,'JOBARC','SCFENEG0',Iintfp,Eref_I)
-      Call Getrec(20,'JOBARC','TOTENEG0',Iintfp,Ecor_I)
+C SCFENEG0/TOTENEG0 are written by do_brueckner after the first macro
+C iteration; converged in that iteration (OO_METHOD=RFO restart at a
+C minimum, exact-Hessian check) the starting orbitals are the final ones.
+      Call Getrec(0,'JOBARC','SCFENEG0',Length,Junk)
+      If (Length .Gt. 0) Then
+         Call Getrec(20,'JOBARC','SCFENEG0',Iintfp,Eref_I)
+         Call Getrec(20,'JOBARC','TOTENEG0',Iintfp,Ecor_I)
+      Else
+         Call Getrec(20,'JOBARC','SCFENEG ',Iintfp,Eref_I)
+         Call Getrec(20,'JOBARC','TOTENERG',Iintfp,Ecor_I)
+      Endif
   
 
       Call Getrec(20,'JOBARC','SCFENEG ',Iintfp,Eref_F)
