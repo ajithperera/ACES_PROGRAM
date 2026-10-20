@@ -110,9 +110,14 @@ C Hessian is the only Npar**2 array.
       I220 = I210 + Npar*Npar
       Iend = I220
       If (Iend .Gt. Maxcor) Call Insmem("Pccd_rfo_step",Iend,Maxcor)
-C Workspace of the exact-Hessian stability check (Pccd_rsp), if it fits.
+C Workspace of the exact-Hessian stability check (Pccd_rsp), if it fits;
+C it gets the rest of the memory (larger Davidson subspaces).
       Call Pccd_rsp_size(Nbas,Nocc,Npar,Lrsp)
-      If (I220+Lrsp .Gt. Maxcor) Lrsp = 0
+      If (I220+Lrsp .Gt. Maxcor) Then
+         Lrsp = 0
+      Else
+         Lrsp = Maxcor - I220 + 1
+      Endif
 
       Call Pccd_rfo_do(Work(I000),Work(I010),Work(I020),Work(I030),
      +                 Work(I040),Work(I050),Work(I060),Work(I070),

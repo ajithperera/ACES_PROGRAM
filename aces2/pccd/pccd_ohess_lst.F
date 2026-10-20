@@ -10,7 +10,8 @@ C fit Buf(Lbuf) (Lbuf at least one column).
 C   Mode 1, 2: density list; W times it goes into the seniority-zero
 C              A and S (Pccd_ohess_s0el; Dmax: largest dropped value);
 C   Mode 3:    integral list <pq|rs> = (pr|qs), into the frozen Hessian
-C              H and the integral classes Xj, Xk (Pccd_ohess_scat).
+C              H and the integral classes Xj, Xk (Pccd_ohess_scat);
+C   Mode 4:    as 3, Xj and Xk only (H is not touched).
 C
       Implicit Double Precision(A-H,O-Z)
       Dimension Buf(Lbuf),Is(4),Iof(8,2),Nsp(8,2),Igo(2)
@@ -68,10 +69,10 @@ C
                Irow = Irow + 1
                X = Buf(Ioff+Irow)
                If (X .Ne. 0.0D0) Then
-                  If (Mode .Eq. 3) Then
+                  If (Mode .Ge. 3) Then
                      Call Pccd_ohess_scat(Ip,Ir,Iq,Is_,X,Is(1),Is(3),
      +                                    Is(2),Is(4),A,S,H,Xj,Xk,Kp,
-     +                                    Nbas,Npar)
+     +                                    Nbas,Npar,Mode-3)
                   Else
                      Call Pccd_ohess_s0el(Ip,Iq,Ir,Is_,Mode,W*X,A,S,
      +                                    Nbas,Dmax)

@@ -1,5 +1,5 @@
       Subroutine Pccd_rfo_dav(H,Gv,Wr,Npar,Iaug,Nroot,X,Ev,Rtol,Wk,
-     +                        Lwk,Iconv,Niter)
+     +                        Lwk,Mxv,Iconv,Niter)
 C
 C Lowest Nroot eigenpairs of the RFO model by Davidson iterations, for
 C large Npar where the dense diagonalizations (9 Npar**3 flops with
@@ -17,14 +17,14 @@ C   Iaug = 3: as 1 with the exact orbital Hessian.
 C X(N,Nroot) (N = Npar+1 for Iaug = 1, 3, else Npar): normalized
 C eigenvectors, Ev: eigenvalues,
 C converged when every residual norm is below Rtol. Wk(Lwk): workspace
-C (the dense scratch Ah of Pccd_rfo_do). Iconv = 1 converged, 0 not
-C converged within Maxit, -1 workspace too small; Niter = number of
-C matrix-vector products.
+C (the dense scratch Ah of Pccd_rfo_do), Mxv: subspace size. Iconv = 1
+C converged, 0 not converged within Maxit, -1 workspace too small;
+C Niter = number of matrix-vector products.
 C
       Implicit Double Precision(A-H,O-Z)
       Dimension H(Npar,Npar),Gv(*),Wr(*),X(*),Ev(Nroot),Wk(Lwk)
-      Parameter (Mx=40)
 
+      Mx   = Mxv
       N    = Npar
       If (Iaug .Eq. 1 .Or. Iaug .Eq. 3) N = Npar + 1
       Lsw  = 64*Mx

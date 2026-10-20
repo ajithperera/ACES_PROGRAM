@@ -213,7 +213,7 @@
       Integer IHess_calc
       Integer Pccd_refr,Itest
       Integer OOmicroItr,OOmacroItr,OOtotalItr
-      Integer Length,Idrop,Itcv,Ibad
+      Integer Length,Idrop,Itcv,Ibad,Ipair,Iok
       Double Precision Scale 
       Character*80 Fname
       Character*6 Status
@@ -306,7 +306,29 @@ C If Bruekner optimization is sought iterate until Brueckner convergence
 C is achieved before computing orbital gradients. 
 
          If (Iuhf .Eq. 0 .AND. All_mos) Then 
-            Call Pccd_banner(6,Status)
+C OO_METHOD=RFO pCCD: amplitudes, lambda, energy and gradient in pair
+C form (Pccd_pair_drv); otherwise, or if it cannot run, the CCD-shaped
+C solvers and densities below.
+            Call Pccd_pair_mode(Ipair)
+            Iok = 0
+            If (Ipair .Eq. 1) Then
+               Call Pccd_banner(6,Status)
+               Call Pccd_pair_drv(Icore(i0),icrsiz/iintfp,Iuhf,Iok,Itcv,
+     +                            Ibad)
+            Endif
+            Call Putrec(20,"JOBARC","PCCDPAIR",1,Iok)
+            If (Iok .Eq. 1) Then
+               If (Itcv .Ne. 1 .Or. Ibad .Eq. 1) Go to 20
+               Call Pccd_rfo_tguess(Icore(i0),icrsiz/iintfp,"SAVE ")
+               Call Pccd_rfo_ampchk(Icore(i0),icrsiz/iintfp,46,"T2",
+     +                              Ibad)
+               If (Ibad .Eq. 1) Go to 20
+               Call Pccd_do_orbrots(Icore(I0),icrsiz/iintfp,Iuhf,
+     +                              Igrad_calc,IHess_calc,Scale,
+     +                              OOmicroItr,OOmacroItr,OOtotalItr)
+               Go to 10
+            Endif
+            If (Ipair .Eq. 0) Call Pccd_banner(6,Status)
             Call Pccd_rdriver(Icore(i0),icrsiz/iintfp,Iuhf)
             Call Getrec(20,"JOBARC","PCCD_TCV",1,Itcv)
             If (Itcv .Ne. 1) Go to 20

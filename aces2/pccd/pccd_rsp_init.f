@@ -56,47 +56,13 @@ c sympop.com : end
 
       Iok = 0
       If (Nbas .Gt. 1000) Return
-      Nb  = Nbas
-      No  = Nocc
-      Nv  = Nbas - Nocc
-      Nov = No*Nv
-      Npr = Npar
-      Nsq = Nb*Nb
-      Np  = Nb + 2*Nsq
       Call Pccd_rsp_size(Nbas,Nocc,Npar,Lrsp)
       If (Lrsp .Gt. Lwr) Return
+      Nsq = Nbas*Nbas
       Call Getrec(0,"JOBARC","RSP_JX  ",Length,Junk)
-      If (Length .Ne. Nsq*Nb*Iintfp) Return
-      Lh  = 1
-      Ljx = Lh  + Nsq
-      Lkx = Ljx + Nsq*Nb
-      Le  = Lkx + Nsq*Nb
-      Lw  = Le  + Nb
-      Lk  = Lw  + Nsq
-      Lde = Lk  + Nsq
-      Ldw = Lde + Nb
-      Ldk = Ldw + Nsq
-      Lg1 = Ldk + Nsq
-      Lg2 = Lg1 + Np
-      Lg3 = Lg2 + Np
-      Lz  = Lg3 + Np
-      Lbm = Lz  + Nsq
-      Lt  = Lbm + Nsq
-      Llm = Lt  + Nov
-      Lmk = Llm + Nov
-      Lt1 = Lmk + Nov
-      Ll1 = Lt1 + Nov
-      Lvw = Ll1 + Nov
-      Lr1 = Lvw + Nov
-      Lr2 = Lr1 + Nov
-      La  = Lr2 + Nov
-      Lpv = La  + Nov*Nov
-      Lsc = Lpv + Nov
-      Nblk = Irpdpd(1,14)*Irpdpd(1,15)
-C Ixs: Npar words for the relaxation vector of Pccd_rsp_hv.
-      Ixs = Lsc + Max(Nblk,Nov*Nov)
-      Ldv = Ixs + Npar
-      Ldvl = Lwr - Ldv + 1
+      If (Length .Ne. Nsq*Nbas*Iintfp) Return
+      Call Pccd_rsp_lay(Lwr,Nbas,Nocc,Npar)
+      Np  = Nb + 2*Nsq
       Call Getrec(20,"JOBARC","RSP_HMO ",Nsq*Iintfp,Wr(Lh))
       Call Getrec(20,"JOBARC","RSP_JX  ",Nsq*Nb*Iintfp,Wr(Ljx))
       Call Getrec(20,"JOBARC","RSP_KX  ",Nsq*Nb*Iintfp,Wr(Lkx))

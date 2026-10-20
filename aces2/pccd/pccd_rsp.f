@@ -178,48 +178,41 @@ C X(i,a) = K(i,a).
 
       Subroutine Pccd_rsp_res(T,E,W,Ek,Am,R)
 C Pair residual r(t; P) (linear in P = (E, W, Ek)); frozen pairs r = t.
+C The sums over j.ne.i, b.ne.a and (t K^T t) by DGEMM (O(o v**2)), the
+C excluded diagonal terms K(i,i)t(i,a), K(a,a)t(i,a) taken off after.
       Implicit Double Precision(A-H,O-Z)
       Common /Pccdrsp/ Nb,No,Nv,Nov,Npr,Lh,Ljx,Lkx,Le,Lw,Lk,Lde,Ldw,
      +                 Ldk,Lg1,Lg2,Lg3,Lz,Lbm,Lt,Llm,Lmk,Lt1,Ll1,Lvw,
      +                 Lr1,Lr2,La,Lpv,Lsc,Ldv,Ldvl,Ixs,Ievs
       Dimension T(No,Nv),E(Nb),W(Nb,Nb),Ek(Nb,Nb),Am(No,Nv),R(No,Nv)
-      Dimension Si(1000),Sa(1000)
+      Dimension Si(1000),Sa(1000),Xm(1000*1000)
+      Save Xm
+      Data Zero,One /0.0D0,1.0D0/
       Do I = 1, No
-         Si(I) = 0.0D0
+         Si(I) = Zero
          Do Ia = 1, Nv
             Si(I) = Si(I) + Ek(I,No+Ia)*T(I,Ia)
          Enddo
       Enddo
       Do Ia = 1, Nv
-         Sa(Ia) = 0.0D0
+         Sa(Ia) = Zero
          Do I = 1, No
             Sa(Ia) = Sa(Ia) + Ek(I,No+Ia)*T(I,Ia)
          Enddo
       Enddo
+C R = Koo t + t Kvv + (t Kov^T) t
+      Call Dgemm("N","N",No,Nv,No,One,Ek,Nb,T,No,Zero,R,No)
+      Call Dgemm("N","N",No,Nv,Nv,One,T,No,Ek(No+1,No+1),Nb,One,R,No)
+      Call Dgemm("N","T",No,No,Nv,One,T,No,Ek(1,No+1),Nb,Zero,Xm,No)
+      Call Dgemm("N","N",No,Nv,No,One,Xm,No,T,No,One,R,No)
       Do Ia = 1, Nv
          Iav = No + Ia
          Do I = 1, No
-            X = Ek(I,Iav) + Pccd_rsp_dia(I,Iav,E,W,Nb,No)*T(I,Ia)
-            Do J = 1, No
-               If (J .Ne. I) X = X + Ek(I,J)*T(J,Ia)
-            Enddo
-            Do Ib = 1, Nv
-               If (Ib .Ne. Ia) X = X + Ek(Iav,No+Ib)*T(I,Ib)
-            Enddo
-C (t K^T t)(i,a) = sum_kc t(i,c) K(k,c) t(k,a)
-            Y = 0.0D0
-            Do K = 1, No
-               If (T(K,Ia) .Ne. 0.0D0) Then
-                  Z = 0.0D0
-                  Do Ic = 1, Nv
-                     Z = Z + T(I,Ic)*Ek(K,No+Ic)
-                  Enddo
-                  Y = Y + Z*T(K,Ia)
-               Endif
-            Enddo
-            X = X + Y - 2.0D0*T(I,Ia)*(Si(I) + Sa(Ia))
-     +            + 2.0D0*Ek(I,Iav)*T(I,Ia)*T(I,Ia)
-            R(I,Ia) = Am(I,Ia)*X + (1.0D0 - Am(I,Ia))*T(I,Ia)
+            X = R(I,Ia) - (Ek(I,I) + Ek(Iav,Iav))*T(I,Ia)
+     +        + Ek(I,Iav) + Pccd_rsp_dia(I,Iav,E,W,Nb,No)*T(I,Ia)
+     +        - 2.0D0*T(I,Ia)*(Si(I) + Sa(Ia))
+     +        + 2.0D0*Ek(I,Iav)*T(I,Ia)*T(I,Ia)
+            R(I,Ia) = Am(I,Ia)*X + (One - Am(I,Ia))*T(I,Ia)
          Enddo
       Enddo
       Return
@@ -542,9 +535,27 @@ C Init = 0: Pccd_rsp_init was already done at this point.
      +                 Ldk,Lg1,Lg2,Lg3,Lz,Lbm,Lt,Llm,Lmk,Lt1,Ll1,Lvw,
      +                 Lr1,Lr2,La,Lpv,Lsc,Ldv,Ldvl,Ixs,Ievs
       Logical Test
-      Parameter (Xzero=1.0D-8, Xlamth=-1.0D-4, Mxrt=8, Rtol=1.0D-8,
-     +           Ndns=80)
+      Parameter (Xzero=1.0D-8, Xlamth=-1.0D-4, Ndns=80)
       Iact = -1
+C Davidson: roots, residual tolerance, subspace size; debug override in
+C pccd_rsp_dav.in. The subspace is the largest up to Mxsp that fits the
+C workspace (Pccd_rsp_size reserves 40). Tests 10/2026 (N2 cc-pVDZ
+C 1.4-2.52 A, N2 6-31G, C2H4 cc-pVTZ sym off): subspace 40 -> 200 gave
+C the same roots with 2.5-8x fewer products (C2H4 3044 -> 528); Rtol
+C 1e-6 lost exact zero modes (skipped eigenvalues) and 1e-5 converged
+C C2H4 to a wrong lowest root after 9 products.
+      Mxrt = 8
+      Rtol = 1.0D-8
+      Mxsp = 200
+      Inquire(File="pccd_rsp_dav.in",Exist=Test)
+      If (Test) Then
+         Open(Unit=45,File="pccd_rsp_dav.in",Status="Old")
+         Read(45,*,End=5,Err=5) Mxrt,Rtol,Mxsp
+ 5       Close(45)
+         Mxrt = Min(Mxrt,30)
+         Write(6,"(a,i3,a,1p,E9.2,a,i4)") " @-RFO stability Davidson:",
+     +        Mxrt," roots, Rtol",Rtol,", subspace",Mxsp
+      Endif
       Alam = 0.0D0
       If (Nbas .Gt. 1000) Return
       Iok = 1
@@ -569,6 +580,12 @@ C frozen part and the relaxation, to pccd_rsp_test.out.
          Close(45)
       Endif
       Nroot = Min(Mxrt,Npar)
+ 7    Continue
+      If (2*Npar*Mxsp + 2*Npar + 2*Mxsp*Mxsp + 65*Mxsp .Gt. Ldvl .And.
+     +    Mxsp .Gt. 2*Nroot+1) Then
+         Mxsp = Mxsp - 10
+         Go to 7
+      Endif
       If (Npar .Le. Ndns) Then
 C Small: the exact Hessian column by column (Npar products), dense
 C diagonalization (fits in the Davidson workspace for Npar <= 2*40).
@@ -591,7 +608,7 @@ C diagonalization (fits in the Davidson workspace for Npar <= 2*40).
          Enddo
       Else
       Call Pccd_rfo_dav(Hf,Gv,Wr,Npar,2,Nroot,X,Ev,Rtol,Wr(Ldv),Ldvl,
-     +                  Iconv,Nmv)
+     +                  Mxsp,Iconv,Nmv)
       Endif
       If (Iconv .Ne. 1) Then
          Write(6,"(2a,i6,a)") " @-RFO exact-Hessian Davidson not",

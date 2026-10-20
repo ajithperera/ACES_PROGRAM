@@ -44,13 +44,14 @@ C
       End
 
       Subroutine Pccd_ohess_scat(Ia,Ib,Ic,Id,X,Ja,Jb,Jc,Jd,A,S,H,Xj,Xk,
-     +                           Kp,Nbas,Npar)
+     +                           Kp,Nbas,Npar,Ijk)
 C
 C One integral X = (ab|cd) of a list with Mulliken index spaces
 C (Ja Jb|Jc Jd). Each class of permutationally equal integrals is taken
 C once, from its member with a >= b when Ja = Jb, c >= d when Jc = Jd
 C and pair(a,b) >= pair(c,d) when (Ja,Jb) = (Jc,Jd) (each class lives
 C in one list), and every distinct ordered image goes to Pccd_ohess_img.
+C Ijk = 1: only the classes Xj, Xk (no H).
 C
       Implicit Double Precision(A-H,O-Z)
       Dimension M(4,8)
@@ -92,14 +93,14 @@ C (ab|cd) (ba|cd) (ab|dc) (ba|dc) and the same with the pairs swapped.
      +          M(3,L) .Eq. M(3,K) .And. M(4,L) .Eq. M(4,K)) Go to 10
          Enddo
          Call Pccd_ohess_img(M(1,K),M(2,K),M(3,K),M(4,K),X,A,S,H,Xj,Xk,
-     +                       Kp,Nbas,Npar)
+     +                       Kp,Nbas,Npar,Ijk)
  10      Continue
       Enddo
       Return
       End
 
       Subroutine Pccd_ohess_img(Ip,Iq,Ir,Is_,X,A,S,H,Xj,Xk,Kp,Nbas,
-     +                          Npar)
+     +                          Npar,Ijk)
 C
 C The integral G(p,q,r,s) = (pq|rs) = X (one ordered element): the
 C integral classes Xj(p,q,y) = (pq|yy), Xk(p,q,y) = (py|qy), and its
@@ -114,6 +115,7 @@ C
 
       If (Ir .Eq. Is_) Xj(Ip,Iq,Ir) = X
       If (Iq .Eq. Is_) Xk(Ip,Ir,Iq) = X
+      If (Ijk .Eq. 1) Return
 C (qp|sr): q=p', p=q', s=r', r=s'
       Call Pccd_ohess_addh(Iq,Ip,Is_,Ir,Four*A(Iq,Is_)*X,H,Kp,Nbas,
      +                     Npar)
@@ -183,15 +185,7 @@ C
       Dimension Xj(Nbas,Nbas,Nbas),Xk(Nbas,Nbas,Nbas),Wy(Nbas,Nbas,Nbas)
       Data Zero,Half,One,Two /0.0D0,0.5D0,1.0D0,2.0D0/
 
-      Do Iq = 1, Nbas
-         Do Ip = 1, Nbas
-            X = Zero
-            Do J = 1, Nocc
-               X = X + Two*Xj(Ip,Iq,J) - Xk(Ip,Iq,J)
-            Enddo
-            Hh(Ip,Iq) = Hh(Ip,Iq) - X
-         Enddo
-      Enddo
+      Call Pccd_ohess_hmo(Hh,Xj,Xk,Nbas,Nocc)
 C F(p,q) = n(p)h(p,q) + sum_s A(p,s)(qp|ss) + S(p,s)(qs|sp)
       Do Iq = 1, Nbas
          Do Ip = 1, Nbas
@@ -249,6 +243,23 @@ C   d(u,w)[2n(u)h(v,x) + 2Wy(u,v,x)] - d(v,x)[F(u,w) + F(w,u)]
             X = Half*(H(K,L) + H(L,K))
             H(K,L) = X
             H(L,K) = X
+         Enddo
+      Enddo
+      Return
+      End
+
+      Subroutine Pccd_ohess_hmo(Hh,Xj,Xk,Nbas,Nocc)
+C Hh = f - (2J - K): the MO Fock matrix f in, the core Hamiltonian h out
+C (Xj(p,q,y) = (pq|yy), Xk(p,q,y) = (py|qy)).
+      Implicit Double Precision(A-H,O-Z)
+      Dimension Hh(Nbas,Nbas),Xj(Nbas,Nbas,Nbas),Xk(Nbas,Nbas,Nbas)
+      Do Iq = 1, Nbas
+         Do Ip = 1, Nbas
+            X = 0.0D0
+            Do J = 1, Nocc
+               X = X + 2.0D0*Xj(Ip,Iq,J) - Xk(Ip,Iq,J)
+            Enddo
+            Hh(Ip,Iq) = Hh(Ip,Iq) - X
          Enddo
       Enddo
       Return

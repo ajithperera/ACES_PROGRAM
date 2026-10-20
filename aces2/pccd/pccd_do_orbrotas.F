@@ -49,9 +49,22 @@ C points of the stability check).
      +                                     Iphase)
             If (Iphase .Eq. 1) Ih0 = 0
          Endif
+C PCCDPAIR = 1 (set by Pccd_main for this run): the amplitudes, lambda,
+C energy and gradient come from the pair-form solver (Pccd_pair_drv);
+C there are no ACES densities, so the frozen Hessian is formed from the
+C pair densities and the gradient lists are skipped.
+         Call Getrec(0,"JOBARC","PCCDPAIR",Length,Junk)
+         Ipair = 0
+         If (Length .Gt. 0) Call Getrec(20,"JOBARC","PCCDPAIR",1,Ipair)
          Iok = 0
+         If (Ipair .Eq. 1) Then
+            If (Ih0 .Ge. 1) Call Pccd_ohess(Work,Maxcor,2,Iok)
+            If (Iok .Eq. 1) Call Pccd_pair_chk(Work,Maxcor)
+            Call Putrec(20,"JOBARC","OHESOK  ",1,Iok)
+            Go to 10
+         Endif
          If (pCCD .And. (Ohess .Or. Ih0 .Ge. 1))
-     +      Call Pccd_ohess(Work,Maxcor,Iok)
+     +      Call Pccd_ohess(Work,Maxcor,0,Iok)
          Call Putrec(20,"JOBARC","OHESOK  ",1,Iok)
 C Debug (file pccd_hess.in): dump the two-particle density and all
 C other lists 1-250 as they are (GA, AL), then form the gradient and
@@ -81,6 +94,7 @@ C Hessian lists that Pccd_form_htau_1D_pqrs builds after the gradient.
      +                          Ihess,Scale)
          Endif
          If (pCCD .And. Ohess) Call Pccd_ohess_chk(Work,Maxcor)
+ 10      Continue
       Else
 
 C Uhf only or UHF and RHF for forzen core orbitals.

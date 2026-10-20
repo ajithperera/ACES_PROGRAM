@@ -474,7 +474,7 @@ C the soft physical modes and the stability check then cannot resolve
 C them (N2 cc-pVDZ sym off: 1e-6 -> third zero mode unresolved after
 C 200 Hv, INCONCLUSIVE; 1e-10: 60 Hv here).
                Call Pccd_rfo_dav(H,Gv,Wr,Npar,0,Ng,Sb,Ev,1.0D-10,Ah,
-     +                           Lah,Iconv,Nmv)
+     +                           Lah,40,Iconv,Nmv)
                If (Iconv .Eq. 1) Then
                   Call Putrec(20,"JOBARC","RFO_GVEC",Npar*Ng*Iintfp,Sb)
                Else
@@ -548,7 +548,7 @@ C products near convergence, N2 cc-pVTZ SYMMETRY=OFF, |g| 1e-5). If
 C not converged, the last Ritz vector (the trust region judges it).
          Rtol = Max(1.0D-12,1.0D-4*Dsqrt(Ddot(Npar,Gv,1,Gv,1)))
          Call Pccd_rfo_dav(Hf,Gv,Wr,Npar,3,1,Ev,Wm,Rtol,Ah,Lah,
-     +                     Iconv,Nmv)
+     +                     40,Iconv,Nmv)
          If (Iconv .Eq. 0 .And. Nmv .Gt. 0) Iconv = 2
          If (Iconv .Ge. 1 .And. Ev(Np1) .Ne. Zero) Then
             Do K = 1, Npar
@@ -575,10 +575,10 @@ C not converged, the last Ritz vector (the trust region judges it).
 C Model (Iexa = 0) or frozen (Iexa = 2) Hessian matrix.
          If (Iexa .Eq. 0) Then
             Call Pccd_rfo_dav(H,Gv,Wr,Npar,1,1,Ev,Wm,1.0D-10,Ah,Lah,
-     +                        Iconv,Nmv)
+     +                        40,Iconv,Nmv)
          Else
             Call Pccd_rfo_dav(Hf,Gv,Wr,Npar,1,1,Ev,Wm,1.0D-10,Ah,Lah,
-     +                        Iconv,Nmv)
+     +                        40,Iconv,Nmv)
          Endif
          If (Iconv .Eq. 1 .And. Ev(Np1) .Ne. Zero) Then
             Do K = 1, Npar
