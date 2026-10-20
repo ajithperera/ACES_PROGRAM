@@ -246,10 +246,14 @@ C Alpha and beta MOs (e.g. of a broken-symmetry UHF) -> ca.dat, cb.dat
          Write(32,"(4(1x,E25.17))") ((C(I,J),I=1,Nao),J=1,Nmo)
          Close(32)
       Elseif (Mode .Eq. "SAVE    ") Then
+C c0.dat holds the MOs in SCF (irrep-blocked) order. After xvtran,
+C SCFEVCA0 is in correlated order (REORDERA: SCF column I = correlated
+C column REORDERA(I)); identical without symmetry.
          Call Getrec(20,"JOBARC","SCFEVCA0",Nao*Nmo*Iintfp,C0)
+         Call Oorot_reord(C0,C,Nao,Nmo,"TOSCF ")
          Open(Unit=32,File="c0.dat",Status="Unknown")
          Write(32,*) Nao, Nmo
-         Write(32,"(4(1x,E25.17))") ((C0(I,J),I=1,Nao),J=1,Nmo)
+         Write(32,"(4(1x,E25.17))") ((C(I,J),I=1,Nao),J=1,Nmo)
          Close(32)
       Elseif (Mode(1:5) .Eq. "APPLY") Then
          Open(Unit=32,File="c0.dat",Status="Old")
@@ -311,14 +315,17 @@ C flags Pccd_do_orbrots sets for non-HF orbitals, so that the next
 C xvscf (no iterations, MOs from JOBARC) builds the matching Fock.
 C With xrunpccd, do not run this beforehand: xjoda resets the flags.
 C Put c0.dat and oorot.in (LOAD) in the job directory; do_brueckner
-C runs xoorot and xvscf after the cycle-1 SCF.
+C runs xoorot and xvscf after the cycle-1 SCF. c0.dat is in SCF order
+C (SAVE); xvscf reorders SCFEVCA0 from correlated order only once
+C REORDERA exists (written by xvtran, so not after the cycle-1 SCF).
          Open(Unit=32,File="c0.dat",Status="Old")
          Read(32,*) N1, N2
          If (N1 .Ne. Nao .Or. N2 .Ne. Nmo) Call Errex
          Read(32,*) ((C0(I,J),I=1,Nao),J=1,Nmo)
          Close(32)
-         Call Putrec(20,"JOBARC","SCFEVCA0",Nao*Nmo*Iintfp,C0)
-         Call Putrec(20,"JOBARC","SCFEVCB0",Nao*Nmo*Iintfp,C0)
+         Call Oorot_reord(C0,C,Nao,Nmo,"TOCORR")
+         Call Putrec(20,"JOBARC","SCFEVCA0",Nao*Nmo*Iintfp,C)
+         Call Putrec(20,"JOBARC","SCFEVCB0",Nao*Nmo*Iintfp,C)
          Call Getrec(20,"JOBARC","IFLAGS  ",100,Iflags)
          Iflags(16) = 0
          Iflags(38)      = 1
@@ -353,5 +360,38 @@ C Correlation one-particle density blocks DENSOO, DENSVV (normal ordered)
          Write(6,"(2a)") " @-oorot: unknown mode ", Mode
          Call Errex
       Endif
+      Return
+      End
+
+      Subroutine Oorot_reord(Cin,Cout,Nao,Nmo,Dir)
+C MO column order: "TOSCF " correlated -> SCF, "TOCORR" SCF -> correlated,
+C with SCF column I = correlated column REORDERA(I). Without a REORDERA
+C record (before xvtran) both orders coincide: plain copy.
+      Implicit Double Precision (A-H,O-Z)
+      Character*6 Dir
+c maxbasfn.par : begin
+
+c MAXBASFN := the maximum number of (Cartesian) basis functions
+
+c This parameter is the same as MXCBF. Do NOT change this without changing
+c mxcbf.par as well.
+
+      INTEGER MAXBASFN
+      PARAMETER (MAXBASFN=1000)
+c maxbasfn.par : end
+      Dimension Cin(Nao,Nmo),Cout(Nao,Nmo),Ireord(MAXBASFN)
+      Call Getrec(0,"JOBARC","REORDERA",Length,Junk)
+      If (Length .Ne. Nmo) Then
+         Call Dcopy(Nao*Nmo,Cin,1,Cout,1)
+         Return
+      Endif
+      Call Getrec(20,"JOBARC","REORDERA",Nmo,Ireord)
+      Do I = 1, Nmo
+         If (Dir .Eq. "TOSCF ") Then
+            Call Dcopy(Nao,Cin(1,Ireord(I)),1,Cout(1,I),1)
+         Else
+            Call Dcopy(Nao,Cin(1,I),1,Cout(1,Ireord(I)),1)
+         Endif
+      Enddo
       Return
       End
