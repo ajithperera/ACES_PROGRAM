@@ -1,0 +1,31 @@
+test -n "$USERDIR" || exit 1
+# OO-pCCD RFO with dropped MOs (DROPMO=1/13): uncorrelated but optimized.
+# The dropped MOs stay in the integral transformation; xpccd keeps
+# their pair amplitudes zero (frozen pairs), so the energy is the
+# active-space pCCD energy and the frozen-active rotations are
+# optimized. SYMMETRY=ON, frozen 1a1 core and highest (a1) virtual.
+# Must reach a verified minimum. TOTENERG is the OO-pCCD energy.
+cat <<. >ZMAT
+H2O OO-pCCD RFO 6-31G DROPMO=1/13
+H
+O 1 R
+H 2 R 1 A
+
+R=0.957
+A=104.5
+
+*ACES2(BASIS=6-31G
+CALC=PCCD,PROGRAM=PCCD
+REF=RHF,MEM_SIZE=2gb
+sym=on,DROPMO=1/13
+PCCD_REF=OPTIMIZED,OO_METHOD=RFO
+BRUCK_CONV=6,OO_MAXCYC=800
+cc_conv=10,cc_maxcyc=300,scf_conv=10,scf_maxcyc=300)
+
+.
+ln -s $GENBAS . || exit 1
+xjoda || exit 1
+xrunpccd >run.out 2>&1 || { tail -15 run.out; exit 1; }
+cat run.out
+grep -q "Frozen occupied MOs per irrep" run.out || { echo "frozen pairs not set up"; exit 1; }
+grep -q "converged to a minimum" run.out || { echo "no verified minimum"; exit 1; }

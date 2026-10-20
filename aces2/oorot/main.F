@@ -14,6 +14,8 @@ C   DUMPD : DENSOO, DENSVV (correlation 1-RDM blocks)  -> dens.dat
 C   DUMPT2: max|t| and norm of RFO_T2C (last accepted T2) -> stdout
 C   DUMPREC: the double precision JOBARC record named on the second
 C           line of oorot.in (all of it)    -> rec_<name>.dat (n, values)
+C   FCSET : DROPMO -> frozen pairs of OO_METHOD=RFO pCCD (as xrunpccd
+C           does after the cycle-1 SCF; for drivers running the modules)
 C All text files are column-major with a "nrow ncol" header line.
 C
       Implicit Double Precision (A-H,O-Z)
@@ -49,6 +51,11 @@ C
          Write(Fname,"(a4,a,a4)") "rec_",Recnam(1:Len_trim(Recnam)),
      +                            ".dat"
          Call Oorot_wrec(icore(i0),Length/Iintfp,Fname)
+         Call Aces_fin
+         Stop
+      Endif
+      If (Mode(1:5) .Eq. "FCSET") Then
+         Call Pccd_fc_setup(.True.,.True.)
          Call Aces_fin
          Stop
       Endif

@@ -269,6 +269,10 @@ C as in the later orbital optimization cycles.
              Call Runit("xvmol")
              Call Runit("xvmol2ja")
              Call Runit("xvscf")
+C DROPMO with OO_METHOD=RFO pCCD: frozen pairs in the full MO space.
+             Call Aces_ja_init
+             Call Pccd_fc_setup(Xpccd,.False.)
+             Call Aces_ja_fin
              If (porbrot_in) Then
                 Write(6,"(3a)")" Warning! - porbrot_in file is",
      +                         " present and specified extrenal",
