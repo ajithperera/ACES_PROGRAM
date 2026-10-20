@@ -200,3 +200,23 @@ C pccd_rfo_h0.in: CONST -> 0, FRZ0 -> 1; FRZ or no file -> 2.
       If (Word .Eq. "FRZ") Ih0 = 2
       Return
       End
+
+      Subroutine Pccd_rfo_eigmode(Npar,Idav)
+C Eigenproblems of OO_METHOD=RFO (step, stability start vectors): dense
+C DSYEV (Idav = 0) up to Npar = Ndense, Davidson (Idav = 1) above. The
+C first word of the file pccd_rfo_eig.in, DENSE or DAVIDSON, forces one.
+      Parameter (Ndense=1500)
+      Character*8 Word
+      Logical Exist
+      Idav = 0
+      If (Npar .Gt. Ndense) Idav = 1
+      Inquire(File="pccd_rfo_eig.in",Exist=Exist)
+      If (.Not. Exist) Return
+      Word = " "
+      Open(Unit=44,File="pccd_rfo_eig.in",Status="Old")
+      Read(44,*,End=10,Err=10) Word
+ 10   Close(44)
+      If (Word .Eq. "DENSE") Idav = 0
+      If (Word .Eq. "DAVIDSON") Idav = 1
+      Return
+      End

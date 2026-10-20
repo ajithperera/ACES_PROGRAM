@@ -57,6 +57,8 @@ C every point rejected by Pccd_rfo_ampchk); stop instead.
 
       Nsq = Nbas*Nbas
       Np1 = Npar + 1
+C Idav = 1: Davidson instead of the dense diagonalizations (large Npar).
+      Call Pccd_rfo_eigmode(Npar,Idav)
       Call Getrec(20,"JOBARC","OBRTGRDA",Nsq*Iintfp,G)
       Call Getrec(20,"JOBARC","TOTENERG",Iintfp,E)
       Call Getrec(20,"JOBARC","SCFEVCA0",Nsq*Iintfp,C)
@@ -264,13 +266,17 @@ C Etol sits above the energy noise of the amplitude solution.
       Enddo
       Grms = Dsqrt(Grms/Dble(Npar))
 
-C Number of negative model-Hessian eigenvalues (diagnostic).
-      Call Dcopy(Npar*Npar,H,1,Ah,1)
-      Call Dsyev("N","U",Npar,Ah,Npar,Ev,Wk,Lwork,Info)
-      Nneg = 0
-      Do K = 1, Npar
-         If (Ev(K) .Lt. Zero) Nneg = Nneg + 1
-      Enddo
+C Number of negative model-Hessian eigenvalues (diagnostic; -1 when
+C not computed, Idav = 1).
+      Nneg = -1
+      If (Idav .Eq. 0) Then
+         Call Dcopy(Npar*Npar,H,1,Ah,1)
+         Call Dsyev("N","U",Npar,Ah,Npar,Ev,Wk,Lwork,Info)
+         Nneg = 0
+         Do K = 1, Npar
+            If (Ev(K) .Lt. Zero) Nneg = Nneg + 1
+         Enddo
+      Endif
 
       If (Ifail .Eq. 1) Then
          Write(6,"(a,i4,2a)") " @-RFO it",Nit," step rejected:",
@@ -311,10 +317,28 @@ C of the SR1 model Hessian, which carries the curvature seen along the
 C path (unit vectors of its lowest diagonal elements can miss a
 C negative mode entirely: N2 cc-pVDZ 1.1016 A, symmetric saddle
 C accepted as a minimum).
+            Ng = Min(Ngvec,Npar)
+            Iconv = 0
+            If (Idav .Eq. 1) Then
+C Sb is free until Pccd_rfo_stab START; Ah is the workspace.
+C Tight: approximate vectors mix the exact invariance zero modes with
+C the soft physical modes and the stability check then cannot resolve
+C them (N2 cc-pVDZ sym off: 1e-6 -> third zero mode unresolved after
+C 200 Hv, INCONCLUSIVE; 1e-10: 60 Hv here).
+               Call Pccd_rfo_dav(H,Gv,Npar,0,Ng,Sb,Ev,1.0D-10,Ah,
+     +                           Np1*Np1,Iconv,Nmv)
+               If (Iconv .Eq. 1) Then
+                  Call Putrec(20,"JOBARC","RFO_GVEC",Npar*Ng*Iintfp,Sb)
+               Else
+                  Write(6,"(2a,i6)") " @-RFO Davidson (model Hessian",
+     +                 " vectors) not converged; dense, Hv =",Nmv
+               Endif
+            Endif
+            If (Iconv .Ne. 1) Then
             Call Dcopy(Npar*Npar,H,1,Ah,1)
             Call Dsyev("V","U",Npar,Ah,Npar,Ev,Wk,Lwork,Info)
-            Ng = Min(Ngvec,Npar)
             Call Putrec(20,"JOBARC","RFO_GVEC",Npar*Ng*Iintfp,Ah)
+            Endif
             Call Pccd_rfo_pdia(Gp,C,F,Scr,Wk,Lwork,Irp,Nbas,Nocc,Npar)
             Call Putrec(20,"JOBARC","RFO_PDIA",Npar*Iintfp,Gp)
             Call Putrec(20,"JOBARC","RFO_HESS",Npar*Npar*Iintfp,H)
@@ -337,7 +361,25 @@ C accepted as a minimum).
       Call Putrec(20,"JOBARC","GRADTEST",1,0)
 
 C RFO step: lowest eigenvector of [[H,g],[g^T,0]], scaled to the trust
-C radius when longer.
+C radius when longer. Idav = 1: Davidson (eigenvector in Ev, Ah the
+C workspace), dense if it does not converge.
+      Iconv = 0
+      If (Idav .Eq. 1) Then
+         Call Pccd_rfo_dav(H,Gv,Npar,1,1,Ev,Wm,1.0D-10,Ah,Np1*Np1,
+     +                     Iconv,Nmv)
+         If (Iconv .Eq. 1 .And. Ev(Np1) .Ne. Zero) Then
+            Do K = 1, Npar
+               Step(K) = Ev(K)/Ev(Np1)
+            Enddo
+            Write(6,"(a,i5,a)") " @-RFO step from Davidson (",Nmv,
+     +                          " Hv)."
+         Else
+            Iconv = 0
+            Write(6,"(2a,i6)") " @-RFO Davidson (step) not converged;",
+     +                         " dense, Hv =",Nmv
+         Endif
+      Endif
+      If (Iconv .Ne. 1) Then
       Call Dzero(Ah,Np1*Np1)
       Do J = 1, Npar
          Do I = 1, Npar
@@ -354,6 +396,7 @@ C radius when longer.
       Do K = 1, Npar
          Step(K) = Ah(K,1)/Ah(Np1,1)
       Enddo
+      Endif
       Snrm = Dsqrt(Ddot(Npar,Step,1,Step,1))
       If (Snrm .Gt. Trust) Then
          Call Dscal(Npar,Trust/Snrm,Step,1)
