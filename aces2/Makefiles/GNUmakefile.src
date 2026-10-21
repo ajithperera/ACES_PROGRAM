@@ -216,3 +216,23 @@ ifeq (${CURR},vcc)
 endif
 
 
+
+# 2026-10-21: Fortran module order. The build compiles the f90 files of a
+# directory in name order (only mod-*.f90 files go first), so a file that
+# USEs a module defined in a later file fails in a fresh clone ("Error in
+# opening the compiled module file"); old trees hid it with leftover .mod
+# files. Only alice_nwchem and get_acesmo have such files (scanned 10/2026).
+# These are the first plain rules in this file, which GNUmakefile includes
+# before its `all`, hence the explicit default goal.
+.DEFAULT_GOAL := all
+ifeq (${CURR},alice_nwchem)
+   alice_nwchem.o: job.o
+   job.o: aovec.o civec.o get_aces2.o nwchem_info.o movec.o print.o
+   aovec.o: function.o get_aces2.o print.o
+   civec.o civec2.o get_aces2.o: print.o
+   movec.o nwchem_info.o: function.o
+   movec.o: print.o
+endif
+ifeq (${CURR},get_acesmo)
+   main.o: movec.o nwchem_info.o
+endif
