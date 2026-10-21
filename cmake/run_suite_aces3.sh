@@ -9,9 +9,8 @@ ACES3_DIR="$2"
 NP="$3"
 LOG="$4"
 
-module purge
-# shellcheck disable=SC2086
-module load $MODULES
+source "$(dirname "${BASH_SOURCE[0]}")/env.sh"
+aces_load_modules "$MODULES"
 
 mkdir -p "$(dirname "$LOG")"
 ( cd "$ACES3_DIR" && python3 tests/fast/run_tests.py --jobs "$NP" --np "$NP" ) > "$LOG" 2>&1

@@ -27,9 +27,8 @@ ACES2_DIR="$2"
 INSTALL_BIN="$3"
 INSTALL_LIB="$4"
 
-module purge
-# shellcheck disable=SC2086
-module load $MODULES
+source "$(dirname "${BASH_SOURCE[0]}")/env.sh"
+aces_load_modules "$MODULES"
 
 mkdir -p "$INSTALL_BIN" "$INSTALL_LIB"
 

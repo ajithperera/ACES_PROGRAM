@@ -34,9 +34,8 @@ set -euo pipefail
 MODULES="$1"
 ACES3_DIR="$2"
 
-module purge
-# shellcheck disable=SC2086
-module load $MODULES
+source "$(dirname "${BASH_SOURCE[0]}")/env.sh"
+aces_load_modules "$MODULES"
 
 cd "$ACES3_DIR"
 # aces3/lib is tracked (via .gitkeep) but aces3/bin is not -- the SIAL
@@ -54,7 +53,9 @@ cd "$ACES3_DIR"
 # never caught before this fresh worktree (see 2026-08-12 note above).
 mkdir -p bin bin/sio lib
 
-bash configure_line.ufhpc
+# Site configure script (compilers, MKL, flags): HiPerGator's by default,
+# another site's via ACES3_CONFIGURE_LINE=/path/to/script.
+bash "${ACES3_CONFIGURE_LINE:-configure_line.ufhpc}"
 
 # Level 0: independent leaf libraries -- each depends only on its own
 # local sources (confirmed: none of their `all:` targets reference another

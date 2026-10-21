@@ -38,9 +38,12 @@ include(ExternalProject)
 # testing (mirrors phase-1's ./configure --modules). Not validated at
 # `cmake` configure time -- like phase 1, that's left to each build step's
 # own `module load`, since modules aren't necessarily loaded in the shell
-# that just runs `cmake -S . -B build`.
+# that just runs `cmake -S . -B build`. The default is HiPerGator's set;
+# elsewhere pass your site's modules, or -DACES_MODULES="" to build with the
+# environment of the calling shell (ifx/icx, MPI wrappers, MKLROOT and
+# python3 with numpy already set up; see cmake/env.sh).
 set(ACES_MODULES "intel/2025.1.0 openmpi/5.0.7 python/3.12" CACHE STRING
-    "module load set shared by aces2/aces3/pyaces")
+    "module load set shared by aces2/aces3/pyaces (empty: current environment)")
 set(ACES_NP 4 CACHE STRING
     "default MPI rank / parallel job count for the fast test suites")
 
@@ -111,7 +114,7 @@ if(ACES_BUILD_PYACES)
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE   1
     BUILD_COMMAND     bash ${CMAKE_SOURCE_DIR}/cmake/build_pyaces.sh
-                       "${PYACES_SOURCE_DIR}"
+                       "${PYACES_SOURCE_DIR}" "${ACES_MODULES}"
     INSTALL_COMMAND   ""
     BUILD_ALWAYS      1
     USES_TERMINAL_BUILD 1

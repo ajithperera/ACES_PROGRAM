@@ -8,9 +8,8 @@ MODULES="$1"
 PYACES_DIR="$2"
 LOG="$3"
 
-module purge
-# shellcheck disable=SC2086
-module load $MODULES
+source "$(dirname "${BASH_SOURCE[0]}")/env.sh"
+aces_load_modules "$MODULES"
 
 mkdir -p "$(dirname "$LOG")"
 ( cd "$PYACES_DIR" && python3 pyaces_suite_runner.py ) > "$LOG" 2>&1

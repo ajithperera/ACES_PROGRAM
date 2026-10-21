@@ -5,8 +5,11 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 SHIM=$SCRIPT_DIR/tools/compat_bin
 export PATH=$SHIM:$PATH
-module purge
-module load intel/2025.1.0 openmpi/5.0.7 python/3.12
+# Module set (HiPerGator default); PYACES_MODULES="" uses the current
+# environment (ifx, MKLROOT, python3 with numpy already set up).
+PYACES_MODULES=${PYACES_MODULES-"intel/2025.1.0 openmpi/5.0.7 python/3.12"}
+source "$SCRIPT_DIR/../cmake/env.sh"
+aces_load_modules "$PYACES_MODULES"
 
 WORK=$SCRIPT_DIR
 MAIN=$WORK/Main
@@ -14,7 +17,7 @@ PYF=$WORK/a2_pyf
 ACES=$SCRIPT_DIR/../aces2
 NUMPY_INC=$(python3 -c "import numpy; print(numpy.get_include())")
 PY_INC=$(python3 -c "import sysconfig; print(sysconfig.get_path('include'))")
-F2PY_SRC=/apps/python/3.12/lib/python3.12/site-packages/numpy/f2py/src
+F2PY_SRC=$(python3 -c "import os, numpy.f2py; print(os.path.join(os.path.dirname(numpy.f2py.__file__), 'src'))")
 MKL=$MKLROOT/lib/intel64
 
 cd $MAIN

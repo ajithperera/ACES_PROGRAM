@@ -95,3 +95,4 @@ vmol/xvmol
 vprops/xvprops
 vscf/xvscf
 vtran/xvtran
+Makefiles/local.mk

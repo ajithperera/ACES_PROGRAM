@@ -231,9 +231,34 @@ CMPLR := $(word  4, ${list})
 list  :=
 MACHSTATS :=
 
+# Hosts not in the table (any machine but the ones above, e.g. a
+# collaborator's cluster or workstation) get the generic Linux x86_64 Intel
+# entry (ifx/icx + MKL), the one HiPerGator uses, if ifx is on PATH.
+# ACES_HOST=<name> on the command line selects a table entry by name.
+ifdef ACES_HOST
+   MACHSTATS := $(filter ${ACES_HOST}:%, \
+                  hipergator:em64t:linux:intel xxx:X86_64:linux:gnu)
+   ifneq (,${MACHSTATS})
+      list  := $(subst :, , ${MACHSTATS})
+      ARCH  := $(word  2, ${list})
+      OPSYS := $(word  3, ${list})
+      CMPLR := $(word  4, ${list})
+      list  :=
+   endif
+   MACHSTATS :=
+endif
+ifeq (${CMPLR},undefined)
+   ifneq (,$(shell command -v ifx 2>/dev/null))
+      ARCH  := em64t
+      OPSYS := linux
+      CMPLR := intel
+   endif
+endif
+
 # bomb if the compiler is not defined
 ifeq (${CMPLR},undefined)
-$(error The compiler is undefined)
+$(error The compiler is undefined: host ${MACHNAME} is not in the MACHSTATS \
+table and ifx is not on PATH (load the Intel compilers, or set ACES_HOST))
 endif
 
 #
