@@ -41,11 +41,14 @@ CFLAGS_EXTRA += -fPIC
 # 2026-10-19: binaries install to the installation directory ~/Develop/bin
 # (A2DEV_PATH, first on PATH), so the binaries run are the ones built here.
 # Libraries stay in this tree's aces2/lib.
-LDFLAGS_NUMLIBS:= -L$(MKLROOT)/lib/intel64  -Wl,--start-group $(MKL_GRP) -Wl,--end-group -pthread -L/home/perera/Develop/ACES_PROGRAM/aces2/lib -llb -llinpack
-
-DIR_INSTBIN := /home/perera/Develop/bin
-DIR_INSTLIB := /home/perera/Develop/ACES_PROGRAM/aces2/lib
+# 2026-08-12 (CMake superbuild): `?=` so a second checkout can override
+# them (`gmake DIR_INSTBIN=... DIR_INSTLIB=... all install`, as the
+# superbuild does); LDFLAGS_NUMLIBS takes its -L from DIR_INSTLIB.
+DIR_INSTBIN ?= /home/perera/Develop/bin
+DIR_INSTLIB ?= /home/perera/Develop/ACES_PROGRAM/aces2/lib
 DIR_SRCLIB  := ${DIR_INSTLIB}
+
+LDFLAGS_NUMLIBS:= -L$(MKLROOT)/lib/intel64  -Wl,--start-group $(MKL_GRP) -Wl,--end-group -pthread -L${DIR_INSTLIB} -llb -llinpack
 
 ###################################
 ## AME and ASL specific settings ##

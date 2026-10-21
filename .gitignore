@@ -5,3 +5,4 @@ build_config.sh
 # configure outputs
 aces3/config.status
 aces3/config.log
+build/

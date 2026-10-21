@@ -114,6 +114,16 @@ AC_CONFIG_FILES([src/aces/aces_library/special_directory/oed_F12/Makefile])
 AC_CONFIG_FILES([src/aces/aces_library/special_directory/F12_grid/Makefile])
 AC_CONFIG_FILES([src/aces/aces_library/special_directory/dkh/Makefile])
 AC_CONFIG_FILES([src/aces/aces_library/special_directory/direct_integral/Makefile])
+# 2026-08-12: prop_ints/Makefile.in has always existed in-tree (real
+# integral routines, not a stub) and every OTHER Makefile.in's LIBS
+# variable already links -lprop_ints -- but this AC_CONFIG_FILES entry was
+# missing, so `./configure` never generated its Makefile and nothing ever
+# built libprop_ints.a. Invisible until a truly from-scratch build actually
+# needed the link to succeed (see cmake/build_aces3.sh in the top-level
+# CMake superbuild for the full story); every prior build in this
+# project's history ran against a tree where libprop_ints.a already
+# existed from some earlier, more complete bootstrap.
+AC_CONFIG_FILES([src/aces/aces_library/special_directory/prop_ints/Makefile])
 AC_CONFIG_FILES([src/aces/aces_library/a2driver/symcor/Makefile])
 AC_CONFIG_FILES([src/aces/aces_library/a2driver/aces2/Makefile])
 AC_CONFIG_FILES([src/aces/aces_library/a2driver/geopt/Makefile])

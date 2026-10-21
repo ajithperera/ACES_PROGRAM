@@ -43,7 +43,7 @@ tl_tmp :=
 tl_tmp += \
           lib bin include \
           module% \
-          scr tmp work test configure \
+          scr tmp work test tests configure \
           CVS Basis Info Makefiles Scripts Test aces.py%
 tl_tmp += \
           molcas.% \

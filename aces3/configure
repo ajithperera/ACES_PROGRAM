@@ -3676,6 +3676,17 @@ ac_config_files="$ac_config_files src/aces/aces_library/special_directory/dkh/Ma
 
 ac_config_files="$ac_config_files src/aces/aces_library/special_directory/direct_integral/Makefile"
 
+# 2026-08-12: prop_ints/Makefile.in has always existed in-tree (real
+# integral routines, not a stub) and every OTHER Makefile.in's LIBS
+# variable already links -lprop_ints -- but this AC_CONFIG_FILES entry was
+# missing, so `./configure` never generated its Makefile and nothing ever
+# built libprop_ints.a. Invisible until a truly from-scratch build actually
+# needed the link to succeed (see cmake/build_aces3.sh in the top-level
+# CMake superbuild for the full story); every prior build in this
+# project's history ran against a tree where libprop_ints.a already
+# existed from some earlier, more complete bootstrap.
+ac_config_files="$ac_config_files src/aces/aces_library/special_directory/prop_ints/Makefile"
+
 ac_config_files="$ac_config_files src/aces/aces_library/a2driver/symcor/Makefile"
 
 ac_config_files="$ac_config_files src/aces/aces_library/a2driver/aces2/Makefile"
@@ -4404,6 +4415,7 @@ do
     "src/aces/aces_library/special_directory/F12_grid/Makefile") CONFIG_FILES="$CONFIG_FILES src/aces/aces_library/special_directory/F12_grid/Makefile" ;;
     "src/aces/aces_library/special_directory/dkh/Makefile") CONFIG_FILES="$CONFIG_FILES src/aces/aces_library/special_directory/dkh/Makefile" ;;
     "src/aces/aces_library/special_directory/direct_integral/Makefile") CONFIG_FILES="$CONFIG_FILES src/aces/aces_library/special_directory/direct_integral/Makefile" ;;
+    "src/aces/aces_library/special_directory/prop_ints/Makefile") CONFIG_FILES="$CONFIG_FILES src/aces/aces_library/special_directory/prop_ints/Makefile" ;;
     "src/aces/aces_library/a2driver/symcor/Makefile") CONFIG_FILES="$CONFIG_FILES src/aces/aces_library/a2driver/symcor/Makefile" ;;
     "src/aces/aces_library/a2driver/aces2/Makefile") CONFIG_FILES="$CONFIG_FILES src/aces/aces_library/a2driver/aces2/Makefile" ;;
     "src/aces/aces_library/a2driver/geopt/Makefile") CONFIG_FILES="$CONFIG_FILES src/aces/aces_library/a2driver/geopt/Makefile" ;;
