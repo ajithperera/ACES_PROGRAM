@@ -15,7 +15,10 @@ PYACES_LOG="$3"
 # zero-point-20260812 baseline, as TOTAL:PASS:FAIL:OTHER. Overridable via
 # environment for a deliberate, reviewed re-baseline -- not meant to be
 # edited casually to make a regression "pass".
-BASELINE_ACES2="${ACES_BASELINE_ACES2:-125:121:1:3}"
+# aces2 baseline updated 2026-10-21 (142 cases: the 08/2026 125 plus pCCD
+# and other cases added since; the same 020 FAIL and s_108/s_119b/s_122a.bw
+# ERROR as before).
+BASELINE_ACES2="${ACES_BASELINE_ACES2:-142:138:1:3}"
 BASELINE_ACES3="${ACES_BASELINE_ACES3:-37:37:0:0}"
 BASELINE_PYACES="${ACES_BASELINE_PYACES:-58:37:16:5}"
 
@@ -46,8 +49,13 @@ parse_pyaces() {
   fc=$(grep -oE 'FAIL_CLEAN: [0-9]+' "$log" 2>/dev/null | grep -oE '[0-9]+')
   cr=$(grep -oE 'CRASH: [0-9]+' "$log" 2>/dev/null | grep -oE '[0-9]+')
   nr=$(grep -oE 'NO_RESULT: [0-9]+' "$log" 2>/dev/null | grep -oE '[0-9]+')
+  mm=$(grep -oE 'MISMATCH: [0-9]+' "$log" 2>/dev/null | grep -oE '[0-9]+')
+  to=$(grep -oE 'TIMEOUT: [0-9]+' "$log" 2>/dev/null | grep -oE '[0-9]+')
   [ -z "$p" ] && { echo "?:?:?:?"; return; }
-  other=$(( ${cr:-0} + ${nr:-0} ))
+  # MISMATCH (wrong energy) counts as a failure, TIMEOUT as other, so no
+  # case drops out of the total.
+  fc=$(( ${fc:-0} + ${mm:-0} ))
+  other=$(( ${cr:-0} + ${nr:-0} + ${to:-0} ))
   total=$(( p + ${fc:-0} + other ))
   echo "$total:$p:${fc:-0}:$other"
 }

@@ -44,6 +44,10 @@ include(ExternalProject)
 # python3 with numpy already set up; see cmake/env.sh).
 set(ACES_MODULES "intel/2025.1.0 openmpi/5.0.7 python/3.12" CACHE STRING
     "module load set shared by aces2/aces3/pyaces (empty: current environment)")
+# The aces3 suite runs ACES_NP cases at a time with ACES_NP MPI ranks each
+# (ACES_NP^2 ranks): keep 4 on a 16-core node. Its references were made with
+# 4 ranks; with 8, several SIAL programs stop with "Block not found" or time
+# out (10/2026).
 set(ACES_NP 4 CACHE STRING
     "default MPI rank / parallel job count for the fast test suites")
 

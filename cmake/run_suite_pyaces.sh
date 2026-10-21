@@ -12,6 +12,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/env.sh"
 aces_load_modules "$MODULES"
 
 mkdir -p "$(dirname "$LOG")"
+export PYACES_SUITE_RUN_DIR="$(dirname "$LOG")/pyaces_suite_run"
 ( cd "$PYACES_DIR" && python3 pyaces_suite_runner.py ) > "$LOG" 2>&1
 echo "pyaces suite exit code: $?" >> "$LOG"
 exit 0
