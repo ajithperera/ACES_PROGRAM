@@ -509,6 +509,7 @@ c COMMON BLOCKS
 
 
 
+
 c This common block contains the IFLAGS and IFLAGS2 arrays for JODA ROUTINES
 c ONLY! The reason is that it contains both arrays back-to-back. If the
 c preprocessor define  is set, then the arrays are compressed
@@ -3237,7 +3238,25 @@ C
      &    ioppar(2).eq.46   ) Then 
           szTmp = 'oo_method=full-nr'//achar(0)
           call asv_update_kv(szTmp,iASV,szData,0)
-      Endif 
+      Endif
+C
+C Orbital-optimized pCCD family (PROGRAM=PCCD, PCCD_REF=OPTIMIZED):
+C RFO is the only orbital optimizer that converges (10/2026) and is the
+C default; BB-SD, BFGS, FULL-NR, AMSGRAD and ROTGRAD are retired.
+C
+      If (ioppar(232).eq.4 .and.
+     &    ioppar(279).eq.5) Then
+          If (ioppar(278).eq.0) Then
+              szTmp = 'oo_method=rfo'//achar(0)
+              call asv_update_kv(szTmp,iASV,szData,0)
+          Else If (ioppar(278).ne.6) Then
+              Write(6,"(a,a)") " @-GTFLGS: PCCD_REF=OPTIMIZED supports",
+     &                         " only OO_METHOD=RFO (the default)."
+              Write(6,"(a,a)") " BB-SD, BFGS, FULL-NR, AMSGRAD and",
+     &                         " ROTGRAD have been retired."
+              Call Errex
+          Endif
+      Endif
 
 c   o NOREORI and finite difference vibrational frequency calculations.
 c
