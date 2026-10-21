@@ -89,6 +89,14 @@ echo "=== step 4: link ==="
 # stale/dead location -- ACES is always this same build's own aces2 tree.
 LIBDIRS=$(find $ACES -maxdepth 2 -iname "*.a" | xargs -n1 dirname | sort -u | sed 's/^/-L/' | tr '\n' ' ')
 LIBNAMES=$(find $ACES -maxdepth 2 -iname "*.a" | xargs -n1 basename | sed -E 's/^lib(.*)\.a$/\1/' | sort -u | sed 's/^/-l/' | tr '\n' ' ')
+# 2026-10-21: standalone aces2 programs pyaces never calls, left out of the
+# link. They were re-enabled in aces2 after 08/2026 (723989ab) and carry
+# their own copies of vcc routines; sorted ahead of -lvcc they won the link
+# (rpa: coreng, e4seng, dmptgss, linear, ...), and UCC(4) case 025 came out
+# 2.5e-5 off while standalone xvcc stayed right.
+for m in a2mix aux rpa scrnc; do
+  LIBNAMES=$(echo " $LIBNAMES " | sed "s/ -l$m / /")
+done
 
 # 12 aces2 modules (intprc, vmol, joda, vcc, vscf, vtran, hbar, lambda, vee,
 # pccd, props, vmol2ja) each have their own Fortran PROGRAM entry (MAIN__) --
