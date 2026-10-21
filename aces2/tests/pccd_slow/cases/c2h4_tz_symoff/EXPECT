@@ -1,0 +1,6 @@
+# C2H4 cc-pVTZ, SYMMETRY=OFF, from HF orbitals (~50 min, ~2 GB). Very flat
+# surface near the minimum (soft modes 1e-7..1e-6); run with --long.
+energy -78.2466963355
+grads 77
+long
+timeout 10800

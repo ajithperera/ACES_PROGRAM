@@ -1,0 +1,5 @@
+# N2 cc-pVDZ R=2.52 from supplied orbitals: the walk leaves the physical OO-pCCD
+# branch (T2 runaway). Must stop cleanly (trust collapse) and report the last
+# checked stationary point, a saddle with lowest Hessian eigenvalue -5.635e-2.
+fail trust radius collapsed
+stationary -108.699427553709 -5.6353E-02

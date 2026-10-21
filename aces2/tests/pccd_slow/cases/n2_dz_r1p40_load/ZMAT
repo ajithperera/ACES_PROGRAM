@@ -1,0 +1,14 @@
+N2 OO-pCCD cc-pVDZ R=1.4
+N
+N 1 R
+
+R=1.4
+
+*ACES2(BASIS=CC-PVDZ
+CALC=PCCD,PROGRAM=PCCD
+REF=RHF,MEM_SIZE=4gb
+sym=off
+PCCD_REF=OPTIMIZED
+BRUCK_CONV=6,OO_MAXCYC=800
+cc_conv=10,cc_maxcyc=300,scf_conv=10,scf_maxcyc=300)
+
