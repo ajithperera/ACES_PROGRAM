@@ -332,6 +332,7 @@ C T2 to list 46 (all irreps zeroed first).
       Dref = Eref + Enuc - Escf
       If (Dabs(Dref) .Gt. 1.0D-8) Write(6,"(2a,1p,E10.3)")
      +   " @-PAIR WARNING: pair-form reference energy - SCFENEG =",Dref
+      Call Pccd_doci_run(Work(Iwr),Lwr,Ec,Eref,Enuc)
 
       Write(6,"(a,F12.6)") " @-RFO L2 max|amp| (pair lambda) =",Alm
       If (Alm .Gt. Ampcap) Then
