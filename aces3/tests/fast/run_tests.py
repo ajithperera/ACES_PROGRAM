@@ -271,6 +271,16 @@ def main():
     if not os.path.isfile(XACES3):
         sys.exit(f"bin/xaces3 not found at {XACES3} -- build it first")
 
+    # Each case's scratch is a node-local tempfile dir, and mpirun inside a
+    # Slurm job places ranks across all of the job's nodes: ranks on other
+    # nodes can't see the scratch files. On 2026-10-21 a --ntasks=16 job
+    # without --nodes=1 landed on 9 nodes and gave 12/37 FAIL (timeouts,
+    # "Block not found"); the same build on one node is 37/37.
+    nnodes = int(os.environ.get("SLURM_JOB_NUM_NODES", "1"))
+    if nnodes > 1:
+        sys.exit(f"this Slurm job spans {nnodes} nodes; the suite needs one "
+                 "node (sbatch --nodes=1)")
+
     all_cases = sorted(
         d for d in os.listdir(CASES_DIR)
         if os.path.isfile(os.path.join(CASES_DIR, d, "ZMAT"))

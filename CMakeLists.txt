@@ -46,8 +46,10 @@ set(ACES_MODULES "intel/2025.1.0 openmpi/5.0.7 python/3.12" CACHE STRING
     "module load set shared by aces2/aces3/pyaces (empty: current environment)")
 # The aces3 suite runs ACES_NP cases at a time with ACES_NP MPI ranks each
 # (ACES_NP^2 ranks): keep 4 on a 16-core node, as the references were made
-# with 4 ranks. (10/2026: some SIAL programs stop with "Block not found" or
-# time out at any rank count, also with the 08/2026 build; still open.)
+# with 4 ranks, all on ONE node (sbatch --nodes=1; run_tests.py refuses a
+# multi-node job: the 10/2026 timeouts and "Block not found" failures were
+# a 16-task job spread over 9 nodes). steom_so still fails ~1 run in 12
+# (NaN, then DGEBAL error, ~12 s in) under both UCX and ob1: a race, open.
 set(ACES_NP 4 CACHE STRING
     "default MPI rank / parallel job count for the fast test suites")
 
