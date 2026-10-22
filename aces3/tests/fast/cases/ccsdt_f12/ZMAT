@@ -9,8 +9,7 @@ F12GAMMA=1.5,UNITS=ANGSTROM)
 *SIP
 MAXMEM=1500
 TIMER=YES
-SIAL_PROGRAM=scf_aguess.sio
-SIAL_PROGRAM=scf_rhf_aguess.sio
+SIAL_PROGRAM=scf_rhf.sio
 SIAL_PROGRAM=F12_2el_tran_rhf.sio
 SIAL_PROGRAM=F12_multiint_ccsd.sio
 SIAL_PROGRAM=interm_F12_ccsd.sio

@@ -12,8 +12,7 @@ BASIS=DZP,REF=UHF,MULT=2)
 
 *SIP
 MAXMEM=2000
-SIAL_PROGRAM = scf_aguess.sio
-SIAL_PROGRAM = scf_uhf_finish_aguess.sio
+SIAL_PROGRAM = scf_uhf.sio
 SIAL_PROGRAM = tran_uhf_ao_sv1.sio
 SIAL_PROGRAM = rccsd_uhf.sio
 SIAL_PROGRAM = urccsdpt_aaa.sio

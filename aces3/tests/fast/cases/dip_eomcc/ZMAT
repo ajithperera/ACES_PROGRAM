@@ -21,8 +21,7 @@ cc_conv=8,scf_conv=8,estate_tol=8)
 
 *SIP
 MAXMEM=2000
-SIAL_PROGRAM = scf_aguess.sio
-SIAL_PROGRAM = scf_uhf_finish_aguess.sio
+SIAL_PROGRAM = scf_uhf.sio
 SIAL_PROGRAM = cis_uhf.sio
 SIAL_PROGRAM = tran_uhf_dip.sio
 SIAL_PROGRAM = ccsd_uhf_dip.sio
