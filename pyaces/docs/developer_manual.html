@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>pyaces 개발자 매뉴얼</title>
+<style>
+@page { size: A4; margin: 20mm 18mm 20mm 18mm;
+  @bottom-center { content: counter(page); font-size: 9pt; color: #666; } }
+:root { --ink:#1b1f24; --muted:#5b6470; --rule:#d5dae0; --accent:#1f5f8b; --bg-code:#f4f6f8; --warn:#9a3b00; }
+html { font-size: 10pt; }
+body { font-family: "Noto Sans CJK KR", sans-serif; color: var(--ink); background:#fff; line-height: 1.6; margin: 0; }
+h1, h2, h3, h4 { font-family: "Noto Sans CJK KR", sans-serif; color: var(--ink); line-height: 1.3; }
+h2 { font-size: 17pt; border-bottom: 2px solid var(--accent); padding-bottom: 4pt; margin-top: 0; break-before: page; }
+h3 { font-size: 12.5pt; margin: 16pt 0 6pt; color: var(--accent); break-after: avoid; }
+h4 { font-size: 10.5pt; margin: 12pt 0 4pt; break-after: avoid; }
+p { margin: 5pt 0; }
+code, pre, .mono { font-family: "DejaVu Sans Mono", "Noto Sans Mono CJK KR", monospace; font-size: 8.6pt; }
+code { background: var(--bg-code); padding: 0 2pt; border-radius: 2pt; }
+pre { background: var(--bg-code); border-left: 3px solid var(--accent); padding: 6pt 9pt; white-space: pre-wrap; word-break: break-all; break-inside: avoid; margin: 6pt 0; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt; font-size: 8.8pt; break-inside: auto; }
+th, td { border: 1px solid var(--rule); padding: 3pt 5pt; vertical-align: top; text-align: left; }
+th { background: #eaf0f5; }
+tr { break-inside: avoid; }
+td code, th code { font-size: 8pt; }
+.note, .warn { border: 1px solid var(--rule); border-left: 4px solid var(--accent); padding: 5pt 9pt; margin: 8pt 0; background: #f7fafc; break-inside: avoid; }
+.warn { border-left-color: var(--warn); background: #fdf6f1; }
+.note b:first-child, .warn b:first-child { color: var(--accent); }
+.warn b:first-child { color: var(--warn); }
+ul, ol { margin: 4pt 0 6pt; padding-left: 18pt; }
+li { margin: 2pt 0; }
+.cover { height: 247mm; display: flex; flex-direction: column; justify-content: center; }
+.cover h1 { font-size: 30pt; margin: 0 0 6pt; color: var(--accent); }
+.cover .sub { font-size: 14pt; color: var(--muted); margin-bottom: 30pt; }
+.cover table { width: auto; font-size: 10pt; }
+.cover td { border: none; padding: 2pt 14pt 2pt 0; }
+.toc { break-before: page; }
+.toc h2 { break-before: avoid; }
+.toc ol { list-style: none; padding-left: 0; font-size: 10.5pt; }
+.toc ol ol { padding-left: 16pt; font-size: 9.5pt; color: var(--muted); }
+.toc a { color: var(--ink); text-decoration: none; }
+.flow { display: flex; flex-direction: column; gap: 3pt; margin: 8pt 0; break-inside: avoid; }
+.flow div { border: 1px solid var(--accent); border-radius: 3pt; padding: 4pt 8pt; background: #f2f7fb; }
+.flow .arrow { border: none; background: none; text-align: center; padding: 0; color: var(--accent); }
+.small { font-size: 8.6pt; color: var(--muted); }
+.pill { display: inline-block; font-size: 7.8pt; padding: 0 5pt; border-radius: 7pt; background: #e1ecf4; color: var(--accent); }
+.pill.legacy { background: #eee; color: #777; }
+.pill.gen { background: #eef6e8; color: #3d6b1f; }
+</style>
+</head>
+<body>
+
+<!-- ============================ 표지 ============================ -->
+<section class="cover">
+  <h1>pyaces 개발자 매뉴얼</h1>
+  <div class="sub">ACES II 를 Python 에서 부르는 f2py 확장 모듈 <code>aces2py</code> 의 구조 · 빌드 · 확장 · 테스트</div>
+  <table>
+    <tr><td><b>저장소</b></td><td><code>ACES_PROGRAM/pyaces</code> (GitHub youngchoonpark/ACES, private)</td></tr>
+    <tr><td><b>기준 커밋</b></td><td><code>eab3c4e6</code> (master, 2026-10-14)</td></tr>
+    <tr><td><b>작성일</b></td><td>2026-10-23</td></tr>
+    <tr><td><b>검증 상태</b></td><td>pyaces 스위트 51/51 PASS — 로컬 워크스테이션(oneAPI 2024.0) · ccsd 서버(oneAPI 2023.2)</td></tr>
+    <tr><td><b>링크 감사</b></td><td>collision baseline 296 항목, COMMON shadow 0 — 두 기계에서 동일</td></tr>
+  </table>
+  <p class="small" style="margin-top:30pt">이 문서는 소스 코드(<code>pyaces/build.sh</code>, <code>a2_pyf/*.F</code>, 생성된 <code>Main/gen/aces2pymodule.c</code>, 테스트 스크립트)와
+  빌드된 <code>.so</code> 를 직접 읽고 확인한 내용으로 작성했다. 줄 번호는 기준 커밋 기준이다.</p>
+</section>
+
+<!-- ============================ 목차 ============================ -->
+<section class="toc">
+<h2>목차</h2>
+<ol>
+  <li><a href="#c1">1. 개요</a></li>
+  <li><a href="#c2">2. 디렉터리 구조</a></li>
+  <li><a href="#c3">3. 빌드 환경</a></li>
+  <li><a href="#c4">4. 빌드 파이프라인 (<code>build.sh</code>)</a></li>
+  <li><a href="#c5">5. 하나의 .so 로 링크하기 — 심볼 충돌과 해결</a></li>
+  <li><a href="#c6">6. 링크 결과 감사 도구 (<code>collision_audit.py</code>)</a></li>
+  <li><a href="#c7">7. <code>aces2py</code> 모듈 API</a></li>
+  <li><a href="#c8">8. 계산 실행하기</a></li>
+  <li><a href="#c9">9. 테스트 스위트</a></li>
+  <li><a href="#c10">10. 확장하기 — 새 진입점과 새 테스트</a></li>
+  <li><a href="#c11">11. 알려진 문제 (수정 내역 포함)</a></li>
+  <li><a href="#c12">12. 개발 이력과 서버 배포</a></li>
+  <li><a href="#ca">부록 A. 레거시 파일 · 부록 B. 명령 요약</a></li>
+</ol>
+</section>
+
+<!-- ============================ 1 ============================ -->
+<section id="c1">
+<h2>1. 개요</h2>
+
+<p><b>pyaces</b> 는 Fortran 양자화학 프로그램 ACES II(<code>ACES_PROGRAM/aces2</code>)의 계산 모듈을 Python 에서 직접 호출하기 위한 인터페이스다.
+ACES II 는 원래 <code>xjoda</code>, <code>xvscf</code>, <code>xvcc</code> 처럼 모듈마다 독립 실행 파일을 만들고, 드라이버가 이를 차례로 실행하며
+디스크 파일(JOBARC, MOINTS 등)로 상태를 주고받는다. pyaces 는 이 모듈들을 <b>하나의 공유 라이브러리</b>
+<code>aces2py.cpython-312-x86_64-linux-gnu.so</code> 로 링크하고, numpy 의 f2py 로 만든 Python 래퍼를 붙인다.</p>
+
+<div class="flow">
+  <div><b>Python</b> — <code>import aces2py</code>; <code>aces2py.Init()</code>; <code>aces2py.Runcc(0)</code>; <code>aces2py.Dgetrecpy("TOTENERG", e)</code></div>
+  <div class="arrow">▼ f2py C 래퍼 (<code>Main/gen/aces2pymodule.c</code>)</div>
+  <div><b>pyaces Fortran 셈(shim)</b> — <code>Main/init.F</code>, <code>a2_pyf/run*.F</code>, <code>a2_pyf/*recpy.F</code>, <code>*lstpy.F</code>, <code>aux_pyaces/*.F</code></div>
+  <div class="arrow">▼ 정적 링크 (<code>-Wl,--start-group</code> … 약 107개 아카이브)</div>
+  <div><b>aces2 아카이브</b> — <code>aces2/lib/lib*.a</code> (joda, vmol, vscf, vtran, intprc, vcc, lambda, vee, props, intgrt, dirmp2 …) + 일부는 <code>build/patched_libs</code> 의 수정본</div>
+  <div class="arrow">▼</div>
+  <div><b>Intel MKL ILP64 (sequential)</b> · Intel Fortran 런타임</div>
+</div>
+
+<h3>1.1 핵심 사실</h3>
+<ul>
+  <li><b>aces2 소스는 건드리지 않는다.</b> pyaces 는 aces2 가 만든 <code>.a</code> 를 그대로 링크하고, 충돌이 나는 아카이브만 임시 복사본을 만들어 <code>objcopy</code> 로 심볼 이름을 바꾼다. aces2 트리는 고전 드라이버와 테스트 스위트의 공용 소스이기 때문이다.</li>
+  <li><b>모든 정수는 64비트</b>다. aces2 와 pyaces 는 <code>-i8</code> 로 컴파일되고 MKL 도 ILP64 로 링크한다.</li>
+  <li><b>한 프로세스에서 한 계산만</b> 한다. aces2 의 COMMON 블록 상태는 한 번 쓰는 것을 전제로 하며, 같은 프로세스에서 Vtran/Vcc 를 두 번 부르면 오류 없이 틀린 답으로 수렴한 사례가 있다.</li>
+  <li><b>가장 큰 위험은 링크 단계</b>다. 고전 빌드에서는 실행 파일마다 따로 링크되던 동명 루틴(서로 다른 구현)이 하나의 .so 안에서 충돌한다. 링커는 경고 없이 하나를 고르므로 결과가 조용히 틀릴 수 있다. 이를 다루는 장치가 5–6장의 핵심이다.</li>
+  <li><b>테스트는 aces2 fast 스위트를 재사용</b>한다. 125개 케이스 중 pyaces 로 실행 가능한 51개(SCF 9, CC 31, EOM 8, KS 3)를 돌려 JOBARC 에너지를 기준값과 1×10<sup>-6</sup> E<sub>h</sub> 이내로 비교한다.</li>
+</ul>
+
+<h3>1.2 이 문서를 읽는 순서</h3>
+<p>처음이라면 2장(어떤 파일이 살아 있는지) → 4장(빌드) → 7–8장(API 와 실행) 순서로 읽는다. 새 Fortran 루틴을 노출하거나 aces2 모듈을 추가로 링크하려면
+5–6장과 10장을 반드시 읽는다. 11장은 지금 코드에 남아 있는 결함 목록이다.</p>
+</section>
+
+<!-- ============================ 2 ============================ -->
+<section id="c2">
+<h2>2. 디렉터리 구조</h2>
+
+<p><code>pyaces/</code> 에는 2023년 원본 acespy 의 흔적이 많이 남아 있어서, 지금 빌드가 실제로 쓰는 파일과 그렇지 않은 파일을 구분하는 것이 중요하다.
+<span class="pill">사용</span> 은 현재 빌드/테스트가 쓰는 것, <span class="pill gen">생성</span> 은 빌드 산출물(gitignore), <span class="pill legacy">레거시</span> 는 쓰지 않는 것이다.</p>
+
+<table>
+<tr><th style="width:30%">경로</th><th style="width:10%">상태</th><th>내용</th></tr>
+<tr><td><code>build.sh</code></td><td><span class="pill">사용</span></td><td>빌드 전체(약 506줄). f2py 래퍼 생성 → C/Fortran 컴파일 → 패치 아카이브 → 링크 → import 시험 → 링크 감사. 충돌 해결 이력이 주석으로 기록되어 있다.</td></tr>
+<tr><td><code>Main/aces2.pyf</code></td><td><span class="pill">사용</span></td><td>f2py 시그니처 파일. 모듈 이름 <code>aces2py</code> 를 정한다. <b>단, 최종 시그니처는 Fortran 소스에서 결정된다</b>(7.1절).</td></tr>
+<tr><td><code>Main/init.F</code>, <code>Main/aces2_main.F</code></td><td><span class="pill">사용</span></td><td><code>Init()</code> 진입점. Joda 로 ZMAT 를 읽고 <code>aces_init</code> 으로 코어 메모리·플래그·리스트를 초기화한다.</td></tr>
+<tr><td><code>Main/*.com</code></td><td><span class="pill">사용</span></td><td>init.F 가 따옴표 <code>#include</code> 로 읽는 헤더 사본(<code>integer*8</code> 명시판). aces2 의 헤더와 내용이 다르다(11장).</td></tr>
+<tr><td><code>a2_pyf/*.F</code></td><td><span class="pill">사용</span></td><td>Python 에 노출되는 래퍼와 드라이버: <code>run*.F</code>, <code>*recpy.F</code>, <code>*lstpy.F</code>, <code>*allpy.F</code>, <code>get1ehpy/get2ehpy.F</code>, <code>acesja*.F</code>, 그리고 내부용 <code>a2_get*/a2_put*.F</code>. <code>rungrads</code>, <code>run1props</code>, <code>run</code> 은 빌드에서 제외된다.</td></tr>
+<tr><td><code>aux_pyaces/*.F</code></td><td><span class="pill">사용</span></td><td><code>init_legacies</code>(레거시 COMMON 초기화), <code>get1ents</code>/<code>get2eints</code>(IIII 파일에서 AO 적분 읽기), <code>sym_expand</code>.</td></tr>
+<tr><td><code>tools/collision_audit.py</code></td><td><span class="pill">사용</span></td><td>링크 결과 감사(6장). <code>collision_baseline.txt</code>(296), <code>common_shadow_baseline.txt</code>(0).</td></tr>
+<tr><td><code>tools/compat_bin/ifort</code></td><td><span class="pill">사용</span></td><td><code>exec ifx "$@"</code> 두 줄짜리 셈. ifort 가 없는 oneAPI 에서도 <code>ifort</code> 이름으로 ifx 를 부른다.</td></tr>
+<tr><td><code>pyaces_run_case.py</code></td><td><span class="pill">사용</span></td><td>케이스 하나를 독립 프로세스에서 실행하고 결과를 표식 줄로 출력한다(8장).</td></tr>
+<tr><td><code>pyaces_suite_runner.py</code></td><td><span class="pill">사용</span></td><td>51개 케이스를 돌리고 PASS/MISMATCH/… 를 판정한다(9장).</td></tr>
+<tr><td><code>classify_suite.py</code>, <code>suite_classification.tsv</code></td><td><span class="pill">사용</span></td><td>aces2 fast 스위트 케이스를 범주·진입점·기준값으로 분류한 표와, 그 표의 최초 생성기. <b>TSV 에는 손으로 고친 행이 있다</b>(9.4절).</td></tr>
+<tr><td><code>Main/gen/</code></td><td><span class="pill gen">생성</span></td><td>f2py 산출물 <code>aces2pymodule.c</code>, <code>aces2py-f2pywrappers.f</code>.</td></tr>
+<tr><td><code>Main/build/</code></td><td><span class="pill gen">생성</span></td><td>모든 <code>.o</code> 와 최종 <code>aces2py.cpython-312-x86_64-linux-gnu.so</code>.</td></tr>
+<tr><td><code>build/patched_libs/</code></td><td><span class="pill gen">생성</span></td><td>심볼을 고친 aces2 아카이브 사본(약 37개). 빌드마다 지우고 다시 만든다.</td></tr>
+<tr><td><code>f2py_gen.log</code></td><td><span class="pill gen">생성</span></td><td>f2py 래퍼 생성 로그. 래퍼가 어떻게 만들어졌는지 확인할 때 본다.</td></tr>
+<tr><td><code>Fxx/</code>, <code>include/</code>, <code>a2_pyf/include_no/</code>, <code>Main/Archive/</code>, <code>a2_pyf/Archive/</code>, <code>Main/Pilot_tests/</code>, <code>Exp/</code>, <code>Python/</code>, <code>rename.py</code>, <code>README</code>, <code>frequently_asked_questions</code></td><td><span class="pill legacy">레거시</span></td><td>원본 acespy 시절의 공유 라이브러리 빌드, 옛 헤더, 시험 코드, f2py 튜토리얼. 현재 빌드와 무관하다(부록 A).</td></tr>
+</table>
+
+<div class="note"><b>소문자 <code>.f</code> 파일</b> — <code>a2_pyf/*.f</code>, <code>Main/init.f</code> 등은 예전 전처리 결과물이다. 빌드는 <code>*.F</code> 만 쓰므로 <code>.F</code> 를 고쳐야 한다.</div>
+</section>
+
+<!-- ============================ 3 ============================ -->
+<section id="c3">
+<h2>3. 빌드 환경</h2>
+
+<h3>3.1 필요한 도구</h3>
+<table>
+<tr><th style="width:26%">항목</th><th>요구 사항</th></tr>
+<tr><td>Fortran</td><td>Intel <code>ifx</code> (oneAPI 2023.2 · 2024.0 에서 검증). <code>ifort</code> 이름은 <code>tools/compat_bin</code> 셈이 해결한다.</td></tr>
+<tr><td>C</td><td><code>mpicc</code> (f2py C 래퍼와 <code>fortranobject.c</code> 컴파일용. 로컬에서는 gcc 를 감싼다)</td></tr>
+<tr><td>Python</td><td><b>3.12</b> + numpy (f2py 포함). 출력 파일 이름이 <code>cpython-312</code> 로 고정되어 있어 다른 버전에서는 import 되지 않는다.</td></tr>
+<tr><td>BLAS/LAPACK</td><td>Intel MKL, <code>MKLROOT</code> 설정 필수. ILP64 · sequential 로 링크.</td></tr>
+<tr><td>binutils</td><td><code>ar</code>, <code>nm</code>, <code>objcopy</code></td></tr>
+<tr><td>환경 모듈</td><td><code>module</code> 명령. <code>pyaces/build.sh</code> 가 스스로 <code>module purge</code> 후 다시 load 한다.</td></tr>
+<tr><td>선행 빌드</td><td>aces2 가 먼저 빌드되어 <code>aces2/lib/lib*.a</code> 가 있어야 한다.</td></tr>
+</table>
+
+<h3>3.2 configure 와 모듈 세트</h3>
+<p>최상위 <code>./configure</code> 가 툴체인을 찾아 <code>build_config.sh</code> 를 쓴다. 여기 기록된 <code>ACES_PROGRAM_MODULES</code> 를 최상위 <code>build.sh</code> 가
+export 하고, <code>pyaces/build.sh</code> 는 <code>module purge</code> 뒤 이 세트를 다시 load 한다. 값이 없으면 HiPerGator 세트
+(<code>intel/2025.1.0 openmpi/5.0.7 python/3.12</code>)로 대체된다.</p>
+<pre><code># ccsd 서버
+./configure --modules="intel/oneapi_2023.2.0 python/3.12.3" --np=4
+# 로컬 워크스테이션: build_config.sh 의 ACES_PROGRAM_MODULES="intel-ompi/2024.0"</code></pre>
+<div class="warn"><b>주의</b> — 모듈 세트에 Python 모듈을 꼭 넣는다. <code>module purge</code> 가 numpy 가 있는 Python 을 내려 버리면 f2py 단계가 실패한다.</div>
+
+<h3>3.3 로케일</h3>
+<p><code>pyaces/build.sh</code> 는 <code>export LC_ALL=C</code> 를 강제한다(21행). 이 스크립트 안의 glob 과 <code>sort</code> 가 아카이브 멤버 순서와 <code>-l</code> 순서를
+정하고, 그 순서가 동명 루틴 중 어느 것이 링크되는지를 바꾸기 때문이다. aces2 makefile 의 소스 목록도 같은 이유로 <code>$(sort …)</code> 로 감싸 두었다
+(GNU Make 4.2 는 wildcard 를 정렬하지 않고, 4.3 은 로케일 순서로 정렬한다).</p>
+
+<h3>3.4 빌드 명령</h3>
+<pre><code>./build.sh aces2 pyaces          # 최상위: aces2 다음 pyaces
+./build.sh pyaces                # aces2 가 이미 있으면 pyaces 만
+bash pyaces/build.sh             # 직접 실행 (ACES_PROGRAM_MODULES 를 지정할 것)</code></pre>
+<p>로그는 <code>build_logs/unified_build_pyaces.log</code>. 로컬 워크스테이션에서는 할당 코어 안에서 돌린다:
+<code>taskset -c 20-23 flock -s /tmp/qtoy-bench.lock ./build.sh pyaces</code>. ccsd 서버에서는 PBS(<code>build_logs/build_ccsd.pbs</code>)로만 빌드한다.</p>
+<div class="note"><b>컴파일 플래그를 바꿨다면</b> — make 는 플래그 변경을 추적하지 않는다. aces2 플래그를 바꾼 뒤에는 <code>git clean -fdXq aces2</code> 로 산출물을 지우고 다시 빌드한다. pyaces 는 매번 <code>gen/</code> 과 <code>build/</code> 를 지우고 새로 만든다.</div>
+</section>
+
+<!-- ============================ 4 ============================ -->
+<section id="c4">
+<h2>4. 빌드 파이프라인 (<code>build.sh</code>)</h2>
+
+<h3>4.0 준비 (1–38행)</h3>
+<ul>
+  <li><code>tools/compat_bin</code> 을 PATH 앞에 넣어 <code>ifort → ifx</code>.</li>
+  <li><code>module purge</code> → <code>module load $ACES_PROGRAM_MODULES</code>. 실패하면 configure 를 다시 하라는 안내와 함께 종료.</li>
+  <li><code>MKLROOT</code> 가 비어 있으면 종료. <code>MKL=$MKLROOT/lib/intel64</code> (없으면 <code>$MKLROOT/lib</code>).</li>
+  <li><code>export LC_ALL=C</code>.</li>
+  <li><code>NUMPY_INC</code>, <code>PY_INC</code>, <code>F2PY_SRC</code>(numpy 안의 <code>f2py/src</code>)를 지금 쓰는 python3 에 물어 정한다.</li>
+  <li><code>cd Main; rm -rf gen build; mkdir -p build</code>.</li>
+</ul>
+
+<h3>4.1 소스 목록</h3>
+<p><b><code>PYF_SOURCES</code></b>(47–52행): <code>.pyf</code> 에 선언된 루틴을 <i>정의하는</i> 소스만 나열한다. f2py 에 <code>.pyf</code> 만 주면 빈 껍데기 래퍼가 생기고,
+반대로 모든 소스를 주면 f2py 가 그 안의 모든 서브루틴을 자동으로 래핑하면서 대문자 F77 이름에서 대소문자 맹글링 오류가 난다. 그래서 필요한 파일만 고른다.</p>
+<p><b><code>SOURCES</code></b>(54–64행): 컴파일할 전체 Fortran. <code>a2_pyf/*.F</code> 중 <code>rungrads</code>·<code>run1props</code>·<code>run</code> 을 뺀 것, <code>Main/init.F</code>, <code>Main/aces2_main.F</code>, <code>aux_pyaces/*.F</code>.
+따라서 <code>a2_get*/a2_put*</code>, <code>getlstpy_dbg</code>, <code>get1epy</code>, <code>returnpy</code> 는 링크되지만 Python 에는 노출되지 않는다.</p>
+
+<h3>4.2 단계별 동작</h3>
+<table>
+<tr><th style="width:17%">단계</th><th>명령 / 동작</th><th style="width:24%">산출물</th></tr>
+<tr><td>1. 래퍼 생성</td><td><code>python3 -m numpy.f2py aces2.pyf $PYF_SOURCES -m aces2py --build-dir gen</code> (생성만, <code>-c</code> 없음). 이어서 <code>sed</code> 로 <code>F_FUNC(Name,…)</code> 의 첫 인자를 소문자로 바꾼다 — ifx 는 <code>init_</code> 처럼 소문자 심볼을 내보내는데 f2py 는 소스 대소문자 <code>Init</code> 을 쓰기 때문이다.</td><td><code>gen/aces2pymodule.c</code><br><code>gen/aces2py-f2pywrappers.f</code><br><code>f2py_gen.log</code></td></tr>
+<tr><td>2. C 컴파일</td><td><code>mpicc -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC</code> 로 모듈 C 파일과 <code>fortranobject.c</code></td><td><code>build/aces2pymodule.o</code>, <code>build/fortranobject.o</code></td></tr>
+<tr><td>3. Fortran 컴파일</td><td>아래 <code>FFLAGS</code> 로 <code>$SOURCES</code> 와 f2py 래퍼를 컴파일. 그 다음 <code>objcopy --redefine-sym props_=pyaces_vprops_props_ build/runee.o</code> (Runee 가 이름이 바뀐 vprops 의 PROPS 를 부르도록).</td><td><code>build/*.o</code></td></tr>
+<tr><td>4. 링크</td><td>LIBDIRS/LIBNAMES 생성, 충돌 모듈의 패치 아카이브 생성(5장), 그리고 <code>ifx -shared -nofor-main</code>.</td><td><code>build/aces2py.cpython-312-x86_64-linux-gnu.so</code></td></tr>
+<tr><td>5. import 시험</td><td><code>python3 -c "import aces2py; print('IMPORT OK')"</code> — 실패하면 <code>set -e</code> 로 빌드 실패.</td><td>—</td></tr>
+<tr><td>6. 링크 감사</td><td><code>python3 tools/collision_audit.py || true</code> — 권고용이며 빌드를 실패시키지 않는다.</td><td>로그의 <code>@COLLISION_AUDIT:</code> 줄</td></tr>
+</table>
+
+<h4>Fortran 플래그</h4>
+<pre><code>FFLAGS="-diag-disable=10448 -i8 -fPIC -fp-model strict -O1 -assume minus0 -qopenmp \
+        -D__fortran -D__fortran77 -D_INTEL -D_RECL_IS_WORDS_ \
+        -I$ACES/include -I$ACES/acescore/include -I. -FI"</code></pre>
+<ul>
+  <li><code>-i8</code>: 기본 INTEGER 를 8바이트로. aces2 와 MKL ILP64 에 맞춘다.</li>
+  <li><code>-FI</code>: 고정 형식 소스. <code>-D__fortran77</code> 은 aces2 헤더의 F77 분기를 고른다.</li>
+  <li>헤더는 aces2 의 <code>include</code>, <code>acescore/include</code> 를 쓴다(<code>pyaces/include/</code> 는 쓰지 않는다).</li>
+</ul>
+
+<h4>링크 명령</h4>
+<pre><code>ifx -shared -nofor-main -o build/aces2py.cpython-312-x86_64-linux-gnu.so build/*.o \
+    -L$PATCHED_LIBDIR $LIBDIRS -Wl,--start-group $LIBNAMES -Wl,--end-group \
+    -L$MKL -Wl,--start-group -lmkl_intel_ilp64 -lmkl_lapack95_ilp64 \
+           -lmkl_sequential -lmkl_core -Wl,--end-group -lpthread</code></pre>
+<ul>
+  <li><code>LIBDIRS</code>/<code>LIBNAMES</code>: <code>find $ACES -maxdepth 2 -iname "*.a"</code> 로 매번 새로 만든다(정렬·중복 제거). aces2 의 모든 아카이브가 한 그룹 안에 들어가므로 순환 의존도 풀린다.</li>
+  <li><code>-L$PATCHED_LIBDIR</code> 가 맨 앞이라, 같은 이름의 패치본이 원본보다 먼저 선택된다.</li>
+  <li><code>-nofor-main</code>: ifx 가 자체 main 을 요구하지 않게 한다.</li>
+</ul>
+</section>
+
+<!-- ============================ 5 ============================ -->
+<section id="c5">
+<h2>5. 하나의 .so 로 링크하기 — 심볼 충돌과 해결</h2>
+
+<p>고전 ACES II 빌드에서는 모듈마다 실행 파일을 따로 링크한다. 그래서 <code>vcc</code> 의 <code>FINISH</code> 와 <code>lambda</code> 의 <code>FINISH</code> 처럼
+<b>이름은 같고 구현은 다른 루틴</b>이 있어도 문제가 없었다. pyaces 는 이것들을 한 .so 에 모두 넣으므로, 링커가 그중 하나를 골라 모든 호출자에게 준다.
+링커는 경고하지 않는다. 결과는 세그폴트, <code>@GETLST: List (x,y) does not exist</code>, 혹은 <b>조용히 틀린 에너지</b>다.
+pyaces 의 링크 단계에는 이를 막기 위한 장치가 네 가지 있다.</p>
+
+<h3>5.1 MAIN__ 지역화</h3>
+<p>12개 모듈(<code>hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vtran intprc</code>, <code>MAIN_COLLISION_MODULES</code>)은 Fortran PROGRAM 을 가지고 있어
+각자 <code>MAIN__</code> 를 정의한다. 독립 실행 파일에는 필요하지만 한 .so 에서는 "multiple definition of MAIN__" 가 된다.
+빌드는 이 모듈들의 아카이브를 임시 디렉터리에 <code>ar x</code> 로 풀고, <code>MAIN__</code> 를 정의한 오브젝트에 <code>objcopy --localize-symbol=MAIN__</code> 를 적용한 뒤
+<code>build/patched_libs/lib&lt;mod&gt;.a</code> 로 다시 묶는다. aces2 의 원본 <code>.a</code> 는 수정하지 않는다.</p>
+
+<h3>5.2 <code>EXTRA_LOCALIZE_SYMBOLS</code> — 진 쪽 이름 바꾸기</h3>
+<p><code>module:symbol</code> 쌍의 목록이다(411행 부근). 각 쌍에 대해 그 모듈 아카이브의 <b>모든 오브젝트</b>에
+<code>objcopy --redefine-sym sym=pyaces_&lt;mod&gt;_sym</code> 을 적용한다. 정의와 그 모듈 내부의 호출이 함께 바뀌므로, 진 쪽 모듈은 자기 구현을 새 이름으로 계속 쓰고,
+원래 이름은 이긴 쪽 구현에 남는다.</p>
+<div class="warn"><b>규칙</b> — 쌍이 효과를 내려면 그 모듈이 <code>MAIN_COLLISION_MODULES</code> 또는 <code>EXTRA_LOCALIZE_MODULES</code> 에 있어야 한다. 처리 대상이 아닌 모듈의 쌍은 <b>아무 경고 없이 무시</b>되고, <code>objcopy</code> 오류도 <code>2&gt;/dev/null || true</code> 로 버려진다.</div>
+<p>예전에는 <code>--localize-symbol</code> 을 썼으나, 그러면 진 쪽 모듈 자신의 호출까지 이긴 쪽으로 가 버려(lambda 의 <code>vlamcc</code> 가 vcc 의 FINISH 를 부름) 2026-08-11 에 <code>--redefine-sym</code> 로 바꿨다.</p>
+
+<h4>지금까지 해결한 주요 충돌</h4>
+<table>
+<tr><th style="width:28%">심볼</th><th style="width:26%">이름을 바꾼(진) 쪽</th><th>증상 / 비고</th></tr>
+<tr><td><code>FINISH</code></td><td>lambda, molcas</td><td>Runcc 가 수렴 에너지 대신 0회차 TOTENERG 를 보고</td></tr>
+<tr><td><code>GSCHMIDT</code></td><td>joda, libr, vcceh, vea</td><td>인자 수 불일치로 SIGSEGV</td></tr>
+<tr><td><code>MODF</code></td><td>lambda, fsip, vcceh, hcmult, vea, lcct</td><td>EOM 경로 오류</td></tr>
+<tr><td><code>EXPDEN</code>, <code>PROPS</code> 외 vprops 보조 루틴</td><td>props, vcceh / vprops</td><td>Runee 의 DIPOLE 계산</td></tr>
+<tr><td><code>HBARXC</code>, <code>DT2INT2</code>, <code>DRAOLAD</code>, <code>T2TOAO</code>, <code>GETAOINF</code>, <code>Z2TOMO</code></td><td>vcceh, lcct, hcmult, lambda, vee, dens</td><td>GETLST 리스트 없음, Z2TOMO 는 약 1e-5 오차</td></tr>
+<tr><td><code>W45T3DRV</code></td><td>lambda</td><td>lambda 의 8인자판이 trp 의 4인자판을 이김</td></tr>
+<tr><td><code>CMPENG</code></td><td>rpa</td><td>단일 항이 빠져 2.49e-05 조용한 오차</td></tr>
+<tr><td><code>XGEMM</code></td><td>tools</td><td>DGEMM 잘못된 인자</td></tr>
+<tr><td><code>CHECK_T2</code>, <code>INITIN/INITSN/DIISLST/DODIIS0</code></td><td>ringcc / lambda</td><td>vcc 가 남의 DIIS·초기화 루틴을 사용</td></tr>
+<tr><td><code>ABCD</code> (COMMON 그림자)</td><td>intgrt</td><td>모든 KS 케이스가 명령어 인출 중 폴트(5.4절)</td></tr>
+<tr><td><code>getdt1</code>, <code>fndmaxs</code>, <code>t2l2rng</code>, <code>r1l2y2c</code></td><td>vcc, vee, lcct, lcct</td><td>링크 순서에 따라 승자가 바뀌던 것(make 4.2 vs 4.3). eab3c4e6 에서 고정</td></tr>
+</table>
+<p class="small">각 항목의 자세한 원인과 진단 과정은 <code>build.sh</code> 의 주석(약 118–410행)에 기록되어 있다.</p>
+
+<h3>5.3 <code>NEWLY_LINKED_MODULES</code> — 새로 들어온 모듈 일괄 처리</h3>
+<p><code>a2mix aux rpa scrnc</code> 는 원래 <code>.skip</code> 디렉터리였다가 다시 활성화된 모듈로, 고전 빌드에서는 다른 모듈과 함께 링크된 적이 없다.
+빌드는 <code>aces2/lib/lib*.a</code> 전체의 <code>T</code> 심볼을 모아, 이 네 모듈이 다른 모듈과 공유하는 모든 심볼(<code>MAIN__</code> 제외)을 자동으로
+<code>EXTRA_LOCALIZE_SYMBOLS</code> 에 추가한다. 로그에 <code>shadowed by &lt;mod&gt;, renaming: …</code> 로 찍힌다.</p>
+
+<h3>5.4 COMMON 블록이 서브루틴을 가리는 경우</h3>
+<p>Fortran <code>COMMON /abcd/</code> 는 <code>abcd_</code> 라는 tentative 심볼(<code>nm</code> 의 <code>C</code>)을 만든다. 서브루틴 <code>ABCD</code> 도 <code>abcd_</code> 다.
+링커가 서브루틴이 들어 있는 오브젝트를 꺼내기 전에 COMMON 이 참조를 채워 버리면, <code>call abcd</code> 는 0으로 채워진 BSS 로 점프한다.
+증상은 명령어 인출 중 SIGSEGV 이며, gdb 에서 <code>si_addr == $pc</code> 로 알아볼 수 있다.</p>
+<ul>
+  <li><b>rename-definer</b>: 정의한 모듈만 그 루틴을 부르면 <code>definer:sym</code> 을 <code>EXTRA_LOCALIZE_SYMBOLS</code> 에 넣는다(예: <code>intgrt:abcd_</code>).</li>
+  <li><b>rename-commons</b>: 다른 모듈에서도 부르면 이름을 바꿀 수 없으므로 COMMON 쪽을 옮겨야 한다.</li>
+</ul>
+<p>잠재 위험 9개(mopac <code>deriv/grid/local/polar</code>, nddo <code>guess/local</code>, aces2·ccd_light <code>energy</code>, pdens <code>one/tab</code>, vdint <code>sym2</code>)는 미리 이름을 바꿔 두었다.</p>
+
+<h3>5.5 patched_libs 위생</h3>
+<p><code>build/patched_libs</code> 는 <code>-L</code> 로 aces2/lib 보다 앞에 오므로 남아 있는 옛 파일이 진짜 아카이브를 가린다. 예전 실험에서 남은 <code>libintgrt.a</code> 때문에
+<code>undefined symbol: intgrt_run_</code> 가 난 적이 있어, 지금은 빌드마다 <code>rm -rf</code> 후 다시 만든다.</p>
+
+<h3>5.6 어느 쪽이 이겼는지 확인하기</h3>
+<pre><code># 1순위: 링커에게 직접 묻는다 (링크 명령에 추가)
+-Wl,-trace-symbol=getdt1_
+# 2순위: .so 의 크기와 아카이브 크기를 맞춰 본다
+nm -S Main/build/aces2py*.so | grep ' getdt1_$'
+nm -S ../aces2/lib/libvcc.a ../aces2/lib/libvee.a | grep ' getdt1_$'
+# COMMON 그림자 확인: T 가 아니라 B/D 이면 코드가 아니다
+nm Main/build/aces2py*.so | grep -E ' (abcd_|hbar_)$'</code></pre>
+</section>
+
+<!-- ============================ 6 ============================ -->
+<section id="c6">
+<h2>6. 링크 결과 감사 도구 (<code>collision_audit.py</code>)</h2>
+
+<p>빌드 6단계에서 자동으로 실행되며, 직접 실행할 수도 있다. 이미 빌드된 <code>Main/build/aces2py*.so</code> 가 필요하다.</p>
+<pre><code>python3 tools/collision_audit.py            # 기준선과 비교해 보고
+python3 tools/collision_audit.py --update   # 현재 결과로 두 기준선 파일을 덮어씀</code></pre>
+
+<h3>6.1 무엇을 검사하나</h3>
+<p><b>(1) 해석 차이</b> — 여러 모듈이 정의한 심볼마다:</p>
+<ol>
+  <li><code>aces2/Makefiles/GNUmakefile</code> 의 <code>ACES_LINK_LISTS</code> 로 고전 링크 순서를 재구성한다.</li>
+  <li>.so 에 실제로 들어간 구현을 <code>nm -S</code> 크기로 판별한다(크기가 같아 구분이 안 되면 건너뜀).</li>
+  <li>각 호출 모듈이 고전 빌드에서 받았을 구현(자기 것, 없으면 링크 목록에서 처음 정의한 라이브러리)과 비교한다.</li>
+  <li>둘이 다르고, 주석을 뺀 소스 코드도 다르면 <code>symbol winner classic caller</code> 로 보고한다.</li>
+</ol>
+<p><code>build.sh</code> 의 <code>EXTRA_LOCALIZE_SYMBOLS</code> 와 <code>NEWLY_LINKED_MODULES</code> 를 직접 읽어 이미 이름을 바꾼 쌍은 제외한다.</p>
+<p><b>(2) COMMON 그림자</b> — 한 아카이브에서 <code>T</code>, 다른 아카이브에서 <code>C</code> 이고 .so 에서 B/b/D/d 인 심볼을 찾아
+<code>rename-definer</code> 또는 <code>rename-commons</code> 판정과 함께 보고한다.</p>
+
+<h3>6.2 출력 읽기</h3>
+<pre><code>@COLLISION_AUDIT: 0 subroutines shadowed by a same-named COMMON block ...
+@COLLISION_AUDIT: 296 resolution differences (296 in the baseline)
+  resolved since the baseline: ...             # 기준선에 있었는데 사라진 것
+@COLLISION_AUDIT: NEW resolution differences ...
+    getdt1_   .so gives vcc, lcct expects lcct   # 새로 생긴 것 — 조치 필요</code></pre>
+
+<h3>6.3 NEW 항목이 나왔을 때</h3>
+<ol>
+  <li>두 구현을 비교한다(인자 수, 리스트 번호, 계산 내용). 같은 계산이면 기준선에 받아들여도 된다.</li>
+  <li>다르면 이름을 바꿀 쪽을 정해 <code>"&lt;loser&gt;:&lt;symbol&gt;"</code> 을 <code>EXTRA_LOCALIZE_SYMBOLS</code> 에 추가한다. 그 모듈이 <code>EXTRA_LOCALIZE_MODULES</code> 에 있는지 확인한다.</li>
+  <li>pyaces 를 다시 빌드해 NEW 가 사라졌는지, 다른 심볼이 뒤집히지 않았는지 확인한다(모듈을 처리 대상에 추가하면 그 모듈의 다른 심볼 해석도 바뀔 수 있다).</li>
+  <li>스위트를 돌린 뒤에만 <code>--update</code> 로 기준선을 갱신한다.</li>
+</ol>
+<div class="warn"><b>기준선은 작업 목록이 아니다</b> — 기준선의 296개는 "알고 받아들인" 차이다. 한 번에 "안전해 보이는" 42개를 고쳤다가 스위트가 45 → 31 PASS 로 떨어진 적이 있다. 또 <code>ACES_LINK_LISTS</code> 는 실행 파일을 만드는 모듈만 다루므로, 라이브러리 모듈(libr, libr2, tools, acescore …) 안의 호출자는 감사가 보지 못한다.</div>
+</section>
+
+<!-- ============================ 7 ============================ -->
+<section id="c7">
+<h2>7. <code>aces2py</code> 모듈 API</h2>
+
+<h3>7.1 시그니처는 Fortran 소스가 정한다</h3>
+<p>f2py 는 <code>aces2.pyf</code> 와 <code>PYF_SOURCES</code> 를 모두 받으면 모듈을 두 번 만든다. 한 번은 <code>.pyf</code> 로부터(소문자 이름, COMMON 블록 포함),
+한 번은 소스 스캔으로부터(소스 대소문자)이고, 같은 <code>aces2pymodule.c</code> 에 쓰이므로 <b>두 번째가 이긴다</b>(<code>f2py_gen.log</code> 로 확인 가능). 그 결과:</p>
+<ul>
+  <li>Python 이름은 소스의 대소문자를 따른다: <code>Init</code>, <code>Dgetrecpy</code>, <code>IGetrecpy</code>(G 대문자).</li>
+  <li>인자 타입과 intent 는 소스에서 온다. <code>.pyf</code> 의 <code>intent(inout)</code> 등은 무시된다. 모든 <code>Run*</code> 은 <code>Iuhf</code> 인자를 받는다.</li>
+  <li><code>.pyf</code> 의 COMMON 블록(<code>/flags/</code>, <code>/jobarc/</code>, <code>/lists/</code> …)은 노출되지 않는다.</li>
+  <li>정확한 시그니처는 <code>print(aces2py.Runcc.__doc__)</code> 또는 <code>gen/aces2pymodule.c</code> 의 docstring 으로 확인한다.</li>
+</ul>
+
+<h3>7.2 배열 인자 규칙</h3>
+<p>모든 함수는 반환값이 없는 Fortran 서브루틴이다. 결과는 <b>호출자가 넘긴 numpy 배열에 쓰인다</b>. f2py 는 배열 인자를 "input" 으로 래핑하므로,
+dtype 이나 메모리 배치가 다르면 조용히 <b>사본</b>을 만들어 넘기고, Fortran 이 쓴 값은 사본과 함께 사라진다.</p>
+<div class="warn"><b>반드시</b> — 실수형은 <code>np.zeros(n, dtype=np.float64)</code>, 정수형은 <code>np.zeros(n, dtype=np.int64)</code> 처럼 C-연속 1차원 배열을 미리 만들어 넘긴다. 레코드 이름은 8자이며 공백으로 채운다(<code>"IFLAGS  "</code>).</div>
+
+<h3>7.3 계산 드라이버</h3>
+<p><code>Iuhf</code>: 0 = RHF, 1 = UHF/ROHF (Fortran 쪽은 <code>Integer*8</code>, C 쪽은 <code>long long</code>). 어떤 드라이버도 <code>aces_fin</code> 을 부르지 않으므로 계산 뒤에도 세션이 열려 있어 레코드를 읽을 수 있다.</p>
+<table>
+<tr><th style="width:20%">함수</th><th style="width:20%">소스</th><th>수행 내용</th></tr>
+<tr><td><code>Init()</code></td><td><code>Main/init.F</code></td><td><code>aces2_main</code> → <code>Joda_</code>(ZMAT 해석, JOBARC 생성), <code>Aces_ja_fin</code>, <code>aces_init</code>(코어 할당, 플래그·리스트 초기화, JOBARC 재개방). <b>Runee 이외의 드라이버 전에 먼저 부른다.</b></td></tr>
+<tr><td><code>Runints(Iuhf)</code></td><td><code>runints.F</code></td><td><code>Ints_</code>(vmol AO 적분) + <code>V2ja</code></td></tr>
+<tr><td><code>Runscf(Iuhf)</code></td><td><code>runscf.F</code></td><td>IIII 파일이 없으면 적분부터, 그 다음 <code>Vscf</code></td></tr>
+<tr><td><code>Runcc(Iuhf)</code></td><td><code>runcc.F</code></td><td>SCF 가 안 되어 있으면(<code>SCFEVCA0</code> 레코드 없음) SCF 부터, 이어서 <code>aces_init_chemsys</code>, <code>Vtran</code>, <code>Init_legacies</code>, <code>Intproc</code>, <code>Vcc</code>. MBPT/CC 계열 전반.</td></tr>
+<tr><td><code>Runhbar(Iuhf)</code>, <code>Buildhbar()</code></td><td><code>runhbar.F</code>, <code>buildhbar.F</code></td><td>Runcc 단계 + <code>Hbar_</code>. SCF 가 끝나 있으면(<code>SCFEVCA0</code>) Vtran 부터, CC 가 끝나 있으면(<code>CC_DONE</code>) Hbar 만 돈다. Buildhbar 는 <code>IFLAGS(11)</code> 에서 iuhf 를 읽는다. <b>Runcc 다음에 부르지 않는다</b> — SCF 분기로 들어가 Vtran 을 두 번 부르게 된다.</td></tr>
+<tr><td><code>Runprops(Iuhf)</code></td><td><code>runprops.F</code></td><td><code>Props_</code></td></tr>
+<tr><td><code>Runpccd(Iuhf)</code></td><td><code>runpccd.F</code></td><td>자체 완결: Joda, Ints, aces_init, V2ja, Vscf, Vtran, Intproc, Vcc, Vlambda, Pccd</td></tr>
+<tr><td><code>Runee(Iuhf)</code></td><td><code>runee.F</code></td><td>자체 완결 EOM-CC: Joda, aces_init, Ints, V2ja, vprops Props(이름 변경판), Vscf, Vtran, Intproc, Vcc, Vlambda, Vee. <b><code>Init()</code> 을 먼저 부르지 않는다.</b></td></tr>
+<tr><td><code>Rundirmp2(Iuhf)</code></td><td><code>rundirmp2.F</code></td><td>필요하면 SCF, 그 다음 <code>Dirmp2_run(0)</code>. Iuhf 는 전달되지 않는다.</td></tr>
+<tr><td><code>Runintgrt(Iuhf)</code></td><td><code>runintgrt.F</code></td><td>필요하면 SCF, 그 다음 <code>Intgrt_run</code>(KS/DFT 수치 적분, XC 에너지)</td></tr>
+<tr><td><code>Acesjafin()</code> / <code>Acesjainit()</code></td><td><code>acesjafin.F</code> / <code>acesjainit.F</code></td><td>JOBARC 세션 닫기(플러시) / 다시 열기. 이미 열린 세션을 다시 열면 <code>aces_exit</code> 로 종료된다.</td></tr>
+</table>
+
+<h3>7.4 JOBARC 레코드</h3>
+<table>
+<tr><th style="width:40%">시그니처</th><th>설명</th></tr>
+<tr><td><code>Dgetrecpy(Name, Dest, [Length])</code></td><td>float64 레코드를 <code>Dest</code> 로 읽는다. 예: <code>"TOTENERG"</code>, <code>"SCFENEG "</code></td></tr>
+<tr><td><code>IGetrecpy(Name, IDest, [Length])</code></td><td>int64 레코드 읽기. 예: <code>"IFLAGS  "</code>(100), <code>"NBASTOT "</code></td></tr>
+<tr><td><code>Dputrecpy(Name, Source, [Length])</code></td><td>float64 레코드 쓰기</td></tr>
+<tr><td><code>Iputrecpy(Name, Isource, [Length])</code></td><td>int64 레코드 쓰기</td></tr>
+<tr><td><code>Cputrecpy(Name, Length, Source)</code></td><td>문자 레코드 쓰기</td></tr>
+<tr><td><code>Dest = Cgetrecpy(Name, Length)</code></td><td>문자 레코드 <code>Length</code> 바이트를 읽어 <code>bytes</code>(길이 1024, 공백으로 채움)로 돌려준다. 1024 를 넘는 길이는 <code>aces_exit</code>.</td></tr>
+<tr><td><code>Length = Getreclenpy(Name)</code></td><td>레코드 길이(정수 워드)를 돌려준다. 레코드가 없으면 <code>-1</code>.</td></tr>
+</table>
+<p>길이는 정수 워드 단위이며, <code>-i8</code> 이므로 정수 1개 = 실수 1개 = 8바이트다. <code>Length</code> 를 생략하면 배열 길이를 쓴다.</p>
+
+<h3>7.5 MO 리스트(MOIO)</h3>
+<table>
+<tr><th style="width:52%">시그니처</th><th>설명</th></tr>
+<tr><td><code>Getlstpy(Column_Index, No_columns, Irrep, Left_index, Right_index, Destn, Ndim)</code></td><td><code>A2_getlst(Destn, Column_Index, No_columns, 1, Left_index, Right_index)</code>. 실제로는 <b><code>Left_index</code> 가 irrep, <code>Right_index</code> 가 리스트 번호</b>이며 <code>Irrep</code>·<code>Ndim</code> 은 쓰이지 않는다.</td></tr>
+<tr><td><code>Putlstpy(Source, Column_Index, No_columns, Irrep, Left_index, Right_index, [Ndim])</code></td><td>Getlstpy 의 쓰기판</td></tr>
+<tr><td><code>Getallpy(Destn, Irrep, Right_index, [Ndim])</code></td><td>전체 대칭 <code>Irrep</code> 인 리스트 <code>Right_index</code> 의 모든 irrep 블록 읽기</td></tr>
+<tr><td><code>Putallpy(Source, Irrep, Right_index, [Ndim])</code></td><td>쓰기판</td></tr>
+</table>
+<p class="small">리스트 번호 참고표의 초안이 <code>Python/moio_len.py</code> 에 있다(예: T2(Ij,Ab) = 46, T1(AI) = 901, W&lt;AB||IJ&gt; = 14). 이 파일은 문법상 올바른 Python 이 아니므로 참고용으로만 본다.</p>
+
+<h3>7.6 AO 적분</h3>
+<table>
+<tr><th style="width:36%">시그니처</th><th>설명</th></tr>
+<tr><td><code>Get1ehpy(Name, Dest, Ndim)</code></td><td><code>"overlap"</code> · <code>"oneh"</code> · <code>"kinetic"</code> 을 IIII 파일에서 읽어 <code>Ndim×Ndim</code>(<code>Ndim = NBASTOT</code>) 전체 행렬로 펼친다.</td></tr>
+<tr><td><code>Get2ehpy(Name, Dest, Ndim)</code></td><td><code>"2elints"</code>: IIII/IJIJ/IIJJ/IJKL 에서 <code>Ndim<sup>4</sup></code> 크기의 2전자 적분 전체를 펼친다. 메모리에 주의.</td></tr>
+</table>
+</section>
+
+<!-- ============================ 8 ============================ -->
+<section id="c8">
+<h2>8. 계산 실행하기</h2>
+
+<h3>8.1 실행 환경</h3>
+<ul>
+  <li><b>작업 디렉터리</b>에 <code>ZMAT</code> 과 <code>GENBAS</code> 가 있어야 한다. ACES 는 같은 디렉터리에 JOBARC, JAINDX, IIII/IJIJ/IIJJ/IJKL, MOINTS, MOABCD, MOL, NEWMOS 등을 쓴다. 메모리 크기는 ZMAT 키워드로 정해진다.</li>
+  <li><b>라이브러리</b>: Intel 런타임과 MKL 이 필요하다. 빌드 때와 같은 모듈 세트를 load 하거나 <code>LD_LIBRARY_PATH</code> 를 맞춘다. 그렇지 않으면 <code>libmkl_intel_ilp64.so.2: cannot open shared object file</code> 로 import 가 실패한다.</li>
+  <li><b>import 경로</b>: <code>pyaces/Main/build</code> 를 <code>sys.path</code> 나 <code>PYTHONPATH</code> 에 넣는다.</li>
+</ul>
+
+<h3>8.2 기본 사용 예</h3>
+<pre><code>import os, sys, numpy as np
+os.chdir("/path/to/workdir")                 # ZMAT, GENBAS 가 있는 곳
+sys.path.insert(0, "/path/to/ACES_PROGRAM/pyaces/Main/build")
+import aces2py
+
+aces2py.Init()                               # Runee 일 때는 생략
+aces2py.Runcc(0)                             # 0 = RHF, 1 = UHF/ROHF
+
+e = np.zeros(1, dtype=np.float64)
+aces2py.Dgetrecpy("TOTENERG", e)
+print("E =", e[0])</code></pre>
+
+<h3>8.3 레코드 읽고 고치기</h3>
+<pre><code>iflags = np.zeros(100, dtype=np.int64)
+aces2py.IGetrecpy("IFLAGS  ", iflags)
+iflags[1] = 1                                # IFLAGS(2) = CALC
+aces2py.Iputrecpy("IFLAGS  ", iflags)
+aces2py.Acesjafin()                          # 외부 실행 파일이 JOBARC 를 읽기 전에 플러시
+# ... subprocess 로 ../aces2/bin/xvtran 등 실행 ...
+aces2py.Acesjainit()</code></pre>
+
+<h3>8.4 지켜야 할 규칙</h3>
+<ul>
+  <li><b>한 프로세스에 한 계산.</b> 여러 ZMAT 을 한 프로세스에서 연달아 돌리지 않는다. 테스트 러너도 케이스마다 새 프로세스를 띄운다.</li>
+  <li><b>같은 모듈을 두 번 부르지 않는다.</b> Vtran/Vcc 를 같은 프로세스에서 두 번 부르면 틀린 값으로 수렴한 사례가 있다.</li>
+  <li><b>Runee, Runpccd 는 자체적으로 Joda 를 부른다.</b> Runee 앞에는 <code>Init()</code> 을 부르지 않는다.</li>
+  <li><b>대상 밖 계산</b>: 기하 최적화, 진동수, 해석적 미분(gradient/Hessian), Brueckner, <code>HFSTABILITY=FOLLOW</code>, CCSD(TQ) 는 아직 pyaces 로 실행할 수 없다(<code>rungrads.F</code> 는 빌드에서 제외).</li>
+</ul>
+
+<h3>8.5 FNO 특수 처리 (<code>pyaces_run_case.py</code>)</h3>
+<p>ZMAT 에 <code>FNO_KEEP=</code> 이 있으면, 고전 드라이버는 동결할 가상 궤도를 고르기 위해 예비 Vtran/Intproc/Vcc/Fno 를 한 번 더 돈다.
+pyaces 에서 이를 프로세스 안에서 하면 Vtran/Vcc 를 두 번 부르게 되므로, 러너는 다음 순서로 처리한다.</p>
+<ol>
+  <li><code>Runscf</code> 실행</li>
+  <li><code>IFLAGS</code> 2, 93, 83, 100 을 임시로 바꾸고, <code>NUMDROPA</code> 를 <code>FNOFREEZ</code> 로 옮김</li>
+  <li><code>Acesjafin()</code> 후 독립 실행 파일 <code>../aces2/bin/{xvtran,xintprc,xvcc,xfno}</code> 를 subprocess 로 실행 (로그: <code>fno_prelim_&lt;exe&gt;.log</code>)</li>
+  <li>플래그 복원, IIII 가 소모되었으면 <code>xvmol</code>/<code>xvmol2ja</code> 로 재생성</li>
+  <li><code>Acesjainit()</code> 후 <code>Runcc</code></li>
+</ol>
+
+<h3>8.6 <code>pyaces_run_case.py</code> 출력 규약</h3>
+<pre><code>python3 -u pyaces_run_case.py &lt;workdir&gt; &lt;entrypoint&gt; &lt;iuhf&gt; &lt;record&gt;
+# 진행: PYACES_CASE: ...
+# 성공: PYACES_CASE_VALUE: &lt;repr&gt;   /   PYACES_CASE_RESULT: SUCCESS &lt;%.10f&gt;
+# 실패(종료 코드 1): IMPORT_FAILED, &lt;ENTRY&gt;_FAILED, RECORD_ZERO_OR_MISSING, DGETRECPY_FAILED</code></pre>
+<p>레코드 값이 정확히 0.0 이면 "없음"으로 간주한다.</p>
+</section>
+
+<!-- ============================ 9 ============================ -->
+<section id="c9">
+<h2>9. 테스트 스위트</h2>
+
+<h3>9.1 실행</h3>
+<pre><code>./run_tests.sh pyaces                                   # 최상위 (로그: build_logs/unified_test_pyaces.log)
+cd pyaces && python3 pyaces_suite_runner.py             # 직접
+cd pyaces && python3 pyaces_suite_runner.py 010a 117b   # 일부 케이스만</code></pre>
+<ul>
+  <li>케이스 입력: <code>aces2/tests/fast/cases/&lt;name&gt;/ZMAT</code>, 기저: <code>aces2/tests/fast/GENBAS</code>. pyaces 전용 테스트 디렉터리는 없다.</li>
+  <li>작업 디렉터리: <code>$PYACES_RUN_DIR/&lt;name&gt;</code>. <code>run_tests.sh</code> 는 HiPerGator 가 아니면 <code>build_logs/pyaces_suite_run</code> 으로 정한다. 러너 자체 기본값은 HiPerGator 의 <code>/blue/...</code> 경로다.</li>
+  <li>케이스마다 새 디렉터리에 ZMAT 복사, GENBAS 심볼릭 링크 후 <code>pyaces_run_case.py</code> 를 300초 제한으로 실행. 로그는 <code>&lt;dir&gt;/run.log</code>, 요약은 <code>$RUN_DIR/summary.tsv</code>.</li>
+  <li>로컬 워크스테이션: <code>OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 taskset -c 20-23 flock -s /tmp/qtoy-bench.lock ./run_tests.sh pyaces</code>. ccsd 서버: <code>qsub build_logs/test_ccsd.pbs</code>.</li>
+</ul>
+
+<h3>9.2 판정</h3>
+<table>
+<tr><th style="width:18%">상태</th><th>조건</th></tr>
+<tr><td>PASS</td><td>종료 코드 0, |계산값 − 기준값| ≤ 1×10<sup>-6</sup> E<sub>h</sub> (<code>TOLERANCE</code>, 케이스별 예외 없음)</td></tr>
+<tr><td>MISMATCH</td><td>종료 코드 0 이지만 차이가 허용치 초과</td></tr>
+<tr><td>NO_RESULT</td><td>종료 코드 0 이지만 <code>PYACES_CASE_RESULT: SUCCESS</code> 줄이 없음</td></tr>
+<tr><td>TIMEOUT</td><td>300초 초과</td></tr>
+<tr><td>FAIL_CLEAN</td><td>양수 종료 코드 + <code>@ROUTINE:</code> 배너, "Assertion failed", "did not converge", "forrtl: severe" 등 인식된 메시지</td></tr>
+<tr><td>CRASH</td><td>시그널로 종료(음수 코드) 또는 인식되지 않는 양수 종료</td></tr>
+</table>
+<p>마지막 결과(2026-10-14): 51/51 PASS, 최대 차이 4.95×10<sup>-8</sup> (케이스 078).</p>
+
+<h3>9.3 <code>suite_classification.tsv</code></h3>
+<p>열: <code>name</code>, <code>category</code>, <code>reason</code>, <code>entrypoint</code>, <code>iuhf</code>, <code>record</code>(비교할 JOBARC 레코드, <code>TOTENERG</code> 또는 <code>SCFENEG</code>), <code>ref_value</code>(Fortran E/D 형식).
+러너는 category 가 SCF·CC·EOM·PCCD·KS 인 행만 실행한다.</p>
+<table>
+<tr><th>범주</th><th>개수</th><th>진입점 / iuhf</th></tr>
+<tr><td>CC</td><td>31</td><td>Runcc (iuhf 0: 12, 1: 16), Rundirmp2 (3)</td></tr>
+<tr><td>EOM</td><td>8</td><td>Runee (0: 6, 1: 2)</td></tr>
+<tr><td>SCF</td><td>9</td><td>Runscf (0: 6, 1: 3)</td></tr>
+<tr><td>KS</td><td>3</td><td>Runintgrt (0)</td></tr>
+<tr><td>PCCD</td><td>0</td><td>—</td></tr>
+<tr><td>EXCLUDED</td><td>59</td><td>기하 최적화, VIB, 미분, MRCC, Brueckner, HFSTABILITY=FOLLOW, CCSD(TQ) 등</td></tr>
+<tr><td>SCRIPT</td><td>15</td><td>ZMAT 없이 스크립트로 돌아가는 케이스</td></tr>
+</table>
+
+<h3>9.4 <code>classify_suite.py</code> 를 다시 돌리지 말 것</h3>
+<p><code>classify_suite.py</code> 는 <code>aces2/tests/fast/test_results</code> 와 각 ZMAT 를 읽어 TSV 를 처음 만든 스크립트다. 그 뒤 다음 항목은 <b>손으로</b> 고쳐졌으므로,
+스크립트를 다시 돌리면 사라진다: KS → Runintgrt 행, 117a/b/c → Rundirmp2, 020(CCSD(TQ))·022 계열(Brueckner)·083·124d.fno(HFSTABILITY=FOLLOW) 제외.
+TSV 는 직접 편집하거나, 먼저 이 예외들을 <code>classify()</code> 에 옮긴 뒤 재생성한다.</p>
+
+<div class="warn"><b>롤업의 빈틈</b> — <code>run_tests.sh</code> 의 pyaces 요약은 <code>PASS:</code>, <code>FAIL_CLEAN:</code>, <code>CRASH:</code>, <code>NO_RESULT:</code> 만 센다. MISMATCH·TIMEOUT 은 TOTAL 에 잡히지 않으므로, 결과가 51 이 아니면 <code>unified_test_pyaces.log</code> 의 Summary 블록을 직접 확인한다.</div>
+</section>
+
+<!-- ============================ 10 ============================ -->
+<section id="c10">
+<h2>10. 확장하기 — 새 진입점과 새 테스트</h2>
+
+<h3>10.1 새 Fortran 루틴을 Python 에 노출하기</h3>
+<ol>
+  <li><b>aces2 쪽을 호출 가능하게 만든다.</b> 대상이 PROGRAM 이면 본문을 서브루틴으로 분리한다(“wrapper-split” 패턴: <code>dirmp2_run</code>, <code>intgrt_run</code>, <code>joda_</code>, <code>hbar_</code>, <code>props_</code>). aces2 를 먼저 다시 빌드한다.</li>
+  <li><b><code>a2_pyf/&lt;name&gt;.F</code> 를 작성한다.</b>
+    <ul>
+      <li>고정 형식, <code>#include</code> 는 1열에서 시작(oneAPI 2023.2 ifort 가 들여쓴 include 를 거부함).</li>
+      <li>모든 인자를 <code>Integer*8</code> / <code>Double Precision</code> 으로 <b>명시</b>한다. 그냥 <code>Integer</code> 로 쓰면 f2py 가 C <code>int</code>(4바이트)로 넘긴다(11장).</li>
+      <li>소스의 서브루틴 이름 대소문자가 그대로 Python 이름이 된다.</li>
+      <li>코어는 <code>icore.com</code>/<code>istart.com</code> 의 <code>Icore(i0), Icrsiz</code> 를 쓴다(<code>runcc.F</code> 참고). <code>aces_fin</code> 은 부르지 않는다.</li>
+    </ul></li>
+  <li><b><code>Main/aces2.pyf</code> 의 interface 에 블록을 추가</b>한다(문서화 목적. 실제 시그니처는 소스가 정한다).</li>
+  <li><b><code>build.sh</code> 의 <code>PYF_SOURCES</code> 에 추가</b>한다. 컴파일은 <code>a2_pyf/*.F</code> glob 이 자동으로 한다(제외 목록에 없는 한).</li>
+  <li><b>충돌을 처리한다.</b>
+    <ul>
+      <li>새로 끌려 들어오는 모듈이 PROGRAM 을 가지면 <code>MAIN_COLLISION_MODULES</code> 에 추가.</li>
+      <li>동명 루틴이 있으면 <code>loser:sym_</code> 을 <code>EXTRA_LOCALIZE_SYMBOLS</code> 에, 그 모듈을 <code>EXTRA_LOCALIZE_MODULES</code> 에 추가.</li>
+      <li>pyaces 쪽 오브젝트가 이름이 바뀐 루틴을 직접 부르면, 3단계 뒤에 <code>objcopy --redefine-sym</code> 을 추가(<code>runee.o</code> 의 예).</li>
+      <li><code>.skip</code> 모듈을 다시 켜면 <code>NEWLY_LINKED_MODULES</code> 에 추가.</li>
+    </ul></li>
+  <li><b>빌드하고 확인한다.</b> “IMPORT OK”, <code>f2py_gen.log</code> 의 두 번째(source-case) 모듈 빌드에 새 래퍼가 있는지, <code>print(aces2py.&lt;Name&gt;.__doc__)</code>.</li>
+  <li><b>감사 결과</b>의 NEW 항목을 6.3절 순서대로 처리한다.</li>
+  <li><b>호출하는 이름이 코드인지</b> 확인한다: <code>nm Main/build/aces2py*.so | grep ' &lt;sym&gt;$'</code> 이 <code>T</code> 여야 한다. <code>B</code>/<code>D</code> 이면 COMMON 블록에 묶인 것이다.</li>
+  <li><b>테스트 케이스를 추가</b>하고 스위트 전체를 돌린다.</li>
+</ol>
+
+<h3>10.2 새 테스트 케이스 추가</h3>
+<ol>
+  <li>aces2 스위트에 케이스를 넣는다: <code>aces2/tests/fast/cases/&lt;name&gt;/ZMAT</code> 와 <code>aces2/tests/fast/test_results</code> 의 3줄 항목(<code>name src</code> / <code>RECORD 1</code> / 기준값).</li>
+  <li><code>pyaces/suite_classification.tsv</code> 에 행을 직접 추가한다(category, entrypoint, iuhf, record, ref_value).</li>
+  <li><code>PYACES_RUN_DIR=... python3 pyaces_suite_runner.py &lt;name&gt;</code> 로 확인하고, <code>&lt;dir&gt;/run.log</code> 와 <code>summary.tsv</code> 를 본다.</li>
+  <li>전체 스위트(<code>./run_tests.sh aces2 pyaces</code>)가 그대로 통과하는지 확인한다.</li>
+</ol>
+
+<h3>10.3 변경 후 점검 목록</h3>
+<table>
+<tr><th style="width:40%">무엇을 바꿨나</th><th>확인할 것</th></tr>
+<tr><td>a2_pyf / Main 의 Fortran</td><td>pyaces 빌드, IMPORT OK, 스위트 51/51</td></tr>
+<tr><td>build.sh 의 이름 바꾸기 목록</td><td>감사 결과(NEW 없음, resolved 항목이 의도한 것인지), 스위트, 그 다음 <code>--update</code></td></tr>
+<tr><td>aces2 소스나 플래그</td><td><code>git clean -fdXq aces2</code> 후 aces2+pyaces 재빌드, aces2 스위트 125/125, pyaces 51/51, 감사</td></tr>
+<tr><td>툴체인 / 다른 기계</td><td>위 전부 + 두 기계의 감사 결과가 같은지</td></tr>
+</table>
+</section>
+
+<!-- ============================ 11 ============================ -->
+<section id="c11">
+<h2>11. 알려진 문제</h2>
+<p>아래는 현재 코드에서 확인된 결함과 함정이다. 지금 스위트가 지나가는 경로에는 영향이 없지만, 해당 기능을 쓰거나 확장할 때 걸린다.</p>
+<div class="note"><b>2026-10-23 수정됨</b> — 이 매뉴얼을 쓰며 찾은 결함 셋은 고쳤다.
+<ul>
+<li><b>Runhbar/Buildhbar 의 <code>Call Hbar</code></b>: 심볼 <code>hbar_</code> 는 서브루틴이 아니라 lambda 의 <code>COMMON /HBAR/</code>(.so 에서 <code>B hbar_</code>)이어서, SCF·CC 가 끝난 상태의 분기가 BSS 로 점프할 수 있었다. <code>Call Hbar_</code>(= <code>hbar__</code>)로 고쳤다. 감사 도구는 <code>T hbar_</code> 가 어디에도 없어 이 경우를 잡지 못한다 — 10.1절 8단계의 <code>nm</code> 확인이 필요한 이유다.</li>
+<li><b><code>Iuhf</code> 폭</b>: <code>run*.F</code> 의 <code>Integer Iuhf</code> 를 f2py 가 4바이트 C <code>int</code> 로 넘기고 <code>-i8</code> Fortran 은 8바이트를 읽었다. <code>Integer*8 Iuhf</code> 로 선언해 양쪽을 64비트로 맞췄다.</li>
+<li><b><code>Getreclenpy</code>, <code>Cgetrecpy</code></b>: <code>Cf2py intent(out)</code> 을 붙여 길이와 문자열을 반환하게 했다(7.4절).</li>
+</ul></div>
+
+<table>
+<tr><th style="width:4%">#</th><th style="width:28%">문제</th><th>내용 / 권장 조치</th></tr>
+<tr><td>1</td><td><code>Getlstpy</code> 인자 의미</td><td><code>Irrep</code>, <code>Ndim</code> 은 무시되고 <code>Left_index</code> 가 irrep 로 쓰인다.</td></tr>
+<tr><td>2</td><td><code>.pyf</code> 가 사실상 무시됨</td><td>COMMON 블록 노출과 intent 지정이 적용되지 않는다(7.1절).</td></tr>
+<tr><td>3</td><td>Python 버전 고정</td><td>출력 파일 이름이 <code>cpython-312</code> 로 고정. 다른 버전은 <code>sysconfig.get_config_var('EXT_SUFFIX')</code> 를 써야 한다.</td></tr>
+<tr><td>4</td><td>헤더 사본 불일치</td><td><code>Main/*.com</code> 9개가 aces2 의 헤더와 다르다(<code>integer*8</code> 명시, include guard 없음). <code>-i8</code> 덕분에 크기는 같아 지금은 무해하지만, aces2 헤더가 바뀌면 init.F 와 나머지가 서로 다른 COMMON 배치를 보게 된다.</td></tr>
+<tr><td>5</td><td>Runpccd 와 Init</td><td>Runpccd 는 스스로 Joda 를 부르는데 러너는 그 전에 <code>Init()</code> 을 부른다. PCCD 케이스가 없어 시험되지 않았다.</td></tr>
+<tr><td>6</td><td>오류 무시</td><td><code>EXTRA_LOCALIZE_SYMBOLS</code> 의 오타나 처리 대상이 아닌 모듈은 경고 없이 무시된다.</td></tr>
+<tr><td>7</td><td>최상위 빌드의 ifort 검사</td><td>최상위 <code>build.sh</code> 가 pyaces 셈을 PATH 에 넣기 전에 <code>ifort</code> 를 요구하므로, ifx 만 있는 툴체인은 거부된다.</td></tr>
+<tr><td>8</td><td>모듈 시스템 전제</td><td><code>pyaces/build.sh</code> 는 항상 <code>module purge/load</code> 를 하므로 setvars/path 모드나 <code>module</code> 명령이 없는 호스트에서 실패한다.</td></tr>
+<tr><td>9</td><td>테스트 롤업 · 분류기</td><td>9.3–9.4절 참고.</td></tr>
+<tr><td>10</td><td><code>Get1ehpy</code> 대칭 블록 오프셋</td><td><code>get1ehpy.F:101</code> 의 <code>Index = Index + Nelms*(K-1)</code> 가 의심스럽다. 대칭이 있는 분자에서 결과를 검증한 뒤 쓴다.</td></tr>
+</table>
+</section>
+
+<!-- ============================ 12 ============================ -->
+<section id="c12">
+<h2>12. 개발 이력과 서버 배포</h2>
+
+<h3>12.1 단계별 이력</h3>
+<table>
+<tr><th style="width:24%">시기</th><th>내용</th></tr>
+<tr><td>2023-11</td><td>원본 acespy (Ajith Perera). 모듈별 공유 라이브러리(<code>Fxx/</code>)와 f2py 로 시작.</td></tr>
+<tr><td>2026-08-08 – 08-11</td><td>ACES_PROGRAM 에 subtree 병합(<code>ff876bec</code>). 하드코딩 경로 제거, aces2 아카이브에서 링크 목록 생성(<code>37d57822</code>). 첫 충돌(FINISH) 해결로 13 → 30/58 PASS. EOM 경로 충돌(GSCHMIDT, MODF, Z2TOMO …) 해결, localize → redefine-sym 전환.</td></tr>
+<tr><td>2026-09-02 – 09-04</td><td>테스트 러너 이식성, W45T3DRV·CMPENG·XGEMM·CHECK_T2·INITIN 충돌 해결, NEWLY_LINKED_MODULES 일괄 이름 바꾸기, 감사 도구 도입, Rundirmp2·Runintgrt 진입점, 제외 케이스 정리.</td></tr>
+<tr><td>2026-09-04 – 09-11</td><td>COMMON 그림자 발견(ABCD → KS 크래시), KS 범주 추가로 51/51 달성, COMMON 감사 추가, 잠재 그림자 9개 선제 처리.</td></tr>
+<tr><td>2026-10-14</td><td>두 번째 기계(ccsd) 이식: init.F include 1열(<code>73944a6d</code>), aces2 <code>-assume dummy_aliases</code>(<code>dbed9377</code>, ifx 2023.2 의 vgamma2 오컴파일), 소스 목록 정렬·<code>LC_ALL=C</code>·추가 이름 바꾸기(<code>eab3c4e6</code>). 두 기계 모두 51/51, 감사 296 동일.</td></tr>
+<tr><td>2026-10-23</td><td>이 매뉴얼 작성 중 찾은 결함 수정: Runhbar/Buildhbar 의 <code>Hbar</code> → <code>Hbar_</code>, <code>Iuhf</code> 를 <code>Integer*8</code> 로, <code>Getreclenpy</code>·<code>Cgetrecpy</code> 가 값을 반환하도록. 51/51 유지.</td></tr>
+</table>
+
+<h3>12.2 ccsd 서버 배포</h3>
+<ul>
+  <li>설치 위치 <code>ycpark@172.24.7.130:/home/ycpark/program/ACES</code>. 서버는 인터넷이 없으므로 워크스테이션에서 <code>git push ccsd master</code> 로 갱신한다(서버 저장소는 <code>receive.denyCurrentBranch=updateInstead</code>).</li>
+  <li>툴체인: <code>intel/oneapi_2023.2.0</code>(ifx 2023.2, MKL 2023.2, Intel MPI 2021.10) + <code>python/3.12.3</code>.</li>
+  <li>빌드와 테스트는 PBS 로만: <code>build_logs/build_ccsd.pbs</code>(<code>qsub -v TARGETS=pyaces …</code>), <code>build_logs/test_ccsd.pbs</code>, <code>build_logs/rebuild_test.pbs</code>(aces2 clean 재빌드 + 테스트).</li>
+  <li><code>-march=core-avx2</code> 빌드이므로 ccsd50/51/52 어느 노드에서도 실행된다.</li>
+</ul>
+
+<h3>12.3 도구체인 차이에서 배운 것</h3>
+<ul>
+  <li>컴파일러 버전이 바뀌면 세 스위트(aces2, aces3, pyaces)를 모두 다시 돌린다. ifx 2023.2 는 2024.0 이 통과시킨 코드를 두 군데서 다르게 처리했다.</li>
+  <li>링크 감사 결과를 기계 간에 비교한다. 같은 소스라도 make·로케일 차이로 다른 구현이 링크될 수 있었다.</li>
+</ul>
+</section>
+
+<!-- ============================ 부록 ============================ -->
+<section id="ca">
+<h2>부록 A. 레거시 파일</h2>
+<table>
+<tr><th style="width:30%">경로</th><th>정체</th></tr>
+<tr><td><code>Fxx/</code></td><td>2023년 acespy 의 모듈별 공유 라이브러리 빌드용 aces2 소스 사본(45개 디렉터리, 약 6,100 파일). 현재 aces2 와 상당히 달라졌고 어떤 스크립트도 참조하지 않는다.</td></tr>
+<tr><td><code>include/</code>, <code>a2_pyf/include_no/</code></td><td>옛 헤더 사본. 빌드는 aces2 의 include 를 쓴다.</td></tr>
+<tr><td><code>Main/Archive/</code>, <code>Main/compile_acespy</code></td><td>초기 프로토타입과 옛 <code>f2py -c</code> 빌드 레시피.</td></tr>
+<tr><td><code>a2_pyf/Archive/</code></td><td>루틴별 <code>.pyf</code> 를 쓰던 시절의 파일과 시험 코드.</td></tr>
+<tr><td><code>Main/Pilot_tests/</code></td><td>COMMON/icore 초기 시험.</td></tr>
+<tr><td><code>Exp/</code></td><td>독립 f2py 튜토리얼(<code>add.F</code>, <code>check_strngs.F</code> …).</td></tr>
+<tr><td><code>Python/moio_len.py</code></td><td>MO 리스트 번호 참고표 초안(문법 오류 있음).</td></tr>
+<tr><td><code>rename.py</code></td><td><code>.a → .so</code> 이름 바꾸기(하드코딩 경로).</td></tr>
+<tr><td><code>README</code>, <code>frequently_asked_questions</code></td><td>옛 빌드 메모, 일반 f2py FAQ.</td></tr>
+<tr><td><code>suite_classification.tsv.before_*</code></td><td>분류 수정 전 TSV 스냅숏.</td></tr>
+<tr><td><code>LICENSE</code></td><td>GPL v3 — <b>유효</b>.</td></tr>
+</table>
+
+<h2 style="break-before:auto; margin-top:24pt">부록 B. 명령 요약</h2>
+<pre><code># 빌드 (로컬, 할당 코어 안에서)
+taskset -c 20-23 flock -s /tmp/qtoy-bench.lock ./build.sh aces2 pyaces
+
+# 테스트
+OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+  taskset -c 20-23 flock -s /tmp/qtoy-bench.lock ./run_tests.sh aces2 pyaces
+cd pyaces && python3 pyaces_suite_runner.py 010a       # 한 케이스
+
+# 링크 감사
+cd pyaces && python3 tools/collision_audit.py
+cd pyaces && python3 tools/collision_audit.py --update # 검증 후에만
+
+# 모듈 내용 확인
+python3 -c "import sys; sys.path.insert(0,'pyaces/Main/build'); import aces2py; print(aces2py.__doc__)"
+nm pyaces/Main/build/aces2py*.so | grep ' runcc_$'
+
+# aces2 플래그 변경 후 clean 재빌드
+git clean -fdXq aces2 && ./build.sh aces2 pyaces
+
+# ccsd 서버
+git push ccsd master
+ssh ycpark@172.24.7.130 'cd program/ACES/build_logs && qsub rebuild_test.pbs'</code></pre>
+</section>
+
+</body>
+</html>
