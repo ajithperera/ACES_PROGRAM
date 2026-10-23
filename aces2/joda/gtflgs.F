@@ -1120,6 +1120,12 @@ c   o vmol cannot do direct integrals
          print *, '@GTFLGS: vmol cannot calculate integrals directly'
          call errex
       end if
+      if (ioppar(h_IOPPAR_integrals).eq.6.and.
+     &    ioppar(h_IOPPAR_direct   ).eq.1     ) then
+         print *, '@GTFLGS: xerdints cannot calculate integrals ',
+     &            'directly'
+         call errex
+      end if
 
 c   o direct integrals are only useful for FOCK=AO
       if (ioppar(h_IOPPAR_direct).eq.1) then
@@ -2854,7 +2860,8 @@ c Also, always stop if PROP=TDHF has been specified.
 
 c   o SYM=FULL
       if (ioppar(h_IOPPAR_sym).eq.3) then
-         if (ioppar(h_IOPPAR_integrals).eq.1) then
+         if (ioppar(h_IOPPAR_integrals).eq.1.or.
+     &       ioppar(h_IOPPAR_integrals).eq.6) then
             print *, '@GTFLGS: VMOL does not understand high symmetry'
             call errex
          end if

@@ -19,7 +19,7 @@ C
       Implicit Double Precision (A-H,O-Z)
       Parameter (Lmax = 7, Mxyz = (Lmax+1)*(Lmax+2)/2)
       Dimension Cv(Ldc,*), W(Ldw,*), C(Mxyz,Mxyz), A(2*Lmax+1,
-     &          2*Lmax+1), B(2*Lmax+1), Q(Mxyz), Ct(Mxyz,Mxyz)
+     &          2*Lmax+1), B(2*Lmax+1), Ct(Mxyz,Mxyz)
       Integer Iparv(3,*), Ixyz(3,Mxyz), Ipiv(2*Lmax+1), Iord(Mxyz)
 
       Ncrt = (L+1)*(L+2)/2
@@ -28,31 +28,7 @@ C
       Call Erd_sphcof(L,C,Mxyz,Nsph0)
       Call Erd_monos(L,Ixyz,N)
 
-C VMOL's table interleaves harmonics and contaminants (for f, x r^2
-C is column 6); the harmonics are the columns with zero Laplacian.
-C Keep VMOL's table order within each kind, harmonics first.
-
-      Nh = 0
-      Nc = 0
-      Do J = 1, Ncrt
-         Call Erd_lapl(L,Cv(1,J),Q)
-         Qn = 0.0D0
-         Do K = 1, (L-1)*L/2
-            Qn = Qn + Dabs(Q(K))
-         Enddo
-         If (Qn .Eq. 0.0D0) Then
-            Nh = Nh + 1
-            Iord(Nh) = J
-         Else
-            Nc = Nc + 1
-            Iord(Nsph+Nc) = J
-         Endif
-      Enddo
-      If (Nh .Ne. Nsph) Then
-         Write(6,"(a,2i3)") " @Erd_vsph: harmonic count in VMOL table ",
-     &                      L, Nh
-         Call Errex
-      Endif
+      Call Erd_vhord(L,Iord)
       Do J = 1, Ncrt
          Do K = 1, Ncrt
             Ct(K,J) = Cv(K,Iord(J))

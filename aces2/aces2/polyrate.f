@@ -39,7 +39,7 @@ C             here is currently of minor value.
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
      &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract 
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       common /sv_bool/
      &        mrcc,
      &        geom_opt, analytical_gradient,numerical_gradient,
@@ -51,7 +51,7 @@ C             here is currently of minor value.
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
      &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       save   /sv_bool/
 
       character
@@ -71,7 +71,7 @@ C             here is currently of minor value.
       call a2getrec(20,'JOBARC','NDROPGEO',1,ndrgeo)
 
       if (.not.direct) call runit(integral_package)
-      call runit('xvmol2ja')
+      if (.not.erd_ints) call runit('xvmol2ja')
       if (nddo_guess) call runit('xnddo')
       If (dkh .and. contract) Call Runit("xdkh")
       call runit('xvscf')

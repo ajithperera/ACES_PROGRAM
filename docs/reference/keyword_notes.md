@@ -127,6 +127,8 @@ Controls whether effective core potentials (a kind of pseudopotential) are used 
 
 Specifies which integral package to use. This is not a very robust keyword and should always be set to VMOL unless otherwise directed to change it. Other values include SEW ARD and GAMESS, but these options will not work unless the binaries were linked to the appropriate libraries, which require third-party license agreements.
 
+=ERD computes the integrals with the OED/ERD library (`xerdints`) instead of `xvmol` + `xvmol2ja`. It writes the same files and JOBARC records, for Cartesian and spherical basis sets, ECPs and DKH. As with VMOL, it cannot be combined with DIRECT or SYMMETRY=FULL. Only the xaces2 driver uses it so far; the other drivers (runpccd, aux, pyaces) still always run VMOL.
+
 ## INTGRL_TOL
 
 Sets the tolerance for storing the two-electron integrals such that integrals having an absolute value greater than 10<sup>-N</sup> will be stored on disk.

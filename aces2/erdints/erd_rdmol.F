@@ -20,7 +20,7 @@ C
       Character*80 Xline
       Character*4 Atmnam
       Integer Ishl(8)
-      Double Precision Salpha(200), Scoef(200,30)
+      Double Precision Salpha(200), Scoef(200,30), Sraw(200,30)
       Logical Bexist
       Data Luin /10/
 
@@ -84,6 +84,9 @@ C of this type; read it once and replicate it on each atom.
                Endif
                Do I = 1, Np
                   Read(Luin,*) Salpha(I), (Scoef(I,J),J=1,Nc)
+                  Do J = 1, Nc
+                     Sraw(I,J) = Scoef(I,J)
+                  Enddo
                Enddo
                Call Erd_normcc(Np,Nc,L1-1,Salpha,Scoef,200)
 
@@ -114,6 +117,7 @@ C of this type; read it once and replicate it on each atom.
                      Iend = 0
                      Do I = 1, Np
                         Ccoef(Ncc+(J-1)*Np+I) = Scoef(I,J)
+                        Ccraw(Ncc+(J-1)*Np+I) = Sraw(I,J)
                         If (Scoef(I,J) .Ne. 0.0D0) Then
                            If (Ibeg .Eq. 0) Ibeg = I
                            Iend = I

@@ -58,6 +58,12 @@ c
      &                ioffn(mxshl), iofcrt(mxshl), nfnerd, ncart,
      &                iccbeg(mxctrt), iccend(mxctrt), spher
 
+c   CCRAW(i)      : the coefficients as read (MOL_ERDOED, i.e. the MOL
+c                   file's), same layout as CCOEF; VMOL writes these
+c                   for vprops (Erd_wrvp)
+      double precision ccraw
+      common /erdraw/ ccraw(mxcct)
+
       integer ngen, nops, iopsgn, iatmap, ishmap
       common /erdsym/ ngen, nops, iopsgn(3,0:7), iatmap(mxatms,0:7),
      &                ishmap(mxshl,0:7)

@@ -136,7 +136,8 @@ C
          ENDIF
 CJDW 9/20/96. Allow for Seward.
 CADY 5/06/04. Allow for GAMESS.
-         IF(INTTYP.EQ.1.OR.INTTYP.EQ.4.OR.INTTYP.EQ.5) THEN
+         IF(INTTYP.EQ.1.OR.INTTYP.EQ.4.OR.INTTYP.EQ.5.OR.
+     &      INTTYP.EQ.6) THEN
          WRITE(LUABI,4030)NULLST,FLOAT(IATNUM),NORD,
      &                    LMAX,(NUMSHL(I),I=1,LMAX)
          ELSE IF(INTTYP.EQ.2) THEN

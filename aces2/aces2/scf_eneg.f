@@ -34,7 +34,7 @@
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
      &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract 
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       common /sv_bool/
      &        mrcc,
      &        geom_opt, analytical_gradient,numerical_gradient,
@@ -46,7 +46,7 @@
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
      &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       save   /sv_bool/
 
       character
@@ -257,12 +257,13 @@
 
 
 
+
 c This calls to  integrals do not fit in here, perhaps 
 c we should create a small function call integral and 
 c move all the calls to integral packages outside. 
 
       if (.not.direct) call runit(integral_package)
-      call runit('xvmol2ja')
+      if (.not.erd_ints) call runit('xvmol2ja')
       If (iflags(23).NE.0 .OR.
      &    iflags(24).NE.0 .OR.
      &    iflags(25).NE.0 ) call runit('xvprops')

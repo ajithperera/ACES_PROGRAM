@@ -17,7 +17,7 @@ C             here is currently of minor value.
       call a2getrec(20,'JOBARC','NDROPGEO',1,ndrgeo)
 
       if (.not.direct) call runit(integral_package)
-      call runit('xvmol2ja')
+      if (.not.erd_ints) call runit('xvmol2ja')
       if (nddo_guess) call runit('xnddo')
       If (dkh .and. contract) Call Runit("xdkh")
       call runit('xvscf')

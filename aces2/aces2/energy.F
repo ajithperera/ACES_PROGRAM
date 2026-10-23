@@ -7,7 +7,7 @@
       integer iter, maxiter, izero, itest
 
       if (.not.direct) call runit(integral_package)
-      call runit('xvmol2ja')
+      if (.not.erd_ints) call runit('xvmol2ja')
 
       if (mrcc.or.
      &    (iflags(18).ne.0.and.iflags(18).ne.3.or.iflags(23).ne.0.or.
@@ -49,7 +49,7 @@ c
 c     integrals are no longer there
 c
                   if (.not.direct) call runit(integral_package)
-                  call runit('xvmol2ja')
+                  if (.not.erd_ints) call runit('xvmol2ja')
                   call runit('xvprops')
                   call runit('rm -f VPOUT')
                endif

@@ -15,7 +15,7 @@ c
       brueckner = iflags(22) .eq. 1
 
       if (.not.direct) call runit(integral_package)
-      call runit('xvmol2ja')
+      if (.not.erd_ints) call runit('xvmol2ja')
       call runit('xvprops')
 c     
       if (brueckner) then

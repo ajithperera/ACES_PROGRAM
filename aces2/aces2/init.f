@@ -206,6 +206,7 @@
 
 
 
+
       subroutine init
       implicit none
 
@@ -230,7 +231,7 @@
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
      &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract 
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       common /sv_bool/
      &        mrcc,
      &        geom_opt, analytical_gradient,numerical_gradient,
@@ -242,7 +243,7 @@
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
      &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       save   /sv_bool/
 
       character
@@ -401,6 +402,9 @@ c ---------------------------------------------------------------------------
 c set the defaults and override them with the CL.
       sewswitch=.FALSE.
       integral_package='xvmol'
+c INTEGRALS=ERD: xerdints writes the integrals and the vmol2ja records
+      erd_ints = (iflags(56).eq.6)
+      if (erd_ints) integral_package='xerdints'
       if (hf_scf) then
          if ((iflags2(154).eq.1).and.
      &       (iflags(56).eq.5).and.

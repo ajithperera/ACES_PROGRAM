@@ -213,6 +213,7 @@ C Modifications for [name it] by: The ACES Development Team
 
 
 
+
       SUBROUTINE GEOPT
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
 
@@ -906,7 +907,8 @@ CJDW 9/20/96. Allow for Seward (currently must make MOL file).
 CADY 5/06/04. Allow for GAMESS (currently must make MOL file).
         ElseIf (IntTyp .eq. 1 .or. IntTyp .eq. 2
      &                        .or. IntTyp .eq. 5
-     &                        .or. IntTyp .eq. 4) then
+     &                        .or. IntTyp .eq. 4
+     &                        .or. IntTyp .eq. 6) then
 C
 C The last argument is added to reformat the basis set to satisfy 
 C the requirement for the wave function analysis (see a2proc). The
@@ -1865,7 +1867,8 @@ CADY 5/06/04. Allow for GAMESS (currently must make MOL file).
       Else If (IntTyp .eq. 1 .or.
      &         IntTyp .eq. 2 .or.
      &         IntTyp .eq. 5 .or.
-     &         IntTyp .eq. 4) Then
+     &         IntTyp .eq. 4 .or.
+     &         IntTyp .eq. 6) Then
 C The last argument is added to reformat the basis set to satisfy
 C the requirement for the wave function analysis (see a2proc). The
 C reformatting routine read a tmp file, GENB.TMP, created in the

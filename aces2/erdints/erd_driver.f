@@ -287,6 +287,12 @@ c
      &                ioffn(mxshl), iofcrt(mxshl), nfnerd, ncart,
      &                iccbeg(mxctrt), iccend(mxctrt), spher
 
+c   CCRAW(i)      : the coefficients as read (MOL_ERDOED, i.e. the MOL
+c                   file's), same layout as CCOEF; VMOL writes these
+c                   for vprops (Erd_wrvp)
+      double precision ccraw
+      common /erdraw/ ccraw(mxcct)
+
       integer ngen, nops, iopsgn, iatmap, ishmap
       common /erdsym/ ngen, nops, iopsgn(3,0:7), iatmap(mxatms,0:7),
      &                ishmap(mxshl,0:7)
@@ -412,7 +418,8 @@ C nuclear charges. Iz2a (J010) and Coord (J020) come from Erd_cmpord.
      &                       Icore(J040))
 
 C Nuclear repulsion of the MOL_ERDOED atoms (effective charges with
-C ECPs); without ECPs it must agree with joda's.
+C ECPs). Like vmol2ja, overwrite joda's NUCREP: at finite-difference
+C points and in later optimization cycles joda's is not current.
 
       Repnuc = 0.0D0
       Do I = 2, Natm
@@ -423,17 +430,6 @@ C ECPs); without ECPs it must agree with joda's.
             Repnuc = Repnuc + Zatm(I)*Zatm(J)/R
          Enddo
       Enddo
-C (joda writes no NUCREP for Cartesian coordinate input.)
-
-      Call Getrec(0,'JOBARC','NUCREP  ',Length,Rnjoda)
-      If (Length .Gt. 0 .And. .Not. Lecp) Then
-         Call Getrec(20,'JOBARC','NUCREP  ',Iintfp,Rnjoda)
-         If (Dabs(Repnuc-Rnjoda) .Gt. 1.0D-8) Then
-            Write(6,"(a,2f20.12)") " @Erd_driver: nuclear repulsion ",
-     &                             Repnuc, Rnjoda
-            Call Errex
-         Endif
-      Endif
       Call Putrec(20,'JOBARC','NUCREP  ',Iintfp,Repnuc)
 
       If (J010+13*Nso .Gt. Maxcor) Call Insmem("Erd_driver",
@@ -451,25 +447,6 @@ C (joda writes no NUCREP for Cartesian coordinate input.)
       Call Erd_wrja(Icore(J000),Ncrt,Icore(I000),Icore(I010),
      &              Icore(I020),Icore(I030),Icore(I040),Ncrt*Ncrt)
       If (Spher) Call Erd_sphchk(Icore(I000),Maxcor-I000+1)
-
-C One-electron integrals.
-
-      N   = Nfnerd
-      N2  = N*N*Iintfp
-      I0s = J010
-      I0t = I0s + N2
-      I0v = I0t + N2
-      I0b = I0v + N2
-      I0z = I0b + Nso*Nso*Iintfp
-      Left = Maxcor - I0z + 1
-      If (Left .Le. 0) Call Insmem("Erd_driver",I0z,Maxcor)
-      Lzscr = (Left/2)/Iintfp
-      Liscr = Left/2
-      I0i = I0z + Lzscr*Iintfp
-
-      Call Erd_ao1e(Icore(I0s),Icore(I0t),Icore(I0v),N,
-     &              Icore(I0z),Lzscr,Icore(I0i),Liscr)
-      If (Debug) Call Erd_dump1e(Icore(I0s),Icore(I0t),Icore(I0v),N)
 
 C Integral files, opened as VMOL does (IIJJ, IJIJ only with
 C symmetry, IJKL only with more than two irreps).
@@ -494,8 +471,46 @@ C symmetry, IJKL only with more than two irreps).
       Enddo
       Title(1) = 'xerdints'
       Title(2) = ' OED/ERD'
-      Ijunk = 0
-      Write(Lu(1)) Title, Nirr, (Nbfirr(I),I=1,Nirr), Repnuc, Ijunk
+      Idosph = 0
+      If (Spher) Idosph = 1
+      Write(Lu(1)) Title, Nirr, (Nbfirr(I),I=1,Nirr), Repnuc, Idosph
+
+C The basis set block vprops reads (VMOL's, see Erd_wrvp).
+
+      I010 = J010 + Ncrt*Ncrt*Iintfp
+      I020 = I010 + Ncrt
+      I030 = I020 + Ncrt
+      I040 = I030 + Ncrt
+      I050 = I040 + Ncrt
+      I060 = I050 + Ncrt
+      I070 = I060 + Ncrt
+      I080 = I070 + Ncrt
+      I090 = I080 + Ncrt*Iintfp
+      I100 = I090 + Ncrt
+      If (I100 .Gt. Maxcor) Call Insmem("Erd_driver",I100,Maxcor)
+      Call Getrec(20,'JOBARC','FULLSOAO',Ncrt*Ncrt*Iintfp,Icore(J010))
+      Call Erd_wrvp(Lu(1),Icore(J000),Ncrt,Icore(J010),Icore(I010),
+     &              Icore(I020),Icore(I030),Icore(I040),Icore(I050),
+     &              Icore(I060),Icore(I070),Icore(I080),Icore(I090))
+
+C One-electron integrals.
+
+      N   = Nfnerd
+      N2  = N*N*Iintfp
+      I0s = J010
+      I0t = I0s + N2
+      I0v = I0t + N2
+      I0b = I0v + N2
+      I0z = I0b + Nso*Nso*Iintfp
+      Left = Maxcor - I0z + 1
+      If (Left .Le. 0) Call Insmem("Erd_driver",I0z,Maxcor)
+      Lzscr = (Left/2)/Iintfp
+      Liscr = Left/2
+      I0i = I0z + Lzscr*Iintfp
+
+      Call Erd_ao1e(Icore(I0s),Icore(I0t),Icore(I0v),N,
+     &              Icore(I0z),Lzscr,Icore(I0i),Liscr)
+      If (Debug) Call Erd_dump1e(Icore(I0s),Icore(I0t),Icore(I0v),N)
 
       Call Erd_so1e(Icore(I0s),N,Icore(I0b),Asym1)
       Call Erd_wr1e(Lu(1),'OVERLAP ',Icore(I0b),Icore(I0z),Icore(I0i))

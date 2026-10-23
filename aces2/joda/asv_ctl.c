@@ -743,7 +743,7 @@ void asv_handle_proc(const f_int * index, const char * value)
         case h_IOPPAR_integrals:
         {
             const char *handles[] = { "ARGOS", "VMOL", "HERMIT", "CADPAC",
-                                      "SEWARD", "GAMESS", "" };
+                                      "SEWARD", "GAMESS", "ERD", "" };
             asv_update_handle(index,value,handles);
             break;
         }

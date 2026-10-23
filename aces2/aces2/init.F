@@ -240,6 +240,9 @@ c ---------------------------------------------------------------------------
 c set the defaults and override them with the CL.
       sewswitch=.FALSE.
       integral_package='xvmol'
+c INTEGRALS=ERD: xerdints writes the integrals and the vmol2ja records
+      erd_ints = (iflags(h_IFLAGS_integrals).eq.6)
+      if (erd_ints) integral_package='xerdints'
       if (hf_scf) then
          if ((iflags2(h_IFLAGS2_direct).eq.1).and.
      &       (iflags(h_IFLAGS_integrals).eq.5).and.

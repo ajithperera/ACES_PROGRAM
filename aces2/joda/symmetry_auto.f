@@ -204,6 +204,7 @@
 
 
 
+
       SUBROUTINE SYMMETRY_AUTO(SCRATCH, QTMP, NEWQ, IT, IDEGEN, 
      &                         ORIEN2, NOSILENT)
 C
@@ -1257,7 +1258,7 @@ CJDW 9/20/96. Also for SEWARD.
 CADY 5/06/04. Also for GAMESS.
 C
    75 IF(INTTYP.EQ.1.OR.INTTYP.EQ.2.OR.INTTYP.EQ.0.OR.INTTYP.EQ.5
-     &     .OR.INTTYP.EQ.4)THEN
+     &     .OR.INTTYP.EQ.4.OR.INTTYP.EQ.6)THEN
         IF(PGRP.EQ.'C2v')THEN
           SYMSTR(1)(2:2)='X'
           SYMSTR(2)(2:2)='Y'
