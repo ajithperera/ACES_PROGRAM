@@ -120,7 +120,7 @@ def min_abbrev(oppar):
 def describe(key, handles, flag_names):
     names = flag_names.get(key["index"], [])
     values, terminated = None, True
-    for n in names:
+    for n in names if key["type"] == "handle" else []:
         if n in handles:
             values, terminated = handles[n]
             break

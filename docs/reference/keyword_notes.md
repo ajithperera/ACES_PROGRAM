@@ -9,7 +9,7 @@
 
 ## CALCLEVEL
 
-Specifies the general level of theory to be used throughout the program. Acceptable values are: SCF, MBPT(2), MBPT(3), SDQ-MBPT(4), MBPT(4), LCCD, LCCSD, UCCSD(4), CCD, UCC(4), CCSD, CCSD[T], CCSD+TQ*, CCSDT-1, CCSDT-1b, CCSDT-2, CCSDT-3, CCSDT-4, CCSDT, LCCSDT, CCD+ST(CCD), QCISD(T), CCSD(T), QCISD, CID, CISD, QCISD(TQ), CCSD(TQ), CCSD+TQ, CCSDT+Q*, CCSDT+Q, CC5SD(T), CCSD-T, CC3, CCSDT-T1T2, CCSDTQ-1, CCSDTQF-1, CCSDTQ-2, CCSDTQ-3, CCSDTQ, ACCSD, and HFDFT. Emphasized calculation levels (in italics) are not implemented currently but are planned for future versions of the program. CALC=HFDFT has been obsoleted by SCF TYPE=KS.
+Selects the method for the energy (and its derivatives) after the SCF. See {doc}`../user/methods` for the method families and examples. `CALC=HFDFT` is obsolete; use `SCF_TYPE=KS` for Kohn–Sham DFT. Not every value is implemented for every reference, derivative order or property.
 
 ## MEMORY_SIZE
 
@@ -209,7 +209,19 @@ If DAMP TYP=DA VIDSON, then the cutoff is defined to be N∗ 0.01, so the defaul
 
 ## DAMPSCF
 
-If DAMP TYP=STATIC, then the static damping factor used in the SCF iterations is N∗ 0.01, so the default damping factor is 0.2. SCF EXTRAP (previously RPP) = (switch) ON Controls whether or not the reduced partitioning procedure is to be used to accelerate convergence of the SCF equations. SCF EXPORDER (previously RPP ORDER) = (integer) 6 Sets the number of density matrices to be used in the RPP convergence acceleration procedure. SCF EXPSTAR (previously RPP LATEST) = (integer) 8 Sets the latest iteration for initiation of the RPP convergence acceleration procedure. RPP is switched on when the error falls below a certain threshold, but in difficult cases, in which the iterations are oscillatory, it is necessary to force it on when the error is still large. In these cases, the RPP will begin on the iteration number specified by this parameter.
+If DAMP TYP=STATIC, then the static damping factor used in the SCF iterations is N∗ 0.01, so the default damping factor is 0.2.
+
+## SCF_EXTRAP
+
+(Formerly RPP.) Controls whether or not the reduced partitioning procedure is to be used to accelerate convergence of the SCF equations.
+
+## SCF_EXPORDE
+
+(Formerly RPP_ORDER.) Sets the number of density matrices to be used in the RPP convergence acceleration procedure.
+
+## SCF_EXPSTAR
+
+(Formerly RPP_LATEST.) Sets the latest iteration for initiation of the RPP convergence acceleration procedure. RPP is switched on when the error falls below a certain threshold, but in difficult cases, in which the iterations are oscillatory, it is necessary to force it on when the error is still large. In these cases, the RPP will begin on the iteration number specified by this parameter.
 
 ## LSHF_A1
 
@@ -319,7 +331,15 @@ Sets the convergence criterion for the CC and Lambda equations. Equations are co
 
 ## CC_MAXCYC
 
-Sets the maximum number of CC or Lambda iterations. CC EXTRAPOL (previously RLE) = (handle) DIIS Specifies the type of convergence acceleration used during the CC iterations. =STANDARD uses the RLE method of Bartlett and Purvis with periodic extrapolation of the solution vector, =DIIS uses the DIIS approach of Pulay, =NOJACOBI uses the RLE method with continuous extrapolation, and =OFF uses no convergence acceleration. In general, DIIS works well for a wide range of molecular systems while RLE can be better for certain cases. NOJACOBI might offer advantages in cases where the reduced subspace becomes singular too rapidly. NOJACOBI requires some additional disk storage, which might be disadvantageous for very large calculations. =OFF is generally a bad idea for CC calculations but might be preferred by some CI calculations. CC EXPORDER (previously ORDER RLE) = (integer) 5 Sets the maximum number of iterates to include in the R matrix used by RLE and DIIS. The maximum value allowed is 25.
+Sets the maximum number of CC or Lambda iterations.
+
+## CC_EXTRAPOL
+
+(Formerly RLE.) Specifies the type of convergence acceleration used during the CC iterations. =STANDARD uses the RLE method of Bartlett and Purvis with periodic extrapolation of the solution vector, =DIIS uses the DIIS approach of Pulay, =NOJACOBI uses the RLE method with continuous extrapolation, and =OFF uses no convergence acceleration. In general, DIIS works well for a wide range of molecular systems while RLE can be better for certain cases. NOJACOBI might offer advantages in cases where the reduced subspace becomes singular too rapidly. NOJACOBI requires some additional disk storage, which might be disadvantageous for very large calculations. =OFF is generally a bad idea for CC calculations but might be preferred by some CI calculations.
+
+## CC_EXPORDER
+
+(Formerly ORDER_RLE.) Sets the maximum number of iterates to include in the R matrix used by RLE and DIIS. The maximum value allowed is 25.
 
 ## XFORM_TOL
 
@@ -345,7 +365,7 @@ Controls what action is taken by the linear response program. =ON calculates and
 
 ## EXCITE
 
-Specifies the type of excited-state calculation to perform. Available values are: NONE, TDA, RPA, EOMEE, CIS, CIS(D), P-EOMEE, EOM-BWPT2, and STEOM. This keyword needs a lot of attention...
+Selects the method for excited states of the same charge: `TDA` (CIS), `RPA`, `DRPA`, `EOMEE` (EOM-CCSD), `CIS(D)`, `P-EOMEE` (partitioned EOM-CCSD), `STEOM`, and EOM variants built on ring-CCD ground states (`EOM(S)-RCCD`, `EOM(S)-DRCCD` and their spin-flip and doubles forms, used with `EOMREF`). The number of states per irrep is set with `ESTATE_SYM`. See {doc}`../user/methods`.
 
 ## ESTATE_TOL
 
@@ -626,4 +646,66 @@ Obsoleted by the *INTGRT namelist.
 ## INSERTF
 
 ## GLOBAL_MEM
+
+# Added since 2006
+
+## TRUNC_ORBS
+
+Truncates the virtual space before the correlated calculation. `FNO` replaces the virtual orbitals by frozen natural orbitals from a preliminary MBPT(2) calculation and keeps the fraction given by `FNO_KEEP`; `OVOS` uses optimized virtual orbitals. See test `124a.fno`.
+
+## FNO_KEEP
+
+With `TRUNC_ORBS=FNO`, the percentage of virtual orbitals kept (for example `FNO_KEEP=60`).
+
+## DAMP_CC
+
+Damping of the coupled-cluster amplitude update, in units of 0.01: the default 100 is a full (undamped) update, smaller values mix in the previous amplitudes. Can help difficult CC convergence. Used by `xvcc`, the pCCD and ring-CC codes.
+
+## DKH_ORDER
+
+Order of the Douglas–Kroll–Hess scalar-relativistic Hamiltonian; 0 (the default) turns it off.
+
+## UNCONTRACT
+
+With `DKH_ORDER` > 0, builds the DKH one-electron operator in the uncontracted basis instead of the contracted one.
+
+## FFIELD
+
+Field strength, in units of 10<sup>-6</sup> a.u., for finite-field calculations of polarizabilities (see `ORDER_ALPHA`). A non-zero value makes `xaces2` run the finite-field sequence; a positive value requires `SYMMETRY=OFF`.
+
+## ORDER_ALPHA
+
+For finite-field calculations (`FFIELD`), the multipole operator whose response is computed: `DIPOLE`, `QUADRUPOLE` or `OCTUPOLE`.
+
+## OO_METHOD
+
+Orbital optimizer for orbital-optimized pCCD and related methods (`PCCD_REF=OPTIMIZED`, `CALC=OO-CCD`, `OO-LCCD`): `RFO` (rational function), `BFGS`, `FULL-NR` (Newton–Raphson), `BB-SD`, `AMSGRAD`, `ROTGRAD`. See {doc}`../user/methods`.
+
+## PCCD_REF
+
+Orbitals used by pCCD: `HF` (canonical SCF), `KS`, `BRUECKNER`, `NATURAL`, `LOCAL`, or `OPTIMIZED` for orbital-optimized pCCD.
+
+## OO_MAXCYC
+
+Maximum number of orbital-optimization steps in OO-pCCD and related methods.
+
+## OO_DIIS
+
+DIIS acceleration in the pCCD amplitude and orbital iterations (on by default).
+
+## RPA_SOLVE
+
+How RPA-type eigenvalue problems are solved: `FULL_DIAG` (full diagonalization, the default) or `DAVIDSON` (iterative, for the lowest roots only).
+
+## EE_ROOT_FIND
+
+Eigenvalue solver for EOM-CC excitation energies in `xvee`: `DAVIDSON` (the default), `BLOCK_DAVIDSON`, `LANCZOS`, or `FULL_DIAG`.
+
+## IP_ROOT_FIND
+
+Eigenvalue solver for EOM-CC ionization potentials in `xvip`: `DAVIDSON` (the default) or `FULL_DIAG`.
+
+## EOM_SOLVE
+
+For EOM-IP in `xvip`, whether the right (`RIGHT`, the default) or left (`LEFT`) eigenvectors are solved for.
 
