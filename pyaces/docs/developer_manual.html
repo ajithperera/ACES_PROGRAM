@@ -55,7 +55,7 @@ li { margin: 2pt 0; }
   <div class="sub">Structure, build, extension and testing of <code>aces2py</code>, the f2py extension module that drives ACES II from Python</div>
   <table>
     <tr><td><b>Repository</b></td><td><code>ACES_PROGRAM/pyaces</code> (GitHub youngchoonpark/ACES, private)</td></tr>
-    <tr><td><b>Reference commit</b></td><td><code>f97a9759</code> (master, 2026-10-23)</td></tr>
+    <tr><td><b>Reference commit</b></td><td>master, 2026-10-23 (TODO stage 1 applied)</td></tr>
     <tr><td><b>Written</b></td><td>2026-10-23</td></tr>
     <tr><td><b>Verified</b></td><td>pyaces suite 51/51 PASS on the local workstation (oneAPI 2024.0) and the ccsd server (oneAPI 2023.2)</td></tr>
     <tr><td><b>Link audit</b></td><td>296 collision-baseline entries, 0 COMMON shadows, identical on both machines</td></tr>
@@ -157,7 +157,7 @@ Before exposing a new Fortran routine or linking another aces2 module, read chap
 <tr><th style="width:24%">Item</th><th>Requirement</th></tr>
 <tr><td>Fortran</td><td>Intel <code>ifx</code> (verified with oneAPI 2023.2 and 2024.0). The name <code>ifort</code> is provided by the <code>tools/compat_bin</code> shim.</td></tr>
 <tr><td>C</td><td><code>mpicc</code>, to compile the f2py C wrapper and <code>fortranobject.c</code> (it wraps gcc on the local workstation).</td></tr>
-<tr><td>Python</td><td><b>3.12</b> with numpy (including f2py). The output file name is hard-coded to <code>cpython-312</code>, so other versions cannot import it.</td></tr>
+<tr><td>Python</td><td>3.12 (verified) with numpy (including f2py). The extension suffix is taken from the building interpreter (<code>EXT_SUFFIX</code>), so the module imports only under the Python version that built it.</td></tr>
 <tr><td>BLAS/LAPACK</td><td>Intel MKL; <code>MKLROOT</code> must be set. Linked as ILP64, sequential.</td></tr>
 <tr><td>binutils</td><td><code>ar</code>, <code>nm</code>, <code>objcopy</code></td></tr>
 <tr><td>Environment modules</td><td>The <code>module</code> command. <code>pyaces/build.sh</code> runs <code>module purge</code> and loads its own set.</td></tr>
@@ -214,7 +214,7 @@ f2py generates empty stub wrappers; given every source, it auto-wraps every subr
 <tr><td>2. Compile C</td><td><code>mpicc -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC</code> on the module C file and <code>fortranobject.c</code>.</td><td><code>build/aces2pymodule.o</code>, <code>build/fortranobject.o</code></td></tr>
 <tr><td>3. Compile Fortran</td><td>Compile <code>$SOURCES</code> and the f2py wrapper with the <code>FFLAGS</code> below. Then <code>objcopy --redefine-sym props_=pyaces_vprops_props_ build/runee.o</code>, so Runee calls the renamed vprops PROPS.</td><td><code>build/*.o</code></td></tr>
 <tr><td>4. Link</td><td>Build LIBDIRS/LIBNAMES, build the patched archives for colliding modules (chapter 5), then <code>ifx -shared -nofor-main</code>.</td><td><code>build/aces2py.cpython-312-x86_64-linux-gnu.so</code></td></tr>
-<tr><td>5. Import test</td><td><code>python3 -c "import aces2py; print('IMPORT OK')"</code>. A failure fails the build (<code>set -e</code>).</td><td>none</td></tr>
+<tr><td>5. Import test</td><td><code>python3 -c "import aces2py; print('IMPORT OK')"</code>, then <code>collision_audit.py --calls</code> (section 6.1). Either failure fails the build (<code>set -e</code>).</td><td>none</td></tr>
 <tr><td>6. Link audit</td><td><code>python3 tools/collision_audit.py || true</code>. Advisory only; it never fails the build.</td><td><code>@COLLISION_AUDIT:</code> lines in the log</td></tr>
 </table>
 
@@ -229,7 +229,7 @@ f2py generates empty stub wrappers; given every source, it auto-wraps every subr
 </ul>
 
 <h4>Link command</h4>
-<pre><code>ifx -shared -nofor-main -o build/aces2py.cpython-312-x86_64-linux-gnu.so build/*.o \
+<pre><code>ifx -shared -nofor-main -o build/aces2py${EXT_SUFFIX} build/*.o \
     -L$PATCHED_LIBDIR $LIBDIRS -Wl,--start-group $LIBNAMES -Wl,--end-group \
     -L$MKL -Wl,--start-group -lmkl_intel_ilp64 -lmkl_lapack95_ilp64 \
            -lmkl_sequential -lmkl_core -Wl,--end-group -lpthread</code></pre>
@@ -259,7 +259,7 @@ and repacks them as <code>build/patched_libs/lib&lt;mod&gt;.a</code>. aces2's ow
 <p>A list of <code>module:symbol</code> pairs (around line 411). For each pair the build applies
 <code>objcopy --redefine-sym sym=pyaces_&lt;mod&gt;_sym</code> to <b>every object</b> in that module's archive. The definition and the module's own calls are renamed together,
 so the losing module keeps using its own implementation under the new name, and the original name is left to the winner.</p>
-<div class="warn"><b>Rule</b>: a pair only takes effect if its module is in <code>MAIN_COLLISION_MODULES</code> or <code>EXTRA_LOCALIZE_MODULES</code>. Pairs for modules that are not processed are <b>silently ignored</b>, and <code>objcopy</code> errors are discarded by <code>2&gt;/dev/null || true</code>.</div>
+<div class="warn"><b>Rule</b>: a pair only takes effect if its module is in <code>MAIN_COLLISION_MODULES</code> or <code>EXTRA_LOCALIZE_MODULES</code>. Before patching, the build checks every pair: if the module is in neither list, or its archive defines no <code>T</code> symbol of that name, the build stops with <code>EXTRA_LOCALIZE_SYMBOLS has pairs that cannot be applied</code>.</div>
 <p>The build used <code>--localize-symbol</code> at first, but that sent the losing module's own calls to the winner (lambda's <code>vlamcc</code> ended up calling vcc's FINISH), so on 2026-08-11 it switched to <code>--redefine-sym</code>.</p>
 
 <h4>Main collisions resolved so far</h4>
@@ -316,7 +316,8 @@ nm Main/build/runhbar.o | grep -i hbar</code></pre>
 
 <p>It runs automatically as build step 6 and can also be run by hand. It needs an already built <code>Main/build/aces2py*.so</code>.</p>
 <pre><code>python3 tools/collision_audit.py            # report against the baselines
-python3 tools/collision_audit.py --update   # overwrite both baseline files with the current findings</code></pre>
+python3 tools/collision_audit.py --update   # overwrite both baseline files with the current findings
+python3 tools/collision_audit.py --calls    # fail if a pyaces call binds to data (run by build step 5)</code></pre>
 
 <h3>6.1 What it checks</h3>
 <p><b>(1) Resolution differences.</b> For every symbol defined by more than one module:</p>
@@ -329,6 +330,7 @@ python3 tools/collision_audit.py --update   # overwrite both baseline files with
 <p>Pairs already renamed by <code>build.sh</code> are excluded; the audit reads <code>EXTRA_LOCALIZE_SYMBOLS</code> and <code>NEWLY_LINKED_MODULES</code> straight from build.sh.</p>
 <p><b>(2) COMMON shadows.</b> It reports symbols that are <code>T</code> in one archive and <code>C</code> in another and B/b/D/d in the .so, with a verdict of
 <code>rename-definer</code> or <code>rename-commons</code>.</p>
+<p><b>(3) Calls bound to data</b> (<code>--calls</code>). Every <code>U</code> symbol in pyaces's own Fortran objects (<code>Main/build/*.o</code> except the two C objects) is a call, because Fortran references COMMON blocks as <code>C</code>. If the .so defines that name as data (B/b/D/d), the call would jump into a COMMON block. This catches the case (2) cannot, where no subroutine of that name exists anywhere (the <code>hbar_</code> defect). It is not advisory: build step 5 runs it and any hit fails the build.</p>
 
 <h3>6.2 Reading the output</h3>
 <pre><code>@COLLISION_AUDIT: 0 subroutines shadowed by a same-named COMMON block ...
@@ -344,7 +346,7 @@ python3 tools/collision_audit.py --update   # overwrite both baseline files with
   <li>Rebuild pyaces and confirm the NEW entry is gone and no other symbol flipped. Adding a module to the processed set can change how its other symbols resolve.</li>
   <li>Update the baseline with <code>--update</code> only after the suite has passed.</li>
 </ol>
-<div class="warn"><b>The baseline is not a to-do list</b>: its 296 entries are known, accepted differences. Renaming 42 "safe-looking" entries in one pass once dropped the suite from 45 to 31 PASS. Also, <code>ACES_LINK_LISTS</code> only covers modules that build executables, so callers inside library modules (libr, libr2, tools, acescore, …) are invisible to the audit. A call bound to a COMMON block with no <code>T</code> definition anywhere (the <code>hbar_</code> case in chapter 11) is invisible too.</div>
+<div class="warn"><b>The baseline is not a to-do list</b>: its 296 entries are known, accepted differences. Renaming 42 "safe-looking" entries in one pass once dropped the suite from 45 to 31 PASS. Also, <code>ACES_LINK_LISTS</code> only covers modules that build executables, so callers inside library modules (libr, libr2, tools, acescore, …) are invisible to the audit. Calls from pyaces's own objects into COMMON blocks are covered separately by <code>--calls</code>.</div>
 </section>
 
 <!-- ============================ 7 ============================ -->
@@ -485,7 +487,7 @@ cd pyaces && python3 pyaces_suite_runner.py             # directly
 cd pyaces && python3 pyaces_suite_runner.py 010a 117b   # selected cases only</code></pre>
 <ul>
   <li>Case input: <code>aces2/tests/fast/cases/&lt;name&gt;/ZMAT</code>; basis: <code>aces2/tests/fast/GENBAS</code>. There is no pyaces-specific test directory.</li>
-  <li>Working directory: <code>$PYACES_RUN_DIR/&lt;name&gt;</code>. Off HiPerGator, <code>run_tests.sh</code> sets it to <code>build_logs/pyaces_suite_run</code>; the runner's own default is HiPerGator's <code>/blue/...</code> path.</li>
+  <li>Working directory: <code>$PYACES_RUN_DIR/&lt;name&gt;</code>, by default <code>build_logs/pyaces_suite_run</code> in the repository. On HiPerGator, <code>run_tests.sh</code> points it at the <code>/blue/...</code> scratch filesystem.</li>
   <li>Each case gets a fresh directory with ZMAT copied in and GENBAS symlinked, then <code>pyaces_run_case.py</code> runs with a 300-second limit. Log: <code>&lt;dir&gt;/run.log</code>; summary: <code>$RUN_DIR/summary.tsv</code>.</li>
   <li>Local workstation: <code>OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 taskset -c 20-23 flock -s /tmp/qtoy-bench.lock ./run_tests.sh pyaces</code>. ccsd server: <code>qsub build_logs/test_ccsd.pbs</code>.</li>
 </ul>
@@ -516,12 +518,14 @@ The runner only runs rows whose category is SCF, CC, EOM, PCCD or KS.</p>
 <tr><td>SCRIPT</td><td>15</td><td>Cases driven by scripts rather than a ZMAT</td></tr>
 </table>
 
-<h3>9.4 Do not rerun <code>classify_suite.py</code></h3>
-<p><code>classify_suite.py</code> first built the TSV from <code>aces2/tests/fast/test_results</code> and the ZMATs. Several rows were later edited <b>by hand</b> and would be lost if the
-script were rerun: the KS → Runintgrt rows, 117a/b/c → Rundirmp2, and the exclusions of 020 (CCSD(TQ)), the 022 family (Brueckner), 083 and 124d.fno (HFSTABILITY=FOLLOW).
-Edit the TSV directly, or move those exceptions into <code>classify()</code> before regenerating it.</p>
+<h3>9.4 <code>classify_suite.py</code> is the source of the TSV</h3>
+<p><code>classify_suite.py</code> builds the TSV from <code>aces2/tests/fast/test_results</code> and the ZMATs. Every routing rule lives in <code>classify()</code>, including the ones that were
+once hand edits: <code>SCF_TYPE=KS</code> → KS/Runintgrt, <code>FOCK=AO</code> MBPT(2) → Rundirmp2, and the exclusions for CCSD(TQ), <code>BRUECKNER</code> and <code>HFSTABILITY=FOLLOW</code>.
+<b>Never edit the TSV by hand</b>: change <code>classify()</code> and regenerate.</p>
+<pre><code>python3 classify_suite.py           # rewrite suite_classification.tsv
+python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differs from the rules</code></pre>
 
-<div class="warn"><b>Gap in the roll-up</b>: the pyaces summary in <code>run_tests.sh</code> only counts <code>PASS:</code>, <code>FAIL_CLEAN:</code>, <code>CRASH:</code> and <code>NO_RESULT:</code>. MISMATCH and TIMEOUT are not counted in TOTAL, so if the total is not 51, read the Summary block in <code>unified_test_pyaces.log</code> yourself.</div>
+<div class="note"><b>Roll-up</b>: <code>run_tests.sh</code> reads every <code>STATUS: n</code> line of the runner's Summary block. PASS counts as PASS, MISMATCH and FAIL_CLEAN as FAIL, and everything else (CRASH, NO_RESULT, TIMEOUT, …) as OTHER, so TOTAL is always the number of cases run.</div>
 </section>
 
 <!-- ============================ 10 ============================ -->
@@ -584,19 +588,24 @@ Edit the TSV directly, or move those exceptions into <code>classify()</code> bef
 <li><b><code>Getreclenpy</code>, <code>Cgetrecpy</code></b>: their outputs never reached Python. <code>Cf2py intent(out)</code> now makes them return the length and the string (section 7.4); the debug prints in Cgetrecpy were removed.</li>
 </ul></div>
 
+<div class="note"><b>Fixed on 2026-10-23 (TODO stage 1: T-03, T-04, T-07, T-16)</b>
+<ul>
+<li><b>Calls bound to data</b>: <code>collision_audit.py --calls</code> now fails the build when a pyaces object calls a name the .so defines as data (section 6.1). It reports both <code>hbar_</code> calls when run against the pre-f97a9759 objects.</li>
+<li><b>Rename pairs that cannot apply</b>: the build stops instead of ignoring them (section 5.2), and <code>objcopy</code> errors are no longer discarded.</li>
+<li><b>Python version</b>: the extension suffix comes from <code>EXT_SUFFIX</code> instead of a hard-coded <code>cpython-312</code>.</li>
+<li><b>Test roll-up and classifier</b>: the roll-up counts every status, the former hand edits are rules in <code>classify()</code> with a <code>--check</code> mode, and the runner's default run directory is inside the repository (sections 9.1–9.4).</li>
+</ul></div>
+
 <p>The remaining issues below are present in the current code. They do not affect the paths the suite exercises today, but you will meet them when using or extending the affected features.</p>
 <table>
 <tr><th style="width:4%">#</th><th style="width:26%">Issue</th><th>Details / recommended action</th></tr>
 <tr><td>1</td><td>Meaning of <code>Getlstpy</code> arguments</td><td><code>Irrep</code> and <code>Ndim</code> are ignored; <code>Left_index</code> is used as the irrep.</td></tr>
 <tr><td>2</td><td>The <code>.pyf</code> is effectively ignored</td><td>COMMON-block exports and intents in it are not applied (section 7.1).</td></tr>
-<tr><td>3</td><td>Python version is fixed</td><td>The output name is hard-coded to <code>cpython-312</code>. Other versions would need <code>sysconfig.get_config_var('EXT_SUFFIX')</code>.</td></tr>
-<tr><td>4</td><td>Header copies differ</td><td>The nine <code>Main/*.com</code> files differ from aces2's headers (explicit <code>integer*8</code>, no include guards). Sizes match thanks to <code>-i8</code>, so this is harmless today, but if aces2's headers change, init.F and the rest would see different COMMON layouts.</td></tr>
-<tr><td>5</td><td>Runpccd and Init</td><td>Runpccd calls Joda itself, yet the runner calls <code>Init()</code> before it. Untested, since there are no PCCD cases.</td></tr>
-<tr><td>6</td><td>Errors are ignored</td><td>Typos in <code>EXTRA_LOCALIZE_SYMBOLS</code> and pairs for unprocessed modules are silently ignored.</td></tr>
-<tr><td>7</td><td>ifort check in the top-level build</td><td>The top-level <code>build.sh</code> requires <code>ifort</code> before the pyaces shim is on PATH, so an ifx-only toolchain is refused.</td></tr>
-<tr><td>8</td><td>Assumes environment modules</td><td><code>pyaces/build.sh</code> always runs <code>module purge/load</code>, so it fails in setvars/path mode or on hosts without a <code>module</code> command.</td></tr>
-<tr><td>9</td><td>Test roll-up and classifier</td><td>See sections 9.3–9.4.</td></tr>
-<tr><td>10</td><td>Symmetry-block offset in <code>Get1ehpy</code></td><td><code>Index = Index + Nelms*(K-1)</code> at <code>get1ehpy.F:101</code> looks wrong. Verify the result on a molecule with symmetry before relying on it.</td></tr>
+<tr><td>3</td><td>Header copies differ</td><td>The nine <code>Main/*.com</code> files differ from aces2's headers (explicit <code>integer*8</code>, no include guards). Sizes match thanks to <code>-i8</code>, so this is harmless today, but if aces2's headers change, init.F and the rest would see different COMMON layouts.</td></tr>
+<tr><td>4</td><td>Runpccd and Init</td><td>Runpccd calls Joda itself, yet the runner calls <code>Init()</code> before it. Untested, since there are no PCCD cases.</td></tr>
+<tr><td>5</td><td>ifort check in the top-level build</td><td>The top-level <code>build.sh</code> requires <code>ifort</code> before the pyaces shim is on PATH, so an ifx-only toolchain is refused.</td></tr>
+<tr><td>6</td><td>Assumes environment modules</td><td><code>pyaces/build.sh</code> always runs <code>module purge/load</code>, so it fails in setvars/path mode or on hosts without a <code>module</code> command.</td></tr>
+<tr><td>7</td><td>Symmetry-block offset in <code>Get1ehpy</code></td><td><code>Index = Index + Nelms*(K-1)</code> at <code>get1ehpy.F:101</code> looks wrong. Verify the result on a molecule with symmetry before relying on it.</td></tr>
 </table>
 </section>
 
@@ -613,6 +622,7 @@ Edit the TSV directly, or move those exceptions into <code>classify()</code> bef
 <tr><td>2026-09-04 – 09-11</td><td>COMMON shadowing found (ABCD → the KS crash); the KS category brought the suite to 51/51; COMMON audit added; nine latent shadows renamed pre-emptively.</td></tr>
 <tr><td>2026-10-14</td><td>Ported to a second machine (ccsd): init.F includes in column 1 (<code>73944a6d</code>); aces2 built with <code>-assume dummy_aliases</code> (<code>dbed9377</code>, ifx 2023.2 miscompiled vgamma2); sorted source lists, <code>LC_ALL=C</code> and extra renames (<code>eab3c4e6</code>). 51/51 and an identical 296-entry audit on both machines.</td></tr>
 <tr><td>2026-10-23</td><td>Defects found while writing this manual fixed (<code>f97a9759</code>): <code>Hbar</code> → <code>Hbar_</code> in Runhbar/Buildhbar, <code>Iuhf</code> as <code>Integer*8</code>, Getreclenpy and Cgetrecpy return their values. Still 51/51 on both machines.</td></tr>
+<tr><td>2026-10-23</td><td>TODO stage 1 (T-03, T-04, T-07, T-16): the <code>--calls</code> check fails the build on calls into COMMON blocks, unapplicable rename pairs stop the build, the extension suffix comes from <code>EXT_SUFFIX</code>, and the test roll-up and classifier were fixed. See <code>docs/DONE.md</code>.</td></tr>
 </table>
 
 <h3>12.2 Deployment on the ccsd server</h3>

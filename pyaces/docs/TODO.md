@@ -23,10 +23,6 @@
 
 | 번호 | 과제 | 분류 | 우선순위 | 규모 | 단계 |
 |---|---|---|---|---|---|
-| T-03 | COMMON 블록에 연결된 호출 검사 | 정확성 | 높음 | 작음 | 1 |
-| T-04 | 이름 바꾸기 실패 시 빌드 중단 | 정확성 | 높음 | 작음 | 1 |
-| T-07 | Python 버전 고정 해제 | 빌드 | 높음 | 작음 | 1 |
-| T-16 | 테스트 요약 누락과 분류기 문제 | 테스트 | 높음 | 작음 | 1 |
 | T-11 | 레거시 파일 정리 (약 47 MB) | 구조 | 중간 | 작음 | 2 |
 | T-12 | 헤더 사본 중복 제거 | 구조 | 중간 | 작음 | 2 |
 | T-15 | `Python/moio_len.py` 수정 | 구조 | 낮음 | 작음 | 2 |
@@ -43,36 +39,7 @@
 
 ## 1단계 — 위험이 낮고 바로 효과가 있는 것
 
-### T-03. COMMON 블록에 연결된 호출 검사
-- **우선순위 / 규모:** 높음 / 작음
-- **문제:** Runhbar가 lambda의 `COMMON /HBAR/`(`hbar_`)을 호출하던 결함(f97a9759에서 수정)은 지금 감사 도구가 볼 수 없다. `T hbar_`가 어디에도 없기 때문이다.
-- **할 일:** pyaces `.o`가 부르는 심볼(`nm`의 `U`)이 `.so`에서 데이터(`B`/`b`/`D`/`d`)로 연결되면 빌드를 실패시키는 검사를 `collision_audit.py` 또는 `build.sh`에 추가한다.
-- **완료 기준:** f97a9759 이전의 `runhbar.F`로 되돌려 시험하면 빌드가 실패하고, 현재 코드에서는 통과한다.
-- **관련 파일:** `pyaces/tools/collision_audit.py`, `pyaces/build.sh`
-
-### T-04. 이름 바꾸기 실패 시 빌드 중단
-- **우선순위 / 규모:** 높음 / 작음
-- **문제:** `EXTRA_LOCALIZE_SYMBOLS`에 오타가 있거나 처리 대상이 아닌 모듈의 쌍이 있어도 조용히 무시된다(`objcopy ... 2>/dev/null || true`).
-- **할 일:** 쌍마다 모듈이 `MAIN_COLLISION_MODULES`/`EXTRA_LOCALIZE_MODULES`에 있는지, 심볼이 그 아카이브에 정의되어 있는지 확인하고 아니면 빌드를 실패시킨다.
-- **완료 기준:** 일부러 틀린 쌍을 넣으면 빌드가 실패하고, 현재 목록으로는 통과한다.
-- **관련 파일:** `pyaces/build.sh` (약 456–484행)
-
-### T-07. Python 버전 고정 해제
-- **우선순위 / 규모:** 높음 / 작음
-- **문제:** 출력 파일 이름이 `aces2py.cpython-312-x86_64-linux-gnu.so`로 고정되어 다른 Python 버전에서 import되지 않는다.
-- **할 일:** `sysconfig.get_config_var('EXT_SUFFIX')`로 이름을 정한다. `collision_audit.py`의 `.so` 탐색도 확인한다.
-- **완료 기준:** 3.12에서 결과 동일. 가능하면 다른 버전(예: 3.11/3.13)에서 빌드·import 확인.
-- **관련 파일:** `pyaces/build.sh` (486행), `pyaces/tools/collision_audit.py`
-
-### T-16. 테스트 요약 누락과 분류기 문제
-- **우선순위 / 규모:** 높음 / 작음
-- **문제:**
-  - `run_tests.sh`의 pyaces 요약이 MISMATCH와 TIMEOUT을 세지 않아 실패가 요약에서 빠질 수 있다.
-  - `classify_suite.py`를 다시 돌리면 TSV에 손으로 고친 행(KS → Runintgrt, 117a/b/c → Rundirmp2, 020·022 계열·083·124d.fno 제외)이 사라진다.
-  - 러너의 기본 실행 디렉터리가 HiPerGator 경로(`/blue/...`)다.
-- **할 일:** 요약에 모든 상태를 포함한다. 수동 예외를 `classify()`로 옮겨, 재생성한 TSV가 현재 TSV와 같게 한다. 기본 실행 디렉터리를 저장소 안으로 바꾼다.
-- **완료 기준:** 재생성 TSV와 현재 TSV의 diff가 없다. 일부러 MISMATCH를 만들면 요약의 FAIL에 잡힌다.
-- **관련 파일:** `run_tests.sh`, `pyaces/classify_suite.py`, `pyaces/suite_classification.tsv`, `pyaces/pyaces_suite_runner.py`
+1단계 항목(T-03, T-04, T-07, T-16)은 2026-10-23에 끝났다. [DONE.md](DONE.md) 참고.
 
 ## 2단계 — 구조 정리 (동작 변화 없음)
 
