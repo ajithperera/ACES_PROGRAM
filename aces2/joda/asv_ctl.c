@@ -486,7 +486,8 @@ void asv_handle_proc(const f_int * index, const char * value)
       /*44-47*/ "CCSDT(Qf)",	"OO-MP2",       "OO-MBPT(2)",   "CC2",
       /*48-51*/ "rCCD",         "drCCD",        "EXTRNL_CCD",   "EXTRNL_CCSD", 
       /*52-55*/ "pCCD",         "OO-LCCD",      "OO-CCD",       "pCCD-(S)",
-      /*56-57*/ "pCCD-(TS)",    "PCCDQF",       "PCCD-(TSD)",   "CCDQF"};
+      /*56-57*/ "pCCD-(TS)",    "PCCDQF",       "PCCD-(TSD)",   "CCDQF",
+                "" };
             asv_update_handle(index,value,handles);
             break;
         }
@@ -571,7 +572,8 @@ void asv_handle_proc(const f_int * index, const char * value)
               "FRACTIONAL",
               "BCANONICAL",
               "BFRACTIONAL",
-              "NWCHEM_MOS_2A2" 
+              "NWCHEM_MOS_2A2",
+               ""
             };
             asv_update_handle(index,value,handles);
             break;
@@ -591,7 +593,7 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "HUCKEL",	/* 7 */
                 "OVERRIDE",     /* 8 */
                 "ATOMIC",       /* 9 */
-                "AODENS"        /* 10 */
+                "AODENS",       /* 10 */
                 ""
             };
             asv_update_handle(index,value,handles);
@@ -709,7 +711,8 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "LST",          /* 1 */
                 "QST",          /* 2 */
                 "CONSTRAINED",  /* 3 */
-                "COMBO"         /* 4 - reserved for QST/LST and constrained*/
+                "COMBO",        /* 4 - reserved for QST/LST and constrained*/
+                ""
             };
             asv_update_handle(index,value,handles);
             break;
@@ -895,7 +898,8 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "EOM(Sf)-RCCD",   /* 17 */
                 "EOM(Sf)-DRCCD",  /* 18 */
                 "EOM(S)-DXRCCD",  /* 19 */ 
-                "EOM(SF)-DXRCCD", /* 20 */ 
+                "EOM(SF)-DXRCCD", /* 20 */
+                "",
             };  
             asv_update_handle(index,value,handles);
             break;
@@ -1051,7 +1055,7 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "ADC(2)",     /* 12 */
                 "ADCC(2)",    /* 13 */
                 "COPT",       /* 14 */
-                "DRXCCD"      /* 15 */
+                "DRXCCD",     /* 15 */
                 ""  
             };
             asv_update_handle(index,value,handles);
@@ -1135,7 +1139,7 @@ void asv_handle_proc(const f_int * index, const char * value)
         case h_IOPPAR_program:
         {
             const char *handles[] = { "DEFAULT", "NOT_USED", "ACES2", "MN_A3",
-                                      "PCCD" };
+                                      "PCCD", "" };
             asv_update_handle(index,value,handles);
             break;
         }
@@ -1193,7 +1197,7 @@ void asv_handle_proc(const f_int * index, const char * value)
 
         case h_IOPPAR_rpa_solve:
         {
-            const char *handles[] = { "FULL_DIAG", "DAVIDSON" };
+            const char *handles[] = { "FULL_DIAG", "DAVIDSON", "" };
             asv_update_handle(index,value,handles);
             break;
         }
@@ -1220,7 +1224,7 @@ void asv_handle_proc(const f_int * index, const char * value)
                                       "BRUECKNER",
                                       "NATURAL",
                                       "LOCAL",
-                                      "OPTIMIZED"};
+                                      "OPTIMIZED", ""};
             asv_update_handle(index,value,handles);
             break;
         }
@@ -1228,7 +1232,7 @@ void asv_handle_proc(const f_int * index, const char * value)
         case h_IOPPAR_oo_method:
         {
             const char *handles[] = { "NONE","BB-SD", "BFGS", "FULL-NR",
-                                      "AMSGRAD","ROTGRAD","RFO"};
+                                      "AMSGRAD","ROTGRAD","RFO", ""};
             asv_update_handle(index,value,handles);
             break;
         }
@@ -1265,7 +1269,7 @@ void asv_handle_proc(const f_int * index, const char * value)
 
         case h_IOPPAR_newvrt:
         {
-            const char *handles[] = { "OFF", "SELF_CONSISTENT", "POST_HF" };
+            const char *handles[] = { "OFF", "SELF_CONSISTENT", "POST_HF", "" };
             asv_update_handle(index,value,handles);
             break;
         }
