@@ -6,3 +6,6 @@ build_config.sh
 aces3/config.status
 aces3/config.log
 build/
+docs/_build/
+docs/reference/keywords.md
+__pycache__/
