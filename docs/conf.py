@@ -59,3 +59,8 @@ def setup(app):
     app.connect("builder-inited", generate_jobflows)
     app.connect("builder-inited", generate_keywords)
     app.connect("builder-inited", generate_jobarc)
+
+# Published as a private web page: no copied sources, MathJax pinned to an exact version.
+html_copy_source = False
+html_show_sourcelink = False
+mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"
