@@ -16,7 +16,7 @@ C points; dirmp2 reads the reference from JOBARC through CRAPSI itself, so
 C it is deliberately not forwarded.
 C
       Implicit None
-      Integer Iuhf
+      Integer*8 Iuhf
       Integer Length
       Double Precision Tmp
       Logical Scf_done

@@ -1,7 +1,7 @@
       Subroutine Runcc(Iuhf)
 
       Implicit None
-      Integer Iuhf 
+      Integer*8 Iuhf 
       Integer Length 
       Double Precision Tmp
       Logical Scf_done

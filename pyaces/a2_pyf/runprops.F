@@ -2,7 +2,7 @@
 
       Implicit None
 
-      Integer Iuhf
+      Integer*8 Iuhf
     
 CSSS      Call Propints_()
       Call Props_(Iuhf)

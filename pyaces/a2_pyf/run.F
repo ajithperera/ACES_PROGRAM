@@ -2,7 +2,7 @@
 
       Implicit None
 
-      Integer Iuhf 
+      Integer*8 Iuhf 
 #include "flags.com"
      
       Character*(*) String

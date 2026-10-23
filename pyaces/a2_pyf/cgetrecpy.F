@@ -3,14 +3,18 @@
       Implicit None
 
       Integer*8 Flag
-      Integer*8 I
       Integer*8 Length
       Character*6 File
       Character*8 Name
-      Character*8 Dest
+      Character*1024 Dest
+Cf2py intent(out) Dest
 
-      Write(6,"(a,a)")  "@-Entry to Getcrec,Rec name:", Name
-      Write(6,"(a,I5)") "@-Entry to Getcrec,Rec len:", Length
+      Dest = " "
+      If (Length .Gt. Len(Dest)) Then
+         Write(6,"(a,a,a,I8,a,I5)") "@CGETRECPY: record ", Name,
+     &      " length ", Length, " exceeds ", Len(Dest)
+         Call aces_exit(1)
+      Endif
 
       Flag = 20
       File = "JOBARC"

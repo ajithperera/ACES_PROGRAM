@@ -85,7 +85,7 @@ python module aces2py ! in
         subroutine cgetrecpy(name,length,dest) ! in :cgetrecpy:cgetrecpy.F
             character*8, intent(in) :: name
             integer*8,   intent(in) :: length
-            character*8  intent(inout) :: dest
+            character*1024, intent(out) :: dest
         end subroutine getcrecpy
 
         subroutine cputrecpy(name,length,source) ! in :cputrecpy:cputrecpy.F
@@ -140,7 +140,7 @@ python module aces2py ! in
   
         subroutine getreclenpy(name,length) ! in :getreclenpy:getreclenpy.F
             character*8 :: name
-            integer*8, intent(inout) :: length
+            integer*8, intent(out) :: length
         end subroutine getrelen
 
         subroutine get1ehpy(name,dest,ndim) ! in :get1ehp:get1ehpy.F

@@ -36,10 +36,10 @@
          Call Intproc(icore(i0),Icrsiz,Iuhf)
          Call aces_init_chemsys()
          Call Vcc(icore(i0),Icrsiz,Iuhf)
-         Call Hbar(icore(i0),Icrsiz,Iuhf)
+         Call Hbar_(icore(i0),Icrsiz,Iuhf)
       Elseif (CC_done) Then
          Call aces_init_chemsys()
-         Call Hbar(icore(i0),Icrsiz,Iuhf)
+         Call Hbar_(icore(i0),Icrsiz,Iuhf)
       Else
          Call Init_legacies()
          Call aces_init_chemsys()

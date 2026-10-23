@@ -1,7 +1,7 @@
       Subroutine Runhbar(Iuhf)
 
       Implicit None
-      Integer Iuhf 
+      Integer*8 Iuhf 
       Integer Length_scf
       Integer Length_cc
       Double Precision Tmp
@@ -31,10 +31,10 @@
          Call Intproc(icore(i0),Icrsiz,Iuhf)
          Call aces_init_chemsys()
          Call Vcc(icore(i0),Icrsiz,Iuhf)
-         Call Hbar(icore(i0),Icrsiz,Iuhf)
+         Call Hbar_(icore(i0),Icrsiz,Iuhf)
       Elseif (CC_done) Then
          Call aces_init_chemsys()
-         Call Hbar(icore(i0),Icrsiz,Iuhf)
+         Call Hbar_(icore(i0),Icrsiz,Iuhf)
       Else
          Call Init_legacies()
          Call Ints_(Icore(i0),Icrsiz,Iuhf)

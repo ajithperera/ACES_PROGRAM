@@ -12,7 +12,7 @@ C aces_init_rte/aces_ja_init and aces_ja_fin, which pyaces has already
 C done and will do itself.
 C
       Implicit None
-      Integer Iuhf
+      Integer*8 Iuhf
       Integer Length
       Double Precision Tmp
       Logical Scf_done
