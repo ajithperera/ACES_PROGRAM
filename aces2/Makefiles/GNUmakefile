@@ -1022,6 +1022,7 @@ ACES_LINK_LISTS = \
    cse12:${LIST_DEF_LIBS}\
    hcmult:vee:libr2:${LIST_DEF_LIBS}\
    libint:oed:erd:${LIST_DEF_LIBS}\
+   erdints:ecplib:oed:erd:${LIST_DEF_LIBS}\
    lsccresp:sbtools:vcc:libr2:${LIST_DEF_LIBS}\
    vibavg:a2proc:sbtools:ibr2:${LIST_DEF_LIBS}\
    eompccd:vee:vea:trp:librt3:libr2:crust:hbar:vcc:blockdave:pccd:${LIST_DEF_LIBS}\
@@ -1074,6 +1075,7 @@ ACES_MAIN_OBJS = \
    cse12:cse12_main\
    hcmult:hcmult_main\
    libint:libint_main\
+   erdints:erdints_main\
    lsccresp:lsccresp_main\
    vibavg:vibavg_main\
    eompccd:eompccd_main\

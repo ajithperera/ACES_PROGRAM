@@ -369,26 +369,28 @@ C
 
 C      enddo
 C
-      Call rescale_2ints(out_pvp,acesord,Nbasis,Erd_index,ERD_scale)
-      Call dcopy(Nbasis*Nbasis,acesord,1,out_pvp,1) 
-      Call rescale_2ints(out_nai,acesord,Nbasis,Erd_index,ERD_scale)
-      Call dcopy(Nbasis*Nbasis,acesord,1,out_nai,1) 
-      Call rescale_2ints(out_ovl,acesord,Nbasis,Erd_index,ERD_scale)
-      Call dcopy(Nbasis*Nbasis,acesord,1,out_ovl,1) 
+C Print the primitive integrals in ACES order and normalization. Only
+C copies (acesord) are rescaled: the DKH transformation below needs
+C them as ERD made them. (Copying the rescaled matrices back here made
+C every debug build's DKH Hamiltonian wrong, e.g. d-d blocks scaled by
+C 3 and the result rescaled a second time by the caller. A. Perera,
+C 10/2026.)
       Call rescale_2ints(out_kin,acesord,Nbasis,Erd_index,ERD_scale)
-      Call dcopy(Nbasis*Nbasis,acesord,1,out_kin,1) 
       Write(6,*) "The <mu| P^2 |nu > integral matrix"
-      call output(out_kin, 1, nprims, 1, nprims, nprims, nprims, 1)
-      call checksum("KIN",out_kin,Nprims*Nprims)
+      call output(acesord, 1, nprims, 1, nprims, nprims, nprims, 1)
+      call checksum("KIN",acesord,Nprims*Nprims)
+      Call rescale_2ints(out_ovl,acesord,Nbasis,Erd_index,ERD_scale)
       Write(6,*) "The <mu| S |nu >  matrix"
-      call output(out_ovl, 1, nprims, 1, nprims, nprims, nprims, 1)
-      call checksum("S",out_ovl,Nprims*Nprims)
+      call output(acesord, 1, nprims, 1, nprims, nprims, nprims, 1)
+      call checksum("S",acesord,Nprims*Nprims)
+      Call rescale_2ints(out_pvp,acesord,Nbasis,Erd_index,ERD_scale)
       Write(6,*) "The <mu| PVP |nu >  matrix"
-      call output(out_pvp, 1, nprims, 1, nprims, nprims, nprims, 1)
-      call checksum("pvp",out_pvp,Nprims*Nprims)
+      call output(acesord, 1, nprims, 1, nprims, nprims, nprims, 1)
+      call checksum("pvp",acesord,Nprims*Nprims)
+      Call rescale_2ints(out_nai,acesord,Nbasis,Erd_index,ERD_scale)
       Write(6,*) "The <mu| NAI |nu >  matrix"
-      call output(out_nai, 1, nprims, 1, nprims, nprims, nprims, 1)
-      call checksum("Nai",out_nai,Nprims*Nprims)
+      call output(acesord, 1, nprims, 1, nprims, nprims, nprims, 1)
+      call checksum("Nai",acesord,Nprims*Nprims)
 C
       Iorder = dkh_order 
       Write(6,*)
