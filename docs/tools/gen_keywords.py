@@ -63,7 +63,8 @@ def parse_handles(src):
         if m is None:
             pending.extend(cases)
             continue
-        values = re.findall(r'"([^"]*)"', m.group(1))
+        # adjacent literals ("A" "") are one string to the C compiler
+        values = re.findall(r'"([^"]*)"', re.sub(r'"\s+"', "", m.group(1)))
         terminated = bool(values) and values[-1] == ""
         values = [v for v in values if v]
         for c in pending + cases:
