@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyaces"
+version = "0.1.0"
+description = "Python API for ACES II on top of the aces2py extension built by pyaces/build.sh"
+requires-python = ">=3.10"
+dependencies = ["numpy"]
+license = {text = "GPL-3.0-or-later"}
+
+[tool.setuptools]
+packages = ["pyaces"]

@@ -53,6 +53,7 @@ ACES2 = os.path.normpath(os.path.join(HERE, '..', '..', 'aces2'))
 SO_GLOB = os.path.normpath(os.path.join(HERE, '..', 'Main', 'build'))
 BASELINE = os.path.join(HERE, 'collision_baseline.txt')
 COMMON_BASELINE = os.path.join(HERE, 'common_shadow_baseline.txt')
+LOCALIZE = os.path.join(HERE, 'localize.txt')
 
 
 def find_so():
@@ -139,20 +140,21 @@ def code_of(path):
 def renamed_pairs(defs):
     """(module, symbol) pairs that build.sh renames out of the way.
 
+    The explicit ones come from tools/localize.txt; the NEWLY_LINKED_MODULES
+    ones are expanded here the same way build.sh expands them.
+
     Without this the audit reports its own fixes back as problems: build.sh
     renames lambda's DIISLST so vcc keeps its own, and an audit that only reads
     the archives then sees "the .so gives vcc's, but lambda wants lambda's" --
     true of the archives, false of the shared object lambda is actually linked
     into, where its calls go to pyaces_lambda_diislst_.
     """
-    txt = open(os.path.join(HERE, '..', 'build.sh'), errors='ignore').read()
     pairs = set()
-    m = re.search(r'EXTRA_LOCALIZE_SYMBOLS="([^"]*)"', txt, re.S)
-    if m:
-        for tok in m.group(1).split():
-            if ':' in tok:
-                mod, sym = tok.split(':', 1)
-                pairs.add((mod, sym))
+    for line in open(LOCALIZE, errors='ignore'):
+        p = line.split('#', 1)[0].split()
+        if len(p) == 3 and p[0] == 'rename':
+            pairs.add((p[1], p[2]))
+    txt = open(os.path.join(HERE, '..', 'build.sh'), errors='ignore').read()
     m = re.search(r'NEWLY_LINKED_MODULES="([^"]*)"', txt)
     if m:
         for mod in m.group(1).split():
@@ -185,8 +187,8 @@ def common_block_shadows(so):
     the 8-line SUBROUTINE ABCD that vscf actually wanted.
 
     Reported separately from the audit above because the fix differs. When
-    the defining module is also the only caller, rename it (build.sh's
-    EXTRA_LOCALIZE_SYMBOLS moves definition and caller together). When some
+    the defining module is also the only caller, rename it (a rename
+    line in tools/localize.txt moves definition and caller together). When some
     OTHER module calls it, renaming the definition orphans that caller --
     the common blocks are what have to move instead.
 
@@ -361,8 +363,8 @@ def main():
             print(f'    {sym:22s} subroutine in {definers}, called by {callers}'
                   f' -- {verdict}')
         print()
-        print('                  rename-definer: add "<definer>:<symbol>" to '
-              'EXTRA_LOCALIZE_SYMBOLS.')
+        print('                  rename-definer: add "rename <definer> <symbol>" '
+              'to tools/localize.txt.')
         print('                  rename-commons: the callers are outside the '
               'defining module, so')
         print('                  renaming the definition would orphan them -- '
@@ -392,8 +394,8 @@ def main():
             sym, win, serial, caller = l.split()
             print(f'    {sym:22s} .so gives {win}, {caller} expects {serial}')
         print()
-        print('                  Fix by adding "<loser>:<symbol>" to '
-              'EXTRA_LOCALIZE_SYMBOLS in build.sh,')
+        print('                  Fix by adding "rename <loser> <symbol>" to '
+              'tools/localize.txt,')
         print('                  or accept them with '
               'tools/collision_audit.py --update')
     return 0

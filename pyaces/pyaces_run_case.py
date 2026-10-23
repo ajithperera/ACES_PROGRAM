@@ -37,7 +37,8 @@ REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 STANDALONE_BIN = os.path.join(os.path.dirname(REPO_DIR), "aces2", "bin")
 
 os.chdir(WORKDIR)
-sys.path.insert(0, os.path.join(REPO_DIR, "Main", "build"))
+sys.path.insert(0, os.environ.get("PYACES_EXT_DIR",
+                                os.path.join(REPO_DIR, "Main", "build")))
 
 try:
     import aces2py
