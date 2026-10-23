@@ -129,7 +129,6 @@ Before exposing a new Fortran routine or linking another aces2 module, read chap
 <tr><td><code>build.sh</code></td><td><span class="pill">live</span></td><td>The whole build (about 510 lines): f2py wrapper generation, C/Fortran compilation, patched archives, link, import test, link audit. The history of every collision fix is recorded in its comments.</td></tr>
 <tr><td><code>Main/aces2.pyf</code></td><td><span class="pill">live</span></td><td>The f2py signature file. It sets the module name <code>aces2py</code>. <b>The final signatures, however, come from the Fortran sources</b> (section 7.1).</td></tr>
 <tr><td><code>Main/init.F</code>, <code>Main/aces2_main.F</code></td><td><span class="pill">live</span></td><td>The <code>Init()</code> entry point. Joda reads ZMAT, then <code>aces_init</code> sets up core memory, flags and lists.</td></tr>
-<tr><td><code>Main/*.com</code></td><td><span class="pill">live</span></td><td>Header copies (with explicit <code>integer*8</code>) that init.F picks up through quoted <code>#include</code>. They differ from aces2's headers (chapter 11).</td></tr>
 <tr><td><code>a2_pyf/*.F</code></td><td><span class="pill">live</span></td><td>Wrappers and drivers exposed to Python: <code>run*.F</code>, <code>*recpy.F</code>, <code>*lstpy.F</code>, <code>*allpy.F</code>, <code>get1ehpy/get2ehpy.F</code>, <code>acesja*.F</code>, plus the internal <code>a2_get*/a2_put*.F</code>. <code>rungrads</code>, <code>run1props</code> and <code>run</code> are excluded from the build.</td></tr>
 <tr><td><code>aux_pyaces/*.F</code></td><td><span class="pill">live</span></td><td><code>init_legacies</code> (initialises legacy COMMON blocks), <code>get1ents</code>/<code>get2eints</code> (read AO integrals from the IIII file), <code>sym_expand</code>.</td></tr>
 <tr><td><code>tools/collision_audit.py</code></td><td><span class="pill">live</span></td><td>The link-resolution audit (chapter 6), with <code>collision_baseline.txt</code> (296 entries) and <code>common_shadow_baseline.txt</code> (0).</td></tr>
@@ -142,10 +141,11 @@ Before exposing a new Fortran routine or linking another aces2 module, read chap
 <tr><td><code>Main/build/</code></td><td><span class="pill gen">generated</span></td><td>All <code>.o</code> files and the final <code>aces2py.cpython-312-x86_64-linux-gnu.so</code>.</td></tr>
 <tr><td><code>build/patched_libs/</code></td><td><span class="pill gen">generated</span></td><td>Copies of aces2 archives with renamed symbols (about 37). Wiped and rebuilt on every build.</td></tr>
 <tr><td><code>f2py_gen.log</code></td><td><span class="pill gen">generated</span></td><td>The f2py wrapper-generation log. Read it to see how the wrappers were built.</td></tr>
-<tr><td><code>Fxx/</code>, <code>include/</code>, <code>a2_pyf/include_no/</code>, <code>Main/Archive/</code>, <code>a2_pyf/Archive/</code>, <code>Main/Pilot_tests/</code>, <code>Exp/</code>, <code>Python/</code>, <code>rename.py</code>, <code>README</code>, <code>frequently_asked_questions</code></td><td><span class="pill legacy">legacy</span></td><td>The acespy-era per-module shared-library build, old headers, test stubs and an f2py tutorial. Unrelated to the current build (Appendix A).</td></tr>
+<tr><td><code>Python/moio_len.py</code></td><td><span class="pill">live</span></td><td>Reference tables of MO-list and distribution numbers with lookup functions (section 7.5).</td></tr>
+<tr><td><code>README</code>, <code>frequently_asked_questions</code>, <code>LICENSE</code></td><td><span class="pill legacy">legacy</span></td><td>Old acespy build notes and the generic f2py FAQ; LICENSE (GPL v3) is still in force (Appendix A).</td></tr>
 </table>
 
-<div class="note"><b>Lower-case <code>.f</code> files</b>: <code>a2_pyf/*.f</code>, <code>Main/init.f</code> and similar are old preprocessed copies. The build only uses <code>*.F</code>, so edit the <code>.F</code> files.</div>
+<div class="note"><b>Removed legacy tree</b>: the acespy-era files (<code>Fxx/</code>, <code>include/</code>, the <code>Archive/</code> folders, stale lower-case <code>.f</code> copies, <code>Main/*.com</code> header copies, …) were deleted on 2026-10-23. They remain reachable through the tag <code>pyaces-legacy-20261023</code> (Appendix A).</div>
 </section>
 
 <!-- ============================ 3 ============================ -->
@@ -225,7 +225,7 @@ f2py generates empty stub wrappers; given every source, it auto-wraps every subr
 <ul>
   <li><code>-i8</code>: 8-byte default INTEGER, matching aces2 and MKL ILP64.</li>
   <li><code>-FI</code>: fixed-form source. <code>-D__fortran77</code> selects the F77 branch of aces2's headers.</li>
-  <li>Headers come from aces2's <code>include</code> and <code>acescore/include</code>. <code>pyaces/include/</code> is not used.</li>
+  <li>Headers come from aces2's <code>include</code> and <code>acescore/include</code>. <code>Main/init.F</code> and <code>Main/aces2_main.F</code> include them the same way as every other pyaces source.</li>
 </ul>
 
 <h4>Link command</h4>
@@ -406,7 +406,7 @@ f2py wraps those arrays as "input", so if the dtype or memory layout is wrong it
 <tr><td><code>Getallpy(Destn, Irrep, Right_index, [Ndim])</code></td><td>Read all irrep blocks of list <code>Right_index</code> with total symmetry <code>Irrep</code></td></tr>
 <tr><td><code>Putallpy(Source, Irrep, Right_index, [Ndim])</code></td><td>The write counterpart</td></tr>
 </table>
-<p class="small">A draft table of list numbers is in <code>Python/moio_len.py</code> (e.g. T2(Ij,Ab) = 46, T1(AI) = 901, W&lt;AB||IJ&gt; = 14). It is not valid Python; use it as a reference only.</p>
+<p class="small">A draft table of list numbers is in <code>Python/moio_len.py</code> (e.g. T2(Ij,Ab) = 46, T1(AI) = 901, W&lt;AB||IJ&gt; = 14). Import it from <code>pyaces/Python</code> and use <code>list_numbers(label)</code>, <code>list_labels(number)</code> or <code>distribution_numbers(label)</code>; some labels and numbers repeat, so each returns a list. The entries were transcribed by hand and have not been checked one by one against the ACES II sources.</p>
 
 <h3>7.6 AO integrals</h3>
 <table>
@@ -601,11 +601,10 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <tr><th style="width:4%">#</th><th style="width:26%">Issue</th><th>Details / recommended action</th></tr>
 <tr><td>1</td><td>Meaning of <code>Getlstpy</code> arguments</td><td><code>Irrep</code> and <code>Ndim</code> are ignored; <code>Left_index</code> is used as the irrep.</td></tr>
 <tr><td>2</td><td>The <code>.pyf</code> is effectively ignored</td><td>COMMON-block exports and intents in it are not applied (section 7.1).</td></tr>
-<tr><td>3</td><td>Header copies differ</td><td>The nine <code>Main/*.com</code> files differ from aces2's headers (explicit <code>integer*8</code>, no include guards). Sizes match thanks to <code>-i8</code>, so this is harmless today, but if aces2's headers change, init.F and the rest would see different COMMON layouts.</td></tr>
-<tr><td>4</td><td>Runpccd and Init</td><td>Runpccd calls Joda itself, yet the runner calls <code>Init()</code> before it. Untested, since there are no PCCD cases.</td></tr>
-<tr><td>5</td><td>ifort check in the top-level build</td><td>The top-level <code>build.sh</code> requires <code>ifort</code> before the pyaces shim is on PATH, so an ifx-only toolchain is refused.</td></tr>
-<tr><td>6</td><td>Assumes environment modules</td><td><code>pyaces/build.sh</code> always runs <code>module purge/load</code>, so it fails in setvars/path mode or on hosts without a <code>module</code> command.</td></tr>
-<tr><td>7</td><td>Symmetry-block offset in <code>Get1ehpy</code></td><td><code>Index = Index + Nelms*(K-1)</code> at <code>get1ehpy.F:101</code> looks wrong. Verify the result on a molecule with symmetry before relying on it.</td></tr>
+<tr><td>3</td><td>Runpccd and Init</td><td>Runpccd calls Joda itself, yet the runner calls <code>Init()</code> before it. Untested, since there are no PCCD cases.</td></tr>
+<tr><td>4</td><td>ifort check in the top-level build</td><td>The top-level <code>build.sh</code> requires <code>ifort</code> before the pyaces shim is on PATH, so an ifx-only toolchain is refused.</td></tr>
+<tr><td>5</td><td>Assumes environment modules</td><td><code>pyaces/build.sh</code> always runs <code>module purge/load</code>, so it fails in setvars/path mode or on hosts without a <code>module</code> command.</td></tr>
+<tr><td>6</td><td>Symmetry-block offset in <code>Get1ehpy</code></td><td><code>Index = Index + Nelms*(K-1)</code> at <code>get1ehpy.F:101</code> looks wrong. Verify the result on a molecule with symmetry before relying on it.</td></tr>
 </table>
 </section>
 
@@ -623,6 +622,7 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <tr><td>2026-10-14</td><td>Ported to a second machine (ccsd): init.F includes in column 1 (<code>73944a6d</code>); aces2 built with <code>-assume dummy_aliases</code> (<code>dbed9377</code>, ifx 2023.2 miscompiled vgamma2); sorted source lists, <code>LC_ALL=C</code> and extra renames (<code>eab3c4e6</code>). 51/51 and an identical 296-entry audit on both machines.</td></tr>
 <tr><td>2026-10-23</td><td>Defects found while writing this manual fixed (<code>f97a9759</code>): <code>Hbar</code> → <code>Hbar_</code> in Runhbar/Buildhbar, <code>Iuhf</code> as <code>Integer*8</code>, Getreclenpy and Cgetrecpy return their values. Still 51/51 on both machines.</td></tr>
 <tr><td>2026-10-23</td><td>TODO stage 1 (T-03, T-04, T-07, T-16): the <code>--calls</code> check fails the build on calls into COMMON blocks, unapplicable rename pairs stop the build, the extension suffix comes from <code>EXT_SUFFIX</code>, and the test roll-up and classifier were fixed. See <code>docs/DONE.md</code>.</td></tr>
+<tr><td>2026-10-23</td><td>TODO stage 2 (T-11, T-12, T-15): the acespy legacy tree removed (tag <code>pyaces-legacy-20261023</code>), <code>Main</code> built against aces2's own headers (the old <code>lists.com</code> copy had a different <code>/lists/</code> layout), <code>Python/moio_len.py</code> made importable.</td></tr>
 </table>
 
 <h3>12.2 Deployment on the ccsd server</h3>
@@ -643,20 +643,20 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <!-- ============================ Appendices ============================ -->
 <section id="ca">
 <h2>Appendix A. Legacy files</h2>
+<p>The acespy-era files were removed on 2026-10-23 (TODO T-11). To look at them, check out the tag <code>pyaces-legacy-20261023</code>:</p>
+<pre><code>git show pyaces-legacy-20261023:pyaces/Fxx/README
+git checkout pyaces-legacy-20261023 -- pyaces/Fxx    # restore a directory into the working tree</code></pre>
 <table>
-<tr><th style="width:30%">Path</th><th>What it is</th></tr>
-<tr><td><code>Fxx/</code></td><td>A copy of aces2 sources from the 2023 acespy per-module shared-library build (45 directories, about 6,100 files). It has drifted considerably from today's aces2 and no script references it.</td></tr>
-<tr><td><code>include/</code>, <code>a2_pyf/include_no/</code></td><td>Old header copies. The build uses aces2's include directories.</td></tr>
-<tr><td><code>Main/Archive/</code>, <code>Main/compile_acespy</code></td><td>Early prototypes and the old <code>f2py -c</code> build recipe.</td></tr>
-<tr><td><code>a2_pyf/Archive/</code></td><td>Files and test code from when each routine had its own <code>.pyf</code>.</td></tr>
-<tr><td><code>Main/Pilot_tests/</code></td><td>Early COMMON/icore experiments.</td></tr>
-<tr><td><code>Exp/</code></td><td>A standalone f2py tutorial (<code>add.F</code>, <code>check_strngs.F</code>, …).</td></tr>
-<tr><td><code>Python/moio_len.py</code></td><td>Draft reference table of MO list numbers (contains syntax errors).</td></tr>
-<tr><td><code>rename.py</code></td><td>Renames <code>.a</code> to <code>.so</code> under a hard-coded path.</td></tr>
-<tr><td><code>README</code>, <code>frequently_asked_questions</code></td><td>Old build notes and the generic f2py FAQ.</td></tr>
-<tr><td><code>suite_classification.tsv.before_*</code></td><td>TSV snapshots taken before classification fixes.</td></tr>
-<tr><td><code>LICENSE</code></td><td>GPL v3, <b>still in force</b>.</td></tr>
+<tr><th style="width:30%">Removed path</th><th>What it was</th></tr>
+<tr><td><code>Fxx/</code></td><td>A copy of aces2 sources from the 2023 per-module shared-library build (45 directories, about 6,100 files, 45 MB), long drifted from aces2.</td></tr>
+<tr><td><code>include/</code>, <code>a2_pyf/include_no/</code>, <code>Main/*.com</code></td><td>Old header copies. The <code>Main/*.com</code> copies were still read by init.F; their <code>lists.com</code> declared a smaller <code>/lists/</code> block (<code>maxref=1</code>, 0x61a80 bytes) than aces2's (0x64b540). init.F only includes the headers and never touches the variables, so nothing broke, but the layouts did not match.</td></tr>
+<tr><td><code>Main/Archive/</code>, <code>Main/compile_acespy</code>, <code>Main/GNUmakefile*</code>, <code>a2_pyf/GNUmakefile*</code></td><td>Early prototypes and the old make / <code>f2py -c</code> build recipes.</td></tr>
+<tr><td><code>a2_pyf/Archive/</code>, <code>Main/Pilot_tests/</code></td><td>Per-routine <code>.pyf</code> files and early COMMON/icore experiments.</td></tr>
+<tr><td><code>a2_pyf/*.f</code>, <code>Main/init.f</code>, <code>Main/aces2_main.f</code></td><td>Stale preprocessed copies of the <code>.F</code> sources.</td></tr>
+<tr><td><code>Exp/</code>, <code>rename.py</code></td><td>An f2py tutorial and a <code>.a</code> → <code>.so</code> renamer with a hard-coded path.</td></tr>
+<tr><td><code>suite_classification.tsv.before_*</code></td><td>TSV snapshots taken before earlier classification fixes.</td></tr>
 </table>
+<p>Still present: <code>README</code> and <code>frequently_asked_questions</code> (old notes and the generic f2py FAQ) and <code>LICENSE</code> (GPL v3, still in force).</p>
 
 <h2 style="break-before:auto; margin-top:24pt">Appendix B. Command summary</h2>
 <pre><code># Build (local workstation, inside the allocated cores)

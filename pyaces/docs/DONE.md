@@ -15,6 +15,26 @@
 
 ---
 
+### T-15. `Python/moio_len.py` 수정 (2026-10-23)
+- **커밋:** `fabd383a`
+- **한 일:** `"key" = value` 형식의 깨진 딕셔너리를 `(label, number)` 쌍 목록 `MO_DISTRIBUTIONS`(21개), `MO_LISTS`(93개)로 바꾸고, 조회 함수 `distribution_numbers()`, `list_numbers()`, `list_labels()`를 추가했다. 값은 원본 그대로 두었다.
+- **검증:** 로컬·ccsd에서 import 성공. 예: `list_numbers("T2(Ij,Ab):Ab,Ij")` → `[46]`.
+- **남은 것:** 원본의 중복은 고치지 않고 모듈 docstring에 적었다. 분포 "ia"가 14·16 두 번, "HB(MI):MI"가 911·912(912는 아마 "HB(mi):mi"), "HB(Mb,Ej):MbEj"가 56–59로 겹친다. 값을 ACES II 소스와 하나씩 대조하지는 않았다. 리스트 7–10, 27–30이 W와 HB에 같이 쓰이는 것은 HBAR가 적분 리스트 위에 만들어지기 때문이라 정상이다.
+
+### T-12. 헤더 사본 중복 제거 (2026-10-23)
+- **커밋:** `fabd383a`
+- **한 일:** `Main/*.com` 9개를 지워, `init.F`와 `aces2_main.F`가 다른 pyaces 소스처럼 aces2의 `include`·`acescore/include` 헤더를 읽게 했다.
+- **검증:**
+  - 컴파일된 `init.o`의 COMMON 블록 크기가 aces2 헤더로 컴파일한 결과와 같다(`nm -S`). `aces2_main.o`는 변경 전후 동일.
+  - 로컬·ccsd: aces2 125/125, pyaces 51/51, 감사 296, `--calls` 0건.
+- **메모:** 옛 사본은 크기만 다른 것이 아니라 배치도 달랐다. `lists.com` 사본은 `maxref=1`로 `/lists/`를 0x61a80바이트로 선언했지만 aces2 헤더는 0x64b540바이트이고, `io_ptrs`도 0xa0 대 0xa50이었다. `init.F`는 헤더를 include만 하고 변수를 쓰지 않아 실제 피해는 없었다. 매뉴얼의 "크기는 같아 무해하다"는 설명은 틀렸으므로 고쳤다.
+
+### T-11. 레거시 파일 정리 (2026-10-23)
+- **커밋:** `fabd383a` (지우기 전 상태: 태그 `pyaces-legacy-20261023` = `4e53d532`)
+- **한 일:** 6,415개 파일을 지웠다: `Fxx/`, `include/`, `a2_pyf/include_no/`, `Main/Archive/`, `a2_pyf/Archive/`, `Main/Pilot_tests/`, `Exp/`, `rename.py`, 옛 `.f` 사본(`a2_pyf/*.f` 35개, `Main/init.f`, `Main/aces2_main.f`), `suite_classification.tsv.before_*`. TODO에 없던 것 중 같은 옛 빌드에 속한 `Main/compile_acespy`, `Main/GNUmakefile*`(`Fxx`를 가리키는 심볼릭 링크), `a2_pyf/GNUmakefile*`도 함께 지웠다. pyaces 디렉터리는 약 47 MB에서 2.2 MB(빌드 산출물 제외)가 됐다.
+- **검증:** 지운 경로를 참조하는 스크립트가 없음(`git grep`). 빌드·테스트 결과는 T-12와 같다.
+- **메모:** `README`, `frequently_asked_questions`, `LICENSE`는 남겼다. 매뉴얼 2장과 부록 A를 갱신했다. 태그는 ccsd에만 푸시했고 GitHub에는 아직 올리지 않았다.
+
 ### T-16. 테스트 요약 누락과 분류기 문제 (2026-10-23)
 - **커밋:** `95cc01a2`
 - **한 일:**
