@@ -15,7 +15,8 @@ myst_enable_extensions = ["colon_fence", "deflist", "dollarmath", "attrs_inline"
 myst_heading_anchors = 3
 
 source_suffix = {".md": "markdown"}
-exclude_patterns = ["_build", "reference/keyword_notes.md", "tools", "README.md"]
+exclude_patterns = ["_build", "reference/keyword_notes.md", "programmer/jobarc_notes.md",
+                    "tools", "README.md"]
 
 html_theme = "furo"
 html_title = "ACES program system"
@@ -34,5 +35,16 @@ def generate_keywords(app):
         check=True)
 
 
+def generate_jobarc(app):
+    """Regenerate programmer/jobarc.md from the PUTREC/GETREC calls."""
+    subprocess.run(
+        [sys.executable, os.path.join(DOCS, "tools", "gen_jobarc.py"),
+         os.path.join(ROOT, "aces2"),
+         os.path.join(DOCS, "programmer", "jobarc_notes.md"),
+         os.path.join(DOCS, "programmer", "jobarc.md")],
+        check=True)
+
+
 def setup(app):
     app.connect("builder-inited", generate_keywords)
+    app.connect("builder-inited", generate_jobarc)
