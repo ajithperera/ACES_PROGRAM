@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>pyaces 개선 과제</title>
+<style>
+@page { size: A4; margin: 18mm 18mm 18mm 18mm;
+  @bottom-center { content: counter(page); font-size: 9pt; color: #666; } }
+:root { --ink:#1b1f24; --muted:#5b6470; --rule:#d5dae0; --accent:#1f5f8b; --bg-code:#f4f6f8; --warn:#9a3b00; }
+html { font-size: 10pt; }
+body { font-family: "Noto Sans CJK KR", sans-serif; color: var(--ink); background:#fff; line-height: 1.6; margin: 0; }
+h1 { font-size: 22pt; color: var(--accent); margin: 0 0 4pt; }
+.sub { color: var(--muted); font-size: 10.5pt; margin-bottom: 10pt; }
+h2 { font-size: 14pt; border-bottom: 2px solid var(--accent); padding-bottom: 3pt; margin: 18pt 0 6pt; break-after: avoid; }
+h3 { font-size: 11pt; margin: 12pt 0 4pt; color: var(--accent); break-after: avoid; }
+p { margin: 4pt 0; }
+code { font-family: "DejaVu Sans Mono", "Noto Sans Mono CJK KR", monospace; font-size: 8.6pt; background: var(--bg-code); padding: 0 2pt; border-radius: 2pt; }
+ul, ol { margin: 3pt 0 5pt; padding-left: 18pt; }
+li { margin: 2pt 0; }
+table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt; font-size: 8.8pt; }
+th, td { border: 1px solid var(--rule); padding: 3pt 5pt; vertical-align: top; text-align: left; }
+th { background: #eaf0f5; }
+tr { break-inside: avoid; }
+.item { break-inside: avoid; margin-bottom: 6pt; }
+.meta { font-size: 8.8pt; color: var(--muted); }
+.tag { display: inline-block; font-size: 7.8pt; padding: 0 5pt; border-radius: 7pt; background: #e1ecf4; color: var(--accent); margin-left: 4pt; }
+.tag.hi { background: #fbe4d6; color: var(--warn); }
+.note { border: 1px solid var(--rule); border-left: 4px solid var(--accent); padding: 5pt 9pt; margin: 8pt 0; background: #f7fafc; break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<h1>pyaces 개선 과제</h1>
+<div class="sub">구조 · 빌드 · 테스트 검토 결과 — 기준 커밋 <code>3a123417</code> (2026-10-23)</div>
+
+<div class="note">
+<b>범위</b> — <code>pyaces/</code> 의 구조와 빌드(<code>build.sh</code>), f2py 인터페이스, 테스트 도구를 검토했다. 개발자 매뉴얼(<code>docs/pyaces_developer_manual.pdf</code>) 11장의 알려진 문제와,
+그 뒤 다시 살펴보며 새로 찾은 항목을 함께 정리했다. 현재 상태는 로컬 워크스테이션과 ccsd 서버 모두 pyaces 51/51 PASS, 링크 감사 296 항목(동일)이다.
+</div>
+
+<h2>요약</h2>
+<table>
+<tr><th style="width:6%">#</th><th>과제</th><th style="width:14%">분류</th><th style="width:12%">우선순위</th><th style="width:13%">규모</th></tr>
+<tr><td>1</td><td>모듈별 부분 링크로 고전 빌드와 같은 이름 해석 보장</td><td>정확성</td><td>높음</td><td>큼 (시험 구현 필요)</td></tr>
+<tr><td>2</td><td>ACES 오류가 Python 인터프리터를 종료시킴</td><td>안정성</td><td>높음</td><td>중간–큼</td></tr>
+<tr><td>3</td><td>COMMON 블록에 연결된 호출 검사</td><td>정확성</td><td>높음</td><td>작음</td></tr>
+<tr><td>4</td><td>이름 바꾸기 실패 시 빌드 중단</td><td>정확성</td><td>높음</td><td>작음</td></tr>
+<tr><td>5</td><td>남은 알려진 결함 (Getlstpy, Get1ehpy, Runpccd)</td><td>정확성</td><td>중간</td><td>작음–중간</td></tr>
+<tr><td>6</td><td>f2py 모듈 이중 생성 제거</td><td>빌드</td><td>중간</td><td>중간</td></tr>
+<tr><td>7</td><td>Python 버전 고정 해제</td><td>빌드</td><td>높음</td><td>작음</td></tr>
+<tr><td>8</td><td>증분 빌드</td><td>빌드</td><td>낮음</td><td>큼</td></tr>
+<tr><td>9</td><td>컴파일러·옵션 정리 (mpicc, -qopenmp)</td><td>빌드</td><td>낮음</td><td>작음</td></tr>
+<tr><td>10</td><td>빌드 환경 가정 완화 (module, ifort 검사)</td><td>빌드</td><td>중간</td><td>작음</td></tr>
+<tr><td>11</td><td>레거시 파일 정리 (약 47 MB)</td><td>구조</td><td>중간</td><td>작음</td></tr>
+<tr><td>12</td><td>헤더 사본 중복 제거</td><td>구조</td><td>중간</td><td>작음</td></tr>
+<tr><td>13</td><td>이름 바꾸기 목록을 데이터 파일로 분리</td><td>구조</td><td>중간</td><td>중간</td></tr>
+<tr><td>14</td><td>Python 패키지와 API 계층</td><td>구조</td><td>중간</td><td>중간–큼</td></tr>
+<tr><td>15</td><td><code>Python/moio_len.py</code> 수정</td><td>구조</td><td>낮음</td><td>작음</td></tr>
+<tr><td>16</td><td>테스트 요약 누락과 분류기 문제</td><td>테스트</td><td>높음</td><td>작음</td></tr>
+<tr><td>17</td><td>API 단위 테스트 추가</td><td>테스트</td><td>중간</td><td>중간</td></tr>
+</table>
+
+<h2>A. 정확성과 안정성</h2>
+
+<div class="item">
+<h3>1. 모듈별 부분 링크로 고전 빌드와 같은 이름 해석 보장 <span class="tag hi">높음</span></h3>
+<p><b>문제</b></p>
+<ul>
+<li>약 107개 아카이브를 담은 <code>.so</code> 하나를 손으로 쓴 이름 바꾸기 쌍 약 60개(<code>EXTRA_LOCALIZE_SYMBOLS</code>)가 지탱하고 있다.</li>
+<li>새 모듈을 넣거나 툴체인이 바뀌면 새 충돌이 생길 수 있고, 감사 기준선에는 이미 알려진 차이가 296개 있다.</li>
+</ul>
+<p><b>제안</b></p>
+<ul>
+<li>vcc, vee, lambda 같은 진입 모듈마다 자기 링크 목록(<code>ACES_LINK_LISTS</code>)과 함께 <code>ld -r</code> 로 부분 링크한다. 각 모듈이 고전 실행 파일과 같은 루틴에 연결된다.</li>
+<li>그다음 <code>objcopy</code> 로 진입점 외의 심볼을 모두 숨긴다.</li>
+<li>이름 바꾸기 목록이 필요 없어지고, 감사 결과도 0에 가까워질 것으로 본다.</li>
+</ul>
+<p><b>주의</b> — 모듈들이 같은 프로세스 안에서 공유하는 COMMON 블록(<code>/flags/</code>, <code>/icore/</code> 등)은 전역으로 남겨야 하고, <code>.so</code> 가 커진다. 모듈 하나로 먼저 시험한다.</p>
+</div>
+
+<div class="item">
+<h3>2. ACES 오류가 Python 인터프리터를 종료시킴 <span class="tag hi">높음</span></h3>
+<ul>
+<li><code>aces_exit</code> 가 <code>c_exit</code> 를 불러 프로세스 전체를 끝내므로, Python 이 오류를 잡을 수 없다.</li>
+<li>“한 프로세스에 계산 하나” 제약도 있으므로, 계산마다 하위 프로세스에서 돌리는 API 계층을 둔다. 테스트 러너(<code>pyaces_suite_runner.py</code>)는 이미 이렇게 한다.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>3. COMMON 블록에 연결된 호출 검사 <span class="tag hi">높음</span></h3>
+<ul>
+<li>2026-10-23 에 고친 <code>hbar_</code> 결함(Runhbar 가 lambda 의 <code>COMMON /HBAR/</code> 을 호출)은 지금 감사 도구가 볼 수 없는 종류다. <code>T hbar_</code> 가 어디에도 없기 때문이다.</li>
+<li>pyaces <code>.o</code> 가 부르는 심볼(<code>U</code>)이 <code>.so</code> 에서 데이터(<code>B</code>/<code>D</code>)로 연결되면 빌드를 실패시키는 검사를 추가한다.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>4. 이름 바꾸기 실패 시 빌드 중단 <span class="tag hi">높음</span></h3>
+<ul>
+<li>지금은 오타가 있거나 처리 대상이 아닌 모듈의 쌍이어도 조용히 무시된다(<code>2&gt;/dev/null || true</code>).</li>
+<li>해당 심볼이 그 아카이브에 실제로 있는지, 모듈이 처리 대상인지 확인하고, 아니면 빌드를 실패시킨다.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>5. 남은 알려진 결함 <span class="tag">중간</span></h3>
+<ul>
+<li><code>Getlstpy</code> 가 <code>Irrep</code>, <code>Ndim</code> 인자를 무시하고 <code>Left_index</code> 를 irrep 로 쓴다. 인자를 정리하거나 문서화된 의미에 맞게 고친다.</li>
+<li><code>Get1ehpy</code> 의 대칭 블록 오프셋(<code>get1ehpy.F:101</code>)을 대칭이 있는 분자로 검증한다.</li>
+<li>러너가 <code>Runpccd</code> 전에 <code>Init()</code> 을 부르는데, Runpccd 는 스스로 Joda 를 부른다. 이 경로는 시험된 적이 없다.</li>
+</ul>
+</div>
+
+<h2>B. 빌드와 컴파일</h2>
+
+<div class="item">
+<h3>6. f2py 모듈 이중 생성 제거 <span class="tag">중간</span></h3>
+<ul>
+<li><code>.pyf</code> 와 소스 스캔이 각각 모듈을 만들고, 두 번째가 첫 번째를 덮어쓴다. 그래서 <code>.pyf</code> 의 intent·COMMON 선언이 적용되지 않는다.</li>
+<li>기준을 하나로 정한다: 소스 안의 <code>Cf2py</code> 지시문으로 통일하거나, <code>.pyf</code> 만 쓴다.</li>
+<li>f2py 의 <code>--lower</code> 옵션으로 <code>sed</code> 소문자 처리 우회를 없앨 수 있다. 다만 Python 함수 이름이 소문자로 바뀌므로 API 가 달라진다.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>7. Python 버전 고정 해제 <span class="tag hi">높음</span></h3>
+<ul>
+<li>출력 파일 이름이 <code>aces2py.cpython-312-x86_64-linux-gnu.so</code> 로 고정되어 있어 다른 Python 버전에서는 import 되지 않는다.</li>
+<li><code>python3 -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))"</code> 결과를 쓴다.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>8. 증분 빌드 <span class="tag">낮음</span></h3>
+<ul>
+<li>빌드할 때마다 <code>gen/</code> 과 <code>build/</code> 를 통째로 지우고, 아카이브 약 37개를 다시 푼다.</li>
+<li>make 나 meson 같은 도구로 단계를 나누면 작은 수정 뒤의 빌드가 훨씬 빨라진다.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>9. 컴파일러와 옵션 정리 <span class="tag">낮음</span></h3>
+<ul>
+<li>C 래퍼를 <code>mpicc</code> 로 컴파일하지만 MPI 를 쓰지 않는다. 일반 <code>icx</code> 나 <code>gcc</code> 면 충분하다.</li>
+<li>Fortran 연결 코드를 <code>-qopenmp</code> 로 빌드하는데, MKL 이 sequential 이라 필요 없을 수 있다. 확인 후 정리한다.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>10. 빌드 환경 가정 완화 <span class="tag">중간</span></h3>
+<ul>
+<li><code>pyaces/build.sh</code> 가 항상 <code>module purge/load</code> 를 하므로, setvars/path 방식 환경이나 <code>module</code> 명령이 없는 곳에서 실패한다. configure 의 <code>ACES_PROGRAM_ENV_MODE</code> 를 따르게 한다.</li>
+<li>최상위 <code>build.sh</code> 가 pyaces 의 <code>ifort</code> 셈을 PATH 에 넣기 전에 <code>ifort</code> 를 검사해서, ifx 만 있는 툴체인을 거부한다.</li>
+</ul>
+</div>
+
+<h2>C. 구조 정리</h2>
+
+<div class="item">
+<h3>11. 레거시 파일 정리 <span class="tag">중간</span></h3>
+<ul>
+<li>쓰지 않는 파일(합계 약 47 MB): <code>Fxx/</code> (45 MB, 약 6,100개 파일), <code>include/</code>, <code>a2_pyf/include_no/</code>, <code>Archive/</code> 폴더들, <code>Exp/</code>, <code>rename.py</code>.</li>
+<li>그 밖에 쓰지 않는 것: 옛 <code>.f</code> 파일 35개, <code>suite_classification.tsv.before_*</code>.</li>
+<li>방법: 별도 태그나 브랜치에 남기고 master 에서 지운다. 이력은 그대로 남는다.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>12. 헤더 사본 중복 제거 <span class="tag">중간</span></h3>
+<ul>
+<li><code>Main/*.com</code> 9개는 aces2 헤더와 내용이 다른 옛 사본이다(<code>integer*8</code> 명시, include guard 없음).</li>
+<li>aces2 헤더를 쓰도록 바꿔 둘이 어긋나지 않게 한다.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>13. 이름 바꾸기 목록을 데이터 파일로 분리 <span class="tag">중간</span></h3>
+<ul>
+<li>약 60쌍과 그 설명이 510줄짜리 스크립트의 주석 속에 묻혀 있다.</li>
+<li>한 줄에 한 쌍씩 이유와 함께 적는 데이터 파일(예: <code>tools/localize.txt</code>)로 옮기면, 빌드와 감사 도구가 같은 파일을 읽는다.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>14. Python 패키지와 API 계층 <span class="tag">중간</span></h3>
+<ul>
+<li>지금은 f2py 원시 함수를 그대로 불러야 한다: 대소문자가 섞인 이름, 넘겨준 배열로 받는 결과, 8자로 맞춘 레코드 이름.</li>
+<li>소문자 함수, 반환값, 예외, <code>pyproject.toml</code> 을 갖춘 얇은 <code>pyaces</code> 패키지를 둔다. 2번(하위 프로세스 실행)과 함께 설계한다.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>15. <code>Python/moio_len.py</code> 수정 <span class="tag">낮음</span></h3>
+<ul>
+<li>딕셔너리를 <code>"key" = value</code> 로 써서 문법 오류가 나고, 중복 키도 있다.</li>
+<li>올바른 딕셔너리 모듈로 고치면 리스트 번호표로 쓸 수 있다.</li>
+</ul>
+</div>
+
+<h2>D. 테스트</h2>
+
+<div class="item">
+<h3>16. 테스트 요약 누락과 분류기 문제 <span class="tag hi">높음</span></h3>
+<ul>
+<li><code>run_tests.sh</code> 의 pyaces 요약이 MISMATCH 와 TIMEOUT 을 세지 않아, 실패가 요약에서 빠질 수 있다.</li>
+<li><code>classify_suite.py</code> 를 다시 돌리면 TSV 에 손으로 고친 행(KS → Runintgrt, 117a/b/c → Rundirmp2, 제외 케이스)이 사라진다. 그 예외들을 코드로 옮긴다.</li>
+<li>러너의 기본 실행 디렉터리가 HiPerGator 경로(<code>/blue/...</code>)로 되어 있다.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>17. API 단위 테스트 추가 <span class="tag">중간</span></h3>
+<ul>
+<li>지금은 에너지 값만 검사한다.</li>
+<li>레코드 읽기/쓰기, <code>Getreclenpy</code>·<code>Cgetrecpy</code>, <code>Runhbar</code> 의 각 분기, 리스트 접근을 확인하는 작은 테스트를 추가한다.</li>
+</ul>
+</div>
+
+<h2>추천 진행 순서</h2>
+<table>
+<tr><th style="width:12%">단계</th><th style="width:22%">항목</th><th>이유</th></tr>
+<tr><td>1</td><td>3, 4, 7, 16</td><td>위험이 낮고 몇 시간이면 된다. 결함을 조용히 넘기는 경로를 바로 막는다.</td></tr>
+<tr><td>2</td><td>11, 12, 15</td><td>구조 정리. 동작은 바뀌지 않으며 이후 작업이 쉬워진다.</td></tr>
+<tr><td>3</td><td>6, 13, 14</td><td>사용성과 유지보수성. API 이름이 바뀔 수 있으므로 사용자와 합의가 필요하다.</td></tr>
+<tr><td>4</td><td>1, 2, 8</td><td>큰 구조 변경. 시험 구현으로 효과와 비용을 확인한 뒤 결정한다.</td></tr>
+</table>
+<p class="meta">모든 변경 뒤에는 로컬과 ccsd 양쪽에서 aces2 125/125, pyaces 51/51, 링크 감사 결과 일치를 확인한다.</p>
+
+</body>
+</html>
