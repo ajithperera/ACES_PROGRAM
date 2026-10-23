@@ -49,12 +49,12 @@ for t in $TARGETS; do
         > "$LOG" 2>&1
       ;;
     pyaces)
-      # The suite gives every case its own working directory under a scratch
-      # filesystem; the runner's built-in default is HiPerGator's /blue path.
-      # Off HiPerGator, keep the cases inside build_logs/ instead -- unless the
-      # caller already named somewhere better.
-      if [ -z "${PYACES_RUN_DIR:-}" ] && [ ! -d /blue/ufhpc ]; then
-        export PYACES_RUN_DIR="$ROOT/build_logs/pyaces_suite_run"
+      # The suite gives every case its own working directory. The runner keeps
+      # them under build_logs/pyaces_suite_run by default; on HiPerGator they
+      # go to the /blue scratch filesystem as before -- unless the caller
+      # already named somewhere better.
+      if [ -z "${PYACES_RUN_DIR:-}" ] && [ -d /blue/ufhpc ]; then
+        export PYACES_RUN_DIR=/blue/ufhpc/perera/aces_program_pyaces_suite_test
       fi
       ( cd "$ROOT/pyaces" && python3 pyaces_suite_runner.py ) \
         > "$LOG" 2>&1
@@ -95,13 +95,19 @@ for t in $TARGETS; do
       fi
       ;;
     pyaces)
-      P=$(grep -oE 'PASS: [0-9]+' "$LOG" | grep -oE '[0-9]+')
-      FC=$(grep -oE 'FAIL_CLEAN: [0-9]+' "$LOG" | grep -oE '[0-9]+')
-      CR=$(grep -oE 'CRASH: [0-9]+' "$LOG" | grep -oE '[0-9]+')
-      NR=$(grep -oE 'NO_RESULT: [0-9]+' "$LOG" | grep -oE '[0-9]+')
-      if [ -n "$P" ]; then
-        PASS=$P; FAIL=${FC:-0}
-        OTHER=$(( ${CR:-0} + ${NR:-0} ))
+      # Read every "  STATUS: n" line of the runner's Summary block rather than
+      # a fixed list: MISMATCH and TIMEOUT used to fall out of the totals, and
+      # a run with no PASS at all printed "?" everywhere.
+      SUMMARY=$(sed -n '/^=== Summary ===$/,/^$/p' "$LOG" | grep -E '^  [A-Z_]+: [0-9]+$')
+      if [ -n "$SUMMARY" ]; then
+        PASS=0; FAIL=0; OTHER=0
+        while read -r STATUS N; do
+          case "${STATUS%:}" in
+            PASS)                PASS=$((PASS + N)) ;;
+            MISMATCH|FAIL_CLEAN) FAIL=$((FAIL + N)) ;;
+            *)                   OTHER=$((OTHER + N)) ;;
+          esac
+        done <<< "$SUMMARY"
         TOTAL=$(( PASS + FAIL + OTHER ))
       fi
       ;;

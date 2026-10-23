@@ -26,6 +26,9 @@ PYF=$WORK/a2_pyf
 ACES=$SCRIPT_DIR/../aces2
 NUMPY_INC=$(python3 -c "import numpy; print(numpy.get_include())")
 PY_INC=$(python3 -c "import sysconfig; print(sysconfig.get_path('include'))")
+# The extension suffix (cpython-312-x86_64-linux-gnu.so, ...) belongs to the
+# interpreter doing the building; a hard-coded one only imports under 3.12.
+EXT_SUFFIX=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))")
 # fortranobject.c/.h ship inside numpy itself, so ask the interpreter that is
 # actually being built against rather than hardcoding one site's install path.
 F2PY_SRC=$(python3 -c "import numpy, os; print(os.path.join(os.path.dirname(numpy.__file__), 'f2py', 'src'))")
@@ -453,6 +456,29 @@ for mod in $NEWLY_LINKED_MODULES; do
 done
 rm -f $ALLSYMS
 
+# A pair the loop below cannot apply used to vanish without a trace: a module
+# outside both lists is never extracted, and a misspelt symbol is simply not
+# there for objcopy to rename. Either way the collision it was meant to fix
+# stays in the .so. Refuse to link instead.
+bad_pairs=
+for pair in $EXTRA_LOCALIZE_SYMBOLS; do
+    pmod=${pair%%:*}
+    psym=${pair#*:}
+    case " $MAIN_COLLISION_MODULES $EXTRA_LOCALIZE_MODULES " in
+        *" $pmod "*) ;;
+        *) bad_pairs="$bad_pairs
+    $pair: $pmod is in neither MAIN_COLLISION_MODULES nor EXTRA_LOCALIZE_MODULES"
+           continue ;;
+    esac
+    nm --defined-only $ACES/lib/lib${pmod}.a 2>/dev/null | grep -q " T ${psym}\$" ||
+        bad_pairs="$bad_pairs
+    $pair: lib${pmod}.a defines no T ${psym}"
+done
+if [ -n "$bad_pairs" ]; then
+    echo "EXTRA_LOCALIZE_SYMBOLS has pairs that cannot be applied:$bad_pairs" >&2
+    exit 1
+fi
+
 PATCHED_LIBDIR=$WORK/build/patched_libs
 # Wipe it first. This directory is linked with -L ahead of aces2's own lib/,
 # so anything left here from a previous build shadows the real archive -- and
@@ -476,14 +502,14 @@ for mod in $MAIN_COLLISION_MODULES $EXTRA_LOCALIZE_MODULES; do
             psym=${pair#*:}
             [ "$pmod" = "$mod" ] || continue
             newsym="pyaces_${pmod}_${psym}"
-            objcopy --redefine-sym ${psym}=${newsym} "$o" 2>/dev/null || true
+            objcopy --redefine-sym ${psym}=${newsym} "$o"
         done
     done
     (cd $workdir && ar rcs $PATCHED_LIBDIR/lib${mod}.a *.o)
     rm -rf $workdir
 done
 
-ifx -shared -nofor-main -o build/aces2py.cpython-312-x86_64-linux-gnu.so \
+ifx -shared -nofor-main -o build/aces2py${EXT_SUFFIX} \
     build/*.o \
     -L$PATCHED_LIBDIR \
     $LIBDIRS \
@@ -494,6 +520,12 @@ ifx -shared -nofor-main -o build/aces2py.cpython-312-x86_64-linux-gnu.so \
 echo "=== step 5: test import ==="
 cd build
 python3 -c "import aces2py; print('IMPORT OK')"
+
+# A call that binds to a COMMON block instead of a subroutine faults the moment
+# it runs, and nothing else here notices it (see calls_into_data in the audit).
+# Unlike the audit below this one has no judgement call in it, so it fails the
+# build.
+python3 $WORK/tools/collision_audit.py --calls
 
 # Which copy of a multiply-defined routine won this link is not something the
 # linker will ever complain about -- it just picks one and everybody lives with

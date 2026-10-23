@@ -5,6 +5,12 @@ Runpccd, Runprops, Runee -- no gradient/Vdens path (rungrads/run1props excluded
 from the pyaces build), so any case requiring an analytic/numerical gradient or
 geometry optimization is out of scope for now. SCRIPT (chained multi-job) cases
 are also out of scope for this first pass -- different driver shape entirely.
+
+  python3 classify_suite.py           # rewrite suite_classification.tsv
+  python3 classify_suite.py --check   # exit 1 if the TSV differs from the rules
+
+Every routing decision belongs in classify(), never only in the TSV: an edit
+made by hand there is lost the next time this script runs.
 """
 import os
 import re
@@ -111,6 +117,18 @@ def classify(name, kw, starred):
         reasons.append(f"DERIV_LEV={deriv_lvl}")
     if any(m in calc for m in ("MRCC",)):
         reasons.append("MRCC (already dropped from suite as unsupportable)")
+    # The next three were hand-edited into the TSV (e9e0a31b, 67cfb87d) before
+    # they lived here; regenerating the TSV used to silently undo them. Each is
+    # a driver loop or extra program that one pyaces entry point cannot replay.
+    if calc == "CCSD(TQ)":
+        reasons.append("CCSD(TQ): post_scf_eneg.F runs xvcc5t then xvcc5q after "
+                       "xvcc; pyaces has no entry point for either")
+    if kw.get("BRUECKNER", "OFF") not in ("OFF", "NO"):
+        reasons.append("Brueckner: the driver repeats vscf/vtran/intprc/vcc "
+                       "until the orbitals settle")
+    if kw.get("HFSTABILITY", "") == "FOLLOW":
+        reasons.append("HFSTABILITY=FOLLOW: precc.F re-runs vtran/intprc off the "
+                       "SCFKICK record after the SCF is rotated")
 
     # QRHF (without MAKERHF) makes joda/gtflgs.F internally force the
     # reference to UHF/ROHF regardless of any explicit REFERENCE=/REF=
@@ -132,8 +150,19 @@ def classify(name, kw, starred):
     if calc in PCCD_METHODS:
         return "PCCD", f"CALC={calc}", "Runpccd", iuhf
 
+    # KS runs vscf and then intgrt for the XC energy (2fa4573b); Runscf alone
+    # would report the wrong total energy.
+    if kw.get("SCF_TYPE", "") == "KS":
+        return ("KS", "KS via Runintgrt: SCF then intgrt_run, same order as the "
+                "classic driver", "Runintgrt", iuhf)
+
     if calc in ("SCF", "HF"):
         return "SCF", f"CALC={calc}", "Runscf", iuhf
+
+    # FOCK=AO MBPT(2) is the direct (AO-driven) MP2 that the classic driver
+    # hands to xdirmp2, not xvcc (f68f9692).
+    if calc == "MBPT(2)" and kw.get("FOCK", "") == "AO":
+        return "CC", f"CALC={calc} direct (fock=ao,direct)", "Rundirmp2", iuhf
 
     # Default: any other correlated single-point method (CCSD variants, CI
     # variants, MBPT/MPn, ACCSD(T), CCSDTQ, BCCD, QCISD, ...) routes through
@@ -167,12 +196,29 @@ def main():
 
     out_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              "suite_classification.tsv")
+    text = "name\tcategory\treason\tentrypoint\tiuhf\trecord\tref_value\n" + "".join(
+        "\t".join("" if x is None else str(x) for x in r) + "\n" for r in rows)
+    # --check: report whether the committed TSV is what this script produces,
+    # without touching it. Any difference means a rule here and the TSV the
+    # suite runner reads have drifted apart.
+    if "--check" in sys.argv[1:]:
+        with open(out_path) as f:
+            current = f.read()
+        if current == text:
+            print(f"{out_path} matches the classifier ({len(rows)} rows)")
+            return 0
+        old = {l.split("\t", 1)[0]: l for l in current.splitlines()[1:]}
+        new = {l.split("\t", 1)[0]: l for l in text.splitlines()[1:]}
+        for name in sorted(set(old) | set(new)):
+            if old.get(name) != new.get(name):
+                print(f"  - {old.get(name)}\n  + {new.get(name)}")
+        print(f"{out_path} differs from the classifier")
+        return 1
     with open(out_path, "w") as f:
-        f.write("name\tcategory\treason\tentrypoint\tiuhf\trecord\tref_value\n")
-        for r in rows:
-            f.write("\t".join("" if x is None else str(x) for x in r) + "\n")
+        f.write(text)
     print(f"Wrote {len(rows)} rows to {out_path}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

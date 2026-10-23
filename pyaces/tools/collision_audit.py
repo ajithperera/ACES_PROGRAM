@@ -26,6 +26,7 @@ implementations is a live wrong-answer risk on whatever path reaches it.
 
   python3 tools/collision_audit.py                 # report against the baseline
   python3 tools/collision_audit.py --update        # accept the current state
+  python3 tools/collision_audit.py --calls         # fail if a pyaces call binds to data
 
 WHAT THIS LIST IS NOT: a work queue. Every collision fixed so far started from a
 test that failed and was verified one at a time against the tree's own reference
@@ -280,11 +281,54 @@ def audit():
     return sorted(found)
 
 
+def calls_into_data(so):
+    """Find calls from pyaces's own Fortran objects that bind to data.
+
+    common_block_shadows() above needs a subroutine (T) somewhere to report a
+    name lost to a COMMON block. A call to a name that is ONLY ever a common
+    has no such subroutine, so it never shows up there -- and it is just as
+    fatal. That is how Runhbar and Buildhbar shipped calling `Hbar`: aces2
+    defines SUBROUTINE HBAR_ (hbar__), so hbar_ resolved to lambda's
+    COMMON /HBAR/ and the call would have jumped into BSS.
+
+    Fortran objects reference commons as C, never U, so every U in them is a
+    call; one that the .so defines as data is a defect with no exceptions.
+    The two C objects (the f2py module and fortranobject) are left out:
+    they legitimately reference C data such as PyFortran_Type.
+    """
+    data = set()
+    for line in nm(so, '--defined-only').split('\n'):
+        p = line.split()
+        if len(p) == 3 and p[1] in ('B', 'b', 'D', 'd'):
+            data.add(p[2])
+    out = []
+    for f in sorted(os.listdir(SO_GLOB)):
+        if not f.endswith('.o') or f in ('aces2pymodule.o', 'fortranobject.o'):
+            continue
+        for line in nm(os.path.join(SO_GLOB, f), '--undefined-only').split('\n'):
+            p = line.split()
+            if len(p) == 2 and p[0] == 'U' and p[1] in data:
+                out.append(f'{p[1]} {f}')
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--update', action='store_true',
                     help='rewrite the baseline with the current findings')
+    ap.add_argument('--calls', action='store_true',
+                    help='only check that pyaces objects call code, not data; '
+                         'exit 1 if any call binds to a COMMON block')
     args = ap.parse_args()
+
+    if args.calls:
+        bad = calls_into_data(find_so())
+        print(f'@COLLISION_AUDIT: {len(bad)} calls from pyaces objects bound '
+              f'to data instead of code')
+        for l in bad:
+            sym, obj = l.split()
+            print(f'    {sym:22s} called from {obj}, defined as data in the .so')
+        return 1 if bad else 0
 
     current = audit()
     shadows = common_block_shadows(find_so())

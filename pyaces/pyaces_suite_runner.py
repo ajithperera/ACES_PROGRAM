@@ -19,7 +19,8 @@ CLASSIFICATION = os.path.join(BASE, "suite_classification.tsv")
 SUITE_CASES = os.path.join(ACES2_TESTS, "cases")
 GENBAS = os.path.join(ACES2_TESTS, "GENBAS")
 RUN_DIR = os.environ.get("PYACES_RUN_DIR",
-                         "/blue/ufhpc/perera/aces_program_pyaces_suite_test")
+                         os.path.join(os.path.dirname(BASE), "build_logs",
+                                      "pyaces_suite_run"))
 RUNNER = os.path.join(BASE, "pyaces_run_case.py")
 TOLERANCE = 1e-6
 
