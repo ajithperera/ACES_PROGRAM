@@ -16,6 +16,7 @@ myst_heading_anchors = 3
 
 source_suffix = {".md": "markdown"}
 exclude_patterns = ["_build", "reference/keyword_notes.md", "programmer/jobarc_notes.md",
+                    "user/aces3_jobflows.md",
                     "tools", "README.md"]
 
 html_theme = "furo"
@@ -45,6 +46,16 @@ def generate_jobarc(app):
         check=True)
 
 
+def generate_jobflows(app):
+    """Regenerate user/aces3_jobflows.md from default_jobflows."""
+    subprocess.run(
+        [sys.executable, os.path.join(DOCS, "tools", "gen_jobflows.py"),
+         os.path.join(ROOT, "aces3"),
+         os.path.join(DOCS, "user", "aces3_jobflows.md")],
+        check=True)
+
+
 def setup(app):
+    app.connect("builder-inited", generate_jobflows)
     app.connect("builder-inited", generate_keywords)
     app.connect("builder-inited", generate_jobarc)
