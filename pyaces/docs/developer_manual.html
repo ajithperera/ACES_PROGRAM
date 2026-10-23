@@ -127,7 +127,6 @@ Before exposing a new Fortran routine or linking another aces2 module, read chap
 <table>
 <tr><th style="width:30%">Path</th><th style="width:11%">Status</th><th>Contents</th></tr>
 <tr><td><code>build.sh</code></td><td><span class="pill">live</span></td><td>The whole build (about 510 lines): f2py wrapper generation, C/Fortran compilation, patched archives, link, import test, link audit. The history of every collision fix is recorded in its comments.</td></tr>
-<tr><td><code>Main/aces2.pyf</code></td><td><span class="pill">live</span></td><td>The f2py signature file. It sets the module name <code>aces2py</code>. <b>The final signatures, however, come from the Fortran sources</b> (section 7.1).</td></tr>
 <tr><td><code>Main/init.F</code>, <code>Main/aces2_main.F</code></td><td><span class="pill">live</span></td><td>The <code>Init()</code> entry point. Joda reads ZMAT, then <code>aces_init</code> sets up core memory, flags and lists.</td></tr>
 <tr><td><code>a2_pyf/*.F</code></td><td><span class="pill">live</span></td><td>Wrappers and drivers exposed to Python: <code>run*.F</code>, <code>*recpy.F</code>, <code>*lstpy.F</code>, <code>*allpy.F</code>, <code>get1ehpy/get2ehpy.F</code>, <code>acesja*.F</code>, plus the internal <code>a2_get*/a2_put*.F</code>. <code>rungrads</code>, <code>run1props</code> and <code>run</code> are excluded from the build.</td></tr>
 <tr><td><code>aux_pyaces/*.F</code></td><td><span class="pill">live</span></td><td><code>init_legacies</code> (initialises legacy COMMON blocks), <code>get1ents</code>/<code>get2eints</code> (read AO integrals from the IIII file), <code>sym_expand</code>.</td></tr>
@@ -141,7 +140,8 @@ Before exposing a new Fortran routine or linking another aces2 module, read chap
 <tr><td><code>Main/build/</code></td><td><span class="pill gen">generated</span></td><td>All <code>.o</code> files and the final <code>aces2py.cpython-312-x86_64-linux-gnu.so</code>.</td></tr>
 <tr><td><code>build/patched_libs/</code></td><td><span class="pill gen">generated</span></td><td>Copies of aces2 archives with renamed symbols (about 37). Wiped and rebuilt on every build.</td></tr>
 <tr><td><code>f2py_gen.log</code></td><td><span class="pill gen">generated</span></td><td>The f2py wrapper-generation log. Read it to see how the wrappers were built.</td></tr>
-<tr><td><code>Python/moio_len.py</code></td><td><span class="pill">live</span></td><td>Reference tables of MO-list and distribution numbers with lookup functions (section 7.5).</td></tr>
+<tr><td><code>python/</code></td><td><span class="pill">live</span></td><td>The <code>pyaces</code> Python package (<code>pyproject.toml</code>, <code>python/pyaces/</code>): lower-case in-process wrappers, a subprocess <code>run()</code>, and the MO-list tables in <code>pyaces.moio</code> (section 7.7).</td></tr>
+<tr><td><code>tools/localize.txt</code></td><td><span class="pill">live</span></td><td>Every symbol rename and extracted module, one per line with its reason, plus the history of how each was found (section 5.2).</td></tr>
 <tr><td><code>README</code>, <code>frequently_asked_questions</code>, <code>LICENSE</code></td><td><span class="pill legacy">legacy</span></td><td>Old acespy build notes and the generic f2py FAQ; LICENSE (GPL v3) is still in force (Appendix A).</td></tr>
 </table>
 
@@ -202,15 +202,15 @@ bash pyaces/build.sh             # run directly (set ACES_PROGRAM_MODULES yourse
 </ul>
 
 <h3>4.1 Source lists</h3>
-<p><b><code>PYF_SOURCES</code></b> (lines 47–52) lists only the sources that <i>define</i> routines declared in the <code>.pyf</code>. Given only the <code>.pyf</code>,
-f2py generates empty stub wrappers; given every source, it auto-wraps every subroutine it finds and then trips over case mangling in the all-caps F77 names. Hence the hand-picked list.</p>
+<p><b><code>PYF_SOURCES</code></b> lists the sources whose routines make up the Python interface. f2py scans them and wraps every routine it finds; there is no <code>.pyf</code>.
+Passing every source would also wrap internal helpers, whose all-caps F77 names trip over case mangling. Hence the hand-picked list.</p>
 <p><b><code>SOURCES</code></b> (lines 54–64) is every Fortran file to compile: <code>a2_pyf/*.F</code> except <code>rungrads</code>, <code>run1props</code> and <code>run</code>, plus
 <code>Main/init.F</code>, <code>Main/aces2_main.F</code> and <code>aux_pyaces/*.F</code>. So <code>a2_get*/a2_put*</code>, <code>getlstpy_dbg</code>, <code>get1epy</code> and <code>returnpy</code> are linked but not exposed to Python.</p>
 
 <h3>4.2 Steps</h3>
 <table>
 <tr><th style="width:17%">Step</th><th>Command / action</th><th style="width:25%">Output</th></tr>
-<tr><td>1. Generate wrappers</td><td><code>python3 -m numpy.f2py aces2.pyf $PYF_SOURCES -m aces2py --build-dir gen</code> (generate only, no <code>-c</code>). Then a <code>sed</code> lower-cases the first argument of every <code>F_FUNC(Name,…)</code>: ifx exports lower-case symbols such as <code>init_</code>, but f2py uses the source spelling <code>Init</code>.</td><td><code>gen/aces2pymodule.c</code><br><code>gen/aces2py-f2pywrappers.f</code><br><code>f2py_gen.log</code></td></tr>
+<tr><td>1. Generate wrappers</td><td><code>python3 -m numpy.f2py $PYF_SOURCES -m aces2py --build-dir gen</code> (generate only, no <code>-c</code>). Then a <code>sed</code> lower-cases the first argument of every <code>F_FUNC(Name,…)</code>: ifx exports lower-case symbols such as <code>init_</code>, but f2py uses the source spelling <code>Init</code>.</td><td><code>gen/aces2pymodule.c</code><br><code>gen/aces2py-f2pywrappers.f</code><br><code>f2py_gen.log</code></td></tr>
 <tr><td>2. Compile C</td><td><code>mpicc -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC</code> on the module C file and <code>fortranobject.c</code>.</td><td><code>build/aces2pymodule.o</code>, <code>build/fortranobject.o</code></td></tr>
 <tr><td>3. Compile Fortran</td><td>Compile <code>$SOURCES</code> and the f2py wrapper with the <code>FFLAGS</code> below. Then <code>objcopy --redefine-sym props_=pyaces_vprops_props_ build/runee.o</code>, so Runee calls the renamed vprops PROPS.</td><td><code>build/*.o</code></td></tr>
 <tr><td>4. Link</td><td>Build LIBDIRS/LIBNAMES, build the patched archives for colliding modules (chapter 5), then <code>ifx -shared -nofor-main</code>.</td><td><code>build/aces2py.cpython-312-x86_64-linux-gnu.so</code></td></tr>
@@ -255,11 +255,11 @@ so each defines <code>MAIN__</code>. The standalone executables need it, but in 
 The build extracts each of these archives with <code>ar x</code> into a temporary directory, applies <code>objcopy --localize-symbol=MAIN__</code> to the objects that define it,
 and repacks them as <code>build/patched_libs/lib&lt;mod&gt;.a</code>. aces2's own <code>.a</code> files are not modified.</p>
 
-<h3>5.2 <code>EXTRA_LOCALIZE_SYMBOLS</code>: renaming the losing copy</h3>
-<p>A list of <code>module:symbol</code> pairs (around line 411). For each pair the build applies
+<h3>5.2 <code>tools/localize.txt</code>: renaming the losing copy</h3>
+<p>Each <code>rename &lt;module&gt; &lt;symbol&gt;</code> line in <code>tools/localize.txt</code> (60 today, each with its reason) becomes a <code>module:symbol</code> pair in build.sh's <code>EXTRA_LOCALIZE_SYMBOLS</code>, and each <code>extract &lt;module&gt;</code> line an entry of <code>EXTRA_LOCALIZE_MODULES</code>. For each pair the build applies
 <code>objcopy --redefine-sym sym=pyaces_&lt;mod&gt;_sym</code> to <b>every object</b> in that module's archive. The definition and the module's own calls are renamed together,
 so the losing module keeps using its own implementation under the new name, and the original name is left to the winner.</p>
-<div class="warn"><b>Rule</b>: a pair only takes effect if its module is in <code>MAIN_COLLISION_MODULES</code> or <code>EXTRA_LOCALIZE_MODULES</code>. Before patching, the build checks every pair: if the module is in neither list, or its archive defines no <code>T</code> symbol of that name, the build stops with <code>EXTRA_LOCALIZE_SYMBOLS has pairs that cannot be applied</code>.</div>
+<div class="warn"><b>Rule</b>: a rename only takes effect if its module is extracted, i.e. in <code>MAIN_COLLISION_MODULES</code> or on an <code>extract</code> line. Before patching, the build checks every pair: if the module is not extracted, or its archive defines no <code>T</code> symbol of that name, the build stops with <code>tools/localize.txt has renames that cannot be applied</code>. Keep extract lines that have no rename of their own (libr2): repacking an archive reorders its members, which can change which duplicate wins.</div>
 <p>The build used <code>--localize-symbol</code> at first, but that sent the losing module's own calls to the winner (lambda's <code>vlamcc</code> ended up calling vcc's FINISH), so on 2026-08-11 it switched to <code>--redefine-sym</code>.</p>
 
 <h4>Main collisions resolved so far</h4>
@@ -289,7 +289,7 @@ The build collects the <code>T</code> symbols of every <code>aces2/lib/lib*.a</c
 If the COMMON satisfies the reference before the linker extracts the object holding the subroutine, <code>call abcd</code> jumps into zero-filled BSS.
 The symptom is a SIGSEGV on instruction fetch, recognisable in gdb by <code>si_addr == $pc</code>.</p>
 <ul>
-  <li><b>rename-definer</b>: if only the defining module calls the routine, add <code>definer:sym</code> to <code>EXTRA_LOCALIZE_SYMBOLS</code> (e.g. <code>intgrt:abcd_</code>).</li>
+  <li><b>rename-definer</b>: if only the defining module calls the routine, add <code>rename &lt;definer&gt; &lt;sym&gt;</code> to <code>tools/localize.txt</code> (e.g. <code>rename intgrt abcd_</code>).</li>
   <li><b>rename-commons</b>: if other modules call it too, renaming would orphan them, so the COMMON block has to move instead.</li>
 </ul>
 <p>Nine latent cases (mopac <code>deriv/grid/local/polar</code>, nddo <code>guess/local</code>, aces2 and ccd_light <code>energy</code>, pdens <code>one/tab</code>, vdint <code>sym2</code>) were renamed ahead of time.</p>
@@ -327,7 +327,7 @@ python3 tools/collision_audit.py --calls    # fail if a pyaces call binds to dat
   <li>For each calling module, compare it with the copy the classic build would have given (its own copy, otherwise the first library in its link list that defines the symbol).</li>
   <li>If the two differ, and their comment-stripped sources differ too, report <code>symbol winner classic caller</code>.</li>
 </ol>
-<p>Pairs already renamed by <code>build.sh</code> are excluded; the audit reads <code>EXTRA_LOCALIZE_SYMBOLS</code> and <code>NEWLY_LINKED_MODULES</code> straight from build.sh.</p>
+<p>Pairs already renamed by <code>build.sh</code> are excluded; the audit reads the rename lines of <code>tools/localize.txt</code> and <code>NEWLY_LINKED_MODULES</code> from build.sh.</p>
 <p><b>(2) COMMON shadows.</b> It reports symbols that are <code>T</code> in one archive and <code>C</code> in another and B/b/D/d in the .so, with a verdict of
 <code>rename-definer</code> or <code>rename-commons</code>.</p>
 <p><b>(3) Calls bound to data</b> (<code>--calls</code>). Every <code>U</code> symbol in pyaces's own Fortran objects (<code>Main/build/*.o</code> except the two C objects) is a call, because Fortran references COMMON blocks as <code>C</code>. If the .so defines that name as data (B/b/D/d), the call would jump into a COMMON block. This catches the case (2) cannot, where no subroutine of that name exists anywhere (the <code>hbar_</code> defect). It is not advisory: build step 5 runs it and any hit fails the build.</p>
@@ -342,7 +342,7 @@ python3 tools/collision_audit.py --calls    # fail if a pyaces call binds to dat
 <h3>6.3 When NEW entries appear</h3>
 <ol>
   <li>Compare the two implementations (argument count, list numbers, what they compute). If they compute the same thing, the entry can be accepted into the baseline.</li>
-  <li>If they differ, choose the copy to rename and add <code>"&lt;loser&gt;:&lt;symbol&gt;"</code> to <code>EXTRA_LOCALIZE_SYMBOLS</code>. Make sure its module is in <code>EXTRA_LOCALIZE_MODULES</code>.</li>
+  <li>If they differ, choose the copy to rename and add <code>rename &lt;loser&gt; &lt;symbol&gt;</code> to <code>tools/localize.txt</code>, with an <code>extract &lt;loser&gt;</code> line if the module is not extracted yet.</li>
   <li>Rebuild pyaces and confirm the NEW entry is gone and no other symbol flipped. Adding a module to the processed set can change how its other symbols resolve.</li>
   <li>Update the baseline with <code>--update</code> only after the suite has passed.</li>
 </ol>
@@ -354,12 +354,11 @@ python3 tools/collision_audit.py --calls    # fail if a pyaces call binds to dat
 <h2>7. The <code>aces2py</code> API</h2>
 
 <h3>7.1 Signatures come from the Fortran sources</h3>
-<p>Given both <code>aces2.pyf</code> and <code>PYF_SOURCES</code>, f2py builds the module twice: once from the <code>.pyf</code> (lower-case names, with COMMON blocks)
-and once from scanning the sources (source spelling). Both write the same <code>aces2pymodule.c</code>, so <b>the second one wins</b> (visible in <code>f2py_gen.log</code>). As a result:</p>
+<p>f2py builds the module from the sources in <code>PYF_SOURCES</code> alone. (Until 2026-10-23 a <code>Main/aces2.pyf</code> was passed as well; f2py then built the module twice and the source scan overwrote the <code>.pyf</code> version, so the <code>.pyf</code> never took effect. Dropping it left <code>aces2pymodule.c</code> byte-for-byte the same.) As a result:</p>
 <ul>
   <li>Python names follow the capitalisation in the source: <code>Init</code>, <code>Dgetrecpy</code>, <code>IGetrecpy</code> (capital G).</li>
-  <li>Argument types and intents come from the source. Intents in the <code>.pyf</code> are ignored; to change one, put a <code>Cf2py intent(...)</code> line in the <code>.F</code> file. Every <code>Run*</code> takes an <code>Iuhf</code> argument.</li>
-  <li>The COMMON blocks declared in the <code>.pyf</code> (<code>/flags/</code>, <code>/jobarc/</code>, <code>/lists/</code>, …) are not exposed.</li>
+  <li>Argument types and intents come from the source. To change an intent, put a <code>Cf2py intent(...)</code> line in the <code>.F</code> file. Every <code>Run*</code> takes an <code>Iuhf</code> argument.</li>
+  <li>No COMMON blocks (<code>/flags/</code>, <code>/jobarc/</code>, <code>/lists/</code>, …) are exposed; read state through JOBARC records instead.</li>
   <li>Check exact signatures with <code>print(aces2py.Runcc.__doc__)</code> or the docstrings in <code>gen/aces2pymodule.c</code>.</li>
 </ul>
 
@@ -406,7 +405,7 @@ f2py wraps those arrays as "input", so if the dtype or memory layout is wrong it
 <tr><td><code>Getallpy(Destn, Irrep, Right_index, [Ndim])</code></td><td>Read all irrep blocks of list <code>Right_index</code> with total symmetry <code>Irrep</code></td></tr>
 <tr><td><code>Putallpy(Source, Irrep, Right_index, [Ndim])</code></td><td>The write counterpart</td></tr>
 </table>
-<p class="small">A draft table of list numbers is in <code>Python/moio_len.py</code> (e.g. T2(Ij,Ab) = 46, T1(AI) = 901, W&lt;AB||IJ&gt; = 14). Import it from <code>pyaces/Python</code> and use <code>list_numbers(label)</code>, <code>list_labels(number)</code> or <code>distribution_numbers(label)</code>; some labels and numbers repeat, so each returns a list. The entries were transcribed by hand and have not been checked one by one against the ACES II sources.</p>
+<p class="small">A table of list numbers is in <code>pyaces.moio</code> (e.g. T2(Ij,Ab) = 46, T1(AI) = 901, W&lt;AB||IJ&gt; = 14). Use <code>list_numbers(label)</code>, <code>list_labels(number)</code> or <code>distribution_numbers(label)</code>; some labels and numbers repeat, so each returns a list. The entries were transcribed by hand and have not been checked one by one against the ACES II sources.</p>
 
 <h3>7.6 AO integrals</h3>
 <table>
@@ -414,7 +413,27 @@ f2py wraps those arrays as "input", so if the dtype or memory layout is wrong it
 <tr><td><code>Get1ehpy(Name, Dest, Ndim)</code></td><td>Read <code>"overlap"</code>, <code>"oneh"</code> or <code>"kinetic"</code> from the IIII file and expand it into a full <code>Ndim×Ndim</code> matrix (<code>Ndim = NBASTOT</code>).</td></tr>
 <tr><td><code>Get2ehpy(Name, Dest, Ndim)</code></td><td><code>"2elints"</code>: expand all two-electron integrals from IIII/IJIJ/IIJJ/IJKL into an array of size <code>Ndim<sup>4</sup></code>. Mind the memory.</td></tr>
 </table>
+<h3>7.7 The <code>pyaces</code> Python package</h3>
+<p><code>python/</code> holds a small package on top of <code>aces2py</code>. It does not replace the raw module (still available as <code>pyaces.ext()</code>, names unchanged); it adds lower-case functions, return values instead of output arrays, and a way to run a calculation without risking the caller's process.</p>
+<pre><code>pip install -e pyaces/python          # or: export PYTHONPATH=.../pyaces/python
+# aces2py is found in pyaces/Main/build, or in $PYACES_EXT_DIR</code></pre>
+<table>
+<tr><th style="width:36%">Function</th><th>What it does</th></tr>
+<tr><td><code>run(method, zmat, genbas, iuhf=None, record="TOTENERG", workdir=None, timeout=None, keep=False)</code></td><td>Runs one calculation in a child process (<code>pyaces_run_case.py</code>, including its FNO handling) and returns <code>Result(value, record, workdir, log)</code>. <code>method</code> is <code>scf</code>, <code>cc</code>, <code>ee</code>, <code>pccd</code>, <code>dirmp2</code>, <code>ks</code>, <code>hbar</code> or <code>props</code>; <code>zmat</code> is text or a path; <code>iuhf</code> is guessed from REF/REFERENCE and QRHF. Any failure, including an ACES II <code>aces_exit</code> or a crash, raises <code>CalculationError</code> (with <code>status</code>, <code>returncode</code>, <code>workdir</code>, <code>log_tail</code>) and the caller keeps running.</td></tr>
+<tr><td><code>init()</code>, <code>run_scf(iuhf)</code>, <code>run_cc</code>, <code>run_hbar</code>, <code>run_ee</code>, <code>run_pccd</code>, <code>run_dirmp2</code>, <code>run_intgrt</code>, <code>run_props</code>, <code>run_ints</code>, <code>close_jobarc()</code>, <code>open_jobarc()</code></td><td>In-process drivers: the same calls as section 7.3, same rules (one calculation per process, an ACES II error ends the process).</td></tr>
+<tr><td><code>record_length(name)</code>, <code>get_record(name, dtype=float64)</code>, <code>put_record(name, values)</code>, <code>get_string_record(name, nbytes)</code>, <code>put_string_record(name, data)</code></td><td>JOBARC records with names padded for you. <code>get_record</code> sizes the array from the record and raises <code>KeyError</code> for a missing record instead of letting aces2py end the process.</td></tr>
+<tr><td><code>get_list(lst, irrep, first_column, n_columns, size)</code>, <code>put_list</code>, <code>get_all_irreps</code>, <code>put_all_irreps</code></td><td>MO lists, with arguments named for what Getlstpy actually does (7.5).</td></tr>
+<tr><td><code>moio.list_numbers(label)</code>, <code>moio.list_labels(n)</code>, <code>moio.distribution_numbers(label)</code></td><td>MO-list and distribution number tables.</td></tr>
+</table>
+<pre><code>import pyaces
+r = pyaces.run("cc", "ZMAT", "/path/to/GENBAS")
+print(r.value)                       # TOTENERG
+try:
+    pyaces.run("cc", bad_zmat, "/path/to/GENBAS")
+except pyaces.CalculationError as e:
+    print(e.status, e.log_tail)      # the caller is still alive</code></pre>
 </section>
+
 
 <!-- ============================ 8 ============================ -->
 <section id="c8">
@@ -539,17 +558,17 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
     <ul>
       <li>Fixed form, with every <code>#include</code> starting in column 1 (oneAPI 2023.2 ifort rejects indented includes).</li>
       <li>Declare every dummy argument <b>explicitly</b> as <code>Integer*8</code> or <code>Double Precision</code>. A plain <code>Integer</code> makes f2py pass a 4-byte C <code>int</code> while <code>-i8</code> Fortran reads 8 bytes.</li>
-      <li>Mark outputs with <code>Cf2py intent(out) &lt;arg&gt;</code>; the <code>.pyf</code> intents are ignored (7.1).</li>
+      <li>Mark outputs with <code>Cf2py intent(out) &lt;arg&gt;</code>; the source is the only place signatures are defined (7.1).</li>
       <li>The capitalisation of the subroutine name becomes the Python name.</li>
       <li>Use <code>Icore(i0), Icrsiz</code> from <code>icore.com</code>/<code>istart.com</code> for core memory (see <code>runcc.F</code>). Do not call <code>aces_fin</code>.</li>
       <li>Call aces2 routines by their real symbol: if aces2 defines <code>SUBROUTINE HBAR_</code>, the call must be <code>Call Hbar_</code>; <code>Call Hbar</code> would bind to a COMMON block (chapter 11).</li>
     </ul></li>
-  <li><b>Add a block to the interface in <code>Main/aces2.pyf</code></b> (for documentation; the source decides the real signature).</li>
+  <li><b>Add a lower-case wrapper</b> to <code>python/pyaces/drivers.py</code> (and to <code>runner.ENTRY_POINTS</code> if it is a calculation entry point).</li>
   <li><b>Add the file to <code>PYF_SOURCES</code> in <code>build.sh</code>.</b> The <code>a2_pyf/*.F</code> glob compiles it automatically unless it is on the exclusion list.</li>
   <li><b>Handle collisions.</b>
     <ul>
       <li>If a newly pulled-in module has a PROGRAM, add it to <code>MAIN_COLLISION_MODULES</code>.</li>
-      <li>For a same-named routine, add <code>loser:sym_</code> to <code>EXTRA_LOCALIZE_SYMBOLS</code> and the module to <code>EXTRA_LOCALIZE_MODULES</code>.</li>
+      <li>For a same-named routine, add <code>rename &lt;loser&gt; &lt;sym_&gt;</code> (and <code>extract &lt;loser&gt;</code> if needed) to <code>tools/localize.txt</code>.</li>
       <li>If a pyaces object calls a renamed routine directly, add an <code>objcopy --redefine-sym</code> after step 3 (as done for <code>runee.o</code>).</li>
       <li>If you re-enable a <code>.skip</code> module, add it to <code>NEWLY_LINKED_MODULES</code>.</li>
     </ul></li>
@@ -600,11 +619,10 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <table>
 <tr><th style="width:4%">#</th><th style="width:26%">Issue</th><th>Details / recommended action</th></tr>
 <tr><td>1</td><td>Meaning of <code>Getlstpy</code> arguments</td><td><code>Irrep</code> and <code>Ndim</code> are ignored; <code>Left_index</code> is used as the irrep.</td></tr>
-<tr><td>2</td><td>The <code>.pyf</code> is effectively ignored</td><td>COMMON-block exports and intents in it are not applied (section 7.1).</td></tr>
-<tr><td>3</td><td>Runpccd and Init</td><td>Runpccd calls Joda itself, yet the runner calls <code>Init()</code> before it. Untested, since there are no PCCD cases.</td></tr>
-<tr><td>4</td><td>ifort check in the top-level build</td><td>The top-level <code>build.sh</code> requires <code>ifort</code> before the pyaces shim is on PATH, so an ifx-only toolchain is refused.</td></tr>
-<tr><td>5</td><td>Assumes environment modules</td><td><code>pyaces/build.sh</code> always runs <code>module purge/load</code>, so it fails in setvars/path mode or on hosts without a <code>module</code> command.</td></tr>
-<tr><td>6</td><td>Symmetry-block offset in <code>Get1ehpy</code></td><td><code>Index = Index + Nelms*(K-1)</code> at <code>get1ehpy.F:101</code> looks wrong. Verify the result on a molecule with symmetry before relying on it.</td></tr>
+<tr><td>2</td><td>Runpccd and Init</td><td>Runpccd calls Joda itself, yet the runner calls <code>Init()</code> before it. Untested, since there are no PCCD cases.</td></tr>
+<tr><td>3</td><td>ifort check in the top-level build</td><td>The top-level <code>build.sh</code> requires <code>ifort</code> before the pyaces shim is on PATH, so an ifx-only toolchain is refused.</td></tr>
+<tr><td>4</td><td>Assumes environment modules</td><td><code>pyaces/build.sh</code> always runs <code>module purge/load</code>, so it fails in setvars/path mode or on hosts without a <code>module</code> command.</td></tr>
+<tr><td>5</td><td>Symmetry-block offset in <code>Get1ehpy</code></td><td><code>Index = Index + Nelms*(K-1)</code> at <code>get1ehpy.F:101</code> looks wrong. Verify the result on a molecule with symmetry before relying on it.</td></tr>
 </table>
 </section>
 
@@ -623,6 +641,7 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <tr><td>2026-10-23</td><td>Defects found while writing this manual fixed (<code>f97a9759</code>): <code>Hbar</code> → <code>Hbar_</code> in Runhbar/Buildhbar, <code>Iuhf</code> as <code>Integer*8</code>, Getreclenpy and Cgetrecpy return their values. Still 51/51 on both machines.</td></tr>
 <tr><td>2026-10-23</td><td>TODO stage 1 (T-03, T-04, T-07, T-16): the <code>--calls</code> check fails the build on calls into COMMON blocks, unapplicable rename pairs stop the build, the extension suffix comes from <code>EXT_SUFFIX</code>, and the test roll-up and classifier were fixed. See <code>docs/DONE.md</code>.</td></tr>
 <tr><td>2026-10-23</td><td>TODO stage 2 (T-11, T-12, T-15): the acespy legacy tree removed (tag <code>pyaces-legacy-20261023</code>), <code>Main</code> built against aces2's own headers (the old <code>lists.com</code> copy had a different <code>/lists/</code> layout), <code>Python/moio_len.py</code> made importable.</td></tr>
+<tr><td>2026-10-23</td><td>TODO stage 3 (T-06, T-13, T-14) and T-02: f2py builds the module from the sources alone (<code>Main/aces2.pyf</code> removed), renames moved to <code>tools/localize.txt</code>, and the <code>python/pyaces</code> package with a subprocess <code>run()</code>.</td></tr>
 </table>
 
 <h3>12.2 Deployment on the ccsd server</h3>

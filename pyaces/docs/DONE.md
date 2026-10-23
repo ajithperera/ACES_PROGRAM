@@ -15,10 +15,40 @@
 
 ---
 
+### T-02. ACES 오류가 Python 인터프리터를 종료시킴 (2026-10-23)
+- **커밋:** `ba6c8646` (T-14와 함께)
+- **한 일:** `pyaces.run()`이 계산을 하위 프로세스(`pyaces_run_case.py`)에서 돌리고, 성공하면 `Result`를, 실패(`aces_exit`, 크래시, 시간 초과)하면 `CalculationError`(status, returncode, workdir, log_tail)를 돌려준다. `pyaces_run_case.py`가 `PYACES_EXT_DIR`을 따르게 했다.
+- **검증:** `CALC=NOSUCHMETHOD`로 바꾼 ZMAT: 로컬·ccsd 모두 `CalculationError`(CRASH, exit 1)를 받고 호출한 프로세스는 계속 실행됨. 정상 케이스 026은 −76.27254545743(기준값과 7×10⁻¹¹ 이내).
+- **남은 것:** 같은 프로세스 안에서 쓰는 함수(`pyaces.init()` 등)는 여전히 ACES II 오류 시 프로세스가 끝난다. 이는 `aces_exit` 구조상 바뀌지 않으며 문서에 명시했다.
+
+### T-14. Python 패키지와 API 계층 (2026-10-23)
+- **커밋:** `ba6c8646`
+- **한 일:**
+  - `pyaces/python/`에 `pyproject.toml`과 `pyaces` 패키지를 추가했다. 기존 `aces2py` 이름은 바꾸지 않고(`pyaces.ext()`로 그대로 사용 가능), 그 위에 소문자 함수를 얹었다.
+  - `drivers.py`: `init()`, `run_scf()`, `run_cc()` 등. `records.py`: `record_length()`, `get_record()`(길이 자동, 없는 레코드는 `KeyError`), `put_record()`, 문자 레코드. `lists.py`: 실제 의미에 맞춘 인자 이름의 리스트 접근. `runner.py`: `run()`(T-02). `moio.py`: 옛 `Python/moio_len.py`를 옮김.
+  - `aces2py.so` 위치는 `pyaces/Main/build` 또는 `$PYACES_EXT_DIR`.
+- **검증:**
+  - venv에서 `pip install --no-build-isolation -e pyaces/python` 후 import 성공.
+  - 케이스 026 같은 프로세스 안: `init → run_scf → run_hbar`, SCF −76.0462837086, CCSD −76.27254545743, `record_length("NOSUCHRC")` → None, `get_record` 없는 레코드 → KeyError, 실수·문자 레코드 쓰기/읽기 일치.
+  - ccsd (PBS 7717): `run("cc", 026)` −76.27254545743, 실패 ZMAT은 `CalculationError`.
+- **남은 것:** 리스트 함수(`get_list` 등)는 시험하지 않았다(T-17에서 다룰 것).
+
+### T-13. 이름 바꾸기 목록을 데이터 파일로 분리 (2026-10-23)
+- **커밋:** `ba6c8646`
+- **한 일:** `EXTRA_LOCALIZE_SYMBOLS`(60쌍)와 `EXTRA_LOCALIZE_MODULES`(21개)를 `tools/localize.txt`의 `rename <module> <symbol>  # 이유`, `extract <module>` 줄로 옮기고, build.sh에 있던 약 290줄의 발견 경위 주석도 그 파일로 옮겼다. build.sh(약 510줄 → 247줄)와 감사 도구가 같은 파일을 읽는다. 쌍이 없는 `extract libr2`도 그대로 두었다(아카이브를 다시 묶으면 멤버 순서가 바뀌어 링크 결과가 달라질 수 있음).
+- **검증:** 파일에서 읽은 두 목록이 옛 문자열과 같음. 새로 만든 패치 아카이브 37개의 `nm` 결과가 변경 전과 모두 같음. 감사 296(일치).
+
+### T-06. f2py 모듈 이중 생성 제거 (2026-10-23)
+- **커밋:** `ba6c8646`
+- **한 일:** f2py에 `Main/aces2.pyf`를 넘기지 않고 소스만으로 모듈을 만들게 하고, `aces2.pyf`를 지웠다. 시그니처는 소스의 `Cf2py` 지시문으로만 정한다.
+- **검증:** `.pyf` 없이 만든 `aces2pymodule.c`가 이전과 바이트 단위로 같고, f2py 로그의 모듈 생성이 한 번으로 줄었다. 노출 함수 26개 그대로. 로컬·ccsd: aces2 125/125, pyaces 51/51, 감사 296, `--calls` 0건.
+- **메모:** 아무 데서도 쓰지 않던 COMMON 초기화 래퍼(`aces2py-f2pywrappers.f`의 `f2pyinit*`)가 사라졌다. Python 이름을 유지하기로 해서 `sed` 소문자 처리(`F_FUNC` 첫 인자)는 남겼다. f2py `--lower`를 쓰면 없앨 수 있지만 Python 이름이 바뀐다.
+
 ### T-15. `Python/moio_len.py` 수정 (2026-10-23)
 - **커밋:** `fabd383a`
 - **한 일:** `"key" = value` 형식의 깨진 딕셔너리를 `(label, number)` 쌍 목록 `MO_DISTRIBUTIONS`(21개), `MO_LISTS`(93개)로 바꾸고, 조회 함수 `distribution_numbers()`, `list_numbers()`, `list_labels()`를 추가했다. 값은 원본 그대로 두었다.
 - **검증:** 로컬·ccsd에서 import 성공. 예: `list_numbers("T2(Ij,Ab):Ab,Ij")` → `[46]`.
+- **이후 변경:** T-14에서 `python/pyaces/moio.py`(`pyaces.moio`)로 옮겼다.
 - **남은 것:** 원본의 중복은 고치지 않고 모듈 docstring에 적었다. 분포 "ia"가 14·16 두 번, "HB(MI):MI"가 911·912(912는 아마 "HB(mi):mi"), "HB(Mb,Ej):MbEj"가 56–59로 겹친다. 값을 ACES II 소스와 하나씩 대조하지는 않았다. 리스트 7–10, 27–30이 W와 HB에 같이 쓰이는 것은 HBAR가 적분 리스트 위에 만들어지기 때문이라 정상이다.
 
 ### T-12. 헤더 사본 중복 제거 (2026-10-23)
@@ -33,7 +63,7 @@
 - **커밋:** `fabd383a` (지우기 전 상태: 태그 `pyaces-legacy-20261023` = `4e53d532`)
 - **한 일:** 6,415개 파일을 지웠다: `Fxx/`, `include/`, `a2_pyf/include_no/`, `Main/Archive/`, `a2_pyf/Archive/`, `Main/Pilot_tests/`, `Exp/`, `rename.py`, 옛 `.f` 사본(`a2_pyf/*.f` 35개, `Main/init.f`, `Main/aces2_main.f`), `suite_classification.tsv.before_*`. TODO에 없던 것 중 같은 옛 빌드에 속한 `Main/compile_acespy`, `Main/GNUmakefile*`(`Fxx`를 가리키는 심볼릭 링크), `a2_pyf/GNUmakefile*`도 함께 지웠다. pyaces 디렉터리는 약 47 MB에서 2.2 MB(빌드 산출물 제외)가 됐다.
 - **검증:** 지운 경로를 참조하는 스크립트가 없음(`git grep`). 빌드·테스트 결과는 T-12와 같다.
-- **메모:** `README`, `frequently_asked_questions`, `LICENSE`는 남겼다. 매뉴얼 2장과 부록 A를 갱신했다. 태그는 ccsd에만 푸시했고 GitHub에는 아직 올리지 않았다.
+- **메모:** `README`, `frequently_asked_questions`, `LICENSE`는 남겼다. 매뉴얼 2장과 부록 A를 갱신했다. 태그는 ccsd와 GitHub 모두에 푸시했다.
 
 ### T-16. 테스트 요약 누락과 분류기 문제 (2026-10-23)
 - **커밋:** `95cc01a2`
