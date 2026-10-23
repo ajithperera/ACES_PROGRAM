@@ -1,5 +1,0 @@
-      SUBROUTINE SQUARE(A,B,ICB,IRB,NROW)
-      IMPLICIT REAL*8 (A-H,O-Z)
-      DIMENSION A(*),B(*)
-      RETURN
-      END

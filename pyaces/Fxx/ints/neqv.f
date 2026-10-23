@@ -1,5 +1,0 @@
-      INTEGER FUNCTION NEQV(I,J)
-      IMPLICIT INTEGER (A-Z)
-      NEQV=XOR(I,J)
-      RETURN
-      END

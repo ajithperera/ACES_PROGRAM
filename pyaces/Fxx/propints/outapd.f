@@ -1,8 +1,0 @@
-
-      SUBROUTINE OUTAPD(IA,N,I,LL)
-      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      DIMENSION IA(N)
-      LL=LL+1
-      WRITE(I,REC=LL) IA
-      RETURN
-      END
