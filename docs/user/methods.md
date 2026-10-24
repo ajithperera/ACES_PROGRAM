@@ -219,7 +219,11 @@ structure is optimized in one of two coordinate systems:
 : Redundant internal coordinates. `xjoda` finds the bonds from covalent
   radii (with hydrogen bonds and links between fragments added). It builds
   every bond, bond angle, and dihedral from them; a nearly linear bend
-  (within 5° of 180°) gets two perpendicular bending coordinates. Steps are
+  (within 5° of 180°) gets two perpendicular bending coordinates. Every
+  atom with exactly three bonds also gets an out-of-plane coordinate (an
+  improper dihedral), so that the pyramidalization of a planar center
+  (H<sub>2</sub>CO, amides, NH<sub>3</sub> near planarity) is described; an empty
+  file named `NO_RIC_OOPS` in the work directory leaves them out. Steps are
   taken in these coordinates and transformed back to Cartesians by
   iteration (Pulay et al., *J. Chem. Phys.* **96**, 2856 (1992)). A
   `CONNECT` file in the work directory replaces the automatic bonds.
@@ -237,8 +241,10 @@ Water with redundant internals (test `120c`):
 
 **Symmetry.** The energy and gradient calculations use the point group of
 the starting structure, as for Z-matrix input. That group is found with
-a degeneracy tolerance suited to coordinates given to six or more
-decimals, so a slightly imperfect NH<sub>3</sub> is treated as C<sub>3v</sub>. The optimizer itself
+a loose test for degenerate moments of inertia, but the atoms must still
+match under the symmetry operations to 10<sup>−6</sup> bohr. Give
+symmetric structures to about seven decimals: NH<sub>3</sub> with
+0.866025 for √3/2 is found as C<sub>3</sub> only. The optimizer itself
 treats every coordinate as independent. After every step it projects the
 new Cartesian geometry onto the totally symmetric structures of the full
 point group, so the point group never drops. A C1 starting structure is
@@ -290,8 +296,18 @@ input orientation.
   *END
   ```
 
-**Convergence and limits.** An optimization has converged when the RMS of
-the (projected) gradient is below 10<sup>−`CONVERGENCE`</sup>.
+**Convergence and limits.** An optimization has converged when the norm
+of the (projected) gradient is below 10<sup>−`CONVERGENCE`</sup> (the
+value printed as `RMS force` is this norm) and the largest component of
+the next step is below 10<sup>1−`CONVERGENCE`</sup> bohr or radian. The
+step test catches soft coordinates (torsions, pyramidalization) where a
+small gradient still leaves the structure far from the minimum; it is
+skipped once the gradient is a hundred times below the threshold. It
+was added in 10/2026 and costs a few cycles on large floppy molecules
+(glycine 9 → 13) whose energies were up to 10<sup>−5</sup> hartree too
+high before. The Hessian update uses the step actually taken, which
+differs from the requested one by what the back transformation could
+not reproduce.
 `INIT_HESSIAN=SPECIAL` (the default) starts RIC and CART optimizations
 from Lindh's model Hessian (Lindh et al., *Chem. Phys. Lett.* **241**,
 423 (1995)). Its force constants depend on the distances and
@@ -309,6 +325,53 @@ coordinate set is made once, at the first geometry. If the bonding changes
 during the run, `xjoda` prints a message and keeps the original set. If
 the iterative back transformation does not converge, the iterate closest
 to the requested step is used.
+
+**Transition states from reactant and product.** With
+`OPT_CONTROL=QST` or `LST` and `OPT_METHOD=EVFTS`, a transition state
+search with `GEOM_OPT=RIC` is guided by the synchronous transit path
+between a reactant and a product (Peng and Schlegel, *Isr. J. Chem.*
+**33**, 449 (1993)). The input holds three structures with the atoms in
+the same order: the guess for the transition state (the main geometry),
+then the reactant and the product, each after a one-line label and a
+blank line:
+
+```text
+H2CO -> H2 + CO
+C   0.000000   0.000000   0.000000
+O   0.000000   0.000000   1.160000
+H   0.376000   0.000000  -1.034000
+H   1.503000   0.000000  -0.547000
+
+Reactant
+C   0.000000   0.000000   0.000000
+O   0.000000   0.000000   1.200000
+H   0.940000   0.000000  -0.540000
+H  -0.940000   0.000000  -0.540000
+
+Product
+C   0.000000   0.000000   0.000000
+O   0.000000   0.000000   1.130000
+H   0.370000   0.000000  -2.800000
+H  -0.370000   0.000000  -2.800000
+
+*ACES2(CALC=SCF,BASIS=3-21G,GEOM_OPT=RIC,OPT_CONTROL=QST
+OPT_METHOD=EVFTS)
+```
+
+The coordinates are built from the bonds of all three structures, so the
+bonds being made and broken are included (Peng et al., 1996). The
+tangent to the path at the current point is a straight line from
+reactant to product for `LST`, and the circle through reactant, current
+point and product for `QST`. The first two steps climb along this
+tangent to the maximum of the path, and steps 3 and 4 do the same if
+the estimated climb is longer than 0.05 au. Every later step is an
+eigenvector-following step uphill along the Hessian eigenvector that
+overlaps the tangent by more than 0.8, or else along the lowest one.
+The starting Hessian is the model Hessian; its updates build up the
+negative eigenvalue. For this input QST converges in 11 cycles and
+LST in 16, to the transition state that an exact-Hessian search finds
+from the same guess. Plain `EVFTS` from the guess wanders off. Before
+10/2026 this path was broken for Cartesian input.
 
 For checking the coordinate code, an empty file named `RIC_FDCHECK` in the
 work directory makes `xjoda` compare every B-matrix element with central

@@ -519,7 +519,7 @@ Specifies the scope of coordinate optimizations. This keyword is automatically s
 
 ## OPT_CONTROL
 
-=CONSTRAINED keeps the coordinates listed in the `*CONSTRAINS` block at their starting values (RIC and CART optimizations; see {doc}`../user/methods` for the format). =LST and =QST guide a transition state search along a linear or quadratic synchronous path between the reactant and product structures given after the Z-matrix.
+=CONSTRAINED keeps the coordinates listed in the `*CONSTRAINS` block at their starting values (RIC and CART optimizations; see {doc}`../user/methods` for the format). =LST and =QST guide a transition state search (`OPT_METHOD=EVFTS`) along a linear or quadratic synchronous path between the reactant and product structures given after the main geometry (for Cartesian input with `GEOM_OPT=RIC` see {doc}`../user/methods`).
 
 ## CURVILINEAR
 
@@ -551,7 +551,7 @@ Specifies the behavior if negative eigenvalues are encountered in the totally sy
 
 ## CONVERGENCE
 
-Sets the convergence criterion for geometry optimizations. The optimization terminates when the RMS gradient is below 10<sup>-N</sup> Hartree/Bohr.
+Sets the convergence criterion for geometry optimizations. The optimization terminates when the norm of the gradient (printed as `RMS force`) is below 10<sup>-N</sup> hartree/bohr and the largest component of the next step is below 10<sup>1-N</sup> bohr or radian (the step test is skipped once the gradient is below 10<sup>-N-2</sup>).
 
 ## OPT_MAXCYC
 

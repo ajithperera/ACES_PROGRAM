@@ -99,8 +99,31 @@ C
 C
 C see if the calcualtion has converged
 C
-      IF ( (SCRATCH(2*NOPT + 5) .LT. 10.D0**(-1*ICONTL) ) .AND.
-     &     (IBREAK .EQ. 0)                                      ) THEN
+C The gradient test (the "RMS force" printed above is the 2-norm of
+C the gradient, which also bounds the largest component) is not
+C enough for floppy modes: a small gradient along a soft coordinate
+C can still leave a large step. Also require the largest component
+C of the next step to be below 10^(1-ICONTL) (bohr or radian), unless
+C the gradient is already a hundred times below the threshold.
+C 10/2026.
+C
+      GRDTOL = 10.D0**(-1*ICONTL)
+      STPCNV = 10.0D0*GRDTOL
+      STPBIG = 0.0D0
+      DO I = 1, NOPT
+         STPBIG = MAX(STPBIG, DABS(SCRATCH(NOPT+I)))
+      ENDDO
+      IF (SCRATCH(2*NOPT + 5) .LT. GRDTOL .AND. IBREAK .EQ. 0 .AND.
+     &    STPBIG .GE. STPCNV .AND.
+     &    SCRATCH(2*NOPT + 5) .GE. 0.01D0*GRDTOL)
+     &    WRITE(6,1326) STPBIG, STPCNV
+ 1326 FORMAT(T3,' Gradient converged, but the largest step ',
+     &       ES10.3,' is above ',ES10.3,'; continuing.')
+C
+      IF ( (SCRATCH(2*NOPT + 5) .LT. GRDTOL) .AND.
+     &     (IBREAK .EQ. 0) .AND.
+     &     (STPBIG .LT. STPCNV .OR.
+     &      SCRATCH(2*NOPT + 5) .LT. 0.01D0*GRDTOL) ) THEN
 C
          WRITE(6,1321)
  1321    FORMAT(80('-'))

@@ -141,10 +141,14 @@ C a degenerate inertia tensor is missed for coordinates given to the
 C usual 6-8 decimals, and only the abelian subgroup is found (C s for
 C NH3, D2h for benzene); the full group then appears once the
 C optimization has made the structure exact, which stops the run 
-C (ascent in symmetry). So detect it with DEGTOL = 1.0D-6. 10/2026.
+C (ascent in symmetry). So detect it with DEGTOL = 1.0D-5. (The atoms
+C must still match under the operations to SYMTOL = 1.0D-6 bohr; a
+C looser SYMTOL lets joda accept a geometry that xvmol2ja then cannot
+C map, so coordinates have to be given to about 7 decimals for the
+C full group to be found.) 10/2026.
 C
             DEGTOL_SAVE = DEGTOL
-            DEGTOL = MAX(DEGTOL, 1.0D-6)
+            DEGTOL = MAX(DEGTOL, 1.0D-5)
             CALL SYMMETRY(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .FALSE.)
             DEGTOL = DEGTOL_SAVE
             CALL OPT_C1_NOSYM(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .FALSE.)
@@ -239,10 +243,14 @@ C a degenerate inertia tensor is missed for coordinates given to the
 C usual 6-8 decimals, and only the abelian subgroup is found (C s for
 C NH3, D2h for benzene); the full group then appears once the
 C optimization has made the structure exact, which stops the run 
-C (ascent in symmetry). So detect it with DEGTOL = 1.0D-6. 10/2026.
+C (ascent in symmetry). So detect it with DEGTOL = 1.0D-5. (The atoms
+C must still match under the operations to SYMTOL = 1.0D-6 bohr; a
+C looser SYMTOL lets joda accept a geometry that xvmol2ja then cannot
+C map, so coordinates have to be given to about 7 decimals for the
+C full group to be found.) 10/2026.
 C
             DEGTOL_SAVE = DEGTOL
-            DEGTOL = MAX(DEGTOL, 1.0D-6)
+            DEGTOL = MAX(DEGTOL, 1.0D-5)
             CALL SYMMETRY(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .TRUE.)
             DEGTOL = DEGTOL_SAVE
             CALL OPT_C1_NOSYM(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .TRUE.)

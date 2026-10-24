@@ -1,8 +1,13 @@
-      SUBROUTINE PROCESTEP_XYZ(SCRATCH, AMATRX, TOTREDNCO)
+      SUBROUTINE PROCESTEP_XYZ(SCRATCH, AMATRX, TOTREDNCO, STEP)
 C
 C Back transform the RIC step to Cartesians (Pulay et al., JCP 96, 2856,
 C 1992):  x_k+1 = x_k + A(dq0 - (q(x_k) - q0)), A = B^t(BB^t)^-, with A
 C fixed at the starting geometry.
+C
+C On return STEP holds the step actually taken, q(x_new) - q0, which
+C is archived and used in the next Hessian update. The requested dq0
+C is not reproduced exactly (convergence threshold, best iterate or
+C linear fallback, rounding and symmetrization). 10/2026.
 C
 C Symmetry: the optimizer works with the full (C1) set of RICs and knows
 C nothing about symmetry; the electronic structure runs in the point
@@ -24,13 +29,13 @@ C
 #include "flags2.com"
 #include "coord.com"
 C
-      PARAMETER (EPSILON = 1.0D-5, SYMTHRS = 1.0D-6)
+      PARAMETER (EPSILON = 1.0D-5, SYMTHRS = 1.0D-5)
       CHARACTER*80 HOLDQ
       COMMON /USINT/ NX, NXM6, IARCH, NCYCLE, NUNIQUE, NOPT
       DIMENSION SCRATCH(9*NATOMS*NATOMS), IQFIX(3*MXATMS, 3*MXATMS),
      &          AMATRX(3*NATOMS*TOTREDNCO), STATS(6),
      &          REDUNCO(MAXREDUNCO), SCRATCH_LCL(4*MAXREDUNCO+6*
-     &          MXATMS+15*MXATMS), XBEST(3*MXATMS)
+     &          MXATMS+15*MXATMS), XBEST(3*MXATMS), STEP(TOTREDNCO)
 #ifdef _DEBUG_LVL0
       DIMENSION TMP1(MAXREDUNCO*MAXREDUNCO),TMP2(MAXREDUNCO)
 #endif
@@ -286,6 +291,20 @@ C
 C
       CALL GEN_NEW_RIC(Q, REDUNCO, IATNUM, NATOMS, TOTNOFBND,
      &                 NW_TOTREDNCO, TOTNOFANG, .TRUE.)
+C
+      DO I = 1, TOTREDNCO
+         STEP(I) = REDUNCO(I) - SCRATCH_LCL(2*TOTREDNCO + I)
+      ENDDO
+      CALL REMOVE_360(STEP, TOTNOFBND, TOTNOFANG, TOTREDNCO)
+#ifdef _DEBUG_LVL0
+      DIFMAX = 0.0D0
+      DO I = 1, TOTREDNCO
+         DIFMAX = MAX(DIFMAX, DABS(STEP(I) -
+     &                SCRATCH_LCL(IOFF4q0 + I)))
+      ENDDO
+      Write(6,"(a,ES10.3)") "  Max |actual - requested| RIC step: ",
+     &                      DIFMAX
+#endif
 
 C
 C Store the Cartesian coordinates with a different record label

@@ -7,6 +7,10 @@ C
 C    bond     k = 0.45  rho_ij
 C    angle    k = 0.15  rho_ij rho_jk
 C    dihedral k = 0.005 rho_ij rho_jk rho_kl     (rho: LINDH_RHO)
+C The out-of-plane coordinates (the last TNUMOOPS dihedrals, improper
+C torsions A-B-C-D about the center C, see ASSIGN_OOPS) are not in
+C the model; they get 0.045 rho_ac rho_bc rho_cd (the value used for
+C out-of-plane bends in geomeTRIC's guess).
 C
 C A force constant is never smaller than FLOOR so that long (H-bond,
 C fragment) coordinates do not make the guess nearly singular.
@@ -33,6 +37,10 @@ C
          ELSE IF (I .LE. TOTNOFBND + TOTNOFANG) THEN
             F = 0.15D0*RHOAB(IREDUNCO(1,I), IREDUNCO(2,I))*
      &                 RHOAB(IREDUNCO(2,I), IREDUNCO(3,I))
+         ELSE IF (I .GT. NRIC - NOOPS) THEN
+            F = 0.045D0*RHOAB(IREDUNCO(1,I), IREDUNCO(3,I))*
+     &                  RHOAB(IREDUNCO(2,I), IREDUNCO(3,I))*
+     &                  RHOAB(IREDUNCO(3,I), IREDUNCO(4,I))
          ELSE
             F = 0.005D0*RHOAB(IREDUNCO(1,I), IREDUNCO(2,I))*
      &                  RHOAB(IREDUNCO(2,I), IREDUNCO(3,I))*

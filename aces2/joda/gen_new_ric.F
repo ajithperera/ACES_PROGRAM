@@ -194,6 +194,7 @@ C
      &                   SMOFCOVRADI, NCONPRCNTR, IBNDTO, MAXCNTVS,
      &                   NRATMS, MARK_FRAGMENTS, LENGTH_FRAGEMENTS,
      &                   FRAGSCR, BLNGT_IJFRGS)
+      CALL UNION_CNTVTES(IBNDTO, IATOMICNMBER, NRATMS)
 #ifdef _DEBUG_LVL0
       Print*, "Entering assign bonds"
       Write(6,*)
@@ -213,6 +214,9 @@ C
 #endif
       CALL ASSIGN_DIHLS(IBNDTO, IREDUNCO, NW_TOTREDNCO, TOTNOFBND,
      &                  TOTNOFANG, NRATMS, TOTNOFDIH, MAXREDUNCO)
+      CALL ASSIGN_OOPS(CARTCOORD, IREDUNCO, NW_TOTREDNCO, TOTNOFBND,
+     &                 TOTNOFANG, TOTNOFDIH, NOOPS, NRATMS,
+     &                 MAXREDUNCO)
 
 #ifdef _DEBUG_LVL0
       Write(6,*)

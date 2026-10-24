@@ -73,23 +73,32 @@ C Let's check that the estimated step size is greater than 0.05 au.
 C If so, then follow the QST or LST tangent (I am interpreting Schlegel's
 C "estimated displacement along the tangent vector is greater than the 0.05".
 C At this point I am not sure whether he meant the largest absolute
-C displacement. Also cap the QST/LST to first four cycle (also rec. by Schlegel)
+C displacement.
 C
-      QSTLST_CLIMB = ((DABS(EST_STEP).GE.THRESHOLD.AND.NCYCLE.LE.4).OR.
-     &                NCYCLE.LE.2)
+C Peng and Schlegel: always climb in steps 1 and 2 (NCYCLE 0 and 1),
+C in steps 3 and 4 only if the estimated displacement along the
+C tangent exceeds 0.05 au, never afterwards. A zero tangent (not
+C defined at this point) is never climbed. 10/2026.
+C
+      TNRM = DDOT(NOPT, QSTLST_TANGENT, 1, QSTLST_TANGENT, 1)
+      QSTLST_CLIMB = (TNRM .GT. 0.5D0) .AND.
+     &               ((DABS(EST_STEP).GE.THRESHOLD.AND.NCYCLE.LE.3).OR.
+     &                 NCYCLE.LE.1)
 
       Write(6,*)
       Write(6,"(a,l)") "The climbing Phase if true", QSTLST_CLIMB
 C
-C Compute the gradient along the tangent vector, copy the tangent
-C vector to the eigenvector matrix (to the first eigenvector) and the
-C eigenvalue (EIGVALUE) to the first eigenvalue and set the IMODE
-C to 1.
+C A climbing step is taken along the tangent T only (eq. 11 of Peng and
+C Schlegel with v = T and b = T'HT). T is put in as mode 1 (IMODE) with
+C curvature b; GRDHES(1) becomes T'g in TKSTEP, Lambda(p) follows from
+C b and T'g in GETLAMBDA and FLOWEVFTS takes the step along mode 1
+C only. (This replaces MODFY_HESSIAN, which made T an approximate
+C eigenvector of a modified Hessian.) 10/2026.
 C
       IF (QSTLST_CLIMB) THEN
-         WEIGHT = ONE - WGHT
-         CALL MODFY_HESSIAN(DIAGHES, HESMOD, HES, QSTLST_TANGENT,
-     &                      SCRATCH, EIGVALUE, WEIGHT, NOPT)
+         CALL DCOPY(NOPT, QSTLST_TANGENT, 1, DIAGHES(1,1), 1)
+         HESMOD(1,1) = EIGVALUE
+         IMODE = 1
       END IF
 C
 C This is just to be safe in subsequent steps.

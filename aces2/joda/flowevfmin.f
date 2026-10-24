@@ -219,6 +219,7 @@ C
 
 
 
+
 c This common block contains the IFLAGS and IFLAGS2 arrays for JODA ROUTINES
 c ONLY! The reason is that it contains both arrays back-to-back. If the
 c preprocessor define MONSTER_FLAGS is set, then the arrays are compressed
@@ -303,14 +304,20 @@ C
       DO 10 I = 1, NOPT
          DO 20 J = 1, NOPT
 
-            IF (LAMBDN .EQ. 0.0D0 .AND. 
-     &          DABS(HESMOD(I,I)) .LT. 1.0D0-8)  THEN
+C Zero modes (translations and rotations in Cartesian, redundancies
+C in RICs) carry no gradient and must not contribute; their 0/0 ratio
+C produced arbitrary steps of 1.0D-2 near convergence. (The tests
+C used 1.0D0-8, i.e. -7, and the misspelled LAMBDN, so they never
+C applied.) 10/2026.
+C
+            IF (DABS(HESMOD(I,I)) .LT. 1.0D-8 .AND.
+     &          DABS(GRDHES(I))   .LT. 1.0D-8)  THEN
 C
                  SCRATCH(J+NOPT) = SCRATCH(J+NOPT) - 0.0D0
 C
             ELSE 
 C
-               IF (DABS((HESMOD(I,I) - LMBDAN)) .LT. 1.0D0-8) THEN
+               IF (DABS((HESMOD(I,I) - LMBDAN)) .LT. 1.0D-8) THEN
 
                   SCRATCH(J+NOPT) = SCRATCH(J+NOPT) - 0.0D0
 C

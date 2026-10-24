@@ -282,6 +282,7 @@ c io_units.par : end
 
 
 
+
 c This common block contains the IFLAGS and IFLAGS2 arrays for JODA ROUTINES
 c ONLY! The reason is that it contains both arrays back-to-back. If the
 c preprocessor define MONSTER_FLAGS is set, then the arrays are compressed
@@ -312,7 +313,8 @@ c              Assignment of eigenvector to be followed
                IMODE = I
                Z = SCRATCH(I)
             ENDIF
-            IF (J.EQ.1.AND.HESMOD(I,I).LT.0.D0) INEG = INEG + 1
+C (zero modes within round off are not negative, see ANLYSHES)
+            IF (J.EQ.1.AND.HESMOD(I,I).LT.-1.0D-8) INEG = INEG + 1
  1100    CONTINUE
          IF (ICYCLE.EQ.0.AND.TS) SCRATCH(IMODE) = 99.0D00
  1101 CONTINUE

@@ -45,7 +45,8 @@ C             used, but needs in the future).
      &          IREDUNCO(4, MAXREDUNCO), BMATRX(9*MXATMS*MXATMS),
      &          GMATRX(9*MXATMS*MXATMS), REDUNCO(MAXREDUNCO),
      &          MARK_FRAGMENTS(MXATMS, MXATMS),
-     &          LENGTH_FRAGMENTS(MXATMS),FRAGSCR(MXATMS*MXATMS)
+     &          LENGTH_FRAGMENTS(MXATMS),FRAGSCR(MXATMS*MXATMS),
+     &          XSAVE(3*MXATMS)
       DIMENSION EIGVECTORS(MAXREDUNCO, MAXREDUNCO),
      &          BTGMIN(3*NRATMS,MAXREDUNCO),BLNGT_IJFRGS(MXATMS)
 #include "ric_heap.com"
@@ -66,6 +67,7 @@ C
      &                   SMOFCOVRADI, NCONPRCNTR, IBNDTO, MAXCNTVS,
      &                   NRATMS, MARK_FRAGMENTS, LENGTH_FRAGMENTS,
      &                   FRAGSCR, BLNGT_IJFRGS)
+      CALL UNION_CNTVTES(IBNDTO, IATOMICNMBER, NRATMS)
 C 
 C Assign bond length Coordinates.
 C
@@ -116,6 +118,14 @@ C linear.
       ENDIF
 #endif
 C
+C Out-of-plane (improper torsion) coordinates at three-coordinated
+C centers, appended to the dihedrals.
+C
+      CALL ASSIGN_OOPS(CARTCOORD, IREDUNCO, TOTREDNCO, TOTNOFBND,
+     &                 TOTNOFANG, TOTNOFDIH, NOOPS, NRATMS,
+     &                 MAXREDUNCO)
+      CALL PUTREC(20, 'JOBARC', 'TNUMOOPS', 1, NOOPS)
+C
 C Assign Label for redundent internal coordinates.
 C
 #ifdef _DEBUG_LVL0
@@ -127,6 +137,9 @@ C
 
       CALL ASSIGN_LABELS(IREDUNCO, TOTREDNCO, TOTNOFBND, TOTNOFANG,
      &                   TOTNOFDIH, INTLABEL)
+      DO I = TOTREDNCO - NOOPS + 1, TOTREDNCO
+         INTLABEL(I)(1:1) = 'O'
+      ENDDO
 #ifdef _DEBUG_LVL0
       Print*, "The redundent internal coordinates assignments"
       Write(6,*)
@@ -142,6 +155,12 @@ C if this is a redundent internal optimization. Note that the transition
 C state is the current structure and both reactants and products is
 C assumed to have the same connectivit pattern, Ajith Perera, 12/2012. 
 C
+C CARTCOORD is the current (symmetry oriented) geometry; it is saved
+C and put back afterwards. (It used to be restored from CUSTRUCT, the
+C geometry in the input frame, which broke the symmetry operations
+C found for the oriented one.) 10/2026.
+C
+      CALL DCOPY(3*NRATMS, CARTCOORD, 1, XSAVE, 1)
       Call Getrec(0,'JOBARC','PRSTRUCT',Length, Redunco)
       If (Length .Gt. 0) Then 
 C
@@ -152,7 +171,7 @@ C
      &                 TOTNOFDIH, IREDUNCO, REDUNCO)
          Call Putrec(20,'JOBARC','PR_RICS_',TOTREDNCO*IINTFP, 
      &               REDUNCO)
-         Call Getrec(20,'JOBARC','CUSTRUCT',3*NRATMS*IINTFP, CARTCOORD) 
+         CALL DCOPY(3*NRATMS, XSAVE, 1, CARTCOORD, 1)
       Endif 
 C
       Call Getrec(0,'JOBARC','RXSTRUCT',Length, Redunco)
@@ -162,7 +181,7 @@ C
      &                 TOTNOFDIH, IREDUNCO, REDUNCO)
          Call Putrec(20,'JOBARC','RX_RICS_',TOTREDNCO*IINTFP, 
      &               REDUNCO)
-         Call Getrec(20,'JOBARC','CUSTRUCT',3*NRATMS*IINTFP, CARTCOORD) 
+         CALL DCOPY(3*NRATMS, XSAVE, 1, CARTCOORD, 1)
       Endif 
 C  
 C Read and process the constraints for constrained geometry 

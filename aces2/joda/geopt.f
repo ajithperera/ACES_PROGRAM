@@ -805,7 +805,7 @@ C tolerance as FETCHZ did (see the comment there). 10/2026.
 C
            DEGTOL_SAVE = DEGTOL
            IF (iFlags2(5).eq.2) 
-     &        DEGTOL = MAX(DEGTOL, 1.0D-6)
+     &        DEGTOL = MAX(DEGTOL, 1.0D-5)
            CALL SYMMETRY(Z(N11), Z(N12), Z(N13), .TRUE.)
            DEGTOL = DEGTOL_SAVE
         ELSE
@@ -1834,7 +1834,7 @@ C
 CSSS         LENGTH_GMAT=3*NATOMS*TOTREDNCO 
 CSSS         CALL GETREC(20, 'JOBARC', 'BTGMIN ',LENGTH_GMAT*IINTFP,
 CSSS     &               Z(N3))
-         CALL PROCESTEP_XYZ(Z(1), Z(N3), TOTREDNCO)
+         CALL PROCESTEP_XYZ(Z(1), Z(N3), TOTREDNCO, Z(N1))
 C
 C Here I force, NX=3*NATOMS so that symmetry.F would no complain
 C when it try to retrive the Cartesiian coordiantes (the record
@@ -1851,7 +1851,7 @@ C project it onto the totally symmetric subspace there (the symmetry
 C operations belong to Q) and bring it back. 10/2026.
 C
          CALL SYMMETRIZE_XYZ(Q, NATOMS, SYMERR, .FALSE.)
-         IF (SYMERR .LE. 1.0D-6) THEN
+         IF (SYMERR .LE. 1.0D-5) THEN
             DO IATM = 1, NATOMS
                DO I = 1, 3
                   YFRM(3*IATM-3+I) = R(3*IATM-3+I) - CFRMR(I)

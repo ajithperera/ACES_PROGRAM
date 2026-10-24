@@ -204,6 +204,7 @@
 
 
 
+
       SUBROUTINE ANLYSHES(HESMOD, DIAGHES, QST_TANGENT, LST_TANGENT,
      &                    HES, GRDMOD, SCRATCH, PMAT, VEC, NOPT, NX,
      &                    NCYCLE, INR, IVEC, IMODE, IDIE, TS, 
@@ -288,7 +289,9 @@ C
        
       DO 1102 J = 1, NOPT
          SCRATCH(J) = HESMOD(J,J)
-         IF (HESMOD(J,J).LT.0.0D0) INEG = INEG + 1
+C Redundant and translation/rotation modes are zero to within round
+C off; do not count them as negative. 10/2026.
+         IF (HESMOD(J,J).LT.-1.0D-8) INEG = INEG + 1
  1102 CONTINUE
 C
       Write(6,*)
@@ -307,7 +310,11 @@ C
          QST = .TRUE.
       ENDIF 
  
-      QSTORLST = (NCYCLE.LE.4.AND.(QST.OR.LST).AND.TS)
+C The tangent guides every step of the search: climbing in the first
+C steps and the choice of the eigenvector to follow afterwards (Peng
+C and Schlegel). It used to be dropped after the fifth cycle. 10/2026.
+C
+      QSTORLST = ((QST.OR.LST).AND.TS)
 
       Write(6,*)
       Write(6,"(a,3l)") "Logicals;LST,QST,QSTORLST :", LST, QST, 
@@ -358,32 +365,42 @@ C meant is that the eigenvector that has maximum overlap with the tangent.
          IF (LST) THEN
             CALL QSTLST_OR_EVEC(LST_TANGENT, GRDMOD, HESMOD, DIAGHES,
      &                          HES, SCRATCH, IMODE, QSTLST_CLIMB)
-            IF (QSTLST_CLIMB) THEN
-               CALL FOLOWTANGENT(HESMOD, DIAGHES, LST_TANGENT,
-     &                           SCRATCH, NX, NOPT, IMODE)
-            ELSE
-               CALL WHAT2FOLLOW(HESMOD, DIAGHES, LST_TANGENT,
-     &                          SCRATCH, NX, NOPT, IMODE)
-   
+            IF (.NOT. QSTLST_CLIMB) THEN
+               DO J = 1, NOPT
+                  SCRATCH(J) = HESMOD(J,J)
+               ENDDO
                CALL FOLOWDFLT(HESMOD, DIAGHES, SCRATCH, VEC, TS,
      &                        NRORMANR, RFA, IVEC, IMODE, NCYCLE,
      &                        NX, NOPT)
+               CALL WHAT2FOLLOW(HESMOD, DIAGHES, LST_TANGENT,
+     &                          SCRATCH, NX, NOPT, IMODE)
             END IF
          ELSE IF (QST) THEN
             CALL QSTLST_OR_EVEC(QST_TANGENT, GRDMOD, HESMOD, DIAGHES,
      &                          HES, SCRATCH, IMODE, QSTLST_CLIMB)
-            IF (QSTLST_CLIMB) THEN
-               CALL FOLOWTANGENT(HESMOD, DIAGHES, QST_TANGENT,
-     &                           SCRATCH, NX, NOPT, IMODE)
-            ELSE
-               CALL WHAT2FOLLOW(HESMOD, DIAGHES, QST_TANGENT,
-     &                          SCRATCH, NX, NOPT, IMODE)
-
+            IF (.NOT. QSTLST_CLIMB) THEN
+               DO J = 1, NOPT
+                  SCRATCH(J) = HESMOD(J,J)
+               ENDDO
                CALL FOLOWDFLT(HESMOD, DIAGHES, SCRATCH, VEC, TS,
      &                        NRORMANR, RFA, IVEC, IMODE, NCYCLE,
      &                        NX, NOPT)
+               CALL WHAT2FOLLOW(HESMOD, DIAGHES, QST_TANGENT,
+     &                          SCRATCH, NX, NOPT, IMODE)
             END IF
          END IF
+C
+C FOLOWDFLT (which sets up the default choice, counts the negative
+C eigenvalues and keeps the mode followed in VEC) has to run before the
+C tangent decides the mode (WHAT2FOLLOW); it used to run after it and
+C overwrote that choice. Its eigenvalues are put back in SCRATCH since
+C the tangent evaluation used SCRATCH as work space. Keep the mode
+C actually followed (or the tangent while climbing). 10/2026.
+C
+         DO I = 1, NOPT
+            VEC(I) = DIAGHES(I, IMODE)
+         ENDDO
+         CALL PUTREC(1,'JOBARC','FIRSTCAL',1,NCYCLE)
          RETURN
 
 C     ELSE IF (.NOT.TS.OR.IVEC.LT.1.OR..NOT.QSTORLST) THEN
