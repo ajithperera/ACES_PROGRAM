@@ -799,7 +799,15 @@ C This call should be avoided for RIC optimizations
 C 03/2003 Ajith Perera. 
 C 
         IF (iFlags2(5).lt.3) THEN
+C
+C Cartesian optimizations: find the full point group with the same
+C tolerance as FETCHZ did (see the comment there). 10/2026.
+C
+           DEGTOL_SAVE = DEGTOL
+           IF (iFlags2(5).eq.2) 
+     &        DEGTOL = MAX(DEGTOL, 1.0D-6)
            CALL SYMMETRY(Z(N11), Z(N12), Z(N13), .TRUE.)
+           DEGTOL = DEGTOL_SAVE
         ELSE
 C
 C Allow higher tolerance for Cartesian inputs (perhaps generated from a

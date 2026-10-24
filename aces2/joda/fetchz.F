@@ -64,6 +64,7 @@ c
      &                ICONTL,IRECAL,INTTYP,IDISFD,IGRDFD,ICNTYP,ISYM,
      &                IBASIS,XYZTol
       Common /PtGp_com/ FPGrp, BPGrp, PGrp
+      COMMON /TOLERS/ SYMTOL,DEGTOL
 #include "ric_heap.com"
 C
       DATA BTOA /0.529177249D0/
@@ -133,7 +134,19 @@ C
             ITMPQ    = ISCRATCH + 9*NATOMS
             INEWQ    = ITMPQ    + 3*NATOMS
             ILAST    = INEWQ    + 3*NATOMS
+C
+C The point group found here is kept for the whole optimization (the 
+C steps are symmetrized). With the default DEGTOL (1.0D-10, relative)
+C a degenerate inertia tensor is missed for coordinates given to the
+C usual 6-8 decimals, and only the abelian subgroup is found (C s for
+C NH3, D2h for benzene); the full group then appears once the
+C optimization has made the structure exact, which stops the run 
+C (ascent in symmetry). So detect it with DEGTOL = 1.0D-6. 10/2026.
+C
+            DEGTOL_SAVE = DEGTOL
+            DEGTOL = MAX(DEGTOL, 1.0D-6)
             CALL SYMMETRY(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .FALSE.)
+            DEGTOL = DEGTOL_SAVE
             CALL OPT_C1_NOSYM(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .FALSE.)
             CALL DCOPY(3*NATOMS, Q, 1, R, 1)
 C
@@ -219,7 +232,19 @@ C
             ITMPQ    = ISCRATCH + 9*NATOMS
             INEWQ    = ITMPQ    + 3*NATOMS
             ILAST    = INEWQ    + 3*NATOMS
+C
+C The point group found here is kept for the whole optimization (the 
+C steps are symmetrized). With the default DEGTOL (1.0D-10, relative)
+C a degenerate inertia tensor is missed for coordinates given to the
+C usual 6-8 decimals, and only the abelian subgroup is found (C s for
+C NH3, D2h for benzene); the full group then appears once the
+C optimization has made the structure exact, which stops the run 
+C (ascent in symmetry). So detect it with DEGTOL = 1.0D-6. 10/2026.
+C
+            DEGTOL_SAVE = DEGTOL
+            DEGTOL = MAX(DEGTOL, 1.0D-6)
             CALL SYMMETRY(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .TRUE.)
+            DEGTOL = DEGTOL_SAVE
             CALL OPT_C1_NOSYM(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .TRUE.)
 #ifdef _DEBUG_LVLM
             Print*, "Entering the Redundent Internal block"

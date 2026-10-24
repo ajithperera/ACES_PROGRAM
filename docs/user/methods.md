@@ -236,7 +236,9 @@ Water with redundant internals (test `120c`):
 ```
 
 **Symmetry.** The energy and gradient calculations use the point group of
-the starting structure, as for Z-matrix input. The optimizer itself
+the starting structure, as for Z-matrix input. That group is found with
+a degeneracy tolerance suited to coordinates given to six or more
+decimals, so a slightly imperfect NH<sub>3</sub> is treated as C<sub>3v</sub>. The optimizer itself
 treats every coordinate as independent. After every step it projects the
 new Cartesian geometry onto the totally symmetric structures of the full
 point group, so the point group never drops. A C1 starting structure is
@@ -290,14 +292,19 @@ input orientation.
 
 **Convergence and limits.** An optimization has converged when the RMS of
 the (projected) gradient is below 10<sup>−`CONVERGENCE`</sup>.
-`INIT_HESSIAN=SPECIAL` (the default) starts RIC optimizations from
-Lindh's diagonal model Hessian (Lindh et al., *Chem. Phys. Lett.*
-**241**, 423 (1995)). Each force constant depends on the
-distances and periodic-table rows of the atoms involved, with a floor of
-10<sup>−3</sup> a.u. On the test molecules it needs about a quarter fewer
-cycles than the constant diagonal used before 10/2026 (1.0 for bonds,
-0.25 for angles, 0.1 for dihedrals). An empty file named
-`OLD_GUESS_HESS` in the work directory brings the old guess back. The
+`INIT_HESSIAN=SPECIAL` (the default) starts RIC and CART optimizations
+from Lindh's model Hessian (Lindh et al., *Chem. Phys. Lett.* **241**,
+423 (1995)). Its force constants depend on the distances and
+periodic-table rows of the atoms involved. RIC uses it as a diagonal
+with a floor of 10<sup>−3</sup> a.u.; CART uses the full Cartesian
+form, summed over all atom pairs, triples and quadruples. Compared with
+the guesses used before 10/2026 it saves about a quarter of the cycles
+for RIC and about half for CART. The old guesses were a constant
+diagonal (1.0 for bonds, 0.25 for angles, 0.1 for dihedrals) for RIC
+and a unit matrix for CART. An empty file named `OLD_GUESS_HESS` in the
+work directory brings them back. Z-matrix optimizations keep their
+constant diagonal, which did as well as the model Hessian on the test
+suite. The
 coordinate set is made once, at the first geometry. If the bonding changes
 during the run, `xjoda` prints a message and keeps the original set. If
 the iterative back transformation does not converge, the iterate closest

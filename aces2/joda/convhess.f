@@ -355,11 +355,25 @@ C
                 END DO
                 RETURN
          ELSE IF (iFlags2(5) .eq. 2) THEN
-                CALL SET_2UNIT_MATRIX(HI, NX)
+C
+C Lindh model Hessian in Cartesians (unit matrix with OLD_GUESS_HESS).
+C 10/2026.
+C
+                INQUIRE(FILE='OLD_GUESS_HESS', EXIST=OLDGUESS)
+                IF (OLDGUESS) THEN
+                   CALL SET_2UNIT_MATRIX(HI, NX)
+                ELSE
+                   CALL LINDH_HESS_R(HI, NX)
+                ENDIF
                 RETURN
          ENDIF
 
         ELSE
+C
+C Z-matrix coordinates keep this constant diagonal: the Lindh model
+C Hessian used for RIC and CART did not help here (27 test-suite
+C Z-matrix optimizations: 182 -> 186 cycles; water 4 -> 6). 10/2026.
+C
             HI(1,1)=1.D0
             HI(2,2)=1.D0
             HI(3,3)=0.25D0
