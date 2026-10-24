@@ -16,35 +16,25 @@ C
       call output(vec, 1, nopt, 1, nopt, nopt, nopt, 1)
 #endif
 
-      NTR=0
-      DO I=NOPT,1,-1
-         IF(ABS(EIGEN(I,I)).LT.1.0D-09) NTR=NTR+1
-         IF(ABS(EIGEN(I,I)).LT.1.0D-09) ISHIFT=I
-      ENDDO
-C 
-      JSHIFT=ISHIFT-1
-      DO J=1,NTR
-         JSHIFT=JSHIFT+1
-          SCR(8,J)=EIGEN(JSHIFT,JSHIFT)
-          DO I=1,NOPT
-             SCR(J,I)=VEC(I,JSHIFT)
-          ENDDO
-      ENDDO
+C Move each zero mode to the end by adjacent swaps. Scanning from
+C the right keeps the order of both the zero and non-zero modes, and
+C needs no work space (the old version kept the vectors in rows
+C 1-NTR of SCR and the eigenvalues in row 8, which overruns SCR for
+C NOPT < 8, and it used an uninitialized ISHIFT when no zero modes
+C were present, e.g. constrained runs where the TR modes are not
+C projected). SCR is no longer used.
 C
-      DO J=ISHIFT,NOPT-NTR
-        EIGEN(J,J)=EIGEN(J+NTR,J+NTR)
-        DO I=1,NOPT
-           VEC(I,J)=VEC(I,J+NTR)
-        ENDDO
-      ENDDO
-C
-      JTMP=0
-      DO J=NOPT-NTR+1,NOPT
-         JTMP=JTMP+1
-         EIGEN(J,J)=SCR(8,JTMP)
-         DO I=1,NOPT
-            VEC(I,J)=SCR(JTMP,I)
-         ENDDO
+      NEND=NOPT
+      DO K=NOPT,1,-1
+         IF (ABS(EIGEN(K,K)).LT.1.0D-09) THEN
+            DO J=K,NEND-1
+               TMP=EIGEN(J,J)
+               EIGEN(J,J)=EIGEN(J+1,J+1)
+               EIGEN(J+1,J+1)=TMP
+               CALL DSWAP(NOPT, VEC(1,J), 1, VEC(1,J+1), 1)
+            ENDDO
+            NEND=NEND-1
+         ENDIF
       ENDDO
 C
 #ifdef _DEBUG_LVL0
