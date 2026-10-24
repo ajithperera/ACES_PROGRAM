@@ -285,6 +285,7 @@ c io_units.par : end
 
 
 
+
 c This common block contains the IFLAGS and IFLAGS2 arrays for JODA ROUTINES
 c ONLY! The reason is that it contains both arrays back-to-back. If the
 c preprocessor define MONSTER_FLAGS is set, then the arrays are compressed
@@ -326,7 +327,7 @@ C
       CALL ZERO(DERBMAT,9*NRATMS*NRATMS*TOTREDNCO)
 C
       CMP_DBMAT = (IFLAGS2(8) .GT. 0) .OR.
-     &            (IFLAGS2(55)    .ge. 0)
+     &            (IFLAGS(55)     .ge. 0)
 C
       DO 20 IBNDS = 1, TOTNOFBND
 C

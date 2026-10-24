@@ -1084,6 +1084,10 @@ C
         ELSE
             WRITE(LUOUT,1885)
  1885       FORMAT(T3,'@SYMMETRY-F, Ascent in symmetry detected.')
+            IF (IFLAGS2(h_IFLAGS2_geom_opt) .GE. 2) WRITE(LUOUT,1886)
+ 1886       FORMAT(T3,'The optimized structure has reached a higher ',
+     &      'point group. Restart from',/,T3,'the coordinates above ',
+     &      '(they keep the higher symmetry) or use SYMMETRY=NONE.')
             CALL ERREX
         ENDIF
         ENDIF

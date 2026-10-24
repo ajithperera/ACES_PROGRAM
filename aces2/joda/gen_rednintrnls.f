@@ -204,6 +204,7 @@
 
 
 
+
       SUBROUTINE GEN_REDNINTRNLS(CARTCOORD, REDUNCO, INTLABEL,
      &                           IBNDTO, BMATRX, GMATRX,
      &                           TOTREDNCO, IATOMICNMBER, NRATMS,
@@ -469,6 +470,7 @@ C Read and process the constraints for constrained geometry
 C optimizations. Ajith Perera, 11/2012
 C   
       Constrained = .False.
+      Not_found   = .False.
       If (Iflags2(169) .EQ. 3) constrained = .True.
       If (Constrained) Call Idntfy_constraints(IREDUNCO, TOTREDNCO, 
      &                                         TOTNOFBND,

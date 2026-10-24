@@ -169,6 +169,7 @@ C Read and process the constraints for constrained geometry
 C optimizations. Ajith Perera, 11/2012
 C   
       Constrained = .False.
+      Not_found   = .False.
       If (Iflags2(h_IFLAGS2_opt_control) .EQ. 3) constrained = .True.
       If (Constrained) Call Idntfy_constraints(IREDUNCO, TOTREDNCO, 
      &                                         TOTNOFBND,

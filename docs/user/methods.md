@@ -210,6 +210,99 @@ Related keywords:
 finite-difference job continue from its last saved step; see
 [](#file-directives) for `SAVEDIR`.
 
+### Optimizations from Cartesian input
+
+With `COORD=CARTESIAN` there is no Z-matrix to star, and the whole
+structure is optimized in one of two coordinate systems:
+
+`GEOM_OPT=RIC` (or `FULL`)
+: Redundant internal coordinates. `xjoda` finds the bonds from covalent
+  radii (with hydrogen bonds and links between fragments added). It builds
+  every bond, bond angle, and dihedral from them; a nearly linear bend
+  (within 5° of 180°) gets two perpendicular bending coordinates. Steps are
+  taken in these coordinates and transformed back to Cartesians by
+  iteration (Pulay et al., *J. Chem. Phys.* **96**, 2856 (1992)). A
+  `CONNECT` file in the work directory replaces the automatic bonds.
+
+`GEOM_OPT=CART`
+: Plain Cartesian coordinates, with translations and rotations projected
+  out of the Hessian. Only `OPT_METHOD=RFA` (minima) and `EVFTS`
+  (transition states) are allowed.
+
+Water with redundant internals (test `120c`):
+
+```{literalinclude} ../../aces2/tests/fast/cases/120c/ZMAT
+:language: text
+```
+
+**Symmetry.** The energy and gradient calculations use the point group of
+the starting structure, as for Z-matrix input. The optimizer itself
+treats every coordinate as independent. After every step it projects the
+new Cartesian geometry onto the totally symmetric structures of the full
+point group, so the point group never drops. A C1 starting structure is
+optimized with `SYMMETRY=NONE`. If a structure that started with symmetry
+reaches a higher point group (a bent molecule that becomes linear, say),
+the run stops with `Ascent in symmetry detected`. Restart from the printed
+coordinates, or use `SYMMETRY=NONE`. Before 10/2026 these optimizations
+always ran with `SYMMETRY=NONE`.
+
+**Constraints.** `OPT_CONTROL=CONSTRAINED` keeps selected coordinates at
+their starting values. The list goes in a `*CONSTRAINS` block after the
+`*ACES2` namelist, ended by `*END`. Constrained optimizations always run
+with `SYMMETRY=NONE` and `NOREORI=ON`, so the coordinates refer to the
+input orientation.
+
+- With `GEOM_OPT=RIC` give the number of bond constraints followed by one
+  line `i j` for each bond, then the number of angle constraints and the
+  lines `i j k` (the angle at atom `j`), then the number of dihedral
+  constraints and the lines `i j k l`. Trailing sections can be left
+  off: `*END` may follow the bond or the angle lines. A constraint must match a
+  coordinate that `xjoda` generated: an angle is looked up with `j` as
+  its vertex first, then as any angle of the same three atoms; a
+  dihedral is looked up as `i j k l` or `l k j i` first. Constraints that
+  do not match are reported with the list of generated coordinates, and
+  the optimization continues without them. Atoms are numbered in input
+  order. The constraints are applied by projecting the Hessian and
+  gradient (Peng et al., *J. Comput. Chem.* **17**, 49 (1996)). The test
+  input `aces2/test/zmat.130` freezes two bonds and two angles:
+
+  ```text
+  *CONSTRAINS
+  2
+  1 3
+  5 4
+  2
+  1 2 3
+  5 6 4
+  *END
+  ```
+
+- With `GEOM_OPT=CART` give the number of frozen Cartesian components and
+  then their positions in the coordinate list, where atom *n* has x, y, z
+  at 3*n*−2, 3*n*−1, 3*n*. `aces2/test/zmat.131` freezes five components:
+
+  ```text
+  *CONSTRAINS
+  5
+  1 5 9 11 16
+  *END
+  ```
+
+**Convergence and limits.** An optimization has converged when the RMS of
+the (projected) gradient is below 10<sup>−`CONVERGENCE`</sup>.
+`INIT_HESSIAN=SPECIAL` (the default) starts from a diagonal Hessian of
+1.0 for bonds, 0.25 for angles and 0.1 for dihedrals (atomic units). The
+coordinate set is made once, at the first geometry. If the bonding changes
+during the run, `xjoda` prints a message and keeps the original set. If
+the iterative back transformation does not converge, the iterate closest
+to the requested step is used.
+
+For checking the coordinate code, an empty file named `RIC_FDCHECK` in the
+work directory makes `xjoda` compare every B-matrix element with central
+differences of the coordinate values and print the largest error for each
+kind of coordinate. At an exactly linear bend the angle has a kink, so a
+large error there is expected.
+
 ## Vibrational frequencies
 
 `VIB=EXACT` computes the force constants analytically, so far for SCF

@@ -134,6 +134,7 @@ C
             INEWQ    = ITMPQ    + 3*NATOMS
             ILAST    = INEWQ    + 3*NATOMS
             CALL SYMMETRY(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .FALSE.)
+            CALL OPT_C1_NOSYM(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .FALSE.)
             CALL DCOPY(3*NATOMS, Q, 1, R, 1)
 C
 #ifdef _DEBUG_LVLM1
@@ -219,6 +220,7 @@ C
             INEWQ    = ITMPQ    + 3*NATOMS
             ILAST    = INEWQ    + 3*NATOMS
             CALL SYMMETRY(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .TRUE.)
+            CALL OPT_C1_NOSYM(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .TRUE.)
 #ifdef _DEBUG_LVLM
             Print*, "Entering the Redundent Internal block"
 #endif
@@ -246,22 +248,18 @@ C
             IF (NCYCLE .EQ. 0) 
      &         CALL PUTREC(20,'JOBARC','COORD_OP',IINTFP*3*NATOMS,Q)
 C
-            IF (IFLAGS(h_IFLAGS_symmetry).EQ. 2 .AND. 
-     &          FPGRP .NE. 'C1') THEN
-               CALL PROCESS_REDINTRNLS(Q, REDUNCO, IREDUNCO, IBNDTO,
-     &                                 I_UNIQUE, FPGRP, TOTNOFBND,
-     &                                 TOTNOFANG, TOTNOFDIH, TOTREDNCO,
-     &                                 NEQ, IEQUIV, NATOMS, NCON, IPRNT,
-     &                                 EPSILON)
-               CALL PUTREC(20,'JOBARC','PLSMINSP',TOTREDNCO,NCON)
-            ELSE
-               CALL IZERO(NCON,TOTREDNCO)
-               CALL IZERO(NEQ, TOTREDNCO)
-               DO IREDNCO = 1, TOTREDNCO
-                  I_UNIQUE(IREDNCO) = .TRUE.
-               ENDDO
-            ENDIF
-            CALL PUTREC(20,'JOBARC','PLSMINSP',TOTREDNCO,NCON) 
+C The RIC optimizer does not use symmetry: every RIC is treated as
+C unique (no equivalences, no plus-minus pairs) whatever the point
+C group is. The point group is kept by symmetrizing the Cartesian
+C step (see PROCESTEP_XYZ). PROCESS_REDINTRNLS, which deduced the
+C equivalent RICs, is no longer called. 10/2026.
+C
+            CALL IZERO(NCON,TOTREDNCO)
+            CALL IZERO(NEQ, TOTREDNCO)
+            DO IREDNCO = 1, TOTREDNCO
+               I_UNIQUE(IREDNCO) = .TRUE.
+            ENDDO
+            CALL PUTREC(20,'JOBARC','PLSMINSP',TOTREDNCO,NCON)
             CALL PUTREC(20, 'JOBARC', 'UNIQUEDF', TOTREDNCO, 
      &                  I_UNIQUE)
 C
@@ -291,15 +289,13 @@ C
          CALL PUTREC(20,'JOBARC', 'GMATRIX ', IINTFP*LENGTH_BGMAT,
      &               dRICHeap(z_GMat))
 C
-C Copy the intial values of the RIC to R array. Before that we need 
-C mark the plus-minus pairs.
-C        
-         IF (IFLAGS(h_IFLAGS_symmetry).EQ. 2) THEN
-            CALL GETREC(20,'JOBARC','PLSMINSP',TOTREDNCO,NCON)
-            DO ICOORD = 1, TOTREDNCO
-               IF (NCON(ICOORD).EQ.1) REDUNCO(ICOORD) = -REDUNCO(ICOORD)
-            END DO
-         END IF
+C Finite difference check of the B-matrix (only if RIC_FDCHECK exists)
+C
+         CALL RIC_FDCHECK(Q, dRICHeap(z_BMat), TOTREDNCO, NATOMS,
+     &                    IATNUM)
+C
+C Copy the intial values of the RIC to R array (there are no
+C plus-minus pairs to mark any more, see above).
 C
          CALL DCOPY(TOTREDNCO, REDUNCO, 1, R, 1)
          NXM6 = TOTREDNCO

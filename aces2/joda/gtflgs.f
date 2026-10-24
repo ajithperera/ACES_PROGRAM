@@ -291,7 +291,8 @@ c     character constants
       character*1 czTab
 c throwing implicit ints together
       integer iLength, iLine, iLines, ipt, irecal, iSpin, iUHF,
-     &        nIrr, nIrrps, ndrgeo,i_havegeom, i_length, iversion
+     &        nIrr, nIrrps, ndrgeo,i_havegeom, i_length, iversion,
+     &        iOptSymOf
 c     statistics for value tokens and line processing
       character*(linelen)  wrk, wrk2, szTmp
       character*(DataSize) szData
@@ -1286,7 +1287,7 @@ c   o convert CALC aliases
             call asv_update_kv('CALC=CCSDT'//achar(0),iASV,szData,0)
             call asv_update_kv('KUCHARSKI'//achar(0),iASV,szData,0)
          else
-            print *, '@GTFLGS: logic error at line ',979
+            print *, '@GTFLGS: logic error at line ',980
             call errex
          end if
       end if
@@ -1606,16 +1607,37 @@ c Turn off symmetry if subgroup=C1.
          call asv_update_kv('!sym'//achar(0),iASV,szData,0)
       end if
       if ((ioppar(105) .ge. 2)) Then
-         szTmp = 'SYMMETRY=NONE'//achar(0)
-         if (ioppar(60).ne.0) then
-             call asv_update_kv(szTmp,iASV,szData,0)
-         Endif
+C
+C Cartesian and RIC optimizations used to force SYMMETRY=NONE. They
+C now run the electronic structure in the point group of the
+C structure; the optimizer itself does not use symmetry (all RICs are
+C treated as unique) and the point group is preserved by symmetrizing
+C each Cartesian step. 10/2026.
+C
+C A C1 starting structure is optimized with SYMMETRY=NONE as before;
+C FETCHZ (OPT_C1_NOSYM) leaves the record OPTSYMOF for the later runs.
+C
+C Constrained optimizations also keep SYMMETRY=NONE: the Cartesian
+C constraints refer to the input orientation, and symmetrizing a step
+C would move constrained coordinates unless the constraints are
+C themselves symmetric.
+C
+         iOptSymOf = 0
+         Call GetRec(0, 'JOBARC', 'OPTSYMOF', i_length, iOptSymOf)
+         if (i_length .gt. 0)
+     &      Call GetRec(-1, 'JOBARC', 'OPTSYMOF', 1, iOptSymOf)
+         if (ioppar(269) .eq. 3) iOptSymOf = 1
+         if (iOptSymOf .eq. 1 .and. ioppar(60).ne.0) then
+            szTmp = 'SYMMETRY=NONE'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
 C
 C For geo. opt with FULL/RIC and SYM=NONE turn on the NOREORI
 C if it is not given as an input. Ajith Perera, 12/08
-C 
+C
           if (ioppar(225) .eq. 2 .and. .not.
-     &        ioppar(54).ge.1 ) then
+     &        ioppar(54).ge.1 .and.
+     &        ioppar(60).eq.0) then
              szTmp = 'NOREORI=ON'//achar(0)
              call asv_update_kv(szTmp,iASV,szData,0)
           endif

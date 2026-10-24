@@ -43,7 +43,7 @@ This is a somewhat complicated keyword to use. The value can be X, Y, or Z. The 
 
 ## NOREORI
 
-Forces the program not to change the internal orientation of the molecule specified by the input Cartesian coordinates. To function correctly, this keyword also requires turning off symmetry (SYMMETRY=OFF).
+Forces the program not to change the internal orientation of the molecule specified by the input Cartesian coordinates. To function correctly, this keyword also requires turning off symmetry (SYMMETRY=NONE). It is turned on automatically for RIC and CART optimizations that run with SYMMETRY=NONE.
 
 # System: debug
 
@@ -515,7 +515,11 @@ Specifies the types of property integrals that are computed. Setting this to FUL
 
 ## GEOM_OPT
 
-Specifies the scope of coordinate optimizations. This keyword is automatically set to PARTIAL if a geometry optimization is implied with asterisks in the internal coordinate Z matrix. Setting GEOM OPT=FULL will optimize all coordinates regardless of asterisks in the Z matrix (COORD=INTERNAL) and will optimize a Cartesian input geometry using Redundant Internal Coordinates (RICs).
+Specifies the scope of coordinate optimizations. This keyword is automatically set to PARTIAL if a geometry optimization is implied with asterisks in the internal coordinate Z matrix. For Cartesian input (`COORD=CARTESIAN`), =RIC (FULL is the same) optimizes in redundant internal coordinates and =CART in Cartesian coordinates. These run in the point group of the starting structure (with `SYMMETRY=NONE` for a C1 start or a constrained optimization) and preserve it; see {doc}`../user/methods`.
+
+## OPT_CONTROL
+
+=CONSTRAINED keeps the coordinates listed in the `*CONSTRAINS` block at their starting values (RIC and CART optimizations; see {doc}`../user/methods` for the format). =LST and =QST guide a transition state search along a linear or quadratic synchronous path between the reactant and product structures given after the Z-matrix.
 
 ## CURVILINEAR
 

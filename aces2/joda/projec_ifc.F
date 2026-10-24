@@ -15,7 +15,7 @@ C
       Dimension HESS(NXM6, NXM6), PMAT(NXM6, NXM6), PHESS(NXM6, NXM6),
      &          GMATRX_M(NXM6, NXM6), GMATRX_N(NXM6, NXM6),
      &          GRD(NXM6), Scr(Maxredunco), Tmp(NXM6, NXm6),
-     &          GRDTM(NXM6)
+     &          GRDTMP(NXM6)
  
       LENGMAT=NXM6*NXM6
       CALL GETREC(20,'JOBARC','GI-MATRX',LENGMAT*IINTFP,GMATRX_M)

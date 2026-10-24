@@ -391,6 +391,11 @@ C     Use to fix orientation for C2v and D2h from one step to the next
       Integer At1, At2, XYOri
 C
       integer genby(mxatms)
+C
+C Cartesian optimizations: rotation from the optimizer frame (R) to
+C the integral frame (Q), see ALIGN_FRAME.
+C
+      DOUBLE PRECISION UFRM(3,3), CFRMR(3), CFRMQ(3), YFRM(3*MXATMS)
 
 c ----------------------------------------------------------------------
 
@@ -1322,6 +1327,21 @@ C
       iflags(18) = itmp
       IF(OPTRES) CALL GETREC(20,'JOBARC','COORD   ',IINTFP*NX,Q)
       Call SavOri (FPGrp, NAtoms, Q, IAtNum, At1, At2, XYOri, Err)
+C
+C Cartesian optimizations keep the Cartesians (R) in the frame of the
+C first cycle, but SYMMETRY puts Q (the geometry of the integrals,
+C gradients and Hessians) in the standard orientation every cycle.
+C Find the rotation between the two frames; gradients and Hessians
+C are rotated to the R frame and the step is symmetrized in the Q
+C frame. 10/2026.
+C
+      IF (iFlags2(5).eq.2) THEN
+         CALL ALIGN_FRAME(R, Q, NATOMS, UFRM, CFRMR, CFRMQ, FRMRES)
+         IF (FRMRES .GT. 1.0D-6) THEN
+            WRITE(6,"(a,a,ES10.3)") " @GEOPT-W, the optimizer and ",
+     &            "integral frames do not match; residual ", FRMRES
+         ENDIF
+      ENDIF
       IF(OPTRES) GO TO 9876
 C
 C:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -1512,6 +1532,7 @@ C Convert gradient to internal coordinates & print it out
 C:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 C
       IF (iFlags2(5).eq.2) Then
+          CALL ROT_XYZVEC(Z(N6), NATOMS, 1, 3*NATOMS, UFRM, .TRUE.)
           CALL DCOPY(NOPT, Z(N6), 1, Z(N7), 1)
       ELSE
          CALL CONVQ(Z(N3), Z(N6), Z(N7), 0, 1)
@@ -1613,6 +1634,18 @@ C
        Print*, "Entering convhess:piece of cart2int transformation"
        Print*, "IAVHES: ", IAVHES
                  cALL CONVHESS(Z(N3),Z(N4),Z(1),Z(N2),Z(N1),-IAVHES)
+C
+           ELSE IF (iFlags2(5).eq.2 .AND.
+     &              IAVHES.EQ.1) THEN
+C
+C Cartesian optimizations: the exact Cartesian Hessian read in READGH
+C (Z(1)) was never moved to Z(N2), so the step was taken with a zero
+C Hessian. Rotate it to the optimizer frame, U^t H U, and use it.
+C 10/2026.
+C
+              CALL ROT_XYZVEC(Z(1), NATOMS, NX, NX, UFRM, .TRUE.)
+              CALL TRANSP(Z(1), Z(N2), NX, NX)
+              CALL ROT_XYZVEC(Z(N2), NATOMS, NX, NX, UFRM, .TRUE.)
 C
            END IF
 
@@ -1805,7 +1838,42 @@ C
 C
       ELSE IF ((iFlags2(5).eq.2)) THEN
 C
-         CALL DCOPY(NX, R, 1, Q, 1) 
+C Keep the point group: take the new geometry to the integral frame,
+C project it onto the totally symmetric subspace there (the symmetry
+C operations belong to Q) and bring it back. 10/2026.
+C
+         CALL SYMMETRIZE_XYZ(Q, NATOMS, SYMERR, .FALSE.)
+         IF (SYMERR .LE. 1.0D-6) THEN
+            DO IATM = 1, NATOMS
+               DO I = 1, 3
+                  YFRM(3*IATM-3+I) = R(3*IATM-3+I) - CFRMR(I)
+               ENDDO
+            ENDDO
+            CALL ROT_XYZVEC(YFRM, NATOMS, 1, 3*NATOMS, UFRM, .FALSE.)
+            DO IATM = 1, NATOMS
+               DO I = 1, 3
+                  YFRM(3*IATM-3+I) = YFRM(3*IATM-3+I) + CFRMQ(I)
+               ENDDO
+            ENDDO
+            CALL SYMMETRIZE_XYZ(YFRM, NATOMS, SYMERR, .TRUE.)
+            DO IATM = 1, NATOMS
+               DO I = 1, 3
+                  YFRM(3*IATM-3+I) = YFRM(3*IATM-3+I) - CFRMQ(I)
+               ENDDO
+            ENDDO
+            CALL ROT_XYZVEC(YFRM, NATOMS, 1, 3*NATOMS, UFRM, .TRUE.)
+            DO IATM = 1, NATOMS
+               DO I = 1, 3
+                  R(3*IATM-3+I) = YFRM(3*IATM-3+I) + CFRMR(I)
+               ENDDO
+            ENDDO
+         ELSE
+            WRITE(6,"(a,a,ES10.3,a)") "  The current geometry is not ",
+     &            "symmetric (", SYMERR, " bohr); the step is not "//
+     &            "symmetrized."
+         ENDIF
+C
+         CALL DCOPY(NX, R, 1, Q, 1)
          CALL PUTREC(20, 'JOBARC', 'COORD_OP', IINTFP*NX, Q)
 C
            Write(6,*)
