@@ -9,7 +9,7 @@ C
 #include "jodaflags.com"
 C
       CHARACTER*(fnamelen) FNAME
-      LOGICAL XYZIN, NWFINDIF
+      LOGICAL XYZIN, NWFINDIF, OLDGUESS
       INTEGER TOTNOFBND, TOTNOFANG, TOTNOFDIH
       COMMON /USINT/ NX, NXM6, IARCH, NCYCLE, NUNIQUE, NOPT
 C     Main OPTIM control data
@@ -40,6 +40,16 @@ C
          CALL ZERO(HI, NXM6*NXM6)
          IF (XYZIN) THEN
             IF (iFlags2(h_IFLAGS2_geom_opt) .ge. 3) THEN
+C
+C Lindh model Hessian (LINDH_HESS); the old constant diagonal
+C (1.0/0.25/0.1) is kept for comparison when OLD_GUESS_HESS exists.
+C 10/2026.
+C
+               INQUIRE(FILE='OLD_GUESS_HESS', EXIST=OLDGUESS)
+               IF (.NOT. OLDGUESS) THEN
+                  CALL LINDH_HESS(HI, NXM6)
+                  RETURN
+               ENDIF
                CALL GETREC(20, 'JOBARC', 'TNUMOBND', 1, TOTNOFBND)
                CALL GETREC(20, 'JOBARC', 'TNUMOANG', 1, TOTNOFANG)
                CALL GETREC(20, 'JOBARC', 'TNUMODIH', 1, TOTNOFDIH)

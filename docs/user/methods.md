@@ -290,8 +290,14 @@ input orientation.
 
 **Convergence and limits.** An optimization has converged when the RMS of
 the (projected) gradient is below 10<sup>−`CONVERGENCE`</sup>.
-`INIT_HESSIAN=SPECIAL` (the default) starts from a diagonal Hessian of
-1.0 for bonds, 0.25 for angles and 0.1 for dihedrals (atomic units). The
+`INIT_HESSIAN=SPECIAL` (the default) starts RIC optimizations from
+Lindh's diagonal model Hessian (Lindh et al., *Chem. Phys. Lett.*
+**241**, 423 (1995)). Each force constant depends on the
+distances and periodic-table rows of the atoms involved, with a floor of
+10<sup>−3</sup> a.u. On the test molecules it needs about a quarter fewer
+cycles than the constant diagonal used before 10/2026 (1.0 for bonds,
+0.25 for angles, 0.1 for dihedrals). An empty file named
+`OLD_GUESS_HESS` in the work directory brings the old guess back. The
 coordinate set is made once, at the first geometry. If the bonding changes
 during the run, `xjoda` prints a message and keeps the original set. If
 the iterative back transformation does not converge, the iterate closest
