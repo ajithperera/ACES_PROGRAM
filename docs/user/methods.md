@@ -189,22 +189,92 @@ A CCSD optimization of water (test `013a`, reference −76.2725483266):
 :language: text
 ```
 
-Related keywords:
+The options below were checked in 10/2026 on SCF/3-21G minima (HOOH as a
+Z-matrix, ethanol from Cartesians) and transition states (HCN ⇌ HNC as a
+Z-matrix, H<sub>2</sub>CO → trans-HCOH from Cartesians). The cycle
+counts quoted are from those runs.
 
-- `GEOM_OPT=FULL` optimizes every coordinate, starred or not; `RIC` uses
-  redundant internal coordinates, which also works for Cartesian input
-  (test `120a`).
-- `OPT_METHOD` chooses the step algorithm: Newton–Raphson (`NR`), rational
-  function (`RFA`), or eigenvector following for transition states
-  (`EVFTS`).
-- `CONVERGENCE`, `OPT_MAXCYC` and `MAX_STEP` control convergence.
-- A starting Hessian can be read from `FCMINT`. Test `126c` searches for the
-  HCN ⇌ HNC transition state with `OPT_METHOD=EVFTS`, starting from a
-  Hessian placed with a `%FCMINT=` file directive (reference −93.1153442031):
+**Coordinates.** Which coordinates are optimized depends on the input:
+
+| Input | Keyword | Coordinates |
+|---|---|---|
+| Z-matrix with `*` | (none; `GEOM_OPT=PARTIAL` is set for you) | the starred Z-matrix variables |
+| Z-matrix or Cartesian | `GEOM_OPT=RIC` (or `FULL`, the same) | redundant internal coordinates of the whole molecule (test `120a`) |
+| Cartesian (`COORD=CARTESIAN`) | `GEOM_OPT=CART` | Cartesian coordinates |
+
+RIC is the most robust choice for floppy molecules: the HOOH minimum
+takes 43 cycles in Z-matrix coordinates and 5 for ethanol in RIC.
+[](#optimizations-from-cartesian-input) has the details of RIC and CART.
+
+**Step algorithm (`OPT_METHOD`).**
+
+| Value | Search | Notes |
+|---|---|---|
+| `AUTO` (default) | minimum | becomes `MANR` |
+| `NR` | minimum | Newton–Raphson; no protection against a wrong-signed Hessian (failed for the HOOH Z-matrix) |
+| `MANR` | minimum | Newton–Raphson with a Morse adjustment of bond stretches; identical to `NR` for RIC in the tests |
+| `RFA` | minimum | rational function step; safe when the Hessian has negative eigenvalues |
+| `EVFTS` | transition state | eigenvector following (Baker), uphill along one mode and downhill along the rest |
+| `MAEVFTS` | transition state | `EVFTS` with the Morse adjustment |
+
+With `GEOM_OPT=CART` every minimum search is changed to `RFA` (with a
+message). `NEGEVAL` chooses what NR and MANR do when the Hessian has a
+negative eigenvalue (`ABORT`, `ABSVAL` or switch to `RFA`).
+`OPT_METHOD=IGTS` and `QSD` were removed in 10/2026; they did not work.
+
+**Hessian.** The step uses an approximate Hessian, set up by
+`INIT_HESSIAN` and corrected every cycle by `HESS_UPDATE`:
+
+- `INIT_HESSIAN=SPECIAL` (default): a model Hessian (Lindh's for RIC
+  and CART, a constant diagonal for Z-matrices). `FCMINT` reads it from
+  the `FCMINT` file; the file must exist. `EXACT` computes it
+  analytically (SCF only; correlated methods get the SCF Hessian).
+  `MOPAC` has not been tested.
+- `EVAL_HESS=n` recomputes the exact Hessian every *n* cycles; `0` (the
+  default with `INIT_HESSIAN=EXACT`) computes it only at the start.
+  Giving `EVAL_HESS` implies `INIT_HESSIAN=EXACT`; `INIT_HESSIAN=SPECIAL`
+  with `EVAL_HESS>0` stops with an error. The exact Hessian pays off for
+  hard cases: the HOOH Z-matrix converges in 7 cycles with `EVAL_HESS=1`,
+  8 with `EVAL_HESS=2`.
+- `HESS_UPDATE`: `AUTO` (default) is `BFGS` for minima and `BOFILL` for
+  transition states. `POWELL` and `PSB` are the same update (Powell's
+  symmetric Broyden) and give identical results; `MS` is
+  Murtagh–Sargent; `BOFILL` mixes Powell and MS; `NONE` keeps the
+  starting Hessian. BFGS keeps the Hessian positive definite and is the
+  only one that reliably converged the HOOH Z-matrix; for RIC and CART
+  minima all of them converged in 5–10 cycles. For transition states use
+  the default (`BOFILL`) or `MS`, which can build up a negative
+  eigenvalue; `NONE` did not converge the HCN search. Before 10/2026
+  `NONE` silently meant `BFGS`, and `MS` crashed on its first update.
+
+**Step size.** `MAX_STEP` caps the step (millibohr, default 300).
+`STP_SIZ_CTL=TRUST_RADIUS` (default) adjusts a trust radius from the
+ratio of actual to predicted energy change (Ayala and Schlegel,
+*J. Chem. Phys.* **107**, 375 (1997)); `NORM` scales the whole step to
+`MAX_STEP` and `MAXIMUM` limits its largest component.
+
+**Transition states.** `OPT_METHOD=EVFTS` follows the lowest Hessian
+eigenvector uphill (`EIGENVECTOR=n` picks the *n*-th lowest instead),
+and the Hessian is then transformed to curvilinear coordinates
+automatically. The search needs a Hessian with the right negative
+eigenvalue, so start from an exact Hessian (`INIT_HESSIAN=EXACT`), a
+`FCMINT` file, or the reactant and product
+([](#transition-states-from-reactant-and-product)). From a model Hessian
+it can slide down to a minimum: the H<sub>2</sub>CO → HCOH guess ends at
+H<sub>2</sub>CO with RIC and CART, but finds the transition state in 4
+cycles with `INIT_HESSIAN=EXACT` (3 with `EVAL_HESS=1`). When a search
+converges at a point whose Hessian has no negative eigenvalue, the
+output says `WARNING: this transition state search converged to a point
+... It is NOT a transition state`. Test `126c` searches for the HCN ⇌ HNC
+transition state, starting from a Hessian placed with a `%FCMINT=` file
+directive (reference −93.1153442031):
 
 ```{literalinclude} ../../aces2/tests/fast/cases/126c/ZMAT
 :language: text
 ```
+
+Check any transition state with a frequency calculation (`VIB=EXACT`):
+it must have exactly one imaginary frequency.
 
 `RESTART` (on by default) lets an interrupted optimization or
 finite-difference job continue from its last saved step; see
@@ -326,7 +396,9 @@ during the run, `xjoda` prints a message and keeps the original set. If
 the iterative back transformation does not converge, the iterate closest
 to the requested step is used.
 
-**Transition states from reactant and product.** With
+### Transition states from reactant and product
+
+With
 `OPT_CONTROL=QST` or `LST` and `OPT_METHOD=EVFTS`, a transition state
 search with `GEOM_OPT=RIC` is guided by the synchronous transit path
 between a reactant and a product (Peng and Schlegel, *Isr. J. Chem.*
@@ -399,6 +471,82 @@ work directory makes `xjoda` compare every B-matrix element with central
 differences of the coordinate values and print the largest error for each
 kind of coordinate. At an exactly linear bend the angle has a kink, so a
 large error there is expected.
+
+### Reaction paths (IRC)
+
+The intrinsic reaction coordinate, the steepest-descent path in
+mass-weighted Cartesians from a transition state down to the minima on
+either side, is followed with the Gonzalez–Schlegel method
+(*J. Chem. Phys.* **90**, 2154 (1989); *J. Phys. Chem.* **94**, 5523
+(1990)). Each point is found by minimizing the energy on a hypersphere
+of radius *s*/2 around a pivot point half a step ahead, using analytic
+gradients and an updated Hessian. The search is run with
+`xa2proc PES_scan`, not `xaces2`, in a directory that holds `ZMAT` and
+`GENBAS`. The `ZMAT` is a frequency calculation (`VIB=EXACT`, so SCF
+for now) at the transition state, followed by an `*IRC` namelist:
+
+```text
+HCOH TS IRC
+C -0.70275405  0.07016197 0.0
+O  0.60245353 -0.06351953 0.0
+H  0.09745863  1.02683686 0.0
+H -1.28726224 -0.84915200 0.0
+
+*ACES2(CALC=SCF,BASIS=3-21G,COORD=CARTESIAN,VIB=EXACT,SCF_CONV=10)
+
+*IRC
+STEP_SIZE=0.1
+IRC_STEPS=40
+IRC_SEARCH=FORWARD
+```
+
+(`PES_scan` also has single points on a grid of normal-mode
+displacements and a direct-dynamics mode, chosen with `SCAN_TYPE` in a
+`*PES_SCAN` namelist; these have not been tested.)
+
+| `*IRC` keyword | Default | Meaning |
+|---|---|---|
+| `STEP_SIZE` | 0.1 | step *s* along the path, sqrt(amu)·bohr |
+| `IRC_SEARCH` | `FORWARD` | `FORWARD` or `REVERSE`: the two directions along the transition vector |
+| `IRC_STEPS` | 20 | number of points |
+| `IRC_SEARCHES` | 20 | constrained optimization cycles allowed per point |
+| `DO_NEXT` | `.FALSE.` | go on to the next point when one does not converge |
+| `SADDLE` | `.TRUE.` | start from a transition state (`.FALSE.`: from any point, along the gradient; not tested) |
+
+Which direction `FORWARD` takes depends on the sign of the transition
+vector, so run both. `xa2proc` first runs the frequency calculation,
+then one gradient calculation per constrained cycle. The output of
+calculation *N* goes to `out.N`; if a script `runaces2a` (reference
+point) or `runaces2b` (the other points) is on the `PATH` it is run
+instead, so a site can stage the calculations elsewhere. The file
+`IRC.map` collects, for every point, the path length *s*, the energy
+and the Cartesian geometry in Å. The search stops after `IRC_STEPS`
+points, when the path stops advancing (a minimum), or when the gradient
+falls below 10<sup>−`CONVERGENCE`</sup>.
+
+For the SCF/3-21G H<sub>2</sub>CO ⇌ trans-HCOH transition state
+(−113.0500520, imaginary frequency 2707i cm⁻¹) with `STEP_SIZE=0.1`,
+`REVERSE` reaches H<sub>2</sub>CO in 24 points (80 gradient
+calculations; −113.2217692 at *s* = 2.30, optimized minimum −113.2218200)
+and `FORWARD` reaches trans-HCOH in 20 points (71 calculations;
+−113.1462658 at *s* = 1.90, optimized minimum −113.1462870). The
+energy falls monotonically along both branches. The search stops when a
+new point lies less than 0.1 *s* from the previous one.
+
+Limitations: the points reuse the MOL file of the transition state, so
+they keep its point group; a transition state whose imaginary mode is
+not totally symmetric needs `SYMMETRY=NONE` in the frequency run.
+`INTEGRALS=ERD` is not supported (only `xvmol` reads the geometry of
+each point). The 0.3 step that was the default before 10/2026 is too
+long for paths that move hydrogens: the first constrained search
+walked back to the transition state.
+
+Before 10/2026 `PES_scan` could not run: it called the
+`runaces2a/b` scripts of a 2007 cluster, dropped the imaginary mode
+when it read the frequencies, used a zero Hessian, looped forever in
+the λ search, computed every energy and gradient with the basis
+functions (and, in `xvdint`, the whole geometry) left at the transition
+state, and let the points drift off the symmetry elements.
 
 ## Vibrational frequencies
 

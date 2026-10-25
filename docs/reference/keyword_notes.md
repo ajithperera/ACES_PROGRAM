@@ -529,15 +529,15 @@ Specifies whether or not the Hessian matrix is transformed (nonlinearly) to curv
 
 ## OPT_METHOD
 
-Specifies the geometry optimization strategy. =AUTO, =NR uses a straightforward Newton-Raphson minimum energy search, =RF A uses the Rational Function Approximation minimum energy search (and can be used when the initial structure is in a region where the number of negative Hessian eigenvalues is nonzero), =MANR uses a Morse-adjusted Newton-Raphson minimum energy search (and is very efficient if the Hessian is available), =EVFTS uses Cerjan-Miller eigenvector following for finding a transition state (can be started in a region where the Hessian index, the number of negative Hessian eigenvalues, is not equal to one), =MAEVFTS uses a Morse-adjusted eigenvector following for finding a transition state.
+Specifies the geometry optimization step algorithm. =AUTO (default) becomes =MANR. =NR is Newton-Raphson, =MANR Newton-Raphson with a Morse adjustment of bond stretches, =RFA the rational function step (safe when the Hessian has negative eigenvalues); these search for minima. =EVFTS (Baker eigenvector following) and =MAEVFTS (with the Morse adjustment) search for transition states. With `GEOM_OPT=CART` minimum searches always use RFA. IGTS and QSD were removed in 10/2026. See {doc}`../user/methods`.
 
 ## MAX_STEP
 
-Sets the largest step size in millibohr.
+Sets the largest step size in millibohr (default 300).
 
 ## STP_SIZ_CTL
 
-Controls how the step size is scaled. =TRUST RADIUS uses the dynamic scaling by Fletcher, =NORM uses the absolute step length, and =MAXIMUM uses the largest individual step in the internal coordinate space.
+Controls how the step size is scaled. =TRUST_RADIUS (default) adjusts a trust radius from the ratio of the actual to the predicted energy change (Ayala and Schlegel 1997), =NORM scales the whole step to MAX_STEP, and =MAXIMUM limits its largest component to MAX_STEP.
 
 ## EIGENVECTOR
 
@@ -559,15 +559,15 @@ Sets the maximum number of optimization cycles.
 
 ## INIT_HESSIAN
 
-Specifies the initial Hessian for geometry optimizations. =SPECIAL generates an approximate Hessian internally, =FCMINT imports an approximate Hessian from the FCMINT file, =MOPAC generates the FCMINT file by running mopac, and =EXACT uses analytical second derivatives to generate an exact Hessian (limited to SCF).
+Specifies the initial Hessian for geometry optimizations. =SPECIAL (default) is a model Hessian (Lindh's for RIC and CART optimizations, a constant diagonal for Z-matrices), =FCMINT reads it from the FCMINT file (which must exist), =MOPAC runs mopac to make the FCMINT file (untested), and =EXACT computes it analytically (SCF; correlated methods get the SCF Hessian).
 
 ## HESS_UPDATE
 
-Specifies the algorithm used to update the Hessian. =NONE uses the same Hessian throughout the optimization, =POWELL uses the Powell update, =BFGS uses the Broyden-Fletcher-Goldfarb-Shanno update, =MS uses the Murtagh-Sargent update, =BOFILL uses the Bofill mixture of Powell and Murtagh-Saregent, and =PSB uses the Powell symmetric Broyden update. =POWELL and =BOFILL are the defaults for minimum energy and transition state searches, respectively.
+Specifies the algorithm used to update the Hessian. =AUTO (default) is BFGS for minimum searches and BOFILL for transition state searches. =NONE keeps the starting Hessian, =POWELL is the Powell symmetric Broyden update (=PSB is the same update), =BFGS the Broyden-Fletcher-Goldfarb-Shanno update, =MS the Murtagh-Sargent update and =BOFILL Bofill's mixture of Powell and Murtagh-Sargent. Before 10/2026 =NONE could not be selected (it meant BFGS) and =MS crashed.
 
 ## EVAL_HESS
 
-Sets the cycle interval for recomputing the Hessian. For correlated calculations, the Hessian is evaluated only at the SCF level .
+Recompute the exact Hessian every N cycles; 0 computes it only at the first geometry. Setting it implies `INIT_HESSIAN=EXACT` (`INIT_HESSIAN=SPECIAL` with N > 0 is an error). For correlated calculations the Hessian is evaluated at the SCF level.
 
 # Geometry optimization: integral derivatives
 
