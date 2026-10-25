@@ -25,7 +25,7 @@ c Call to nl_init find the *IRC namelist if it is in the ZMAT
 
 C Step size control the size of the individual steps.
 
-      call nl_real('STEP_SIZE', 0.3D0, Stride)
+      call nl_real('STEP_SIZE', 0.1D0, Stride)
 
 c Starting point for the IRC search, it can be from the
 C saddle point or any other point on the IRC. The saddle

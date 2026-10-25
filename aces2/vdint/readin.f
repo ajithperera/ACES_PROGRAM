@@ -144,6 +144,202 @@ C MXCOOR : The number of Cartesian that correspond to MXCENT
 
       INTEGER MXCENT, MXCOOR
       PARAMETER (MXCENT=200, MXCOOR=3*MXCENT)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       PARAMETER (MXQN=8, MXAQN=MXQN*(MXQN+1)/2, MXAQNS=MXAQN*MXAQN)
       PARAMETER (D0 = 0.0D0, D1 = 1.0D0, D2 = 2.0D0, D4 = 4.0D0,
      &           DP25 = 0.25D0, DP5 = 0.5D0, DP75 = 0.75D0,
@@ -176,6 +372,7 @@ CCH
       COMMON /CCOM/ THRS, NHTYP, IBX
 C
       DIMENSION DEGEN(MXCENT), CORR(MXCENT,3), IFBA(MXCENT)
+      DIMENSION IFL2PES(500), XYZPES(3*MXCENT)
       DIMENSION A(MXPRIM), NCCF(MXPRIM), C(MXPRIM,MXCONT), JTRAN(MXCORB)
       DIMENSION KA(8,3), NB(8),
      &          JCO(MXQN), KHK(MXQN), MHK(MXQN), NUCMAX(MXQN),
@@ -622,6 +819,24 @@ CCH---------------------------------------------------------------------
                IF (ID3.NE.IBLANK) CORR(N,J) = CORR(N,J)/BOHRAD
                CORD(NMAX,J) = CORR(N,J)
   114       CONTINUE
+C
+C IRC/PES scans: the geometry is in the JOBARC COORD record and MOL is
+C that of the reference point (as in xvmol). Without this the gradient
+C was computed at the reference geometry. 10/2026.
+C
+            CALL GETREC(0,'JOBARC','IFLAGS2 ',LENPES,IFL2PES)
+            IF (LENPES .GT. 0) THEN
+               CALL GETREC(20,'JOBARC','IFLAGS2 ',500,IFL2PES)
+               CALL GETREC(0,'JOBARC','COORD   ',LENPES,XYZPES)
+               IF (LENPES .GT. 0 .AND.
+     &             IFL2PES(171) .EQ. 1) THEN
+                  CALL GETREC(20,'JOBARC','COORD   ',LENPES,XYZPES)
+                  DO J = 1, 3
+                     CORR(N,J)    = XYZPES(3*(NMAX-1)+J)
+                     CORD(NMAX,J) = CORR(N,J)
+                  ENDDO
+               ENDIF
+            ENDIF
   113    CONTINUE
          IF (IPRINT.GE.2) THEN
             WRITE(6,1293)

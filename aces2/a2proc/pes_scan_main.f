@@ -204,6 +204,7 @@
 
 
 
+
       Subroutine Pes_scan_main(Streaming,Stationary,Drive_IRC,Prop)
       Implicit Double Precision (A-H, O-Z) 
 C
@@ -1051,7 +1052,7 @@ c an ACES calculations) Lets run the reference point. For PES scans
 c on a user defined grid, the reference run is a single point 
 c energy or gradient calculation. 
 c
-         Call Runit("runaces2a")
+         Call Run_aces_point("runaces2a")
          call aces_init_rte
          call aces_com_parallel_aces
          call aces_ja_init
@@ -1127,7 +1128,7 @@ C
 C Run the point and read the energy and the gradients and Hessians
 C if available. 
 C
-         Call Runit("runaces2b")
+         Call Run_aces_point("runaces2b")
          Call aces_ja_init
 C
 C
@@ -1194,7 +1195,7 @@ C
 C
 C Run the point and read the energy and the gradients 
 C
-               Call Runit("runaces2b")
+               Call Run_aces_point("runaces2b")
                Call aces_ja_init
 C
                Call Get_flags(FlgACESElec, FlgACESGrad,  FlgACESHess,
@@ -1407,9 +1408,12 @@ C
            More_pts_left = .True.
            End_point     = .False.
            Begin_IRC     = .True.
-           Opt_tol       = Iflags2(48)
+C Gradient tolerance 10**(-CONVERGENCE) (was Iflags2(48), an unset
+C integer, so the minimum test never fired). 10/2026.
+           Opt_tol       = 10.0D0**(-Iflags(48))
            Max_Cycles    = Max_IRC_Searches 
            Stride_total  = 0.0D0
+           Stride_Prev   = 0.0D0
            Stride_Tol    = 1.0D-04
            Ln_Intrp_Tol  = 5.0D0
            Hess_Eval_Tol = 1.0D-09
@@ -1762,14 +1766,29 @@ C
 C
                   If (N_IRC_Step .GE. Max_IRC_Steps) 
      &                More_pts_left = .False.
+C
+C At a minimum the constrained searches only return the same point
+C (steps of 1E-3 of the stride for HCOH -> H2CO); stop there. 10/2026.
+C
+                  If (Stride_Total - Stride_Prev .LT. 0.1D0*Stride) Then
+                      Write(6,"(2a,F10.5,a)") " The IRC point moved",
+     &                   " less than 0.1 step: minimum reached at s =",
+     &                   Stride_Total, " sqrt(amu)*bohr."
+                      End_point = .TRUE.
+                  Endif
+                  Stride_Prev = Stride_Total
 C       
               Endif
 C
            Enddo                     
            Write(6,*) 
-           Write(6,"(a,I3,a)") " The IRC calculation completed the", 
+           If (End_point) Then
+              Write(6,"(2a,I3,a)") " The IRC calculation reached a",
+     &                     " minimum after", N_IRC_Step, " points."
+           Else
+              Write(6,"(a,I3,a)") " The IRC calculation completed the", 
      &                           N_IRC_Step," requested steps." 
-     &                     
+           Endif
            Write(6,"(a)") "          *------------------------*" 
 C
       Endif

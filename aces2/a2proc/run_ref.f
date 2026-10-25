@@ -53,7 +53,7 @@ C
 C    
 C Run the point and read the energy and the gradients
 C
-      Call Runit("runaces2b")
+      Call Run_aces_point("runaces2b")
       Call aces_ja_init
 
       Return

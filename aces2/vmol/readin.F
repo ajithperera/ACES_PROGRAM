@@ -800,6 +800,20 @@ C
         CORD(NMAX,J)=CORD(NMAX,J)/0.5291771
 1148    CONTINUE
       ENDIF
+C
+C IRC/PES scans: the geometry comes from the JOBARC COORD record and the
+C MOL file is that of the reference point. It must replace CORD here,
+C before CORD is copied to the basis function centers (CENT); it used
+C to be done only after that, so the nuclei moved and the basis
+C functions stayed at the reference geometry. 10/2026.
+C
+      Call GETREC(0,"JOBARC","COORD   ",Length,CORR)
+      If (Length .GT. 0 .AND. Iflags2(h_IFLAGS2_pes_scan) .EQ. 1) Then
+         Call GETREC(20,"JOBARC","COORD   ",Length,CORR)
+         DO J = 1, 3
+            CORD(NMAX,J) = CORR(3*(NMAX-1)+J)
+         ENDDO
+      Endif
 114   CONTINUE
 C-----------------------------------------------------------------------
 C     End loop over symmetry inequivalent centers of each type.
@@ -1379,18 +1393,7 @@ C are used. For those cases, the geometries are read from the
 C JOBARC file and the MOL file should correspond to the IRC reference
 C point (usually the TS), 04/2019. Ajith Perera.
 
-      Call GETREC(0,"JOBARC","COORD   ",Length,CORR)
-      Ipes_scan =  Iflags2(h_IFLAGS2_pes_scan)
-      If (Length .GT. 0 .AND. Ipes_scan .EQ. 1) Then 
-         Call GETREC(20,"JOBARC","COORD   ",Length,CORR)
-         Icoff = 0
-         Do Icent = 1, Nmax
-            Do Ixyz = 1,3
-               Cord(Icent,Ixyz) = Corr(icoff+Ixyz)
-            Enddo 
-            Icoff=Icoff+ 3
-         Enddo 
-      Endif 
+C (The COORD record is now applied where the MOL centers are read.)
 
       WRITE(FILEOUT,'(A)') '* geometry'
       NNUC = 0

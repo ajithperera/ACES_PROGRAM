@@ -235,6 +235,7 @@ c machsp.com : end
 
 
 
+
 c This common block contains the IFLAGS and IFLAGS2 arrays for JODA ROUTINES
 c ONLY! The reason is that it contains both arrays back-to-back. If the
 c preprocessor define MONSTER_FLAGS is set, then the arrays are compressed
@@ -1062,7 +1063,7 @@ C
       Write(6,"(a)") " @-Run_a2: call to runaces2b"
       Write(6,"(a)") " The coordinates of the current point"
       Write(6, "(3F17.13)") (Coords(i),i=1,3*Nreals)
-       Call Runit("runaces2b")
+       Call Run_aces_point("runaces2b")
 C
        Call aces_ja_init
 C

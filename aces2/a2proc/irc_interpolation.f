@@ -99,7 +99,7 @@ C Eqns. 12-15 in Gonzales and Schlegel, JCP,90,2154,1989.
       If ((Dabs(Theta) .Gt. Acut) .AND. 
      &   (Dabs(Ang1-Theta)) .GT. Acut) Then
           Error = Theta*Todeg
-          Write(6,"(a,F10.5,a,F10.5,a)") " The angle ", Error,
+          Write(6,"(a,F10.5,2a,F10.5,a)") " The angle ", Error,
      &                                   " exceed the allowed",
      &                                   " limit: ",Acut*Todeg,
      &                                   " Interpolation is skipped"
