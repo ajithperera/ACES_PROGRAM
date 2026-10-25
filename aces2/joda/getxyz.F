@@ -43,7 +43,7 @@ C
      $   XYZTol
 
       double precision rxyz(3,mxatms), pxyz(3,mxatms)
-      integer izl(2,7), iStruct
+      integer izl(2,7), iStruct, nExtra
       CHARACTER*(linelen) ZLINE
       logical btmp, bStruct, bAtom
 
@@ -135,6 +135,7 @@ c   o flush remaining atom slots
 c   o read additional structures into rxyz until we hit a namelist
 c     (iStruct corresponds to the structure we expect to read)
       iStruct = 1
+      nExtra  = 0
       bStruct = .true.
       do while (bStruct.and.iStruct.lt.3)
          iStruct = iStruct + 1
@@ -200,6 +201,7 @@ c               o compare this structure to the primary structure
 c        end do while (bAtom)
          end do
          if (bStruct) then
+            nExtra = nExtra + 1
             if (iStruct.eq.2) then
 c            o read the next line and see if this structure was the TS or PR
                read(luz,'(a)') zline
@@ -258,8 +260,23 @@ c        end if (bStruct)
 c     end do while (bStruct)
       end do
 
-      If (IFLAGS2(h_IFLAGS2_opt_control) .EQ. 1)
-     &    Call Gen_curr_coords(Rxyz, Pxyz, q, Nx, .TRUE.)
+c   o LST/QST with only a reactant (the main geometry) and a product
+c     (QST2): the starting geometry is the LST midpoint. 10/2026.
+      If ((IFLAGS2(h_IFLAGS2_opt_control).EQ.1 .OR.
+     &     IFLAGS2(h_IFLAGS2_opt_control).EQ.2) .AND. nExtra.EQ.1) Then
+         call dcopy(nx,rxyz,1,pxyz,1)
+         call dcopy(nx,q,1,rxyz,1)
+         write(6,"(a)") "  Two structures given: the main geometry is"//
+     &                  " the reactant, the second the product."
+         call lst_guess(rxyz,pxyz,q,natoms,0.5d0)
+         call putrec(1,'JOBARC','RXSTRUCT',nx*iintfp,rxyz)
+         call putrec(1,'JOBARC','PRSTRUCT',nx*iintfp,pxyz)
+         call putrec(1,'JOBARC','CUSTRUCT',nx*iintfp,q)
+         write(6,"(a)") "  Starting geometry (LST midpoint, Angstrom):"
+         do ndx = 1, natoms
+            write(6,"(2x,a5,3F14.8)") zsym(ndx),(q(i,ndx)*btoa,i=1,3)
+         end do
+      End If
 
       RETURN
       END

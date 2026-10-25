@@ -373,6 +373,27 @@ LST in 16, to the transition state that an exact-Hessian search finds
 from the same guess. Plain `EVFTS` from the guess wanders off. Before
 10/2026 this path was broken for Cartesian input.
 
+Without a guess for the transition state (QST2), give only two
+structures: the main geometry is the reactant, and the product follows
+after a label line and a blank line. `xjoda` then starts from the
+midpoint of the linear synchronous transit path (Halgren and Lipscomb,
+*Chem. Phys. Lett.* **49**, 225 (1977)): the product is rotated onto the
+reactant, the interatomic distances are interpolated halfway, and the
+Cartesians are fitted to them by least squares. The search continues as
+above. For H2CO → trans-HCOH, QST2 takes 8 cycles (LST 9) to the
+same transition state as the three-structure input. For vinyl alcohol →
+acetaldehyde it finds the nonplanar 1,3-hydrogen shift transition state
+in 22 cycles (one imaginary frequency, 2513i cm⁻¹). The planar
+three-structure guess for that reaction leads to a different saddle
+point, where H stays on O and the mode is out of plane (1491i cm⁻¹).
+
+The midpoint has every symmetry that the reactant and product share
+with the atoms in the given order, and the search keeps that symmetry.
+When the transition state is less symmetric, QST2 cannot reach it. An
+example is H2CO → H2 + CO, where the midpoint is C2v but the transition
+state is planar Cs: QST2 ends at a C2v point with three imaginary
+frequencies. Use three structures in such cases.
+
 For checking the coordinate code, an empty file named `RIC_FDCHECK` in the
 work directory makes `xjoda` compare every B-matrix element with central
 differences of the coordinate values and print the largest error for each

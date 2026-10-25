@@ -519,7 +519,7 @@ Specifies the scope of coordinate optimizations. This keyword is automatically s
 
 ## OPT_CONTROL
 
-=CONSTRAINED keeps the coordinates listed in the `*CONSTRAINS` block at their starting values (RIC and CART optimizations; see {doc}`../user/methods` for the format). =LST and =QST guide a transition state search (`OPT_METHOD=EVFTS`) along a linear or quadratic synchronous path between the reactant and product structures given after the main geometry (for Cartesian input with `GEOM_OPT=RIC` see {doc}`../user/methods`).
+=CONSTRAINED keeps the coordinates listed in the `*CONSTRAINS` block at their starting values (RIC and CART optimizations; see {doc}`../user/methods` for the format). =LST and =QST guide a transition state search (`OPT_METHOD=EVFTS`) along a linear or quadratic synchronous path between the reactant and product structures given after the main geometry (or, with only a reactant as the main geometry and a product, from their LST midpoint; for Cartesian input with `GEOM_OPT=RIC` see {doc}`../user/methods`).
 
 ## CURVILINEAR
 
