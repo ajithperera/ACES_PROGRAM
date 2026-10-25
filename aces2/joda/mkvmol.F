@@ -467,7 +467,7 @@ C
           Do Iatm = 1, NAtms
              If (AtNr(Iatm).EQ.0) Katm = Katm + 1
              Do Jatm = 1, Num_unique
-                Ilen   = Index(Basnam_hold(Jatm), ":")
+                Ilen   = Index(Ecpnam_hold(Jatm), ":")
                 Symbol = Ecpnam_hold(Jatm)(1:Ilen-1)
                 JAtnr  = ATOMNUMB(Symbol)
                 If (AtNr(Iatm) .EQ. JAtNr) Then

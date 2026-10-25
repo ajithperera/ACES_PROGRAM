@@ -91,7 +91,7 @@ Sets the spin multiplicity (2 S + 1).
 
 ## BASIS
 
-Defines the name of the basis set to use for all atoms in the molecule. If BASIS=SPECIAL, then each atom (in coordinate order) must be specified after the *ACES2 namelist.
+Defines the name of the basis set to use for all atoms in the molecule. If BASIS=SPECIAL, the basis is given after the *ACES2 namelist, either one line per atom (in coordinate order, dummy atoms skipped) or as a count of elements followed by one line per element; see [](#basis-by-atom).
 
 ## SPHERICAL
 

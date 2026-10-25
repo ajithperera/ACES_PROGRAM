@@ -259,29 +259,137 @@ done
 
 ### Choosing a basis
 
-`BASIS=name` uses the same basis on every atom. `xjoda` looks up the entry
-`XX:name` in `GENBAS` for each element `XX`. For example, `BASIS=PVDZ` needs
-`H:PVDZ`, `O:PVDZ`, and so on.
+There are three ways to give the basis set.
 
-With `BASIS=SPECIAL` you give the basis atom by atom. After the namelist
-leave one blank line, then write one line per atom in Z-matrix order,
-skipping dummy atoms. Each line holds the full `GENBAS` name:
+**One basis for all atoms.** `BASIS=name` uses the same basis on every
+atom. `xjoda` looks up the entry `XX:name` in `GENBAS` for each element
+`XX`. For example, `BASIS=CC-PVDZ` needs `C:CC-PVDZ`, `O:CC-PVDZ`,
+`H:CC-PVDZ`, and so on.
 
 ```text
-*ACES2(CALC=CCSD,BASIS=SPECIAL)
+Formaldehyde
+C   0.000000   0.000000   0.000000
+O   0.000000   0.000000   1.205000
+H   0.000000   0.940000  -0.580000
+H   0.000000  -0.940000  -0.580000
 
-O:PVTZ
-H:PVDZ
-H:PVDZ
+*ACES2(CALC=SCF,BASIS=CC-PVDZ)
 
 ```
 
-`xjoda` does not check that the element in each line matches the atom on
-that line of the Z-matrix. To see which basis sets exist for an element,
-search `GENBAS` for `XX:`.
+With `BASIS=SPECIAL` you name the basis yourself, after the namelist,
+in one of two forms.
 
-With `ECP=ON`, the ECP names (from `ECPDATA`) follow the same way: after the
-basis lines (if any), one blank line, then one line per atom.
+**One line per atom.** Leave one blank line after the namelist, then write
+one line per atom in the order of the geometry, skipping dummy atoms. Each
+line holds the full `GENBAS` name. Use this form when atoms of the same
+element need different basis sets, or with ghost atoms.
+
+```text
+*ACES2(CALC=SCF,BASIS=SPECIAL)
+
+C:CC-PVDZ
+O:CC-PVTZ
+H:3-21G
+H:3-21G
+
+```
+
+**One line per element.** For larger molecules, give each element once.
+Leave one blank line after the namelist, then a line with the number of
+elements (an integer in columns 1–4), then one line per element, in any
+order. `xjoda` gives every atom the basis of its element. This input is
+the same as the one above:
+
+```text
+*ACES2(CALC=SCF,BASIS=SPECIAL)
+
+3
+O:CC-PVTZ
+H:3-21G
+C:CC-PVDZ
+
+```
+
+Dummy atoms are not counted and get no line, so this works with any
+Z-matrix:
+
+```text
+NH3 with a dummy atom on the C3 axis
+X
+N 1 RN
+H 2 NH 1 A
+H 2 NH 1 A 3 T
+H 2 NH 1 A 3 MT
+
+RN=1.0
+NH=1.012
+A=112.0
+T=120.0
+MT=-120.0
+
+*ACES2(CALC=SCF,BASIS=SPECIAL)
+
+2
+H:CC-PVDZ
+N:CC-PVTZ
+
+```
+
+Rules for the per-element form:
+
+- List every element in the molecule exactly once. A missing or repeated
+  element is not reported, and the basis sets end up on the wrong atoms.
+- If the number on the first line equals the number of lines in the
+  geometry (dummy atoms included), `xjoda` reads the lines that follow as
+  one per atom, in geometry order. This happens when every atom is a
+  different element (CO, HCN, ...). For those molecules, write the lines
+  in geometry order, or use the one-line-per-atom form.
+
+`xjoda` does not check that the element in each line matches the atom it
+is given to. To see which basis sets exist for an element, search `GENBAS`
+for `XX:`.
+
+### ECP names
+
+With `ECP=ON` (which needs `BASIS=SPECIAL`), the ECP names from `ECPDATA`
+follow the basis lines: one blank line, then the ECP names in either of the
+same two forms. Atoms without an ECP get `XX:NONE`. Both forms below
+describe CuH₂⁻ with the Hay–Wadt ECP on copper:
+
+```text
+CuH2- with an ECP on Cu
+CU  0.000000   0.000000   0.000000
+H   0.000000   0.000000   1.520000
+H   0.000000   0.000000  -1.520000
+
+*ACES2(CALC=SCF,BASIS=SPECIAL,ECP=ON,CHARGE=-1)
+
+CU:HAY-WADT-VDZ
+H:CC-PVDZ
+H:CC-PVDZ
+
+CU:HAY-WADT-VDZ
+H:NONE
+H:NONE
+
+```
+
+```text
+*ACES2(CALC=SCF,BASIS=SPECIAL,ECP=ON,CHARGE=-1)
+
+2
+CU:HAY-WADT-VDZ
+H:CC-PVDZ
+
+2
+H:NONE
+CU:HAY-WADT-VDZ
+
+```
+
+The basis and ECP sections are independent: either can use either form,
+and the elements need not be in the same order in both.
 
 ### GENBAS and ZMAT.BAS
 
