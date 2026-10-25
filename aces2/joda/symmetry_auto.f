@@ -414,7 +414,7 @@ C
       DOSTR(1)='X'
       DOSTR(2)='Y'
       DOSTR(3)='Z'
-      TSSEARCH = (INR .EQ. 4 .OR. INR .EQ. 5 .OR. INR .EQ. 6)
+      TSSEARCH = (INR .EQ. 4 .OR. INR .EQ. 5)
       CALL IZERO(IORBPOP,MXATMS)
       CALL IZERO(IORBREF,MXATMS)
 

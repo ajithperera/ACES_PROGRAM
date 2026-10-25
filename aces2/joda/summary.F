@@ -133,6 +133,25 @@ C
  1322    FORMAT(T3,' Convergence criterion satisfied.  Optimization ',
      &      'completed.')
          WRITE(6,1321)
+C
+C A transition state search can converge to a minimum (no negative
+C eigenvalue of the model Hessian); say so. 10/2026.
+C
+         IF (IFLAGS(h_IFLAGS_opt_method) .EQ. 4 .OR.
+     &       IFLAGS(h_IFLAGS_opt_method) .EQ. 5) THEN
+            CALL GETREC(0,'JOBARC','TSNNEGEV',LENNEG,NNEG)
+            IF (LENNEG .GT. 0) THEN
+               CALL GETREC(20,'JOBARC','TSNNEGEV',1,NNEG)
+               IF (NNEG .EQ. 0) WRITE(6,1327)
+            ENDIF
+         ENDIF
+ 1327    FORMAT(T3,' WARNING: this transition state search converged',
+     &          ' to a point',/,T3,' where the Hessian has no',
+     &          ' negative eigenvalue, most likely a minimum.',/,T3,
+     &          ' It is NOT a transition state. Start closer to the',
+     &          ' saddle point,',/,T3,' use INIT_HESSIAN=EXACT, or',
+     &          ' give the reactant and product (OPT_CONTROL=QST).',/,
+     &          80('-'))
 
          CALL ADM
 

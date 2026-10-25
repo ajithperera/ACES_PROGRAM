@@ -280,6 +280,7 @@ c     Maximum string length of absolute file names
 
 
 
+
 c This common block contains the IFLAGS and IFLAGS2 arrays for JODA ROUTINES
 c ONLY! The reason is that it contains both arrays back-to-back. If the
 c preprocessor define MONSTER_FLAGS is set, then the arrays are compressed
@@ -363,6 +364,15 @@ C
      $      ' Murtagh-Sargent update using ',
      &      'last two gradients and previous step.')
 C
+C MSP_PSB needs SCRATCH(N4) = DG - H DX; only the Bofill branch used to
+C build it, so MS (NaN Hessian) and PSB worked on garbage. 10/2026.
+         N2 = NXM6 + 1
+         N3 = 2*NXM6+1
+         N4 = 3*NXM6+1
+         CALL MODMATMUL(SCRATCH(N2),H,STEP,NXM6,NXM6,1,NXM6,NXM6,1)
+         CALL DCOPY(NXM6, V, 1, SCRATCH(N3), 1)
+         CALL DAXPY(NXM6, -ONE, SCRATCH(1), 1, SCRATCH(N3), 1)
+         CALL VADD(SCRATCH(N4),SCRATCH(N3),SCRATCH(N2),NXM6,-1.D0)
          POWEL_DONE = .TRUE.
          MSPORPSB   = "MSP   "
          CALL MSP_PSB(V, H, SCRATCH, STEP, TBT, TOLRNCE,
@@ -412,6 +422,15 @@ C
      $      ' Powell-Symmetric-Broyden update using ',
      &      'last two gradients and previous step.')
 C
+C MSP_PSB needs SCRATCH(N4) = DG - H DX; only the Bofill branch used to
+C build it, so MS (NaN Hessian) and PSB worked on garbage. 10/2026.
+         N2 = NXM6 + 1
+         N3 = 2*NXM6+1
+         N4 = 3*NXM6+1
+         CALL MODMATMUL(SCRATCH(N2),H,STEP,NXM6,NXM6,1,NXM6,NXM6,1)
+         CALL DCOPY(NXM6, V, 1, SCRATCH(N3), 1)
+         CALL DAXPY(NXM6, -ONE, SCRATCH(1), 1, SCRATCH(N3), 1)
+         CALL VADD(SCRATCH(N4),SCRATCH(N3),SCRATCH(N2),NXM6,-1.D0)
          POWEL_DONE = .FALSE.
          MSPORPSB   = "PSB   "
          CALL MSP_PSB(V, H, SCRATCH, STEP, TBT, TOLRNCE,

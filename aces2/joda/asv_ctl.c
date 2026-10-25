@@ -213,7 +213,7 @@ const ASV_nl_t ASV_nl[] =
 {/*104*/ "IPSI",	"PSI#",		h_ICHAR_handle,	0,	""},
 {/*105*/ "IGEOPT",	"GEOM_OPT#",	h_ICHAR_handle,	0,	""},
 {/*106*/ "IEXTRN",	"EXTERNAL#",	h_ICHAR_handle,	2,	""},
-{/*107*/ "IHESUP",	"HESS_UPD#ATE",	h_ICHAR_handle,	0,	""},
+{/*107*/ "IHESUP",	"HESS_UPD#ATE",	h_ICHAR_handle,	6,	""},
 {/*108*/ "IINHES",	"INIT_HESS#IAN",h_ICHAR_handle,	0,	""},
 {/*109*/ "IEXTRP",	"EXTRAP#OLATE",	h_ICHAR_handle,	0,	""},
 {/*110*/ "","",0,0,""},
@@ -651,6 +651,7 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "MS",		/* 3 */
                 "BOFILL",	/* 4 */
                 "PSB",		/* 5 */
+                "AUTO",		/* 6 - BFGS for minima, BOFILL for TS */
                 ""
             };
             asv_update_handle(index,value,handles);
@@ -695,8 +696,6 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "MANR",		/* 3 */
                 "EVFTS",	/* 4 */
                 "MAEVFTS",	/* 5 */
-                "IGTS",		/* 6 - used to be ENERONLY? */
-                "QSD",		/* 7 */
                 ""
             };
             asv_update_handle(index,value,handles);

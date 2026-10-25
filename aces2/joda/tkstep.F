@@ -13,7 +13,7 @@ C
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
 C
       DOUBLE PRECISION LMBDAN, LMBDAP
-      LOGICAL MORSE, TS, NRORMANR, RFA, EVFTS, IGTS, QSD,
+      LOGICAL MORSE, TS, NRORMANR, RFA, EVFTS,
      &        QSTLST_CLIMB, NOT_FOUND
 C
 #include "mxatms.par"
@@ -178,7 +178,7 @@ C
       CALL ANLYSHES(HESMOD, DIAGHES, RFAMAT, EVRFAMAT, HES,
      &              GRDMOD, SCRATCH, PMAT, VEC, NOPT, NX,
      &              NCYCLE, INR, IVEC, IMODE, IDIE, TS,
-     &              NRORMANR, RFA, EVFTS, IGTS, QSD, LUOUT,
+     &              NRORMANR, RFA, EVFTS, LUOUT,
      &              QSTLST_CLIMB, NATOMS, IPRNT)
 C
 C
@@ -281,12 +281,6 @@ C
      &                             LMBDAN, LMBDAP, STPMAX, MORSE, 
      &                             IMODE, NX, LUOUT, IBREAK, NOPT,
      &                             QSTLST_CLIMB)
-C         
-      ELSE IF (IGTS .OR. QSD) THEN
-C     
-         CALL QSDMINORTS(SCRATCH, GRDMOD, HESMOD, DIAGHES, RFAMAT, 
-     &                 EVRFAMAT, STPMAX, EPS, IGTS, QSD, NX, NOPT,
-     &                 NCYCLE)
 C
       ENDIF
 C    

@@ -2394,8 +2394,10 @@ C The best Hessian update that works for all is not known. I
 C find Bofill mixture of Powell and Murtagh-Sargent seems to
 C work better, 07/2013. Ajith Perera; not so sure anymore
 C for minima reverting back to BFGS for minima. April/2017.
+C The default is AUTO (6); 0 is NONE and used to be overwritten here,
+C so HESS_UPDATE=NONE could not be chosen. 10/2026.
 C
-         if (ioppar(h_IOPPAR_hess_update).eq.0) then
+         if (ioppar(h_IOPPAR_hess_update).eq.6) then
             if (ioppar(h_IOPPAR_opt_method).le.3) then
 CSSS; on 07/2013               ioppar(h_IOPPAR_hess_update) = 2
                ioppar(h_IOPPAR_hess_update) = 2

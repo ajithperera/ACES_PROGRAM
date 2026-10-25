@@ -2,7 +2,7 @@
       SUBROUTINE ANLYSHES(HESMOD, DIAGHES, QST_TANGENT, LST_TANGENT,
      &                    HES, GRDMOD, SCRATCH, PMAT, VEC, NOPT, NX,
      &                    NCYCLE, INR, IVEC, IMODE, IDIE, TS, 
-     &                    NRORMANR, RFA, EVFTS, IGTS, QSD, LUOUT,
+     &                    NRORMANR, RFA, EVFTS, LUOUT,
      &                    QSTLST_CLIMB, NATOMS,
      &                    IPRNT)
 C
@@ -16,7 +16,7 @@ C GRDMOD : The symmetrized gradients
 C
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
 C
-      LOGICAL TS, NRORMANR, RFA, EVFTS, IGTS, QSD
+      LOGICAL TS, NRORMANR, RFA, EVFTS
       LOGICAL LST, QST, QSTORLST, QSTLST_CLIMB, FAILED, RX_PR_EXIST
 C
 #include "jodaflags.com"
@@ -33,8 +33,6 @@ C
       NRORMANR = (INR .EQ. 1 .OR. INR .EQ. 3)
       RFA      = (INR .EQ. 2)
       EVFTS    = (INR .EQ. 4 .OR. INR .EQ. 5)
-      IGTS     = (INR .EQ. 6)
-      QSD      = (INR .EQ. 7)
       QSTLST_CLIMB = .FALSE. 
       RX_PR_EXIST  = .FALSE. 
       QST          = .FALSE.
@@ -72,6 +70,8 @@ C
       Write(6,*)
       WRITE(LUOUT, 2102) INEG
  2102 FORMAT(T3,' There are ',i2,' Negative Eigenvalues.')
+C For the converged-TS check in SUMMARY. 10/2026.
+      CALL PUTREC(1,'JOBARC','TSNNEGEV',1,INEG)
 C
       CALL GETREC(0,'JOBARC','RXSTRUCT',ILENGTH1,TMP)
       CALL GETREC(0,'JOBARC','PRSTRUCT',ILENGTH2,TMP)
