@@ -253,33 +253,6 @@ c
             write(6,*) ' Ready to process final results: gen_quartic '
             call write_quartic(icore(iscr), nmode)
 c
-         elseif(iflags2(h_IFLAGS2_prep_vibron) .eq. 1) then
-c
-         write(6,*) ' Ready to process final results: prep_vibron '
-c
-         CALL GETREC(-1,'JOBARC',DOIT//'NIRX',1,NIRREPF)
-         CALL GETREC(20,'JOBARC','NUMVIBRT',1, NMODE)
-
-C
-            Ifreq = IONE 
-         inumirpf = ifreq + NMODE*iintfp
-             iscr = inumirpf + nirrepf*iintfp
-C
-c         call write_eff(icore(ifreq), numvib, nirrepf,
-c     $        icore(inumirpf), icore(iscr))
-C
-#ifdef _DEBUG_LVL0
-         write(6,*) ' nirrepf, nmode, ifreq, iscr ',
-     $            nirrepf, nmode, ifreq, iscr
-#endif
-
-         call write_pntheff(icore(iscr))
-         write(6,*) ' Finished writing PNTHEFF file '
-         call write_vibronic(icore(ifreq), nmode, icore(iscr))
-         write(6,*) ' Finished writing Vibronic_Coupling file '
-         call write_vibron_input(icore(ifreq), nmode, icore(iscr))
-         write(6,*) ' Finished writing Vibron_Input file '
-
          else
             write(6,*) ' Unexpected case in symcor_muldim '
             call aces_exit(1)

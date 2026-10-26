@@ -85,7 +85,7 @@ c
       if (mrcc) then
          write(6,*) ' @aces2.main: enter mrcc_branch '
          call mrcc_branch
-       else if (iflags2(h_IFLAGS2_prep_vibron).eq.1 .or.
+       else if (
      $         iflags2(h_IFLAGS2_geo_sample).eq.1 .or.
      $         iflags2(h_IFLAGS2_gen_quartic).eq.1 .or.
      $          iflags2(h_IFLAGS2_scan_normal).eq.1 ) then

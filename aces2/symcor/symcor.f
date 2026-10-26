@@ -204,6 +204,7 @@
 
 
 
+
 C
 C THIS PROGRAM DETERMINES SYMMETRY ADAPTED COORDINATES WHICH
 C ARE USED FOR NUMERICAL DERIVATIVE CALCULATIONS.  IT
@@ -278,8 +279,7 @@ C Personaly, I think their should not be such a distinction and a one
 C general routine can handle both but I am not here only to correct past
 C mistakes. Ajith Perera 04/07.
 C
-      FDS_OF_MATELMS = (Iflags2(156) .EQ. 1
-     $     .OR. Iflags2(158) .EQ. 1
+      FDS_OF_MATELMS = (Iflags2(158) .EQ. 1
      $     .OR. Iflags2(160) .EQ. 1
      $     .OR. Iflags2(165) .EQ. 1 )
 

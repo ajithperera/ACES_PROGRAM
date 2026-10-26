@@ -771,17 +771,9 @@ In EOM-EE (`xvee`, Davidson solver), stores up to four left and right vectors pe
 
 Set internally by `xa2proc PES_scan` (IRC and scans) so that the integral and CC codes take the geometry of each point from JOBARC. Not meant to be set in `ZMAT`.
 
-## PREP_VIBRON
-
-Runs single points at displacements along the normal modes (from a previous frequency calculation, record `FREQS_0`) to build a vibronic-coupling model Hamiltonian, and writes `Vibronic_Coupling` and an input for the vibronic code (`Vibron_Input`). The displacement grid is chosen with `GRID_VIBRON`. Part of M. Nooijen's vibronic tools; not tested.
-
-## GRID_VIBRON
-
-Displacement grid for `PREP_VIBRON` (built in `symcor/setpts4_heff.F`). Every grid has +Q<sub>i</sub> along each mode, and all but `GRID_2` also −Q<sub>i</sub>. Mode pairs (±Q<sub>i</sub>, ±Q<sub>j</sub>) of the same symmetry are added for `GRID_4`, `GRID_5`, `GRID_7`, `GRID_8`, `GRID11` and `GRID12`; pairs of different symmetry for `GRID_5`, `GRID_8` and `GRID12`; pairs within degenerate irreps for `GRID_9` and `GRID10`. ±2Q<sub>i</sub> (for cubic and quartic couplings) is added for `GRID_6` and above except `GRID_9`, and general (aQ<sub>i</sub>, bQ<sub>j</sub>) points for `GRID10` and above. The value stored in the code is one less than the number in the name (`GRID_1` = 0).
-
 ## SCAN_NORMAL
 
-Scan of the potential surface along a direction in reduced normal coordinates, read from the file `SCAN_INFO` (scan range and step, number of modes, reference energy, one displacement per mode; see `symcor/setpts4_pes_scan.F`). Results go to `SCANHEFF` and `SCANPLOT`. Not tested.
+Scan of the potential surface along a direction in reduced normal coordinates, read from the file `SCAN_INFO` (scan range and step, number of modes, reference energy, one displacement per mode; see `symcor/setpts4_pes_scan.F`). Results go to `SCANHEFF` and `SCANPLOT`. Part of M. Nooijen's vibronic tools. Not tested.
 
 ## GEO_SAMPLE
 

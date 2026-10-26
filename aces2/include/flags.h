@@ -513,11 +513,7 @@
 #define h_IOPPAR_single_store	255
 #define h_IFLAGS2_single_store	155
 
-#define h_IOPPAR_prep_vibron    256
-#define h_IFLAGS2_prep_vibron   156
 
-#define h_IOPPAR_grid_vibron    257
-#define h_IFLAGS2_grid_vibron   157
 
 #define h_IOPPAR_scan_normal    258
 #define h_IFLAGS2_scan_normal   158

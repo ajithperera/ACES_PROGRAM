@@ -369,8 +369,8 @@ const ASV_nl_t ASV_nl[] =
 {/*253*/ "ISCF",	"SCF_TYPE#",	h_ICHAR_handle,	0,	""},
 {/*254*/ "IDIRCT",	"DIRECT#",	h_ICHAR_handle,	0,	""},
 {/*255*/ "BSNGST",	"SINGLE_STOR#E",h_ICHAR_handle,	0,	""},
-{/*256*/ "IPRVIB",      "PREP_VIB#RON", h_ICHAR_handle, 0,      ""},
-{/*257*/ "IGRVIB",      "GRID_VIB#RON", h_ICHAR_handle, 0,      ""},
+{/*256*/ "","",0,0,""},
+{/*257*/ "","",0,0,""},
 {/*258*/ "ISCAN",       "SCAN_NORMAL#", h_ICHAR_handle, 0,      ""},
 {/*259*/ "ICURVN",      "NORMAL_CURVY#",h_ICHAR_handle, 0,      ""},
 {/*260*/ "ISAMPLE",     "GEO_SAMPLE#"  ,h_ICHAR_handle, 0,      ""},
@@ -1232,29 +1232,6 @@ void asv_handle_proc(const f_int * index, const char * value)
         {
             const char *handles[] = { "NONE","BB-SD", "BFGS", "FULL-NR",
                                       "AMSGRAD","ROTGRAD","RFO", ""};
-            asv_update_handle(index,value,handles);
-            break;
-        }
-
-        case h_IOPPAR_grid_vibron:
-        {
-            const char *handles[] =
-            {
-                "GRID_1",     /* 1 */
-                "GRID_2",     /* 2 */
-                "GRID_3",     /* 3 */
-                "GRID_4",     /* 4 */
-                "GRID_5",     /* 5 */
-                "GRID_6",     /* 6 */
-                "GRID_7",     /* 7 */
-                "GRID_8",     /* 8 */
-                "GRID_9",    /* 9 */
-                "GRID10",    /* 10 */
-                "GRID11",    /* 11 */
-                "GRID12",    /* 12 */
-                "GRID13",    /* 13 */
-                ""
-            };
             asv_update_handle(index,value,handles);
             break;
         }

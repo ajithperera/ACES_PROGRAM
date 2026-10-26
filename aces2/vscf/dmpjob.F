@@ -145,7 +145,6 @@ C
 C Built the non-symmetry adapted AO density matrix.
 C
          IF ((Iflags(h_IFLAGS_vib) .GT. 1) .or.
-     $        (iFlags2(h_IFLAGS2_prep_vibron).EQ.1) .or.
      $        (iFlags2(h_IFLAGS2_scan_normal).EQ.1)) then
 
            IF (.NOT. AODENS_PRESENT) THEN

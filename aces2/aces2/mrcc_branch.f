@@ -33,7 +33,7 @@
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
      &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract 
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       common /sv_bool/
      &        mrcc,
      &        geom_opt, analytical_gradient,numerical_gradient,
@@ -45,7 +45,7 @@
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
      &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       save   /sv_bool/
 
       character
@@ -57,6 +57,7 @@
      &          integral_package,
      &          der_integral_package
       save   /sv_char/
+
 
 
 
@@ -310,7 +311,7 @@ cmn
           call mrcc_grad
 C
 c 
-       else if (iflags2(156).eq.1 .or.
+       else if (
      $         iflags2(160).eq.1 .or.
      $         iflags2(165).eq.1 .or.
      $          iflags2(158).eq.1 ) then

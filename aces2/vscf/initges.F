@@ -77,7 +77,6 @@ C
       G_FLE_READ = .FALSE.
       Geom_Opt   = (iFlags(h_IFLAGS_opt_method).GT.0)
       Findf_Vib  = (iFlags(h_IFLAGS_vib).GT.1) .or. 
-     $     (iFlags2(h_IFLAGS2_prep_vibron).EQ.1) .or.
      $     (iFlags2(h_IFLAGS2_scan_normal).EQ.1)
       Brueckner  = (iFlags(h_IFLAGS_brueckner).GT.0)
       Rohf       = (iFlags(h_IFLAGS_reference).EQ.2)

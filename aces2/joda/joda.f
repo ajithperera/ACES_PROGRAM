@@ -206,6 +206,7 @@
 
 
 
+
       subroutine joda_()
       implicit none
 
@@ -319,7 +320,6 @@ c
 c
       fd = ((iflags(54).eq.3 .and. we_havegeom)
      &     .or. num_grad .or. (geomopt.and.num_grad)
-     $     .or. (iflags2(156) .eq. 1)
      $     .or. (iflags2(158) .eq. 1)
      $     .or. (iflags2(165) .eq. 1)
      $     .or. (iflags2(160) .eq. 1))
@@ -371,7 +371,7 @@ c         o first run -> reset finite difference series
          call getrec(1,'JOBARC','PASS1',1,pass1)
       Print*, "Finite diffs; PASS1",pass1
         if ( (pass1 .eq. 0) .and.
-     $       ( (iflags2(156) .eq. 1) .or.
+     $       (
      $        (iflags2(160) .eq. 1) .or.
      $        (iflags2(165) .eq. 1) .or.
      $        (iflags2(158) .eq. 1) ) ) then

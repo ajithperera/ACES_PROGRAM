@@ -239,10 +239,8 @@ c
      &        (ICRSIZ-I200+I0)/IINTFP)
 C     
       else
-         CALL SETPTS4_HEFF(NATOM,NIRREPF,DOIT,IRRNM,
-     &        ICORE(I010),ICORE(I020),ICORE(I030),
-     &        ICORE(I200),
-     &        (ICRSIZ-I200+I0)/IINTFP)
+         write(6,*) ' @init_fds4_heff: unexpected case'
+         call aces_exit(1)
       endif
 
       return

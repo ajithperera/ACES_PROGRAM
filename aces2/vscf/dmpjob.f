@@ -204,6 +204,7 @@
 
 
 
+
       SUBROUTINE DMPJOB(ONEH,  SHALF, DENS,  FOCK,
      &                  EVAL,  EVEC,  SCR1,  SCR2,
      &                  ISCR,  SCR3,  SCRAB, 
@@ -354,7 +355,6 @@ C
 C Built the non-symmetry adapted AO density matrix.
 C
          IF ((Iflags(54) .GT. 1) .or.
-     $        (iFlags2(156).EQ.1) .or.
      $        (iFlags2(158).EQ.1)) then
 
            IF (.NOT. AODENS_PRESENT) THEN

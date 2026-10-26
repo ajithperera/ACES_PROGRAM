@@ -263,6 +263,7 @@ c parallel_aces.com : end
 
 
 
+
 c This common block contains the IFLAGS and IFLAGS2 arrays for JODA ROUTINES
 c ONLY! The reason is that it contains both arrays back-to-back. If the
 c preprocessor define MONSTER_FLAGS is set, then the arrays are compressed
@@ -506,10 +507,8 @@ c
      &        (ICRSIZ-I200+I0)/IINTFP)
 C     
       else
-         CALL SETPTS4_HEFF(NATOM,NIRREPF,DOIT,IRRNM,
-     &        ICORE(I010),ICORE(I020),ICORE(I030),
-     &        ICORE(I200),
-     &        (ICRSIZ-I200+I0)/IINTFP)
+         write(6,*) ' @init_fds4_heff: unexpected case'
+         call aces_exit(1)
       endif
 
       return

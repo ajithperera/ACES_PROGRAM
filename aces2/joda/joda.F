@@ -73,7 +73,6 @@ c
 c
       fd = ((iflags(h_IFLAGS_vib).eq.3 .and. we_havegeom)
      &     .or. num_grad .or. (geomopt.and.num_grad)
-     $     .or. (iflags2(h_IFLAGS2_prep_vibron) .eq. 1)
      $     .or. (iflags2(h_IFLAGS2_scan_normal) .eq. 1)
      $     .or. (iflags2(h_IFLAGS2_gen_quartic) .eq. 1)
      $     .or. (iflags2(h_IFLAGS2_geo_sample) .eq. 1))
@@ -131,7 +130,7 @@ c         o first run -> reset finite difference series
       Print*, "Finite diffs; PASS1",pass1
 #endif
         if ( (pass1 .eq. 0) .and.
-     $       ( (iflags2(h_IFLAGS2_prep_vibron) .eq. 1) .or.
+     $       (
      $        (iflags2(h_IFLAGS2_geo_sample) .eq. 1) .or.
      $        (iflags2(h_IFLAGS2_gen_quartic) .eq. 1) .or.
      $        (iflags2(h_IFLAGS2_scan_normal) .eq. 1) ) ) then

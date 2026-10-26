@@ -1911,7 +1911,7 @@ Cmn
 C Turn on the finite diffences for VIBRON runs and change the
 C default step size from 25 to 50. 03/06, Ajith Perera
 Cmn
-         vibron_on= (ioppar(256).eq.1) .or.
+         vibron_on=
      &              (ioppar(258).eq.1) .or.
      &              (ioppar(265).eq.1) .or.
      &              (ioppar(260).eq.1)
@@ -1936,7 +1936,7 @@ C Turn on the finite diffences for VIBRON runs and change the
 C default step size from 25 to 50. 03/06, Ajith Perera
 Cmn
 cmn         vibron_on= (ioppar(265).eq.1)
-         vibron_on= (ioppar(256).eq.1) .or.
+         vibron_on=
      &              (ioppar(258).eq.1) .or.
      &              (ioppar(265).eq.1) .or.
      &              (ioppar(260).eq.1)
@@ -2724,13 +2724,6 @@ c      o numerical gradients
             szTmp = 'fd_stepsize=25'//achar(0)
             call asv_update_kv(szTmp,iASV,szData,0)
          end if
-      else if (ioppar(256) .eq. 1) then
-c      o Calculate Vibronic model
-         if (ioppar(57).eq.0) then
-            szTmp = 'fd_stepsize=-25'//achar(0)
-            call asv_update_kv(szTmp,iASV,szData,0)
-         end if
-c
       else if (ioppar(258) .eq. 1) then
 c      o Calculate Vibronic scan
          if (ioppar(57).eq.0) then
