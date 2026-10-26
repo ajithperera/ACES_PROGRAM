@@ -653,6 +653,22 @@ Obsoleted by the *INTGRT namelist.
 
 ## GLOBAL_MEM
 
+## EXTRAPOLATE
+
+Scaled-correlation ("SAC") correction, not a basis-set extrapolation: the correlation part of the energy (`ENERGY`), of the gradient (`GRADIENT`) or of both (`COMBO`) is divided by a factor *F* read from a formatted file `fact` in the work directory, giving E = E<sub>SCF</sub> + (E − E<sub>SCF</sub>)/*F*; `xvdint` saves the SCF gradient for the gradient form. Done by `xa2proc extrap`. Only the energy form currently runs: the gradient drivers call `xa2proc grad_extrp`, which `xa2proc` does not recognize, so the gradient is left unscaled. Not tested.
+
+## FNO_BSSE
+
+Read by `xjoda` but not used by any program.
+
+## OO_CONSTRAIN
+
+Read by `xpccd` and `xpccd_drpmo` but not used yet (meant to constrain occupied–occupied rotations in orbital-optimized pCCD).
+
+## OV_CONSTRAIN
+
+Read by `xpccd` and `xpccd_drpmo` but not used yet (meant to constrain occupied–virtual rotations in orbital-optimized pCCD).
+
 # Added since 2006
 
 ## TRUNC_ORBS
@@ -715,3 +731,66 @@ Eigenvalue solver for EOM-CC ionization potentials in `xvip`: `DAVIDSON` (the de
 
 For EOM-IP in `xvip`, whether the right (`RIGHT`, the default) or left (`LEFT`) eigenvectors are solved for.
 
+## NATURAL
+
+With `TRUNC_ORBS=FNO`, `xfno` writes MP2 natural orbitals (occupied and virtual) instead of truncating to frozen natural orbitals.
+
+## PART_EOM
+
+In `xvcceh` (EOM-CC response properties), drops the doubles–doubles block of H-bar, i.e. partitioned EOM. Not tested.
+
+## AUTO_OCC
+
+Whether `xvscf` maps the reference occupation onto the lower symmetry of displaced geometries in finite-difference frequency runs and reuses the reference density. `AUTO` (the default) becomes `ON` when `OCCUPATION` is given and `OFF` otherwise; `ON` without `OCCUPATION` is unreliable for some degenerate point groups.
+
+## OOMP_CYC
+
+Maximum number of orbital-optimization cycles in OO-MP2 (`CALC=OO-MP2`); 0 means use `SCF_MAXCYC`.
+
+## TIME_DPD_CC
+
+Time-dependent propagation of the CC dipole vector (2018). Sets `EXCITE=EOMEE`, `PROPS=EOM_NLO` and `RESTART=ON` when they are not given, and skips the H-bar *abcd* and *abci* lists. Not tested.
+
+## COPT
+
+With `CALC=MBPT(2)` and `BRUECKNER=ON`, runs `xcopt`: Brueckner orbitals from finite-order (second-order) T1 instead of CCSD. If `EXCITE` is also set, `xfsip` replaces `xvee` for the excited states. Not tested.
+
+## CORE_WINDOW
+
+Core-valence separation for EOM-EE (core excitations): the number of lowest occupied orbitals in each irrep that form the core window, written like `ESTATE_SYM` (for example `CORE_WINDOW=1-0-0-0`). Only doubles with at least one hole in the window are kept; see `PRJCT_SINGLE` for singles. Used by the Davidson and block-Davidson solvers in `xvee` and by `xtdee`.
+
+## PRJCT_SINGLE
+
+With `CORE_WINDOW`, also restricts single excitations to holes in the window (`ON`, the default). With `OFF` only the doubles are projected.
+
+## GENRLIZD_TDENS
+
+In EOM-EE (`xvee`, Davidson solver), stores up to four left and right vectors per irrep and forms the generalized transition densities ⟨L<sub>k</sub>|p<sup>†</sup>q|R<sub>l</sub>⟩ between all pairs of states and the corresponding oscillator strengths, including excited-to-excited transitions.
+
+## PES_SCAN
+
+Set internally by `xa2proc PES_scan` (IRC and scans) so that the integral and CC codes take the geometry of each point from JOBARC. Not meant to be set in `ZMAT`.
+
+## PREP_VIBRON
+
+Runs single points at displacements along the normal modes (from a previous frequency calculation, record `FREQS_0`) to build a vibronic-coupling model Hamiltonian, and writes `Vibronic_Coupling` and an input for the vibronic code (`Vibron_Input`). The displacement grid is chosen with `GRID_VIBRON`. Part of M. Nooijen's vibronic tools; not tested.
+
+## GRID_VIBRON
+
+Displacement grid for `PREP_VIBRON` (built in `symcor/setpts4_heff.F`). Every grid has +Q<sub>i</sub> along each mode, and all but `GRID_2` also −Q<sub>i</sub>. Mode pairs (±Q<sub>i</sub>, ±Q<sub>j</sub>) of the same symmetry are added for `GRID_4`, `GRID_5`, `GRID_7`, `GRID_8`, `GRID11` and `GRID12`; pairs of different symmetry for `GRID_5`, `GRID_8` and `GRID12`; pairs within degenerate irreps for `GRID_9` and `GRID10`. ±2Q<sub>i</sub> (for cubic and quartic couplings) is added for `GRID_6` and above except `GRID_9`, and general (aQ<sub>i</sub>, bQ<sub>j</sub>) points for `GRID10` and above. The value stored in the code is one less than the number in the name (`GRID_1` = 0).
+
+## SCAN_NORMAL
+
+Scan of the potential surface along a direction in reduced normal coordinates, read from the file `SCAN_INFO` (scan range and step, number of modes, reference energy, one displacement per mode; see `symcor/setpts4_pes_scan.F`). Results go to `SCANHEFF` and `SCANPLOT`. Not tested.
+
+## GEO_SAMPLE
+
+Single points at geometries listed in the file `GEO_SAMPLE` as displacements in reduced normal coordinates (see `symcor/setpts4_pes_sample.F`). Results go to `GEO_ADIAB` and `GEO_HEFF`. Not tested.
+
+## GEN_QUARTIC
+
+Points for a one- or two-mode quartic force field along normal modes selected in the file `GEN_QUARTIC` (see `symcor/setpts4_quartic.F`); energies go to `E_QUARTIC`. Not tested.
+
+## NORMAL_CURVY
+
+With `SCAN_NORMAL` or `GEO_SAMPLE`, replaces the rectilinear normal modes by curvilinear ones read from the file `CURVY_FDIF`.
