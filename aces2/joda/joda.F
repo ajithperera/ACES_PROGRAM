@@ -72,10 +72,7 @@ c
       vib_frqs=(iflags(h_IFLAGS_vib).eq.3)
 c
       fd = ((iflags(h_IFLAGS_vib).eq.3 .and. we_havegeom)
-     &     .or. num_grad .or. (geomopt.and.num_grad)
-     $     .or. (iflags2(h_IFLAGS2_scan_normal) .eq. 1)
-     $     .or. (iflags2(h_IFLAGS2_gen_quartic) .eq. 1)
-     $     .or. (iflags2(h_IFLAGS2_geo_sample) .eq. 1))
+     &     .or. num_grad .or. (geomopt.and.num_grad))
       if (do_pes_scan .eq. 1 .and. fd) ignore = .false.
 c
 #ifdef _DEBUG_LVL0
@@ -129,13 +126,6 @@ c         o first run -> reset finite difference series
 #ifdef _DEBUG_LVL0
       Print*, "Finite diffs; PASS1",pass1
 #endif
-        if ( (pass1 .eq. 0) .and.
-     $       (
-     $        (iflags2(h_IFLAGS2_geo_sample) .eq. 1) .or.
-     $        (iflags2(h_IFLAGS2_gen_quartic) .eq. 1) .or.
-     $        (iflags2(h_IFLAGS2_scan_normal) .eq. 1) ) ) then
-            write(6,*) ' All done in constructing vibronic Hamiltonian '
-        else
          if (pass1.ne.-1) then
 c         o vib freqs w/ an grads -OR- geom opts w/ num grads
             call putrec(1,'JOBARC','FIRSTRUN',1,0)
@@ -161,7 +151,6 @@ c               o new geom -> reset finite difference series
                call getrec(1,'JOBARC','FNDFDONE',1,i) 
             end if
          end if
-        endif 
       else
 
          if (ignore) then

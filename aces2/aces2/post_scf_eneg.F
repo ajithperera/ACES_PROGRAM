@@ -3,9 +3,7 @@ c
 #include "aces2.h"    
 #include "flags.h"
 c     
-      Character*79 szEExtrap 
       Logical parcc_exist
-      szEExtrap = 'xa2proc ener_extrp'
       Call a2getrec(20,'JOBARC','NDROPGEO',1,NDRGEO)
 c
 c This Saving of All MO JOBARC/JAINDX as JOBARC_AM/JAINDX_AM is only relevent
@@ -60,12 +58,6 @@ C
          Endif
 c
          If (Iflags(h_IFLAGS_calclevel) .EQ. 31) Call Runit('xvcc5t')
-c
-c Extrapolate energy (only for post-SCF methods), 01/2006, Ajith Perera
-c
-         If (bEextrap .OR. bCExtrap) Then
-            Call Runit(szEExtrap)
-         Endif
 c
        Endif
 c 

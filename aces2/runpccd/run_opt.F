@@ -5,7 +5,6 @@
       logical Do_derint
 
       ndrgeo=0
-      szGExtrap = 'xa2proc grad_extrp'
       call a2getrec(20,'JOBARC','NDROPGEO',1,NDRGEO)
 
       icycle=0

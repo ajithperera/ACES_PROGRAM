@@ -32,8 +32,8 @@
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract 
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       common /sv_bool/
      &        mrcc,
      &        geom_opt, analytical_gradient,numerical_gradient,
@@ -44,8 +44,8 @@
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       save   /sv_bool/
 
       character
@@ -80,11 +80,6 @@ c noniterative 5th-order triples and quadruples
 c JDW 3/17/95
 c CC5SD[T]
       if (iflags(2).eq.31) call runit('xvcc5t')
-
-c Extrapolate energy (only for correlated methods), 01/2006, Ajith Perera
-      if (bEExtrap.or.bCExtrap) then
-         call runit('xa2proc extrap energy')
-      end if
 
       if (iflags(22).eq.1) then
          call a2getrec(20,'JOBARC','BRUKTEST',1,itest)

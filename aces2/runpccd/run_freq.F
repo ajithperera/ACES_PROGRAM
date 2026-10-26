@@ -5,7 +5,6 @@ c
 #include "flags.h"
 c
       Character*4 Calc_level
-      Character*79 szGExtrap  
       Logical Analytical_grads
       Integer Istat, Is, Ius, Irank
 c

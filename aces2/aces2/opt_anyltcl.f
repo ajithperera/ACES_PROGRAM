@@ -31,8 +31,8 @@
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract 
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       common /sv_bool/
      &        mrcc,
      &        geom_opt, analytical_gradient,numerical_gradient,
@@ -43,8 +43,8 @@
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       save   /sv_bool/
 
       character
@@ -56,6 +56,7 @@
      &          integral_package,
      &          der_integral_package
       save   /sv_char/
+
 
 
 
@@ -276,11 +277,9 @@ c parallel_aces.com : end
       integer icore, is, ius
       logical Do_derint
       Character*4 Calc_level
-      character*79 szGExtrap 
 
 
       ndrgeo=0
-      szGExtrap = 'xa2proc grad_extrp'
       call a2getrec(20,'JOBARC','NDROPGEO',1,NDRGEO)
 
 c   o generate an initial approximate Hessian. 12/04, Ajith Perera
@@ -454,14 +453,6 @@ c We have no choice but run integral derivative code twice if we ues analytic SC
 c Hessian to guide the optimization.
 c
          IF (Do_derint) Call Runit(der_integral_package)
-c
-c If the gradients need to modified externally (ie. extrapolation) 
-c do it here (note that no extrapolation for HF-SCF calculations),
-c 01/2006, Ajith Perera. 
-c
-c         If (bGExtrap .or. bCExtrap) then
-c            call runit(szGExtrap) 
-c         endif
 c
 CSSS         call c_gtod(is,ius)
 CSSS         print '(a,f10.1,a)', 'ACES2: Total elapsed time is ',

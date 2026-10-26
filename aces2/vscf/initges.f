@@ -337,8 +337,7 @@ C
       ROHFMO     = .FALSE.
       G_FLE_READ = .FALSE.
       Geom_Opt   = (iFlags(47).GT.0)
-      Findf_Vib  = (iFlags(54).GT.1) .or. 
-     $     (iFlags2(158).EQ.1)
+      Findf_Vib  = (iFlags(54).GT.1)
       Brueckner  = (iFlags(22).GT.0)
       Rohf       = (iFlags(11).EQ.2)
       hfstab     = (iFlags(74).EQ.2)

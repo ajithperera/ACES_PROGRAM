@@ -285,7 +285,7 @@ c     logical flags
      &        bTDCalc, DoABCD, DoABCI, ACES2, bMN_A3, DoQRHF, bSTEOM,
      &        EOM, bGeomOpt, bTDA, bOpenShell
       logical bOpened, bTmp, bDone, bDelLastChar, bHaveKeys, bVerbose
-      logical bAutoCart, NO_AGRAD, Vibron_on
+      logical bAutoCart, NO_AGRAD
 c     character constants
       character*1 czPercent, czAsterisk, czHash, czSpace, czFirstNLChar
       character*1 czTab
@@ -1907,22 +1907,6 @@ CSSS            end if
             end if
             call asv_update_kv('abcdfull'//achar(0),iASV,szData,0)
          end if
-Cmn
-C Turn on the finite diffences for VIBRON runs and change the
-C default step size from 25 to 50. 03/06, Ajith Perera
-Cmn
-         vibron_on=
-     &              (ioppar(258).eq.1) .or.
-     &              (ioppar(265).eq.1) .or.
-     &              (ioppar(260).eq.1)
-         if (vibron_on) Then
-             szTmp = 'grad_calc=numerical'//achar(0)
-             call asv_update_kv(szTmp,iASV,szData,0)
-            if (ioppar(57).eq.0) then
-               szTmp = 'fd_stepsize=-25'//achar(0)
-               call asv_update_kv(szTmp,iASV,szData,0)
-            endif
-         end if
 c     else if (ACES2) then
       else
          If (bTmp) then
@@ -1931,23 +1915,6 @@ c     else if (ACES2) then
                 call asv_update_kv(szTmp,iASV,szData,0)
             end if
          endif 
-Cmn
-C Turn on the finite diffences for VIBRON runs and change the
-C default step size from 25 to 50. 03/06, Ajith Perera
-Cmn
-cmn         vibron_on= (ioppar(265).eq.1)
-         vibron_on=
-     &              (ioppar(258).eq.1) .or.
-     &              (ioppar(265).eq.1) .or.
-     &              (ioppar(260).eq.1)
-         if (vibron_on) Then
-             szTmp = 'grad_calc=numerical'//achar(0)
-             call asv_update_kv(szTmp,iASV,szData,0)
-            if (ioppar(57).eq.0) then
-             szTmp = 'fd_stepsize=-25'//achar(0)
-             call asv_update_kv(szTmp,iASV,szData,0)
-          endif
-         end if
 c     end if (bMN_A3)
       end if
 
@@ -2722,26 +2689,6 @@ c
 c      o numerical gradients 
          if (ioppar(57).eq.0) then
             szTmp = 'fd_stepsize=25'//achar(0)
-            call asv_update_kv(szTmp,iASV,szData,0)
-         end if
-      else if (ioppar(258) .eq. 1) then
-c      o Calculate Vibronic scan
-         if (ioppar(57).eq.0) then
-            szTmp = 'fd_stepsize=-25'//achar(0)
-            call asv_update_kv(szTmp,iASV,szData,0)
-         end if
-c
-      else if (ioppar(265) .eq. 1) then
-c      o Calculate Vibronic scan
-         if (ioppar(57).eq.0) then
-            szTmp = 'fd_stepsize=50'//achar(0)
-            call asv_update_kv(szTmp,iASV,szData,0)
-         end if
-c
-      else if (ioppar(260) .eq. 1) then
-c      o Calculate Vibronic scan
-         if (ioppar(57).eq.0) then
-            szTmp = 'fd_stepsize=-25'//achar(0)
             call asv_update_kv(szTmp,iASV,szData,0)
          end if
 c     end if (bGeomOpt)

@@ -354,8 +354,7 @@ c
 C
 C Built the non-symmetry adapted AO density matrix.
 C
-         IF ((Iflags(54) .GT. 1) .or.
-     $        (iFlags2(158).EQ.1)) then
+         IF (Iflags(54) .GT. 1) then
 
            IF (.NOT. AODENS_PRESENT) THEN
                IF (ISPIN .EQ. 1) THEN

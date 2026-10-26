@@ -653,10 +653,6 @@ Obsoleted by the *INTGRT namelist.
 
 ## GLOBAL_MEM
 
-## EXTRAPOLATE
-
-Scaled-correlation ("SAC") correction, not a basis-set extrapolation: the correlation part of the energy (`ENERGY`), of the gradient (`GRADIENT`) or of both (`COMBO`) is divided by a factor *F* read from a formatted file `fact` in the work directory, giving E = E<sub>SCF</sub> + (E − E<sub>SCF</sub>)/*F*; `xvdint` saves the SCF gradient for the gradient form. Done by `xa2proc extrap`. Only the energy form currently runs: the gradient drivers call `xa2proc grad_extrp`, which `xa2proc` does not recognize, so the gradient is left unscaled. Not tested.
-
 ## FNO_BSSE
 
 Read by `xjoda` but not used by any program.
@@ -770,19 +766,3 @@ In EOM-EE (`xvee`, Davidson solver), stores up to four left and right vectors pe
 ## PES_SCAN
 
 Set internally by `xa2proc PES_scan` (IRC and scans) so that the integral and CC codes take the geometry of each point from JOBARC. Not meant to be set in `ZMAT`.
-
-## SCAN_NORMAL
-
-Scan of the potential surface along a direction in reduced normal coordinates, read from the file `SCAN_INFO` (scan range and step, number of modes, reference energy, one displacement per mode; see `symcor/setpts4_pes_scan.F`). Results go to `SCANHEFF` and `SCANPLOT`. Part of M. Nooijen's vibronic tools. Not tested.
-
-## GEO_SAMPLE
-
-Single points at geometries listed in the file `GEO_SAMPLE` as displacements in reduced normal coordinates (see `symcor/setpts4_pes_sample.F`). Results go to `GEO_ADIAB` and `GEO_HEFF`. Not tested.
-
-## GEN_QUARTIC
-
-Points for a one- or two-mode quartic force field along normal modes selected in the file `GEN_QUARTIC` (see `symcor/setpts4_quartic.F`); energies go to `E_QUARTIC`. Not tested.
-
-## NORMAL_CURVY
-
-With `SCAN_NORMAL` or `GEO_SAMPLE`, replaces the rectilinear normal modes by curvilinear ones read from the file `CURVY_FDIF`.

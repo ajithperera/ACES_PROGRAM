@@ -215,7 +215,7 @@ const ASV_nl_t ASV_nl[] =
 {/*106*/ "IEXTRN",	"EXTERNAL#",	h_ICHAR_handle,	2,	""},
 {/*107*/ "IHESUP",	"HESS_UPD#ATE",	h_ICHAR_handle,	6,	""},
 {/*108*/ "IINHES",	"INIT_HESS#IAN",h_ICHAR_handle,	0,	""},
-{/*109*/ "IEXTRP",	"EXTRAP#OLATE",	h_ICHAR_handle,	0,	""},
+{/*109*/ "","",0,0,""},
 {/*110*/ "","",0,0,""},
 {/*111*/ "","",0,0,""},
 {/*112*/ "","",0,0,""},
@@ -371,14 +371,14 @@ const ASV_nl_t ASV_nl[] =
 {/*255*/ "BSNGST",	"SINGLE_STOR#E",h_ICHAR_handle,	0,	""},
 {/*256*/ "","",0,0,""},
 {/*257*/ "","",0,0,""},
-{/*258*/ "ISCAN",       "SCAN_NORMAL#", h_ICHAR_handle, 0,      ""},
-{/*259*/ "ICURVN",      "NORMAL_CURVY#",h_ICHAR_handle, 0,      ""},
-{/*260*/ "ISAMPLE",     "GEO_SAMPLE#"  ,h_ICHAR_handle, 0,      ""},
+{/*258*/ "","",0,0,""},
+{/*259*/ "","",0,0,""},
+{/*260*/ "","",0,0,""},
 {/*261*/ "IPARTEOM",    "PART_EOM#"    ,h_ICHAR_handle, 0,      ""},
 {/*262*/ "IORDER_A",    "ORDER_ALPHA#" ,h_ICHAR_handle, 0,      ""},
 {/*263*/ "IFFIELD ",    "FFIELD#"      ,h_ICHAR_f_int,  0,      "x 10-6"},
 {/*264*/ "AUTO_OCC",    "AUTO_OCC#"    ,h_ICHAR_handle, 2,      ""},
-{/*265*/ "IQUARTIC",    "GEN_QUARTIC#" ,h_ICHAR_handle, 0,      ""},
+{/*265*/ "","",0,0,""},
 {/*266*/ "IOOMPC",      "OOMP_CYC#"    ,h_ICHAR_f_int , 50,     ""},
 {/*267*/ "DKHORDER",    "DKH_ORD#ER"   ,h_ICHAR_f_int,  0,      ""},
 {/*268*/ "UNCONTRACT",  "UNCONT#RACT"  ,h_ICHAR_handle, 0,      ""},
@@ -666,20 +666,6 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "FCMINT",	/* 1 */
                 "MOPAC",	/* 2 */
                 "EXACT",	/* 3 */
-                ""
-            };
-            asv_update_handle(index,value,handles);
-            break;
-        }
-
-        case h_IOPPAR_extrap:
-        {
-            const char *handles[] =
-            {
-                "NONE",		/* 0 */
-                "GRADIENT",	/* 1 */
-                "ENERGY",	/* 2 */
-                "COMBO",	/* 3 */
                 ""
             };
             asv_update_handle(index,value,handles);

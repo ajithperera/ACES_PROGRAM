@@ -217,6 +217,7 @@ c#define _DIMARGS 3
 
 
 
+
       program main
       implicit none
 
@@ -276,7 +277,6 @@ c ----------------------------------------------------------------------
          print *, 'molden'
 c         print *, 'gennbo'
          print *, 'hyperchem'
-         print *, 'extrap (energy|gradient)'
          print *, 'statthermo'
          print *, 'parfd (update|updump|dump|load <file>)'
          print *, 'jarec datatype RECNAME dimension'
@@ -455,12 +455,6 @@ c These modules require lists.
          call aces_io_remove(53,'DERINT')
          call aces_io_remove(54,'DERGAM')
          print *, '@A2PROC: Successfully removed list files.'
-         goto 9997
-      end if
-
-      if (module(1:7).eq.'extrap ') then
-          call aces_init_chemsys
-         call extrap_main(args, dimargs,.true.)
          goto 9997
       end if
 

@@ -242,7 +242,7 @@ c
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
+     &        Analytical_hessian,
      &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       common /sv_bool/
      &        mrcc,
@@ -254,7 +254,7 @@ c
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
+     &        Analytical_hessian,
      &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       save   /sv_bool/
 
@@ -337,12 +337,6 @@ c
       if (mrcc) then
          write(6,*) ' @aces2.main: enter mrcc_branch '
          call mrcc_branch
-       else if (
-     $         iflags2(160).eq.1 .or.
-     $         iflags2(165).eq.1 .or.
-     $          iflags2(158).eq.1 ) then
-         write(6,*) ' @aces2.main: enter aces2_heff'
-         call aces2_heff
       else
          call Job_control
       end if

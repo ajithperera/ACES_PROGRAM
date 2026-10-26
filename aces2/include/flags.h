@@ -343,8 +343,6 @@
 #define h_IOPPAR_init_hessian	108
 #define h_IFLAGS2_init_hessian	8
 
-#define h_IOPPAR_extrap		109
-#define h_IFLAGS2_extrap	9
 
 #define h_IOPPAR_ea_calc	201
 #define h_IFLAGS2_ea_calc	101
@@ -515,14 +513,8 @@
 
 
 
-#define h_IOPPAR_scan_normal    258
-#define h_IFLAGS2_scan_normal   158
 
-#define h_IOPPAR_normal_curvy    259
-#define h_IFLAGS2_normal_curvy   159
 
-#define h_IOPPAR_geo_sample    260
-#define h_IFLAGS2_geo_sample   160
 
 #define h_IOPPAR_parteom    261
 #define h_IFLAGS2_parteom   161
@@ -536,8 +528,6 @@
 #define h_IOPPAR_auto_occ    264
 #define h_IFLAGS2_auto_occ   164
 
-#define h_IOPPAR_gen_quartic    265
-#define h_IFLAGS2_gen_quartic   165
 
 #define h_IOPPAR_oomp_cyc       266
 #define h_IFLAGS2_oomp_cyc	166

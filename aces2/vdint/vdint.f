@@ -249,6 +249,7 @@ c primitive spaces. For example the ANO basis sets. A. Perera, 03/2005.
 
 
 
+
 c This common block contains the IFLAGS and IFLAGS2 arrays for JODA ROUTINES
 c ONLY! The reason is that it contains both arrays back-to-back. If the
 c preprocessor define MONSTER_FLAGS is set, then the arrays are compressed
@@ -275,7 +276,6 @@ C
       LOGICAL IFIRST,IALL,XCOMP,YCOMP,ZCOMP
       LOGICAL MVDINT1,MVDINT2
       LOGICAL JSO,JFC,JSD,CCSDEH
-      LOGICAL EXTRAPOLATE
 C
       COMMON /ABAINF/ IPRDEF,MOLGRD,MOLHES,DIPDER,POLAR,INPTES,
      &                VIB,RESTAR,DOWALK,GDALL,FOCK1,H2MO
@@ -532,30 +532,7 @@ C
        IF(IPRINT.NE.0) WRITE(6,3000) GRDNRM
 3000   FORMAT('  ','Molecular gradient norm',E10.3)
 C
-       EXTRAPOLATE = (iflags2(9) .Gt. 0)
        IPRINT = 0
-       IF (EXTRAPOLATE .AND. (.NOT.SCF .AND. IECP.EQ.0)) THEN
-C
-C Complete the formation of SCF gradients (for correlated calculations)
-C and write it directly to the JOBARC file.
-C
-          CALL ONEINT(PROPTY,ICORE(ISTART),MAXCOR,ICORE(IEKE),
-     &                ICORE(IGKE),ICORE(IHKE),ICORE(IENA),
-     &                ICORE(IGNA),ICORE(IHNA),ICORE(IGFS),
-     &                ICORE(IHFS2),ICORE(IDME),ICORE(IDMN),
-     &                ICORE(IDDE),ICORE(IDDN),
-     &                ICORE(IQME),ICORE(IDQE),ICORE(IQMN),
-     &                ICORE(IDQN),NCOORD,.TRUE.)
-          CALL ZERO(ICORE(IGM),NCOORD)
-          CALL ADDGRD(ICORE(IGNA),ICORE(IGM),NCOORD)
-          CALL ADDGRD(ICORE(ISCF_GEE),ICORE(IGM),NCOORD)
-          CALL ADDGRD(ICORE(IGNN),ICORE(IGM),NCOORD)
-          CALL ADDGRD(ICORE(IGKE),ICORE(IGM),NCOORD)
-          CALL ADDGRD(ICORE(IGFS),ICORE(IGM),NCOORD)
-          CALL TRAGRD(ICORE(IGM), ICORE(ICSCF_GRAD), NCOORD)
-          CALL PUTREC(20,"JOBARC","SCF_GRAD",NCOORD*IINTFP,
-     &                ICORE(ICSCF_GRAD))
-       END IF
 C
       END IF
 C

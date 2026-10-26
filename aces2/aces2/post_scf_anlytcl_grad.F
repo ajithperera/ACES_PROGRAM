@@ -5,14 +5,12 @@
       integer icore, is, ius
       logical Do_derint
 CSSS Dropmo_analy_grads
-      character*79 szGExtrap
 
 #ifdef _TRACE_ACES2
       write(*,*) '@ACES2: Entered ', __FILE__
 #endif
 
       ndrgeo=0
-      szGExtrap = 'xa2proc grad_extrp'
       call a2getrec(20,'JOBARC','NDROPGEO',1,NDRGEO)
 c
 c   o use NUMDROPA since ndrgeo is 0 for single-point calcs.
@@ -50,14 +48,6 @@ c
       call runit('xanti')
       call runit('xbcktrn')
       call runit(der_integral_package)
-c
-c If the gradients need to modified externally (ie. extrapolation)
-c do it here (note that no extrapolation for HF-SCF calculations),
-c 01/2006, Ajith Perera.
-c
-      If (bGExtrap .or. bCExtrap) then
-         call runit(szGExtrap)
-      endif
 c
       call c_gtod(is,ius)
       print '(a,f10.1,a)', 'ACES2: Total elapsed time is ',
