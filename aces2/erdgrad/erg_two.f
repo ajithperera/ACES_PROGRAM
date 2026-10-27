@@ -160,7 +160,7 @@ c erdints.com : end
      &        Ider(3,4)
       Dimension Alp(Mxpk), Cc(Mxpk), X(4), Y(4), Z(4), Gq(3)
       Logical Screen, Lrep, Lsep
-      Data Screen /.False./
+      Data Screen /.True./
 
       Do Is1 = 1, Nshl
       Do Is2 = 1, Is1

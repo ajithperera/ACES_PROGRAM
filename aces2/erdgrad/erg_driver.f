@@ -559,6 +559,7 @@ C Gamma buffer of the largest shell quartet.
 
 C One-electron part and nuclear repulsion.
 
+      Call Cpu_time(T0)
       Call Zero(Icore(I0g1),3*Natm)
       Call Erg_one(Icore(I0g1),Icore(I0t),Icore(I0w),N,
      &             Icore(I0z),Lzscr,Icore(I0i),Liscr)
@@ -586,6 +587,8 @@ C One-electron part and nuclear repulsion.
          Endif
       Endif
       Call Dcopy(3*Natm,Icore(I0g),1,Icore(I0g1),1)
+
+      Call Cpu_time(T1)
 
 C Two-electron part. With the file ERDGRAD.DEBUG the separable and
 C nonseparable parts are also computed and printed separately.
@@ -623,6 +626,9 @@ C nonseparable parts are also computed and printed separately.
      &             Icore(I0w2),Lw)
       Call Erg_symz(Icore(I0g),Icore(I0gs))
       Call Daxpy(3*Natm,1.0D0,Icore(I0g1),1,Icore(I0gs),1)
+      Call Cpu_time(T2)
+      Write(6,"(a,f10.2,a,f10.2,a)") " @Erg_driver: CPU one-electron",
+     &     T1-T0, " s, two-electron", T2-T1, " s"
 
       Call Erg_wrgrd(Icore(I0gs),Natm,Natoms,Icore(K000),Icore(K010),
      &               Icore(I0z))
