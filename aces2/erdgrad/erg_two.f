@@ -9,16 +9,26 @@
 
 
 
-      Subroutine Erg_two(G,Dt,Da,Db,N,Zscr,Lzscr,Iscr,Liscr,Gam,Lgam)
+      Subroutine Erg_two(G,Ha,Hb,Xa,Xb,N,Zscr,Lzscr,Iscr,Liscr,
+     &                   Gam,Lgam,Lsep,Cns,Bx,Ng,Irg,Ncol,Icol0,Lcol,
+     &                   Ipx,Npr,Ioffg,Gso,W1,W2,Lw)
 C
-C Two-electron part of the gradient for a single determinant,
+C Two-electron part of the gradient,
 C
-C    dE/dX += 1/2 sum Gam(mu,nu,la,si) d(mu nu|la si)/dX,
+C    dE/dX += 1/2 sum Gam(mu,nu,la,si) d(mu nu|la si)/dX.
 C
-C    Gam = D(mu,nu) D(la,si)
-C        - 1/2 sum_spin [Ds(mu,la) Ds(nu,si) + Ds(mu,si) Ds(nu,la)],
+C The separable part of Gam (Lsep) is built from the per spin SCF
+C densities Hs and correlation corrections Xs (Erg_dens), linear in X
+C as in xvdint's Intexp (H, X: sums over spin):
 C
-C (D = Da + Db), over the symmetry unique canonical shell quartets
+C    H(mu,nu) H(la,si) + H(mu,nu) X(la,si) + X(mu,nu) H(la,si)
+C    - 1/2 sum_spin [ Hs(mu,la) Hs(nu,si) + Hs(mu,si) Hs(nu,la)
+C                   + Hs(mu,la) Xs(nu,si) + Xs(mu,la) Hs(nu,si)
+C                   + Hs(mu,si) Xs(nu,la) + Xs(mu,si) Hs(nu,la) ];
+C
+C for an SCF gradient X = 0. Cns times the nonseparable part from the
+C MOINTS lists (Erg_gam, Erg_gnsp) is added when Cns is not zero.
+C The sum runs over the symmetry unique canonical shell quartets
 C only. Each quartet carries its permutational degeneracy and its
 C orbit size; the result is symmetrized later (Erg_symz). The
 C derivative is taken with respect to every atom that carries a
@@ -141,13 +151,15 @@ c                   VMOL's: Erd_fntr turns ERD integrals into them.
 c erdints.com : end
 
       Parameter (Mxpk = 5000)
-      Dimension G(3,Natm), Dt(N,N), Da(N,N), Db(N,N), Zscr(Lzscr),
-     &          Gam(Lgam)
-      Integer Iscr(Liscr)
+      Dimension G(3,Natm), Ha(N,N), Hb(N,N), Xa(N,N), Xb(N,N),
+     &          Zscr(Lzscr), Gam(Lgam), Bx(N,Ng), Gso(*), W1(Lw),
+     &          W2(Lw)
+      Integer Iscr(Liscr), Irg(Ng), Ncol(*), Icol0(*), Lcol(*),
+     &        Ipx(Ng,Ng), Npr(8), Ioffg(8)
       Integer List(4), Icb(Mxpk), Ice(Mxpk), Iat(4), Iatd(4),
      &        Ider(3,4)
       Dimension Alp(Mxpk), Cc(Mxpk), X(4), Y(4), Z(4), Gq(3)
-      Logical Screen, Lrep
+      Logical Screen, Lrep, Lsep
       Data Screen /.False./
 
       Do Is1 = 1, Nshl
@@ -203,13 +215,26 @@ C Distinct atoms of the quartet.
          Do J = J0+1, J0+N2
          Do I = I0+1, I0+N1
             Ind = Ind + 1
-            Gam(Ind) = Dt(I,J)*Dt(K,L) - 0.5D0*(
-     &                 Da(I,K)*Da(J,L) + Da(I,L)*Da(J,K) +
-     &                 Db(I,K)*Db(J,L) + Db(I,L)*Db(J,K))
+            If (Lsep) Then
+               Hij = Ha(I,J) + Hb(I,J)
+               Hkl = Ha(K,L) + Hb(K,L)
+               Gam(Ind) = Hij*Hkl + Hij*(Xa(K,L) + Xb(K,L))
+     &                  + (Xa(I,J) + Xb(I,J))*Hkl - 0.5D0*(
+     &              Ha(I,K)*Ha(J,L) + Ha(I,L)*Ha(J,K)
+     &            + Ha(I,K)*Xa(J,L) + Xa(I,K)*Ha(J,L)
+     &            + Ha(I,L)*Xa(J,K) + Xa(I,L)*Ha(J,K)
+     &            + Hb(I,K)*Hb(J,L) + Hb(I,L)*Hb(J,K)
+     &            + Hb(I,K)*Xb(J,L) + Xb(I,K)*Hb(J,L)
+     &            + Hb(I,L)*Xb(J,K) + Xb(I,L)*Hb(J,K))
+            Else
+               Gam(Ind) = 0.0D0
+            Endif
          Enddo
          Enddo
          Enddo
          Enddo
+         If (Cns .Ne. 0.0D0) Call Erg_gnsp(List,Cns,Gam,Bx,N,Ng,Irg,
+     &                    Ncol,Icol0,Lcol,Ipx,Npr,Ioffg,Gso,W1,W2,Lw)
 
          Call Erd_pack(4,List,Alp,Nalp,Cc,Ncc,Icb,Ice,Ncsum,Mxpk)
          Do I = 1, 4
