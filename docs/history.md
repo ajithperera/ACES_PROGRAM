@@ -1,13 +1,62 @@
 # History and citation
 
+ACES (originally *Advanced Concepts and Esoteric Studies*, now *Advanced
+Concepts in Electronic Structure*) is the program system of
+**Prof. Rodney J. Bartlett** and his group at the Quantum Theory Project,
+University of Florida. Professor Bartlett has led its development from the
+start. ACES was built to put many-body perturbation theory (MBPT),
+coupled-cluster (CC) and equation-of-motion coupled-cluster (EOM-CC)
+methods into practical use. Many of the CC and MBPT methods now found in
+other quantum chemistry programs first appeared in ACES.
+
+This page summarizes the history given in the program's review article:
+
+> A. Perera, R. J. Bartlett, B. A. Sanders, V. F. Lotrich and J. N. Byrd,
+> "Advanced concepts in electronic structure (ACES) software programs",
+> *J. Chem. Phys.* **152**, 184105 (2020),
+> [doi:10.1063/5.0002581](https://doi.org/10.1063/5.0002581).
+
+Cite that article for ACES as a whole, along with the papers for the
+methods you use.
+
+## Origins and ACES I
+
+Work on ACES began in the late 1970s at Battelle Memorial Institute in
+Columbus, Ohio, to turn diagrammatic many-body theory into general programs.
+That work helped move the field toward size-extensive methods and away
+from the variational configuration-interaction approach.
+
+ACES I, in the 1980s, brought the first general-purpose implementations of:
+
+- CCSD, for closed- and open-shell molecules, together with CCSDT-1,
+  CCSD[T] and MBPT up to sixth order
+- analytic gradients for non-variational many-body methods, through their
+  response (relaxed) density matrices
+- full CCSDT and CCSDTQ
+
 ## ACES II
 
-ACES II was begun in 1990 at the Quantum Theory Project, University of
-Florida. The first version was written by J. F. Stanton, J. Gauss,
+ACES II was begun in 1990, rewritten for the vector supercomputers of the
+time. The first version was written by J. F. Stanton, J. Gauss,
 J. D. Watts, W. J. Lauderdale and R. J. Bartlett. It is a set of member
-programs that communicate through files, built around many-body
-perturbation theory and coupled-cluster methods, with full use of
-D<sub>2h</sub> symmetry and analytic gradients and second derivatives.
+programs that communicate through files. It was the first CC program to use
+molecular point-group symmetry (D<sub>2h</sub> and its subgroups) throughout
+the correlated calculation, and it has analytic first and second derivatives.
+
+Methods that first appeared in ACES II include:
+
+- full CCSDT for open-shell molecules
+- CCSD(T) for non-Hartree–Fock references (ROHF, quasi-RHF, Brueckner and
+  Kohn–Sham orbitals)
+- EOM-CCSD for excited states (1993), then triples corrections to it,
+  analytic EOM-CC gradients, and IP- and EA-EOM-CC for ionized and
+  electron-attached states
+- similarity-transformed EOM-CC (STEOM-CC, mid-1990s), with the MRCC module
+  written to support it, multireference EOM-CC, and extended STEOM for
+  doubly excited states, generated with an automatic program generator
+
+Some of the ACES II developers later took part of the code into the
+separate program CFOUR.
 
 The citation given with release 2.5.0 (2006) is:
 
@@ -43,13 +92,30 @@ DOCI, ring and direct-ring CCD and their EOM extensions, and RPA) are not
 yet credited here.
 ```
 
-## ACES III
+## ACES III and Aces4
 
-ACES III, the parallel program built on the Super Instruction Architecture,
-was developed at the Quantum Theory Project in the 2000s (the source
-copyrights run from 2003 to 2010). Its user
-and SIAL programmer guides list V. Lotrich, M. Ponton, N. Flocke,
-A. Perera, E. Deumens and R. J. Bartlett as authors.
+ACES III, begun around 2000, carries CC theory to massively parallel
+computers. It is written in SIAL, the language of the Super Instruction
+Architecture, and has its own integral library. It has been public since
+2007 (the source copyrights run from 2003 to 2010). Its user and SIAL
+programmer guides list V. Lotrich, M. Ponton, N. Flocke, A. Perera,
+E. Deumens and R. J. Bartlett as authors; B. A. Sanders designed much of
+the Super Instruction Architecture. The parallel EOM-CCSD gradients are
+unique to ACES III, as are its parallel DIP- and DEA-EOM-CCSD, IP/EA-STEOM,
+F12 variants, ESR tensors and spin–orbit coupling with EOM and STEOM.
+Its reference paper is V. Lotrich, N. Flocke, M. Ponton, A. D. Yau,
+A. Perera, E. Deumens and R. J. Bartlett, *J. Chem. Phys.* **128**, 194104
+(2008).
+
+Aces4 is a later rewrite of the parallel runtime by V. Lotrich, J. N. Byrd,
+N. Jindal, A. Perera, B. A. Sanders, R. J. Bartlett and others. It was one
+of the first electronic structure programs to work with block-sparse arrays.
+Aces4 is not part of this repository.
+
+ACES II was funded by the U.S. Air Force Office of Scientific Research,
+ACES III by the DoD High Performance Computing Modernization Program, and
+Aces4 by the Air Force Research Laboratory and ENSCO, Inc. The U.S. Army
+Research Office also supported the work.
 
 ## This repository
 
