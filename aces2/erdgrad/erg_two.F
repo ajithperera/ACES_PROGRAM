@@ -1,6 +1,6 @@
       Subroutine Erg_two(G,Ha,Hb,Xa,Xb,N,Zscr,Lzscr,Iscr,Liscr,
      &                   Gam,Lgam,Lsep,Cns,Bx,Ng,Irg,Ncol,Icol0,Lcol,
-     &                   Ipx,Npr,Ioffg,Gso,W1,W2,Lw)
+     &                   Ipx,Npr,Ioffg,Gso,W1,W2,Lw,Lnhf,Dn,Dref)
 C
 C Two-electron part of the gradient,
 C
@@ -15,7 +15,15 @@ C    - 1/2 sum_spin [ Hs(mu,la) Hs(nu,si) + Hs(mu,si) Hs(nu,la)
 C                   + Hs(mu,la) Xs(nu,si) + Xs(mu,la) Hs(nu,si)
 C                   + Hs(mu,si) Xs(nu,la) + Xs(mu,si) Hs(nu,la) ];
 C
-C for an SCF gradient X = 0. Cns times the nonseparable part from the
+C for an SCF gradient X = 0. For QRHF (Lnhf) the separable part also
+C has the terms of the indirect density Dn with the reference density
+C Dref (Erg_dens), as in Intexp:
+C
+C    Dref(mu,nu) Dn(la,si) + Dn(mu,nu) Dref(la,si)
+C    - 1/4 [ Dref(mu,la) Dn(nu,si) + Dn(mu,la) Dref(nu,si)
+C          + Dref(mu,si) Dn(nu,la) + Dn(mu,si) Dref(nu,la) ].
+C
+C Cns times the nonseparable part from the
 C MOINTS lists (Erg_gam, Erg_gnsp) is added when Cns is not zero.
 C The sum runs over the symmetry unique canonical shell quartets
 C only. Each quartet carries its permutational degeneracy and its
@@ -38,7 +46,8 @@ C
       Integer List(4), Icb(Mxpk), Ice(Mxpk), Iat(4), Iatd(4),
      &        Ider(3,4)
       Dimension Alp(Mxpk), Cc(Mxpk), X(4), Y(4), Z(4), Gq(3)
-      Logical Screen, Lrep, Lsep
+      Logical Screen, Lrep, Lsep, Lnhf
+      Dimension Dn(N,N), Dref(N,N)
       Data Screen /.True./
 
       Do Is1 = 1, Nshl
@@ -105,6 +114,10 @@ C Distinct atoms of the quartet.
      &            + Hb(I,K)*Hb(J,L) + Hb(I,L)*Hb(J,K)
      &            + Hb(I,K)*Xb(J,L) + Xb(I,K)*Hb(J,L)
      &            + Hb(I,L)*Xb(J,K) + Xb(I,L)*Hb(J,K))
+               If (Lnhf) Gam(Ind) = Gam(Ind)
+     &              + Dref(I,J)*Dn(K,L) + Dn(I,J)*Dref(K,L)
+     &              - 0.25D0*(Dref(I,K)*Dn(J,L) + Dn(I,K)*Dref(J,L)
+     &                      + Dref(I,L)*Dn(J,K) + Dn(I,L)*Dref(J,K))
             Else
                Gam(Ind) = 0.0D0
             Endif

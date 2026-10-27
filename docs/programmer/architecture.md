@@ -23,6 +23,9 @@ example, runs:
 | 6 | `xintprc` | sort MO integrals into lists; MBPT(2) energy |
 | 7 | `xvcc` | CC amplitude equations and energy |
 
+With `INTEGRALS=ERD` (see the keyword reference), steps 2 and 3 are
+`xerdints` alone, and gradients use `xerdgrad` in place of `xvdint`.
+
 Gradients add `xlambda`, `xdens`, `xanti`, `xbcktrn` and `xvdint`;
 excited states add `xlambda` and `xvee` (or `xvea`, `xvip`); `PROGRAM=PCCD`
 hands the whole job to `xrunpccd`. Because the sequence is just a list of
@@ -42,6 +45,7 @@ convergence.
 | `xjoda` | Input parsing (the `*ACES2` namelist, see `joda/asv_ctl.c`), symmetry, geometry optimization, finite differences, restarts |
 | `xvmol` | One- and two-electron AO integrals (VMOL, by J. Almlöf and P. R. Taylor, with ECPs added) |
 | `xvmol2ja` | Transformation matrices between computational and ZMAT order, Cartesian and spherical functions |
+| `xerdints` | `INTEGRALS=ERD`: one- and two-electron SO integrals from Flocke's OED/ERD, in VMOL's file format, with the records `xvmol2ja` writes; builds the SO basis itself |
 | `xvprops` | One-electron property integrals |
 | `xnddo`, `xmopac` | Semi-empirical starting density; starting Hessian |
 | `xvscf` | Hartree–Fock and Kohn–Sham SCF (`xintgrt` for the numerical integration, `xintpack` for OEP) |
@@ -58,6 +62,7 @@ convergence.
 | `xprops` | First-order properties, Mulliken analysis, relativistic corrections |
 | `xanti`, `xbcktrn` | Sort the two-particle density and transform it to the AO basis |
 | `xvdint`, `xvksdint` | Integral derivatives and gradients (ABACUS, by T. Helgaker, P. Jørgensen, H. J. Aa. Jensen and P. R. Taylor); GIAO integrals |
+| `xerdgrad` | `INTEGRALS=ERD`: gradients from OED/ERD derivative integrals over the symmetry-unique shell pairs and quartets, using the densities `xvdint` reads (SCF vectors, `RELDENS`, `IINTERM`, `NHFDENS`, the back-transformed Γ on `MOINTS`) |
 | `xcphf` | Coupled-perturbed Hartree–Fock |
 | `xnmr` | Correlated NMR shielding (paramagnetic part) |
 | `xtdhf`, `xrpa` | Time-dependent HF and RPA excitation energies |

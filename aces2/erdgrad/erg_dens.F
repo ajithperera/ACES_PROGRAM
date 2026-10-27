@@ -1,6 +1,6 @@
 #include "flags.h"
-      Subroutine Erg_dens(Iuhf,Lcorr,N,B,Ha,Hb,Xa,Xb,Dt,W,Dso,C,Occ,
-     &                    Eps,Scr)
+      Subroutine Erg_dens(Iuhf,Lcorr,Lnhf,N,B,Ha,Hb,Xa,Xb,Dt,W,Dso,
+     &                    Dn,Dref,C,Occ,Eps,Scr)
 C
 C Densities over ERD functions, D = B D(SO) B(T) (Erg_bso). Per spin
 C
@@ -22,9 +22,15 @@ C second derivative calculation), SCFEVC* and SCFEVL* are in the
 C correlated MO order, all occupied orbitals first, like R
 C and I (xvdint's Symcext and Symd turn all of them back to the SCF
 C order instead). ORB_OCC* stays in the SCF order, so in that case
-C the occupied orbitals are the first ones, as many as OCCUPY*0 says
-C (SYMPOPO* would leave out dropped core orbitals, which are still
-C there).
+C the occupied orbitals are the first ones: SYMPOPO* of them plus the
+C dropped occupied orbitals (NDROPPOP), which are still there. (For a
+C QRHF reference OCCUPY*0 is the RHF occupation, not the QRHF one.)
+C
+C QRHF (Lnhf, xvdint's NONHF): the indirect part of the relaxed
+C density NHFDENS* (MO basis, as R) is added to the one-particle
+C density (Dt, Dso) but not to X. Dn is its sum over spin and Dref
+C twice the SCF density of the spin whose occupation is the RHF one
+C (xvdint's Qrhfset and Dsym2); Erg_two adds their terms.
 C For RHF, RELDENSA and IINTERMA are the totals (both spins): Xa = Xb
 C is half of C R C(T) - 2 H. Ha, Hb, Xa, Xb are per spin, Dt is the
 C total one-particle density (H + X over both spins), W the total
@@ -39,9 +45,11 @@ C
 
       Logical Lcorr, Lcord
       Dimension B(N,N), Ha(N,N), Hb(N,N), Xa(N,N), Xb(N,N), Dt(N,N),
-     &          W(N,N), Dso(N,N), C(N,N), Occ(N), Eps(N), Scr(N,N,2)
+     &          W(N,N), Dso(N,N), Dn(N,N), Dref(N,N), C(N,N), Occ(N),
+     &          Eps(N), Scr(N,N,2)
       Integer Iocc(8,2)
-      Logical Lrohf
+      Logical Lrohf, Lnhf
+      Integer Idrop(8), Iset(255), Iset2(255)
       Character*8 Labc(2), Labe(2), Labo(2), Labd(2), Labi(2), Labf(2)
       Data Labc /'SCFEVCA0','SCFEVCB0'/
       Data Labe /'SCFEVLA0','SCFEVLB0'/
@@ -49,18 +57,29 @@ C
       Data Labd /'RELDENSA','RELDENSB'/
       Data Labi /'IINTERMA','IINTERMB'/
       Data Labf /'FOCKA   ','FOCKB   '/
+      Character*8 Labn(2)
+      Data Labn /'NHFDENSA','NHFDENSB'/
 
       Lcord = Lcorr .Or. Iflags(h_IFLAGS_deriv_lev) .Eq. 2
       Lrohf = Iflags(h_IFLAGS_ref) .Eq. 2 .And.
      &        Iflags(h_IFLAGS_orbitals) .Eq. 0
       If (Lcord) Then
-         Call Getrec(20,'JOBARC','OCCUPYA0',Nirr,Iocc(1,1))
+         Call Getrec(20,'JOBARC','SYMPOPOA',Nirr,Iocc(1,1))
          If (Iuhf .Eq. 1) Then
-            Call Getrec(20,'JOBARC','OCCUPYB0',Nirr,Iocc(1,2))
+            Call Getrec(20,'JOBARC','SYMPOPOB',Nirr,Iocc(1,2))
          Endif
+         Do I = 1, Nirr
+            Idrop(I) = 0
+         Enddo
+         Call Getrec(-1,'JOBARC','NDROPPOP',Nirr,Idrop)
+         Do I = 1, Nirr
+            Iocc(I,1) = Iocc(I,1) + Idrop(I)
+            Iocc(I,2) = Iocc(I,2) + Idrop(I)
+         Enddo
       Endif
       Call Zero(W,N*N)
       Call Zero(Dso,N*N)
+      Call Zero(Dn,N*N)
       Call Zero(Xa,N*N)
       Call Zero(Xb,N*N)
       Fac = 1.0D0
@@ -152,6 +171,16 @@ C X = B C R C(T) B(T) / fac - H, W -= B C sym(I) C(T) B(T).
                      Call Erg_btr(N,B,Scr(1,1,1),Xb,Scr(1,1,2),0.0D0)
                      Call Daxpy(N*N,-1.0D0,Hb,1,Xb,1)
                   Endif
+                  If (Lnhf) Then
+                     Call Getrec(20,'JOBARC',Labn(Ispin),N*N*Iintfp,
+     &                           Scr(1,1,1))
+                     Call Dgemm('N','N',N,N,N,1.0D0,C,N,Scr(1,1,1),N,
+     &                          0.0D0,Scr(1,1,2),N)
+                     Call Dgemm('N','T',N,N,N,1.0D0,Scr(1,1,2),N,C,N,
+     &                          0.0D0,Scr(1,1,1),N)
+                     Call Daxpy(N*N,1.0D0,Scr(1,1,1),1,Dso,1)
+                     Call Erg_btr(N,B,Scr(1,1,1),Dn,Scr(1,1,2),1.0D0)
+                  Endif
                Else
                   Call Dscal(N*N,-1.0D0,Scr(1,1,1),1)
                   Call Erg_btr(N,B,Scr(1,1,1),W,Scr(1,1,2),1.0D0)
@@ -168,6 +197,37 @@ C X = B C R C(T) B(T) / fac - H, W -= B C sym(I) C(T) B(T).
       Call Daxpy(N*N,1.0D0,Hb,1,Dt,1)
       Call Daxpy(N*N,1.0D0,Xa,1,Dt,1)
       Call Daxpy(N*N,1.0D0,Xb,1,Dt,1)
+      If (Lnhf) Then
+         Call Daxpy(N*N,1.0D0,Dn,1,Dt,1)
+
+C The spin whose occupation is the RHF one (xvdint's Qrhfset): the
+C other spin loses (QRHFIRR < 0) or gains electrons; QRHFSPN, when
+C there, gives their spin.
+
+         Call Getrec(20,'JOBARC','QRHFTOT ',1,Nmod)
+         Call Getrec(20,'JOBARC','QRHFIRR ',Nmod,Iset)
+         Do I = 1, Nmod
+            Iset2(I) = 0
+         Enddo
+         Call Getrec(-1,'JOBARC','QRHFSPN ',Nmod,Iset2)
+         Isp = 0
+         Do I = 1, Nmod
+            If (Iset(I) .Lt. 0) Then
+               Isp = 2
+               If (Iset2(I) .Eq. 1) Isp = 1
+            Else
+               Isp = 1
+               If (Iset2(I) .Eq. 2) Isp = 2
+            Endif
+         Enddo
+         Iqrhf = 3 - Isp
+         If (Iqrhf .Eq. 1) Then
+            Call Dcopy(N*N,Ha,1,Dref,1)
+         Else
+            Call Dcopy(N*N,Hb,1,Dref,1)
+         Endif
+         Call Dscal(N*N,2.0D0,Dref,1)
+      Endif
 
       Return
       End

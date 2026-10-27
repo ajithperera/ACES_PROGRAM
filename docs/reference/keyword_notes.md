@@ -129,6 +129,8 @@ Specifies which integral package to use. This is not a very robust keyword and s
 
 =ERD computes the integrals with the OED/ERD library (`xerdints`) instead of `xvmol` + `xvmol2ja`. It writes the same files and JOBARC records, for Cartesian and spherical basis sets, ECPs and DKH. As with VMOL, it cannot be combined with DIRECT or SYMMETRY=FULL. Only the xaces2 driver uses it so far; the other drivers (runpccd, aux, pyaces) still always run VMOL.
 
+With INTEGRALS=ERD, analytic gradients also come from OED/ERD: `xerdgrad` replaces `xvdint` for first derivatives (geometry optimizations, single-point gradients, finite-difference frequencies from gradients). It covers SCF, MBPT and CC gradients for RHF, UHF, ROHF and QRHF references, with ECPs, and Cartesian or spherical basis sets, and agrees with `xvdint` to about 1e-10 hartree/bohr. Analytic second derivatives (VIB=EXACT), NMR and the other properties still run `xvdint`.
+
 ## INTGRL_TOL
 
 Sets the tolerance for storing the two-electron integrals such that integrals having an absolute value greater than 10<sup>-N</sup> will be stored on disk.

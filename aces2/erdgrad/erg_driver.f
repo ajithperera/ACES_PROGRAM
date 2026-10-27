@@ -373,14 +373,15 @@ c flags.com : end
 
       Integer Icore(Maxcor), Npr(8), Ioffg(8), Nbg(8)
       Character*3 Kgen(3)
-      Logical Lecp, Lcorr, Debug
+      Logical Lecp, Lcorr, Debug, Lnhf
 
       Lecp = (Iflags(71) .Ne. 0)
       Inquire(File='ERDGRAD.DEBUG',Exist=Debug)
+      Lnhf = (Iflags(77) .Ne. 0)
       If (Iflags(11) .Gt. 2 .Or.
-     &    Iflags(77) .Ne. 0) Then
-         Write(6,"(a)") " @Erg_driver: only RHF, UHF and ROHF"
-     &                  //" references so far (no QRHF)"
+     &    (Lnhf .And. Iflags(2) .Eq. 0)) Then
+         Write(6,"(a)") " @Erg_driver: RHF, UHF and ROHF references,"
+     &                  //" QRHF for correlated methods only"
          Call Errex
       Endif
       If (Iflags(3) .Gt. 1) Then
@@ -449,17 +450,19 @@ C Densities over ERD functions (Erg_dens), kept with B to the end.
       I0t  = I0xb + N2
       I0w  = I0t  + N2
       I0d  = I0w  + N2
-      I0c  = I0d  + N2
+      I0dn = I0d  + N2
+      I0dr = I0dn + N2
+      I0c  = I0dr + N2
       I0o  = I0c  + N2
       I0e  = I0o  + N*Iintfp
       I0s  = I0e  + N*Iintfp
       Iend = I0s  + 2*N2
       If (Iend .Gt. Maxcor) Call Insmem("Erg_driver",Iend,Maxcor)
       Call Erg_bso(Icore(I0b),N)
-      Call Erg_dens(Iuhf,Lcorr,N,Icore(I0b),Icore(I0ha),Icore(I0hb),
-     &              Icore(I0xa),Icore(I0xb),Icore(I0t),Icore(I0w),
-     &              Icore(I0d),Icore(I0c),Icore(I0o),Icore(I0e),
-     &              Icore(I0s))
+      Call Erg_dens(Iuhf,Lcorr,Lnhf,N,Icore(I0b),Icore(I0ha),
+     &              Icore(I0hb),Icore(I0xa),Icore(I0xb),Icore(I0t),
+     &              Icore(I0w),Icore(I0d),Icore(I0dn),Icore(I0dr),
+     &              Icore(I0c),Icore(I0o),Icore(I0e),Icore(I0s))
 
 C Nonseparable two-particle density (correlated gradients only). The
 C MOINTS lists are over the SOs of the SCF, or for spherical functions
@@ -603,7 +606,8 @@ C nonseparable parts are also computed and printed separately.
      &           Icore(I0i),Liscr,Icore(I0q),Lgam,Ipart.Eq.1,
      &           Dble(Ipart-1),Icore(I0bx),Ng,Icore(I0rg),
      &           Icore(I0nc),Icore(I0ic),Icore(I0lc),Icore(I0px),Npr,
-     &           Ioffg,Icore(I0g2),Icore(I0w1),Icore(I0w2),Lw)
+     &           Ioffg,Icore(I0g2),Icore(I0w1),Icore(I0w2),Lw,
+     &           Lnhf,Icore(I0dn),Icore(I0dr))
             Call Erg_symz(Icore(I0g),Icore(I0gs))
             If (Ipart .Eq. 1) Then
                Write(6,"(a)") " @Erg_driver: one-electron + nuclear"
@@ -623,7 +627,7 @@ C nonseparable parts are also computed and printed separately.
      &             Icore(I0q),Lgam,.True.,Cns,Icore(I0bx),Ng,
      &             Icore(I0rg),Icore(I0nc),Icore(I0ic),Icore(I0lc),
      &             Icore(I0px),Npr,Ioffg,Icore(I0g2),Icore(I0w1),
-     &             Icore(I0w2),Lw)
+     &             Icore(I0w2),Lw,Lnhf,Icore(I0dn),Icore(I0dr))
       Call Erg_symz(Icore(I0g),Icore(I0gs))
       Call Daxpy(3*Natm,1.0D0,Icore(I0g1),1,Icore(I0gs),1)
       Call Cpu_time(T2)

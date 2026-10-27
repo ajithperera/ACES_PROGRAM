@@ -415,12 +415,11 @@ c INTEGRALS=ERD: xerdints writes the integrals and the vmol2ja records
          else
             der_integral_package='xvdint'
 c INTEGRALS=ERD: gradients from OED/ERD derivative integrals (xerdgrad)
-c for RHF, UHF and ROHF references, ECPs included; xvdint for QRHF and
-c for second derivatives (DERIV_LEV=2: VIB=EXACT, NMR, ...).
+c for RHF, UHF, ROHF and QRHF references, ECPs included; xvdint for
+c second derivatives (DERIV_LEV=2: VIB=EXACT, NMR, ...).
             if (erd_ints .and.
      &          iflags(3).le.1 .and.
-     &          iflags(11).le.2 .and.
-     &          iflags(77).eq.0)
+     &          iflags(11).le.2)
      &         der_integral_package='xerdgrad'
          end if
       else if (ks_scf .or. hf_dft) then
