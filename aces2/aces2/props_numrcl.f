@@ -31,8 +31,8 @@
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract 
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       common /sv_bool/
      &        mrcc,
      &        geom_opt, analytical_gradient,numerical_gradient,
@@ -43,8 +43,8 @@
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       save   /sv_bool/
 
       character
@@ -91,7 +91,7 @@ c
                Call Scf_eneg
                Call Runit('xvtran')
                Call Runit('xintprc')
-               Call Runit(der_integral_package)
+               Call Runit('xvdint')
                Call Runit('xcphf')
             Endif
 c
@@ -115,7 +115,7 @@ c
               Call Runit('xdens')
               Call runit('xanti')
               Call runit('xbcktrn')
-              Call runit(der_integral_package)
+              Call runit('xvdint')
               Call Aces_ja_init
               Call Aces_io_init(icore,1,0,.false.)
               Call Aces_io_remove(54,'DERGAM')

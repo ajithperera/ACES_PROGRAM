@@ -23,16 +23,18 @@ C
       Logical Lecp, Lcorr, Debug
 
       Lecp = (Iflags(h_IFLAGS_ecp) .Ne. 0)
-      If (Iflags(h_IFLAGS_ref) .Gt. 1) Then
-         Write(6,"(a)") " @Erg_driver: only RHF and UHF references"
-     &                  //" so far"
+      Inquire(File='ERDGRAD.DEBUG',Exist=Debug)
+      If (Iflags(h_IFLAGS_ref) .Gt. 2 .Or.
+     &    Iflags(h_IFLAGS_qrhf_genera) .Ne. 0) Then
+         Write(6,"(a)") " @Erg_driver: only RHF, UHF and ROHF"
+     &                  //" references so far (no QRHF)"
          Call Errex
       Endif
-      If (Lecp) Then
-         Write(6,"(a)") " @Erg_driver: no ECP gradients yet"
+      If (Iflags(h_IFLAGS_deriv_lev) .Gt. 1) Then
+         Write(6,"(a)") " @Erg_driver: first derivatives only (use"
+     &                  //" xvdint for DERIV_LEV=2)"
          Call Errex
       Endif
-
       Call Erd_rdmol(Kgen,Tla)
       Call Erd_symgrp(Kgen)
       Call Erd_sobld
@@ -40,6 +42,10 @@ C
      &     " shells ", Nshl, " functions ", Nfnerd, " spherical", Spher
       Write(6,"(a,i2,3(1x,a3))") " @Erg_driver: generators ", Ngen,
      &     (Kgen(I),I=1,Ngen)
+
+C ECPs: effective nuclear charges and ecplib set up (Erg_ecpini).
+
+      If (Lecp) Call Erg_ecpini(Icore(1))
 
 C Computational order of the AOs and SOs (as in Erd_driver). The
 C ZMAT center -> atom map (Iz2a) and computational center -> ZMAT
@@ -89,7 +95,8 @@ C Densities over ERD functions (Erg_dens), kept with B to the end.
       I0xb = I0xa + N2
       I0t  = I0xb + N2
       I0w  = I0t  + N2
-      I0c  = I0w  + N2
+      I0d  = I0w  + N2
+      I0c  = I0d  + N2
       I0o  = I0c  + N2
       I0e  = I0o  + N*Iintfp
       I0s  = I0e  + N*Iintfp
@@ -98,7 +105,8 @@ C Densities over ERD functions (Erg_dens), kept with B to the end.
       Call Erg_bso(Icore(I0b),N)
       Call Erg_dens(Iuhf,Lcorr,N,Icore(I0b),Icore(I0ha),Icore(I0hb),
      &              Icore(I0xa),Icore(I0xb),Icore(I0t),Icore(I0w),
-     &              Icore(I0c),Icore(I0o),Icore(I0e),Icore(I0s))
+     &              Icore(I0d),Icore(I0c),Icore(I0o),Icore(I0e),
+     &              Icore(I0s))
 
 C Nonseparable two-particle density (correlated gradients only). The
 C MOINTS lists are over the SOs of the SCF, or for spherical functions
@@ -203,6 +211,27 @@ C One-electron part and nuclear repulsion.
      &             Icore(I0z),Lzscr,Icore(I0i),Liscr)
       Call Erg_symz(Icore(I0g1),Icore(I0g))
       Call Erg_nucrep(Icore(I0g))
+      If (Lecp) Then
+         I0ec = I0q
+         I0ep = I0ec + 3*Natoms*Iintfp
+         I0ez = I0ep + Ncrt*Ncrt*Iintfp
+         I0es = I0ez + Ncrt*N*Iintfp
+         I0eg = I0es + Ncrt*N*Iintfp
+         Iend = I0eg + 3*Natoms*Iintfp
+         If (Iend .Gt. Maxcor) Call Insmem("Erg_driver",Iend,Maxcor)
+         If (Debug) Then
+            Write(6,"(a)") " @Erg_driver: one-electron + nuclear,"
+     &                     //" before the ECP part"
+            Call Erg_prgrd(Icore(I0g),Natm)
+         Endif
+         Call Erg_ecpgrd(Icore(I0g),Icore(I0d),N,Ncrt,Natoms,
+     &                   Icore(K000),Icore(I0ec),Icore(I0ez),
+     &                   Icore(I0ep),Icore(I0es),Icore(I0eg))
+         If (Debug) Then
+            Write(6,"(a)") " @Erg_driver: with the ECP part"
+            Call Erg_prgrd(Icore(I0g),Natm)
+         Endif
+      Endif
       Call Dcopy(3*Natm,Icore(I0g),1,Icore(I0g1),1)
 
 C Two-electron part. With the file ERDGRAD.DEBUG the separable and
@@ -210,7 +239,6 @@ C nonseparable parts are also computed and printed separately.
 
       Cns = 0.0D0
       If (Lcorr) Cns = 4.0D0
-      Inquire(File='ERDGRAD.DEBUG',Exist=Debug)
       If (Debug .And. Lcorr) Then
          Do Ipart = 1, 2
             Call Zero(Icore(I0g),3*Natm)
