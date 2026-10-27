@@ -93,7 +93,7 @@ tl_tmp += \
           ${tl_mrcc_libs} \
           diagtools symtools omm imm
 tl_tmp += \
-          vmol vmol2ja vscf vtran intprc lambda dens anti bcktrn vdint \
+          vmol vmol2ja vscf vtran intprc lambda dens anti bcktrn vdint erdints \
           hbar vcceh vee pdens aces2 pccd runpccd psi4dbg
 tl_libs := $(strip ${tl_tmp})
 
