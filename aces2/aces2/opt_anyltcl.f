@@ -254,6 +254,21 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 c parallel_aces.com : begin
 
 c This common block contains the MPI statistics for each MPI process. The values

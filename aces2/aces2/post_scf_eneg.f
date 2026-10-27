@@ -254,6 +254,21 @@ c
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 c     
       Logical parcc_exist
       Call a2getrec(20,'JOBARC','NDROPGEO',1,NDRGEO)

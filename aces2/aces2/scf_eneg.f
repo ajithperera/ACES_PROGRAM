@@ -33,7 +33,7 @@
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
+     &        Analytical_hessian,
      &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       common /sv_bool/
      &        mrcc,
@@ -45,7 +45,7 @@
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
+     &        Analytical_hessian,
      &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       save   /sv_bool/
 
@@ -58,6 +58,21 @@
      &          integral_package,
      &          der_integral_package
       save   /sv_char/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
