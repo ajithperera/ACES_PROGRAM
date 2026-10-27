@@ -258,6 +258,22 @@ cYAU - ACES3 stuff . . . we hope - #include <aces.par>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 c Two different "stacks" of memory will be available in the course of an
 c Aces3 calculation.  Integer memory will be stored in icore.  Real memory
 c will be stored in dcore.
@@ -1310,7 +1326,8 @@ c           buffer for MPI_ALLREDUCE
          imemget = imemget + iTmp
       end if
 
-      If (IFLAGS(45) .EQ. 5) imemget=Max(imemget,Maxcor)
+      If (IFLAGS(45) .EQ. 5)
+     &   imemget=Max(imemget,Min(Maxcor,Icrsiz))
      
 cwc0
 C

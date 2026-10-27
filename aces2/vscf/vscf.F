@@ -607,7 +607,8 @@ c           buffer for MPI_ALLREDUCE
          imemget = imemget + iTmp
       end if
 
-      If (IFLAGS(h_IFLAGS_guess) .EQ. 5) imemget=Max(imemget,Maxcor)
+      If (IFLAGS(h_IFLAGS_guess) .EQ. 5)
+     &   imemget=Max(imemget,Min(Maxcor,Icrsiz))
      
 cwc0
 C

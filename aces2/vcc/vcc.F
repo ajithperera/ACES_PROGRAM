@@ -1532,6 +1532,7 @@ C ----------------------------------------------------------------------
 #include "icore.com"
 #include "istart.com"
       INTEGER IUHF
+      CALL BWSTART(IUHF)
       CALL CRAPSI(ICORE, IUHF, 0)
       CALL VCC(ICORE(I0), ICRSIZ, IUHF)
       CALL ACES_FIN

@@ -211,6 +211,22 @@ C
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE VCC(ICORE,ICRSIZ,IUHF)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       INTEGER DISTSZ,RLECYC,T1_CYCLE
@@ -1807,6 +1823,7 @@ c istart.com : begin
       save   /istart/
 c istart.com : end
       INTEGER IUHF
+      CALL BWSTART(IUHF)
       CALL CRAPSI(ICORE, IUHF, 0)
       CALL VCC(ICORE(I0), ICRSIZ, IUHF)
       CALL ACES_FIN
