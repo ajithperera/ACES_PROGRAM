@@ -20,7 +20,7 @@ C
 
       Integer Icore(Maxcor), Npr(8), Ioffg(8), Nbg(8)
       Character*3 Kgen(3)
-      Logical Lecp, Lcorr, Debug, Lnhf
+      Logical Lecp, Lcorr, Debug, Lnhf, Lnoscr, Ltau
 
       Lecp = (Iflags(h_IFLAGS_ecp) .Ne. 0)
       Inquire(File='ERDGRAD.DEBUG',Exist=Debug)
@@ -200,7 +200,9 @@ C Gamma buffer of the largest shell quartet.
       I0gs = I0g  + 3*Natm*Iintfp
       I0g1 = I0gs + 3*Natm*Iintfp
       I0q  = I0g1 + 3*Natm*Iintfp
-      I0z  = I0q  + Lgam*Iintfp
+      I0sq = I0q  + Lgam*Iintfp
+      I0sf = I0sq + (Nshl*(Nshl+1)/2)*Iintfp
+      I0z  = I0sf + Nshl*Iintfp
       Left = Maxcor - I0z + 1
       If (Left .Le. 0) Call Insmem("Erg_driver",I0z,Maxcor)
       Lzscr = (Left/2)/Iintfp
@@ -240,6 +242,21 @@ C One-electron part and nuclear repulsion.
 
       Call Cpu_time(T1)
 
+C Schwarz screening of the derivative ERIs (Erg_schw, Erg_two); the
+C file ERDGRAD.NOSCREEN turns it off, ERDGRAD.TAU sets the threshold.
+
+      Inquire(File='ERDGRAD.NOSCREEN',Exist=Lnoscr)
+      Tau = 1.0D-13
+      If (Lnoscr) Tau = 0.0D0
+      Inquire(File='ERDGRAD.TAU',Exist=Ltau)
+      If (Ltau) Then
+         Open(Unit=31,File='ERDGRAD.TAU',Status='Old')
+         Read(31,*) Tau
+         Close(31)
+      Endif
+      If (Tau .Gt. 0.0D0) Call Erg_schw(Icore(I0sq),Icore(I0sf),
+     &                    Icore(I0z),Lzscr,Icore(I0i),Liscr)
+
 C Two-electron part. With the file ERDGRAD.DEBUG the separable and
 C nonseparable parts are also computed and printed separately.
 
@@ -254,7 +271,8 @@ C nonseparable parts are also computed and printed separately.
      &           Dble(Ipart-1),Icore(I0bx),Ng,Icore(I0rg),
      &           Icore(I0nc),Icore(I0ic),Icore(I0lc),Icore(I0px),Npr,
      &           Ioffg,Icore(I0g2),Icore(I0w1),Icore(I0w2),Lw,
-     &           Lnhf,Icore(I0dn),Icore(I0dr))
+     &           Lnhf,Icore(I0dn),Icore(I0dr),Icore(I0sq),
+     &           Icore(I0sf),0.0D0,Nskip)
             Call Erg_symz(Icore(I0g),Icore(I0gs))
             If (Ipart .Eq. 1) Then
                Write(6,"(a)") " @Erg_driver: one-electron + nuclear"
@@ -268,18 +286,23 @@ C nonseparable parts are also computed and printed separately.
          Enddo
       Endif
 
+      Nskip = 0
       Call Zero(Icore(I0g),3*Natm)
       Call Erg_two(Icore(I0g),Icore(I0ha),Icore(I0hb),Icore(I0xa),
      &             Icore(I0xb),N,Icore(I0z),Lzscr,Icore(I0i),Liscr,
      &             Icore(I0q),Lgam,.True.,Cns,Icore(I0bx),Ng,
      &             Icore(I0rg),Icore(I0nc),Icore(I0ic),Icore(I0lc),
      &             Icore(I0px),Npr,Ioffg,Icore(I0g2),Icore(I0w1),
-     &             Icore(I0w2),Lw,Lnhf,Icore(I0dn),Icore(I0dr))
+     &             Icore(I0w2),Lw,Lnhf,Icore(I0dn),Icore(I0dr),
+     &             Icore(I0sq),Icore(I0sf),Tau,Nskip)
       Call Erg_symz(Icore(I0g),Icore(I0gs))
       Call Daxpy(3*Natm,1.0D0,Icore(I0g1),1,Icore(I0gs),1)
       Call Cpu_time(T2)
       Write(6,"(a,f10.2,a,f10.2,a)") " @Erg_driver: CPU one-electron",
      &     T1-T0, " s, two-electron", T2-T1, " s"
+      If (Tau .Gt. 0.0D0) Write(6,"(a,i12,a,1p,e8.1)")
+     &     " @Erg_driver: shell quartets screened out", Nskip,
+     &     ", threshold", Tau
 
       Call Erg_wrgrd(Icore(I0gs),Natm,Natoms,Icore(K000),Icore(K010),
      &               Icore(I0z))

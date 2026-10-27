@@ -11,7 +11,8 @@
 
       Subroutine Erg_two(G,Ha,Hb,Xa,Xb,N,Zscr,Lzscr,Iscr,Liscr,
      &                   Gam,Lgam,Lsep,Cns,Bx,Ng,Irg,Ncol,Icol0,Lcol,
-     &                   Ipx,Npr,Ioffg,Gso,W1,W2,Lw,Lnhf,Dn,Dref)
+     &                   Ipx,Npr,Ioffg,Gso,W1,W2,Lw,Lnhf,Dn,Dref,
+     &                   Q,Fd,Tau,Nskip)
 C
 C Two-electron part of the gradient,
 C
@@ -33,6 +34,10 @@ C
 C    Dref(mu,nu) Dn(la,si) + Dn(mu,nu) Dref(la,si)
 C    - 1/4 [ Dref(mu,la) Dn(nu,si) + Dn(mu,la) Dref(nu,si)
 C          + Dref(mu,si) Dn(nu,la) + Dn(mu,si) Dref(nu,la) ].
+C
+C A quartet is skipped when max|Gam| Q(12) Q(34) max(Fd) < Tau, with
+C the Schwarz factors Q and derivative factors Fd of Erg_schw (Tau =
+C 0 turns this off); Nskip counts them.
 C
 C Cns times the nonseparable part from the
 C MOINTS lists (Erg_gam, Erg_gnsp) is added when Cns is not zero.
@@ -168,7 +173,7 @@ c erdints.com : end
      &        Ider(3,4)
       Dimension Alp(Mxpk), Cc(Mxpk), X(4), Y(4), Z(4), Gq(3)
       Logical Screen, Lrep, Lsep, Lnhf
-      Dimension Dn(N,N), Dref(N,N)
+      Dimension Dn(N,N), Dref(N,N), Q(*), Fd(*)
       Data Screen /.True./
 
       Do Is1 = 1, Nshl
@@ -248,6 +253,17 @@ C Distinct atoms of the quartet.
          Enddo
          If (Cns .Ne. 0.0D0) Call Erg_gnsp(List,Cns,Gam,Bx,N,Ng,Irg,
      &                    Ncol,Icol0,Lcol,Ipx,Npr,Ioffg,Gso,W1,W2,Lw)
+         If (Tau .Gt. 0.0D0) Then
+            Gmax = 0.0D0
+            Do I = 1, N1*N2*N3*N4
+               Gmax = Max(Gmax,Dabs(Gam(I)))
+            Enddo
+            F = Max(Fd(Is1),Fd(Is2),Fd(Is3),Fd(Is4))
+            If (Gmax*Q(Ij)*Q(Kl)*F .Lt. Tau) Then
+               Nskip = Nskip + 1
+               Goto 100
+            Endif
+         Endif
 
          Call Erd_pack(4,List,Alp,Nalp,Cc,Ncc,Icb,Ice,Ncsum,Mxpk)
          Do I = 1, 4
@@ -255,6 +271,27 @@ C Distinct atoms of the quartet.
             Y(I) = Xyzatm(2,Iat(I))
             Z(I) = Xyzatm(3,Iat(I))
          Enddo
+
+C The atom whose derivative comes from translational invariance is
+C the one most expensive to differentiate (largest sum of (L+1) times
+C the number of primitives over its centers in the quartet).
+
+         Cmax = -1.0D0
+         Imx  = Nd
+         Do Ia = 1, Nd
+            Cost = 0.0D0
+            Do I = 1, 4
+               If (Iat(I) .Eq. Iatd(Ia)) Cost = Cost +
+     &            Dble((Lshl(List(I))+1)*Nprsh(List(I)))
+            Enddo
+            If (Cost .Gt. Cmax) Then
+               Cmax = Cost
+               Imx  = Ia
+            Endif
+         Enddo
+         Itmp      = Iatd(Imx)
+         Iatd(Imx) = Iatd(Nd)
+         Iatd(Nd)  = Itmp
 
          Do Ia = 1, Nd-1
             Do Kc = 1, 3
