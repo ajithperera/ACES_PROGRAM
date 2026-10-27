@@ -79,7 +79,7 @@ c---------------------------------------------------------------------------
 
          ECP = iflags(71) 
          DKH = .False.
-         DKH = (iflags2(157) .GT. 0)
+         DKH = (iflags2(167) .GT. 0)
 
          if (intpkg .eq. gamess_package .or.
      *       intpkg .eq. gamess_derivative_package) go to 1000

@@ -471,7 +471,7 @@ follows L. R. Kahn, P. Baybutt and D. G. Truhlar, *J. Chem. Phys.* **65**,
 `ISOMASS`
 : Atomic masses for vibrational frequencies (free format, one per real atom
   in Z-matrix order). If the file exists, its masses replace the standard
-  ones.
+  ones. See {ref}`isotopes` for an example.
 
 `frequency`
 : The frequencies at which dynamic polarizabilities are computed (free format).

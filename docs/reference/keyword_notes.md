@@ -766,3 +766,61 @@ In EOM-EE (`xvee`, Davidson solver), stores up to four left and right vectors pe
 ## PES_SCAN
 
 Set internally by `xa2proc PES_scan` (IRC and scans) so that the integral and CC codes take the geometry of each point from JOBARC. Not meant to be set in `ZMAT`.
+
+# ACES III
+
+## LOCK_ORBITALS
+
+ACES III SCF (`scf_rhf`, `scf_uhf`): with `ON`, the occupation numbers are rebuilt (`MAKE_OCCUPATION`) at every iteration once DIIS has started.
+
+## DAMP_END
+
+ACES III SCF: the iteration after which damping (`DAMP_TYPE`, `DAMP_TOL`) is switched off.
+
+## EE_GUESS
+
+ACES III EOM-CC: starting vectors from CIS (`CIS`, the default) or read from a file (`EXTERNAL`).
+
+## EE_DENOM
+
+ACES III EOM-CC: the diagonal used to precondition the Davidson iterations, from Fock-matrix orbital energies (`FOCK`, the default) or the diagonal of H-bar (`HBAR`).
+
+## CIS_TOL
+
+ACES III: convergence of the CIS step that gives the EOM starting vectors, as 10<sup>−n</sup>.
+
+## ROOT_SE
+
+ACES III EOM-CC (alias `ROOT_SEARCH`): how each root is followed through the Davidson iterations, by largest overlap with the starting vector (`MAX_OVERLAP`, the default) or lowest energy (`MIN_ENERGY`).
+
+## SEL_VEC
+
+ACES III EOM-CC (alias `SELECT_VECS`): the vector each root is compared with when it is followed, the first one (`FIRST`, the default) or the one from the previous iteration (`PREVIOUS`).
+
+## SUB_SPACE
+
+ACES III EOM-CC: whether each new root starts a fresh Davidson subspace (`NEW`) or keeps the vectors of the previous roots (`KEEP`).
+
+## STGF12
+
+ACES III: adds the explicitly correlated (F12) correction with a Slater-type geminal; its exponent is `F12GAMMA`.
+
+## F12GAMMA
+
+ACES III: exponent of the Slater-type geminal for `STGF12=ON`, in bohr<sup>−1</sup> (for example `F12GAMMA=1.5`). Written to JOBARC as the record `F12GAMMA`.
+
+## FREQ
+
+ACES III: the frequency (a.u.) of a dynamic polarizability (`PROPS=POLAR`). Written to JOBARC as the record `FREQ`.
+
+## IMFREQ
+
+ACES III: an imaginary frequency (a.u.) for a polarizability at imaginary frequency, as used for C<sub>6</sub> coefficients (test `complex_polar`). Written to JOBARC as the record `IMFREQ`.
+
+## SPINORB_CC
+
+ACES III: spin–orbit coupled-cluster calculation (tests `steom_so`, `so_ipeomcc_f12`).
+
+## SOC_ROOTS
+
+ACES III: number of roots in a spin–orbit coupling (`PROPS=SOC`) calculation.

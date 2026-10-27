@@ -30,6 +30,40 @@ export ACES_EXE_PATH=/path/to/ACES_PROGRAM/aces3/bin
 mpirun -np 4 $ACES_EXE_PATH/xaces3 > out
 ```
 
+`xaces3` reads the input with the ACES II `xjoda`, which it runs as
+`xjoda aces3` in the work directory at the start of the job and after each
+gradient of an optimization or finite-difference run. `xjoda` must be on
+`PATH` (for a superbuild, `ACES_PROGRAM/aces2/bin`), or name it with
+`ACES_XJODA`:
+
+```bash
+export ACES_XJODA=/path/to/ACES_PROGRAM/aces2/bin/xjoda
+```
+
+ACES III runs in C1 only. In this mode `xjoda` sets `SYMMETRY=OFF`: the
+calculation is done in C1, but the molecule is put in the standard
+orientation of its full point group, which is found and stored. With
+`SYMMETRY=NONE` or `NOREORI=ON` in the input, the input orientation is kept
+instead (and no point group is found). A-, G- and D-tensor jobs
+(`PROPS=A-TEN`, `G-TEN`, `D-TEN`) always keep the input orientation and
+origin, because the gauge origin of these properties is the coordinate
+origin. `xjoda` also uses the ACES III
+defaults `CC_MAXCYC=0` (100 iterations) and `EOM_MAXCYC=30` unless they are
+given.
+
+### Orbital symmetry labels
+
+At the end of every job `xaces3` runs `xa2proc symadapt`, which gives each
+C1 SCF orbital the irreducible representation of the full point group and
+appends the table to `summary.out` (for water, 1a<sub>1</sub>,
+2a<sub>1</sub>, 1b<sub>2</sub>, 3a<sub>1</sub>, 1b<sub>1</sub>, the same
+labels and orbital energies as an ACES II run in C<sub>2v</sub>). When an
+EOM or CIS program has written the excited state densities to `JOBARC`, the
+natural orbitals of each state are labeled too. `xa2proc` is found like
+`xjoda`: `$ACES_XA2PROC`, else next to `$ACES_XJODA`, else on `PATH`. A
+`SYMMETRY=NONE` job is not labeled. The labels of fully symmetric orbitals
+of single atoms are not assigned yet (they print as `XXXX`).
+
 Keep all processes of a job on **one node** unless the scratch directory
 (`LOCAL_PATH`, below) is on a shared file system. Each process keeps its
 block files in the run directory, and the processes must see each other's.

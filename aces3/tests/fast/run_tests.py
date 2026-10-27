@@ -184,6 +184,10 @@ def run_case(name, np):
 
         env = os.environ.copy()
         env["ACES_EXE_PATH"] = os.path.join(REPO_DIR, "bin")
+        # xaces3 runs the ACES II xjoda: $ACES_XJODA, else xjoda on PATH,
+        # else the superbuild's aces2/bin/xjoda.
+        if not env.get("ACES_XJODA") and not shutil.which("xjoda", path=env.get("PATH")):
+            env["ACES_XJODA"] = os.path.join(os.path.dirname(REPO_DIR), "aces2", "bin", "xjoda")
 
         timeout = TIMEOUT_OVERRIDES.get(name, DEFAULT_TIMEOUT)
         t0 = time.time()

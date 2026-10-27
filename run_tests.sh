@@ -35,11 +35,13 @@ for t in $TARGETS; do
         > "$LOG" 2>&1
       ;;
     aces3)
-      ( cd "$ROOT/aces3" && python3 tests/fast/run_tests.py --jobs "$ACES_PROGRAM_NP" --np "$ACES_PROGRAM_NP" ) \
+      # xaces3 runs the ACES II xjoda, found on PATH.
+      ( cd "$ROOT/aces3" && PATH="$HOME/Develop/bin:$PATH" \
+          python3 tests/fast/run_tests.py --jobs "$ACES_PROGRAM_NP" --np "$ACES_PROGRAM_NP" ) \
         > "$LOG" 2>&1
       ;;
     pyaces)
-      ( cd "$ROOT/pyaces" && python3 pyaces_suite_runner.py ) \
+      ( cd "$ROOT/pyaces" && PATH="$HOME/Develop/bin:$PATH" python3 pyaces_suite_runner.py ) \
         > "$LOG" 2>&1
       ;;
     *)

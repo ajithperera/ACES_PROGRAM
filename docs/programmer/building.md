@@ -85,6 +85,12 @@ because later directories need the products of earlier ones:
 After changing a `.sial` file, rebuilding level 3 is enough; after changing
 Fortran or C++ in the runtime, rebuild the library and relink `xaces3`.
 
+ACES III has no input parser of its own: `xaces3` runs the ACES II `xjoda`
+(see {doc}`../user/aces3`), so ACES II must be built
+first. Keywords that only ACES III uses are in the same table,
+`aces2/joda/asv_ctl.c`, and `xaces3` reads them from `IFLAGS2` by slot
+number (`aces3/src/main/init_data.F`); move both together.
+
 ## pyaces
 
 `pyaces/build.sh` builds the `aces2py` extension module with F2PY,

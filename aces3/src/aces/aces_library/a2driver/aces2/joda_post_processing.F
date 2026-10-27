@@ -23,30 +23,9 @@ c----------------------------------------------------------------------------
       implicit none
       integer jodadone
 
-      integer dummy, nforcecon
-
-c      call aces_ja_init()
-c      call iputrec(1,'JOBARC','FIRSTRUN',1,0)
-c      call iputrec(1,'JOBARC','DIRTYFLG',1,1)
-c      call geopt(jodadone)
-c      call aces_ja_fin()
-
-      call aces2_joda_main()
+      call run_xjoda()
       call aces_ja_init()
       call igetrec(1, 'JOBARC', 'JODADONE',  1, jodadone)
-c      if (jodadone .eq. 0) then
-
-c--------------------------------------------------------------------------
-c   For VIB_FINDIF=EXACT calculations, joda doesn't set the jodadone flag.
-c   Instead, we check to see if the FORCECON record is on JOBARC.
-c---------------------------------------------------------------------------
-
-c         call igetrec(0, 'JOBARC', 'FORCECON', nforcecon, dummy)
-c         if (nforcecon .gt. 0) jodadone = 1
-c         print *,'JODA_POST_PROCESSING: nforcecon, jodadone ',
-c     *       nforcecon, jodadone
-c      endif
-
       call aces_ja_fin()
       return
       end

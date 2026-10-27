@@ -210,7 +210,9 @@ c     logical flags
      &        bTDCalc, DoABCD, DoABCI, ACES2, bMN_A3, DoQRHF, bSTEOM,
      &        EOM, bGeomOpt, bTDA, bOpenShell
       logical bOpened, bTmp, bDone, bDelLastChar, bHaveKeys, bVerbose
-      logical bAutoCart, NO_AGRAD
+      logical bAutoCart, NO_AGRAD, bACES3, bInput(600)
+      character*16 szArg
+      double precision dTmp
 c     character constants
       character*1 czPercent, czAsterisk, czHash, czSpace, czFirstNLChar
       character*1 czTab
@@ -604,6 +606,9 @@ c   o print the ASV registration header
 c   o initialize flags to default values
       call asv_update_kv(achar(0),iASV,wrk,0)
       bHaveKeys = .false.
+      do i = 1, 600
+         bInput(i) = .false.
+      end do
 
 c   o loop over the number of lines
       do iLine = 1, iLines
@@ -719,6 +724,7 @@ c               o process the boolean and point to the next key token
 
 c         o What do we do if the ASV is not recognized: die or skip?
             if (iASV.eq.0) call errex
+            bInput(iASV) = .true.
             bHaveKeys = .true.
 c            if (iASV.eq.0) goto 101
 
@@ -750,6 +756,21 @@ c         o BASIS
             end if
 
 c YAU - add a conditional for SUBGROUP that sets nIrrps
+
+c         o ACES III: F12 exponent and polarizability frequencies are
+c           passed to xaces3 as JOBARC records.
+            if (iASV.eq.h_IOPPAR_f12gamma.or.
+     &          iASV.eq.h_IOPPAR_pol_freq.or.
+     &          iASV.eq.h_IOPPAR_pol_freq_im) then
+               read(szData(1:ValueSize),*) dTmp
+               if (iASV.eq.h_IOPPAR_f12gamma)
+     &            call putrec(1,'JOBARC','F12GAMMA',iintfp,dTmp)
+               if (iASV.eq.h_IOPPAR_pol_freq)
+     &            call putrec(1,'JOBARC','FREQ    ',iintfp,dTmp)
+               if (iASV.eq.h_IOPPAR_pol_freq_im)
+     &            call putrec(1,'JOBARC','IMFREQ  ',iintfp,dTmp)
+               goto 101
+            end if
 
 c         o OCCUPATION
             if (iASV.eq.h_IOPPAR_occ) then
@@ -1306,6 +1327,67 @@ c Turn off symmetry if subgroup=C1.
       if (ioppar(h_IOPPAR_subgroup).eq.1) then
          call asv_update_kv('!sym'//achar(0),iASV,szData,0)
       end if
+C
+C ACES III runs only in C1: xaces3 runs "xjoda aces3", which sets
+C SYMMETRY=OFF (C1, in the standard orientation of the full point
+C group, so that xa2proc symadapt can label the orbitals at the end),
+C or SYMMETRY=NONE (input orientation) when the input asks for NONE or
+C NOREORI=ON, and for A-, G- and D-tensors. It also sets the defaults xaces3 expects. 10/2026.
+C
+      bACES3 = .false.
+      if (command_argument_count() .ge. 1) then
+         call get_command_argument(1, szArg)
+         bACES3 = (szArg .eq. 'aces3')
+      end if
+      if (bACES3) then
+C        A-, G- and D-tensors (PROPS 15-17) keep the input frame: the
+C        gauge origin is the coordinate origin.
+         if ((bInput(h_IOPPAR_sym) .and.
+     &        ioppar(h_IOPPAR_sym).eq.0) .or.
+     &       (bInput(h_IOPPAR_noreori) .and.
+     &        ioppar(h_IOPPAR_noreori).eq.1) .or.
+     &       (ioppar(h_IOPPAR_props).ge.15 .and.
+     &        ioppar(h_IOPPAR_props).le.17)) then
+            szTmp = 'SYMMETRY=NONE'//achar(0)
+         else
+            szTmp = 'SYMMETRY=OFF'//achar(0)
+         end if
+         call asv_update_kv(szTmp,iASV,szData,0)
+         if (ioppar(h_IOPPAR_scf_exporde).eq.0) then
+            szTmp = 'scf_exporde=8'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+         if (ioppar(h_IOPPAR_scf_expstar).eq.0) then
+            szTmp = 'scf_expstar=2'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+C        ACES III defaults where they differ from ACES II: CC_MAXCYC=0
+C        (xaces3 then allows 100 iterations; it also sizes iteration
+C        arrays by it), EOM_MAXCYC=30 (the Davidson subspace size), and
+C        with SYMMETRY=NONE the input orientation kept unless
+C        frequencies are computed.
+         if (.not.bInput(h_IOPPAR_cc_maxcyc)) then
+            szTmp = 'cc_maxcyc=0'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+         if (.not.bInput(h_IOPPAR_eom_maxcyc)) then
+            szTmp = 'eom_maxcyc=30'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+C        F12 (STGF12=ON) runs in the uncontracted basis, as with the
+C        joda that ACES III used to carry.
+         if (ioppar(h_IOPPAR_stgf12).eq.1 .and.
+     &       .not.bInput(h_IOPPAR_uncontract)) then
+            szTmp = 'UNCONTRACT=ON'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+         if (ioppar(h_IOPPAR_sym).eq.0 .and.
+     &       ioppar(h_IOPPAR_noreori).ge.2 .and.
+     &       ioppar(h_IOPPAR_vib).lt.1) then
+            szTmp = 'NOREORI=ON'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+      end if
       if ((ioppar(h_IOPPAR_geom_opt) .ge. 2)) Then
 C
 C Cartesian and RIC optimizations used to force SYMMETRY=NONE. They
@@ -1360,7 +1442,7 @@ C except when dummy atoms are present but there is no need of this).
 C Ajith Perera 02/2012.
 C
       if ((ioppar(h_IOPPAR_coordinates).eq.0) .and.
-     &   (ioppar(h_IOPPAR_sym).eq.0)) then
+     &   (ioppar(h_IOPPAR_sym).eq.0) .and. .not.bACES3) then
           szTmp = 'SYMMETRY=ON'//achar(0)
           call asv_update_kv(szTmp,iASV,szData,0)
       endif
@@ -1854,6 +1936,26 @@ c   o PROPERTY CALCULATION FOR CORRELATED CALCULATION
       Print*, "First order props and grad flags @enter:",
      &         ioppar(h_IOPPAR_props),ioppar(h_IOPPAR_grad_calc) 
 #endif
+C
+C ACES III property names: POLAR is EOM_NLO and A-TEN is FIRST_ORDER;
+C A-, G- and D-tensors need an open-shell reference.
+C
+      if (ioppar(h_IOPPAR_props).eq.14) then
+         szTmp = 'props=EOM_NLO'//achar(0)
+         call asv_update_kv(szTmp,iASV,szData,0)
+      endif
+      if (ioppar(h_IOPPAR_props).eq.15) then
+         szTmp = 'props=FIRST_ORDER'//achar(0)
+         call asv_update_kv(szTmp,iASV,szData,0)
+      endif
+      if ((ioppar(h_IOPPAR_props).ge.15 .and.
+     &     ioppar(h_IOPPAR_props).le.17) .and.
+     &    (ioppar(h_IOPPAR_reference).eq.0 .or.
+     &     ioppar(h_IOPPAR_mult).eq.1)) then
+         print *, '@GTFLGS: A-, G- and D-tensors need an open-shell',
+     &            ' reference.'
+         call errex
+      endif
       if (ioppar(h_IOPPAR_props).ge.1) then
          szTmp = 'deriv=first'//achar(0)
          call asv_update_kv(szTmp,iASV,szData,0)
@@ -2247,7 +2349,9 @@ c SG 3/11/96
 c  make sure that analytic gradients are available if requested
       if (ioppar(h_IOPPAR_excite   ).gt.0.and.
      &    ioppar(h_IOPPAR_deriv_lev).gt.0     ) then
-         if (ioppar(h_IOPPAR_deriv_lev).gt.1) then
+         if (ioppar(h_IOPPAR_deriv_lev).gt.1 .and. (.not.bACES3 .or.
+     &       ioppar(h_IOPPAR_vib).eq.1 .or.
+     &       ioppar(h_IOPPAR_geom_opt).ne.0)) then
             print *, '@GTFLGS: Analytical frequencies are not',
      &               ' available for excited states.'
             call errex
@@ -2803,7 +2907,7 @@ c  a RHF reference.  If not, then bomb out!
 cJDW 3/31/94
 c Stop NMR calculations (apart from CCSDeH) which cannot use sphericals.
 c Also, always stop if PROP=TDHF has been specified.
-      if (ioppar(h_IOPPAR_spherical).eq. 1.and.
+      if (ioppar(h_IOPPAR_spherical).eq. 1.and. .not.bACES3 .and.
      &    ioppar(h_IOPPAR_props    ).ne. 7.and.
      &    ioppar(h_IOPPAR_props    ).ne. 8.and.
      &    ioppar(h_IOPPAR_props    ).ne. 9.and.

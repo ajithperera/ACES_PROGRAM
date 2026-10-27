@@ -124,9 +124,7 @@ AC_CONFIG_FILES([src/aces/aces_library/special_directory/direct_integral/Makefil
 # project's history ran against a tree where libprop_ints.a already
 # existed from some earlier, more complete bootstrap.
 AC_CONFIG_FILES([src/aces/aces_library/special_directory/prop_ints/Makefile])
-AC_CONFIG_FILES([src/aces/aces_library/a2driver/symcor/Makefile])
 AC_CONFIG_FILES([src/aces/aces_library/a2driver/aces2/Makefile])
-AC_CONFIG_FILES([src/aces/aces_library/a2driver/geopt/Makefile])
 AC_CONFIG_FILES([src/sia/framelib/Makefile])
 AC_CONFIG_FILES([src/sia/manager/Makefile])
 AC_CONFIG_FILES([src/sia/sip/aces_instructions/Makefile])

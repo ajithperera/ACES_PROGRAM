@@ -11,7 +11,7 @@
 # test_compare -- "src" itself has no Makefile, so plain `gmake clean &&
 # gmake all` from aces3/ NEVER builds any of the ~20 other library
 # directories (framelib, sip1/2/3, the special_directory/* integral libs,
-# a2driver's aces2/geopt/symcor, the sial compiler itself) OR src/main
+# a2driver's aces2, the sial compiler itself) OR src/main
 # (xaces3 itself!). This was never caught before because every prior build
 # in this project's history ran against a tree that already had those
 # directories' outputs sitting in aces3/lib,bin from some earlier, more
@@ -79,9 +79,7 @@ src/aces/aces_library/special_directory/F12_grid
 src/aces/aces_library/special_directory/dkh
 src/aces/aces_library/special_directory/direct_integral
 src/aces/aces_library/special_directory/prop_ints
-src/aces/aces_library/a2driver/geopt
 src/aces/aces_library/a2driver/aces2
-src/aces/aces_library/a2driver/symcor
 src/sial_compiler/sial
 "
 

@@ -400,9 +400,24 @@ const ASV_nl_t ASV_nl[] =
 {/*284*/ "IOV_CONSTRAIN","OV_CONSTR#AIN",h_ICHAR_handle, 0,     ""},
 {/*285*/ "IGENRLIZD_TDENS" ,"GENRLIZD_TDENS",h_ICHAR_handle,0,  ""},
 {/*286*/ "IIP_ROOT_FND","IP_ROOT_FIND#",h_ICHAR_handle, 0,      ""},
-{/*287*/ "","",0,0,""},
+/* ACES III keywords (xaces3 runs xjoda; 10/2026) */
+{/*287*/ "ILOCK_ORBS",  "LOCK_ORBI#TALS",h_ICHAR_handle, 0,     ""},
+{/*288*/ "IDAMP_END",   "DAMP_END"     ,h_ICHAR_handle, 20,     ""},
+{/*289*/ "EE_GUESS",    "EE_GUESS"     ,h_ICHAR_handle, 0,      ""},
+{/*290*/ "EE_DENOM",    "EE_DENOM"     ,h_ICHAR_handle, 0,      ""},
+{/*291*/ "ICIS_TOL",    "CIS_TOL#"     ,h_ICHAR_f_int,  5,      "tol"},
+{/*292*/ "ROOT_SEARCH", "ROOT_SE#"     ,h_ICHAR_handle, 0,      ""},
+{/*293*/ "SELECT_VECS", "SEL_VEC#"     ,h_ICHAR_handle, 0,      ""},
+{/*294*/ "SUB_SPACE",   "SUB_SPACE"    ,h_ICHAR_handle, 1,      ""},
+{/*295*/ "IF12STG",     "STGF12"       ,h_ICHAR_handle, 0,      ""},
+{/*296*/ "IF12GAMMA",   "F12GAMMA"     ,h_ICHAR_string, 0,      ""},
+{/*297*/ "IFREQ",       "FREQ"         ,h_ICHAR_string, 0,      ""},
+{/*298*/ "IIMFREQ",     "IMFREQ"       ,h_ICHAR_string, 0,      ""},
+{/*299*/ "ISPINORB",    "SPINORB#_CC"  ,h_ICHAR_handle, 0,      ""},
+{/*300*/ "ISOC_ROOTS",  "SOC_ROOTS"    ,h_ICHAR_f_int,  0,      ""},
+{/*301*/ "","",0,0,""},
 }; /* end ASV_nl[] definition */
-#define MAX_ASVs 286
+#define MAX_ASVs 300
 
 /******************************************************************************/
 
@@ -518,6 +533,11 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "EOM_NLO",	/* 11 */
                 "GEERTSEN",	/* 12 */
                 "JSC_ALL",	/* 13 */
+                "POLAR",	/* 14, ACES III */
+                "A-TEN",	/* 15, ACES III */
+                "G-TEN",	/* 16, ACES III */
+                "D-TEN",	/* 17, ACES III */
+                "SOC",		/* 18, ACES III */
                 ""
             };
             asv_update_handle(index,value,handles);
@@ -990,7 +1010,7 @@ void asv_handle_proc(const f_int * index, const char * value)
 
         case h_IOPPAR_damp_typ:
         {
-            const char *handles[] = { "NONE", "DAVIDSON", "OTHER", "" };
+            const char *handles[] = { "NONE", "DAVIDSON", "CONSTANT", "OTHER", "" };
             asv_update_handle(index,value,handles);
             break;
         }
@@ -1246,6 +1266,49 @@ void asv_handle_proc(const f_int * index, const char * value)
         case h_IOPPAR_auto_occ:
         {
            const char *handles[] = { "OFF", "ON", "AUTO", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_ee_guess:
+        {
+            const char *handles[] = { "CIS", "EXTERNAL", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_ee_denom:
+        {
+            const char *handles[] = { "FOCK", "HBAR", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_root_search:
+        {
+            const char *handles[] = { "MAX_OVERLAP", "MIN_ENERGY", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_select_vecs:
+        {
+            const char *handles[] = { "FIRST", "PREVIOUS", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_sub_space:
+        {
+            const char *handles[] = { "KEEP", "NEW", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_stgf12:
+        case h_IOPPAR_spinorb_cc:
+        {
+            const char *handles[] = { "OFF", "ON", "" };
             asv_update_handle(index,value,handles);
             break;
         }

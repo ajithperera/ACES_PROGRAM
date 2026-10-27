@@ -119,6 +119,13 @@ out of it by offsets. Programs end with `aces_fin`.
 : Write the geometry, orbitals and frequencies for viewers, or print the
   current geometry.
 
+`symadapt`
+: ACES III: label the C1 SCF orbitals (and excited state natural
+  orbitals) of an `xaces3` run with the irreps of the full point group,
+  appending the table to `summary.out`. `xaces3` runs it at the end of each
+  job. The code is in `a2proc/a3_symadapt_*.F`; routines that have other
+  versions elsewhere in ACES II carry the prefix `A3SA_`.
+
 `parfd`, `extrap`, `factor`, `statthermo`, `test`
 : Finite-difference bookkeeping, energy/gradient extrapolation, and helpers
   used by scripts and the old test harness.

@@ -47,6 +47,7 @@ c         print *, 'gennbo'
          print *, 'jareq datatype RECNAME dimension (the quiet version)'
          print *, 'jasum'
          print *, 'xyz'
+         print *, 'symadapt'
          print *, 'iosum'
          print *, 'clrdirty'
          print *, 'zerorec RECNAME [ RECNAME [ RECNAME [ ... ]]]'
@@ -125,6 +126,15 @@ c These modules require heap space, but do not require lists.
          print *, '@MAIN: unable to allocate at least ',
      &            1000000,' integers of memory'
          call aces_exit(1)
+      end if
+
+c ACES III: symmetry labels for the C1 SCF orbitals and the excited
+c state natural orbitals of an xaces3 run (xaces3 runs this at the end
+c of the job).
+      if (module(1:9).eq.'symadapt ') then
+         call a3sa_v2ja(icore(i0), icrsiz)
+         call a3_symadapt_main(icore(i0), icrsiz)
+         goto 9998
       end if
 
       if (module(1:5).eq.'test ') then
