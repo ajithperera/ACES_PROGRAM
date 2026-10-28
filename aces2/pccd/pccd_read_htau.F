@@ -1,4 +1,11 @@
-      Subroutine Pccd_form_htau(Work,Maxcor,Iuhf)
+      Subroutine Pccd_read_htau(Work,Maxcor,Iuhf)
+C
+C Called nowhere at present. It used to be named Pccd_form_htau, the same
+C name as the real routine in pccd_form_htau.F (different arguments) in the
+C same archive, so the link could resolve pccd_form_htau_2d.F's call to
+C this one and read array data as Maxcor -- a bogus "Insufficient memory"
+C abort in the OO_METHOD=RFO cases, depending on archive member order.
+C
 
       Implicit Double Precision(A-H,O-Z)
       Logical Sym_packed 
@@ -57,7 +64,7 @@
       I050 = I040 + Length+Iuhf*Length
       Iend = I050 
       Maxcor = Maxcor - Iend 
-      If (Iend.Gt.Maxcor) Call Insmem("Pccd_form_uhtau",Iend,Maxcor)
+      If (Iend.Gt.Maxcor) Call Insmem("Pccd_read_htau",Iend,Maxcor)
 
       Call Getrec(20,"JOBARC","ROTGRDOO",Ndim_oo*Iintfp,Work(I000))
       Call Getrec(20,"JOBARC","ROTGRDVV",Ndim_vv*Iintfp,Work(I010))
