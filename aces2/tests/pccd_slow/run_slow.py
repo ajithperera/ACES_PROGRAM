@@ -41,7 +41,7 @@ import time
 SLOW_DIR = os.path.dirname(os.path.abspath(__file__))
 CASES_DIR = os.path.join(SLOW_DIR, "cases")
 FAST_DIR = os.path.join(os.path.dirname(SLOW_DIR), "fast")
-GENBAS = os.path.join(FAST_DIR, "GENBAS")
+GENBAS = os.path.join(SLOW_DIR, os.pardir, os.pardir, os.pardir, "basis", "GENBAS")
 
 # JOBARC record comparison and environment setup shared with the fast suite
 # (no __pycache__ left in tests/fast).

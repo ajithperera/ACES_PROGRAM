@@ -32,11 +32,16 @@ python3 tests/fast/run_tests.py --case 013a         # one case
 
 A case is a directory with either:
 
-- a `ZMAT`: run with `xaces2`, with the suite's `GENBAS` copied in; or
+- a `ZMAT`: run with `xaces2`, with `basis/GENBAS` copied in; or
 - a `SCRIPT`: a shell script for jobs with several steps (for example an
   optimization followed by frequencies, or running member programs by
-  hand). The script gets `$GENBAS` and `$USERDIR`, a directory outside its
-  working directory where it can keep files between steps.
+  hand). The script gets `$GENBAS` and `$ECPDATA` (the files in
+  `basis/`) and `$USERDIR`, a directory outside its working directory where
+  it can keep files between steps.
+
+Every suite, ACES II, ACES III and pyaces, reads the basis sets from the one
+`GENBAS` in `ACES_PROGRAM/basis/`. Add a basis set there, never to a copy in
+a test directory.
 
 **Adding a case**: create `cases/<name>/ZMAT` (or `SCRIPT`), run it with a
 build you trust, check the result independently, and add the three lines

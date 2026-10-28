@@ -17,7 +17,7 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 ACES2_TESTS = os.path.join(os.path.dirname(BASE), "aces2", "tests", "fast")
 CLASSIFICATION = os.path.join(BASE, "suite_classification.tsv")
 SUITE_CASES = os.path.join(ACES2_TESTS, "cases")
-GENBAS = os.path.join(ACES2_TESTS, "GENBAS")
+GENBAS = os.path.join(os.path.dirname(BASE), "basis", "GENBAS")
 # Work directories (one per case) and summary.tsv: $PYACES_SUITE_RUN_DIR,
 # default pyaces/suite_run in this checkout (untracked).
 RUN_DIR = os.environ.get("PYACES_SUITE_RUN_DIR", os.path.join(BASE, "suite_run"))

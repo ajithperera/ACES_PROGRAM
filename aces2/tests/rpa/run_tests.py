@@ -69,8 +69,8 @@ import time
 
 SUITE_DIR = os.path.dirname(os.path.abspath(__file__))
 CASES_DIR = os.path.join(SUITE_DIR, "cases")
-# One GENBAS for all aces2 suites (tests/fast/GENBAS).
-GENBAS = os.path.join(SUITE_DIR, os.pardir, "fast", "GENBAS")
+# One GENBAS for all suites (ACES_PROGRAM/basis).
+GENBAS = os.path.join(SUITE_DIR, os.pardir, os.pardir, os.pardir, "basis", "GENBAS")
 
 TOLERANCE_EV = 1e-4
 

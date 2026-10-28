@@ -23,7 +23,7 @@ import time
 FAST_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_DIR = os.path.dirname(os.path.dirname(FAST_DIR))
 CASES_DIR = os.path.join(FAST_DIR, "cases")
-GENBAS = os.path.join(FAST_DIR, "GENBAS")
+GENBAS = os.path.join(REPO_DIR, os.pardir, "basis", "GENBAS")  # ACES_PROGRAM/basis
 XACES3 = os.path.join(REPO_DIR, "bin", "xaces3")
 XTEST_COMPARE = os.path.join(REPO_DIR, "bin", "xtest_compare")
 

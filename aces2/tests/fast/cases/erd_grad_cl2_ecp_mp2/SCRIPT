@@ -1,4 +1,4 @@
-test -n "$GENBAS" || exit 1
+test -n "$GENBAS" && test -n "$ECPDATA" || exit 1
 # MBPT(2) gradient of Cl2 with the SBKJC ECP (10 core electrons):
 # xerdgrad, with its own ECP derivative integrals, against xvdint.
 cat <<. >ZMAT
@@ -19,19 +19,5 @@ CL:SBKJC
 CL:SBKJC
 
 .
-cat <<. >ECPDATA
-CL:SBKJC
-# ECP from SBKJC VDZ ECP     - 10 CORE ELECTRONS
-*
-    NCORE = 10    LMAX =2
-d
-   -3.40738000    1    4.87483000
-s-d
-    6.50966000    0   17.00367000
-   42.27785000    2    4.10380000
-p-d
-    3.42860000    0    8.90029000
-   22.15256000    2    3.52648000
-*
-.
+cp $ECPDATA ECPDATA || exit 1
 . "$(dirname "$0")/../../erdgrad_check.sh"

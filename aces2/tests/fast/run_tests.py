@@ -30,7 +30,10 @@ import time
 
 FAST_DIR = os.path.dirname(os.path.abspath(__file__))
 CASES_DIR = os.path.join(FAST_DIR, "cases")
-GENBAS = os.path.join(FAST_DIR, "GENBAS")
+# Basis set and ECP libraries shared by every suite: ACES_PROGRAM/basis.
+BASIS_DIR = os.path.join(FAST_DIR, os.pardir, os.pardir, os.pardir, "basis")
+GENBAS = os.path.join(BASIS_DIR, "GENBAS")
+ECPDATA = os.path.join(BASIS_DIR, "ECPDATA")
 TEST_RESULTS = os.path.join(FAST_DIR, "test_results")
 
 DEFAULT_TOLERANCE = 1e-6  # a.u.
@@ -116,6 +119,7 @@ def run_case_script(name, script, record, ref_energy, env):
          tempfile.TemporaryDirectory(prefix=f"acesii_fast_{name}_userdir_") as userdir:
         script_env = dict(env)
         script_env["GENBAS"] = GENBAS
+        script_env["ECPDATA"] = ECPDATA
         script_env["USERDIR"] = userdir
 
         t0 = time.time()

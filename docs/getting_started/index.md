@@ -75,8 +75,8 @@ than 1. The full ACES III suite takes about 40 minutes with `ACES_NP=4`.
 
 ACES II reads its input from a file named `ZMAT` and its basis sets from
 `GENBAS` in the current directory. Put `aces2/bin` on your `PATH`, make an
-empty working directory, and copy a `GENBAS` into it (the test suite's
-`aces2/tests/fast/GENBAS` will do):
+empty working directory, and copy `basis/GENBAS` into it (the basis set
+library that the test suites use; `basis/ECPDATA` holds the ECPs):
 
 ```text
 Water CCSD(T)/DZP single point

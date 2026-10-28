@@ -50,8 +50,8 @@ import time
 
 RINGCC_DIR = os.path.dirname(os.path.abspath(__file__))
 CASES_DIR = os.path.join(RINGCC_DIR, "cases")
-# One GENBAS for all aces2 suites (tests/fast/GENBAS).
-GENBAS = os.path.join(RINGCC_DIR, os.pardir, "fast", "GENBAS")
+# One GENBAS for all suites (ACES_PROGRAM/basis).
+GENBAS = os.path.join(RINGCC_DIR, os.pardir, os.pardir, os.pardir, "basis", "GENBAS")
 TEST_RESULTS = os.path.join(RINGCC_DIR, "test_results")
 
 DEFAULT_TOLERANCE = 1e-6  # a.u.
