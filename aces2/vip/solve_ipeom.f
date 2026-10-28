@@ -205,6 +205,21 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 C
 C ***************************************************************
 C FOLLOWING ARE A LARGE NUMBER OF SUBROUTINES THAT RELATE TO THE DIRECT 
@@ -337,7 +352,8 @@ C of this block instead of the Davidson root search (small systems).
 C
          IF (IFLAGS2(186) .EQ. 1) THEN
             IF (IUHF .EQ. 0) THEN
-               WRITE(6,"(2a)") " @SOLVE_IPEOM-F, IP_ROOT_FIND=FULL_DIAG",
+               WRITE(6,
+     &            "(2a)") " @SOLVE_IPEOM-F, IP_ROOT_FIND=FULL_DIAG",
      &                         " requires REF=UHF"
                CALL ERREX
             ENDIF

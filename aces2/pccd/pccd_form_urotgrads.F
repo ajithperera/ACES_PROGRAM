@@ -582,7 +582,8 @@ C
      &                  IUHF,"AL")
        CALL PCCD_DUMPIT(ICORE(IDOO),ICORE(IDVV),ICORE(IIVO),ICORE(IIOV),
      &                  IUHF,"AL")
-       CALL PCCD_DUMPIT(ICORE(IXOO),ICORE(IEVAL),ICORE(IIVO),ICORE(IIOV),
+       CALL PCCD_DUMPIT(ICORE(IXOO),ICORE(IEVAL),ICORE(IIVO),
+     &    ICORE(IIOV),
      &                  IUHF,"AL")
       ENDIF
 C
@@ -598,7 +599,8 @@ C
      &                  IUHF,"AL")
        CALL PCCD_DUMPIT(ICORE(IDOO),ICORE(IDVV),ICORE(IIVO),ICORE(IIOV),
      &                  IUHF,"AL")
-       CALL PCCD_DUMPIT(ICORE(IXOO),ICORE(IEVAL),ICORE(IIVO),ICORE(IIOV),
+       CALL PCCD_DUMPIT(ICORE(IXOO),ICORE(IEVAL),ICORE(IIVO),
+     &    ICORE(IIOV),
      &                  IUHF,"AL")
       ENDIF
 C

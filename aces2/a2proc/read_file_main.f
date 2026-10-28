@@ -210,6 +210,22 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       subroutine Read_File_Main(Icore, Icrsiz)
 c
       implicit double precision (a-h,o-z)
@@ -388,8 +404,10 @@ c
           Call Getrec(-1, 'JOBARC', 'NATOMS  ', Ione, Natoms)
           Call Getrec(-1, 'JOBARC', 'FULLNORB', Ione, Iful_unq_atoms)
           Call Getrec(-1, 'JOBARC', 'COMPNORB', Ione, Icmp_unq_atoms)
-          Call Getrec(-1, 'JOBARC', 'COORD   ', 3*Natoms*Iintfp, Coord)
-          Call Getrec(-1, 'JOBARC', 'ATOMMASS', Natoms*Iintfp, Atommass)
+          Call Getrec(-1, 'JOBARC', 'COORD   ', 3*Natoms*Iintfp,
+     &       Coord)
+          Call Getrec(-1, 'JOBARC', 'ATOMMASS', Natoms*Iintfp,
+     &       Atommass)
           Call Getrec(-1, 'JOBARC', 'ATOMCHRG', Natoms, Iatmchrg)
           Call Getrec(-1, 'JOBARC', 'COMPNIRR', Ione, Nirrep)
           Call Getrec(-1, 'JOBARC', 'OCCUPYA ', Nirrep, Nocc(1))

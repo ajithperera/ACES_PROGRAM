@@ -210,6 +210,22 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       Subroutine Pes_scan_main_c4(Streaming,Stationary,Drive_IRC,Prop)
       Implicit Double Precision (A-H, O-Z) 
 C
@@ -609,8 +625,10 @@ C
            Get_Grad      = .True. 
            Call Get_refvib_data_c4(VCoords, Norm_coords, Vomega, Omega,
      &                             AtmMass, AtmLabel, SymLabel, Coords, 
-     &                             Btmp, A2grad, Grad_K1CM, A2hess, Rhess, 
-     &                             Imap, Vib_Type, Nreals, Natoms, Nvibs,  
+     &                             Btmp, A2grad, Grad_K1CM, A2hess,
+     &                                Rhess,
+     &                             Imap, Vib_Type, Nreals, Natoms,
+     &                                Nvibs,
      &                             B2ang, Au2Invcm, Trans_state, 
      &                             Mass_weigh_nm, Mass_weigh_gr, 
      &                             Get_hess, Get_grad)

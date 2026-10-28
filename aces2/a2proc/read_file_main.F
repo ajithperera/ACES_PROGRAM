@@ -53,8 +53,10 @@ c
           Call B_GETREC(-1, 'JOBARC', 'NATOMS  ', Ione, Natoms)
           Call B_GETREC(-1, 'JOBARC', 'FULLNORB', Ione, Iful_unq_atoms)
           Call B_GETREC(-1, 'JOBARC', 'COMPNORB', Ione, Icmp_unq_atoms)
-          Call B_GETREC(-1, 'JOBARC', 'COORD   ', 3*Natoms*Iintfp, Coord)
-          Call B_GETREC(-1, 'JOBARC', 'ATOMMASS', Natoms*Iintfp, Atommass)
+          Call B_GETREC(-1, 'JOBARC', 'COORD   ', 3*Natoms*Iintfp,
+     &       Coord)
+          Call B_GETREC(-1, 'JOBARC', 'ATOMMASS', Natoms*Iintfp,
+     &       Atommass)
           Call B_GETREC(-1, 'JOBARC', 'ATOMCHRG', Natoms, Iatmchrg)
           Call B_GETREC(-1, 'JOBARC', 'COMPNIRR', Ione, Nirrep)
           Call B_GETREC(-1, 'JOBARC', 'OCCUPYA ', Nirrep, Nocc(1))

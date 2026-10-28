@@ -156,7 +156,8 @@ C
      &               CARTCOORD(3*ICON2 - 2))
             REDUNCO(IBNDS) = DISTAB
 C     
-            WRITE(6,"(a,F10.5)") "The bond distance =",DISTAB*0.529177249d0
+            WRITE(6,"(a,F10.5)") "The bond distance =",
+     &         DISTAB*0.529177249d0
          ENDIF
       ENDDO
 C

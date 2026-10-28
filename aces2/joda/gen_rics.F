@@ -55,7 +55,8 @@ C
             REDUNCO(IBNDS) = DISTAB
 C     
 #ifdef _DEBUG_LVL0
-            WRITE(6,"(a,F10.5)") "The bond distance =",DISTAB*0.529177249d0
+            WRITE(6,"(a,F10.5)") "The bond distance =",
+     &         DISTAB*0.529177249d0
 #endif
          ENDIF
       ENDDO

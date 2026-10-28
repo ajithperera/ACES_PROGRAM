@@ -501,7 +501,8 @@ c
      $     t3, '@SLATER-F, The Slater potential for an unrestricted ',
      $     'reference is not implemented yet.')
  1014 format (
-     $     t3, '@SLATER-F, The Slater potential for any symmetry other ',
+     $     t3,
+     $        '@SLATER-F, The Slater potential for any symmetry other ',
      $     'than C1 is not implemented yet.')
  1020 format (t3, '@SLATER-I, The Slater potential integrates to',
      $     f20.12) 

@@ -9,7 +9,8 @@
 
 
 
-      Subroutine Lanczos_gs_ortho_lr(Work,Memleft,Vecs,Rvecs,Nsize,Ncount,
+      Subroutine Lanczos_gs_ortho_lr(Work,Memleft,Vecs,Rvecs,Nsize,
+     +   Ncount,
      +                               Irrepx)
       
       Implicit Double Precision(A-H,O-Z)

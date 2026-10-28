@@ -340,7 +340,8 @@ C
 #ifdef _DEBUG_LVL0
 C
          WRITE(LUOUT, *) "The debug info for two particle density"
-         WRITE(LUOUT, *)  "Total No, shells, Angular momentum components,
+         WRITE(LUOUT,
+     &      *)  "Total No, shells, Angular momentum components,
      &   No. of contracted functions per shell"
 C
          DO 130 IATM=1,IUATMS

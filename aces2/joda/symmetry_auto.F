@@ -382,7 +382,8 @@ C
               IF(IERR.EQ.0.AND..NOT.ALLDONE)THEN
                 IF(IPRNT.GE.3 .AND. NOSILENT)WRITE(LUOUT,50001)ANGMG
 50001           FORMAT(T3,' ANGMAG angle is ',f8.4)
-                IF(IPRNT.GE.13 .AND. NOSILENT)WRITE(LUOUT,50002)IERR,IAXORD
+                IF(IPRNT.GE.13 .AND. NOSILENT)WRITE(LUOUT,50002)IERR,
+     &             IAXORD
 50002           FORMAT(T3,' IERR is ',i2,' for ',i1)
                 IF(IPRNT.GE.200 .AND. NOSILENT)THEN
                   WRITE(LUOUT,*)' IN ROTATIONAL LOOP, LOOKING FOR ',

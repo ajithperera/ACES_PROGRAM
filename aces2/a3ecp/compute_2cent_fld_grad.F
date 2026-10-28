@@ -538,7 +538,8 @@ C Since there is only one location we can not check all components at
 C once by comparing to ACES II. Do it one at a time
 
 #ifdef _DEBUG_LVLM
-      If (XX .eq. 1)  Call rescale_ints(out_fldgr_xx, aces_4fldgr,Nbasis,
+      If (XX .eq. 1)  Call rescale_ints(out_fldgr_xx, aces_4fldgr,
+     &   Nbasis,
      &                                  ERD_index,ERD_scale)
 #endif 
 C

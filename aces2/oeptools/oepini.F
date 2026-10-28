@@ -64,7 +64,8 @@ c
      &     t3,'be neglected.',/)
  5956 format (
      &     t3,'@OEPINI-I: Update DFW to FALSE. The contribution of',/,
-     &     t3,'the DFW and DWF diagrams to the second-order potential',/,
+     &     t3,'the DFW and DWF diagrams to the second-order potential',
+     &        /,
      &     t3,'will be neglected.',/)
  5957 format (
      &     t3,'@OEPINI-I: Update DWW to FALSE. The contribution of',/,

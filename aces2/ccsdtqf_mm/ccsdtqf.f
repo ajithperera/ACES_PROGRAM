@@ -211,6 +211,22 @@ C
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       PROGRAM CCSDTQF
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       INTEGER DISTSZ,RLECYC,T1_CYCLE

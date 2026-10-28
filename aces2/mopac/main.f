@@ -43,7 +43,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -73,7 +73,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -82,7 +82,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 
 
@@ -106,7 +106,7 @@ c machsp.com : end
 
 c
       COMMON /KEYWRD/ KEYWRD
-      COMMON /GEOVAR/ XPARAM(MAXPAR), NVAR, LOC(2,MAXPAR)               IR0394
+      COMMON /GEOVAR/ XPARAM(MAXPAR), NVAR, LOC(2,MAXPAR)
       COMMON /GEOSYM/ NDEP,LOCPAR(MAXPAR),IDEPFN(MAXPAR),LOCDEP(MAXPAR)
       COMMON /GEOKST/ NATOMS,LABELS(NUMATM),
      1                NA(NUMATM),NB(NUMATM),NC(NUMATM)
@@ -182,10 +182,10 @@ C     If there is no EXTERNAL keyword specified, then just do the whole
 C     MOLDAT once.                     Wei-Ping, Mar 4, 1993
 C
       IF(INDEX(KEYWRD,'EXTERNAL') .NE. 0) THEN
-         CALL MOLDAT(0)                                                 0304WH93
-         CALL EXTPAR                                                    IR0494
+         CALL MOLDAT(0)
+         CALL EXTPAR
       ELSE
-         CALL MOLDAT(2)                                                 0304WH93
+         CALL MOLDAT(2)
       ENDIF
       IF (INDEX(KEYWRD,'RESTART').EQ.0)THEN
          IF (INDEX(KEYWRD,'1SCF').NE.0) THEN

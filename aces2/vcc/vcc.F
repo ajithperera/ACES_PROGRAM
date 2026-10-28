@@ -1134,7 +1134,8 @@ CJDW END
       SING_4TCC = IFLAGS(h_IFLAGS_calc) .NE. 8 .OR.
      &            IFLAGS(h_IFLAGS_calc) .NE. 4 
       if (act_spc_cc .and. act .eq."READ")
-     &    call modf_amps(ICORE(I0),MAXCOR,IUHF,0,SING_4TCC,'T',act,"AMPS")
+     &    call modf_amps(ICORE(I0),MAXCOR,IUHF,0,SING_4TCC,'T',act,
+     &       "AMPS")
 #endif
          CALL CMPENG(ICORE(I0),MAXCOR,43,0,ECORR,ENERGY(ICYCLE+1,1),
      &               ENERGY(ICYCLE+1,2),IUHF,1)

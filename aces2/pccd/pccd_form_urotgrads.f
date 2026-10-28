@@ -218,6 +218,22 @@ C
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 c flags.com : begin
       integer        iflags(100)
       common /flags/ iflags

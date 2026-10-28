@@ -124,8 +124,8 @@ C The relative and absolute error (change from default values)
       Go to 999 
 
  900  Write(6,901) 
- 901  Format(T3,"@-tdee_read_tintgrt_vars,INTGRT_VARS namelist not found',
-     + or incomplete.")
+ 901  Format(T3,"@-tdee_read_tintgrt_vars,INTGRT_VARS namelist",
+     +       " not found or incomplete.")
       Write(6,"(1x,a)") " The default values are being used"
       
 C Set the default values.

@@ -183,7 +183,7 @@ c
 c            ***            ***            ***
 c   test for improper parameters
 c
-      fouru = 4.0 * d1mach(4)                                           ***
+      fouru = 4.0 * d1mach(4)
       if(neqn .lt. 1) go to 10
       if(t .eq. tout) go to 10
       if(relerr .lt. 0.0d0  .or.  abserr .lt. 0.0d0) go to 10
@@ -431,8 +431,8 @@ c     data g(1),g(2)/1.0,0.5/,sig(1)/1.0/
 c
 c
 CSSS      write(6,"(a)") "Entered - Shampine-Gordon ODE solver"
-      twou = 2.0 * d1mach(4)                                            ***
-      fouru = 2.0 * twou                                                ***
+      twou = 2.0 * d1mach(4)
+      fouru = 2.0 * twou
 c       ***     begin block 0     ***
 c   check if step size or error tolerance is too small for machine
 c   precision.  if first step, initialize phi array and estimate a

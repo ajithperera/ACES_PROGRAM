@@ -29,7 +29,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -59,7 +59,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -68,12 +68,12 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
 ************************************************************************
-      CHARACTER NUMBRS(0:9)*1, PARTYP(28)*5, FILES*64, DUMMY(2)*50,     IR0494 
+      CHARACTER NUMBRS(0:9)*1, PARTYP(28)*5, FILES*64, DUMMY(2)*50,
      1          KEYWRD*80, TEXT*50, TXTNEW*50, ELEMNT(107)*2 
       COMMON /ATHEAT/ ATHEAT
 c Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
@@ -92,15 +92,15 @@ C
      *       /SRPR/ BETSS(MAXBET), BETSP(MXATSP,MXATSP), BETPP(MAXBET)
 C
       DIMENSION  IJPARS(5,500), PARSIJ(500), IBLNK(2)
-         SAVE                                                           GL0892
-      LOGICAL ISSRP                                                     IR0494
+         SAVE
+      LOGICAL ISSRP
 
       DATA NUMBRS/' ','1','2','3','4','5','6','7','8','9'/
       DATA PARTYP/'USS  ','UPP  ','UDD  ','ZS   ','ZP   ','ZD   ',
      1    'BETAS','BETAP','BETAD','GSS  ','GSP  ','GPP  ','GP2  ',
      2    'HSP  ','AM1  ','EXPC ','GAUSS','ALP  ','GSD  ','GPD  ',
      3    'GDD  ','FN1  ','FN2  ','FN3  ','ORB  ','BETPP','BETSP',
-     4    'BETSS'/                                                      IR0494
+     4    'BETSS'/
       DATA (ELEMNT(I),I=1,107)/'H ','HE',
      1 'LI','BE','B ','C ','N ','O ','F ','NE',
      2 'NA','MG','AL','SI','P ','S ','CL','AR',
@@ -113,8 +113,8 @@ C
      9 'AU','HG','TL','PB','BI','PO','AT','RN',
      1 'FR','RA','AC','TH','PA','U ','NP','PU','AM','CM','BK','CF','XX',
      2 'FM','MD','CB','++','+','--','-','TV'/
-      DATA (IBLNK(i),i=1,2) / 32, 160/                                  IR0494 
-      ISSRP=.FALSE.                                                     IR0494
+      DATA (IBLNK(i),i=1,2) / 32, 160/
+      ISSRP=.FALSE.
       I=INDEX(KEYWRD,'EXTERNAL=')+9
       J=INDEX(KEYWRD(I:),' ')+I-1
       FILES=KEYWRD(I:J)
@@ -171,7 +171,7 @@ C
       WRITE(6,'(''   NAME NOT FOUND'')')
       STOP
    40 IPARAM=J
-      IF(IPARAM.GT.21 .AND. J.LT.26) THEN                               IR0494
+      IF(IPARAM.GT.21 .AND. J.LT.26) THEN
          I=INDEX(TEXT,'FN')
          KFN=READA(TEXT,I+3)
       ELSE
@@ -262,7 +262,7 @@ C
   100       CONTINUE
   110    CONTINUE
   120 CONTINUE
-      CALL MOLDAT(1)                                                    0304WH93
+      CALL MOLDAT(1)
       CALL CALPAR
       ATHEAT=0.D0
       ETH=0.D0
@@ -295,7 +295,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -325,7 +325,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -334,7 +334,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -370,14 +370,14 @@ C
 C ON RETURN, ENG HOLDS ANALYTICAL DERIVATIVES
 C
       COMMON /FORCE3/ IDMY(5),I3N,IX
-      COMMON /SRPL/ ISSRP                                               IR0494
-      DIMENSION EAA(3),EAB(3),ENUC(3), BI(4), BJ(4),TRMBET(4,4)         IR0494
+      COMMON /SRPL/ ISSRP
+      DIMENSION EAA(3),EAB(3),ENUC(3), BI(4), BJ(4),TRMBET(4,4)
       CHARACTER*80 KEYWRD
-      LOGICAL AM1, MINDO3, ISSRP                                        IR0494
-         SAVE                                                           GL0892
+      LOGICAL AM1, MINDO3, ISSRP
+         SAVE
       DATA ICALCN /0/
       IF (ICALCN .NE. NUMCAL) THEN
-         AM1=(INDEX(KEYWRD,'AM1')+INDEX(KEYWRD,'PM3').NE.0)             IR0492
+         AM1=(INDEX(KEYWRD,'AM1')+INDEX(KEYWRD,'PM3').NE.0)
          MINDO3=(INDEX(KEYWRD,'MINDO').NE.0)
          ICALCN = NUMCAL
       ENDIF
@@ -575,34 +575,34 @@ C       CODE COMMON TO MINDO/3, MNDO, AND AM1
 C
 * 
 * ....first generate pairwise BETA                                      IR0494
-         IF(ISSRP) THEN                                                 IR0494
-            TRMBET(1,1)=2.0d0 *GETBET( NI, NJ, 'BETSS')                 IR0494
-            BSP=2.0d0 *GETBET(NJ, NI, 'BETSP')                          IR0494
-            DO 62 IBET=2,4                                              IR0494
-  62           TRMBET(IBET,1)=BSP                                       IR0494
-            BSP=2.0d0 *GETBET(NI, NJ, 'BETSP')                          IR0494
-            DO 64 JBET=2,4                                              IR0494
-  64           TRMBET(1,JBET)=BSP                                       IR0494
-            BPP=2.0d0 *GETBET(NI, NJ, 'BETPP')                          IR0494
-            DO 66 JBET=2,4                                              IR0494
-               DO 66 IBET=2,4                                           IR0494
-  66           TRMBET(IBET,JBET)=BPP                                    IR0494
-         ELSE                                                           IR0494
-            DO 68 JBET=1,4                                              IR0494
-               DO 68 IBET=1,4                                           IR0494
-  68              TRMBET(IBET,JBET)=BI(IBET)+BJ(JBET)                   IR0494
-         ENDIF                                                          IR0494
-         IF (index(keywrd,' DEBUG') .ne. 0) THEN                        IR0494
-            Write(6,'("BETA", I4, I4)') NI, NJ                          IR0494
-            do 69 ibet=1,4                                              IR0494
-  69           Write(6,'(4F10.6)') (TRMBET(IBET,JBET),JBET=1,4)         IR0494
-         ENDIF                                                          IR0494
+         IF(ISSRP) THEN
+            TRMBET(1,1)=2.0d0 *GETBET( NI, NJ, 'BETSS')
+            BSP=2.0d0 *GETBET(NJ, NI, 'BETSP')
+            DO 62 IBET=2,4
+  62           TRMBET(IBET,1)=BSP
+            BSP=2.0d0 *GETBET(NI, NJ, 'BETSP')
+            DO 64 JBET=2,4
+  64           TRMBET(1,JBET)=BSP
+            BPP=2.0d0 *GETBET(NI, NJ, 'BETPP')
+            DO 66 JBET=2,4
+               DO 66 IBET=2,4
+  66           TRMBET(IBET,JBET)=BPP
+         ELSE
+            DO 68 JBET=1,4
+               DO 68 IBET=1,4
+  68              TRMBET(IBET,JBET)=BI(IBET)+BJ(JBET)
+         ENDIF
+         IF (index(keywrd,' DEBUG') .ne. 0) THEN
+            Write(6,'("BETA", I4, I4)') NI, NJ
+            do 69 ibet=1,4
+  69           Write(6,'(4F10.6)') (TRMBET(IBET,JBET),JBET=1,4)
+         ENDIF
          IOL=0
          DO 70 K=IA,ID
             DO 70 L=JA,JD
                LK=L+K*(K-1)/2
                IOL=IOL+1
-               TERMAB=TERMAB+TRMBET((K-IA+1),(L-JA+1))*PSUM(LK)*DS(IOL) IR0494
+               TERMAB=TERMAB+TRMBET((K-IA+1),(L-JA+1))*PSUM(LK)*DS(IOL)
    70    CONTINUE
          IF(MINDO3)THEN
 C
@@ -2995,7 +2995,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -3025,7 +3025,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -3034,7 +3034,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -3060,7 +3060,7 @@ C            P = DENSITY MATRIX, LOWER HALF TRIANGLE, PACKED.
 C            P   IS NOT ALTERED BY BONDS.
 C
 C***********************************************************************
-         SAVE                                                           GL0892
+         SAVE
       IF(PRINT) THEN
         WRITE(6,10)
    10   FORMAT(//20X,'BOND ORDERS AND VALENCIES',//)
@@ -3111,7 +3111,7 @@ C***********************************************************************
       COMMON/KEYWRD/ KEYWRD
       COMMON /NUMCAL/ NUMCAL
       CHARACTER*80 KEYWRD
-         SAVE                                                           GL0892
+         SAVE
       DATA ICALCN /0/
       IF (ICALCN .NE. NUMCAL) THEN
          ICALCN = NUMCAL
@@ -3214,7 +3214,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -3244,7 +3244,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -3253,13 +3253,13 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
       DIMENSION XPARAM(MAXPAR),GRAD(MAXPAR)
       LOGICAL LGRAD, FULSCF
-      COMMON /GEOVAR/ XDUMMY(MAXPAR),NVAR,LOC(2,MAXPAR)                 IR0394
+      COMMON /GEOVAR/ XDUMMY(MAXPAR),NVAR,LOC(2,MAXPAR)
       COMMON /GEOSYM/ NDEP,LOCPAR(MAXPAR),IDEPFN(MAXPAR),LOCDEP(MAXPAR)
       COMMON /GEOM  / GEO(3,NUMATM)
       COMMON /ATHEAT/ ATHEAT
@@ -3291,13 +3291,13 @@ C             GRAD   = ARRAY OF GRADIENTS, IF LGRAD = .TRUE.
 C
 C***********************************************************************
       COMMON /NUMCAL/ NUMCAL
-      COMMON /MESAGE/ IFLEPO, IERR                                      IR0694
+      COMMON /MESAGE/ IFLEPO, IERR
       COMMON /KEYWRD/KEYWRD
       CHARACTER*80 KEYWRD
       LOGICAL DEBUG, INT, PRINT, ANALYT, LARGE, USEMM
       DIMENSION COORD(3,NUMATM), W(N2ELEC), DEGREE(3)
       EQUIVALENCE (W,WJ)
-         SAVE                                                           GL0892
+         SAVE
       DATA ICALCN /0/
 C                 MNDO     AM1      PM3      MINDO/3
 C
@@ -3414,7 +3414,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -3444,7 +3444,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -3453,7 +3453,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -3484,7 +3484,7 @@ C***********************************************************************
      1CDI(3,2),NDI(2),LSTOR1(6), LSTOR2(6), ENG(3)
       LOGICAL DEBUG, FORCE, MAKEP, ANADER, USEMM
       EQUIVALENCE (LSTOR1(1),L1L), (LSTOR2(1), K1L)
-         SAVE                                                           GL0892
+         SAVE
       DATA CHNGE,CHNGE2 /1.D-4,5.D-5/
 *
 * CHNGE IS A MACHINE-PRECISION DEPENDENT CONSTANT
@@ -3647,7 +3647,7 @@ C
       COMMON /NUMCAL/ NUMCAL
       CHARACTER*80 KEYWRD
       LOGICAL MINDO3
-         SAVE                                                           GL0892
+         SAVE
       DATA ICALCN /0/
       IF (ICALCN .NE. NUMCAL) THEN
          ICALCN = NUMCAL
@@ -3817,7 +3817,7 @@ C***********************************************************************
       COMMON /KEYWRD/ KEYWRD
       COMMON /NUMCAL/ NUMCAL
       CHARACTER*80 KEYWRD
-         SAVE                                                           GL0892
+         SAVE
       DATA ICALCN /0/
       IF (ICALCN .NE. NUMCAL) THEN
          ICALCN = NUMCAL
@@ -3849,7 +3849,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -3879,7 +3879,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -3888,7 +3888,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 ************************************************************************
@@ -3910,7 +3910,7 @@ C
       COMMON /KEYWRD/ KEYWRD
       COMMON /TITLES/ KOMENT,TITLE
       COMMON /GRADNT/ GRAD(MAXPAR),GNORM
-      COMMON /GEOVAR/ XDUMMY(MAXPAR),NVAR,LOC(2,MAXPAR)                 IR0394
+      COMMON /GEOVAR/ XDUMMY(MAXPAR),NVAR,LOC(2,MAXPAR)
       COMMON /DENSTY/ P(MPACK), PA(MPACK), PB(MPACK)
       COMMON /ALPARM/ ALPARM(3,MAXPAR),X0, X1, X2, ILOOP
       COMMON /REACTN/ STEP, GEOA(3,NUMATM), GEOVEC(3,NUMATM),CALCST
@@ -3935,7 +3935,7 @@ c Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
       DIMENSION IEL1(3),Q(3), COORD(3,NUMATM)
       CHARACTER ELEMNT*2, KEYWRD*80,KOMENT*80, TITLE*80
       LOGICAL INTXYZ
-         SAVE                                                           GL0892
+         SAVE
       DATA ICALCN /0/
       OPEN(UNIT=9,FILE='FOR009',STATUS='UNKNOWN',FORM='UNFORMATTED')
       REWIND 9
@@ -4124,7 +4124,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -4154,7 +4154,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -4163,7 +4163,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -4217,7 +4217,7 @@ C
       DIMENSION DIP(4,3)
       DIMENSION HYF(107,2)
       LOGICAL FORCE, CHARGD
-         SAVE                                                           GL0892
+         SAVE
       DATA HYF(1,1)     / 0.0D00           /
       DATA   HYF(1,2) /0.0D0     /
       DATA   HYF(5,2) /6.520587D0/
@@ -4321,7 +4321,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -4351,7 +4351,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -4360,7 +4360,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -4372,7 +4372,7 @@ C
       COMMON /GEOKST/ NATOMS,LABELS(NUMATM),
      1                NA(NUMATM),NB(NUMATM),NC(NUMATM)
       COMMON /ELEMTS/ ELEMNT(107)
-      COMMON /GEOVAR/ XPARAM(MAXPAR),IDUM, LOC(2,MAXPAR)                IR0394
+      COMMON /GEOVAR/ XPARAM(MAXPAR),IDUM, LOC(2,MAXPAR)
       COMMON /TITLES/ KOMENT,TITLE
 c Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
       COMMON /MOLKSI/ NUMAT,NAT(NUMATM),NFIRST(NUMATM),
@@ -4383,7 +4383,7 @@ c Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
       CHARACTER*80 KEYWRD,KOMENT,TITLE, ALPHA*2, ELEMNT*2
       INTEGER PRTKOM, PRTITL, PRTKEY
       LOGICAL LARGE, DRC
-         SAVE                                                           GL0892
+         SAVE
       DATA ICALCN /0/
       IF (ICALCN  .NE. NUMCAL) THEN
          ICALCN = NUMCAL
@@ -4550,7 +4550,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -4580,7 +4580,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -4589,7 +4589,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -4612,7 +4612,7 @@ c Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
       DIMENSION QTOT(NUMATM), QA(NUMATM), QB(NUMATM)
       COMMON /KEYWRD/ KEYWRD
       CHARACTER*80 KEYWRD
-         SAVE                                                           GL0892
+         SAVE
       DATA ICALCN /0/
       IF (ICALCN .NE. NUMCAL) THEN
          ICALCN = NUMCAL
@@ -4718,7 +4718,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -4748,7 +4748,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -4757,7 +4757,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -4782,7 +4782,7 @@ C
 *           NC     = INTEGER ARRAY OF ATOMS (SEE DATA INPUT)
 *           ATMASS = ATOMIC MASSES OF ATOMS.
 ************************************************************************
-      COMMON /PATHR / REACT(3,66), DUMM1,DUMM2                          IR0394
+      COMMON /PATHR / REACT(3,66), DUMM1,DUMM2
       COMMON /ATMASS/ ATMASS(NUMATM)
       COMMON /KEYWRD/ KEYWRD
       DIMENSION ISTART(40), XYZ(3,NUMATM), VALUE(4)
@@ -4790,7 +4790,7 @@ C
       CHARACTER*80 KEYWRD
       CHARACTER ELEMNT(107)*2, LINE*80, SPACE*1, NINE*1,ZERO*1,
      1TAB*1, COMMA*1, STRING*80, ELE*2, TURN*1
-         SAVE                                                           GL0892
+         SAVE
       DATA (ELEMNT(I),I=1,107)/'H','HE',
      1 'LI','BE','B','C','N','O','F','NE',
      2 'NA','MG','AL','SI','P','S','CL','AR',
@@ -5087,7 +5087,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -5117,7 +5117,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -5126,7 +5126,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -5154,7 +5154,7 @@ C
 C***********************************************************************
       DIMENSION IVALUE(40),VALUE(40)
       CHARACTER  TEXT(18)*60, KEYWRD*80, LINE*80
-         SAVE                                                           GL0892
+         SAVE
       DATA TEXT/
      1' BOND LENGTH    IS SET EQUAL TO THE REFERENCE BOND LENGTH   ',
      2' BOND ANGLE     IS SET EQUAL TO THE REFERENCE BOND ANGLE    ',
@@ -5236,7 +5236,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -5266,7 +5266,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -5275,7 +5275,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -5288,7 +5288,7 @@ C
       DIMENSION GEO(3,*),COORD(3,*)
       CHARACTER *15 NDIMEN(4)
       LOGICAL GEOOK
-         SAVE                                                           GL0892
+         SAVE
       DATA NDIMEN/' MOLECULE     ',' POLYMER       ',
      1'LAYER STRUCTURE',' SOLID         '/
       DATA ICALCN /0/
@@ -5533,12 +5533,12 @@ C***********************************************************************
       COMMON /NATORB/ NATORB(107)
       COMMON /UCELL / L1L,L2L,L3L,L1U,L2U,L3U
       COMMON /NUMCAL/ NUMCAL
-      COMMON /SRPL/ ISSRP                                               IR0494
+      COMMON /SRPL/ ISSRP
       DIMENSION SBITS(9,9), LIMS(3,2), XJUC(3)
       CHARACTER*80 KEYWRD
-      LOGICAL ISSRP                                                     IR0494
+      LOGICAL ISSRP
       EQUIVALENCE (L1L,LIMS(1,1))
-         SAVE                                                           GL0892
+         SAVE
       DATA ITYPE /1/
       DATA ICALCN /0/
       IF(NI.EQ.102.OR.NJ.EQ.102)THEN
@@ -5627,7 +5627,7 @@ C    CONTAINS D-ORBITALS.
          DO 130 J=1,NORBJ
             DO 130 I=1,NORBI
   130    SMAT(I,J)=-2.0D0*SMAT(I,J)*SQRT(BI(I)*BJ(J))
-      ELSE IF (ISSRP) THEN                                              IR0494
+      ELSE IF (ISSRP) THEN
 C
 C ...USE SPECIAL SRP BETAs   (Ivan Rossi - Aprile '94)
 C
@@ -5676,7 +5676,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -5706,7 +5706,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -5715,7 +5715,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -5748,7 +5748,7 @@ C             ENUCLR = NUCLEAR ENERGY
       CHARACTER*80 KEYWRD
       LOGICAL DEBUG
       DIMENSION E1B(10),E2A(10),DI(9,9), WJD(100), WKD(100)
-         SAVE                                                           GL0892
+         SAVE
       DATA ICALCN /0/
       IF (ICALCN .NE. NUMCAL) THEN
          IONE=1
@@ -5909,7 +5909,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -5939,7 +5939,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -5948,7 +5948,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -5982,7 +5982,7 @@ C common FIT splitted for portability (Ivan Rossi 0394 &8) )
       COMMON /NUMCAL/ NUMCAL
       LOGICAL DEBUG, DEBUG1
       CHARACTER*80 KEYWRD
-         SAVE                                                           GL0892
+         SAVE
       DATA ICALCN /0/
       DATA ZERO,FF,RADMAX/0.0,0.9,1.5708/
       IF (ICALCN .NE. NUMCAL) THEN
@@ -6314,7 +6314,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -6344,7 +6344,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -6353,7 +6353,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -6399,7 +6399,7 @@ c Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
       COMMON /XYIJKL/ XY(NMECI,NMECI,NMECI,NMECI)
       COMMON /NUMCAL/ NUMCAL
       COMMON /IOCM/ IREAD
-         SAVE                                                           GL0892
+         SAVE
       DATA TSPIN/'SINGLET ','DOUBLET ','TRIPLET ','QUARTET ','QUINTET ',
      1'SEXTET  ','SEPTET  '/
       DATA ICALCN /0/, ICALC1 /0/
@@ -6780,7 +6780,7 @@ C
          MECI=EIG(LROOT)
          KROOT=LROOT
       ENDIF
-      IF(PRNT)  THEN                                                    IR0594
+      IF(PRNT)  THEN
          WRITE(6,'(//20X,''STATE VECTORS'',//)')
          CALL MATOUT(CONF,EIG,LAB,LAB,LAB)
       ENDIF
@@ -6906,7 +6906,7 @@ C                                             SECOND VECTOR!
       RETURN
       END
 C
-      SUBROUTINE MOLDAT(IP)                                             0304WH93
+      SUBROUTINE MOLDAT(IP)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 C
 C
@@ -6926,7 +6926,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -6956,7 +6956,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -6965,7 +6965,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -7021,10 +7021,10 @@ c Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
       character allrf2
       CHARACTER*80 KEYWRD, OLDE(20)*6, ALLREF
       LOGICAL DEBUG, UHF,EXCI, TRIP, MINDO3, BIRAD, AM1, OPEN, LPM3,
-     1        USEMM,SLOW,HALFE                                          IR0494
-         SAVE                                                           GL0892
+     1        USEMM,SLOW,HALFE
+         SAVE
 C
-      IF (IP .EQ. 1) GOTO 35                                            0304WH93
+      IF (IP .EQ. 1) GOTO 35
 C     
       DEBUG = (INDEX(KEYWRD,'MOLDAT').NE.0)
       LPM3  = (INDEX(KEYWRD,'PM3').NE.0)
@@ -7106,14 +7106,14 @@ C
    30    CONTINUE
       ENDIF
 C
-      IF (IP .EQ. 0) RETURN                                             0304WH93
+      IF (IP .EQ. 0) RETURN
 C
 C        SWAP IN OLD PARAMETERS FOR ELEMENTS.  OLDE CONTAINS THE
 C        CHARACTER NAME OF THE ELEMENT, AND ISWAP(1,1:NEWELE) CONTAINS
 C        THE ATOMIC NUMBER OF THE ELEMENT. ISWAP(2,1:NEWELE) CONTAINS
 C        THE STORAGE ADDRESS OF THE OLD SET OF PARAMETERS.
 C
-35    NEWELE=2                                                          0304WH93
+35    NEWELE=2
       OLDE(1)=' S1978'
       ISWAP(1,1)=16
       ISWAP(2,1)=91
@@ -7421,7 +7421,7 @@ C
 C   MAKE SURE ANALYT IS NOT USED WITH ANALYTICAL C.I. DERIVATIVES
 C
       HALFE = (NOPEN.GT.NCLOSE.AND.FRACT.NE.2.D0.AND.FRACT.NE.0.D0
-     1         .OR. (INDEX(KEYWRD,'C.I.').NE.0))                        IR0494
+     1         .OR. (INDEX(KEYWRD,'C.I.').NE.0))
       SLOW=(INDEX(KEYWRD,'EXCI').NE.0.OR.
      1INDEX(KEYWRD,'ROOT').NE.0.AND.INDEX(KEYWRD,'ROOT=1').EQ.0)
       IF(HALFE)HALFE=(.NOT.SLOW)
@@ -7585,7 +7585,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -7615,7 +7615,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -7624,7 +7624,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -7680,7 +7680,7 @@ C
       CHARACTER ELEMNT*2, IDATE*24
       COMMON /KEYWRD/ KEYWRD
       COMMON /TITLES/ KOMENT,TITLE
-      COMMON /GEOVAR/ XPARAM(MAXPAR), NVAR, LOC(2,MAXPAR)               IR0394
+      COMMON /GEOVAR/ XPARAM(MAXPAR), NVAR, LOC(2,MAXPAR)
 C    changed common path for portability  (IR)
       COMMON /PATHI / LATOM,LPARAM
       COMMON /PATHR / REACT(200)
@@ -7696,7 +7696,7 @@ C    changed common path for portability  (IR)
       LOGICAL INT
       DIMENSION COORD(3,NUMATM),VALUE(40)
       EQUIVALENCE (KEYS(1),KEYWRD)
-         SAVE                                                           GL0892
+         SAVE
       DATA SPACE, SPACE2/' ','  '/
 C
 c      WRITE(6,*) "I GET TO READMO"
@@ -8042,7 +8042,7 @@ C
       DIMENSION WSUM(100), WBITS(100), LIMS(3,2), XJUC(3), E1BITS(10),
      1E2BITS(10), WMAX(100)
       EQUIVALENCE (L1L,LIMS(1,1))
-         SAVE                                                           GL0892
+         SAVE
       DATA ICALCN /0/
       IF (ICALCN .NE. NUMCAL) THEN
          ICALCN = NUMCAL
@@ -8100,7 +8100,7 @@ C
       COMMON /NUMCAL/ NUMCAL
       DIMENSION FA(0:13),AFF(0:2,0:2,0:2),AF(0:19),BF(0:19),
      1BI(0:12,0:12)
-         SAVE                                                           GL0892
+         SAVE
       DATA AFF/27*0. D0/
       DATA FA/1.D0,1.D0,2.D0,6.D0,24.D0,120.D0,720.D0,5040.D0,40320.D0,
      1362880.D0,3628800.D0,39916800.D0,479001600.D0,6227020800.D0/
@@ -8195,7 +8195,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -8225,7 +8225,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -8234,7 +8234,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C
@@ -8248,7 +8248,7 @@ C
       LOGICAL UHF, TRIP, BIRAD, EXCI, CI, WORD
       LOGICAL AM1, MNDO, MINDO3, PM3
       CHARACTER SPACE*1, DOT*1, ZERO*1, NINE*1, CH*1, CHRONO*7
-         SAVE                                                           GL0892
+         SAVE
       DATA SPACE,DOT,ZERO,NINE /' ','.','0','9'/
       DATA AM1, MNDO, MINDO3, PM3 /4*.FALSE./
       ALLKEY=KEYWRD

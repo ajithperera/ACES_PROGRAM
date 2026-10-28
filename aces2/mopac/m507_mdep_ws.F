@@ -27,7 +27,7 @@ C        *****  BUFFALO, SUMMER 1971.  REWRITTEN AND MODIFIED   *****
 C        *****  BY A.K. AT SUNY BUFFALO AND THE UNIVERSITY OF   *****
 C        *****  TEXAS.  DECEMBER 1973                           *****
 C
-      COMMON /GEOVAR/ XDUMMY(MAXPAR),NDUM,LOC(2,MAXPAR)                 IR0394
+      COMMON /GEOVAR/ XDUMMY(MAXPAR),NDUM,LOC(2,MAXPAR)
       COMMON /GEOM  / GEO(3,NUMATM)
       COMMON /LAST  / LAST
       COMMON /KEYWRD/ KEYWRD
@@ -56,7 +56,7 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
       LOGICAL DEBUG, RESTRT, TIMES, OKC, OKF, ROUGH, SCF1, RESFIL
       CHARACTER*80 KEYWRD
       CHARACTER SPACE*1, CHDOT*1, ZERO*1, NINE*1, CH*1
-         SAVE                                                           GL0892
+         SAVE
       DATA SPACE,CHDOT,ZERO,NINE /' ','.','0','9'/
       DATA  ICALCN /0/, ISWAP /2,3,1/
       IF(ICALCN.NE.NUMCAL) THEN
@@ -446,7 +446,7 @@ C---WORKSPACE ARRAYS
       DIMENSION WS(MAXORB), SQFAO(MAXORB,MAXORB)
       COMMON /SCRACH/ FMO(MAXORB,MAXORB), XDUMY(MAXPAR**2-MORB2)
       COMMON /ETAEPS/ ETA, EPS
-         SAVE                                                           GL0892
+         SAVE
 ************************************************************************
 *
 *   TAKES A PACKED LOWER-TRIANGULAR MATRIX IN ARRAY FAO AND
@@ -672,7 +672,7 @@ C
      1            (MDFP(4),LNSTOP),(XDFP(1),ALPHA),(XDFP(2),COS   ),
      2            (XDFP(3),PNORM ),(XDFP(4),DROP ),(XDFP(5),DEL   ),
      3            (XDFP(6),FREPF ),(XDFP(7),CYCMX),(XDFP(8),TOTIME)
-         SAVE                                                           GL0892
+         SAVE
       DATA ICALCN /0/
       DATA SPACE,CHDOT,ZERO,NINE /' ','.','0','9'/
       IF (ICALCN.NE.NUMCAL) THEN
@@ -1306,7 +1306,7 @@ C
       COMMON /KEYWRD/ KEYWRD
       COMMON /GEOKST/ NATOMS,LABELS(NUMATM),
      1                NA(NUMATM),NB(NUMATM),NC(NUMATM)
-      COMMON /GEOVAR/ XDUMMY(MAXPAR),NVAR,LOC(2,MAXPAR)                 IR0394
+      COMMON /GEOVAR/ XDUMMY(MAXPAR),NVAR,LOC(2,MAXPAR)
       COMMON /DENSTY/ P(MPACK),PDUMY(2,MPACK)
       COMMON /ATMASS/ ATMASS(NUMATM)
       COMMON /TIMER / TIME0
@@ -1326,7 +1326,7 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
       LOGICAL DEBUG, DERIV, RESTRT, PRNT, RESFIL, ANALYT, PRECIS
       CHARACTER SPACE*1, DOTT*1, ZERO*1, NINE*1, CH*1
       EQUIVALENCE (COORD(1,1),COORDL(1))
-         SAVE                                                           GL0892
+         SAVE
       DATA SPACE,DOTT,ZERO,NINE /' ','.','0','9'/
       DATA FACT/6.95125D-3/
       data angs/0.529177D0/
@@ -1728,7 +1728,7 @@ C
 C
 C
       PARAMETER (MAXPA2=MAXPAR**2)
-      COMMON /GEOVAR/ XDUMMY(MAXPAR),NVAR,LOC(2,MAXPAR)                 IR0394
+      COMMON /GEOVAR/ XDUMMY(MAXPAR),NVAR,LOC(2,MAXPAR)
       COMMON /GEOSYM/ NDEP,LOCPAR(MAXPAR),IDEPFN(MAXPAR),LOCDEP(MAXPAR)
       COMMON /GEOKST/ NATOMS,LABELS(NUMATM),
      1NA(NUMATM),NB(NUMATM),NC(NUMATM)
@@ -1759,7 +1759,7 @@ cmgc
 cmgc
       LOGICAL RESTRT, LINEAR, DEBUG, BARTEL, PRNT, LARGE
       EQUIVALENCE (GRAD(1), GR(1,1)), (KEYWRD,KEYS(1))
-         SAVE                                                           GL0892
+         SAVE
 C
 C TEST GEOMETRY TO SEE IF IT IS OPTIMIZED
       TIME2=-1.D9
@@ -1791,7 +1791,7 @@ C
       PRNT=(INDEX(KEYWRD,'RC=') .EQ. 0)
       DEBUG=(INDEX(KEYWRD,'DFORCE') .NE. 0)
       LARGE=(INDEX(KEYWRD,'LARGE') .NE. 0)
-      BARTEL=((INDEX(KEYWRD,'NLLSQ') .NE. 0)                             IR1094
+      BARTEL=((INDEX(KEYWRD,'NLLSQ') .NE. 0)
      1         .OR. (INDEX(KEYWRD,' EF') .NE. 0)
      2         .OR. (INDEX(KEYWRD,' TS') .NE. 0))
       RESTRT=(INDEX(KEYWRD,'RESTART') .NE. 0)
@@ -1830,15 +1830,15 @@ cmgc      TIME3=SECOND()
      1L,ELEMNT(LABELS(I)),(GRAD(J),J=IL,IU)
    40 CONTINUE
 C   TEST SUM OF GRADIENTS
-      I=INDEX(KEYWRD,' GNORM=')                                          IR1094
-      IF (I .ne. 0) THEN                                                 IR1094
-         GNTOL=READA(KEYWRD, I)                                          IR1094
-      ELSE                                                               IR1094
-         GNTOL=10.0D0                                                    IR1094
-      ENDIF                                                              IR1094
+      I=INDEX(KEYWRD,' GNORM=')
+      IF (I .ne. 0) THEN
+         GNTOL=READA(KEYWRD, I)
+      ELSE
+         GNTOL=10.0D0
+      ENDIF
       GNORM=SQRT(ddot(nvar,grad,1,grad,1))
       IF(PRNT)WRITE(6,'(//10X,''GRADIENT NORM ='',F10.5)') GNORM
-      IF(GNORM .LT. GNTOL) GOTO 60                                       IR1094
+      IF(GNORM .LT. GNTOL) GOTO 60
       IF(INDEX(KEYWRD,' LET ') .NE. 0) THEN
          WRITE(6,'(///1X,''** GRADIENT IS VERY LARGE, BUT SINCE "LET"'',
      1'' IS USED, CALCULATION WILL CONTINUE'')')
@@ -1849,10 +1849,10 @@ C   TEST SUM OF GRADIENTS
    50 CONTINUE
       WRITE(6,'(//10X,'' GEOMETRY WILL BE OPTIMIZED FIRST'')')
       IF(BARTEL) THEN
-         IF( (INDEX(KEYWRD,' EF') + INDEX(KEYWRD,' TS')) .NE. 0) THEN    IR1094
-             WRITE(6,'(15X,''USING EIGENVECTOR FOLLOWING'')')            IR1094
-             CALL EF (XPARAM,NVAR,ESCF)                                  IR1094
-         ELSE                                                            IR1094
+         IF( (INDEX(KEYWRD,' EF') + INDEX(KEYWRD,' TS')) .NE. 0) THEN
+             WRITE(6,'(15X,''USING EIGENVECTOR FOLLOWING'')')
+             CALL EF (XPARAM,NVAR,ESCF)
+         ELSE
              WRITE(6,'(15X,''USING NLLSQ'')')
              CALL NLLSQ(XPARAM,NVAR)
          ENDIF
@@ -2177,11 +2177,11 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
      5       /BETAS / BETAS(107),BETAP(107),BETAD(107)
       COMMON /GEOM  / GEO(3,NUMATM)
       COMMON /EXPONT/ ZS(107),ZP(107),ZD(107)
-      COMMON /SRPL/ ISSRP                                               IR0594
-      CHARACTER*4 BETF                                                  IR0594
-      CHARACTER*1 BETL                                                  IR0594
-      CHARACTER*5 BETTYP                                                IR0594
-      LOGICAL GRAPH,ISSRP                                               IR0594
+      COMMON /SRPL/ ISSRP
+      CHARACTER*4 BETF
+      CHARACTER*1 BETL
+      CHARACTER*5 BETTYP
+      LOGICAL GRAPH,ISSRP
       CHARACTER KEYWRD*80
 **********************************************************************
 *
@@ -2189,7 +2189,7 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
 *
 **********************************************************************
       DIMENSION EIGS(MAXORB), IFACT(MAXORB), XYZ(3,NUMATM)
-         SAVE                                                           GL0892
+         SAVE
       GRAPH=(INDEX(KEYWRD,'GRAPH').NE.0)
       DO 10 I=1,NORBS
    10 IFACT(I)=(I*(I-1))/2
@@ -2252,7 +2252,7 @@ C  THE  +1.D-14 IS TO PREVENT POSSIBLE ERRORS IN THE DIAGONALIZATION.
                   STORE(IJ)=0.D0
    40          H(IJ)=0.D0
    50    BI=BETAP(NAT(I))
-      ENDIF                                                             IR0594
+      ENDIF
       DO 60 I=1,NORBS
          STORE(IFACT(I+1))=1.D0
    60 H(IFACT(I+1))=1.D0
@@ -2377,7 +2377,7 @@ C     **********
       EQUIVALENCE ( IIIUM(2), ICYC),(IIIUM(3), IRST),
      1(IIIUM(4),JRST),
      2(DDDUM(2),ALF), (DDDUM(3),SSQ),(DDDUM(4), PN)
-         SAVE                                                           GL0892
+         SAVE
       DATA SPACE,CHDOT,ZERO,NINE /' ','.','0','9'/
       MIDDLE=(INDEX(KEYWRD,'RESTART') .NE. 0)
       SCF1=(INDEX(KEYWRD,'1SCF') .NE. 0)
@@ -2881,7 +2881,7 @@ C
 *           IPOW(9)= 0 FOR RESTORE, 1 FOR DUMP
 *
 **********************************************************************
-      COMMON /GEOVAR/ XDUMMY(MAXPAR),NVAR,LOC(2,MAXPAR)                 IR0394
+      COMMON /GEOVAR/ XDUMMY(MAXPAR),NVAR,LOC(2,MAXPAR)
       COMMON /ELEMTS/ ELEMNT(107)
       COMMON /GEOSYM/ NDEP,LOCPAR(MAXPAR),IDEPFN(MAXPAR),LOCDEP(MAXPAR)
       COMMON /TITLES/ KOMENT,TITLE
@@ -2903,7 +2903,7 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
 C    changed common path for portability  (IR)
       COMMON /PATHI / LATOM,LPARAM
       COMMON /PATHR / REACT(200)
-         SAVE                                                           GL0892
+         SAVE
       OPEN(UNIT=9,FILE='FOR009',STATUS='UNKNOWN',FORM='UNFORMATTED')
       REWIND 9
       OPEN(UNIT=10,FILE='FOR010',STATUS='UNKNOWN',FORM='UNFORMATTED')
@@ -3040,7 +3040,7 @@ C
       COMMON /GEOSYM/ NDEP,LOCPAR(MAXPAR),IDEPFN(MAXPAR),LOCDEP(MAXPAR)
       COMMON /GEOM  / GEO(3,NUMATM)
       COMMON /ATMASS/ ATMASS(NUMATM)
-      COMMON /GEOVAR/ XPARAM(MAXPAR), NVAR, LOC(2,MAXPAR)               IR0394
+      COMMON /GEOVAR/ XPARAM(MAXPAR), NVAR, LOC(2,MAXPAR)
       COMMON /GEOKST/ NATOMS,LABELS(NUMATM),
      1                NA(NUMATM),NB(NUMATM),NC(NUMATM)
 C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
@@ -3058,7 +3058,7 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
      3GROLD(MAXPAR), PAROLD(MAXPAR), GEOREF(3,NUMATM),
      4 SQRTMS(MAXPAR)
       LOGICAL INT, ADDK, LETOT, LET, VELRED,PRTMAX, IRCDRC
-         SAVE                                                           GL0892
+         SAVE
       DATA VELO0/MAXPAR*0.D0/, INT/.TRUE./
       DATA SPACE,CHDOT,ZERO,NINE /' ','.','0','9'/
       DATA ADDK/.TRUE./
@@ -3530,7 +3530,7 @@ C
       INTEGER LEFT,RIGHT,CENTER
       CHARACTER*80 KEYWRD, CONTRL
       LOGICAL DEBUG, LOWER
-         SAVE                                                           GL0892
+         SAVE
       DATA ICALCN /0/
       DATA CONST/MAXPAR*1.D0/
 ************************************************************************
@@ -3798,7 +3798,7 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
      2XTOT3(3)
       LOGICAL TURN, PARMAX, LDRC, GOTURN
       CHARACTER*80 KEYWRD, TEXT1*3, TEXT2*2,  COTYPE(3)*2
-         SAVE                                                           GL0892
+         SAVE
       DATA REFSCF/0.D0/
       DATA COTYPE/'BL','BA','DI'/
       DATA ICALCN /0/
@@ -4202,7 +4202,7 @@ C
       DIMENSION EMAT(20,20), EVEC(1000), COEFFS(20)
       CHARACTER*80 KEYWRD
       LOGICAL DEBUG
-         SAVE                                                           GL0892
+         SAVE
       DATA ICALCN /0/
 C*TNT      DATA FIRST/.TRUE./
 C*TNT      IF(FIRST) THEN
@@ -4322,7 +4322,7 @@ C
      1                NA(NUMATM), NB(NUMATM), NC(NUMATM)
       COMMON /DENSTY/ P(MPACK),PA(MPACK),PB(MPACK)
       COMMON /GEOSYM/ NDEP,LOCPAR(MAXPAR),IDEPFN(MAXPAR),LOCDEP(MAXPAR)
-      COMMON /GEOVAR/ XPARAM(MAXPAR), NVAR, LOC(2,MAXPAR)               IR0394
+      COMMON /GEOVAR/ XPARAM(MAXPAR), NVAR, LOC(2,MAXPAR)
       COMMON /GRADNT/ GRAD(MAXPAR),GNORM
       COMMON /ISTOPE/ AMS(107)
       COMMON /GRAVEC/ COSINE
@@ -4356,7 +4356,7 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
      +IDUM3(NUMATM), IDUM4(NUMATM), COORD(3,NUMATM), IROT(2,3)
       EQUIVALENCE (IDUMMY,COORD)
       CHARACTER*80 KEYWRD
-         SAVE                                                           GL0892
+         SAVE
       DATA IROT/1,2,1,3,2,3/
       GOLD=0.D0
       GOK(1)=.FALSE.
@@ -4711,7 +4711,7 @@ C
       DIMENSION GRAD(MAXPAR),XREF(MAXPAR), GREF(MAXPAR), XMIN1(MAXPAR)
       CHARACTER*80 KEYWRD
       LOGICAL DEBUG, OKC, OKF, NOPR
-         SAVE                                                           GL0892
+         SAVE
       DATA ICALCN /0/
       IF (ICALCN .NE. NUMCAL) THEN
          ICALCN = NUMCAL
@@ -4878,7 +4878,7 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
      1                NMIDLE(NUMATM),NLAST(NUMATM), NORBS,
      2                NELECS,NALPHA,NBETA,NCLOSE,NOPEN
      3       /MOLKSR/ FRACT
-      COMMON /GEOVAR/ XPARAM(MAXPAR), NVAR, LOC(2,MAXPAR)               IR0394
+      COMMON /GEOVAR/ XPARAM(MAXPAR), NVAR, LOC(2,MAXPAR)
       COMMON /NUMCAL/ NUMCAL
 ************************************************************************
 *
@@ -4892,10 +4892,10 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
       DIMENSION W(N2ELEC), DUMY(3)
       LOGICAL UHF, CI, SINGLT, TRIPLT, EXCITD, PRTGRA, XYZ
       CHARACTER TYPE(3)*11, IDATE*24, CALCN(2)*5, GTYPE*13, GRTYPE*14,
-     1          FLEPO(16)*58, ITER(2)*58, NUMBRS(11)*1                  IR0494
+     1          FLEPO(16)*58, ITER(2)*58, NUMBRS(11)*1
       CHARACTER*2 ELEMNT, IELEMT(20), SPNTYP*7, CALTYP*7
       EQUIVALENCE (W,WJ)
-         SAVE                                                           GL0892
+         SAVE
       DATA TYPE/'BOND       ','ANGLE      ','DIHEDRAL   '/
       DATA CALCN /'     ','ALPHA'/
       DATA NUMBRS /'0','1','2','3','4','5','6','7','8','9',' '/
@@ -4916,7 +4916,7 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
      1' GEOMETRY OPTIMIZED USING NLLSQ. GRADIENT NORM MINIMIZED  ',
      2' GEOMETRY OPTIMIZED USING POWSQ. GRADIENT NORM MINIMIZED  ',
      3' CYCLES EXCEEDED, GRADIENT NOT FULLY MINIMIZED IN NLLSQ   '/
-      DATA FLEPO(13),FLEPO(14),FLEPO(15)/                                IR0394
+      DATA FLEPO(13),FLEPO(14),FLEPO(15)/
      1' 1SCF RUN AFTER RESTART.  GEOMETRY MIGHT NOT BE OPTIMIZED ',
      2' HEAT OF FORMATION MINIMIZED IN ONE LINE SEARCH           ',
      3' GEOMETRY OPTIMISED USING EIGENVECTOR FOLLOWING (EF).     '/
@@ -4981,7 +4981,7 @@ C
      1,''"PL".'',/,
      2'' CHECK YOUR GEOMETRY AND ALSO TRY USING SHIFT OR PULAY. '')')
          CALL GEOUT
-         RETURN                                                          IR0295
+         RETURN
       ENDIF
       WRITE(6,'(////10X,''FINAL HEAT OF FORMATION ='',F17.5,'' KCAL''
      1)')FUNCT
@@ -5536,7 +5536,7 @@ C     ********** MACHEP IS A MACHINE DEPENDENT PARAMETER SPECIFYING
 C                THE RELATIVE PRECISION OF FLOATING POINT ARITHMETIC.
 C
 C     MACHEP = TWO**(-46)
-      MACHEP = TWO**(-45)                                               0519WH93
+      MACHEP = TWO**(-45)
 C
       IERR = 0
       IF (N.EQ.1) GO TO 160
@@ -5728,7 +5728,7 @@ C     ********** MACHEP IS A MACHINE DEPENDENT PARAMETER SPECIFYING
 C                THE RELATIVE PRECISION OF FLOATING POINT ARITHMETIC.
 C
 C     MACHEP = TWO**(-46)
-      MACHEP = TWO**(-45)                                               0519WH93
+      MACHEP = TWO**(-45)
 C
       IERR = 0
       IF (N.EQ.1) GO TO 140

@@ -196,6 +196,10 @@ for t in $TARGETS; do
           STALE=$(aces2_stale_binaries)
           [ -n "$STALE" ] && echo "  aces2: still older than the libraries after relink: $STALE" >&2
         fi
+        # The compiler drops fixed-form code past column 72 without a word.
+        python3 "$ROOT/aces2/Scripts/check_col72.py" "$ROOT/aces2" \
+          > "$ROOT/build_logs/aces2_col72.log" 2>&1 || \
+          echo "  aces2: code past column 72, which the compiler ignores -- see build_logs/aces2_col72.log" >&2
         if [ -z "$MISSING" ]; then
           RESULT[$t]=0
         else

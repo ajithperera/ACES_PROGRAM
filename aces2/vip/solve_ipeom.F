@@ -97,7 +97,8 @@ C of this block instead of the Davidson root search (small systems).
 C
          IF (IFLAGS2(h_IFLAGS2_ip_root_find) .EQ. 1) THEN
             IF (IUHF .EQ. 0) THEN
-               WRITE(6,"(2a)") " @SOLVE_IPEOM-F, IP_ROOT_FIND=FULL_DIAG",
+               WRITE(6,
+     &            "(2a)") " @SOLVE_IPEOM-F, IP_ROOT_FIND=FULL_DIAG",
      &                         " requires REF=UHF"
                CALL ERREX
             ENDIF

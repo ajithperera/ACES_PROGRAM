@@ -1,7 +1,9 @@
 #include <flags.h>
       Subroutine Constr_search_c4(Coords_K0OM, Coords_K1C, Coords_K1PM,
-     &                            Vcoords, Coords, Coords_K1CM, Grad_K1C,
-     &                            Grad_K1CM, Grad_K0O, Grad_K0OM, A2Hess, 
+     &                            Vcoords, Coords, Coords_K1CM,
+     &                               Grad_K1C,
+     &                            Grad_K1CM, Grad_K0O, Grad_K0OM,
+     &                               A2Hess,
      &                            Hess_K1C, AtmMass, Vec_K1C0, Vec_K1C1, 
      &                            Vec_K0O, Grad_on_K0O, Grad_on_K1C, 
      &                            Work, B2ang, Units, Stride, Delta, 

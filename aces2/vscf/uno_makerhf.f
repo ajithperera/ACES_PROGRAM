@@ -757,7 +757,8 @@ c
                   traceb = traceb + scrb(ldim2+
      $                 isqrof(irp)+(i-1)*nsize+i-1)
                enddo
-               write(6,*) '  traces full vacuum density matrix ', tracea,
+               write(6,*) '  traces full vacuum density matrix ',
+     $            tracea,
      $              traceb
                trace = trace + tracea + traceb
             endif

@@ -30,7 +30,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -60,7 +60,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -69,7 +69,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
       DIMENSION XPARAM(MAXPAR)
@@ -96,7 +96,7 @@ C
 **********************************************************************
 C
       COMMON /MESAGE/ IFLEPO,ISCF
-      COMMON /GEOVAR/ XDUMMY(MAXPAR), NDUM, LOC(2,MAXPAR)               IR0494
+      COMMON /GEOVAR/ XDUMMY(MAXPAR), NDUM, LOC(2,MAXPAR)
       COMMON /GEOM  / GEO(3,NUMATM)
       COMMON /GEOSYM/ NDEP,LOCPAR(MAXPAR),IDEPFN(MAXPAR),LOCDEP(MAXPAR)
       COMMON /ISTOPE/ AMS(107)
@@ -113,7 +113,7 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
       COMMON /TIMDMP/ TLEFT, TDUMP
       COMMON /SIGMA2/ GNEXT1(MAXPAR), GMIN1(MAXPAR)
       COMMON /NLLCOM/ HESS(MAXPAR,MAXPAR),BMAT(MAXPAR,MAXPAR),
-     1                PMAT(MAXPAR,MAXPAR)                                IR0494
+     1                PMAT(MAXPAR,MAXPAR)
       COMMON/OPTEF/OLDF(MAXPAR),D(MAXPAR),VMODE(MAXPAR),
      $U(MAXPAR,MAXPAR),DD,rmin,rmax,omin,xlamd,xlamd0,skal,
      $MODE,NSTEP,NEGREQ,IPRNT
@@ -125,7 +125,7 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
       DIMENSION BB(MAXPAR,MAXPAR) 
 
       LOGICAL RESTRT,SCF1,LIMSCF
-      LOGICAL LUPD,lts,lrjk,lorjk,rrscal,donr,gnmin                      IR0794
+      LOGICAL LUPD,lts,lrjk,lorjk,rrscal,donr,gnmin
       CHARACTER*80 KEYWRD
       EQUIVALENCE(IPOW(1),IHESS)
       DATA  ICALCN,ZERO,ONE,TWO    /0,0.D0,1.D0,2.D0/
@@ -149,7 +149,8 @@ c
           if((isXYZ.eq.0).and.(igeok.eq.0)) then
            write(6,'(/,5x,"EF: Exactly 3*N variables.",/,5x,
      1      "Specif XYZ if you are using CARTESIAN coordinates",/,5x,
-     2      "If you use INTERNAL coordinate,  you can specify GEO-OK,",/,
+     2      "If you use INTERNAL coordinate,  you can specify GEO-OK,",
+     3         /,
      3      5x,"but Eigenvector Following is NOT recommended",/)')
            stop
           endif
@@ -168,7 +169,7 @@ C
 C     GET ALL INITIALIZATION DATA
 C
       IF(ICALCN.NE.NUMCAL) 
-     1CALL EFSTR(XPARAM,FUNCT,IHESS,NTIME,ILOOP,IGTHES,MXSTEP,IRECLC,    IR0494
+     1CALL EFSTR(XPARAM,FUNCT,IHESS,NTIME,ILOOP,IGTHES,MXSTEP,IRECLC,
      *           IUPD,DMAX,DDMAX,dmin,TOL2,TOTIME,nvar,SCF1,LUPD,ldump,
      *           rrscal,donr,gnmin)
       lts=.false.
@@ -182,12 +183,12 @@ c     don't allow very small steps
       osmin=0.005d0
       if(ireclc.eq.1)osmin=0.001d0
       IF (SCF1) THEN
-         GNFINA=SQRT(DDOT(NVAR,GRAD,1,GRAD,1))                          IR0494
+         GNFINA=SQRT(DDOT(NVAR,GRAD,1,GRAD,1))
          IFLEPO=1
          RETURN
       ENDIF
 C     CHECK THAT GEOMETRY IS NOT ALREADY OPTIMIZED
-         RMX=SQRT(DDOT(NVAR,GRAD,1,GRAD,1))                             IR0494
+         RMX=SQRT(DDOT(NVAR,GRAD,1,GRAD,1))
          IF (RMX.LT.TOL2) THEN
             IFLEPO=2
             LAST=1
@@ -195,7 +196,7 @@ C     CHECK THAT GEOMETRY IS NOT ALREADY OPTIMIZED
          ENDIF
 C     GET INITIAL HESSIAN. IF ILOOP IS .LE.0 THIS IS AN OPTIMIZATION RESTART 
 C     AND HESSIAN SHOULD ALREADY BE AVAILABLE                                   
-      IF (ILOOP .GE. 0) CALL GETHES(XPARAM,IGTHES,NVAR,iloop,TOTIME)     IR0594
+      IF (ILOOP .GE. 0) CALL GETHES(XPARAM,IGTHES,NVAR,iloop,TOTIME)
 
 C     START OF MAIN LOOP
 C     WE NOW HAVE GRADIENTS AND A HESSIAN. IF THIS IS THE FIRST
@@ -221,7 +222,7 @@ c     store various things for possibly omin rejection
          CALL GETHES(XPARAM,IGTHES,NVAR,iloop,TOTIME)
       ENDIF
          IF (IHESS.GT.0) CALL UPDHES(SVEC,TVEC,NVAR,IUPD)
-         IF(IPRNT.GE.2) CALL GEOUT                                      IR0494
+         IF(IPRNT.GE.2) CALL GEOUT
          IF(IPRNT.GE.2) THEN
             WRITE(6,'('' XPARAM '')')
             WRITE(6,'(5(2I3,F10.4))')(LOC(1,I),LOC(2,I),
@@ -231,12 +232,12 @@ c     store various things for possibly omin rejection
          ENDIF
 C
 C        PRINT RESULTS IN CYCLE
-         GNFINA=SQRT(DDOT(NVAR,GRAD,1,GRAD,1))                          IR0494
+         GNFINA=SQRT(DDOT(NVAR,GRAD,1,GRAD,1))
 cmgc      TIME2=SECOND()
       if (itime.eq.0) time1=time0
       TSTEP=TIME2-TIME1
       IF (TSTEP.LT.ZERO)TSTEP=ZERO
-      TLEFT=TOTIME-TIME2                                                IR0494
+      TLEFT=TOTIME-TIME2
       TIME1=TIME2
       itime=itime+1
       WRITE(6,40) NSTEP+1, TSTEP, TLEFT, GNFINA, FUNCT
@@ -248,7 +249,7 @@ cmgc      TIME2=SECOND()
 C
 C        TEST FOR CONVERGENCE
 C
-      RMX=SQRT(DDOT(NVAR,GRAD,1,GRAD,1))                                IR0494
+      RMX=SQRT(DDOT(NVAR,GRAD,1,GRAD,1))
       IF (RMX.LT.TOL2)GOTO 250
       OLDE  = FUNCT
       oldgn = rmx
@@ -260,8 +261,8 @@ C     if the optimization is in cartesian coordinates, we should remove
 C     translation and rotation modes. Possible problem if run is in
 C     internal but with exactly 3*natoms variable (i.e. dummy atoms
 C     are also optimized).
-      if ( isXYZ.ne.0 ) then                                            IR0494
-        write(6,'(10x,"Optiminzing using CARTESIAN coordinates..")')    IR0494
+      if ( isXYZ.ne.0 ) then
+        write(6,'(10x,"Optiminzing using CARTESIAN coordinates..")')
         call prjfc(hess,xparam,nvar)
       endif
       IJ=0
@@ -294,7 +295,7 @@ c     of step without these contributions. a more safe criteria for deciding
 c     whether this actually is a cartesian optimization should be put in 
 c     some day...
       DO 120 I=1,NVAR                                                           
-         FX(I)=DDOT(NVAR,U(1,I),1,GRAD,1)                               IR0494
+         FX(I)=DDOT(NVAR,U(1,I),1,GRAD,1)
          if (abs(eigval(i)).eq.zero) fx(i)=zero
   120 CONTINUE                                                                  
 c     form geometry step d
@@ -363,7 +364,7 @@ C
 C     GET GRADIENT FOR NEW GEOMETRY 
 C
       CALL COMPFG(XPARAM, .TRUE., FUNCT, .TRUE., GRAD, .TRUE.)
-      IF(GNMIN) GNTEST=SQRT(DDOT(NVAR,GRAD,1,GRAD,1))                   IR0494
+      IF(GNMIN) GNTEST=SQRT(DDOT(NVAR,GRAD,1,GRAD,1))
       DEACT = FUNCT-OLDE
       RATIO = DEACT/DEPRE
       if(iprnt.ge.1)WRITE(6,170)DEACT,DEPRE,RATIO       
@@ -515,7 +516,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -545,7 +546,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -554,7 +555,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
       CHARACTER ELEMNT*2, KEYWRD*80
@@ -575,7 +576,7 @@ C
 *           IPOW(9)= 0 FOR RESTORE, 1 FOR DUMP, 2 FOR SILENT DUMP
 *
 **********************************************************************
-      COMMON /GEOVAR/ XDUMMY(MAXPAR), NVAR, LOC(2,MAXPAR)               IR0494
+      COMMON /GEOVAR/ XDUMMY(MAXPAR), NVAR, LOC(2,MAXPAR)
       COMMON /ELEMTS/ ELEMNT(107)
       COMMON /GEOSYM/ NDEP,LOCPAR(MAXPAR),IDEPFN(MAXPAR),
      1                     LOCDEP(MAXPAR)
@@ -596,19 +597,19 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
      1                NMIDLE(NUMATM),NLAST(NUMATM), NORBS,
      2                NELECS,NALPHA,NBETA,NCLOSE,NOPEN
      3       /MOLKSR/ FRACT
-      COMMON /PATHI / LATOM,LPARAM                                      IR0494
+      COMMON /PATHI / LATOM,LPARAM
       OPEN(UNIT=9,FILE='FOR009',STATUS='UNKNOWN',FORM='UNFORMATTED')
       REWIND 9
       OPEN(UNIT=10,FILE='FOR010',STATUS='UNKNOWN',FORM='UNFORMATTED')
       REWIND 10
       IR=9
       IF(IPOW(9) .EQ. 1 .OR. IPOW(9) .EQ. 2) THEN
-         FUNCT1=SQRT(DDOT(NVAR,GRAD,1,GRAD,1))                          IR0494
+         FUNCT1=SQRT(DDOT(NVAR,GRAD,1,GRAD,1))
          IF(IPOW(9).EQ.1)THEN
             WRITE(6,'(//10X,''CURRENT VALUE OF GRADIENT NORM =''
      1  ,F12.6)')FUNCT1
             WRITE(6,'(/10X,''CURRENT VALUE OF GEOMETRY'',/)')
-            CALL GEOUT                                                  IR0494
+            CALL GEOUT
          ENDIF
 C
 C  IPOW(1) AND IPOW(9) ARE USED ALREADY, THE REST ARE FREE FOR USE
@@ -668,7 +669,7 @@ C        READ DENSITY MATRIX
       END
       SUBROUTINE EFSTR(XPARAM,FUNCT,IHESS,NTIME,ILOOP,IGTHES,MXSTEP,
      $                 IRECLC,IUPD,DMAX,DDMAX,dmin,TOL2,TOTIME,nvar,
-     $                 SCF1,LUPD,ldump,rrscal,donr,gnmin)                IR0494
+     $                 SCF1,LUPD,ldump,rrscal,donr,gnmin)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)                                       
 C
 C
@@ -688,7 +689,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -718,7 +719,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -727,7 +728,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
       DIMENSION XPARAM(*)                                                       
@@ -744,13 +745,13 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
      3       /MOLKSR/ FRACT
       COMMON /NUMCAL/ NUMCAL                                                    
       COMMON /NLLCOM/ HESS(MAXPAR,MAXPAR),BMAT(MAXPAR,MAXPAR),                  
-     1                PMAT(MAXPAR,MAXPAR)                                IR0494
+     1                PMAT(MAXPAR,MAXPAR)
       COMMON/OPTEF/OLDF(MAXPAR),D(MAXPAR),VMODE(MAXPAR),
      $U(MAXPAR,MAXPAR),DD,rmin,rmax,omin,xlamd,xlamd0,skal,
      $MODE,NSTEP,NEGREQ,IPRNT
       DIMENSION IPOW(9)               
       LOGICAL RESTRT,SCF1,LDUM,LUPD,rrscal,donr,gnmin 
-      CHARACTER*80 KEYWRD                                               IR0494
+      CHARACTER*80 KEYWRD
       CHARACTER CHDOT*1,ZERO*1,NINE*1,CH*1
       DATA CHDOT,ZERO,NINE   /'.','0','9'/                     
       DATA  ICALCN,ZZERO  /0,0.D0/                          
@@ -758,7 +759,7 @@ C     GET ALL INITIALIZATION DATA
          NVAR=ABS(NVAR)
          LDUMP=0
          ICALCN=NUMCAL
-         LUPD=(INDEX(KEYWRD,' IUPD=0') .EQ. 0)                          IR0494
+         LUPD=(INDEX(KEYWRD,' IUPD=0') .EQ. 0)
          RESTRT=(INDEX(KEYWRD,'RESTART') .NE. 0)
          SCF1=(INDEX(KEYWRD,'1SCF') .NE. 0)
          NSTEP=0
@@ -918,7 +919,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -948,7 +949,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -957,10 +958,10 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
-      logical ts,rscal,frodo1,frodo2,lrjk,lorjk,rrscal,donr              IR0794
+      logical ts,rscal,frodo1,frodo2,lrjk,lorjk,rrscal,donr
       DIMENSION EIGVAL(MAXPAR),FX(MAXPAR)                                       
       COMMON/OPTEF/OLDF(MAXPAR),D(MAXPAR),VMODE(MAXPAR),
      $U(MAXPAR,MAXPAR),DD,rmin,rmax,omin,xlamd,xlamd0,skal,
@@ -1124,7 +1125,7 @@ C
       D(J)=D(J)+TEMP*U(J,I)                                             
 320   CONTINUE                                                          
 330   CONTINUE                                                          
-      DD=SQRT(DDOT(NVAR,D,1,D,1))                                       IR0494
+      DD=SQRT(DDOT(NVAR,D,1,D,1))
       if(lamda.eq.zero .and. lamda0.eq.zero .and.iprnt.ge.1)
      1 write(6,777)dd
 777   format(1x,'pure NR-step has length',f10.5)
@@ -1142,7 +1143,7 @@ C
          DO 160 I=1,NVAR
             D(I)=D(I)*SKAL
 160      CONTINUE
-         DD=SQRT(DDOT(NVAR,D,1,D,1))                                     IR0494
+         DD=SQRT(DDOT(NVAR,D,1,D,1))
          IF(IPRNT.GE.1)WRITE(6,170)SKAL
 170      FORMAT(5X,'CALCULATED STEP SIZE TOO LARGE, SCALED WITH',F9.5)
          xlamd=lamda
@@ -1262,7 +1263,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -1292,7 +1293,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -1301,7 +1302,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
 C     GET THE HESSIAN. DEPENDING ON IGTHES WE GET IT FROM :                     
@@ -1312,7 +1313,7 @@ C      2 : READ IN FROM FTN009
 C      3 : CALCULATE IT BY DOUBLE NUMERICAL DIFFERENTIATION
 C      4 : READ IN FROM FTN009 (DURING RESTART, PARTLY OR WHOLE,                
 C          ALREADY DONE AT THIS POINT)                                          
-      COMMON /GEOVAR/ XDUMMY(MAXPAR), NDUM, LOC(2,MAXPAR)               IR0494
+      COMMON /GEOVAR/ XDUMMY(MAXPAR), NDUM, LOC(2,MAXPAR)
       COMMON /GEOM  / GEO(3,NUMATM)                                             
       COMMON /GEOSYM/ NDEP,LOCPAR(MAXPAR),IDEPFN(MAXPAR),LOCDEP(MAXPAR)         
       COMMON /LAST  / LAST                                                      
@@ -1327,7 +1328,7 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
       COMMON /NUMCAL/ NUMCAL                                                    
       COMMON /SIGMA2/ GNEXT1(MAXPAR), GMIN1(MAXPAR)                             
       COMMON /NLLCOM/ HESS(MAXPAR,MAXPAR),BMAT(MAXPAR,MAXPAR),                  
-     1                PMAT(MAXPAR,MAXPAR)                                IR0494
+     1                PMAT(MAXPAR,MAXPAR)
       COMMON /TIMDMP/ TLEFT, TDUMP
       COMMON/OPTEF/OLDF(MAXPAR),D(MAXPAR),VMODE(MAXPAR),
      $U(MAXPAR,MAXPAR),DD,rmin,rmax,omin,xlamd,xlamd0,skal,
@@ -1336,7 +1337,7 @@ C Common MOLKST splitted in MOLKSI and MOLKSR    Ivan Rossi 0394   &8)
      *FX(MAXPAR),HESSC(MAXHES),UC(MAXPAR**2)                                    
       DIMENSION XPARAM(*),tmp(150,150)
       LOGICAL RESTRT,SCF1,LDUM 
-      CHARACTER*80 KEYWRD                                               IR0494
+      CHARACTER*80 KEYWRD
       CHARACTER CHDOT*1,ZERO*1,NINE*1,CH*1
       DATA CHDOT,ZERO,NINE  /'.','0','9'/                     
       DATA  ICALCN,ZZERO,ONE,TWO    /0,0.D0,1.D0,2.D0/                          
@@ -1418,7 +1419,7 @@ cmgc         TIME1=SECOND()
             endif
 cmgc            TIME2=SECOND()
             TSTEP=TIME2-TIME1
-            TLEFT=TOTIME-TIME2                                           IR0494
+            TLEFT=TOTIME-TIME2
             TIME1=TIME2
             IF( TLEFT .LT. TSTEP*TWO) THEN
 C
@@ -1442,7 +1443,7 @@ c        add all time used back to tleft, this will then be subtracted
 c        again in main ef routine
 cmgc         TIME2=SECOND()
          TSTEP=TIME2-TSTORE
-         TLEFT=TOTIME-TIME2                                              IR0494
+         TLEFT=TOTIME-TIME2
       ENDIF
 C
 C     SYMMETRIZE HESSIAN
@@ -1472,7 +1473,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -1502,7 +1503,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -1511,21 +1512,21 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
-      COMMON /NUMCAL/ NUMCAL                                            IR1294
+      COMMON /NUMCAL/ NUMCAL
       COMMON/OPTEF/OLDF(MAXPAR),D(MAXPAR),VMODE(MAXPAR),
      $U(MAXPAR,MAXPAR),DD,rmin,rmax,omin,xlamd,xlamd0,skal,
      $MODE,NSTEP,NEGREQ,IPRNT
       dimension xo(maxpar)
       logical lorjk
-      DATA ICALCN /0/                                                   IR1294
+      DATA ICALCN /0/
 C
 C  ON THE FIRST STEP SIMPLY DETERMINE WHICH MODE TO FOLLOW
 C
 c     IF(NSTEP.EQ.1) THEN
-      IF(ICALCN.NE.NUMCAL) THEN                                         IR1294
-         ICALCN=NUMCAL                                                  IR1294
+      IF(ICALCN.NE.NUMCAL) THEN
+         ICALCN=NUMCAL
          IF(MODE.GT.NVAR)THEN
             WRITE(6,*)'ERROR!! MODE IS LARGER THAN NVAR',MODE
             STOP
@@ -1542,11 +1543,11 @@ C  THE GREATEST OVERLAP WITH THE MODE WE ARE FOLLOWING
 C
          IT=1
          lorjk=.false.
-         TOVLP=DDOT(NVAR,U(1,1),1,VMODE,1)                              IR0494
+         TOVLP=DDOT(NVAR,U(1,1),1,VMODE,1)
          TOVLP=ABS(TOVLP)
 c        xo(1)=tovlp
          DO 10 I=2,NVAR
-            OVLP=DDOT(NVAR,U(1,I),1,VMODE,1)                            IR0494
+            OVLP=DDOT(NVAR,U(1,I),1,VMODE,1)
             OVLP=ABS(OVLP)
 c           xo(i)=ovlp
             IF(OVLP.GT.TOVLP) THEN
@@ -1614,7 +1615,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -1644,7 +1645,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -1653,7 +1654,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C                                                                       
 C  CALCULATES PROJECTED FORCE CONSTANT MATRIX (F).                      
@@ -1920,7 +1921,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -1950,7 +1951,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -1959,10 +1960,10 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
       COMMON /NLLCOM/ HESS(MAXPAR,MAXPAR),BMAT(MAXPAR,MAXPAR),                  
-     1                PMAT(MAXPAR,MAXPAR)                                IR0494
+     1                PMAT(MAXPAR,MAXPAR)
       COMMON/OPTEF/OLDF(MAXPAR),D(MAXPAR),VMODE(MAXPAR),                        
      $U(MAXPAR,MAXPAR),DD,rmin,rmax,omin,xlamd,xlamd0,skal,
      $MODE,NSTEP,NEGREQ,IPRNT
@@ -2019,7 +2020,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -2049,7 +2050,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -2058,15 +2059,15 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
       DIMENSION TVEC(*),SVEC(*)
-      COMMON /NUMCAL/NUMCAL                                              IR1294
+      COMMON /NUMCAL/NUMCAL
       COMMON/OPTEF/OLDF(MAXPAR),D(MAXPAR),VMODE(MAXPAR),
      $U(MAXPAR,MAXPAR),DD,rmin,rmax,omin,xlamd,xlamd0,skal,
      $MODE,NSTEP,NEGREQ,IPRNT
       COMMON /NLLCOM/ HESS(MAXPAR,MAXPAR),BMAT(MAXPAR,MAXPAR),                  
-     1                PMAT(MAXPAR,MAXPAR)                                IR0494
+     1                PMAT(MAXPAR,MAXPAR)
       COMMON /GRADNT/ GRAD(MAXPAR),GNFINA
 C
       DATA ZERO/0.0D0/
@@ -2092,8 +2093,8 @@ C       IUPD = 0  :  SKIP UPDATE
 C       IUPD = 1  :  POWELL
 C       IUPD = 2  :  BFGS
 C
-      IF(ICALCN.NE.NUMCAL) THEN                                         IR1294
-         ICALCN=NUMCAL                                                  IR1294
+      IF(ICALCN.NE.NUMCAL) THEN
+         ICALCN=NUMCAL
          IF(IPRNT.GE.2) THEN
             IF (IUPD.EQ.0)WRITE(6,90)
             IF (IUPD.EQ.1)WRITE(6,80)
@@ -2118,7 +2119,7 @@ C
             sVEC(I)=GRAD(I)-OLDF(I)
    20    CONTINUE
          DDS=DD*DD
-         DDTD=DDOT(NVAR,TVEC,1,D,1)                                     IR0494
+         DDTD=DDOT(NVAR,TVEC,1,D,1)
          DDTD=DDTD/DDS
 C
          DO 40 I=2,NVAR
@@ -2141,7 +2142,7 @@ C
          DO 50 I=1,NVAR
             SVEC(I)=GRAD(I)-OLDF(I)
    50    CONTINUE
-         DDS=DDOT(NVAR,SVEC,1,D,1)                                      IR0494
+         DDS=DDOT(NVAR,SVEC,1,D,1)
 C
 C  IF DDS IS NEGATIVE, RETENTION OF POSITIVE DEFINITENESS IS NOT
 C  GUARANTEED. PRINT A WARNING AND SKIP UPDATE THIS CYCLE.
@@ -2155,7 +2156,7 @@ cfrj        WRITE(6,110)
 cfrj        RETURN
 cfrj     ENDIF
 C
-         DDTD=DDOT(NVAR,D,1,TVEC,1)                                     IR0494
+         DDTD=DDOT(NVAR,D,1,TVEC,1)
 C
          DO 70 I=2,NVAR
             DO 60 J=1,I-1

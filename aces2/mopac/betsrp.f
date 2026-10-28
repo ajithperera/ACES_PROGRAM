@@ -47,7 +47,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -77,7 +77,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -86,7 +86,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
       COMMON /SRPI/ IBTPTR(107), NATPTR(MXATSP), NATSP
@@ -161,7 +161,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -191,7 +191,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -200,7 +200,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
       COMMON /SRPI/ IBTPTR(107), NATPTR(MXATSP), NATSP
@@ -274,7 +274,7 @@ C
 *                                                                       
       PARAMETER (MAXHEV=50,   MAXLIT=50)
       PARAMETER (MAXTIM=3600, MAXDMP=3600)
-      PARAMETER (MXATSP=10)                                             IR0494
+      PARAMETER (MXATSP=10)
 *                                                                       
 ************************************************************************
 *                                                                       
@@ -304,7 +304,7 @@ C
      +                     +(MAXLIT*(MAXLIT-1))/2))
       PARAMETER (MAXHES=(MAXPAR*(MAXPAR+1))/2,MORB2=MAXORB**2)
       PARAMETER (MPACK=(MAXORB*(MAXORB+1))/2)
-      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)                          IR0494
+      PARAMETER (MAXBET=(MXATSP*(MXATSP+1))/2)
 ************************************************************************
 *   FOR SHORT VERSION USE LINE WITH NMECI=1, FOR LONG VERSION USE LINE  
 *   WITH NMECI=10                                                       
@@ -313,7 +313,7 @@ C     PARAMETER (NMECI=10,  NPULAY=MPACK)
 C     PARAMETER (NMECI=1,   NPULAY=1)
       PARAMETER (NMECI=10,  NPULAY=MPACK)
 C WARNING : MAXDMO have to be >=  max(MAXORB,NMECI**2)                   IR0494
-      PARAMETER (MAXDMO=250)                                             IR0494
+      PARAMETER (MAXDMO=250)
 ************************************************************************
 C
       COMMON /SRPI/ IBTPTR(107), NATPTR(MXATSP), NATSP

@@ -109,7 +109,8 @@ C The same formulas apply to all four pair types.
 
       If (Type .EQ. "OV") Then
       If (Abs(Ip1) .Gt. Nocco(1) .OR. Ip2 .Gt. Nvrto(1)) Then 
-      write(6,"(2a,i4,a,I4,2a,2i4)") " The selected occupied or virtual",
+      write(6,
+     +   "(2a,i4,a,I4,2a,2i4)") " The selected occupied or virtual",
      +      " orbital", Abs(Ip1)," or",Ip2," exceeded the number of"
       write(6,"(a,2(1x,i4))") " occupied or virtuals:", Nocco(1),
      +                          Nvrto(1)

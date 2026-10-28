@@ -42,7 +42,8 @@ c     The error message
 c     
  5900 format (
      &     t3,'@ASV_UPDATE_INTEGER-F: Invalid integer keyword value',/,
-     &     t3,'(',a,',',a,'). A valid value must be no less than ', i3,/,
+     &     t3,'(',a,',',a,'). A valid value must be no less than ', i3,
+     &        /,
      &     t3,'and no more than ',i3,'.',/)
  5910 format (
      &     t3,'@ASV_UPDATE_INTEGER-F: Invalid integer keyword value',/,
