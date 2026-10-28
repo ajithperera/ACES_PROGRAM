@@ -11,3 +11,5 @@ docs/reference/keywords.md
 __pycache__/
 docs/programmer/jobarc.md
 docs/user/aces3_jobflows.md
+# old ACES II test archive (zmat.NNN, OUTPUT/, KEEP/); kept locally, not tracked
+aces2/tests/legacy_archive/

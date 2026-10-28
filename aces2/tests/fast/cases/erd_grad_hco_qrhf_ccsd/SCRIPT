@@ -1,0 +1,19 @@
+test -n "$GENBAS" || exit 1
+# QRHF CCSD gradient of HCO (an electron added to the HCO+ RHF
+# orbitals, cc-pVDZ, spherical): xerdgrad against xvdint.
+cat <<. >ZMAT
+HCO QRHF CCSD gradient
+C
+O 1 R1*
+H 1 R2* 2 A*
+
+R1=1.18
+R2=1.11
+A=125.0
+
+*ACES2
+CALC=CCSD,BASIS=CC-PVDZ,CHARGE=1,QRHF_G=1,OPT_MAXCYC=1
+SCF_CONV=10,CC_CONV=10
+
+.
+. "$(dirname "$0")/../../erdgrad_check.sh"

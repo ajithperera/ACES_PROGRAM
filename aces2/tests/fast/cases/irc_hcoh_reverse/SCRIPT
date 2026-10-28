@@ -1,0 +1,28 @@
+test -n "$GENBAS" || exit 1
+# First three points of the reverse IRC from the SCF/3-21G H2CO <-> trans-HCOH
+# transition state (xa2proc PES_scan, Gonzalez-Schlegel, step 0.1). The
+# energies must fall monotonically; the third point is checked against a
+# full 24-point run made with the same code (s = 0.3, -113.0622774557).
+cat <<. >ZMAT
+HCOH TS IRC REVERSE
+C -0.70275405  0.07016197 0.0
+O  0.60245353 -0.06351953 0.0
+H  0.09745863  1.02683686 0.0
+H -1.28726224 -0.84915200 0.0
+
+*ACES2(CALC=SCF,BASIS=3-21G,COORD=CARTESIAN,VIB=EXACT,SCF_CONV=10)
+
+*IRC
+STEP_SIZE=0.1
+IRC_STEPS=3
+IRC_SEARCH=REVERSE
+.
+ln -s $GENBAS GENBAS || exit 1
+xa2proc PES_scan >irc.out 2>&1 || { tail -15 irc.out; exit 1; }
+test -s IRC.map || { echo "no IRC.map"; tail -15 irc.out; exit 1; }
+awk '/ E = /{e=$NF; n++; printf "s = %s  E = %s\n", $3, e
+             if (n>1 && e>=p) bad=1; p=e}
+     END {if (n!=3) {print "expected 3 IRC points, got " n; exit 1}
+          d=p+113.0622774557; if (d<0) d=-d
+          if (bad) {print "energy does not fall along the path"; exit 1}
+          if (d>1e-6) {print "third point off by " d; exit 1}}' IRC.map || exit 1

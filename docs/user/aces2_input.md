@@ -391,6 +391,15 @@ CU:HAY-WADT-VDZ
 The basis and ECP sections are independent: either can use either form,
 and the elements need not be in the same order in both.
 
+Test `erd_grad_cl2_ecp_mp2` is a complete ECP job, an MBPT(2) gradient
+of Cl₂ with the SBKJC ECP. Its script writes the `ZMAT` and a one-entry
+`ECPDATA` (see [](#ecpdata)), then runs the gradient with both integral
+programs (see `INTEGRALS=ERD` in {doc}`methods`):
+
+```{literalinclude} ../../aces2/tests/fast/cases/erd_grad_cl2_ecp_mp2/SCRIPT
+:language: sh
+```
+
 ### GENBAS and ZMAT.BAS
 
 `GENBAS` is the basis set library. On its first run, `xjoda` copies the

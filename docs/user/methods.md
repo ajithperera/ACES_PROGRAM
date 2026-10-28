@@ -189,6 +189,21 @@ A CCSD optimization of water (test `013a`, reference −76.2725483266):
 :language: text
 ```
 
+`INTEGRALS=ERD` computes the integrals with `xerdints` and the gradients
+with `xerdgrad` (Flocke's OED/ERD) in place of `xvmol` and `xvdint`. It
+covers SCF, MBPT and CC gradients for RHF, UHF, ROHF and QRHF references,
+with ECPs and Cartesian or spherical basis sets. Test `erd_opt_h2o_ccsd` is `013a` with
+this one keyword added and ends at the same energy, −76.2725483266:
+
+```{literalinclude} ../../aces2/tests/fast/cases/erd_opt_h2o_ccsd/ZMAT
+:language: text
+```
+
+The `erd_grad_*` tests compare single gradients from the two routes
+(UHF MBPT(2), ROHF CCSD, QRHF CCSD, spherical frozen-core MBPT(2) and an
+SBKJC ECP); they agree to 10<sup>−12</sup> hartree/bohr. Analytic second
+derivatives (`VIB=EXACT`), NMR and other properties still use `xvdint`.
+
 The options below were checked in 10/2026 on SCF/3-21G minima (HOOH as a
 Z-matrix, ethanol from Cartesians) and transition states (HCN ⇌ HNC as a
 Z-matrix, H<sub>2</sub>CO → trans-HCOH from Cartesians). The cycle
@@ -262,7 +277,8 @@ eigenvalue, so start from an exact Hessian (`INIT_HESSIAN=EXACT`), a
 ([](#transition-states-from-reactant-and-product)). From a model Hessian
 it can slide down to a minimum: the H<sub>2</sub>CO → HCOH guess ends at
 H<sub>2</sub>CO with RIC and CART, but finds the transition state in 4
-cycles with `INIT_HESSIAN=EXACT` (3 with `EVAL_HESS=1`). When a search
+cycles with `INIT_HESSIAN=EXACT` (3 with `EVAL_HESS=1`; test
+`ric_evfts_exact_hcoh`, reference −113.0500519970). When a search
 converges at a point whose Hessian has no negative eigenvalue, the
 output says `WARNING: this transition state search converged to a point
 ... It is NOT a transition state`. Test `126c` searches for the HCN ⇌ HNC
@@ -341,30 +357,32 @@ input orientation.
   do not match are reported with the list of generated coordinates, and
   the optimization continues without them. Atoms are numbered in input
   order. The constraints are applied by projecting the Hessian and
-  gradient (Peng et al., *J. Comput. Chem.* **17**, 49 (1996)). The test
-  input `aces2/test/zmat.130` freezes two bonds and two angles:
+  gradient (Peng et al., *J. Comput. Chem.* **17**, 49 (1996)). Test
+  `ric_constrained_130` (reference −167.9845273870) freezes the C–O and
+  N–H bonds and, by the lookup rule above, the H–C–O angle at C and the
+  H–N–H angle at N:
 
-  ```text
-  *CONSTRAINS
-  2
-  1 3
-  5 4
-  2
-  1 2 3
-  5 6 4
-  *END
+  ```{literalinclude} ../../aces2/tests/fast/cases/ric_constrained_130/ZMAT
+  :language: text
   ```
 
 - With `GEOM_OPT=CART` give the number of frozen Cartesian components and
   then their positions in the coordinate list, where atom *n* has x, y, z
-  at 3*n*−2, 3*n*−1, 3*n*. `aces2/test/zmat.131` freezes five components:
+  at 3*n*−2, 3*n*−1, 3*n*. Test `cart_constrained_131` (reference
+  −167.9849004110) freezes five components:
 
-  ```text
-  *CONSTRAINS
-  5
-  1 5 9 11 16
-  *END
+  ```{literalinclude} ../../aces2/tests/fast/cases/cart_constrained_131/ZMAT
+  :language: text
   ```
+
+A minimum search in Cartesian coordinates, `GEOM_OPT=CART` with the RFA
+step, is test `cart_rfa_hooh` (HOOH SCF/6-31G\*, reference
+−150.7647867620; the RIC search from the same start ends 10<sup>−7</sup>
+hartree away):
+
+```{literalinclude} ../../aces2/tests/fast/cases/cart_rfa_hooh/ZMAT
+:language: text
+```
 
 **Convergence and limits.** An optimization has converged when the norm
 of the (projected) gradient is below 10<sup>−`CONVERGENCE`</sup> (the
@@ -405,29 +423,10 @@ between a reactant and a product (Peng and Schlegel, *Isr. J. Chem.*
 **33**, 449 (1993)). The input holds three structures with the atoms in
 the same order: the guess for the transition state (the main geometry),
 then the reactant and the product, each after a one-line label and a
-blank line:
+blank line (test `ric_qst3_h2co_h2_co`):
 
-```text
-H2CO -> H2 + CO
-C   0.000000   0.000000   0.000000
-O   0.000000   0.000000   1.160000
-H   0.376000   0.000000  -1.034000
-H   1.503000   0.000000  -0.547000
-
-Reactant
-C   0.000000   0.000000   0.000000
-O   0.000000   0.000000   1.200000
-H   0.940000   0.000000  -0.540000
-H  -0.940000   0.000000  -0.540000
-
-Product
-C   0.000000   0.000000   0.000000
-O   0.000000   0.000000   1.130000
-H   0.370000   0.000000  -2.800000
-H  -0.370000   0.000000  -2.800000
-
-*ACES2(CALC=SCF,BASIS=3-21G,GEOM_OPT=RIC,OPT_CONTROL=QST
-OPT_METHOD=EVFTS)
+```{literalinclude} ../../aces2/tests/fast/cases/ric_qst3_h2co_h2_co/ZMAT
+:language: text
 ```
 
 The coordinates are built from the bonds of all three structures, so the
@@ -442,7 +441,8 @@ overlaps the tangent by more than 0.8, or else along the lowest one.
 The starting Hessian is the model Hessian; its updates build up the
 negative eigenvalue. For this input QST converges in 11 cycles and
 LST in 16, to the transition state that an exact-Hessian search finds
-from the same guess. Plain `EVFTS` from the guess wanders off. Before
+from the same guess (−113.0500312190; the two agree to 10<sup>−8</sup>
+hartree). Plain `EVFTS` from the guess wanders off. Before
 10/2026 this path was broken for Cartesian input.
 
 Without a guess for the transition state (QST2), give only two
@@ -453,7 +453,15 @@ midpoint of the linear synchronous transit path (Halgren and Lipscomb,
 reactant, the interatomic distances are interpolated halfway, and the
 Cartesians are fitted to them by least squares. The search continues as
 above. For H2CO → trans-HCOH, QST2 takes 8 cycles (LST 9) to the
-same transition state as the three-structure input. For vinyl alcohol →
+same transition state as a three-structure input for this reaction
+and the exact-Hessian search (test `ric_qst2_h2co_hcoh`, reference
+−113.0500519800):
+
+```{literalinclude} ../../aces2/tests/fast/cases/ric_qst2_h2co_hcoh/ZMAT
+:language: text
+```
+
+For vinyl alcohol →
 acetaldehyde it finds the nonplanar 1,3-hydrogen shift transition state
 in 22 cycles (one imaginary frequency, 2513i cm⁻¹). The planar
 three-structure guess for that reaction leads to a different saddle
@@ -531,7 +539,10 @@ calculations; −113.2217692 at *s* = 2.30, optimized minimum −113.2218200)
 and `FORWARD` reaches trans-HCOH in 20 points (71 calculations;
 −113.1462658 at *s* = 1.90, optimized minimum −113.1462870). The
 energy falls monotonically along both branches. The search stops when a
-new point lies less than 0.1 *s* from the previous one.
+new point lies less than 0.1 *s* from the previous one. Test
+`irc_hcoh_reverse` runs the first three `REVERSE` points of this path
+(`IRC_STEPS=3`) and checks that the energy falls and that the third
+point is at −113.0622774557, as in the full run.
 
 Limitations: the points reuse the MOL file of the transition state, so
 they keep its point group; a transition state whose imaginary mode is

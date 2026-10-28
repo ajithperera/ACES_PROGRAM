@@ -1,0 +1,24 @@
+test -n "$GENBAS" || exit 1
+# Frozen-core MBPT(2) gradient of C2H4 (D2h, cc-pVDZ, spherical):
+# xerdgrad against xvdint.
+cat <<. >ZMAT
+C2H4 MBPT(2) gradient
+C
+C 1 CC*
+H 1 CH* 2 HCC*
+H 1 CH* 2 HCC* 3 D180
+H 2 CH* 1 HCC* 3 D0
+H 2 CH* 1 HCC* 4 D0
+
+CC=1.35
+CH=1.09
+HCC=121.0
+D180=180.0
+D0=0.0
+
+*ACES2
+CALC=MBPT(2),BASIS=CC-PVDZ,OPT_MAXCYC=1,DROPMO=1-2
+SCF_CONV=10,CC_CONV=10
+
+.
+. "$(dirname "$0")/../../erdgrad_check.sh"

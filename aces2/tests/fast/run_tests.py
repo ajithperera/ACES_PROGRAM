@@ -68,7 +68,7 @@ def load_test_results():
 def _compare_record(scratch, env, name, record, ref_energy, elapsed):
     jr = subprocess.run(
         ["xa2proc", "jareq", "d", record, "1"],
-        cwd=scratch, env=env, capture_output=True, text=True, timeout=60,
+        cwd=scratch, env=env, capture_output=True, text=True, errors="replace", timeout=60,
     )
     m = re.search(r"[-+]?\d*\.\d+[eEdD][-+]?\d+", jr.stdout)
     if not m:
@@ -93,7 +93,7 @@ def run_case_zmat(name, zmat, record, ref_energy, env):
         try:
             run = subprocess.run(
                 ["xaces2"], cwd=scratch, env=env,
-                capture_output=True, text=True, timeout=300,
+                capture_output=True, text=True, errors="replace", timeout=300,
             )
         except subprocess.TimeoutExpired:
             return name, "ERROR", time.time() - t0, "xaces2 timed out (300s)"
@@ -122,7 +122,7 @@ def run_case_script(name, script, record, ref_energy, env):
         try:
             run = subprocess.run(
                 ["sh", script], cwd=scratch, env=script_env,
-                capture_output=True, text=True, timeout=300,
+                capture_output=True, text=True, errors="replace", timeout=300,
             )
         except subprocess.TimeoutExpired:
             return name, "ERROR", time.time() - t0, "script timed out (300s)"

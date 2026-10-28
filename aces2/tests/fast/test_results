@@ -431,3 +431,42 @@ TOTENERG 1
 pccd_oo_rfo_doci_h2o
 DOCIENER 1
 -7.5005667504051E+01
+erd_grad_nh2_uhf_mp2 new (2026-10)
+TOTENERG 1
+-5.573667311420E+01
+erd_grad_nh2_rohf_ccsd new (2026-10)
+TOTENERG 1
+-5.575617998120E+01
+erd_grad_hco_qrhf_ccsd new (2026-10)
+TOTENERG 1
+-1.135677970680E+02
+erd_grad_c2h4_mp2_sph new (2026-10)
+TOTENERG 1
+-7.831520122660E+01
+erd_grad_cl2_ecp_mp2 new (2026-10)
+TOTENERG 1
+-2.934635765130E+01
+erd_opt_h2o_ccsd new (2026-10)
+TOTENERG 1
+-7.627254832660E+01
+ric_qst2_h2co_hcoh new (2026-10)
+TOTENERG 1
+-1.130500519800E+02
+ric_qst3_h2co_h2_co new (2026-10)
+TOTENERG 1
+-1.130500312190E+02
+ric_evfts_exact_hcoh new (2026-10)
+TOTENERG 1
+-1.130500519970E+02
+cart_rfa_hooh new (2026-10)
+TOTENERG 1
+-1.507647867620E+02
+ric_constrained_130 new (2026-10)
+TOTENERG 1
+-1.679845273870E+02
+cart_constrained_131 new (2026-10)
+TOTENERG 1
+-1.679849004110E+02
+irc_hcoh_reverse new (2026-10)
+TOTENERG 1
+-1.130622774560E+02

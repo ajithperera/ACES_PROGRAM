@@ -349,7 +349,7 @@ C With frozen Cartesian components rigid translations and rotations
 C are no longer free motions, so they must not be projected out of
 C the Hessian (doing so left rotation-like directions of the allowed
 C space with zero curvature and the optimization stalled, e.g. 
-C aces2/test/zmat.131). Project only the constraints in that case. 
+C aces2/tests/fast/cases/cart_constrained_131). Project only the constraints in that case. 
 C 10/2026.
 C
       NOT_FOUND = .TRUE.

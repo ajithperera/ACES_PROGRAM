@@ -44,9 +44,21 @@ to `test_results`. Keep cases small enough to finish in seconds. A case
 whose job is expected to exit with an error after writing its result goes
 in `EXPECT_NONZERO_EXIT`.
 
+The `erd_grad_*` cases check `INTEGRALS=ERD` gradients against the default
+route. Their `SCRIPT` writes a one-cycle optimization (`OPT_MAXCYC=1`)
+to `ZMAT` and sources `tests/fast/erdgrad_check.sh`. That runs the job
+twice, once with `xvmol` + `xvdint` and once with `xerdints` +
+`xerdgrad`. It fails if the two `GRADIENT` records differ by more than
+10<sup>-8</sup> hartree/bohr. Then the runner checks the ERD energy as usual.
+
 Other ACES II suites with their own runners: `aces2/tests/ringcc`,
 `ringcl`, `rpa`, `jcp2020_eom_rccd` (published EOM ring-CC results), and
 `pccd_slow` (larger pCCD jobs, run through Slurm).
+
+`aces2/tests/legacy_archive/` (not tracked by git) holds the original ACES
+II test collection: the `zmat.NNN` and `script.NNN` inputs, their old
+outputs, and the `KEEP/` files. The `fast` cases with numeric names
+(`001a`, `013a`, `s_034`, ...) were imported from it.
 
 ## ACES III
 
