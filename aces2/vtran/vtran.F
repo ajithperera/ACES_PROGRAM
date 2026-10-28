@@ -70,7 +70,12 @@ C
       NWRIT4B=0
 C
       CALL SETMET_VTRAN(IUHF)
-      IGNORE_DROP_MO = (Iflags(h_IOPPAR_calclevel) .EQ. 0 .OR. 
+C An SCF reference with EXCITE (RPA, TDA, ...) is a post-SCF calculation:
+C it keeps the frozen core. Ignoring DROPMO there left SYMPOPVA counting
+C one orbital more than NVRTORB, and xintprc (DS4AA) then ran off its
+C arrays (H2O/Ne EXCITE=RPA with DROPMO=1).
+      IGNORE_DROP_MO = ((Iflags(h_IOPPAR_calclevel) .EQ. 0 .AND.
+     &                   Iflags(h_IOPPAR_excite) .EQ. 0) .OR.
      &                  Iflags(h_IOPPAR_vibration) .EQ. 1 .OR.
      &                  Iflags(h_IOPPAR_eval_hess) .GT. 0)
 C

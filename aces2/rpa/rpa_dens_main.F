@@ -4,11 +4,25 @@ C DRIVE THE CALCULATION OF EXCITED STATE RPA/TDA DENSITY MATRICES
 C
 CEND
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      DIMENSION SCR(MAXCOR), ZVEC(NDIM)
+      DIMENSION SCR(MAXCOR), ZVEC(NDIM), NOCCO(2), NVRTO(2)
       COMMON/SYMPOP/IRPDPD(8,22),ISYTYP(2,500),ID(18)
 #include "machsp.com"
 #include "sym.com"
 #include "syminf.com"
+C
+C The NTOs are formed from the full SCF vectors (SCFEVCA0) with column
+C offsets from the correlated POP/VRT, which is only right without a
+C frozen core. With DROPMO, skip them (the excitation energies do not
+C depend on this step).
+C
+      CALL GETREC(20,'JOBARC','NBASTOT ',1,NBAS)
+      CALL GETREC(20,'JOBARC','NOCCORB ',2,NOCCO)
+      CALL GETREC(20,'JOBARC','NVRTORB ',2,NVRTO)
+      IF (NOCCO(1)+NVRTO(1) .LT. NBAS) THEN
+         WRITE(6,'(A)') ' RPA_DENS_MAIN: no NTOs with frozen orbitals'//
+     &                  ' (DROPMO); skipped.'
+         RETURN
+      ENDIF
 C
 C READ SINGLE EXCITATION VECTORS
 

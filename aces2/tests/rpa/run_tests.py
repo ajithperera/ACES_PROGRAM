@@ -28,30 +28,15 @@ confirmed self-consistent within this session, not yet cross-checked
 against the published paper's RPA column -- do that before treating them
 as physics-validated, not just regression-safe).
 
-KNOWN REAL, SEPARATE BUGS (not fixed here):
-  - h2o_rpa: SIGSEGV in xintprc (scatter.f <- sstgen.f <- sst004.f <-
-    ds4aa.f, AA-spin integral processing). H2O-specific -- N2/CH2/BH all
-    process AA-spin integrals fine via the same code path, so this isn't
-    a generic RPA/xintprc bug, something about H2O's specific symmetry/
-    orbital counts trips it. Consistent with a recurring pattern this
-    session of H2O being the outlier case that exposes bugs invisible on
-    other molecules (see tests/jcp2020_eom_rccd/run_tests.py's H2O
-    EOM(S)-rCCD discussion, and the ringcc/ringcl NSZIE bug history in
-    project memory). 2026-08-14: registered in EXPECTED_CRASH below so
-    the suite always runs it and reports XFAIL instead of silently
-    skipping it -- flips to UPASS the moment the crash signature stops
-    reproducing, which is the cue to fix it for real.
-  - ne_rpa: runs most of the way (multiple states print correctly) then
-    crashes in RPA_DENS_MAIN with "@GETREC: ORBMAP_A record length
-    mismatch requested length = 18 stored length = 17" while computing
-    natural transition orbitals for state 5 -- looks like an off-by-one
-    in dropped-MO/active-orbital-count bookkeeping specific to Ne's
-    DROPMO=1 setup, not yet investigated further. ZMAT kept under
-    cases/ne_rpa/ but not yet added to EXPECTED_CRASH -- confirmed
-    2026-08-14 it fails in xrpa itself (not xintprc) with returncode 1
-    via ACES_EXIT, and the "ORBMAP_A" message lands on stdout rather
-    than stderr (unlike h2o_rpa's SIGSEGV traceback), so it's a quick
-    but separate EXPECTED_CRASH entry to add if picked up.
+h2o_rpa and ne_rpa (DROPMO=1) were broken until 2026-10-28: vtran ignored
+DROPMO for CALC=SCF even with EXCITE set, leaving SYMPOPVA one orbital
+larger than NVRTORB, and xintprc (DS4AA) ran off its arrays (H2O) or
+xrpa's NTO step read ORBMAP_A with the full basis length (Ne). Fixed in
+vtran.F and rpa_dens_main.F (no NTOs with frozen orbitals). Their
+singlets agree to 1e-6 eV with the base column of tests/jcp2020_eom_rccd's
+h2o_eomsfrccd / ne_eomsfrccd (EOM(SF)-RCCD through xringcc/xringcl/xvee,
+the same RPA by another code path); the references below are from this
+module's own run.
 
 Usage:
     module load intel/2025.1.0 openmpi/5.0.7   # must be loaded first
@@ -143,6 +128,36 @@ REFERENCE = {
         (4, 16.295507, "Singlet"), (4, 20.202479, "Singlet"),
         (4, 29.662806, "Singlet"), (4, 37.834261, "Singlet"),
     ],
+    "h2o_rpa": [
+        (1, 10.954420, "Singlet"), (1, 12.830829, "Singlet"),
+        (1, 14.750139, "Singlet"), (1, 15.767523, "Singlet"),
+        (2, 8.627536, "Singlet"), (2, 12.187912, "Singlet"),
+        (2, 13.604293, "Singlet"), (3, 12.605485, "Singlet"),
+        (3, 14.350839, "Singlet"), (3, 16.060907, "Singlet"),
+        (4, 10.315737, "Singlet"), (4, 13.414325, "Singlet"),
+    ],
+    "ne_rpa": [
+        (1, 19.943569, "Singlet"), (1, 19.943569, "Singlet"),
+        (1, 20.350752, "Singlet"), (1, 47.760815, "Singlet"),
+        (1, 50.452063, "Singlet"), (2, 18.084459, "Singlet"),
+        (2, 49.556464, "Singlet"), (2, 67.177969, "Singlet"),
+        (2, 80.516181, "Singlet"), (2, 139.608156, "Singlet"),
+        (3, 18.084459, "Singlet"), (3, 49.556464, "Singlet"),
+        (3, 67.177969, "Singlet"), (3, 80.516181, "Singlet"),
+        (3, 139.608156, "Singlet"), (4, 19.943569, "Singlet"),
+        (4, 19.972230, "Singlet"), (4, 49.931572, "Singlet"),
+        (4, 50.452063, "Singlet"), (4, 171.308768, "Singlet"),
+        (5, 18.084459, "Singlet"), (5, 49.556464, "Singlet"),
+        (5, 67.177969, "Singlet"), (5, 80.516181, "Singlet"),
+        (5, 139.608156, "Singlet"), (6, 19.943569, "Singlet"),
+        (6, 19.972230, "Singlet"), (6, 49.931572, "Singlet"),
+        (6, 50.452063, "Singlet"), (6, 171.308768, "Singlet"),
+        (7, 19.943569, "Singlet"), (7, 19.972230, "Singlet"),
+        (7, 49.931572, "Singlet"), (7, 50.452063, "Singlet"),
+        (7, 171.308768, "Singlet"), (8, 139.608156, "Singlet"),
+        (8, 139.608156, "Singlet"), (8, 139.770652, "Singlet"),
+        (8, 50.452063, "Singlet"), (8, 171.308768, "Singlet"),
+    ],
 }
 
 # Cases with a known, real, unfixed crash. Run every time (never silently
@@ -152,19 +167,7 @@ REFERENCE = {
 # because someone fixed it (move the case into REFERENCE and drop it from
 # here) or because something regressed differently (needs investigation).
 #
-# h2o_rpa's excitation energies, once xintprc is fixed, should be
-# cross-checkable against tests/jcp2020_eom_rccd's h2o_eomsrccd REFERENCE
-# base_value_eV column (RCCD/RPA-with-exchange via the ringcc path is the
-# same physics as this module's default RPA, and H2O is a closed-shell
-# singlet so REF=UHF there == REF=RHF here -- see project memory
-# project_rpa_module_tests.md for the ringcc<->RPA correspondence).
-EXPECTED_CRASH = {
-    "h2o_rpa": {
-        "exe": "xintprc",
-        "returncode": 174,
-        "signature": "scatter.f",
-    },
-}
+EXPECTED_CRASH = {}
 
 
 def _parse_states(out_text):
