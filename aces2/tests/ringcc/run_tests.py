@@ -135,7 +135,13 @@ def main():
     parser.add_argument("--case", action="append", dest="cases",
                          help="run only these case names (repeatable); "
                               "default is all cases in tests/ringcc/cases/")
+    parser.add_argument("--xaces2", action="store_true",
+                         help="run each case with xaces2 instead of the "
+                              "program chain above, against the same "
+                              "references (checks the driver's ring-CC route)")
     args = parser.parse_args()
+    if args.xaces2:
+        PIPELINE[:] = ["xaces2"]
 
     if shutil.which("xringcc") is None:
         sys.exit("xringcc not found on PATH -- module load intel/2025.1.0 "

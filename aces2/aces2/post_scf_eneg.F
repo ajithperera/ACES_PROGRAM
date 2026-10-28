@@ -3,8 +3,16 @@ c
 #include "aces2.h"    
 #include "flags.h"
 c     
-      Logical parcc_exist
+      Logical parcc_exist, Ringcc
       Call a2getrec(20,'JOBARC','NDROPGEO',1,NDRGEO)
+c
+c rCCD (48) and drCCD (49) have their own programs: xringcc for the
+c amplitudes and xringcl for Lambda. xvcc's own ring branch is not
+c maintained (it stops in GETLST).
+c
+      Ringcc = (Iflags(h_IFLAGS_calclevel) .EQ. 48 .OR.
+     &          Iflags(h_IFLAGS_calclevel) .EQ. 49) .AND.
+     &          Iflags(h_IFLAGS_excite) .NE. 2
 c
 c This Saving of All MO JOBARC/JAINDX as JOBARC_AM/JAINDX_AM is only relevent
 c for DROPMO gradients. It is done here even for energy only as a organizational
@@ -32,6 +40,10 @@ c
       Else If (Dirmp2) Then
 c
          Call Runit('xdirmp2')
+c
+      Else If (Ringcc) Then
+c
+         Call Runit('xringcc')
 c
       Else 
 C
@@ -65,7 +77,10 @@ c EOM-CC excitation energies
 C Do EOM-CC exciation energie with RPA/DRPA refeences. In principal
 C MBPT, P-EOM must come here.
 c
-      If (Iflags(h_IFLAGS_excite) .GT. 2) Then
+      If (Iflags(h_IFLAGS_excite) .GT. 2 .AND. Ringcc) Then
+         Call Runit("xringcl")
+         Call Runit("xvee")
+      Else If (Iflags(h_IFLAGS_excite) .GT. 2) Then
          Call Runit("xlambda")     
          Call Runit("xvee") 
       Else if (Iflags(h_IFLAGS_excite) .EQ. 2 .AND.

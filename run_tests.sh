@@ -84,6 +84,13 @@ for t in $TARGETS; do
           "cd '$ROOT/aces2' && python3 tests/$s/run_tests.py --jobs $ACES_PROGRAM_NP" \
           >> "$LOG" 2>&1
       done
+      # The same ground-state and EOM cases through xaces2's ring-CC route.
+      for s in ringcc jcp2020_eom_rccd; do
+        echo "=== $s --xaces2" >> "$LOG"
+        PATH="$ACES2_BIN:$PATH" bash -c \
+          "cd '$ROOT/aces2' && python3 tests/$s/run_tests.py --xaces2 --jobs $ACES_PROGRAM_NP" \
+          >> "$LOG" 2>&1
+      done
       ;;
     *)
       echo "unknown target: $t (expected aces2, ring, aces3, pyaces)" >&2
