@@ -20,6 +20,19 @@ source "$ROOT/build_config.sh"
 # Defaults for configs written by an older ./configure (which had neither knob).
 ACES_PROGRAM_MACHNAME="${ACES_PROGRAM_MACHNAME:-}"
 ACES_PROGRAM_ACES3_CONFIG="${ACES_PROGRAM_ACES3_CONFIG:-configure_line.ufhpc}"
+# Intel compilers chosen by ./configure --fortran=ifx|ifort; configs written
+# before that option keep the oneAPI 2025 defaults.
+ACES_PROGRAM_FC="${ACES_PROGRAM_FC:-ifx}"
+ACES_PROGRAM_CC="${ACES_PROGRAM_CC:-icx}"
+ACES_PROGRAM_CXX="${ACES_PROGRAM_CXX:-icpx}"
+# aces3 builds through MPI wrappers: OpenMPI's take the compiler from OMPI_*,
+# and configure_line.local picks Intel MPI's mpii<compiler> from ACES3_MPI*.
+export OMPI_FC="$ACES_PROGRAM_FC" OMPI_F77="$ACES_PROGRAM_FC"
+export OMPI_CC="$ACES_PROGRAM_CC" OMPI_CXX="$ACES_PROGRAM_CXX"
+export ACES3_MPIFC="mpi$ACES_PROGRAM_FC" ACES3_MPICC="mpi$ACES_PROGRAM_CC"
+export ACES3_MPICXX="mpi$ACES_PROGRAM_CXX" ACES3_SERIAL_CXX="$ACES_PROGRAM_CXX"
+# pyaces/build.sh compiles and links with this.
+export PYACES_FC="$ACES_PROGRAM_FC"
 # pyaces/build.sh does its own `module purge` + load, so it has to be told
 # which module set this build is using rather than inheriting the loaded one.
 export ACES_PROGRAM_MODULES
@@ -70,10 +83,12 @@ require_tools() {
 # that .gitignore line is aspirational and nothing can ever satisfy it.
 # Where `gmake install` puts the aces2 binaries: aces2/bin, unless
 # aces2/Makefiles/local.mk sets DIR_INSTBIN (the development install in
-# ~/Develop/bin does).
-ACES2_BINDIR=$(sed -n 's/^DIR_INSTBIN *:*= *//p' "$ROOT/aces2/Makefiles/local.mk" 2>/dev/null | tail -1)
-ACES2_BINDIR=${ACES2_BINDIR//\$(HOME)/$HOME}
-ACES2_BINDIR=${ACES2_BINDIR//\$\{HOME\}/$HOME}
+# ~/Develop/bin) -- asked of make itself, as run_tests.sh does.
+ACES2_BINDIR=""
+if [ -f "$ROOT/aces2/Makefiles/local.mk" ]; then
+  ACES2_BINDIR=$(printf 'include local.mk\nall:;@echo $(DIR_INSTBIN)\n' |
+                 make -s --no-print-directory -C "$ROOT/aces2/Makefiles" -f - 2>/dev/null)
+fi
 ACES2_BINDIR=${ACES2_BINDIR:-$ROOT/aces2/bin}
 
 aces2_missing_binaries() {
@@ -131,7 +146,7 @@ for t in $TARGETS; do
       # own hostname lookup, unchanged.
       MACHNAME_ARG=""
       [ -n "$ACES_PROGRAM_MACHNAME" ] && MACHNAME_ARG="MACHNAME=$ACES_PROGRAM_MACHNAME"
-      if require_tools aces2 gmake; then
+      if require_tools aces2 gmake $ACES_PROGRAM_FC $ACES_PROGRAM_CC; then
         : > "$LOG"
         # A fresh checkout has no aces2/bin or aces2/lib (both gitignored) --
         # they are created by aces2's own xprep, and every module's install
@@ -157,7 +172,7 @@ for t in $TARGETS; do
           echo "=== aces2 build pass $pass ===" >> "$LOG"
           # shellcheck disable=SC2086
           ( cd "$ROOT/aces2" && \
-            gmake -k $MACHNAME_ARG FFLAGS_EXTRA=-fPIC F9XFLAGS_EXTRA=-fPIC CFLAGS_EXTRA=-fPIC CXXFLAGS_EXTRA=-fPIC all install \
+            gmake -k $MACHNAME_ARG INTEL_FC=$ACES_PROGRAM_FC INTEL_CC=$ACES_PROGRAM_CC FFLAGS_EXTRA=-fPIC F9XFLAGS_EXTRA=-fPIC CFLAGS_EXTRA=-fPIC CXXFLAGS_EXTRA=-fPIC all install \
           ) >> "$LOG" 2>&1
           MISSING=$(aces2_missing_binaries)
           N=$(echo "$MISSING" | wc -w)
@@ -175,7 +190,7 @@ for t in $TARGETS; do
           echo "=== aces2: $(echo "$STALE" | wc -w) binaries older than the libraries -- relinking ===" >> "$LOG"
           # shellcheck disable=SC2086
           ( cd "$ROOT/aces2" && \
-            gmake -k $MACHNAME_ARG FFLAGS_EXTRA=-fPIC F9XFLAGS_EXTRA=-fPIC CFLAGS_EXTRA=-fPIC CXXFLAGS_EXTRA=-fPIC relink \
+            gmake -k $MACHNAME_ARG INTEL_FC=$ACES_PROGRAM_FC INTEL_CC=$ACES_PROGRAM_CC FFLAGS_EXTRA=-fPIC F9XFLAGS_EXTRA=-fPIC CFLAGS_EXTRA=-fPIC CXXFLAGS_EXTRA=-fPIC relink \
           ) >> "$LOG" 2>&1
           MISSING=$(aces2_missing_binaries)
           STALE=$(aces2_stale_binaries)
@@ -203,7 +218,9 @@ for t in $TARGETS; do
         echo "  $t exit code: ${RESULT[$t]}  (log: build_logs/unified_build_$t.log)"
         continue
       fi
-      A3TOOLS=$(grep -oE '\b(F77|FC|CC|CXX)=[^ ]+' "$A3CONF" | cut -d= -f2 | sort -u | tr '\n' ' ')
+      # The names can be ${ACES3_MPIFC:-mpiifort}-style defaults: expand them.
+      A3TOOLS=$(grep -oE '\b(F77|FC|CC|CXX)=[^ ]+' "$A3CONF" | cut -d= -f2 | sort -u \
+                  | while read -r w; do eval "echo $w"; done | tr '\n' ' ')
       # shellcheck disable=SC2086
       if require_tools aces3 gmake $A3TOOLS; then
         # aces3/bin (and bin/sio, where the compiled .sio jobflows land) is
@@ -221,12 +238,13 @@ for t in $TARGETS; do
       fi
       ;;
     pyaces)
-      # pyaces/build.sh hardcodes ifort/ifx/mpicc and links against
+      # pyaces/build.sh compiles with $PYACES_FC and mpicc and links against
       # $MKLROOT/lib/intel64 -- an unset MKLROOT silently becomes "-L/lib/intel64".
-      # ifort is not checked: pyaces/build.sh puts its own ifort (a wrapper
-      # around ifx, tools/compat_bin) first on PATH, and oneAPI 2025 has none.
-      if require_tools pyaces ifx mpicc python3 && [ -n "${MKLROOT:-}" ]; then
-        bash "$ROOT/pyaces/build.sh" > "$LOG" 2>&1
+      if require_tools pyaces $ACES_PROGRAM_FC mpicc python3 && [ -n "${MKLROOT:-}" ]; then
+        # Hand over exactly the configured module set; empty (setvars or
+        # PATH toolchains) makes pyaces/build.sh use the environment as loaded
+        # here instead of falling back to the HiPerGator modules.
+        PYACES_MODULES="$ACES_PROGRAM_MODULES" bash "$ROOT/pyaces/build.sh" > "$LOG" 2>&1
         RESULT[$t]=$?
       else
         [ -n "${MKLROOT:-}" ] || echo "  cannot build pyaces -- MKLROOT is unset (no Intel MKL in the loaded modules)" >&2

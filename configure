@@ -29,6 +29,7 @@ NP=4
 MACHNAME=""
 MACHNAME_SET=0
 ACES3_CONFIG=""
+FORTRAN=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -38,10 +39,12 @@ while [ $# -gt 0 ]; do
     --np=*) NP="${1#*=}" ;;
     --machname=*) MACHNAME="${1#*=}"; MACHNAME_SET=1 ;;
     --aces3-config=*) ACES3_CONFIG="${1#*=}" ;;
+    --fortran=*) FORTRAN="${1#*=}" ;;
     -h|--help)
       cat <<EOF
 Usage: ./configure [--modules="mod1 mod2 ..." | --setvars=SCRIPT | --no-modules]
                    [--np=N] [--machname=NAME] [--aces3-config=FILE]
+                   [--fortran=ifx|ifort]
 
 Works out how to put the shared toolchain (Intel compilers + Intel MKL + MPI)
 on PATH and records it in build_config.sh. Does not replace any subsystem's own
@@ -69,6 +72,10 @@ With no arguments everything below is probed automatically.
                 default: configure_line.local when the Intel MPI wrappers
                 (mpiifort) are present, configure_line.ufhpc when mpif77 is an
                 Intel-backed OpenMPI as on HiPerGator.
+  --fortran     Intel Fortran compiler for all three subsystems: ifx (the
+                default when present) or ifort (the classic compiler, removed
+                in oneAPI 2025; for older installations). The C and C++
+                compilers follow: icx/icpx where they exist, else icc/icpc.
 EOF
       exit 0 ;;
     *) echo "unknown option: $1 (see --help)" >&2; exit 1 ;;
@@ -126,6 +133,30 @@ case "$(basename "${FC_FOUND:-none}")" in
   gfortran)  CMPLR_KIND=gnu ;;
 esac
 
+# ---------------------------------------------------------- Intel compilers
+if [ -n "$FORTRAN" ]; then
+  case "$FORTRAN" in
+    ifx|ifort) ;;
+    *) echo "--fortran must be ifx or ifort, not '$FORTRAN'" >&2; exit 1 ;;
+  esac
+  FC_FOUND=$(probe "command -v $FORTRAN" || true)
+  if [ -z "$FC_FOUND" ]; then
+    echo "--fortran=$FORTRAN: $FORTRAN is not on PATH with this toolchain" >&2
+    exit 1
+  fi
+  CMPLR_KIND=intel
+elif [ "$CMPLR_KIND" = "intel" ]; then
+  FORTRAN=$(basename "$FC_FOUND")
+fi
+INTEL_CC=""
+INTEL_CXX=""
+if [ "$CMPLR_KIND" = "intel" ]; then
+  INTEL_CC=$(probe 'for c in icx icc; do command -v $c && break; done' || true)
+  INTEL_CXX=$(probe 'for c in icpx icpc; do command -v $c && break; done' || true)
+  INTEL_CC=${INTEL_CC##*/}
+  INTEL_CXX=${INTEL_CXX##*/}
+fi
+
 # ------------------------------------------------------------------- machname
 if [ "$MACHNAME_SET" = "0" ]; then
   HOST_SHORT=$(uname -n | cut -d. -f1)
@@ -162,6 +193,10 @@ ACES_PROGRAM_SETVARS="$SETVARS"
 ACES_PROGRAM_NP=$NP
 ACES_PROGRAM_MACHNAME="$MACHNAME"
 ACES_PROGRAM_ACES3_CONFIG="$ACES3_CONFIG"
+# Intel compilers (empty for a non-Intel toolchain): Fortran, C, C++.
+ACES_PROGRAM_FC="$FORTRAN"
+ACES_PROGRAM_CC="$INTEL_CC"
+ACES_PROGRAM_CXX="$INTEL_CXX"
 
 # Put the toolchain on PATH the same way for build.sh and run_tests.sh.
 # Returns nonzero with an explanation rather than letting a half-set-up
@@ -221,14 +256,14 @@ case "$ENV_MODE" in
   setvars) echo "  toolchain: source $SETVARS" ;;
   path)    echo "  toolchain: whatever is already on PATH" ;;
 esac
-echo "  compiler:  ${FC_FOUND:-<none found>} ($CMPLR_KIND)"
+echo "  compiler:  ${FC_FOUND:-<none found>} ($CMPLR_KIND${INTEL_CC:+; C $INTEL_CC, C++ $INTEL_CXX})"
 echo "  np:        $NP"
 echo "  machname:  ${MACHNAME:-<unset: host is listed in the aces2 table>}"
 echo "  aces3:     $ACES3_CONFIG"
 if [ "$CMPLR_KIND" != "intel" ]; then
   echo
   echo "WARNING: no Intel Fortran compiler found. All three subsystems expect"
-  echo "         Intel compilers + MKL; pyaces requires ifort AND ifx by name."
+  echo "         Intel compilers (ifx or ifort) + MKL."
 fi
 if [ "${ACES3_WARN:-0}" = "1" ]; then
   echo
@@ -239,4 +274,4 @@ fi
 echo
 echo "Next:"
 echo "  ./build.sh [aces2] [aces3] [pyaces]      (default: all three, dependency order)"
-echo "  ./run_tests.sh [aces2] [aces3] [pyaces]  (default: all three, unified rollup table)"
+echo "  ./run_tests.sh [aces2] [ring] [aces3] [pyaces]  (default: all four, unified rollup table)"

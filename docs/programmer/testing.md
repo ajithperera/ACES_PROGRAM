@@ -58,12 +58,17 @@ twice, once with `xvmol` + `xvdint` and once with `xerdints` +
 
 Other ACES II suites with their own runners: `aces2/tests/ringcc`,
 `ringcl`, `rpa`, `jcp2020_eom_rccd` (published EOM ring-CC results), and
-`pccd_slow` (larger pCCD jobs, run through Slurm).
+`pccd_slow` (larger pCCD jobs, run through Slurm). `./run_tests.sh ring` runs the first four
+(they take seconds) and is part of the default `./run_tests.sh`; `pccd_slow`
+is run by hand.
 
 `aces2/tests/legacy_archive/` (not tracked by git) holds the original ACES
 II test collection: the `zmat.NNN` and `script.NNN` inputs, their old
 outputs, and the `KEEP/` files. The `fast` cases with numeric names
 (`001a`, `013a`, `s_034`, ...) were imported from it.
+`aces3/tests/legacy_archive/` (also untracked) holds ACES III's old test
+collection: the `zmat.N` inputs, its PBS staging `Makefile`, `Archive/`
+and an older `GENBAS` whose entries differ from `basis/GENBAS`.
 
 ## ACES III
 

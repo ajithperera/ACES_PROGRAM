@@ -37,8 +37,9 @@ fi
 if test "x$MKLFLAGS" = x; then
    AC_MSG_ERROR([Please specify mkl library location in variable  MKLFLAGS])
 fi
-#If intel mkl is used, use icpx as c++ compiler (icpc was removed in oneAPI 2024+)
-SERIAL_CPP="icpx"
+#If intel mkl is used, use icpx as c++ compiler (icpc was removed in oneAPI 2024+);
+#../build.sh sets ACES3_SERIAL_CXX=icpc for an older installation without icpx
+SERIAL_CPP="${ACES3_SERIAL_CXX:-icpx}"
 #Also set SIAL_COMPILER_LIBS accordingly
 if test "x$SIAL_COMPILER_LIBS" = x; then
 SIAL_COMPILER_LIBS="-lsial -lsip_shared -laces2  -lifcore"

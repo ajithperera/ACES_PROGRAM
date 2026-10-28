@@ -2,7 +2,9 @@
 
 ## Requirements
 
-- Intel oneAPI compilers (`ifx`, `icx`, `icpx`) and Intel MKL
+- Intel compilers and Intel MKL: oneAPI's `ifx`, `icx`, `icpx`, or the
+  classic `ifort` with `icx`/`icc` on older installations (see
+  [](#choosing-the-intel-compilers))
 - An MPI library with Intel compiler wrappers (OpenMPI 5 is used on HiPerGator); ACES III needs it
 - Python 3 with NumPy, for pyaces and the test runners
 - CMake 3.18 or newer and GNU make
@@ -52,6 +54,32 @@ Where the results go:
 
 On HiPerGator, build through Slurm rather than on a login or interactive node.
 
+### Choosing the Intel compilers
+
+The same build can also be driven by three scripts at the top of the tree,
+which is the simpler route on a workstation:
+
+```bash
+./configure                 # probe the toolchain, write build_config.sh
+./build.sh                  # aces2, aces3, pyaces
+./run_tests.sh              # all suites and one rollup table
+```
+
+`./configure` finds the compilers through environment modules, an Intel
+`setvars.sh` (`--setvars=/opt/intel/oneapi/setvars.sh`), or whatever is on
+`PATH` (`--no-modules`). It uses `ifx` when it is there. On an older
+installation, or to stay with the classic compiler, pass `--fortran=ifort`:
+
+```bash
+./configure --setvars=/opt/intel/oneapi/setvars.sh --fortran=ifort
+```
+
+The C and C++ compilers follow (`icx`/`icpx` where they exist, otherwise
+`icc`/`icpc`). The choice is used everywhere: the ACES II makefiles, the
+MPI wrappers of ACES III (`mpiifort` or `mpiifx` with Intel MPI; OpenMPI's
+wrappers through `OMPI_FC`), and pyaces. `./configure --help` lists the
+other options.
+
 ## Running the test suites
 
 ```bash
@@ -74,9 +102,10 @@ than 1. The full ACES III suite takes about 40 minutes with `ACES_NP=4`.
 ## A first ACES II calculation
 
 ACES II reads its input from a file named `ZMAT` and its basis sets from
-`GENBAS` in the current directory. Put `aces2/bin` on your `PATH`, make an
-empty working directory, and copy `basis/GENBAS` into it (the basis set
-library that the test suites use; `basis/ECPDATA` holds the ECPs):
+`GENBAS` in the current directory. Put `aces2/bin` on your `PATH` and make
+an empty working directory with this `ZMAT`. There is no need to copy a
+`GENBAS`: when the directory has none, `xjoda` links in the library from
+`basis/` (see [](../user/aces2_input.md#genbas-and-zmatbas)):
 
 ```text
 Water CCSD(T)/DZP single point

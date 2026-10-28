@@ -247,8 +247,14 @@ ifdef ACES_HOST
    endif
    MACHSTATS :=
 endif
+# The Intel compilers to use: ifx/icx (oneAPI's LLVM compilers) by default,
+# ifort/icc for older installations. ./configure --fortran=ifort records the
+# choice and build.sh passes it here; the environment can set them too.
+INTEL_FC ?= ifx
+INTEL_CC ?= icx
+
 ifeq (${CMPLR},undefined)
-   ifneq (,$(shell command -v ifx 2>/dev/null))
+   ifneq (,$(shell command -v ${INTEL_FC} 2>/dev/null))
       ARCH  := em64t
       OPSYS := linux
       CMPLR := intel
@@ -258,7 +264,7 @@ endif
 # bomb if the compiler is not defined
 ifeq (${CMPLR},undefined)
 $(error The compiler is undefined: host ${MACHNAME} is not in the MACHSTATS \
-table and ifx is not on PATH (load the Intel compilers, or set ACES_HOST))
+table and ${INTEL_FC} is not on PATH (load the Intel compilers, or set ACES_HOST))
 endif
 
 #
@@ -815,9 +821,9 @@ ifeq (${CMPLR},intel) ##########################################################
       MPLD = mpif90
    endif
    C_SUFFIX = 1
-   CC   = icx -c  #-shared -fPIC 
-   F9XC = ifx -c -Wall -traceback #-shared -fPIC
-   LD   = ifx
+   CC   = ${INTEL_CC} -c  #-shared -fPIC 
+   F9XC = ${INTEL_FC} -c -Wall -traceback #-shared -fPIC
+   LD   = ${INTEL_FC}
  # make sure the other compilers f9x, cc, and CC all get double alignment
    CFLAGS   = -Zp8
  # -assume dummy_aliases: callers routinely pass several slices of one work
@@ -1551,6 +1557,11 @@ CXXFLAGS := ${flag_opt} ${flag_preproc} ${CXXFLAGS} ${CXXFLAGS_EXTRA}
 cppflags := $(strip ${CPPFLAGS})
 cxxflags := $(strip ${CXXFLAGS})
 cflags   := $(strip ${CFLAGS})
+# The basis set library joda links into a job directory without a GENBAS
+# (joda/link_basis.c): ACES_PROGRAM/basis of the tree being built.
+ifneq (,${ACES2_ROOT})
+cflags   += -DACES_BASIS_DIR='"$(abspath ${ACES2_ROOT}/../basis)"'
+endif
 f9xflags := $(strip ${F9XFLAGS})
 fflags   := $(strip ${FFLAGS})
 ldflags  := $(strip ${LDFLAGS})

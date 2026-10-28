@@ -251,6 +251,21 @@ C     it to act like it encountered a real error on reading the file.
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE MKVMOL(geom, PTGRP,NATMS,NUNIQUE,ZSYM,ATNR,GENBY,
      $     SCRATCH, ISTAT, BasName)
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
@@ -587,8 +602,10 @@ c
         ioffsh=0
       endif
 C
-C SEE IF A GENBAS FILE IS PRESENT
+C SEE IF A GENBAS FILE IS PRESENT; WITHOUT GENBAS OR ZMAT.BAS, LINK
+C THE ONE FROM THE BASIS SET LIBRARY (link_basis.c)
 C
+      CALL LINK_BASIS
       INQUIRE(FILE='GENBAS',EXIST=GENBAS)
       IF (.NOT.GENBAS) INQUIRE(FILE='ZMAT.BAS',EXIST=GENBAS)
 C

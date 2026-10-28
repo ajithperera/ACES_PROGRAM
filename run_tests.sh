@@ -45,7 +45,7 @@ if [ -z "${ACES2_BIN:-}" ]; then
 fi
 
 TARGETS="$*"
-[ -z "$TARGETS" ] && TARGETS="aces2 aces3 pyaces"
+[ -z "$TARGETS" ] && TARGETS="aces2 ring aces3 pyaces"
 
 for t in $TARGETS; do
   echo "=== testing $t ==="
@@ -73,8 +73,20 @@ for t in $TARGETS; do
       ( cd "$ROOT/pyaces" && PATH="$ACES2_BIN:$PATH" python3 pyaces_suite_runner.py ) \
         > "$LOG" 2>&1
       ;;
+    ring)
+      # The ACES II ring-CC/RPA suites, each with its own runner: ringcc,
+      # ringcl (RHF vs UHF DRCCD Lambda), rpa, jcp2020_eom_rccd (published
+      # EOM ring-CC excitation energies). Seconds each.
+      : > "$LOG"
+      for s in ringcc ringcl rpa jcp2020_eom_rccd; do
+        echo "=== $s" >> "$LOG"
+        PATH="$ACES2_BIN:$PATH" bash -c \
+          "cd '$ROOT/aces2' && python3 tests/$s/run_tests.py --jobs $ACES_PROGRAM_NP" \
+          >> "$LOG" 2>&1
+      done
+      ;;
     *)
-      echo "unknown target: $t (expected aces2, aces3, pyaces)" >&2
+      echo "unknown target: $t (expected aces2, ring, aces3, pyaces)" >&2
       exit 1
       ;;
   esac
@@ -99,6 +111,18 @@ for t in $TARGETS; do
         PASS=$(echo "$LINE"  | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+')
         FAIL=$(echo "$LINE"  | grep -oE '[0-9]+ failed' | grep -oE '[0-9]+')
         OTHER=$(echo "$LINE" | grep -oE '[0-9]+ errored' | grep -oE '[0-9]+')
+      fi
+      ;;
+    ring)
+      # One summary line per suite ("N case(s)" or "N pair(s), P passed, F
+      # failed, E errored[, X known-crash ...]"); OTHER is errors + known crashes.
+      LINES=$(grep -aoE '[0-9]+ (case|pair)\(s\), [0-9]+ passed, [0-9]+ failed' "$LOG")
+      if [ -n "$LINES" ]; then
+        TOTAL=0; PASS=0; FAIL=0
+        while read -r N _ P _ F _; do
+          TOTAL=$((TOTAL + N)); PASS=$((PASS + P)); FAIL=$((FAIL + F))
+        done <<< "$LINES"
+        OTHER=$((TOTAL - PASS - FAIL))
       fi
       ;;
     aces3)

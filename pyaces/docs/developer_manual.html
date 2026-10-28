@@ -131,7 +131,6 @@ Before exposing a new Fortran routine or linking another aces2 module, read chap
 <tr><td><code>a2_pyf/*.F</code></td><td><span class="pill">live</span></td><td>Wrappers and drivers exposed to Python: <code>run*.F</code>, <code>*recpy.F</code>, <code>*lstpy.F</code>, <code>*allpy.F</code>, <code>get1ehpy/get2ehpy.F</code>, <code>acesja*.F</code>, plus the internal <code>a2_get*/a2_put*.F</code>. <code>rungrads</code>, <code>run1props</code> and <code>run</code> are excluded from the build.</td></tr>
 <tr><td><code>aux_pyaces/*.F</code></td><td><span class="pill">live</span></td><td><code>init_legacies</code> (initialises legacy COMMON blocks), <code>get1ents</code>/<code>get2eints</code> (read AO integrals from the IIII file), <code>sym_expand</code>.</td></tr>
 <tr><td><code>tools/collision_audit.py</code></td><td><span class="pill">live</span></td><td>The link-resolution audit (chapter 6), with <code>collision_baseline.txt</code> (296 entries) and <code>common_shadow_baseline.txt</code> (0).</td></tr>
-<tr><td><code>tools/compat_bin/ifort</code></td><td><span class="pill">live</span></td><td>A two-line shim, <code>exec ifx "$@"</code>, so that <code>ifort</code> resolves to ifx on oneAPI releases without ifort.</td></tr>
 <tr><td><code>pyaces_run_case.py</code></td><td><span class="pill">live</span></td><td>Runs one case in its own process and prints the result as marker lines (chapter 8).</td></tr>
 <tr><td><code>pyaces_suite_runner.py</code></td><td><span class="pill">live</span></td><td>Runs the 51 cases and grades each one PASS/MISMATCH/… (chapter 9).</td></tr>
 <tr><td><code>classify_suite.py</code>, <code>suite_classification.tsv</code></td><td><span class="pill">live</span></td><td>The table that classifies the aces2 fast-suite cases by category, entry point and reference value, and the script that first generated it. <b>The TSV contains hand-edited rows</b> (section 9.4).</td></tr>
@@ -155,7 +154,7 @@ Before exposing a new Fortran routine or linking another aces2 module, read chap
 <h3>3.1 Required tools</h3>
 <table>
 <tr><th style="width:24%">Item</th><th>Requirement</th></tr>
-<tr><td>Fortran</td><td>Intel <code>ifx</code> (verified with oneAPI 2023.2 and 2024.0). The name <code>ifort</code> is provided by the <code>tools/compat_bin</code> shim.</td></tr>
+<tr><td>Fortran</td><td>Intel <code>ifx</code> or <code>ifort</code>, from <code>$PYACES_FC</code> (set by <code>../build.sh</code> from <code>./configure --fortran</code>; default ifx when present, else ifort).</td></tr>
 <tr><td>C</td><td><code>mpicc</code>, to compile the f2py C wrapper and <code>fortranobject.c</code> (it wraps gcc on the local workstation).</td></tr>
 <tr><td>Python</td><td>3.12 (verified) with numpy (including f2py). The extension suffix is taken from the building interpreter (<code>EXT_SUFFIX</code>), so the module imports only under the Python version that built it.</td></tr>
 <tr><td>BLAS/LAPACK</td><td>Intel MKL; <code>MKLROOT</code> must be set. Linked as ILP64, sequential.</td></tr>
@@ -195,7 +194,7 @@ bash pyaces/build.sh             # run directly (set PYACES_MODULES or ACES_PROG
 
 <h3>4.0 Setup (lines 1–36)</h3>
 <ul>
-  <li>Prepend <code>tools/compat_bin</code> to PATH, so <code>ifort</code> runs ifx.</li>
+  <li>Pick the Fortran compiler: <code>$PYACES_FC</code>, else ifx, else ifort.</li>
   <li>Choose the module set (<code>PYACES_MODULES</code>, else <code>ACES_PROGRAM_MODULES</code>, else the HiPerGator set) and load it with <code>aces_load_modules</code> from <code>cmake/env.sh</code>: <code>module purge; module load</code>, nothing for an empty set, a warning and the current environment on a host without a <code>module</code> command.</li>
   <li>Exit if <code>MKLROOT</code> is empty. <code>MKL=$MKLROOT/lib/intel64</code> (or <code>$MKLROOT/lib</code>).</li>
   <li><code>export LC_ALL=C</code>.</li>

@@ -3,8 +3,6 @@ set -e
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-SHIM=$SCRIPT_DIR/tools/compat_bin
-export PATH=$SHIM:$PATH
 # Module set: PYACES_MODULES (the CMake superbuild), else the set ../configure
 # recorded (ACES_PROGRAM_MODULES, when driven from ../build.sh), else the
 # HiPerGator default; PYACES_MODULES="" uses the current environment (ifx,
@@ -13,6 +11,12 @@ PYACES_MODULES=${PYACES_MODULES-${ACES_PROGRAM_MODULES:-"intel/2025.1.0 openmpi/
 source "$SCRIPT_DIR/../cmake/env.sh"
 aces_load_modules "$PYACES_MODULES"
 : "${MKLROOT:?is unset -- the loaded modules provide no Intel MKL}"
+# Fortran compiler for every pyaces object and the link: PYACES_FC (../build.sh
+# passes ./configure's --fortran choice), else ifx, else ifort.
+if [ -z "${PYACES_FC:-}" ]; then
+    if command -v ifx >/dev/null 2>&1; then PYACES_FC=ifx; else PYACES_FC=ifort; fi
+fi
+command -v "$PYACES_FC" >/dev/null 2>&1 || { echo "$PYACES_FC is not on PATH" >&2; exit 1; }
 # The globs and sorts below set archive member and -l order, and with them which
 # copy of a multiply-defined routine the link picks. Collate bytewise so that
 # does not change with the caller's locale (PBS jobs often run with none).
@@ -90,9 +94,9 @@ FFLAGS="-diag-disable=10448 -i8 -fPIC -fp-model strict -O1 -assume minus0 -qopen
 for f in $SOURCES; do
     base=$(basename "$f" .F)
     echo "compiling $base"
-    ifort $FFLAGS -c "$f" -o build/${base}.o
+    $PYACES_FC $FFLAGS -c "$f" -o build/${base}.o
 done
-ifort $FFLAGS -c gen/aces2py-f2pywrappers.f -o build/aces2py-f2pywrappers.o
+$PYACES_FC $FFLAGS -c gen/aces2py-f2pywrappers.f -o build/aces2py-f2pywrappers.o
 
 # runee.o's own new CALL PROPS(...) (see vprops:props_ in tools/localize.txt)
 # must be redefined to match vprops's renamed copy the SAME way, since it's
@@ -227,7 +231,7 @@ for mod in $MAIN_COLLISION_MODULES $EXTRA_LOCALIZE_MODULES; do
     rm -rf $workdir
 done
 
-ifx -shared -nofor-main -o build/aces2py${EXT_SUFFIX} \
+$PYACES_FC -shared -nofor-main -o build/aces2py${EXT_SUFFIX} \
     build/*.o \
     -L$PATCHED_LIBDIR \
     $LIBDIRS \

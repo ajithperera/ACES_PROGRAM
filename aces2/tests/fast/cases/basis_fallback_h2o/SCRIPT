@@ -1,0 +1,25 @@
+# No GENBAS in the job directory: xjoda must link the basis set library
+# (joda/link_basis.c): with no ACES_BASIS_DIR set, the ACES_PROGRAM/basis
+# of the tree it was built from, which is where $GENBAS lives.
+# Same job and reference energy as h2o_ccsd_rhf_sto3g_symon.
+test -n "$GENBAS" || exit 1
+cat <<. >ZMAT
+H2O, CCSD RHF STO-3G, basis set library linked by xjoda.
+O
+H 1 R
+H 1 R 2 A
+
+R=0.96
+A=104.5
+
+*ACES2(BASIS=STO-3G
+CALC=CCSD
+REF=RHF,MEM_SIZE=1gb
+sym=on
+CC_EXTRAP=OFF
+cc_conv=9,scf_conv=10)
+.
+env -u ACES_BASIS_DIR xaces2 >out 2>&1 || { tail -15 out; exit 1; }
+test -L GENBAS || { echo "GENBAS was not linked"; exit 1; }
+test "$(readlink GENBAS)" -ef "$GENBAS" || { echo "GENBAS -> $(readlink GENBAS)"; exit 1; }
+grep '@LINK_BASIS' out

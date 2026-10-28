@@ -406,6 +406,19 @@ programs (see `INTEGRALS=ERD` in {doc}`methods`):
 entries the job needs into `ZMAT.BAS` and reads that file instead of
 `GENBAS` from then on. Delete `ZMAT.BAS` if you change the basis.
 
+When the job directory has neither `GENBAS` nor `ZMAT.BAS`, `xjoda` links
+`GENBAS` there from the basis set library, and `ECPDATA` too if the
+directory has none. It prints `@LINK_BASIS: no GENBAS in the job
+directory; using ...`. The library is the first of these that holds a
+`GENBAS`:
+
+1. the directory named by the environment variable `ACES_BASIS_DIR`
+2. `basis/` of the ACES_PROGRAM tree the executables were built from
+3. `share/aces/basis` next to the `bin` directory of `xjoda`
+
+A `GENBAS` or `ECPDATA` of your own in the job directory is always used
+instead. To use a private library for every job, set `ACES_BASIS_DIR`.
+
 Each entry has this fixed format:
 
 | Line | Format | Content |
