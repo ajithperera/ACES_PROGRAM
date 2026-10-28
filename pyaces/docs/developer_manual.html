@@ -279,7 +279,7 @@ so the losing module keeps using its own implementation under the new name, and 
 <tr><td><code>ABCD</code> (COMMON shadow)</td><td>intgrt</td><td>Every KS case faulted on instruction fetch (section 5.4)</td></tr>
 <tr><td><code>getdt1</code>, <code>fndmaxs</code>, <code>t2l2rng</code>, <code>r1l2y2c</code></td><td>vcc, vee, lcct, lcct</td><td>The winner depended on link order (make 4.2 vs 4.3); pinned in eab3c4e6</td></tr>
 </table>
-<p class="small">The cause and diagnosis of each entry are recorded in the comments of <code>build.sh</code> (roughly lines 118–410).</p>
+<p class="small">The cause and diagnosis of each entry are recorded next to its entry in <code>tools/localize.txt</code>.</p>
 
 <h3>5.3 <code>NEWLY_LINKED_MODULES</code>: bulk handling of re-enabled modules</h3>
 <p><code>a2mix aux rpa scrnc</code> were <code>.skip</code> directories until they were re-enabled, so the classic build never linked them next to the other modules.

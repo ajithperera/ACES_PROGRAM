@@ -91,7 +91,9 @@ for t in $TARGETS; do
   TOTAL="?"; PASS="?"; FAIL="?"; OTHER="?"
   case "$t" in
     aces2)
-      LINE=$(grep -oE '[0-9]+ case\(s\), [0-9]+ passed, [0-9]+ failed, [0-9]+ errored' "$LOG" | tail -1)
+      # -a: a crashed case can leave non-UTF-8 bytes in the log, and grep would
+      # then answer only "binary file matches" and the rollup would show "?".
+      LINE=$(grep -aoE '[0-9]+ case\(s\), [0-9]+ passed, [0-9]+ failed, [0-9]+ errored' "$LOG" | tail -1)
       if [ -n "$LINE" ]; then
         TOTAL=$(echo "$LINE" | grep -oE '^[0-9]+')
         PASS=$(echo "$LINE"  | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+')
@@ -100,7 +102,7 @@ for t in $TARGETS; do
       fi
       ;;
     aces3)
-      LINE=$(grep -oE '[0-9]+ case\(s\), [0-9]+ failed,' "$LOG" | tail -1)
+      LINE=$(grep -aoE '[0-9]+ case\(s\), [0-9]+ failed,' "$LOG" | tail -1)
       if [ -n "$LINE" ]; then
         TOTAL=$(echo "$LINE" | grep -oE '^[0-9]+')
         FAIL=$(echo "$LINE"  | grep -oE '[0-9]+ failed' | grep -oE '[0-9]+')
@@ -112,7 +114,7 @@ for t in $TARGETS; do
       # Read every "  STATUS: n" line of the runner's Summary block rather than
       # a fixed list: MISMATCH and TIMEOUT used to fall out of the totals, and
       # a run with no PASS at all printed "?" everywhere.
-      SUMMARY=$(sed -n '/^=== Summary ===$/,/^$/p' "$LOG" | grep -E '^  [A-Z_]+: [0-9]+$')
+      SUMMARY=$(sed -n '/^=== Summary ===$/,/^$/p' "$LOG" | grep -aE '^  [A-Z_]+: [0-9]+$')
       if [ -n "$SUMMARY" ]; then
         PASS=0; FAIL=0; OTHER=0
         while read -r STATUS N; do
