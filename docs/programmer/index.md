@@ -12,6 +12,7 @@ architecture
 io
 jobarc
 building
+duplicate_symbols
 extending
 conventions
 sial
