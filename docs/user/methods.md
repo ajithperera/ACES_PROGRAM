@@ -140,8 +140,12 @@ DOCI energy −75.005667504).
 ## Ring coupled-cluster and RPA
 
 `CALC=RCCD` and `CALC=DRCCD` give ring CCD and direct ring CCD (the latter is
-equivalent to direct RPA for the correlation energy). Ring-CCD for water
-(`aces2/tests/ringcc`, reference −76.3039658461):
+equivalent to direct RPA for the correlation energy). `xaces2` runs them with
+their own programs, `xringcc` for the amplitudes and, for excitation
+energies, `xringcl` (Λ) and `xvee`. The RHF ring-CCD energy combines the
+singlet and triplet channels with equal weights (Eq. 49 of the paper cited
+below) and equals the UHF value for a closed shell. Ring-CCD for water
+(`aces2/tests/ringcc`, reference −76.1821730567, the same with `REF=UHF`):
 
 ```{literalinclude} ../../aces2/tests/ringcc/cases/rccd_rhf/ZMAT
 :language: text
