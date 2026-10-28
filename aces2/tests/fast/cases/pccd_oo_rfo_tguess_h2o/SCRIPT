@@ -1,0 +1,48 @@
+test -n "$USERDIR" || exit 1
+# OO-pCCD RFO amplitude continuation across calculations (TGUESS file).
+# Job 1 (subdirectory r1, R=0.957) converges from HF orbitals and leaves
+# the T2 of the minimum in TGUESS; xoorot SAVE writes its orbitals to
+# c0.dat. Job 2 (R=0.967, here) starts from those orbitals (oorot LOAD)
+# and must take its first T2 guess from the TGUESS file instead of MP2.
+# TOTENERG is the job-2 minimum.
+zmat() {
+cat <<. >ZMAT
+H2O OO-pCCD RFO STO-3G
+H
+O 1 R
+H 2 R 1 A
+
+R=$1
+A=104.5
+
+*ACES2(BASIS=STO-3G
+CALC=PCCD,PROGRAM=PCCD
+REF=RHF,MEM_SIZE=2gb
+sym=on
+PCCD_REF=OPTIMIZED,OO_METHOD=RFO
+BRUCK_CONV=6,OO_MAXCYC=300
+cc_conv=10,scf_conv=10)
+
+.
+}
+mkdir r1 || exit 1
+cd r1 || exit 1
+zmat 0.957
+ln -s $GENBAS . || exit 1
+xjoda || exit 1
+xrunpccd || exit 1
+echo SAVE >oorot.in
+xoorot || exit 1
+test -s c0.dat || exit 1
+test -s TGUESS || exit 1
+cd .. || exit 1
+cp r1/c0.dat r1/TGUESS . || exit 1
+rm -rf r1
+zmat 0.967
+ln -s $GENBAS . || exit 1
+echo LOAD >oorot.in
+xjoda || exit 1
+xrunpccd >job2.out 2>&1 || { tail -15 job2.out; exit 1; }
+cat job2.out
+grep -q "amplitudes from the TGUESS file" job2.out || { echo "TGUESS not read"; exit 1; }
+grep -q "converged to a minimum" job2.out || { echo "no verified minimum"; exit 1; }

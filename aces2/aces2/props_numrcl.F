@@ -19,7 +19,7 @@ c
                Call Scf_eneg
                Call Runit('xvtran')
                Call Runit('xintprc')
-               Call Runit(der_integral_package)
+               Call Runit('xvdint')
                Call Runit('xcphf')
             Endif
 c
@@ -43,7 +43,7 @@ c
               Call Runit('xdens')
               Call runit('xanti')
               Call runit('xbcktrn')
-              Call runit(der_integral_package)
+              Call runit('xvdint')
               Call Aces_ja_init
               Call Aces_io_init(icore,1,0,.false.)
               Call Aces_io_remove(54,'DERGAM')

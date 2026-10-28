@@ -204,6 +204,7 @@
 
 
 
+
       SUBROUTINE SUMMARY(SCRATCH, RFAMAT, GRD, SCALE, STPMAG,
      &                   IQFIX, NOPT, NX, NXM6, IBREAK, ICONTL,
      &                   LUOUT, NCYCLE, LUDONE, BMATRIX,
@@ -366,8 +367,31 @@ C
 C
 C see if the calcualtion has converged
 C
-      IF ( (SCRATCH(2*NOPT + 5) .LT. 10.D0**(-1*ICONTL) ) .AND.
-     &     (IBREAK .EQ. 0)                                      ) THEN
+C The gradient test (the "RMS force" printed above is the 2-norm of
+C the gradient, which also bounds the largest component) is not
+C enough for floppy modes: a small gradient along a soft coordinate
+C can still leave a large step. Also require the largest component
+C of the next step to be below 10^(1-ICONTL) (bohr or radian), unless
+C the gradient is already a hundred times below the threshold.
+C 10/2026.
+C
+      GRDTOL = 10.D0**(-1*ICONTL)
+      STPCNV = 10.0D0*GRDTOL
+      STPBIG = 0.0D0
+      DO I = 1, NOPT
+         STPBIG = MAX(STPBIG, DABS(SCRATCH(NOPT+I)))
+      ENDDO
+      IF (SCRATCH(2*NOPT + 5) .LT. GRDTOL .AND. IBREAK .EQ. 0 .AND.
+     &    STPBIG .GE. STPCNV .AND.
+     &    SCRATCH(2*NOPT + 5) .GE. 0.01D0*GRDTOL)
+     &    WRITE(6,1326) STPBIG, STPCNV
+ 1326 FORMAT(T3,' Gradient converged, but the largest step ',
+     &       ES10.3,' is above ',ES10.3,'; continuing.')
+C
+      IF ( (SCRATCH(2*NOPT + 5) .LT. GRDTOL) .AND.
+     &     (IBREAK .EQ. 0) .AND.
+     &     (STPBIG .LT. STPCNV .OR.
+     &      SCRATCH(2*NOPT + 5) .LT. 0.01D0*GRDTOL) ) THEN
 C
          WRITE(6,1321)
  1321    FORMAT(80('-'))
@@ -377,6 +401,25 @@ C
  1322    FORMAT(T3,' Convergence criterion satisfied.  Optimization ',
      &      'completed.')
          WRITE(6,1321)
+C
+C A transition state search can converge to a minimum (no negative
+C eigenvalue of the model Hessian); say so. 10/2026.
+C
+         IF (IFLAGS(47) .EQ. 4 .OR.
+     &       IFLAGS(47) .EQ. 5) THEN
+            CALL GETREC(0,'JOBARC','TSNNEGEV',LENNEG,NNEG)
+            IF (LENNEG .GT. 0) THEN
+               CALL GETREC(20,'JOBARC','TSNNEGEV',1,NNEG)
+               IF (NNEG .EQ. 0) WRITE(6,1327)
+            ENDIF
+         ENDIF
+ 1327    FORMAT(T3,' WARNING: this transition state search converged',
+     &          ' to a point',/,T3,' where the Hessian has no',
+     &          ' negative eigenvalue, most likely a minimum.',/,T3,
+     &          ' It is NOT a transition state. Start closer to the',
+     &          ' saddle point,',/,T3,' use INIT_HESSIAN=EXACT, or',
+     &          ' give the reactant and product (OPT_CONTROL=QST).',/,
+     &          80('-'))
 
          CALL ADM
 

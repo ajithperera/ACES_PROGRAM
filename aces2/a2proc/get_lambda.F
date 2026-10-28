@@ -10,6 +10,7 @@ C
       Double Precision L_bound,  Lamsearch_Tol, Mass, Lamda
 C
       Logical lamda_found, Bracket_end
+      Parameter (Sym_Tol = 1.0D-06)
 C
       Dimension Grad_K1CM(3*Nreals), Hess_K1C(3*Nreals, 3*Nreals), 
      &          AtmMass(Nreals), Evecs(3*Nreals, 3*Nreals),
@@ -93,6 +94,19 @@ C
              Hess_K1C(Imode, Imode)   = 0.0D0
          Endif 
 C
+C Modes with neither gradient nor displacement are those forbidden by
+C the symmetry of the path; leave them out like the zero modes. Near
+C a minimum such a mode can have the lowest eigenvalue, lambda then
+C sits just below it and 1/(h-lambda) blew round-off up into a real
+C out-of-plane step (HCOH IRC, 10/2026).
+C
+         If (Dabs(Grad_K1C_on_Evecs(Imode)) .LT. Sym_Tol .AND.
+     &       Dabs(Vec_K1C_on_Evecs(Imode))  .LT. Sym_Tol) Then
+             Grad_K1C_on_Evecs(Imode) = 0.0D0
+             Vec_K1C_on_Evecs(Imode)  = 0.0D0
+             Hess_K1C(Imode, Imode)   = 0.0D0
+         Endif
+C
       Enddo
 C 
 #ifdef _DEBUG_LVLM1
@@ -103,13 +117,17 @@ C
       Write(6, "(F17.13)") (Vec_K1C_on_EvecS(I), I=1, 3*Nreals)
 #endif
 C
-      Imode = 3*Nreals
-      Eval_min  = Hess_K1C(Imode, Imode) 
-      Do While (Hess_K1C(Imode, Imode) .NE. 0.0D0 .OR. Imode .GT. 0)
-         Imode  = Imode - 1
-         If (Hess_K1C(Imode, Imode) .NE. 0.0D0) Eval_min  = 
-     &                                Hess_K1C(Imode, Imode) 
-      Enddo 
+C The lowest nonzero eigenvalue (the zeroed ones are the translations,
+C rotations and modes below Hess_Eval_Tol). The old Do While ran with
+C .OR. Imode .GT. 0 and walked off the array: an endless loop. 10/2026.
+C
+      Eval_min = 0.0D0
+      Do Imode = 1, 3*Nreals
+         If (Hess_K1C(Imode, Imode) .NE. 0.0D0 .AND.
+     &      (Eval_min .EQ. 0.0D0 .OR.
+     &       Hess_K1C(Imode, Imode) .LT. Eval_min))
+     &       Eval_min = Hess_K1C(Imode, Imode)
+      Enddo
 C
 #ifdef _DEBUG_LVLM1
       Write(6,*)
@@ -138,8 +156,24 @@ C
         Write(6,"(2F17.13)") L_bound, U_bound
 #endif
 C
+#ifdef _DEBUG_LVL0
+      Write(6,"(a,ES14.6,a,ES12.4,a,ES12.4)")
+     &      " @-get_lambda: Eval_min=", Eval_min, " Delta=", Delta,
+     &      " Stride=", Stride
+      Write(6,"(a)") " @-get_lambda: eigenvalues, grad, vec on e-vecs"
+      Write(6,"(3ES16.7)") (Hess_K1C(I,I), Grad_K1C_on_Evecs(I),
+     &                      Vec_K1C_on_Evecs(I), I=1,3*Nreals)
+#endif
       Bracket_end = .FALSE. 
       Do while (.NOT. Bracket_end) 
+C The bracket must be found well before the bounds run away; stop
+C with a message instead of looping (it used to hang). 10/2026.
+         If (niter .GT. 100) Then
+            Write(6,"(2a,ES14.6,2(a,ES12.4))") " @-get_lambda: no",
+     &            " bracket for lambda; Eval_min=", Eval_min,
+     &            " F_Lowr=", F_Lowr, " F_Uppr=", F_Uppr
+            Call Errex
+         Endif
          F_Lowr = 0.0D0
          F_Uppr = 0.0D0
 C

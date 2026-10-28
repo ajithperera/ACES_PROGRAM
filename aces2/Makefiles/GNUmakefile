@@ -231,9 +231,34 @@ CMPLR := $(word  4, ${list})
 list  :=
 MACHSTATS :=
 
+# Hosts not in the table (any machine but the ones above, e.g. a
+# collaborator's cluster or workstation) get the generic Linux x86_64 Intel
+# entry (ifx/icx + MKL), the one HiPerGator uses, if ifx is on PATH.
+# ACES_HOST=<name> on the command line selects a table entry by name.
+ifdef ACES_HOST
+   MACHSTATS := $(filter ${ACES_HOST}:%, \
+                  hipergator:em64t:linux:intel xxx:X86_64:linux:gnu)
+   ifneq (,${MACHSTATS})
+      list  := $(subst :, , ${MACHSTATS})
+      ARCH  := $(word  2, ${list})
+      OPSYS := $(word  3, ${list})
+      CMPLR := $(word  4, ${list})
+      list  :=
+   endif
+   MACHSTATS :=
+endif
+ifeq (${CMPLR},undefined)
+   ifneq (,$(shell command -v ifx 2>/dev/null))
+      ARCH  := em64t
+      OPSYS := linux
+      CMPLR := intel
+   endif
+endif
+
 # bomb if the compiler is not defined
 ifeq (${CMPLR},undefined)
-$(error The compiler is undefined)
+$(error The compiler is undefined: host ${MACHNAME} is not in the MACHSTATS \
+table and ifx is not on PATH (load the Intel compilers, or set ACES_HOST))
 endif
 
 #
@@ -987,7 +1012,7 @@ ACES_LINK_LISTS = \
    dkh:a3ecp:oed:erd:${LIST_DEF_LIBS} \
    tdcc2:hbar:vcceh:libr2:${LIST_DEF_LIBS} \
    tdee:vee:vcceh:lnczos:libr2:${LIST_DEF_LIBS} \
-   scrnc:vcceh:libr2:${LIST_DEF_LIBS} \
+   scrnc:ringcc:vcc:vcceh:libr2:${LIST_DEF_LIBS} \
    ringcc:vcc:libr2:${LIST_DEF_LIBS} \
    pccd:libpccd:trp:vcc:dens:lambda:libr2:liboo:${LIST_DEF_LIBS} \
    pccd_drpmo:pccd:libpccd:vcc:dens:lambda:libr2:liboo:${LIST_DEF_LIBS} \
@@ -1001,6 +1026,8 @@ ACES_LINK_LISTS = \
    cse12:${LIST_DEF_LIBS}\
    hcmult:vee:libr2:${LIST_DEF_LIBS}\
    libint:oed:erd:${LIST_DEF_LIBS}\
+   erdints:ecplib:oed:erd:${LIST_DEF_LIBS}\
+   erdgrad:erdints:ecplib:oed:erd:${LIST_DEF_LIBS}\
    lsccresp:sbtools:vcc:libr2:${LIST_DEF_LIBS}\
    vibavg:a2proc:sbtools:ibr2:${LIST_DEF_LIBS}\
    eompccd:vee:vea:trp:librt3:libr2:crust:hbar:vcc:blockdave:pccd:${LIST_DEF_LIBS}\
@@ -1053,6 +1080,8 @@ ACES_MAIN_OBJS = \
    cse12:cse12_main\
    hcmult:hcmult_main\
    libint:libint_main\
+   erdints:erdints_main\
+   erdgrad:erdgrad_main\
    lsccresp:lsccresp_main\
    vibavg:vibavg_main\
    eompccd:eompccd_main\

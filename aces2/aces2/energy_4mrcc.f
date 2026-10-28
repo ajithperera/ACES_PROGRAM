@@ -32,8 +32,8 @@
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract 
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       common /sv_bool/
      &        mrcc,
      &        geom_opt, analytical_gradient,numerical_gradient,
@@ -44,8 +44,8 @@
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       save   /sv_bool/
 
       character
@@ -255,6 +255,22 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       logical brueckner,dkhess           ! ...Watson... !
       integer iter, maxiter, izero, itest, iflags0(100),
      $     iflags2_0(500), iuhf0
@@ -264,7 +280,7 @@
       call a2getrec(20,'JOBARC','IFLAGS2 ',500,iflags2_0)
 
       if (.not.direct) call runit(integral_package)
-      call runit('xvmol2ja')
+      if (.not.erd_ints) call runit('xvmol2ja')
       iuhf0 = iflags0(11)
 
       if (mrcc.or.
@@ -316,7 +332,7 @@ c
 c     integrals are no longer there
 c
                   if (.not.direct) call runit(integral_package)
-                  call runit('xvmol2ja')
+                  if (.not.erd_ints) call runit('xvmol2ja')
                   call runit('xvprops')
                   call runit('rm -f VPOUT')
                endif

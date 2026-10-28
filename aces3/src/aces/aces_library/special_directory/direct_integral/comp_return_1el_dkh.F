@@ -61,14 +61,14 @@ c----------------------------------------------------------------------------
 c   Clear the output array.
 c----------------------------------------------------------------------------
 
-      DKH = (iflags2(157) .GT. 0)
+      DKH = (iflags2(167) .GT. 0)
 
       If (.NOT. DKH) Return
 
 #ifdef _DEBUG_LVL0
       If (me .EQ. 0 .and. DKH) 
      *    Write(6, "(a,i1,a)")  " The DKH-1el of order ", 
-     *    iflags2(157), " is added to the 1-el Hamiltonian" 
+     *    iflags2(167), " is added to the 1-el Hamiltonian" 
 #endif 
 
       if (intpkg .ne. flocke_package) then

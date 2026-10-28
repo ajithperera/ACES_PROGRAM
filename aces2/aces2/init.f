@@ -206,6 +206,22 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       subroutine init
       implicit none
 
@@ -229,8 +245,8 @@
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract 
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       common /sv_bool/
      &        mrcc,
      &        geom_opt, analytical_gradient,numerical_gradient,
@@ -241,8 +257,8 @@
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       save   /sv_bool/
 
       character
@@ -259,7 +275,7 @@
       integer linblnk, iTmp
       character arg*20, alaska_inp*11
       integer i, f_iargc, num_args,length
-      logical file_exists, gen_quartic
+      logical file_exists
 
 
 
@@ -313,21 +329,13 @@ c
 c In general, this is wrong since ACES3 is not just mrcc code.
       mrcc=(iflags2(132).eq.3)
 c
-cmn include procedure to do multiple points on a surface
-cmn  for the purpose of calculating quartic force constants.
-cmn  In MRCC branch a number of such options are available. Here only one.
-c
-      gen_quartic = iflags2(165).eq.1
-     $     .and. .not. mrcc
-c
 c Single Point calculations: Energy;gradients;hessians
 c There is no direct keyword that we can acces to choose single point.
 c The single point is true if not a geometry optimization, finite difference 
 c frequency or finite difference property (energy gradient included) calculation. 
 c
       Single_point          = .NOT. (Geom_opt .OR. Vib_specs .OR. 
-     &                               Numerical_gradient .OR.
-     $                                  gen_quartic) 
+     &                               Numerical_gradient)
       Single_point_energy   = (Single_point .AND. (.NOT. 
      &                         (Analytical_gradient .OR. 
      &                          Numerical_gradient)))
@@ -389,11 +397,6 @@ c blCCSDT; TRUE if CALCLEVEL = ACCSD(T)
 c
       blCCSDT = (iflags(2).eq.42)
 c
-c bGExtrap;bEExtrap;bCExtrap TRUE if EXTRAPOLATE = GRADIENT, ENERGY, COMBO
-c
-      bGExtrap = (iflags2(9) .eq .1)
-      bEExtrap = (iflags2(9) .eq .2)
-      bCExtrap = (iflags2(9) .eq .3)
 c ---------------------------------------------------------------------------
 c Analyze the command-line arguments next -----------------------------------
 c ---------------------------------------------------------------------------
@@ -401,6 +404,9 @@ c ---------------------------------------------------------------------------
 c set the defaults and override them with the CL.
       sewswitch=.FALSE.
       integral_package='xvmol'
+c INTEGRALS=ERD: xerdints writes the integrals and the vmol2ja records
+      erd_ints = (iflags(56).eq.6)
+      if (erd_ints) integral_package='xerdints'
       if (hf_scf) then
          if ((iflags2(154).eq.1).and.
      &       (iflags(56).eq.5).and.
@@ -408,6 +414,13 @@ c set the defaults and override them with the CL.
             der_integral_package='xscfgrd'
          else
             der_integral_package='xvdint'
+c INTEGRALS=ERD: gradients from OED/ERD derivative integrals (xerdgrad)
+c for RHF, UHF, ROHF and QRHF references, ECPs included; xvdint for
+c second derivatives (DERIV_LEV=2: VIB=EXACT, NMR, ...).
+            if (erd_ints .and.
+     &          iflags(3).le.1 .and.
+     &          iflags(11).le.2)
+     &         der_integral_package='xerdgrad'
          end if
       else if (ks_scf .or. hf_dft) then
          der_integral_package='xvdint'

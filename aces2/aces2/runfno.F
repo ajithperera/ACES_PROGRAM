@@ -46,7 +46,7 @@
       inquire(file='IIII',exist=IntsExist)
       if (.not.IntsExist) then
          call runit(integral_package)
-         call runit('xvmol2ja')         
+         if (.not.erd_ints) call runit('xvmol2ja')
       endif
       return
       end

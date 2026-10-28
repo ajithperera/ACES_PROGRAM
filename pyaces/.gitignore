@@ -24,3 +24,4 @@ link_stderr*.log
 f2py_gen.log
 core.*
 __pycache__/
+suite_run/

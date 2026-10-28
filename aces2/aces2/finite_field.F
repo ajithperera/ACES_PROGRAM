@@ -33,7 +33,7 @@ c
       integer i, j, ilow(3), ihigh(3), ib, jb, i1, i2
 c     
       if (.not.direct) call runit(integral_package)
-      call runit('xvmol2ja')
+      if (.not.erd_ints) call runit('xvmol2ja')
       call runit('xvprops')
 c     
       ialpha_order = iflags2(h_IFLAGS2_order_alpha)

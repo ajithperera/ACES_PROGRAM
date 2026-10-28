@@ -1,0 +1,16 @@
+H2O OO-pCCD cc-pVTZ sym=on
+H
+O 1 R
+H 2 R 1 A
+
+R=0.957
+A=104.5
+
+*ACES2(BASIS=CC-PVTZ
+CALC=PCCD,PROGRAM=PCCD
+REF=RHF,MEM_SIZE=8gb
+sym=on
+PCCD_REF=OPTIMIZED
+BRUCK_CONV=6,OO_MAXCYC=800
+cc_conv=10,cc_maxcyc=300,scf_conv=10,scf_maxcyc=300)
+

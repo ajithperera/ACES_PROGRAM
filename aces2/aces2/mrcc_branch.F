@@ -62,15 +62,6 @@ cmn
           call mrcc_grad
 C
 c 
-       else if (iflags2(h_IFLAGS2_prep_vibron).eq.1 .or.
-     $         iflags2(h_IFLAGS2_geo_sample).eq.1 .or.
-     $         iflags2(h_IFLAGS2_gen_quartic).eq.1 .or.
-     $          iflags2(h_IFLAGS2_scan_normal).eq.1 ) then
-c
-         write(6,*) ' @mrcc_branch: enter mrcc_heff'
-C
-          call mrcc_heff
-
        else
          write(6,*) ' @mrcc_branch: enter energy_4mrcc', mrcc
           call energy_4mrcc

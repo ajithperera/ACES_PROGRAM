@@ -204,6 +204,7 @@
 
 
 
+
       Subroutine Constr_search(Coords_K0OM, Coords_K1C, Coords_K1PM,
      &                         Vcoords, Coords, Coords_K1CM, Grad_K1C,
      &                         Grad_K1CM, Grad_K0O, Grad_K0OM, A2Hess, 
@@ -322,6 +323,7 @@ C
 C
           Call Dzero(Vcoords, 3*Natoms)
           Call Dzero(Coords, 3*Natoms)
+          Call Irc_symmetrize(Coords_K1C, Coords_K1CM, Nreals, Natoms)
           Call Daxpy(3*Nreals, Convert, Coords_K1C, 1, Vcoords, 1)
           Do Iatoms = 1, Natoms
              If (Imap(Iatoms) .NE. 0) Then
@@ -341,7 +343,7 @@ C
           Call aces_ja_fin
 C
           Write(6,*) "Initial call to runaces2b"
-          Call Runit("runaces2b")
+          Call Run_aces_point("runaces2b")
 C
           Call aces_ja_init
 C
@@ -358,6 +360,7 @@ C
 C
           Call Dzero(Vcoords, 3*Natoms)
           Call Dzero(Coords, 3*Natoms)
+          Call Irc_symmetrize(Coords_K1C, Coords_K1CM, Nreals, Natoms)
           Call Daxpy(3*Nreals, Convert, Coords_K1C, 1, Vcoords, 1)
           Do Iatoms = 1, Natoms
              If (Imap(Iatoms) .NE. 0) Then
@@ -374,7 +377,7 @@ C
           Call aces_ja_fin
 C
           Write(6,*) "Second call to runaces2b"
-          Call Runit("runaces2b")
+          Call Run_aces_point("runaces2b")
 C
           Call aces_ja_init
 C
@@ -641,7 +644,9 @@ C
       Call Dcopy(3*Nreals, Grad_K1CM, 1, Grad_K0OM, 1)
 C
 C Add the geo. update to the current point and generate a new point.
+C (The old point is kept in Work(12N+1) for the step actually taken.)
 
+      Call Dcopy(3*Nreals, Coords_K1C, 1, Work(12*Nreals+1), 1)
       Call Daxpy(3*Nreals, 1.0D0, Work(6*Nreals+1), 1, Coords_K1C, 1)
       Call Dcopy(3*Nreals, Work(6*Nreals+1), 1, Work(9*Nreals+1), 1)
 C
@@ -654,6 +659,38 @@ C
          Enddo
       Enddo
       Call Daxpy(3*Nreals, 1.0D0, Work(6*Nreals+1), 1, Coords_K1CM, 1)
+C
+C Keep the new point in the point group of the path, then put it back
+C on the hypersphere of radius Stride/2 around the pivot point: the
+C quadratic step only lands on it as far as the model is exact, and
+C near trans-HCOH, where in- and out-of-plane modes of the updated
+C Hessian mix, the step also left the plane; the in-plane part was
+C 0.013 instead of 0.05 ("The Norm criteria is violated"). The stored
+C step (Work(9N+1), used in the Hessian update and Delta_q) is the step
+C actually taken. 10/2026.
+C
+      Call Irc_symmetrize(Coords_K1C, Coords_K1CM, Nreals, Natoms)
+      Dnorm = 0.0D0
+      Do I = 1, 3*Nreals
+         Dnorm = Dnorm + (Coords_K1CM(I) - Coords_K1PM(I))**2
+      Enddo
+      Dnorm = Dsqrt(Dnorm)
+      If (Dnorm .Gt. 1.0D-10) Then
+         Scale = 0.50D0*Stride/Dnorm
+         Ioff = 0
+         Do Iatom = 1, Nreals
+            Sqrtm = Dsqrt(AtmMass(Iatom))
+            Do Ixyz = 1, 3
+               Ioff = Ioff + 1
+               Coords_K1CM(Ioff) = Coords_K1PM(Ioff) + Scale*
+     &                       (Coords_K1CM(Ioff) - Coords_K1PM(Ioff))
+               Coords_K1C(Ioff)  = Coords_K1CM(Ioff)/Sqrtm
+            Enddo
+         Enddo
+      Endif
+      Do I = 1, 3*Nreals
+         Work(9*Nreals+I) = Coords_K1C(I) - Work(12*Nreals+I)
+      Enddo
 C
       Write(6,*)
       Write(6,*) "@-Constr_search: The updated no M.W. geo."
@@ -735,7 +772,7 @@ C
       Write(6,*) "@-Constr_search: The IRC is converged "
       Write(6,*)
       Write(6,*) "@-Constr_search: The NEW IRC point (in Angs.)"
-      Write(6,"(3F17.13)") (Coords_K1C(I)/B2ang, I = 1, 3*Nreals)
+      Write(6,"(3F17.13)") (Coords_K1C(I)*B2ang, I = 1, 3*Nreals)
       Write(6,*) "@-Constr_search The Previous IRC point "
       Ikeep_K0OM = 50*Nreals*Nreals - 3*Nreals
       Write(6,"(3F17.13)") (Work(Ikeep_K0OM+I-1), I = 1, 3*Nreals)
@@ -775,16 +812,23 @@ C
 
          If (Direction .EQ. "FORWARD") String="forward"
          If (Direction .EQ. "REVERSE") String="reverse"
+C
+C One block per IRC point: the path length s, the energy and the
+C Cartesian geometry in Angstrom. (The coordinates used to be the
+C mass-weighted ones divided, not multiplied, by B2ang.) 10/2026.
+C
          If (Print_header) Then
          Write(IUnitO, "(a,a7,2a)") " The coordinates map for the ",
      &                               String, " IRC search",
-     &                             " (in sqrt(amu)*Angs.)."
+     &                             " (Cartesian, Angstrom)."
          Write(Iunito,*) 
          Endif 
+         Write(IUnitO,"(a,F10.5,a,F18.10)") " s =", Stride_Total,
+     &                   " sqrt(amu)*bohr   E =", E_currnt
          Ioff = 0
          Do I = 1, Nreals
             Write(IUnitO,"(1x,a,3(2X,F15.10))") Atomlabel(I),
-     &                          (Coords_K1CM(Ioff+J)/B2ang,J = 1,3)
+     &                          (Coords_K1C(Ioff+J)*B2ang,J = 1,3)
             Ioff = Ioff + 3 
          Enddo
          Write(IUnitO,*)
@@ -797,6 +841,7 @@ C
 C
       Call Dzero(Vcoords, 3*Natoms)
       Call Dzero(Coords, 3*Natoms)
+      Call Irc_symmetrize(Coords_K1C, Coords_K1CM, Nreals, Natoms)
       Call Daxpy(3*Nreals, Convert, Coords_K1C, 1, Vcoords, 1)
       Do Iatoms = 1, Natoms
          If (Imap(Iatoms) .NE. 0) Then
@@ -815,7 +860,7 @@ C
       Call aces_ja_fin
 C
           Write(6,*) "Third call to runaces2b"
-      Call Runit("runaces2b")
+      Call Run_aces_point("runaces2b")
 C
       Call aces_ja_init
 C

@@ -18,6 +18,7 @@ C
       DIMENSION SCR(MAXCOR),LENVV(2),LENOO(2),LENVO(2),TM(3),
      &          TMNMR (6*MAXCENT)
       COMMON/FLAGS/IFLAGS(100)
+      COMMON/FLAGS2/IFLAGS2(500)
       COMMON/INFO/NOCCO(2),NVRTO(2)
       COMMON/MACHSP/IINTLN,IFLTLN,IINTFP,IALONE,IBITWD
       COMMON/SYMPOP/IRPDPD(8,22),ISYTYP(2,500),ID(18)
@@ -168,6 +169,15 @@ C CALCULATE FULL UNPACKED DENSITY MATRIX
 C
        CALL EXPDEN(SCR(IOFFOO),SCR(IOFFVV),SCR(IOFFVO),SCR(IOFFOV),
      &             SCR(IDFLMO),NMO,IRREPX,ISPIN,.FALSE.)
+C
+C EE_ROOT_FIND=FULL_DIAG (IFLAGS2(177)=3): DIAGALL has unit 83
+C (eom_tdm.dat) open; save the full MO transition density of this
+C root/side/spin for scrnc's sum-over-states screened interaction.
+C
+       IF (IFLAGS2(177) .EQ. 3) THEN
+        WRITE(83,*) ISIDE,ISPIN,ROOT,R0
+        WRITE(83,*) (SCR(IDFLMO-1+I),I=1,NMO*NMO)
+       ENDIF
 C
        IF (PRINT) THEN
          WRITE(6,5100)

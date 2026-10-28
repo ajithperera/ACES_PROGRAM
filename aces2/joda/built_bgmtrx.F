@@ -34,7 +34,7 @@ C
       CALL ZERO(DERBMAT,9*NRATMS*NRATMS*TOTREDNCO)
 C
       CMP_DBMAT = (IFLAGS2(h_IFLAGS2_init_hessian) .GT. 0) .OR.
-     &            (IFLAGS2(h_IFLAGS_eval_hess)    .ge. 0)
+     &            (IFLAGS(h_IFLAGS_eval_hess)     .ge. 0)
 C
       DO 20 IBNDS = 1, TOTNOFBND
 C

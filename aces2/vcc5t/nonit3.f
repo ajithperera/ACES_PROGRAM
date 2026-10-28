@@ -191,47 +191,6 @@ C
 C
       IF(METHOD.EQ.12.OR.METHOD.EQ.26.OR.METHOD.EQ.27.OR.METHOD.EQ.28
      &               .OR.METHOD.EQ.31)THEN
-C
-C     The RHF branch below folds in the all-alpha (AAA) spin case as
-C     E5xx1 -- but TRPS14, the block that computes those, is skipped for
-C     RHF at trps.F "IF(IUHF.EQ.0.OR.ISKP14) GOTO 1000", so E5TD1/E5TT1/
-C     E5QT1/E6TT1 arrive here as exact zeros and the 2*(X1+X2) below
-C     silently drops half of each fifth-order term. It is not a small
-C     effect: for the H2O/DZP CCSD(TQ) reference case (tests/fast 020)
-C     the missing 2*E5TD1 etc. add up to 2.24e-04 hartree, and the run
-C     reports -76.2737454652 where the archive (and a UHF run of the same
-C     input, and a CFOUR CCSDTQ/CCSDT(Q) ladder in the same basis) all say
-C     -76.2739691209. Refuse rather than write that number to JOBARC.
-C
-C     What a real fix needs: TRPS14 reads the AAAA OOOV intermediate
-C     (list 107 = LWIC11) and the AAAA T2 amplitudes (list 44 = 43+ISPIN),
-C     and an RHF run has neither -- T2-AAAA is allocated but left at zero
-C     (see the @CHECKSUM T2-AAAA line in any RHF output), and several AAAA
-C     lists are not even dimensioned, since trpint.F only INIPCKs them
-C     under IF(IUHF.NE.0). So RHF support means initialising those lists
-C     and filling them by antisymmetrising their ABAB counterparts
-C     (libr/assym.f is the existing helper) before letting the block run;
-C     simply deleting the guard in trps.F fails immediately with
-C     "@GETTRN: Assertion failed, MOIO rows = 0". Verification targets are
-C     known exactly, from a UHF run of case 020: E5TD1 = -0.000057010064,
-C     E5TT1 = 0.000000815536, E5QT1 = 0.000002037487,
-C     E6TT1 = -0.000000661806, total -76.273969124744.
-C
-C     Until then the workaround is REF=UHF, which is correct for a closed
-C     shell too and reproduces the reference to 3.8e-09.
-C
-       IF(IUHF.EQ.0)THEN
-       WRITE(6,9110)
- 9110  FORMAT(/,' @NONIT3-F, Fifth-order triples/quadruples',
-     &        ' corrections are not available',/,
-     &        '            with an RHF reference: the all-alpha spin',
-     &        ' case is never computed',/,
-     &        '            (TRPS14 is skipped for IUHF=0), which would',
-     &        ' silently drop about',/,
-     &        '            half of each fifth-order term. Rerun with',
-     &        ' REF=UHF.',/)
-       CALL ERREX
-       ENDIF
        IF(IUHF.EQ.0)THEN
        E5TD = 2.0D+00 * (E5TD1 + E5TD2)
        E5TT = 2.0D+00 * (E5TT1 + E5TT2)

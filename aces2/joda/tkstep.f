@@ -24,7 +24,7 @@ C
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
 C
       DOUBLE PRECISION LMBDAN, LMBDAP
-      LOGICAL MORSE, TS, NRORMANR, RFA, EVFTS, IGTS, QSD,
+      LOGICAL MORSE, TS, NRORMANR, RFA, EVFTS,
      &        QSTLST_CLIMB, NOT_FOUND
 C
 C MXATMS     : Maximum number of atoms currently allowed
@@ -65,6 +65,7 @@ C
      &     NOPTI(MAXREDUNCO), NATOMS
 
 C coord.com : end
+
 
 
 
@@ -336,29 +337,42 @@ C
             Fscr(Iatoms) = 1.0D0
          Enddo 
 C
-         CALL PROJEC_FC(Q, Hes, Fscr, GrdMOD, HesMOd, Scratch, 
-     &                  EPS, Nx/3, .True., .True., .False.)
+C The Hessian and gradient are in the frame of the optimizer
+C coordinates R, which differs from that of Q (the integral frame)
+C when SYMMETRY reorients the molecule, so use R. 10/2026.
 C
-      Write(6,*) "@-TKSTEP The Hessian after the projection"
-      call output(Hes, 1, NX, 1, NX, NX, NX, 1)
-
 C If the optimization is constrained lets handle it here instead
 C of in projec_fc.F in libr (projec_fc.F is shared by other modules).
 C Ajith Perera, 06/2013.
-
+C
+C With frozen Cartesian components rigid translations and rotations
+C are no longer free motions, so they must not be projected out of
+C the Hessian (doing so left rotation-like directions of the allowed
+C space with zero curvature and the optimization stalled, e.g. 
+C aces2/test/zmat.131). Project only the constraints in that case. 
+C 10/2026.
+C
+      NOT_FOUND = .TRUE.
       IF (iFlags2(169) .EQ. 3) Then
-
          CALL READ_CART_CONSTRAINS(CONSTRAINS, NUM_CONSTRAINS,
      &                             NOT_FOUND)
          IF (NOT_FOUND) THEN
             WRITE(6, "(1x, 2a)") "Constrained optimization requested "
      &                         , "but no constrains found. Proceeded "
             WRITE(6, "(1x,a)") "to do a full optimization."
-         ELSE 
+         ENDIF
+      ENDIF
+C
+      IF (NOT_FOUND) THEN
+         CALL PROJEC_FC(R, Hes, Fscr, GrdMOD, HesMOd, Scratch,
+     &                  EPS, Nx/3, .True., .True., .False.)
+C
+      Write(6,*) "@-TKSTEP The Hessian after the projection"
+      call output(Hes, 1, NX, 1, NX, NX, NX, 1)
+      ELSE
             CALL APP_CART_CONSTRAINS(HES, SCRATCH, PMAT,
      &                               GRD, GRDMOD, CONSTRAINS, 
      &                               NUM_CONSTRAINS, NX)
-         ENDIF
       ENDIF
 C
 C Note that for Cartesian opts., setup call really do nothing,
@@ -417,7 +431,7 @@ C
       CALL ANLYSHES(HESMOD, DIAGHES, RFAMAT, EVRFAMAT, HES,
      &              GRDMOD, SCRATCH, PMAT, VEC, NOPT, NX,
      &              NCYCLE, INR, IVEC, IMODE, IDIE, TS,
-     &              NRORMANR, RFA, EVFTS, IGTS, QSD, LUOUT,
+     &              NRORMANR, RFA, EVFTS, LUOUT,
      &              QSTLST_CLIMB, NATOMS, IPRNT)
 C
 C
@@ -476,12 +490,6 @@ C
      &                             LMBDAN, LMBDAP, STPMAX, MORSE, 
      &                             IMODE, NX, LUOUT, IBREAK, NOPT,
      &                             QSTLST_CLIMB)
-C         
-      ELSE IF (IGTS .OR. QSD) THEN
-C     
-         CALL QSDMINORTS(SCRATCH, GRDMOD, HESMOD, DIAGHES, RFAMAT, 
-     &                 EVRFAMAT, STPMAX, EPS, IGTS, QSD, NX, NOPT,
-     &                 NCYCLE)
 C
       ENDIF
 C    

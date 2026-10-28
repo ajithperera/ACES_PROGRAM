@@ -219,6 +219,22 @@ c
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       Program ACES2
 
 
@@ -241,8 +257,8 @@ c
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract 
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       common /sv_bool/
      &        mrcc,
      &        geom_opt, analytical_gradient,numerical_gradient,
@@ -253,8 +269,8 @@ c
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       save   /sv_bool/
 
       character
@@ -308,6 +324,16 @@ C
 c   o initialize the ACES environment and turn off the job archive subsystem
       call crapsi(ijunk,iuhf,-1)
       call aces_ja_fin
+C
+C PROGRAM=PCCD: the pCCD family (including OO-pCCD) has its own driver,
+C xrunpccd, which runs xjoda again, handles all the branches and prints
+C the completion message.
+C
+      if (iflags2(132).eq.4) then
+         call runit('xrunpccd')
+         call parenv_stop
+         call c_exit(0)
+      end if
 
       call init
       if (iflags2(113).eq.1.and.
@@ -326,12 +352,6 @@ c
       if (mrcc) then
          write(6,*) ' @aces2.main: enter mrcc_branch '
          call mrcc_branch
-       else if (iflags2(156).eq.1 .or.
-     $         iflags2(160).eq.1 .or.
-     $         iflags2(165).eq.1 .or.
-     $          iflags2(158).eq.1 ) then
-         write(6,*) ' @aces2.main: enter aces2_heff'
-         call aces2_heff
       else
          call Job_control
       end if

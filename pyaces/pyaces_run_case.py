@@ -36,6 +36,16 @@ IUHF = int(IUHF)
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 STANDALONE_BIN = os.path.join(os.path.dirname(REPO_DIR), "aces2", "bin")
 
+
+def standalone(exe):
+    """An ACES II program: aces2/bin (superbuild) first, then PATH (a
+    development install such as ~/Develop/bin)."""
+    p = os.path.join(STANDALONE_BIN, exe)
+    if os.path.exists(p):
+        return p
+    import shutil
+    return shutil.which(exe) or p
+
 os.chdir(WORKDIR)
 sys.path.insert(0, os.environ.get("PYACES_EXT_DIR",
                                 os.path.join(REPO_DIR, "Main", "build")))
@@ -100,7 +110,7 @@ def run_fno_preliminary_pass():
 
     for exe in ("xvtran", "xintprc", "xvcc", "xfno"):
         logname = f"fno_prelim_{exe}.log"
-        r = subprocess.run([os.path.join(STANDALONE_BIN, exe)],
+        r = subprocess.run([standalone(exe)],
                             capture_output=True, text=True)
         with open(logname, "w") as f:
             f.write(r.stdout)
@@ -125,7 +135,7 @@ def run_fno_preliminary_pass():
         print("PYACES_CASE: FNO prelim pass consumed IIII, regenerating")
         for exe in ("xvmol", "xvmol2ja"):
             logname = f"fno_prelim_{exe}.log"
-            r = subprocess.run([os.path.join(STANDALONE_BIN, exe)],
+            r = subprocess.run([standalone(exe)],
                                 capture_output=True, text=True)
             with open(logname, "w") as f:
                 f.write(r.stdout)

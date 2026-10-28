@@ -17,8 +17,10 @@
 C This is written to debug the orbital rotation codes. The algorithim
 C takes  pair of orbitals (OO,VV,OV and VO) and apply a unitary rotation (U)
 C or mixing (L) of oribitals with  +eps and -eps 
-C p' = cos (eps) p + Sin (eps) q
-C q' = Sin(eps) p  - Cos (eps) q
+C U: p' = cos (eps) p + Sin (eps) q
+C    q' = Sin(eps) p  - Cos (eps) q
+C L: p' = (p + q)/sqrt(2), q' = (p - q)/sqrt(2), times the sign of eps
+C The same formulas apply to all four pair types.
 
       Call read_rotinfo(Type,UorL,Eps,Ip1,Ip2,Ip3,Ip4)
 

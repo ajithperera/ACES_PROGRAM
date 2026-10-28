@@ -1048,7 +1048,7 @@ C Include dummy atoms!
 CMN this file is needed in calculations of vibronic Hamiltonians
 c
 cmn:
-c sort normal modes as is done in Vibron  i.e. setpts4_heff in symcor
+c sort normal modes as the old Vibron code (symcor setpts4_heff) did
 c module
 
         ione =1
@@ -1274,7 +1274,7 @@ CSSS        endif
 c
 c first write normal modes, in unnormalized fashion to file
 c
-c sort normal modes as is done in Vibron  i.e. setpts4_heff in symcor
+c sort normal modes as the old Vibron code (symcor setpts4_heff) did
 c module
 c
 c

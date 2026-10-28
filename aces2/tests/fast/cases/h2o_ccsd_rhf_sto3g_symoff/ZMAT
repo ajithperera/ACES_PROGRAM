@@ -1,0 +1,14 @@
+H2O, CCSD RHF/UHF identity check, STO-3G, SYM=OFF.
+O
+H 1 R
+H 1 R 2 A
+
+R=0.96
+A=104.5
+
+*ACES2(BASIS=STO-3G
+CALC=CCSD
+REF=RHF,MEM_SIZE=1gb
+sym=off
+CC_EXTRAP=OFF
+cc_conv=9,scf_conv=10)

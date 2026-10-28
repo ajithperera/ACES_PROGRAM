@@ -268,15 +268,22 @@ C There are no antisymmetrized T2 amplitudes.
         IF (IMULT .EQ. 1) THEN
            CALL GETLST(ICORE(I020),1,NMSYTA,1,IRREP,LISTTA)
         ELSE IF (IMULT .EQ.2) THEN
-           CALL GETLST(ICORE(I020),1,NMSYTA,1,IRREP,LISTTB)
-        ENDIF 
-        
+           CALL GETLST(ICORE(I020),1,NMSYTB,1,IRREP,LISTTB)
+        ENDIF
+
 C        IF (IMULT .EQ. 2) CALL SSCAL (NMSYTA*NMSYTA,TWO,
 C     &                                ICORE(I020),1)
 C
-C The integrals are antisymmetric. So they get singlet spin-adapated 
-C in cntract for the singlet spin-adpated path. 
+C The integrals are antisymmetric. So they get singlet spin-adapated
+C in cntract for the singlet spin-adpated path.
 
+#ifdef _DEBUG_LVL0
+        Write(6,"(a,i2,a,i4,a,i4)") " RCC_DWMBEJ RHF IMULT=",IMULT,
+     &        " irrep=",IRREP," T2 list=",
+     &        MERGE(LISTTA,LISTTB,IMULT.EQ.1)
+        call checksum("T2-in", ICORE(I020),
+     &        MERGE(NMSYTA*DSSYTA,NMSYTB*DSSYTB,IMULT.EQ.1))
+#endif
         IF (IMULT .EQ. 1) THEN
             CALL CNTRCT(ICORE(I000),ICORE(I010),ICORE(I020),
      &                  DISSYQ,NUMSYQ,DSSYTA,NMSYTA,DSSYWA,NMSYWA,
@@ -286,35 +293,40 @@ C The triplet spin-adapted path. Also notice that minus sign in front
 C (by using C4 instead of -C4).
 
             CALL RCC_TRP_CNTRCT(ICORE(I000),ICORE(I010),ICORE(I020),
-     &                          DISSYQ,NUMSYQ,DSSYTA,NMSYTA,DSSYWA,
-     &                          NMSYWA,IRREP,LISTWA,LISTWB,LISTTA,
+     &                          DISSYQ,NUMSYQ,DSSYTB,NMSYTB,DSSYWA,
+     &                          NMSYWA,IRREP,LISTWA,LISTWB,LISTTB,
      &                         'WxT',ZILCH,-C4,1)
-        ENDIF 
+        ENDIF
         NSIZE=DISSYQ*NUMSYQ
-#ifdef _DEBUG_LVLM
-        Write(6,"(a,i4)") "The ABAB and BABA-target list",listq
-        call checksum(SPCASE, ICORE(I000), NSIZE)
-#endif 
+#ifdef _DEBUG_LVL0
+        Write(6,"(a,i4)") " RCC_DWMBEJ RHF after T*W contract, list",
+     &        listq
+        call checksum("TxW", ICORE(I000), NSIZE)
+#endif
 C
 C For rCCD we have antisymmetric integrals and we need to singlet and
 c triplet spin-adapt them.
 C
         CALL GETLST(ICORE(I010),1,NUMSYQ,1,IRREP,LSTINT)
         CALL GETLST(ICORE(I020),1,NUMSYQ,1,IRREP,LSTINTB)
+#ifdef _DEBUG_LVL0
+        call checksum("bare-J(18)", ICORE(I010), NUMSYQ*DISSYQ)
+        call checksum("bare-K(25)", ICORE(I020), NUMSYQ*DISSYQ)
+#endif
         IF (IMULT .EQ. 1) THEN
            CALL SSCAL (DISSYQ*DISSYQ,TWO,ICORE(I010),1)
-           CALL SAXPY (DISSYQ*DISSYQ,ONEM,ICORE(I020),1,ICORE(I010),1) 
-           CALL SAXPY (DISSYQ*DISSYQ,ONE,ICORE(I010),1,ICORE(I000),1) 
+           CALL SAXPY (DISSYQ*DISSYQ,ONEM,ICORE(I020),1,ICORE(I010),1)
+           CALL SAXPY (DISSYQ*DISSYQ,ONE,ICORE(I010),1,ICORE(I000),1)
 #ifdef _DEBUG_LVL0
            call checksum("2J-E",ICORE(I010),NUMSYQ*DISSYQ)
-#endif 
-        ELSEIF (IMULT .EQ. 2) THEN 
+#endif
+        ELSEIF (IMULT .EQ. 2) THEN
            CALL SSCAL (DISSYQ*DISSYQ,ONEM,ICORE(I020),1)
-           CALL SAXPY (DISSYQ*DISSYQ,ONE,ICORE(I020),1,ICORE(I000),1) 
+           CALL SAXPY (DISSYQ*DISSYQ,ONE,ICORE(I020),1,ICORE(I000),1)
 #ifdef _DEBUG_LVL0
         call checksum("-E:",ICORE(I020),NUMSYQ*DISSYQ)
-#endif 
-        ENDIF 
+#endif
+        ENDIF
 
         CALL SUMSYM2(ICORE(I000),ICORE(I010),NSIZE,1,IRREP,LISTQ)
 

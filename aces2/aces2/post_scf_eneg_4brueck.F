@@ -3,9 +3,7 @@ c
 #include "aces2.h"    
 #include "flags.h"
 c     
-      Character*79 szEExtrap 
       Logical Rot_grad
-      szEExtrap = 'xa2proc ener_extrp'
       Call a2getrec(20,'JOBARC','NDROPGEO',1,NDRGEO)
 C
 C The regular post_scr_energy routine has excited states logic. But
@@ -67,12 +65,6 @@ C
          Endif
 c
          If (Iflags(h_IFLAGS_calclevel) .EQ. 31) Call Runit('xvcc5t')
-c
-c Extrapolate energy (only for post-SCF methods), 01/2006, Ajith Perera
-c
-         If (bEextrap .OR. bCExtrap) Then
-            Call Runit(szEExtrap)
-         Endif
 c
        Endif
 c 

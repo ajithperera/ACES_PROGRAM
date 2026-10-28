@@ -9,7 +9,7 @@ C
 #include "jodaflags.com"
 C
       CHARACTER*(fnamelen) FNAME
-      LOGICAL XYZIN, NWFINDIF
+      LOGICAL XYZIN, NWFINDIF, OLDGUESS
       INTEGER TOTNOFBND, TOTNOFANG, TOTNOFDIH
       COMMON /USINT/ NX, NXM6, IARCH, NCYCLE, NUNIQUE, NOPT
 C     Main OPTIM control data
@@ -40,6 +40,16 @@ C
          CALL ZERO(HI, NXM6*NXM6)
          IF (XYZIN) THEN
             IF (iFlags2(h_IFLAGS2_geom_opt) .ge. 3) THEN
+C
+C Lindh model Hessian (LINDH_HESS); the old constant diagonal
+C (1.0/0.25/0.1) is kept for comparison when OLD_GUESS_HESS exists.
+C 10/2026.
+C
+               INQUIRE(FILE='OLD_GUESS_HESS', EXIST=OLDGUESS)
+               IF (.NOT. OLDGUESS) THEN
+                  CALL LINDH_HESS(HI, NXM6)
+                  RETURN
+               ENDIF
                CALL GETREC(20, 'JOBARC', 'TNUMOBND', 1, TOTNOFBND)
                CALL GETREC(20, 'JOBARC', 'TNUMOANG', 1, TOTNOFANG)
                CALL GETREC(20, 'JOBARC', 'TNUMODIH', 1, TOTNOFDIH)
@@ -55,11 +65,25 @@ C
                 END DO
                 RETURN
          ELSE IF (iFlags2(h_IFLAGS2_geom_opt) .eq. 2) THEN
-                CALL SET_2UNIT_MATRIX(HI, NX)
+C
+C Lindh model Hessian in Cartesians (unit matrix with OLD_GUESS_HESS).
+C 10/2026.
+C
+                INQUIRE(FILE='OLD_GUESS_HESS', EXIST=OLDGUESS)
+                IF (OLDGUESS) THEN
+                   CALL SET_2UNIT_MATRIX(HI, NX)
+                ELSE
+                   CALL LINDH_HESS_R(HI, NX)
+                ENDIF
                 RETURN
          ENDIF
 
         ELSE
+C
+C Z-matrix coordinates keep this constant diagonal: the Lindh model
+C Hessian used for RIC and CART did not help here (27 test-suite
+C Z-matrix optimizations: 182 -> 186 cycles; water 4 -> 6). 10/2026.
+C
             HI(1,1)=1.D0
             HI(2,2)=1.D0
             HI(3,3)=0.25D0

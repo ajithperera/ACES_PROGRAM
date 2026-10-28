@@ -1,0 +1,4 @@
+# As n2_dz_symoff with the RFO eigenproblems forced to Davidson (pccd_rfo_eig.in);
+# must reach the same minimum as the dense path.
+energy -109.0730979330
+grads 18

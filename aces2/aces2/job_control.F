@@ -3,7 +3,7 @@
 
       Subroutine Job_control
 c
-      Logical Converged, Both_gopt_vfreq, gen_quartic, NORMCO_exsist
+      Logical Converged, Both_gopt_vfreq, NORMCO_exsist
       Character*4 Calc_level 
 c
 #include "aces2.h"
@@ -324,15 +324,6 @@ c Generate HyperChem input file after calculating vibrational frequencies
 c
 c            If (bHyper) call runit(szHyper)
 c            If (bMolden) call runit(szMolden)
-c
-cmn
-c add block for gen_quartic. This can follow opt_numrcl procedure
-c
-         Else if (gen_quartic) then
-#ifdef _DEBUG
-      print *, "Entering gen_quartic block"
-#endif
-            call Opt_numrcl(Calc_level)
 c
          Else if (Cmpt_props_numrcl) Then
 C

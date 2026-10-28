@@ -50,6 +50,11 @@ C of the code.
       ENDIF
       CALL GETLST(W,1,NUMSYW,2,IRREP,LISTW)
 
+      Write(6,"(a,i4,a,i4,a,i4,a,L1)")
+     &      " RCL_LRNGPRD irrep=",IRREP," LISTT=",LISTT,
+     &      " LISTW=",LISTW," SPINAD=",SPINAD
+      call checksum("@-lrngprd_w",w,NUMSYW*DISSYW)
+      call checksum("@-lrngprd_t",T,NUMSYT*DISSYT)
 C
 C SPIN ADAPT W INTERMEDIATES
 C
@@ -63,8 +68,9 @@ C
      &           W,DISSYW,AZERO,Q,DISSYQ)
       ELSE
        CALL ZERO(Q,NUMSYQ*DISSYQ)
-      ENDIF 
+      ENDIF
 
+      call checksum("@-lrngprd_q",q,NUMSYQ*DISSYQ)
 
       RETURN
       END

@@ -252,6 +252,7 @@ C
      &                   SMOFCOVRADI, NCONPRCNTR, IBNDTO, MAXCNTVS,
      &                   NRATMS, MARK_FRAGMENTS, LENGTH_FRAGEMENTS,
      &                   FRAGSCR, BLNGT_IJFRGS)
+      CALL UNION_CNTVTES(IBNDTO, IATOMICNMBER, NRATMS)
       Print*, "Entering assign bonds"
       Write(6,*)
       CALL ASSIGN_BONDS(IBNDTO, IREDUNCO, NW_TOTREDNCO, TOTNOFBND,
@@ -265,6 +266,9 @@ C
       Print*, "Total # of Angles:", TOTNOFANG
       CALL ASSIGN_DIHLS(IBNDTO, IREDUNCO, NW_TOTREDNCO, TOTNOFBND,
      &                  TOTNOFANG, NRATMS, TOTNOFDIH, MAXREDUNCO)
+      CALL ASSIGN_OOPS(CARTCOORD, IREDUNCO, NW_TOTREDNCO, TOTNOFBND,
+     &                 TOTNOFANG, TOTNOFDIH, NOOPS, NRATMS,
+     &                 MAXREDUNCO)
 
       Write(6,*)
       Print*, "Total # of dihedrals:", TOTNOFDIH
@@ -276,12 +280,20 @@ C
          Write(6,111) (iredunco(j, i), j=1, 4)
       Enddo
  111  Format(5X, 4(I3, 1X))
+C
+C The optimization used to stop here. It now continues with the RICs
+C of the first cycle, which remain a valid (redundant) coordinate set:
+C e.g. an angle that becomes nearly linear stays an ordinary angle (it
+C cannot pass 180 degrees, see CHECK4_180), a new contact does not
+C become a bond. The coordinates are printed so that the optimization
+C can be restarted with the new set if desired. 10/2026.
+C
       IF (NW_TOTREDNCO .NE. TOTREDNCO) THEN
           Write(6,*) 
           Write(6,"(1x,a,a,a,a)")"The total number of redundent ",
      &                           "internals have changed during ", 
-     &                           "the optimization, please start ",
-     &                           "from the following coords (Angs.)"
+     &                           "the optimization. Continuing with ",
+     &                           "the original set; current coords:"
 C
           IOFF = 1
           DO I =1, NRATMS
@@ -289,9 +301,7 @@ C
      &                                 J=IOFF,IOFF+2)
              IOFF=IOFF+3
           END DO
-
-
-         CALL ERREX
+          NW_TOTREDNCO = TOTREDNCO
       ENDIF 
  100  FORMAT(T6,A,T10,F14.8,T25,F14.8,T40,F14.8)
 

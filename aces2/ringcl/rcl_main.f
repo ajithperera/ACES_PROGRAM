@@ -286,9 +286,10 @@ C excited states are requested then turn off lambda.
      +   IFLAGS(87)  .EQ. 20).AND. 
      +   (.NOT. Density)) Solve_4lambda = .False.
 
-      Call Rcl_hbar(Icore(i0),icrsiz/iintfp,Iuhf,Solve_4lambda) 
+      Call Rcl_hbar(Icore(i0),icrsiz/iintfp,Iuhf,Solve_4lambda)
 
-      Call rcl_driver(Icore(i0),icrsiz/iintfp,Iuhf,Solve_4lambda)
+      Call Rcl_driver_hbarsafe(Icore(i0),icrsiz/iintfp,Iuhf,
+     +                         Solve_4lambda)
 
 CSSS        Call rcl_check_rcchbar(Icore(i0),icrsiz/iintfp,Iuhf) 
 

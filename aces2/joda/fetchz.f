@@ -305,6 +305,7 @@ c io_units.par : end
 
 
 
+
 C     Labels used throughout the program:
 C     ZSYM    Atomic symbol given for each line of the Z-matrix
 C     VARNAM  Symbols of all variable parameters
@@ -357,6 +358,7 @@ c
      &                ICONTL,IRECAL,INTTYP,IDISFD,IGRDFD,ICNTYP,ISYM,
      &                IBASIS,XYZTol
       Common /PtGp_com/ FPGrp, BPGrp, PGrp
+      COMMON /TOLERS/ SYMTOL,DEGTOL
 c ric_heap.com : begin
 
 c This common block contains the heap address and array indices for
@@ -429,7 +431,24 @@ C
             ITMPQ    = ISCRATCH + 9*NATOMS
             INEWQ    = ITMPQ    + 3*NATOMS
             ILAST    = INEWQ    + 3*NATOMS
+C
+C The point group found here is kept for the whole optimization (the 
+C steps are symmetrized). With the default DEGTOL (1.0D-10, relative)
+C a degenerate inertia tensor is missed for coordinates given to the
+C usual 6-8 decimals, and only the abelian subgroup is found (C s for
+C NH3, D2h for benzene); the full group then appears once the
+C optimization has made the structure exact, which stops the run 
+C (ascent in symmetry). So detect it with DEGTOL = 1.0D-5. (The atoms
+C must still match under the operations to SYMTOL = 1.0D-6 bohr; a
+C looser SYMTOL lets joda accept a geometry that xvmol2ja then cannot
+C map, so coordinates have to be given to about 7 decimals for the
+C full group to be found.) 10/2026.
+C
+            DEGTOL_SAVE = DEGTOL
+            DEGTOL = MAX(DEGTOL, 1.0D-5)
             CALL SYMMETRY(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .FALSE.)
+            DEGTOL = DEGTOL_SAVE
+            CALL OPT_C1_NOSYM(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .FALSE.)
             CALL DCOPY(3*NATOMS, Q, 1, R, 1)
 C
             NXM6 = 3*NATOMS 
@@ -500,7 +519,24 @@ C
             ITMPQ    = ISCRATCH + 9*NATOMS
             INEWQ    = ITMPQ    + 3*NATOMS
             ILAST    = INEWQ    + 3*NATOMS
+C
+C The point group found here is kept for the whole optimization (the 
+C steps are symmetrized). With the default DEGTOL (1.0D-10, relative)
+C a degenerate inertia tensor is missed for coordinates given to the
+C usual 6-8 decimals, and only the abelian subgroup is found (C s for
+C NH3, D2h for benzene); the full group then appears once the
+C optimization has made the structure exact, which stops the run 
+C (ascent in symmetry). So detect it with DEGTOL = 1.0D-5. (The atoms
+C must still match under the operations to SYMTOL = 1.0D-6 bohr; a
+C looser SYMTOL lets joda accept a geometry that xvmol2ja then cannot
+C map, so coordinates have to be given to about 7 decimals for the
+C full group to be found.) 10/2026.
+C
+            DEGTOL_SAVE = DEGTOL
+            DEGTOL = MAX(DEGTOL, 1.0D-5)
             CALL SYMMETRY(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .TRUE.)
+            DEGTOL = DEGTOL_SAVE
+            CALL OPT_C1_NOSYM(Z(ISCRATCH), Z(ITMPQ), Z(INEWQ), .TRUE.)
             CALL GEN_REDNINTRNLS(Q, REDUNCO, INTLABEL, IBNDTO,
      &                           dRICHeap(z_BMat), dRICHeap(z_GMat),
      &                           TOTREDNCO, IATNUM, NATOMS, IREDUNCO,
@@ -525,22 +561,18 @@ C
             IF (NCYCLE .EQ. 0) 
      &         CALL PUTREC(20,'JOBARC','COORD_OP',IINTFP*3*NATOMS,Q)
 C
-            IF (IFLAGS(60).EQ. 2 .AND. 
-     &          FPGRP .NE. 'C1') THEN
-               CALL PROCESS_REDINTRNLS(Q, REDUNCO, IREDUNCO, IBNDTO,
-     &                                 I_UNIQUE, FPGRP, TOTNOFBND,
-     &                                 TOTNOFANG, TOTNOFDIH, TOTREDNCO,
-     &                                 NEQ, IEQUIV, NATOMS, NCON, IPRNT,
-     &                                 EPSILON)
-               CALL PUTREC(20,'JOBARC','PLSMINSP',TOTREDNCO,NCON)
-            ELSE
-               CALL IZERO(NCON,TOTREDNCO)
-               CALL IZERO(NEQ, TOTREDNCO)
-               DO IREDNCO = 1, TOTREDNCO
-                  I_UNIQUE(IREDNCO) = .TRUE.
-               ENDDO
-            ENDIF
-            CALL PUTREC(20,'JOBARC','PLSMINSP',TOTREDNCO,NCON) 
+C The RIC optimizer does not use symmetry: every RIC is treated as
+C unique (no equivalences, no plus-minus pairs) whatever the point
+C group is. The point group is kept by symmetrizing the Cartesian
+C step (see PROCESTEP_XYZ). PROCESS_REDINTRNLS, which deduced the
+C equivalent RICs, is no longer called. 10/2026.
+C
+            CALL IZERO(NCON,TOTREDNCO)
+            CALL IZERO(NEQ, TOTREDNCO)
+            DO IREDNCO = 1, TOTREDNCO
+               I_UNIQUE(IREDNCO) = .TRUE.
+            ENDDO
+            CALL PUTREC(20,'JOBARC','PLSMINSP',TOTREDNCO,NCON)
             CALL PUTREC(20, 'JOBARC', 'UNIQUEDF', TOTREDNCO, 
      &                  I_UNIQUE)
 C
@@ -570,15 +602,13 @@ C
          CALL PUTREC(20,'JOBARC', 'GMATRIX ', IINTFP*LENGTH_BGMAT,
      &               dRICHeap(z_GMat))
 C
-C Copy the intial values of the RIC to R array. Before that we need 
-C mark the plus-minus pairs.
-C        
-         IF (IFLAGS(60).EQ. 2) THEN
-            CALL GETREC(20,'JOBARC','PLSMINSP',TOTREDNCO,NCON)
-            DO ICOORD = 1, TOTREDNCO
-               IF (NCON(ICOORD).EQ.1) REDUNCO(ICOORD) = -REDUNCO(ICOORD)
-            END DO
-         END IF
+C Finite difference check of the B-matrix (only if RIC_FDCHECK exists)
+C
+         CALL RIC_FDCHECK(Q, dRICHeap(z_BMat), TOTREDNCO, NATOMS,
+     &                    IATNUM)
+C
+C Copy the intial values of the RIC to R array (there are no
+C plus-minus pairs to mark any more, see above).
 C
          CALL DCOPY(TOTREDNCO, REDUNCO, 1, R, 1)
          NXM6 = TOTREDNCO

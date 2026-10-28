@@ -14,7 +14,7 @@ c we should create a small function call integral and
 c move all the calls to integral packages outside. 
 
       if (.not.direct) call runit(integral_package)
-      call runit('xvmol2ja')
+      if (.not.erd_ints) call runit('xvmol2ja')
       If (iflags(h_IFLAGS_xfield).NE.0 .OR.
      &    iflags(h_IFLAGS_yfield).NE.0 .OR.
      &    iflags(h_IFLAGS_zfield).NE.0 ) call runit('xvprops')

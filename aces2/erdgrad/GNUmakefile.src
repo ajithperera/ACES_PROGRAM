@@ -1,0 +1,238 @@
+#-D_NONO_SKIP will do the original transformation
+#-D_READ_ONLY do the new transformation but built on old structure
+#-D_2HOT is new transformation on the new structure.
+#
+#DEFINES_EXTRA += -D_READ_ONLY -D_DEBUG_LVL0# -D_DEBUG_LVLM1 -D_ASSERT
+#DEFINES_EXTRA += -D_DEBUG_LVLM1 -D_DEBUG_LVL0 -D_NONOSKIP   -D_ASSERT
+#DEFINES_EXTRA += -D_2HOT -D_ASSERT #-D_DEBUG_LVL0 #-D_DEBUG_LVLM1 -D_DEBUG_LVL0  -D_DEBUG_LVLM2
+
+#DEFINES_EXTRA +=  -D_ASSERT -D_DOUG_KROLL -D_DPOCC -D_DEBUG_LVL0 #-D_RCC #-D_OLDECP #-D_DEBUG_LVLM1 # -D_DOUG_KROLL #-D_DEBUG -D_IMPORT_CORR_ORBS -D_DEBUG_LVL0# -D_2ND_ORD_PROPS  -D_DEBUG 
+DEFINES_EXTRA = -D_ASSERT -D_DOUG_KROLL -D_TDENS -D_MKLST -D_GETPTS -D_DPOCC -D_RCC -D_DEBUG_LVL0  #-D_NO_NRML_ORD #-D_HF_ONLY #-D_SAVE_GAMMA -D_TAILORED #-D_USE_CFOUR #-D_SCALE_IJAB
+ 
+OPTIMIZE=1
+DEBUG=0
+64BIT=1
+INCDIRS= ../include ../include/mpi ./include  ../intgrt/include/ ../sbtools/include
+MKL_GRP:= -Bstatic -lmkl_intel_ilp64 -lmkl_lapack95_ilp64 -lmkl_sequential -lmkl_core -Bdynamic
+
+# 2026-08-04: this tree's whole point is to be linkable into a shared object
+# (aces2py.so, via acespy_build/build.sh), but a plain `gmake` was compiling
+# everything WITHOUT -fPIC -- confirmed by the link step failing across ~15
+# unrelated libraries with "relocation ... can not be used when making a
+# shared object; recompile with -fPIC". Add it tree-wide here so every
+# object file this build produces is actually position-independent.
+# IMPORTANT: FFLAGS_EXTRA defaults to `${F9XFLAGS_EXTRA}` (one-directional --
+# set via F9XFLAGS_EXTRA, not FFLAGS_EXTRA directly, or free-form .f90/.F90
+# files (blockdave, liboo, pccd's newer routines) never see the flag even
+# though fixed-form .f/.F files do. First attempt used FFLAGS_EXTRA alone and
+# left exactly those 3 libraries un-PIC'd -- confirmed by the relocation
+# errors surviving a full rebuild otherwise dominated by -fPIC.
+F9XFLAGS_EXTRA += -fPIC
+CFLAGS_EXTRA += -fPIC
+
+# 2026-08-04, inherited from acesii_build_pic's own GNUmakefile.src via the
+# subtree merge: that comment (and these paths) were self-referential for
+# THAT tree ("this tree is pyaces's OWN independent -fPIC build ... each
+# must build+install fully standalone"). Copied verbatim here they instead
+# pointed ACES_PROGRAM/aces2 AT acesii_build_pic's install dirs, making this
+# tree parasitic on the other one instead of standalone. 2026-08-10: repointed
+# at this tree's own aces2/bin (bin: ~/Develop/bin since 2026-10-19, below), aces2/lib so ACES_PROGRAM builds+installs
+# fully within itself -- do not point these back at acesii_build_pic again.
+# 2026-10-21: no absolute paths. Binaries and libraries install into this
+# checkout's own aces2/bin and aces2/lib, wherever it was cloned. Per-site
+# settings go in the untracked Makefiles/local.mk (see local.mk.example),
+# e.g. DIR_INSTBIN := $(HOME)/Develop/bin for the development install
+# first on PATH. The command line still overrides both (`gmake
+# DIR_INSTBIN=... DIR_INSTLIB=... all install`, as the CMake superbuild
+# does); LDFLAGS_NUMLIBS takes its -L from DIR_INSTLIB.
+ACES2_ROOT := $(abspath $(dir $(realpath GNUmakefile.src))/..)
+DIR_INSTBIN := ${ACES2_ROOT}/bin
+DIR_INSTLIB := ${ACES2_ROOT}/lib
+-include ${ACES2_ROOT}/Makefiles/local.mk
+# GNUmakefile skips the install (silently) when these do not exist yet,
+# as in a fresh clone.
+$(shell mkdir -p ${DIR_INSTBIN} ${DIR_INSTLIB})
+DIR_SRCLIB  := ${DIR_INSTLIB}
+
+LDFLAGS_NUMLIBS:= -L$(MKLROOT)/lib/intel64  -Wl,--start-group $(MKL_GRP) -Wl,--end-group -pthread -L${DIR_INSTLIB} -llb -llinpack
+
+###################################
+## AME and ASL specific settings ##
+###################################
+
+ifeq (${CURR},asv)
+   LIST_DEF_LIBS :=
+   ACES_LINK_LISTS :=
+   LD := $(filter-out -c,${CC})
+   LDFLAGS := ${CFLAGS}
+   LDFLAGS_EXTRA := ../joda/asv_ctl.o
+   LDFLAGS_NUMLIBS :=
+endif
+
+# 2026-07-17, joda only: found while debugging a SIGSEGV in the H2 SCF/RHF
+# GEOM_OPT=PARTIAL reference job. ifx -O2 -i8 lowers a block of ~17 sequential
+# scalar copies from COMMON /FLAGS/ into COMMON /OPTCTL/ (IPrnt = iFlags(46),
+# etc., in mkerdoed.F) into an aligned SSE `movaps` struct-copy, but the linked
+# commons land only 8-byte aligned at runtime, so the aligned SIMD load faults.
+# -no-vec and -O1 do NOT suppress this (confirmed empirically); only -O0 does.
+# Rest of joda stays at production -O2 -- this routine runs once per geometry
+# point and is not performance-sensitive.
+# 2026-08-04: mkvmol.f has the IDENTICAL 17-scalar COMMON /FLAGS/ ->
+# COMMON /OPTCTL/ copy block as mkerdoed.F above (same variable names, same
+# order, IPrnt=iFlags(46) through IDFGHI=iFlags(62)) -- found in
+# ~/Develop/ACESII_build after this tree's own copy of GNUmakefile.src had
+# already diverged (this file predates that discovery), causing a universal
+# SIGSEGV on every single ACES2 job there until fixed. Applying the same
+# override here proactively rather than waiting to rediscover it.
+ifeq (${CURR},joda)
+   mkerdoed.o: compile_f += -O0
+   mkvmol.o: compile_f += -O0
+endif
+
+# 2026-07-18, oed only: found while bisecting the overlap/NAI-derivative-integral
+# discrepancy vs ACES III. oed__ovl_prepare_ctr.f/oed__nai_prepare_ctr.f copy the
+# NIJ exponential-prefactor array RHO into RHOAB, which the routine's own header
+# comment documents can alias RHO in memory (same underlying WORK/ZCORE block) --
+# safe only if copied element-by-element in reverse (N=NIJ,1,-1). At -O2, ifx's
+# loop-idiom recognition matches this reverse loop as a plain array-range copy
+# (regardless of iteration direction) and lowers it to a memcpy-family call,
+# which assumes non-overlapping memory -- silently corrupting data whenever RHO
+# and RHOAB really do alias at the call site. -no-vec/-no-fma/-fp-model precise/
+# -no-ansi-alias do NOT suppress this (confirmed empirically); only dropping to
+# -O1 (or -O0) does. oed__kin_prepare_ctr.o has the identical vulnerable pattern
+# but wasn't observed to misbehave in the cases tested here -- included
+# defensively since it's the same latent hazard. Rest of oed stays at -O2.
+ifeq (${CURR},oed)
+   oed__ovl_prepare_ctr.o: compile_f += -O1
+   oed__nai_prepare_ctr.o: compile_f += -O1
+   oed__kin_prepare_ctr.o: compile_f += -O1
+endif
+
+# 2026-07-19, libr only: found while bisecting the TSTOPS-on-water symmetry
+# failure. UNITRY calls MODMATMUL(rot,TRNMAT,TRNMAT,3) -- the same actual array
+# aliased into both the B and C dummy arguments, to transform TRNMAT in place
+# (used by GENDIH to build the second mirror-plane matrix for even-order point
+# groups, e.g. C2v's sigma-v'). MODMATMUL's own read-into-SCRATCH-then-write
+# design is provably alias-safe at the source level, but ifx -O2 miscompiles it
+# anyway under this self-aliased call, producing a non-orthogonal matrix. Only
+# -O0 was tested/confirmed to suppress this. Rest of libr stays at production
+# -O2 -- MODMATMUL is a small utility routine, not a hot loop.
+ifeq (${CURR},libr)
+   modmatmul.o: compile_f += -O0
+   dodiis.o: compile_f += -O0
+endif
+
+# 2026-08-09, libr only: found while chasing why all 6 remaining 124*.fno
+# (FNO virtual-space truncation) fast-suite cases plateaued at a ~5.7e-6
+# CCSD residual and never converged, on the modern ifx-built xaces2, while
+# BOTH an independent classic-toolchain build (/apps/shared/bartlett/
+# ACESII-2.14.0, ifort-era) and a from-scratch checksum-diff of intermediate
+# quantities pointed at the symmetry-expansion routines (SYMEXP family) as
+# the point of divergence. Compiling all 6 symexp*.o at -O0 (no other
+# change) made every previously-plateauing 124*.fno case converge cleanly
+# and match archive TOTENERG to full precision -- same ifx -O2
+# miscompilation bug class as mkerdoed.F/mkvmol.f/oed__*_prepare_ctr.f/
+# modmatmul.o above (5th confirmed instance in this codebase). Not yet
+# narrowed to which specific symexp*.f file(s) trigger it individually --
+# all 6 pinned at -O0 together as the safe, verified-working set. Rest of
+# libr stays at production -O2.
+ifeq (${CURR},libr)
+   symexp.o: compile_f += -O0
+   symexp2.o: compile_f += -O0
+   symexp3.o: compile_f += -O0
+   symexp4.o: compile_f += -O0
+   symexp5.o: compile_f += -O0
+   symexp6.o: compile_f += -O0
+endif
+
+# 2026-08-09, same ifx -O2 SYMEXP miscompilation as libr's own block above --
+# these are per-module LOCAL copies of the same symmetry-expansion routine
+# (legacy pattern in this codebase, matches TSPABCI/CHECK_T2/INCOR elsewhere
+# already documented as multiply-duplicated-per-module), not aliases of
+# libr's copy, so each needs its own override. Applied proactively to every
+# other copy found in the tree (excluding disabled .skip module dirs) rather
+# than waiting for each to surface as its own bug report.
+ifeq (${CURR},lcct)
+   symexp5.o: compile_f += -O0
+endif
+ifeq (${CURR},librt3)
+   symexpt3.o: compile_f += -O0
+endif
+ifeq (${CURR},pccd)
+   pccd_symexp.o: compile_f += -O0
+endif
+ifeq (${CURR},vcc5t)
+   symexpt3.o: compile_f += -O0
+endif
+ifeq (${CURR},vcceh)
+   symexp5.o: compile_f += -O0
+endif
+ifeq (${CURR},vee)
+   symexp5.o: compile_f += -O0
+endif
+
+# 2026-08-13, ringcc only: found while debugging why the ring-CCD T2-amplitude
+# DIIS iteration converges to the WRONG answer for H2O/cc-pVDZ/RHF/DRCCD
+# (SYMMETRY=ON) -- the T2=0 zeroth-iteration estimate already matched the
+# archive/reference-binary answer (-0.231259763876 a.u.), but every
+# subsequent DIIS-extrapolated iteration moved AWAY from it, converging
+# instead to -0.235769503949. `rcc_dodiis0.f` is ringcc's own LOCAL copy of
+# the DIIS extrapolation routine -- same duplicated-per-module pattern as
+# SYMEXP above -- and its `libr/dodiis.o` twin already has a confirmed
+# -O0 override (2026-07-19 entry above) that this copy never inherited.
+# Compiling rcc_dodiis0.o at -O0 (no other change) reproduces the
+# reference-binary iteration table EXACTLY (iteration 0 through the
+# converged 16th iteration, matching to 8+ decimals) -- 6th confirmed
+# instance of this ifx -O2 miscompilation bug class in this codebase.
+ifeq (${CURR},ringcc)
+   rcc_dodiis0.o: compile_f += -O0
+endif
+
+# 2026-08-13, applied proactively to every other local dodiis/dodiis0 copy
+# found in the tree (`find aces2 -iname '*dodiis*'`), same rationale as the
+# SYMEXP family's own proactive rollout above -- DIIS is the exact same
+# per-iteration amplitude-extrapolation mechanism in every one of these
+# modules, so there is no reason to expect ifx treats any of them
+# differently, and re-deriving each one via its own convergence-corruption
+# bug report first would just be paying the same discovery cost N more
+# times. Not each individually re-verified against an archive/reference
+# run the way rcc_dodiis0.o above was -- if any of these modules' own fast-
+# suite cases regress, check here first before assuming a different cause.
+ifeq (${CURR},lhbar)
+   dodiis0_l.o: compile_f += -O0
+endif
+ifeq (${CURR},lambda)
+   dodiis0.o: compile_f += -O0
+endif
+ifeq (${CURR},oombpt2)
+   oombpt_dodiis.o: compile_f += -O0
+endif
+ifeq (${CURR},pccd)
+   pccd_dodiiso.o: compile_f += -O0
+   pccd_dodiis.o: compile_f += -O0
+endif
+ifeq (${CURR},vcc)
+   dodiis0.o: compile_f += -O0
+endif
+
+
+
+# 2026-10-21: Fortran module order. The build compiles the f90 files of a
+# directory in name order (only mod-*.f90 files go first), so a file that
+# USEs a module defined in a later file fails in a fresh clone ("Error in
+# opening the compiled module file"); old trees hid it with leftover .mod
+# files. Only alice_nwchem and get_acesmo have such files (scanned 10/2026).
+# These are the first plain rules in this file, which GNUmakefile includes
+# before its `all`, hence the explicit default goal.
+.DEFAULT_GOAL := all
+ifeq (${CURR},alice_nwchem)
+   alice_nwchem.o: job.o
+   job.o: aovec.o civec.o get_aces2.o nwchem_info.o movec.o print.o
+   aovec.o: function.o get_aces2.o print.o
+   civec.o civec2.o get_aces2.o: print.o
+   movec.o nwchem_info.o: function.o
+   movec.o: print.o
+endif
+ifeq (${CURR},get_acesmo)
+   main.o: movec.o nwchem_info.o
+endif

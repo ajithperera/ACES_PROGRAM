@@ -218,6 +218,7 @@ C
 
 
 
+
 c machsp.com : begin
 
 c This data is used to measure byte-lengths and integer ratios of variables.
@@ -436,6 +437,7 @@ C
 
       CALL PCCD_SETLST(WORK(INEXT),MAXCOR,IUHF,"L")
       CALL PCCD_INIT(WORK(INEXT),MAXCOR,IUHF,"L")
+      IF (PCCD) CALL PCCD_FCMASK(WORK(INEXT),MAXCOR,146)
       CALL PCCD_RNABIJ(WORK(INEXT),MAXCOR,IUHF,'L')
 
       IF (LCCD) THEN
@@ -497,6 +499,7 @@ C
 C Denominator weigh the T2 increments. 
 C
       IF (PCCD) CALL PCCD_RESET(WORK(INEXT),MAXCOR,IUHF,63)
+      IF (PCCD) CALL PCCD_FCMASK(WORK(INEXT),MAXCOR,63)
       CALL PCCD_NEWT2(WORK(INEXT),MAXCOR,IUHF)
 
 C

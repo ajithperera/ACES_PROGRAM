@@ -217,6 +217,22 @@ c#define _DIMARGS 3
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       program main
       implicit none
 
@@ -276,13 +292,13 @@ c ----------------------------------------------------------------------
          print *, 'molden'
 c         print *, 'gennbo'
          print *, 'hyperchem'
-         print *, 'extrap (energy|gradient)'
          print *, 'statthermo'
          print *, 'parfd (update|updump|dump|load <file>)'
          print *, 'jarec datatype RECNAME dimension'
          print *, 'jareq datatype RECNAME dimension (the quiet version)'
          print *, 'jasum'
          print *, 'xyz'
+         print *, 'symadapt'
          print *, 'iosum'
          print *, 'clrdirty'
          print *, 'zerorec RECNAME [ RECNAME [ RECNAME [ ... ]]]'
@@ -360,6 +376,15 @@ c These modules require heap space, but do not require lists.
          print *, '@MAIN: unable to allocate at least ',
      &            1000000,' integers of memory'
          call aces_exit(1)
+      end if
+
+c ACES III: symmetry labels for the C1 SCF orbitals and the excited
+c state natural orbitals of an xaces3 run (xaces3 runs this at the end
+c of the job).
+      if (module(1:9).eq.'symadapt ') then
+         call a3sa_v2ja(icore(i0), icrsiz)
+         call a3_symadapt_main(icore(i0), icrsiz)
+         goto 9998
       end if
 
       if (module(1:5).eq.'test ') then
@@ -455,12 +480,6 @@ c These modules require lists.
          call aces_io_remove(53,'DERINT')
          call aces_io_remove(54,'DERGAM')
          print *, '@A2PROC: Successfully removed list files.'
-         goto 9997
-      end if
-
-      if (module(1:7).eq.'extrap ') then
-          call aces_init_chemsys
-         call extrap_main(args, dimargs,.true.)
          goto 9997
       end if
 

@@ -285,13 +285,16 @@ c     logical flags
      &        bTDCalc, DoABCD, DoABCI, ACES2, bMN_A3, DoQRHF, bSTEOM,
      &        EOM, bGeomOpt, bTDA, bOpenShell
       logical bOpened, bTmp, bDone, bDelLastChar, bHaveKeys, bVerbose
-      logical bAutoCart, NO_AGRAD, Vibron_on
+      logical bAutoCart, NO_AGRAD, bACES3, bInput(600)
+      character*16 szArg
+      double precision dTmp
 c     character constants
       character*1 czPercent, czAsterisk, czHash, czSpace, czFirstNLChar
       character*1 czTab
 c throwing implicit ints together
       integer iLength, iLine, iLines, ipt, irecal, iSpin, iUHF,
-     &        nIrr, nIrrps, ndrgeo,i_havegeom, i_length, iversion
+     &        nIrr, nIrrps, ndrgeo,i_havegeom, i_length, iversion,
+     &        iOptSymOf
 c     statistics for value tokens and line processing
       character*(linelen)  wrk, wrk2, szTmp
       character*(DataSize) szData
@@ -309,6 +312,22 @@ c pseudo-registers (one-time temporary integers)
 c COMMON BLOCKS
       INTEGER        NX,NXM6,IARCH,NCYCLE,NUNIQUE,NOPT
       COMMON /USINT/ NX,NXM6,IARCH,NCYCLE,NUNIQUE,NOPT
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -912,6 +931,9 @@ c   o print the ASV registration header
 c   o initialize flags to default values
       call asv_update_kv(achar(0),iASV,wrk,0)
       bHaveKeys = .false.
+      do i = 1, 600
+         bInput(i) = .false.
+      end do
 
 c   o loop over the number of lines
       do iLine = 1, iLines
@@ -1027,6 +1049,7 @@ c               o process the boolean and point to the next key token
 
 c         o What do we do if the ASV is not recognized: die or skip?
             if (iASV.eq.0) call errex
+            bInput(iASV) = .true.
             bHaveKeys = .true.
 c            if (iASV.eq.0) goto 101
 
@@ -1058,6 +1081,21 @@ c         o BASIS
             end if
 
 c YAU - add a conditional for SUBGROUP that sets nIrrps
+
+c         o ACES III: F12 exponent and polarizability frequencies are
+c           passed to xaces3 as JOBARC records.
+            if (iASV.eq.296.or.
+     &          iASV.eq.297.or.
+     &          iASV.eq.298) then
+               read(szData(1:ValueSize),*) dTmp
+               if (iASV.eq.296)
+     &            call putrec(1,'JOBARC','F12GAMMA',iintfp,dTmp)
+               if (iASV.eq.297)
+     &            call putrec(1,'JOBARC','FREQ    ',iintfp,dTmp)
+               if (iASV.eq.298)
+     &            call putrec(1,'JOBARC','IMFREQ  ',iintfp,dTmp)
+               goto 101
+            end if
 
 c         o OCCUPATION
             if (iASV.eq.17) then
@@ -1285,7 +1323,7 @@ c   o convert CALC aliases
             call asv_update_kv('CALC=CCSDT'//achar(0),iASV,szData,0)
             call asv_update_kv('KUCHARSKI'//achar(0),iASV,szData,0)
          else
-            print *, '@GTFLGS: logic error at line ',979
+            print *, '@GTFLGS: logic error at line ',1001
             call errex
          end if
       end if
@@ -1427,6 +1465,12 @@ c   o vmol cannot do direct integrals
       if (ioppar(56).eq.1.and.
      &    ioppar(254   ).eq.1     ) then
          print *, '@GTFLGS: vmol cannot calculate integrals directly'
+         call errex
+      end if
+      if (ioppar(56).eq.6.and.
+     &    ioppar(254   ).eq.1     ) then
+         print *, '@GTFLGS: xerdints cannot calculate integrals ',
+     &            'directly'
          call errex
       end if
 
@@ -1598,17 +1642,99 @@ c Turn off symmetry if subgroup=C1.
       if (ioppar(85).eq.1) then
          call asv_update_kv('!sym'//achar(0),iASV,szData,0)
       end if
+C
+C ACES III runs only in C1: xaces3 runs "xjoda aces3", which sets
+C SYMMETRY=OFF (C1, in the standard orientation of the full point
+C group, so that xa2proc symadapt can label the orbitals at the end),
+C or SYMMETRY=NONE (input orientation) when the input asks for NONE or
+C NOREORI=ON, and for A-, G- and D-tensors. It also sets the defaults xaces3 expects. 10/2026.
+C
+      bACES3 = .false.
+      if (command_argument_count() .ge. 1) then
+         call get_command_argument(1, szArg)
+         bACES3 = (szArg .eq. 'aces3')
+      end if
+      if (bACES3) then
+C        A-, G- and D-tensors (PROPS 15-17) keep the input frame: the
+C        gauge origin is the coordinate origin.
+         if ((bInput(60) .and.
+     &        ioppar(60).eq.0) .or.
+     &       (bInput(225) .and.
+     &        ioppar(225).eq.1) .or.
+     &       (ioppar(18).ge.15 .and.
+     &        ioppar(18).le.17)) then
+            szTmp = 'SYMMETRY=NONE'//achar(0)
+         else
+            szTmp = 'SYMMETRY=OFF'//achar(0)
+         end if
+         call asv_update_kv(szTmp,iASV,szData,0)
+         if (ioppar(20).eq.0) then
+            szTmp = 'scf_exporde=8'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+         if (ioppar(40).eq.0) then
+            szTmp = 'scf_expstar=2'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+C        ACES III defaults where they differ from ACES II: CC_MAXCYC=0
+C        (xaces3 then allows 100 iterations; it also sizes iteration
+C        arrays by it), EOM_MAXCYC=30 (the Davidson subspace size), and
+C        with SYMMETRY=NONE the input orientation kept unless
+C        frequencies are computed.
+         if (.not.bInput(7)) then
+            szTmp = 'cc_maxcyc=0'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+         if (.not.bInput(205)) then
+            szTmp = 'eom_maxcyc=30'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+C        F12 (STGF12=ON) runs in the uncontracted basis, as with the
+C        joda that ACES III used to carry.
+         if (ioppar(295).eq.1 .and.
+     &       .not.bInput(268)) then
+            szTmp = 'UNCONTRACT=ON'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+         if (ioppar(60).eq.0 .and.
+     &       ioppar(225).ge.2 .and.
+     &       ioppar(54).lt.1) then
+            szTmp = 'NOREORI=ON'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
+      end if
       if ((ioppar(105) .ge. 2)) Then
-         szTmp = 'SYMMETRY=NONE'//achar(0)
-         if (ioppar(60).ne.0) then
-             call asv_update_kv(szTmp,iASV,szData,0)
-         Endif
+C
+C Cartesian and RIC optimizations used to force SYMMETRY=NONE. They
+C now run the electronic structure in the point group of the
+C structure; the optimizer itself does not use symmetry (all RICs are
+C treated as unique) and the point group is preserved by symmetrizing
+C each Cartesian step. 10/2026.
+C
+C A C1 starting structure is optimized with SYMMETRY=NONE as before;
+C FETCHZ (OPT_C1_NOSYM) leaves the record OPTSYMOF for the later runs.
+C
+C Constrained optimizations also keep SYMMETRY=NONE: the Cartesian
+C constraints refer to the input orientation, and symmetrizing a step
+C would move constrained coordinates unless the constraints are
+C themselves symmetric.
+C
+         iOptSymOf = 0
+         Call GetRec(0, 'JOBARC', 'OPTSYMOF', i_length, iOptSymOf)
+         if (i_length .gt. 0)
+     &      Call GetRec(-1, 'JOBARC', 'OPTSYMOF', 1, iOptSymOf)
+         if (ioppar(269) .eq. 3) iOptSymOf = 1
+         if (iOptSymOf .eq. 1 .and. ioppar(60).ne.0) then
+            szTmp = 'SYMMETRY=NONE'//achar(0)
+            call asv_update_kv(szTmp,iASV,szData,0)
+         end if
 C
 C For geo. opt with FULL/RIC and SYM=NONE turn on the NOREORI
 C if it is not given as an input. Ajith Perera, 12/08
-C 
+C
           if (ioppar(225) .eq. 2 .and. .not.
-     &        ioppar(54).ge.1 ) then
+     &        ioppar(54).ge.1 .and.
+     &        ioppar(60).eq.0) then
              szTmp = 'NOREORI=ON'//achar(0)
              call asv_update_kv(szTmp,iASV,szData,0)
           endif
@@ -1631,7 +1757,7 @@ C except when dummy atoms are present but there is no need of this).
 C Ajith Perera 02/2012.
 C
       if ((ioppar(68).eq.0) .and.
-     &   (ioppar(60).eq.0)) then
+     &   (ioppar(60).eq.0) .and. .not.bACES3) then
           szTmp = 'SYMMETRY=ON'//achar(0)
           call asv_update_kv(szTmp,iASV,szData,0)
       endif
@@ -1878,22 +2004,6 @@ CSSS            end if
             end if
             call asv_update_kv('abcdfull'//achar(0),iASV,szData,0)
          end if
-Cmn
-C Turn on the finite diffences for VIBRON runs and change the
-C default step size from 25 to 50. 03/06, Ajith Perera
-Cmn
-         vibron_on= (ioppar(256).eq.1) .or.
-     &              (ioppar(258).eq.1) .or.
-     &              (ioppar(265).eq.1) .or.
-     &              (ioppar(260).eq.1)
-         if (vibron_on) Then
-             szTmp = 'grad_calc=numerical'//achar(0)
-             call asv_update_kv(szTmp,iASV,szData,0)
-            if (ioppar(57).eq.0) then
-               szTmp = 'fd_stepsize=-25'//achar(0)
-               call asv_update_kv(szTmp,iASV,szData,0)
-            endif
-         end if
 c     else if (ACES2) then
       else
          If (bTmp) then
@@ -1902,23 +2012,6 @@ c     else if (ACES2) then
                 call asv_update_kv(szTmp,iASV,szData,0)
             end if
          endif 
-Cmn
-C Turn on the finite diffences for VIBRON runs and change the
-C default step size from 25 to 50. 03/06, Ajith Perera
-Cmn
-cmn         vibron_on= (ioppar(265).eq.1)
-         vibron_on= (ioppar(256).eq.1) .or.
-     &              (ioppar(258).eq.1) .or.
-     &              (ioppar(265).eq.1) .or.
-     &              (ioppar(260).eq.1)
-         if (vibron_on) Then
-             szTmp = 'grad_calc=numerical'//achar(0)
-             call asv_update_kv(szTmp,iASV,szData,0)
-            if (ioppar(57).eq.0) then
-             szTmp = 'fd_stepsize=-25'//achar(0)
-             call asv_update_kv(szTmp,iASV,szData,0)
-          endif
-         end if
 c     end if (bMN_A3)
       end if
 
@@ -2152,6 +2245,26 @@ c   o If CC calc, then set MAXCYC and turn on RLE with order equal to 5
 c   o PROPERTY CALCULATION FOR CORRELATED CALCULATION
       Print*, "First order props and grad flags @enter:",
      &         ioppar(18),ioppar(238) 
+C
+C ACES III property names: POLAR is EOM_NLO and A-TEN is FIRST_ORDER;
+C A-, G- and D-tensors need an open-shell reference.
+C
+      if (ioppar(18).eq.14) then
+         szTmp = 'props=EOM_NLO'//achar(0)
+         call asv_update_kv(szTmp,iASV,szData,0)
+      endif
+      if (ioppar(18).eq.15) then
+         szTmp = 'props=FIRST_ORDER'//achar(0)
+         call asv_update_kv(szTmp,iASV,szData,0)
+      endif
+      if ((ioppar(18).ge.15 .and.
+     &     ioppar(18).le.17) .and.
+     &    (ioppar(11).eq.0 .or.
+     &     ioppar(29).eq.1)) then
+         print *, '@GTFLGS: A-, G- and D-tensors need an open-shell',
+     &            ' reference.'
+         call errex
+      endif
       if (ioppar(18).ge.1) then
          szTmp = 'deriv=first'//achar(0)
          call asv_update_kv(szTmp,iASV,szData,0)
@@ -2543,7 +2656,9 @@ c SG 3/11/96
 c  make sure that analytic gradients are available if requested
       if (ioppar(87   ).gt.0.and.
      &    ioppar(3).gt.0     ) then
-         if (ioppar(3).gt.1) then
+         if (ioppar(3).gt.1 .and. (.not.bACES3 .or.
+     &       ioppar(54).eq.1 .or.
+     &       ioppar(105).ne.0)) then
             print *, '@GTFLGS: Analytical frequencies are not',
      &               ' available for excited states.'
             call errex
@@ -2657,8 +2772,10 @@ C The best Hessian update that works for all is not known. I
 C find Bofill mixture of Powell and Murtagh-Sargent seems to
 C work better, 07/2013. Ajith Perera; not so sure anymore
 C for minima reverting back to BFGS for minima. April/2017.
+C The default is AUTO (6); 0 is NONE and used to be overwritten here,
+C so HESS_UPDATE=NONE could not be chosen. 10/2026.
 C
-         if (ioppar(107).eq.0) then
+         if (ioppar(107).eq.6) then
             if (ioppar(47).le.3) then
 CSSS; on 07/2013               ioppar(107) = 2
                ioppar(107) = 2
@@ -2691,33 +2808,6 @@ c
 c      o numerical gradients 
          if (ioppar(57).eq.0) then
             szTmp = 'fd_stepsize=25'//achar(0)
-            call asv_update_kv(szTmp,iASV,szData,0)
-         end if
-      else if (ioppar(256) .eq. 1) then
-c      o Calculate Vibronic model
-         if (ioppar(57).eq.0) then
-            szTmp = 'fd_stepsize=-25'//achar(0)
-            call asv_update_kv(szTmp,iASV,szData,0)
-         end if
-c
-      else if (ioppar(258) .eq. 1) then
-c      o Calculate Vibronic scan
-         if (ioppar(57).eq.0) then
-            szTmp = 'fd_stepsize=-25'//achar(0)
-            call asv_update_kv(szTmp,iASV,szData,0)
-         end if
-c
-      else if (ioppar(265) .eq. 1) then
-c      o Calculate Vibronic scan
-         if (ioppar(57).eq.0) then
-            szTmp = 'fd_stepsize=50'//achar(0)
-            call asv_update_kv(szTmp,iASV,szData,0)
-         end if
-c
-      else if (ioppar(260) .eq. 1) then
-c      o Calculate Vibronic scan
-         if (ioppar(57).eq.0) then
-            szTmp = 'fd_stepsize=-25'//achar(0)
             call asv_update_kv(szTmp,iASV,szData,0)
          end if
 c     end if (bGeomOpt)
@@ -3124,7 +3214,7 @@ c  a RHF reference.  If not, then bomb out!
 cJDW 3/31/94
 c Stop NMR calculations (apart from CCSDeH) which cannot use sphericals.
 c Also, always stop if PROP=TDHF has been specified.
-      if (ioppar(62).eq. 1.and.
+      if (ioppar(62).eq. 1.and. .not.bACES3 .and.
      &    ioppar(18    ).ne. 7.and.
      &    ioppar(18    ).ne. 8.and.
      &    ioppar(18    ).ne. 9.and.
@@ -3145,7 +3235,8 @@ c Also, always stop if PROP=TDHF has been specified.
 
 c   o SYM=FULL
       if (ioppar(60).eq.3) then
-         if (ioppar(56).eq.1) then
+         if (ioppar(56).eq.1.or.
+     &       ioppar(56).eq.6) then
             print *, '@GTFLGS: VMOL does not understand high symmetry'
             call errex
          end if
@@ -3237,7 +3328,25 @@ C
      &    ioppar(2).eq.46   ) Then 
           szTmp = 'oo_method=full-nr'//achar(0)
           call asv_update_kv(szTmp,iASV,szData,0)
-      Endif 
+      Endif
+C
+C Orbital-optimized pCCD family (PROGRAM=PCCD, PCCD_REF=OPTIMIZED):
+C RFO is the only orbital optimizer that converges (10/2026) and is the
+C default; BB-SD, BFGS, FULL-NR, AMSGRAD and ROTGRAD are retired.
+C
+      If (ioppar(232).eq.4 .and.
+     &    ioppar(279).eq.5) Then
+          If (ioppar(278).eq.0) Then
+              szTmp = 'oo_method=rfo'//achar(0)
+              call asv_update_kv(szTmp,iASV,szData,0)
+          Else If (ioppar(278).ne.6) Then
+              Write(6,"(a,a)") " @-GTFLGS: PCCD_REF=OPTIMIZED supports",
+     &                         " only OO_METHOD=RFO (the default)."
+              Write(6,"(a,a)") " BB-SD, BFGS, FULL-NR, AMSGRAD and",
+     &                         " ROTGRAD have been retired."
+              Call Errex
+          Endif
+      Endif
 
 c   o NOREORI and finite difference vibrational frequency calculations.
 c

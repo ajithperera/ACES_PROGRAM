@@ -343,8 +343,6 @@
 #define h_IOPPAR_init_hessian	108
 #define h_IFLAGS2_init_hessian	8
 
-#define h_IOPPAR_extrap		109
-#define h_IFLAGS2_extrap	9
 
 #define h_IOPPAR_ea_calc	201
 #define h_IFLAGS2_ea_calc	101
@@ -513,20 +511,10 @@
 #define h_IOPPAR_single_store	255
 #define h_IFLAGS2_single_store	155
 
-#define h_IOPPAR_prep_vibron    256
-#define h_IFLAGS2_prep_vibron   156
 
-#define h_IOPPAR_grid_vibron    257
-#define h_IFLAGS2_grid_vibron   157
 
-#define h_IOPPAR_scan_normal    258
-#define h_IFLAGS2_scan_normal   158
 
-#define h_IOPPAR_normal_curvy    259
-#define h_IFLAGS2_normal_curvy   159
 
-#define h_IOPPAR_geo_sample    260
-#define h_IFLAGS2_geo_sample   160
 
 #define h_IOPPAR_parteom    261
 #define h_IFLAGS2_parteom   161
@@ -540,8 +528,6 @@
 #define h_IOPPAR_auto_occ    264
 #define h_IFLAGS2_auto_occ   164
 
-#define h_IOPPAR_gen_quartic    265
-#define h_IFLAGS2_gen_quartic   165
 
 #define h_IOPPAR_oomp_cyc       266
 #define h_IFLAGS2_oomp_cyc	166
@@ -602,6 +588,52 @@
 
 #define h_IOPPAR_genrlizd_tdens    285
 #define h_IFLAGS2_genrlizd_tdens   185
+
+#define h_IOPPAR_ip_root_find    286
+#define h_IFLAGS2_ip_root_find   186
+
+/* ACES III keywords (xaces3 runs xjoda) */
+#define h_IOPPAR_lock_orbitals   287
+#define h_IFLAGS2_lock_orbitals  187
+
+#define h_IOPPAR_damp_end        288
+#define h_IFLAGS2_damp_end       188
+
+#define h_IOPPAR_ee_guess        289
+#define h_IFLAGS2_ee_guess       189
+
+#define h_IOPPAR_ee_denom        290
+#define h_IFLAGS2_ee_denom       190
+
+#define h_IOPPAR_cis_tol         291
+#define h_IFLAGS2_cis_tol        191
+
+#define h_IOPPAR_root_search     292
+#define h_IFLAGS2_root_search    192
+
+#define h_IOPPAR_select_vecs     293
+#define h_IFLAGS2_select_vecs    193
+
+#define h_IOPPAR_sub_space       294
+#define h_IFLAGS2_sub_space      194
+
+#define h_IOPPAR_stgf12          295
+#define h_IFLAGS2_stgf12         195
+
+#define h_IOPPAR_f12gamma        296
+#define h_IFLAGS2_f12gamma       196
+
+#define h_IOPPAR_pol_freq        297
+#define h_IFLAGS2_pol_freq       197
+
+#define h_IOPPAR_pol_freq_im     298
+#define h_IFLAGS2_pol_freq_im    198
+
+#define h_IOPPAR_spinorb_cc      299
+#define h_IFLAGS2_spinorb_cc     199
+
+#define h_IOPPAR_soc_roots       300
+#define h_IFLAGS2_soc_roots      200
 
 
 #endif /* _FLAGS_H_ */

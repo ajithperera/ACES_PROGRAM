@@ -200,7 +200,8 @@ C Return the eigenvalues in the diagonal.
       Double Precision EvecL(Ndim,Ndim)
       Double Precision Guess_vec(a1:a2,b1:b2)
       Double Precision Norm(Ndim)
-      Double Precision Dtmp,DtmpR,DtmpL,Ddot
+      Double Precision Dtmp,DtmpR,DtmpL,Ddot,Degtol
+      Parameter (Degtol = 1.0D-6)
 
 C Reorder the eigenvalues and vectors descending order
 
@@ -236,30 +237,36 @@ C      Write(6,"(a)") "The left-hand side"
 C      call output(EvecL,1,NDIM,1,NDim,Ndim,Ndim,1)
       Endif 
 #endif 
-C 
-C Normalized the Eigenvectors so that they are bi-orthonormal.
 C
-      Do i = 1, Ndim
-         Norm(i) = Ddot(Ndim, EvecR(1,i), 1, EvecL(1,i),1)
-         If (Dsqrt(Norm(i)) .lt. 1.0D-9) Then 
-             Write(6,"(a,a)") "@-Process_vecs: Division by a small",
-     +                      " number. Discontinuing."
-             Call abort_job()
-         Else
-             Norm(i) = 1.0D0/Dsqrt(Norm(i))
-         Endif 
-      Enddo 
+C Normalize the left eigenvectors to unit length; orthonormalize each
+C degenerate group (Gram-Schmidt). Only EvecL is used below, so it is
+C not scaled by 1/sqrt(<L|R>): within a degenerate group Dgeev's left
+C and right vectors are not paired and <L(i)|R(i)> can be negative,
+C which gave NaN guess vectors (see Process_vecs_r). Any combination of
+C degenerate eigenvectors is still an eigenvector.
 C
-#ifdef _DEBUG_LVL0
-      If(me.eq.0) Then
-      Write(6,"(a)") "<L|R>"
-      Write(6,"(6(1x,F10.5))") (Norm(i),i=1,Ndim)
-      Endif 
-#endif 
-C
-      Do i = 1, Ndim
-         Call Dscal(Ndim, Norm(i), EvecR(1,i), 1)
-         Call Dscal(Ndim, Norm(i), EvecL(1,i), 1)
+      Istart = 1
+      Do j = 2, Ndim+1
+         If (j .Le. Ndim) Then
+            Dtmp = Dabs(EigR(j)-EigR(Istart))
+            If (Dtmp .Le. Degtol*Dmax1(1.0D0,Dabs(EigR(Istart))))
+     +          Go To 10
+         Endif
+         Do k = Istart, j-1
+            Do l = Istart, k-1
+               Dtmp = Ddot(Ndim, EvecL(1,l), 1, EvecL(1,k), 1)
+               Call Daxpy(Ndim, -Dtmp, EvecL(1,l), 1, EvecL(1,k), 1)
+            Enddo
+            Dtmp = Dsqrt(Ddot(Ndim, EvecL(1,k), 1, EvecL(1,k), 1))
+            If (Dtmp .Lt. 1.0D-9) Then
+               Write(6,"(a,a)") "@-Process_vecs: linearly dependent",
+     +                          " degenerate eigenvectors."
+               Call abort_job()
+            Endif
+            Call Dscal(Ndim, 1.0D0/Dtmp, EvecL(1,k), 1)
+         Enddo
+         Istart = j
+ 10      Continue
       Enddo
 C
 C Form the initial Guess in appropriate array. We only use the first

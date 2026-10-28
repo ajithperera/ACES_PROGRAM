@@ -1,0 +1,84 @@
+=== Pilot check: negative-frequency folding fix ===
+g(w') = 1/(1+(w'/b)**2), b=1.5, Omega_c=1.0
+
+eps_m= -5.0000D-01   omega=  0.0000D+00
+  ground truth   (Re,Im) =   -3.75000000D-01  -1.82052909D-19
+  N=  8  one-term(Re,Im)=  -1.87500057D-01   1.96705064D-01   two-term(Re,Im)=  -3.75000115D-01   0.00000000D+00
+  N= 16  one-term(Re,Im)=  -1.87500000D-01   1.96705773D-01   two-term(Re,Im)=  -3.75000000D-01   0.00000000D+00
+  N= 24  one-term(Re,Im)=  -1.87500000D-01   1.96705773D-01   two-term(Re,Im)=  -3.75000000D-01   0.00000000D+00
+  N= 32  one-term(Re,Im)=  -1.87500000D-01   1.96705773D-01   two-term(Re,Im)=  -3.75000000D-01   0.00000000D+00
+  |two-term - exact| at N=32 =    9.83D-15   1.82D-19
+  |one-term - exact| at N=32 =    1.88D-01   1.97D-01
+
+eps_m= -5.0000D-01   omega=  3.0000D-01
+  ground truth   (Re,Im) =   -3.66748166D-01   5.50122249D-02
+  N=  8  one-term(Re,Im)=  -1.15417622D-01   1.99154268D-01   two-term(Re,Im)=  -3.66657053D-01   5.48803962D-02
+  N= 16  one-term(Re,Im)=  -1.15417536D-01   1.99153762D-01   two-term(Re,Im)=  -3.66748196D-01   5.50121967D-02
+  N= 24  one-term(Re,Im)=  -1.15417536D-01   1.99153762D-01   two-term(Re,Im)=  -3.66748166D-01   5.50122249D-02
+  N= 32  one-term(Re,Im)=  -1.15417536D-01   1.99153762D-01   two-term(Re,Im)=  -3.66748166D-01   5.50122249D-02
+  |two-term - exact| at N=32 =    5.55D-15   2.71D-15
+  |one-term - exact| at N=32 =    2.51D-01   1.44D-01
+
+eps_m= -5.0000D-01   omega=  7.5000D-01
+  ground truth   (Re,Im) =   -3.28767123D-01   1.23287671D-01
+  N=  8  one-term(Re,Im)=  -5.70659400D-02   1.64224698D-01   two-term(Re,Im)=  -3.26874926D-01   1.28194558D-01
+  N= 16  one-term(Re,Im)=  -5.70658190D-02   1.64224319D-01   two-term(Re,Im)=  -3.28788889D-01   1.23327184D-01
+  N= 24  one-term(Re,Im)=  -5.70658190D-02   1.64224319D-01   two-term(Re,Im)=  -3.28767500D-01   1.23287748D-01
+  N= 32  one-term(Re,Im)=  -5.70658190D-02   1.64224319D-01   two-term(Re,Im)=  -3.28767126D-01   1.23287669D-01
+  |two-term - exact| at N=32 =    2.57D-09   2.03D-09
+  |one-term - exact| at N=32 =    2.72D-01   4.09D-02
+
+eps_m=  3.0000D-01   omega=  0.0000D+00
+  ground truth   (Re,Im) =    4.16666667D-01  -1.20235451D-17
+  N=  8  one-term(Re,Im)=   2.08324700D-01   2.66823949D-01   two-term(Re,Im)=   4.16649400D-01   0.00000000D+00
+  N= 16  one-term(Re,Im)=   2.08333333D-01   2.66822916D-01   two-term(Re,Im)=   4.16666666D-01   0.00000000D+00
+  N= 24  one-term(Re,Im)=   2.08333333D-01   2.66822916D-01   two-term(Re,Im)=   4.16666667D-01   0.00000000D+00
+  N= 32  one-term(Re,Im)=   2.08333333D-01   2.66822916D-01   two-term(Re,Im)=   4.16666667D-01   0.00000000D+00
+  |two-term - exact| at N=32 =    1.35D-14   1.20D-17
+  |one-term - exact| at N=32 =    2.08D-01   2.67D-01
+
+eps_m=  3.0000D-01   omega=  3.0000D-01
+  ground truth   (Re,Im) =    4.05405405D-01   6.75675676D-02
+  N=  8  one-term(Re,Im)=   9.44746955D-02   2.43433605D-01   two-term(Re,Im)=   4.05054613D-01   6.95077532D-02
+  N= 16  one-term(Re,Im)=   9.44746502D-02   2.43433127D-01   two-term(Re,Im)=   4.05408977D-01   6.75720466D-02
+  N= 24  one-term(Re,Im)=   9.44746502D-02   2.43433127D-01   two-term(Re,Im)=   4.05405422D-01   6.75675683D-02
+  N= 32  one-term(Re,Im)=   9.44746502D-02   2.43433127D-01   two-term(Re,Im)=   4.05405405D-01   6.75675675D-02
+  |two-term - exact| at N=32 =    3.30D-11   3.47D-11
+  |one-term - exact| at N=32 =    3.11D-01   1.76D-01
+
+eps_m=  3.0000D-01   omega=  7.5000D-01
+  ground truth   (Re,Im) =    3.55029586D-01   1.47928994D-01
+  N=  8  one-term(Re,Im)=   3.82145101D-02   1.78400398D-01   two-term(Re,Im)=   3.67645492D-01   1.77591622D-01
+  N= 16  one-term(Re,Im)=   3.82144418D-02   1.78400019D-01   two-term(Re,Im)=   3.56285228D-01   1.47061977D-01
+  N= 24  one-term(Re,Im)=   3.82144418D-02   1.78400019D-01   two-term(Re,Im)=   3.54979167D-01   1.47876780D-01
+  N= 32  one-term(Re,Im)=   3.82144418D-02   1.78400019D-01   two-term(Re,Im)=   3.55027526D-01   1.47931770D-01
+  |two-term - exact| at N=32 =    2.06D-06   2.78D-06
+  |one-term - exact| at N=32 =    3.17D-01   3.05D-02
+
+eps_m= -2.0600D+01   omega=  0.0000D+00
+  ground truth   (Re,Im) =   -3.39366516D-02   5.54268279D-19
+  N=  8  one-term(Re,Im)=  -1.69456827D-02   2.20621225D-03   two-term(Re,Im)=  -3.38913654D-02   0.00000000D+00
+  N= 16  one-term(Re,Im)=  -1.69681486D-02   2.22265414D-03   two-term(Re,Im)=  -3.39362973D-02   0.00000000D+00
+  N= 24  one-term(Re,Im)=  -1.69683261D-02   2.22254086D-03   two-term(Re,Im)=  -3.39366523D-02   0.00000000D+00
+  N= 32  one-term(Re,Im)=  -1.69683258D-02   2.22253931D-03   two-term(Re,Im)=  -3.39366516D-02   0.00000000D+00
+  |two-term - exact| at N=32 =    2.34D-11   5.54D-19
+  |one-term - exact| at N=32 =    1.70D-02   2.22D-03
+
+eps_m= -2.0600D+01   omega=  3.0000D-01
+  ground truth   (Re,Im) =   -3.39303992D-02   4.60593654D-04
+  N=  8  one-term(Re,Im)=  -1.68906287D-02   2.43634849D-03   two-term(Re,Im)=  -3.38850641D-02   4.62256955D-04
+  N= 16  one-term(Re,Im)=  -1.69123324D-02   2.45196948D-03   two-term(Re,Im)=  -3.39300434D-02   4.60590373D-04
+  N= 24  one-term(Re,Im)=  -1.69124920D-02   2.45185774D-03   two-term(Re,Im)=  -3.39303998D-02   4.60593242D-04
+  N= 32  one-term(Re,Im)=  -1.69124916D-02   2.45185639D-03   two-term(Re,Im)=  -3.39303992D-02   4.60593651D-04
+  |two-term - exact| at N=32 =    2.35D-11   3.11D-12
+  |one-term - exact| at N=32 =    1.70D-02   1.99D-03
+
+eps_m= -2.0600D+01   omega=  7.5000D-01
+  ground truth   (Re,Im) =   -3.38976118D-02   1.15037144D-03
+  N=  8  one-term(Re,Im)=  -1.67964757D-02   2.77728383D-03   two-term(Re,Im)=  -3.38520194D-02   1.15452805D-03
+  N= 16  one-term(Re,Im)=  -1.68171184D-02   2.79172045D-03   two-term(Re,Im)=  -3.38972480D-02   1.15036329D-03
+  N= 24  one-term(Re,Im)=  -1.68172537D-02   2.79161145D-03   two-term(Re,Im)=  -3.38976124D-02   1.15037041D-03
+  N= 32  one-term(Re,Im)=  -1.68172532D-02   2.79161036D-03   two-term(Re,Im)=  -3.38976119D-02   1.15037143D-03
+  |two-term - exact| at N=32 =    2.41D-11   8.07D-12
+  |one-term - exact| at N=32 =    1.71D-02   1.64D-03
+

@@ -1,2 +1,13 @@
 build_logs/
 build_config.sh
+# vim swap files
+.*.sw[a-p]
+# configure outputs
+aces3/config.status
+aces3/config.log
+build/
+docs/_build/
+docs/reference/keywords.md
+__pycache__/
+docs/programmer/jobarc.md
+docs/user/aces3_jobflows.md

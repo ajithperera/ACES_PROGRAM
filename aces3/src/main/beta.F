@@ -474,6 +474,7 @@ c---------------------------------------------------------------------------
       call mpi_barrier(mpi_comm_world,mpierr)
       if (jodadone .ne. 0) then
          if (me .eq. 0) then
+            call run_symadapt()
             call prt_time('Program stop')
 
 c----------------------------------------------------------------------------
@@ -897,9 +898,9 @@ c          go to 333
 C
 C Add the DKH transformed integrals of a given DKH order. 
 C
-         Write(6,"(a,i4)") "iflags2(157);DKH===>", iflags2(157)
-         If (iflags2(157) .NE. 0) then
-             Idkh_order = iflags2(157)
+         Write(6,"(a,i4)") "iflags2(167);DKH===>", iflags2(167)
+         If (iflags2(167) .NE. 0) then
+             Idkh_order = iflags2(167)
              Write(6,"(a,i4,a)") " The DKH-1el ints. of order ",
      +                             idkh_order," is computed."
              Write(6,*)

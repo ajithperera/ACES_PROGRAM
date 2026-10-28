@@ -270,8 +270,8 @@ CSSS           CALL GETLST(ICORE(I010),1,NMSYTA,1,IRREP,LISTTB)
 CSSS           CALL SSCAL (NMSYTA*NMSYTA,TWO,ICORE(I020),1)
 CSSS           CALL SAXPY (NMSYTA*NMSYTA,ONEM,ICORE(I010),1,ICORE(I020),1)
         ELSE IF (IMULT .EQ.2) THEN
-           CALL GETLST(ICORE(I020),1,NMSYTA,1,IRREP,LISTTB)
-        ENDIF 
+           CALL GETLST(ICORE(I020),1,NMSYTB,1,IRREP,LISTTB)
+        ENDIF
         
 C        IF (IMULT .EQ. 2) CALL SSCAL (NMSYTA*NMSYTA,TWO,
 C     &                                ICORE(I020),1)
@@ -286,10 +286,15 @@ C in cntract for the singlet spin-adpated path.
         ELSEIF (IMULT .EQ.2) THEN
 C The triplet spin-adapted path. Also notice that minus sign in front
 C (by using C4 instead of -C4).
+C 2026-08-19: same copy/paste bug as ringcc/rcc_dwmbej.F's IMULT.EQ.2
+C branch -- this call was using the singlet-labeled DSSYTA/NMSYTA/
+C LISTTA sizes/list for what must be the triplet channel; fixed to the
+C TB-suffixed variables already computed above (line ~248/250) but
+C previously unused here. See SCRNC_DEBUG_LOG.md.
 
             CALL RCC_TRP_CNTRCT(ICORE(I000),ICORE(I010),ICORE(I020),
-     &                          DISSYQ,NUMSYQ,DSSYTA,NMSYTA,DSSYWA,
-     &                          NMSYWA,IRREP,LISTWA,LISTWB,LISTTA,
+     &                          DISSYQ,NUMSYQ,DSSYTB,NMSYTB,DSSYWA,
+     &                          NMSYWA,IRREP,LISTWA,LISTWB,LISTTB,
      &                         'WxT',ZILCH,-C4,1)
         ENDIF 
         NSIZE=DISSYQ*NUMSYQ

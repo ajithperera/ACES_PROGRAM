@@ -141,7 +141,7 @@ C
       Write(6,"(a)") " The coordinates of the current point"
       Write(6, "(3F17.13)") (Coords(i),i=1,3*Nreals)
 #endif
-       Call Runit("runaces2b")
+       Call Run_aces_point("runaces2b")
 C
        Call aces_ja_init
 C

@@ -109,9 +109,43 @@ C in AO basis. We process the p(1)q(1) integrals for a given pair
 C of X(2)X(2) C and lets designate them as Mu(pq).
 
       Irreprl     = 1
-      Npert_count = 0
 
       Call Scrnc_form_lrspn_cc_lists(Work,Maxcor,Iuhf,Nperts)
+
+C Dynamic (frequency-dependent) response, mirroring vcceh/secprp.F's
+C ITOP/FACT scheme exactly (2026-08-15): for a nonzero real frequency,
+C solve the perturbed-amplitude equations at +Freq and -Freq separately
+C (ITOP=2), saving the +Freq solution to list 375 (secprp's own
+C convention, see secprp.F lines 256-264) before the -Freq pass
+C overwrites list 373 in place. For the static case (no frequency file,
+C Freq=0) or an imaginary frequency, this collapses to a single solve
+C (ITOP=1) -- Freq=0 exactly reproduces the original static code path.
+C Lineqy/Plineqy already accept Freq/Realfreq as arguments (unchanged
+C here); this loop is what actually varies Freq and combines the two
+C solves, which scrnc never did before.
+
+      Itop = 1
+      If (Freq .NE. Zilch .AND. Realfreq) Itop = 2
+
+C Imaginary-frequency axis, 2026-08-16: Lineqy/Plineqy (vcceh/lineqy.F
+C lines 143,242,277 etc.) divide by (denom**2+Freq) on their
+C .NOT.Realfreq branches -- i.e. they expect the CALLER to already have
+C squared the imaginary-axis magnitude before passing it in as Freq,
+C exactly like vcceh/secprp.F does (its own "IF(.NOT. REALFREQ) FREQ =
+C FREQ*FREQ", secprp.F:124). This call site never did that squaring,
+C so any run with an imaginary frequency file silently passed the raw
+C (unsquared) magnitude into Lineqy/Plineqy's (denom**2+Freq) formula
+C instead of the correct (denom**2+Freq**2) -- a real, silent physics
+C bug, not yet caught because the imaginary axis had never been tested
+C (see SCRNC_DEBUG_LOG.md). Square it here, once, before the Icount
+C loop -- matches secprp.F's own placement (right after its ITOP/FACT
+C determination, before its main IPERT loop).
+
+      If (.NOT. Realfreq) Freq = Freq * Freq
+
+      Do Icount = 1, Itop
+
+      Npert_count = 0
 
       Do Irrep = 1, Nirrep
          Nperts_4irrep = Irpdpdao(Irrep)
@@ -168,6 +202,20 @@ C VO and OV integral lists
      +                               Work(Ioff_vo),Iuhf,Lenoo,
      +                                Lenvv,Lenvo,Iao_pair_4irrep,
      +                                Irrepx,Irrepr)
+      If (Npert_count .EQ. 9) Then
+         Nocca = Nocco(1)
+         Write(6,"(a,i3)") " DIAG-CHECK MIJ(i,j) vs MIJ(j,i), Nocca=",
+     +                     Nocca
+         Do Idi = 1, Nocca
+            Do Idj = Idi+1, Nocca
+               Xij = Work(Ioff_oo-1+(Idj-1)*Nocca+Idi)
+               Xji = Work(Ioff_oo-1+(Idi-1)*Nocca+Idj)
+               Write(6,"(a,i2,i2,a,F18.12,a,F18.12,a,D12.4)")
+     +            " MIJ i,j=",Idi,Idj," MIJ(i,j)=",Xij,
+     +            " MIJ(j,i)=",Xji," diff=",Xij-Xji
+            Enddo
+         Enddo
+      Endif
           Call Dcopy(Lenoo,Work(I000),1,Work(I030),1)
           Call Dcopy(Lenvv,Work(I010),1,Work(I040),1)
           Call Dcopy(Lenvo,Work(I020),1,Work(I050),1)
@@ -207,7 +255,7 @@ C We construct e^-TMue(pq)^T, similarity transformed Mu(p,q).
                  Ioff_d = 0
                  Call Scrnc_load_vec(Irrepx,Work(I000),Maxcor,Mu_s,
      +                               Ioff_s,Mu_d,Ioff_d,Iuhf,.False.)
-                 Call Putlst(Work(I000),1,1,0,Irrepx,373)
+                 Call Putlst(Work(I000),Npert_count,1,1,Irrepx,373)
                  Dmod_r=Ddot(Nsizec,Work(I000),1,Work(I000),1)
       write(6,*)
       call checksum("Jbar_R<(S,D)|pq>:",Work(I000),Nsizec)
@@ -218,7 +266,7 @@ C We construct e^-TMue(pq)^T, similarity transformed Mu(p,q).
                  Ioff_d = 0
                  Call Scrnc_load_vec(Irrepx,Work(I000),Maxcor,Mu_s,
      +                               Ioff_s,Mu_d,Ioff_d,Iuhf,.False.)
-                 Call Putlst(Work(I000),1,1,0,Irrepx,374)
+                 Call Putlst(Work(I000),Npert_count,1,1,Irrepx,374)
                  Dmod_l=Ddot(Nsizec,Work(I000),1,Work(I000),1)
       write(6,*)
       call checksum("Jbar_R<(S,D)|pq>:",Work(I000),Nsizec)
@@ -264,7 +312,7 @@ C linear equations. Simply set the solution vector to zero.
              Endif 
                 
              If (Incore) Then
-                Ioffset  = 1
+                Ioffset  = Npert_count
                 Ipert    = Iao_pair
       Write(6,"(1x,a)") "-----Entering Plineqy------"
                 Call Plineqy(Work(I070),Mxcor,Iuhf,Work(I000),
@@ -279,9 +327,9 @@ C linear equations. Simply set the solution vector to zero.
                 I010 = I000 + Kmax * Kmax
                 I020 = I010 + Kmax
        
-                Ioffset = 1
+                Ioffset = Npert_count
                 Ipert   = Iao_pair
-                Mxcor   = Maxcor - I020 
+                Mxcor   = Maxcor - I020
                 Kmax    = Maxexp - 1
       Write(6,"(1x,a)") "-----Entering Lineqy------"
                 Write(6,"(3a,1x,5I,2I)")" Linear equations are",
@@ -293,22 +341,44 @@ C linear equations. Simply set the solution vector to zero.
      +                      Work(I010),Kmax,Irrepx,Ioffset,Ipert, 
      +                      Freq,Iside,Realfreq)
 
-             Endif 
+             Endif
 
-C Save the 1^st order perturbed amplitude for all perturbations
+C Bug fix 2026-08-14 (see SCRNC_DEBUG_LOG.md): Lineqy/Plineqy read their
+C RHS from, and write their converged solution back to, list 372+Iside
+C record Ioffset in-place (see vcceh/lineqy.F line 107/398 and
+C vcceh/plineqy.f line 89/328 -- Ioffset is a fully generic parameter to
+C both, nothing requires it to be a fixed scratch record). This used to
+C hardcode Ioffset=1 and relocate afterward via a Getlst(record
+C 1)/Putlst(record Npert_count) pair -- but record 1 is ALSO
+C Npert_count=1's own permanent slot, so every later perturbation's
+C solve clobbered Npert_count=1's finished value. Setting
+C Ioffset=Npert_count above means Lineqy/Plineqy already left the
+C converged solution in its real record, so the relocating Putlst is
+C gone -- but the solution lives in Lineqy/Plineqy's OWN scratch array
+C (a different memory region than this routine's Work(I000)), so a
+C plain re-fetch of the now-correct record is still needed here.
 
              Call Getlst(Work(I000),Ioffset,1,1,Irrepx,372+Iside)
-  
-             Call Putlst(Work(I000),Npert_count,1,1,Irrepx,
-     +                   372+Iside)
       write(6,*)
       call checksum("1^st order amps:",Work(I000),Nsizec)
               Endif ! Endif for Dmod_r and Dmod_l
+
+C Save the +Freq solution to list 375 before the next Icount pass
+C (which negates Freq below) overwrites list 372+Iside in place with
+C the -Freq solution. Matches secprp.F's own 372+ISIDE->375 copy.
+
+              If (Icount .EQ. 1 .AND. Itop .EQ. 2) Then
+                 Call Putlst(Work(I000),Npert_count,1,1,Irrepx,375)
+              Endif
 
           Enddo ! Enddo for Iside
         Enddo ! Enddo for Iao_pair
 
       Enddo ! Enddo of irrepr
+
+      Freq = -Freq
+
+      Enddo ! Enddo for Icount (dynamic +/-Freq loop)
 
     
       Return

@@ -18,7 +18,7 @@ C
       DIMENSION SCRATCH(NX*NX), IQFIX(3*MXATMS, 3*MXATMS), AV(6),
      &          STEP(NXM6), GRAD(NOPT), HES(NOPT, NOPT), 
      &          ITIE(3*MXATMS)
-      DATA ONE /1.0D0/, THREE /3.0D0/
+      DATA ONE /1.0D0/, THREE /3.0D0/, ZERO /0.0D0/
 C
 C Convert to Internal from symmetry coordinates.
 C

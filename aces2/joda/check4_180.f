@@ -30,9 +30,12 @@ C
      &             TOTNOFANG+TOTNOFBND)
    10 Format (5(1X,F10.6)) 
 C  
+C The test used to be .NOT.(DVAL.LE.0 .OR. DVAL.GT.1.0D-8), which is
+C true only for 0 < DVAL <= 1.0D-8, i.e. never in practice. 10/2026.
+C
       DO I = (TOTNOFBND + 1), TOTNOFANG+TOTNOFBND
          DVAL = (QRIC(I) + DELTAQ(I)) - PI
-         IF ( .NOT. ((DVAL .LE. 0.0D0) .OR. (DVAL .GT. 1.0D-8)) ) THEN
+         IF (DVAL .GT. 1.0D-8) THEN
              NO_ITER = .TRUE.
              RETURN
          ENDIF 

@@ -204,6 +204,7 @@
 
 
 
+
 C
 C THIS PROGRAM DETERMINES SYMMETRY ADAPTED COORDINATES WHICH
 C ARE USED FOR NUMERICAL DERIVATIVE CALCULATIONS.  IT
@@ -221,7 +222,6 @@ c
       implicit none
       INTEGER ICRSIZ
       INTEGER ICORE(ICRSIZ)
-      LOGICAL FDS_OF_VECTRS , FDS_OF_MATELMS
 C
       LOGICAL          ENERONLY,GRADONLY,ROTPROJ,RAMAN,GMTRYOPT,
      &                 SNPTGRAD
@@ -271,24 +271,7 @@ c iflags2(500) ASVs for everyone else
 
 
 
-C The symcor_onedim handles numerical derivatives of energy, gradients,
-C dipole moments etc. We can loosly say that it handles the derivative
-C of vectors and the symcor_muldim handles the deriavtives of matrices.
-C Personaly, I think their should not be such a distinction and a one
-C general routine can handle both but I am not here only to correct past
-C mistakes. Ajith Perera 04/07.
-C
-      FDS_OF_MATELMS = (Iflags2(156) .EQ. 1
-     $     .OR. Iflags2(158) .EQ. 1
-     $     .OR. Iflags2(160) .EQ. 1
-     $     .OR. Iflags2(165) .EQ. 1 )
-
-      IF (FDS_OF_MATELMS) THEN
-          CALL SYMCOR_MULDIM(ICORE, ICRSIZ)
-      ELSE
-
-          CALL SYMCOR_ONEDIM(ICORE, ICRSIZ)
-      ENDIF
+      CALL SYMCOR_ONEDIM(ICORE, ICRSIZ)
 
       RETURN
       END

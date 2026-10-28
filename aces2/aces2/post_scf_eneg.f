@@ -31,8 +31,8 @@ c
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract 
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       common /sv_bool/
      &        mrcc,
      &        geom_opt, analytical_gradient,numerical_gradient,
@@ -43,8 +43,8 @@ c
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       save   /sv_bool/
 
       character
@@ -253,10 +253,24 @@ c
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 c     
-      Character*79 szEExtrap 
       Logical parcc_exist
-      szEExtrap = 'xa2proc ener_extrp'
       Call a2getrec(20,'JOBARC','NDROPGEO',1,NDRGEO)
 c
 c This Saving of All MO JOBARC/JAINDX as JOBARC_AM/JAINDX_AM is only relevent
@@ -311,12 +325,6 @@ C
          Endif
 c
          If (Iflags(2) .EQ. 31) Call Runit('xvcc5t')
-c
-c Extrapolate energy (only for post-SCF methods), 01/2006, Ajith Perera
-c
-         If (bEextrap .OR. bCExtrap) Then
-            Call Runit(szEExtrap)
-         Endif
 c
        Endif
 c 

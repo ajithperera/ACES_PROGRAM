@@ -999,9 +999,18 @@ C
 C COMPUTE THE CONTRIBUTION OF DOUBLES TO T1 AND
 C DENOMINATOR WEIGHT THE NEW INCREMENTS
 C (ONLY CCSD AND QCISD METHODS)
-C 
+C
+C 2026-08-19: RCCD/DRCCD (ring-CC, method 48/49) have no singles at all,
+C so this "ONLY CCSD AND QCISD METHODS" block should never run for them
+C -- but "METHOD.GE.9" is a broad catch-all predating 48/49 that let
+C them through anyway. E4S/T2T1AA1 then hit a genuine divide-by-zero
+C (t2t1aa1.f:86, MAXDIS=MAXSIZE/DISSYW, DISSYW=0 for a list type that
+C simply isn't meaningful for ring-CC) once RHF RCCD's crashes upstream
+C were fixed and this path finally became reachable. See
+C SCRNC_DEBUG_LOG.md.
       IF ((METHOD.GE.9.OR.METHOD.EQ.6.OR.METHOD.EQ.7)
-     &    .AND. .NOT. OO_CC) THEN
+     &    .AND. .NOT. OO_CC
+     &    .AND. METHOD.NE.48.AND.METHOD.NE.49) THEN
 C
 C Evaluate the following three contributions to T1:
 C
@@ -1158,9 +1167,24 @@ C  LAMBDA EQUATIONS ON THE GAMLAM FILE
          WRITE(6,4000)
  4000    FORMAT(T3,' The CC iterations have converged.',/)
 
+C 2026-08-19: DRMOVE (called below, both blocks) moves list 90 -> list
+C 90+NLIST(=190) whenever SING1 is true (its own "IF(.NOT.SING1) RETURN"
+C guard). For RCCD/DRCCD (ring-CC, calclevel 48/49, no singles) with
+C RHF+DENSITY=RESPONSE, SING1 can still come out true here (via the
+C DTMP=DNRM2(list 90) check above), but nothing has registered list 190
+C yet at this point in xvcc for ring-CC -- that registration is
+C scrnc-specific (Scrnc_rccd_dummy_inits.F) and runs later, inside
+C xscrnc, too late for this call. Register it here too, same idiom as
+C the existing LEOM_CC block further down (~line 522), so DRMOVE's
+C PUTLST has a valid target regardless of what SING1 evaluates to.
+C @PUTLST: List (1,190) does not exist. See SCRNC_DEBUG_LOG.md.
+         DO ISPIN=1,IUHF+1
+            CALL UPDMOI(1,NT(ISPIN),ISPIN,190,0,0)
+         END DO
+C
          IF ((GRAD.AND..NOT.UCC)) THEN
 C
-CSSS     &       (IFLAGS(87).EQ.3 
+CSSS     &       (IFLAGS(87).EQ.3
 CSSS     &       .AND. (TRIPIT.OR.TRIPNI1)) THEN
 C Modified for EOM-CCSD(T) variants, 03/2014, Ajith Perera
 
@@ -1508,6 +1532,7 @@ C ----------------------------------------------------------------------
 #include "icore.com"
 #include "istart.com"
       INTEGER IUHF
+      CALL BWSTART(IUHF)
       CALL CRAPSI(ICORE, IUHF, 0)
       CALL VCC(ICORE(I0), ICRSIZ, IUHF)
       CALL ACES_FIN

@@ -93,7 +93,14 @@ C
       Ibegin = Num_bond_Constrains + 1
       Jbegin = TOTNOFBND + 1
 
+C A constraint i j k means the angle i-j-k (vertex j). Look for that
+C angle first; only if it is not there accept any angle made of the 
+C same three atoms (the old rule, which picked the first such angle
+C and so could constrain the wrong angle of a three-membered ring).
+C 10/2026.
+C
       Do Jc = Ibegin, Ibegin + Num_angle_Constrains - 1
+         Do Ipass = 1, 2
          Do Ic = Jbegin, Jbegin + TOTNOFANG - 1
             
             ICcon = Constrains(1, Jc) 
@@ -104,6 +111,15 @@ C
             JRcon = Iredunco(2, Ic)
             KRcon = Iredunco(3, Ic)
 
+            If (Ipass .Eq. 1) Then
+               If (JCcon .Eq. JRcon .And. 
+     &            ((ICcon .Eq. IRcon .And. KCcon .Eq. KRcon) .Or.
+     &             (ICcon .Eq. KRcon .And. KCcon .Eq. IRcon))) Then
+                   Constrained(Ic) = 1
+                   Ifound = Ifound + 1
+                   Sucess = .TRUE.
+               Endif
+            Else
 
             If (ICCon .eq. IRcon .OR. ICCon .eq. JRcon .OR. 
      &          ICcon .EQ. KRcon) Then
@@ -119,9 +135,11 @@ C
                      Endif
                 Endif
             Endif
+            Endif
 
             IF (Sucess) GO TO 20
 
+         Enddo
          Enddo
   20     Continue 
          Sucess = .False. 
@@ -130,7 +148,12 @@ C
       Ibegin = Num_bond_constrains + Num_angle_constrains + 1
       Jbegin = TOTNOFBND + TOTNOFANG + 1
 
+C A constraint i j k l means the dihedral i-j-k-l (or l-k-j-i). Look
+C for that dihedral first and accept any dihedral of the same four 
+C atoms only if it is not there. 10/2026.
+C
       Do Jc = Ibegin, Ibegin + Num_dihs_angle_Constrains - 1
+         Do Ipass = 1, 2
          Do Ic = Jbegin, Jbegin + TOTNOFDIH - 1
 
             ICcon = Constrains(1, Jc)
@@ -142,6 +165,16 @@ C
             JRcon = Iredunco(2, Ic)
             KRcon = Iredunco(3, Ic)
             LRcon = Iredunco(4, Ic)
+            If (Ipass .Eq. 1) Then
+               If ((ICcon .Eq. IRcon .And. JCcon .Eq. JRcon .And.
+     &              KCcon .Eq. KRcon .And. LCcon .Eq. LRcon) .Or.
+     &             (ICcon .Eq. LRcon .And. JCcon .Eq. KRcon .And.
+     &              KCcon .Eq. JRcon .And. LCcon .Eq. IRcon)) Then
+                   Constrained(Ic) = 1
+                   Ifound = Ifound + 1
+                   Sucess = .TRUE.
+               Endif
+            Else
 
             If (ICCon .eq. Ircon .OR. ICcon .Eq. JRcon .OR.
      &          ICcon .eq. Krcon .OR. ICCon .EQ. LRcon) Then
@@ -160,9 +193,11 @@ C
                     Endif
                 Endif
             Endif
+            Endif
 
             IF (Sucess) GO TO 30
 
+         Enddo
          Enddo
   30     Continue
          Sucess = .False.

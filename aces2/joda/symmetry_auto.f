@@ -204,6 +204,7 @@
 
 
 
+
       SUBROUTINE SYMMETRY_AUTO(SCRATCH, QTMP, NEWQ, IT, IDEGEN, 
      &                         ORIEN2, NOSILENT)
 C
@@ -413,7 +414,7 @@ C
       DOSTR(1)='X'
       DOSTR(2)='Y'
       DOSTR(3)='Z'
-      TSSEARCH = (INR .EQ. 4 .OR. INR .EQ. 5 .OR. INR .EQ. 6)
+      TSSEARCH = (INR .EQ. 4 .OR. INR .EQ. 5)
       CALL IZERO(IORBPOP,MXATMS)
       CALL IZERO(IORBREF,MXATMS)
 
@@ -1257,7 +1258,7 @@ CJDW 9/20/96. Also for SEWARD.
 CADY 5/06/04. Also for GAMESS.
 C
    75 IF(INTTYP.EQ.1.OR.INTTYP.EQ.2.OR.INTTYP.EQ.0.OR.INTTYP.EQ.5
-     &     .OR.INTTYP.EQ.4)THEN
+     &     .OR.INTTYP.EQ.4.OR.INTTYP.EQ.6)THEN
         IF(PGRP.EQ.'C2v')THEN
           SYMSTR(1)(2:2)='X'
           SYMSTR(2)(2:2)='Y'
@@ -1365,6 +1366,10 @@ C
         ELSE
             WRITE(LUOUT,1885)
  1885       FORMAT(T3,'@SYMMETRY-F, Ascent in symmetry detected.')
+            IF (IFLAGS2(5) .GE. 2) WRITE(LUOUT,1886)
+ 1886       FORMAT(T3,'The optimized structure has reached a higher ',
+     &      'point group. Restart from',/,T3,'the coordinates above ',
+     &      '(they keep the higher symmetry) or use SYMMETRY=NONE.')
             CALL ERREX
         ENDIF
         ENDIF

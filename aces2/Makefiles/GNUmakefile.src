@@ -36,23 +36,25 @@ CFLAGS_EXTRA += -fPIC
 # must build+install fully standalone"). Copied verbatim here they instead
 # pointed ACES_PROGRAM/aces2 AT acesii_build_pic's install dirs, making this
 # tree parasitic on the other one instead of standalone. 2026-08-10: repointed
-# at this tree's own aces2/bin, aces2/lib so ACES_PROGRAM builds+installs
+# at this tree's own aces2/bin (bin: ~/Develop/bin since 2026-10-19, below), aces2/lib so ACES_PROGRAM builds+installs
 # fully within itself -- do not point these back at acesii_build_pic again.
-# 2026-09-02: those three paths were written out absolute (/home/perera/
-# Develop/ACES_PROGRAM/...), which silently disables the install step on any
-# checkout living anywhere else: dir_instlib is computed as the first entry of
-# DIR_INSTLIB that exists AND is writeable, so a non-existent absolute path
-# leaves it empty, every module reports "Leaving the library as ..." instead of
-# installing, and the first module that links dies with "cannot find -llb
-# -llinpack -lmpw -lmpistubs". Written relative instead -- every module builds
-# one level below aces2/, which is exactly what the ../lib, ../bin defaults in
-# Makefiles/GNUmakefile already assume, so this keeps the same "own tree, not
-# acesii_build_pic" meaning while being checkout-location independent.
-LDFLAGS_NUMLIBS:= -L$(MKLROOT)/lib/intel64  -Wl,--start-group $(MKL_GRP) -Wl,--end-group -pthread -L../lib -llb -llinpack
-
-DIR_INSTBIN := ../bin
-DIR_INSTLIB := ../lib
+# 2026-10-21: no absolute paths. Binaries and libraries install into this
+# checkout's own aces2/bin and aces2/lib, wherever it was cloned. Per-site
+# settings go in the untracked Makefiles/local.mk (see local.mk.example),
+# e.g. DIR_INSTBIN := $(HOME)/Develop/bin for the development install
+# first on PATH. The command line still overrides both (`gmake
+# DIR_INSTBIN=... DIR_INSTLIB=... all install`, as the CMake superbuild
+# does); LDFLAGS_NUMLIBS takes its -L from DIR_INSTLIB.
+ACES2_ROOT := $(abspath $(dir $(realpath GNUmakefile.src))/..)
+DIR_INSTBIN := ${ACES2_ROOT}/bin
+DIR_INSTLIB := ${ACES2_ROOT}/lib
+-include ${ACES2_ROOT}/Makefiles/local.mk
+# GNUmakefile skips the install (silently) when these do not exist yet,
+# as in a fresh clone.
+$(shell mkdir -p ${DIR_INSTBIN} ${DIR_INSTLIB})
 DIR_SRCLIB  := ${DIR_INSTLIB}
+
+LDFLAGS_NUMLIBS:= -L$(MKLROOT)/lib/intel64  -Wl,--start-group $(MKL_GRP) -Wl,--end-group -pthread -L${DIR_INSTLIB} -llb -llinpack
 
 ###################################
 ## AME and ASL specific settings ##
@@ -169,5 +171,68 @@ ifeq (${CURR},vee)
    symexp5.o: compile_f += -O0
 endif
 
+# 2026-08-13, ringcc only: found while debugging why the ring-CCD T2-amplitude
+# DIIS iteration converges to the WRONG answer for H2O/cc-pVDZ/RHF/DRCCD
+# (SYMMETRY=ON) -- the T2=0 zeroth-iteration estimate already matched the
+# archive/reference-binary answer (-0.231259763876 a.u.), but every
+# subsequent DIIS-extrapolated iteration moved AWAY from it, converging
+# instead to -0.235769503949. `rcc_dodiis0.f` is ringcc's own LOCAL copy of
+# the DIIS extrapolation routine -- same duplicated-per-module pattern as
+# SYMEXP above -- and its `libr/dodiis.o` twin already has a confirmed
+# -O0 override (2026-07-19 entry above) that this copy never inherited.
+# Compiling rcc_dodiis0.o at -O0 (no other change) reproduces the
+# reference-binary iteration table EXACTLY (iteration 0 through the
+# converged 16th iteration, matching to 8+ decimals) -- 6th confirmed
+# instance of this ifx -O2 miscompilation bug class in this codebase.
+ifeq (${CURR},ringcc)
+   rcc_dodiis0.o: compile_f += -O0
+endif
+
+# 2026-08-13, applied proactively to every other local dodiis/dodiis0 copy
+# found in the tree (`find aces2 -iname '*dodiis*'`), same rationale as the
+# SYMEXP family's own proactive rollout above -- DIIS is the exact same
+# per-iteration amplitude-extrapolation mechanism in every one of these
+# modules, so there is no reason to expect ifx treats any of them
+# differently, and re-deriving each one via its own convergence-corruption
+# bug report first would just be paying the same discovery cost N more
+# times. Not each individually re-verified against an archive/reference
+# run the way rcc_dodiis0.o above was -- if any of these modules' own fast-
+# suite cases regress, check here first before assuming a different cause.
+ifeq (${CURR},lhbar)
+   dodiis0_l.o: compile_f += -O0
+endif
+ifeq (${CURR},lambda)
+   dodiis0.o: compile_f += -O0
+endif
+ifeq (${CURR},oombpt2)
+   oombpt_dodiis.o: compile_f += -O0
+endif
+ifeq (${CURR},pccd)
+   pccd_dodiiso.o: compile_f += -O0
+   pccd_dodiis.o: compile_f += -O0
+endif
+ifeq (${CURR},vcc)
+   dodiis0.o: compile_f += -O0
+endif
 
 
+
+# 2026-10-21: Fortran module order. The build compiles the f90 files of a
+# directory in name order (only mod-*.f90 files go first), so a file that
+# USEs a module defined in a later file fails in a fresh clone ("Error in
+# opening the compiled module file"); old trees hid it with leftover .mod
+# files. Only alice_nwchem and get_acesmo have such files (scanned 10/2026).
+# These are the first plain rules in this file, which GNUmakefile includes
+# before its `all`, hence the explicit default goal.
+.DEFAULT_GOAL := all
+ifeq (${CURR},alice_nwchem)
+   alice_nwchem.o: job.o
+   job.o: aovec.o civec.o get_aces2.o nwchem_info.o movec.o print.o
+   aovec.o: function.o get_aces2.o print.o
+   civec.o civec2.o get_aces2.o: print.o
+   movec.o nwchem_info.o: function.o
+   movec.o: print.o
+endif
+ifeq (${CURR},get_acesmo)
+   main.o: movec.o nwchem_info.o
+endif

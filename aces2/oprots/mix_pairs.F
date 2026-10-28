@@ -6,35 +6,28 @@
 
       Dimension Scf_mos(Nbasis,Nbasis)
 
-C For p' = cos (eps) p + Sin (eps) q (p and q are original MOs. Here the
-C the number of rows goes over rhe number of function but this can
-C easily change go over only the number of orbitals per irrep. Just a
-C lot of work to gain nothing!
+C p' = eps (p + q), q' = eps (p - q), then normalized, for every pair
+C type (OO, VV, OV, VO). OV used to store the results in swapped
+C columns. p and q are orthonormal SCF orbitals, so p +/- q are
+C orthogonal with norm sqrt(2); normalizing leaves (p +/- q)/sqrt(2)
+C times the sign of eps, whatever its magnitude.
 
-      If (Type .EQ. "OO" .or. Type .EQ. "VV" .OR. Type .EQ. "VO") Then
-      Do Irow = 1, Nbasis
-
-         Scf_mos(Irow,Index1) = Eps*(Scf_mos(Irow,INdex1) +
-     +                               Scf_mos(Irow,INdex2))
-
-         Scf_mos(Irow,Index2) = Eps*(Scf_mos(Irow,INdex1) -
-     +                               Scf_mos(Irow,INdex2))
-
-      Enddo
-
-      ELse if (Type .EQ. "OV") Then
+      If (Dabs(Eps) .Lt. 1.0D-12) Then
+         Write(6,"(a)") " Mix_pairs: eps = 0 gives zero orbitals."
+         Call Errex
+      Endif
+      Scale = Sign(1.0D0/Dsqrt(2.0D0),Eps)
 
       Do Irow = 1, Nbasis
 
-         Scf_mos(Irow,Index2) = Eps*(Scf_mos(Irow,INdex1) +
-     +                               Scf_mos(Irow,INdex2))
+         P = Scf_mos(Irow,Index1)
+         Q = Scf_mos(Irow,Index2)
 
-         Scf_mos(Irow,Index1) = Eps*(Scf_mos(Irow,INdex1) -
-     +                               Scf_mos(Irow,INdex2))
+         Scf_mos(Irow,Index1) = Scale*(P + Q)
+
+         Scf_mos(Irow,Index2) = Scale*(P - Q)
 
       Enddo
-      Endif 
 
       Return
       End
-

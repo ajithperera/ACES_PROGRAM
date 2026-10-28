@@ -33,8 +33,8 @@ c
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract 
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       common /sv_bool/
      &        mrcc,
      &        geom_opt, analytical_gradient,numerical_gradient,
@@ -45,8 +45,8 @@ c
      &        Single_point_gradient, First_order_props,
      &        Higher_order_props, NMR_SHIFTS, NMR_SPNSPN,
      &        NLO_PROPS, TDHF, bHyper, bMolden,blCCSDT,
-     &        BEextrap, BGextrap, BCextrap, Analytical_hessian,
-     &        hf_dft,sl_oep,Manual_FD,dkh,contract
+     &        Analytical_hessian,
+     &        hf_dft,sl_oep,Manual_FD,dkh,contract,erd_ints
       save   /sv_bool/
 
       character
@@ -255,13 +255,27 @@ c
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 c
       Character*4 Calc_level
-      Character*79 szGExtrap  
       Logical Analytical_grads
       Integer Istat, Is, Ius, Irank
 c
-      szGExtrap = 'xa2proc grad_extrap'
 c
 c This shell script (with minor mods) can perform a restartable SCF vib freq
 c rmjunk; restore; xjoda || exit 1
@@ -346,15 +360,6 @@ c
             If (Analytical_grads) then
 c
                Call Post_scf_anlytcl_grad(.TRUE.)
-c
-c If the gradients need to modified externally (ie. extrapolation)
-c do it here (note that no extrapolation for HF-SCF calculations),
-c 01/2006, Ajith Perera. When POST-HF exact frequencies are availble
-c the extrpolation has to be done differently. 
-c
-               If (bGExtrap .or. bCExtrap) then
-                  call runit(szGExtrap)
-               endif
             Endif
 c
             call a2getrec(1,'JOBARC','LASTGEOM',1,istat)

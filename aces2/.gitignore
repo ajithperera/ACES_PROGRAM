@@ -60,6 +60,7 @@ nddo/xnddo
 nlorb/xnlorb
 nmr/xnmr
 oombpt2/xoombpt2
+oorot/xoorot
 oprots/xoprots
 pccd_drpmo/xpccd_drpmo
 pccd/xpccd
@@ -95,3 +96,4 @@ vmol/xvmol
 vprops/xvprops
 vscf/xvscf
 vtran/xvtran
+Makefiles/local.mk

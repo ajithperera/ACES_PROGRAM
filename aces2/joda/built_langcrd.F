@@ -18,6 +18,7 @@ C B(*,*,b,*)(z) = B(*,a,*,*)(z) + B(*,*,*,c)(z)
 C
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
       INTEGER TOTREDNCO
+      DOUBLE PRECISION LEN_N2AC
       DIMENSION CARTCOORD(3*NRATMS), BMATRX(TOTREDNCO, 3*NRATMS),
      &          VECBA(3), VECBC(3), VECAC(3), VECX(3), VECY(3), 
      &          VECZ(3), VECBCX(3), VECBAX(3),  VECN2AC(3),
@@ -46,6 +47,24 @@ C
       CALL NORMAL(VECBA, 3)
       CALL NORMAL(VECBC, 3)
       CALL CROSS(VECBA, VECBC, VECN2AC, 0)
+C
+C For an exactly linear arrangement BA x BC vanishes; pick the same
+C perpendicular as BULT_ANGCRD does (its normal is BC x BA, i.e.
+C minus this one), otherwise the B-matrix row of this second bend is
+C zero and one bending direction is lost. 10/2026.
+C
+      LEN_N2AC = DSQRT(DABS(XDOT(3, VECN2AC, 1, VECN2AC, 1)))
+      IF (LEN_N2AC .LE. 1.0D-8) THEN
+         VECN2AC(1) = -(VECBC(2) + VECBC(3))
+         VECN2AC(2) = -(VECBC(1) - VECBC(3))
+         VECN2AC(3) =  VECBC(1) + VECBC(2)
+      ENDIF
+      LEN_N2AC = DSQRT(DABS(XDOT(3, VECN2AC, 1, VECN2AC, 1)))
+      IF (LEN_N2AC .LE. 1.0D-8) THEN
+         VECN2AC(1) = -(VECBC(2) - VECBC(3))
+         VECN2AC(2) = -(VECBC(1) + VECBC(3))
+         VECN2AC(3) = -(VECBC(1) + VECBC(2))
+      ENDIF
       CALL NORMAL(VECN2AC, 3)
 
 #ifdef _DEBUG_LVL0

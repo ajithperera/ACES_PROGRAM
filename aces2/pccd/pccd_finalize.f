@@ -204,6 +204,7 @@
 
 
 
+
       Subroutine Pccd_finalize(Work,Maxcor,Iuhf,Tol,Grd_max,Grd_rms)
 
       Implicit Double Precision(A-H,O-Z)
@@ -216,6 +217,10 @@ c flags.com : begin
       integer        iflags(100)
       common /flags/ iflags
 c flags.com : end
+c flags2.com : begin
+      integer         iflags2(500)
+      common /flags2/ iflags2
+c flags2.com : end
 
 
 c machsp.com : begin
@@ -241,8 +246,17 @@ c machsp.com : end
       Write(6,*) 
       Status ="Finish"  
       Call Pccd_banner(6,Status)
-      Call Getrec(20,'JOBARC','SCFENEG0',Iintfp,Eref_I)
-      Call Getrec(20,'JOBARC','TOTENEG0',Iintfp,Ecor_I)
+C SCFENEG0/TOTENEG0 are written by do_brueckner after the first macro
+C iteration; converged in that iteration (OO_METHOD=RFO restart at a
+C minimum, exact-Hessian check) the starting orbitals are the final ones.
+      Call Getrec(0,'JOBARC','SCFENEG0',Length,Junk)
+      If (Length .Gt. 0) Then
+         Call Getrec(20,'JOBARC','SCFENEG0',Iintfp,Eref_I)
+         Call Getrec(20,'JOBARC','TOTENEG0',Iintfp,Ecor_I)
+      Else
+         Call Getrec(20,'JOBARC','SCFENEG ',Iintfp,Eref_I)
+         Call Getrec(20,'JOBARC','TOTENERG',Iintfp,Ecor_I)
+      Endif
   
 
       Call Getrec(20,'JOBARC','SCFENEG ',Iintfp,Eref_F)
@@ -263,8 +277,13 @@ c machsp.com : end
 
       Write(6,*) 
 
+      If (Iflags2(178) .Eq. 6) Then
+      Write(6,"(2a)") " The orbital rotation algorithm :",
+     +                " RFO (trust-region)"
+      Else
       Write(6,"(3a)") " The orbital rotation algorithm :", " Newton",
      +                "-Raphson with Diis" 
+      Endif
       Write(6,*) 
 
       Write(6,"(a,E12.6)")  " The maximum gradient at convergence: ",

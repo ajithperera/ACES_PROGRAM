@@ -10,10 +10,11 @@
 
 
       Subroutine Scrnc_lrspn_rcc_main(Work,Maxcor,Iuhf,Isympert,
-     +                                Ioffpert,Nperts)
+     +                                Ioffpert,Nperts,Hbarinv,Iloc,
+     +                                Icount,Itop,Imult)
 
       Implicit Double Precision (A-H,O-Z)
-      
+
 c maxbasfn.par : begin
 
 c MAXBASFN := the maximum number of (Cartesian) basis functions
@@ -31,8 +32,9 @@ c maxbasfn.par : end
       Logical Realfreq
       Logical Rcc
       Integer Occ_pair,Occ_pair_4irrep
-      Dimension Isympert(Nperts),Ioffpert(Nperts) 
+      Dimension Isympert(Nperts),Ioffpert(Nperts)
       Dimension Work(Maxcor)
+      Dimension Hbarinv(*)
       Dimension Iloc(8)
       Character*8 Label(3),Work_label 
       COMMON/AOSYM/IAOPOP(8),IOFFAO(8),ioffv(8,2),ioffo(8,2),
@@ -104,50 +106,47 @@ c info.com : end
       Data One, Zilch /1.0D0,0.0D0/
      
       Write(6,"(1x,a)") "-----Entering scrnc_lrspn_rcc_main------"
-C In the case of RPA like situations, we do not necessarily need 
+C In the case of RPA like situations, we do not necessarily need
 C to solve linear equations (smaller problem). We have Hbar C = Y.
-C We can simply write C = Hbar^(-1) Y. So, lets first built the inverse
-C of Hbar. This is perturbation independent; so we do it once and
-C keep the inverse at the end of the Work array. 
+C We can simply write C = Hbar^(-1) Y. Hbar^(-1) is perturbation
+C independent, so it is built ONCE by the caller (Scrnc_driver.F) and
+C shared with Scrnc_jj_rcc_lrspn.F -- see Hbarinv/Iloc arguments.
+C 2026-08-14: this used to be built independently here AND in
+C Scrnc_jj_rcc_lrspn.F; since Scrnc_form_rcc_hbar.F hands its result to
+C Scrnc_form_rcc_hbar_inv.F by writing it back into the same list it
+C read the raw integrals from, the second independent build silently
+C re-added the one-particle Fock diagonal on top of the first build's
+C already-dressed output, breaking L/R Hbar consistency.
 
       Irreprl     = 1
       Npert_count = 0
 
-      If (Nodavid ) Then
-         Nmult = 1
-         Ndim  = 0
-         If (Iuhf .EQ. 0) Nmult = 1
-
-         Iloc(1) = 1
-         Do Irrepr = 2, Nirrep 
-            Length = Irpdpd(Irrepr-1,9) 
-            If (Iuhf .NE. 0) Length = Length + Irpdpd(Irrepr-1,10) 
-            Length = Length * Length 
-            Iloc(Irrepr)  = Iloc(Irrepr-1) + Length 
-         Enddo 
-
-         Do Irrepr = 1, Nirrep 
-            Ndim = Ndim + Irpdpd(Irrepr,9) 
-            If (Iuhf .NE. 0) Ndim = Ndim + Irpdpd(Irrepr-1,10) 
-         Enddo 
-
-         Ineed  = Ndim * Ndim + Ndim 
-         Isave  = Maxcor + 1 - Ineed 
-         Maxcor = Maxcor - Ineed 
-
-         Do Imult = 1, Nmult
-            Call Scrnc_rcc_hbar_inv(Work(Isave),Maxcor,Iuhf,Imult,
-     +                              Iloc)
-         Enddo 
-      Endif
+C 2026-08-19: Imult selects which spin-adapted RHF channel's Hbar^(-1)
+C the caller built for this pass (1=singlet, list 56; 2=triplet, list
+C 54 -- see Scrnc_form_rcc_hbar.F). Route each channel's raw R-side
+C vector to its own list numbers (Loffset=0 for Imult=1 reproduces the
+C original 373/375 numbers exactly) so Scrnc_jj_rcc_assemble.F can read
+C both channels back separately and combine them with the correct
+C 0.25 (singlet) / 0.75 (triplet) weights -- see check_rhf_rcc.F and
+C SCRNC_DEBUG_LOG.md. For Iuhf.NE.0 (UHF), Imult is always 1 and this
+C is a no-op (Loffset=0, identical to the pre-existing behavior).
+      Loffset = 4*(Imult-1)
 
 C Next step is to prepare the integrals. We have the repulsion
-C integrals prepared in the form X(p(1)q(1),i(2)j(2)) where p and q can 
+C integrals prepared in the form X(p(1)q(1),i(2)j(2)) where p and q can
 C be occ-occ,vrt-vrt or occ-vrt and i(2) and j(2) always kept as AO
 C We process the p(1)q(1) integrals for a given pair of i(2)j(2)
 C and lets designate them as Mu(pq).
 
-      Call Scrnc_form_lrspn_rcc_lists(Work,Maxcor,Iuhf,Nperts)
+C 2026-08-15: list creation (Scrnc_form_lrspn_rcc_lists) moved to
+C Scrnc_driver.F, called ONCE before the dynamic +/-Freq Icount loop,
+C instead of here -- this routine is now called once PER Icount pass,
+C and re-touching/re-opening the underlying list files on the second
+C pass was found to corrupt the (otherwise Freq-independent) raw Hbar
+C data that Scrnc_form_rcc_hbar_inv.F reads (same class of bug as the
+C original list-374 collision, one level removed: a shared underlying
+C file getting reset by a second Updmoi/list-creation call). See
+C SCRNC_DEBUG_LOG.md, 2026-08-15 dynamic-ring-CC entry.
 
       Do Irrepr = 1, Nirrep
          Irrepl = Dirprd(Irrepr,Irreprl)
@@ -173,11 +172,11 @@ C array. Form the 1^st order perturbed amplitudes by HBAR(^-1)
             Nmult = 1
          Endif 
 
-         Ifnd = Iloc(irrepr)+ (Isave-1)
+         Ifnd = Iloc(irrepr)
          Ibgn = 1
-         I000 = Ibgn + Nrow * Ncol 
+         I000 = Ibgn + Nrow * Ncol
 
-         Call Dcopy(Nrow*Ncol,Work(Ifnd),1,Work(Ibgn),1)
+         Call Dcopy(Nrow*Ncol,Hbarinv(Ifnd),1,Work(Ibgn),1)
          write(6,*) " @-Scrnc_lrspn_rcc_main Hbar^(-1)"
          call output(work(Ibgn),1,nrow,1,ncol,nrow,ncol,1)
 
@@ -187,8 +186,8 @@ C list
          Lenvv = Irpdpd(Irrepx,19) + Iuhf*Irpdpd(Irrepx,20)
          Lenvo = Irpdpd(Irrepx,9)  + Iuhf*Irpdpd(Irrepx,10)
 
-         Nperts_4irrepr = Irpdpd(Irrepr,21) 
- 
+         Nperts_4irrepr = Irpdpdao(Irrepr)
+
          Iao_pair_4irrep = 0
          Do Iao_pair= 1, Nperts_4irrepr
 
@@ -214,7 +213,7 @@ C list
 
           Call Scrnc_prep_culomb_ints(Work(Ioff_oo),Work(Ioff_vv),
      +                                Work(Ioff_vo),Iuhf,Lenoo,
-     +                                Lenvv,Lenvo,cc_pair_4irrep,
+     +                                Lenvv,Lenvo,Iao_pair_4irrep,
      +                                Irrepx,Irrepr)
 
           Call Dcopy(Lenoo,Work(I000),1,Work(I030),1)
@@ -234,9 +233,20 @@ C We construct e^-TMue(pq)^T, similarity transformed Mu(p,q).
              Call Scrnc_form_mubar_s(Work(Ioff_oo),Work(Ioff_vv),
      +                               Work(Ioff_vo),Work(I030),
      +                               Work(I040),Work(I050),
-     +                               Work(I060),Work(Iend),Maxcor, 
+     +                               Work(I060),Work(Iend),Maxcor,
      +                               Iuhf,Irrepx,Iside,Mbar_00,
      +                               Ieomprop)
+
+C R-side/L-routine cross-checkpoint (SCRNC_DEBUG_LOG.md step 1): the
+C same raw integrals for this Npert_count feed an Iside=1 mubar_s stage
+C in Scrnc_jj_rcc_lrspn.F too, before that routine's own Iside=2 stage
+C diverges. R-side is proven correct (RPA-sourced-T2 elimination test),
+C so these two checksums should match theirs exactly for the same
+C Npert_count -- diff to confirm before narrowing into Iside=2.
+      write(6,"(1x,a,i4)") "R-side Npert_count=",Npert_count
+      call checksum("R-side Mbar_00:",Mbar_00,1)
+      call checksum("R-side Mubar_s(Iside=1):",Work(I030),
+     +              Lenoo+Lenvv+2*Lenvo)
              If (Iside .eq. 1) Then
 
                  Mu_s   = 480
@@ -259,10 +269,22 @@ C We construct e^-TMue(pq)^T, similarity transformed Mu(p,q).
                  Call Xgemm("N","N",Nrow,1,Nrow,One,Work(Ibgn),
      +                       Nrow,Work(I010),Nrow,Zilch,Work(I030),
      +                       Nrow)
-                 
+
 C Save the 1^st order perturbed amplitude for all perturbations
 
-                 Call Putlst(Work(I030),1,1,0,Irrepx,372+Iside)
+                 Call Putlst(Work(I030),Npert_count,1,1,Irrepx,
+     +                       372+Iside+Loffset)
+
+C Dynamic (frequency-dependent) response, 2026-08-15: on the +Freq pass
+C of a 2-pass dynamic run (see Scrnc_driver.F's Icount loop), also save
+C to list 375 (secprp's own convention, mirrors the CCSD path) before
+C the -Freq pass overwrites list 372+Iside=373 in place. (Loffset shifts
+C this to 379 for the Imult=2/triplet channel.)
+
+                 If (Icount .EQ. 1 .AND. Itop .EQ. 2) Then
+                    Call Putlst(Work(I030),Npert_count,1,1,Irrepx,
+     +                          375+Loffset)
+                 Endif
 
       write(6,*)
       call checksum("1^st order amps,Iside=1:",Work(I030),Nsizec)
@@ -291,7 +313,8 @@ C Save the 1^st order perturbed amplitude for all perturbations
 
 C Save the 1^st order perturbed amplitude for all perturbations
 
-                 Call Putlst(Work(I030),1,1,0,Irrepx,372+Iside)
+                 Call Putlst(Work(I030),Npert_count,1,1,Irrepx,
+     +                       372+Iside+Loffset)
 
       write(6,*)
       call checksum("1^st order amps,Iside=2",Work(I030),Nsizec)

@@ -169,51 +169,62 @@ C Hbar(MB,EJ)
       Endif
 
 C Hbar(AB,CI)
+C 2026-08-19: lists 127-130 (Hbar(AB,CI)) are never built for ring-CC
+C (RCCD/DRCCD) at all -- neither reference. That Hbar block simply
+C isn't needed by ring-CC's own amplitude equations, unlike CCSD which
+C does build it. Originally only the RHF branch below was disabled
+C (CSSS) for the AAAA case, leaving the ABBA case and the whole UHF
+C branch active; both also crashed (@IDSYMSZ: ITYPL=0 ITYPR=0) once
+C ring-CC finally reached this diagnostic-only routine (CheckHbar has
+C no other callers/effects) for the first time today. Skipped entirely
+C now, both references. See SCRNC_DEBUG_LOG.md.
       Write(*,*)
       IF (UHF) Then
-         AAAA_LENGTH_ABCI = IDSYMSZ(IRREPX,ISYTYP(1,127),ISYTYP(2,127))
-         BBBB_LENGTH_ABCI = IDSYMSZ(IRREPX,ISYTYP(1,128),ISYTYP(2,128))
-         ABAB_LENGTH_ABCI = IDSYMSZ(IRREPX,ISYTYP(1,129),ISYTYP(2,129))
-         ABBA_LENGTH_ABCI = IDSYMSZ(IRREPX,ISYTYP(1,130),ISYTYP(2,130))
-         Call Getall(Work, AAAA_LENGTH_ABCI, IRREPX, 127)
-         Call Checksum("AAAA_ABCI", Work, AAAA_LENGTH_ABCI)
-         Call Getall(Work, BBBB_LENGTH_ABCI, IRREPX, 128)
-         Call Checksum("BBBB_ABCI", Work, BBBB_LENGTH_ABCI)
-         Call Getall(Work, ABAB_LENGTH_ABCI, IRREPX, 129)
-         Call Checksum("ABAB_ABCI", Work, ABAB_LENGTH_ABCI)
-         Call Getall(Work, ABBA_LENGTH_ABCI, IRREPX, 130)
-         Call Checksum("ABBA_ABCI", Work, ABBA_LENGTH_ABCI)
+CSSS         AAAA_LENGTH_ABCI = IDSYMSZ(IRREPX,ISYTYP(1,127),ISYTYP(2,127))
+CSSS         BBBB_LENGTH_ABCI = IDSYMSZ(IRREPX,ISYTYP(1,128),ISYTYP(2,128))
+CSSS         ABAB_LENGTH_ABCI = IDSYMSZ(IRREPX,ISYTYP(1,129),ISYTYP(2,129))
+CSSS         ABBA_LENGTH_ABCI = IDSYMSZ(IRREPX,ISYTYP(1,130),ISYTYP(2,130))
+CSSS         Call Getall(Work, AAAA_LENGTH_ABCI, IRREPX, 127)
+CSSS         Call Checksum("AAAA_ABCI", Work, AAAA_LENGTH_ABCI)
+CSSS         Call Getall(Work, BBBB_LENGTH_ABCI, IRREPX, 128)
+CSSS         Call Checksum("BBBB_ABCI", Work, BBBB_LENGTH_ABCI)
+CSSS         Call Getall(Work, ABAB_LENGTH_ABCI, IRREPX, 129)
+CSSS         Call Checksum("ABAB_ABCI", Work, ABAB_LENGTH_ABCI)
+CSSS         Call Getall(Work, ABBA_LENGTH_ABCI, IRREPX, 130)
+CSSS         Call Checksum("ABBA_ABCI", Work, ABBA_LENGTH_ABCI)
       Else
 CSSS         AAAA_LENGTH_ABCI = IDSYMSZ(IRREPX,ISYTYP(1,127),ISYTYP(2,127))
 CSSS         Call Getall(Work, AAAA_LENGTH_ABCI, IRREPX, 127)
 CSSS         Call Checksum("AAAA_ABCI", Work, AAAA_LENGTH_ABCI)
-         ABBA_LENGTH_ABCI = IDSYMSZ(IRREPX,ISYTYP(1,130),ISYTYP(2,130))
-         Call Getall(Work, ABBA_LENGTH_ABCI, IRREPX, 130)
-         Call Checksum("ABBA_ABCI", Work, ABBA_LENGTH_ABCI)
+CSSS         ABBA_LENGTH_ABCI = IDSYMSZ(IRREPX,ISYTYP(1,130),ISYTYP(2,130))
+CSSS         Call Getall(Work, ABBA_LENGTH_ABCI, IRREPX, 130)
+CSSS         Call Checksum("ABBA_ABCI", Work, ABBA_LENGTH_ABCI)
       Endif
 
 C Hbar(IA,JK)
+C 2026-08-19: same as Hbar(AB,CI) just above -- lists 107-110 aren't
+C built for ring-CC either, neither reference. See SCRNC_DEBUG_LOG.md.
       Write(*,*)
       IF (UHF) Then
-         AAAA_LENGTH_IJKA = IDSYMSZ(IRREPX,ISYTYP(1,107),ISYTYP(2,107))
-         BBBB_LENGTH_IJKA = IDSYMSZ(IRREPX,ISYTYP(1,108),ISYTYP(2,108))
-         ABAB_LENGTH_IJKA = IDSYMSZ(IRREPX,ISYTYP(1,109),ISYTYP(2,109))
-         ABBA_LENGTH_IJKA = IDSYMSZ(IRREPX,ISYTYP(1,110),ISYTYP(2,110))
-         Call Getall(Work, AAAA_LENGTH_IJKA, IRREPX, 107)
-         Call Checksum("AAAA_IAJK", Work, AAAA_LENGTH_IJKA)
-         Call Getall(Work, BBBB_LENGTH_IJKA, IRREPX, 108)
-         Call Checksum("BBBB_IAJK", Work, BBBB_LENGTH_IJKA)
-         Call Getall(Work, ABAB_LENGTH_IJKA, IRREPX, 109)
-         Call Checksum("ABAB_IAJK", Work, ABAB_LENGTH_IJKA)
-         Call Getall(Work, ABBA_LENGTH_IJKA, IRREPX, 110)
-         Call Checksum("ABBA_IAJK", Work, ABBA_LENGTH_IJKA)
+CSSS         AAAA_LENGTH_IJKA = IDSYMSZ(IRREPX,ISYTYP(1,107),ISYTYP(2,107))
+CSSS         BBBB_LENGTH_IJKA = IDSYMSZ(IRREPX,ISYTYP(1,108),ISYTYP(2,108))
+CSSS         ABAB_LENGTH_IJKA = IDSYMSZ(IRREPX,ISYTYP(1,109),ISYTYP(2,109))
+CSSS         ABBA_LENGTH_IJKA = IDSYMSZ(IRREPX,ISYTYP(1,110),ISYTYP(2,110))
+CSSS         Call Getall(Work, AAAA_LENGTH_IJKA, IRREPX, 107)
+CSSS         Call Checksum("AAAA_IAJK", Work, AAAA_LENGTH_IJKA)
+CSSS         Call Getall(Work, BBBB_LENGTH_IJKA, IRREPX, 108)
+CSSS         Call Checksum("BBBB_IAJK", Work, BBBB_LENGTH_IJKA)
+CSSS         Call Getall(Work, ABAB_LENGTH_IJKA, IRREPX, 109)
+CSSS         Call Checksum("ABAB_IAJK", Work, ABAB_LENGTH_IJKA)
+CSSS         Call Getall(Work, ABBA_LENGTH_IJKA, IRREPX, 110)
+CSSS         Call Checksum("ABBA_IAJK", Work, ABBA_LENGTH_IJKA)
       Else
 CSSS         AAAA_LENGTH_IJKA = IDSYMSZ(IRREPX,ISYTYP(1,107),ISYTYP(2,107))
 CSSS         Call Getall(Work, AAAA_LENGTH_IJKA, IRREPX, 107)
 CSSS         Call Checksum("AAAA_IAJK", Work, AAAA_LENGTH_IJKA)
-         ABBA_LENGTH_IJKA = IDSYMSZ(IRREPX,ISYTYP(1,110),ISYTYP(2,110))
-         Call Getall(Work, ABBA_LENGTH_IJKA, IRREPX, 110)
-         Call Checksum("ABBA_IAJK", Work, ABBA_LENGTH_IJKA)
+CSSS         ABBA_LENGTH_IJKA = IDSYMSZ(IRREPX,ISYTYP(1,110),ISYTYP(2,110))
+CSSS         Call Getall(Work, ABBA_LENGTH_IJKA, IRREPX, 110)
+CSSS         Call Checksum("ABBA_IAJK", Work, ABBA_LENGTH_IJKA)
       Endif
 
       Return

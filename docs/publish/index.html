@@ -1,0 +1,121 @@
+<title>ACES Manual</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  /* Layout: one reading column; parts as labeled groups of chapter rows. */
+  :root {
+    --bg: #f7f8f9;
+    --surface: #ffffff;
+    --fg: #1d2329;
+    --muted: #5b6672;
+    --rule: #dde2e7;
+    --accent: #1f5f8b;
+    --font-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --font-ui: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181c; --surface: #1b2026; --fg: #e3e7eb; --muted: #9aa5b0;
+      --rule: #2d343b; --accent: #7db7e0; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14181c; --surface: #1b2026; --fg: #e3e7eb; --muted: #9aa5b0;
+    --rule: #2d343b; --accent: #7db7e0; color-scheme: dark;
+  }
+  body {
+    background: var(--bg); color: var(--fg);
+    font: 16px/1.55 var(--font-body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 40px 56px;
+  }
+  main { max-width: 46rem; margin: 0 auto; display: grid; gap: 36px; }
+  header { display: grid; gap: 10px; }
+  .eyebrow {
+    font: 600 0.75rem/1 var(--font-ui); letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  h1 {
+    margin: 0; font: 600 2.25rem/1.15 var(--font-ui);
+    letter-spacing: -0.01em; text-wrap: balance;
+  }
+  .lede { margin: 0; color: var(--muted); max-width: 40rem; }
+  .start {
+    justify-self: start; margin-top: 6px;
+    font: 600 0.95rem/1 var(--font-ui); color: var(--bg); background: var(--accent);
+    padding: 10px 16px; border-radius: 6px; text-decoration: none;
+  }
+  .start:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  section { display: grid; gap: 4px; }
+  h2 {
+    margin: 0 0 6px; font: 600 0.8rem/1 var(--font-ui);
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    padding-bottom: 8px; border-bottom: 1px solid var(--rule);
+  }
+  .row {
+    display: grid; grid-template-columns: minmax(0, 14rem) minmax(0, 1fr); gap: 4px 20px;
+    padding: 10px 0; border-bottom: 1px solid var(--rule); text-decoration: none; color: inherit;
+  }
+  .row:hover .name { text-decoration: underline; }
+  .name { font: 600 1rem/1.4 var(--font-ui); color: var(--accent); }
+  .what { color: var(--muted); font-size: 0.95rem; }
+  .gen {
+    font: 500 0.7rem/1 var(--font-mono); color: var(--muted);
+    border: 1px solid var(--rule); border-radius: 4px; padding: 2px 5px; margin-left: 6px;
+    vertical-align: 2px; white-space: nowrap;
+  }
+  footer { color: var(--muted); font: 0.85rem/1.5 var(--font-ui); }
+  code { font-family: var(--font-mono); font-size: 0.9em; }
+  @media (max-width: 560px) {
+    h1 { font-size: 1.8rem; }
+    .row { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@500;600&family=Source+Serif+4:wght@400;600&display=swap">
+
+<main>
+  <header>
+    <span class="eyebrow">Quantum Theory Project · draft</span>
+    <h1>The ACES Program System</h1>
+    <p class="lede">User guide, keyword reference and programmer manual for ACES II, ACES III and pyaces, rebuilt from the 2006 and 1990s manuals and checked against the current source.</p>
+    <a class="start" href="manual/index.html">Open the manual</a>
+  </header>
+
+  <section>
+    <h2>Getting started</h2>
+    <a class="row" href="manual/getting_started/index.html"><span class="name">Building and testing</span><span class="what">CMake superbuild, the three test suites, a first <code>xaces2</code> run</span></a>
+  </section>
+
+  <section>
+    <h2>User guide</h2>
+    <a class="row" href="manual/user/aces2_input.html"><span class="name">ACES II input</span><span class="what">ZMAT, the <code>*ACES2</code> namelist, basis sets, ECPs, starting orbitals, file directives</span></a>
+    <a class="row" href="manual/user/methods.html"><span class="name">Methods</span><span class="what">SCF, MBPT, CC, EOM, pCCD, ring CC, properties, optimizations, frequencies, with test-suite inputs</span></a>
+    <a class="row" href="manual/user/aces3.html"><span class="name">Running ACES III</span><span class="what"><code>xaces3</code> under MPI, <code>*SIP</code> parameters, <code>xjoda</code> and symmetry labels, jobflows <span class="gen">generated</span></span></a>
+    <a class="row" href="manual/user/pyaces.html"><span class="name">pyaces</span><span class="what">ACES II from Python through <code>aces2py</code></span></a>
+  </section>
+
+  <section>
+    <h2>Reference</h2>
+    <a class="row" href="manual/reference/keywords.html"><span class="name">Keyword reference</span><span class="what">All 185 <code>*ACES2</code> keywords with types, defaults and values <span class="gen">generated</span></span></a>
+  </section>
+
+  <section>
+    <h2>Programmer manual</h2>
+    <a class="row" href="manual/programmer/architecture.html"><span class="name">How ACES II is organized</span><span class="what">The driver, member programs, libraries, <code>xa2proc</code></span></a>
+    <a class="row" href="manual/programmer/io.html"><span class="name">JOBARC and list files</span><span class="what"><code>GETREC</code>/<code>GETLST</code>, list numbering, symmetry types</span></a>
+    <a class="row" href="manual/programmer/jobarc.html"><span class="name">JOBARC record catalog</span><span class="what">633 records and the code that writes and reads each <span class="gen">generated</span></span></a>
+    <a class="row" href="manual/programmer/building.html"><span class="name">How the build works</span><span class="what">Superbuild, ACES II makefiles, ACES III levels, pyaces</span></a>
+    <a class="row" href="manual/programmer/extending.html"><span class="name">Adding to ACES II</span><span class="what">A new keyword, a new member program</span></a>
+    <a class="row" href="manual/programmer/conventions.html"><span class="name">Coding conventions</span><span class="what">Column 72, include guards, implicit typing, compiler pitfalls</span></a>
+    <a class="row" href="manual/programmer/sial.html"><span class="name">SIAL programming</span><span class="what">The ACES III language and runtime</span></a>
+    <a class="row" href="manual/programmer/testing.html"><span class="name">Test suites</span><span class="what">Layout, references, adding a case</span></a>
+  </section>
+
+  <section>
+    <h2>About</h2>
+    <a class="row" href="manual/history.html"><span class="name">History and citation</span><span class="what">Bartlett group origins, first implementations, authors, citation</span></a>
+  </section>
+
+  <footer>Pages marked <span class="gen">generated</span> are rebuilt from the source code each time the manual is built.</footer>
+</main>

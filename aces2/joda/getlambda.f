@@ -15,6 +15,12 @@ C If this is a simple LST or QST climb, we do not need Lambda(n) parameter.
 
       JCT=1
       NDIM = NOPT + IADITNL
+C
+C RFAMAT holds the LST/QST tangents on entry (see ANLYSHES) and EIG
+C leaves work space in it, so clear it before building the RFA
+C matrix. 10/2026.
+C
+      CALL ZERO(RFAMAT, NDIM*NDIM)
 
       DO 503 I = 1, NOPT
 C

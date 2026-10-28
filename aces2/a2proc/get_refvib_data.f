@@ -240,6 +240,7 @@ c machsp.com : end
 
 
 
+
 c This common block contains the IFLAGS and IFLAGS2 arrays for JODA ROUTINES
 c ONLY! The reason is that it contains both arrays back-to-back. If the
 c preprocessor define MONSTER_FLAGS is set, then the arrays are compressed
@@ -265,7 +266,7 @@ C
 C
       Logical Trns_state, Mass_weigh_nm, Get_Hess, Get_Grad, 
      &        Mass_Weigh_gr,Symmetry
-      Logical HESSIANM_present
+      Logical HESSIANM_present, Skip(3*Nreals)
 C
       Dimension VCoords(3*Natoms), Norm_coords(9*Nreals*Nreals), 
      &          Vomega(3*Nreals), Omega(3*Nreals), AtmMass(Natoms), 
@@ -306,6 +307,26 @@ C not in the correct order. Simply skip the first six frequencies.
 
       Call Getrec(20, "JOBARC", 'FORCECON', 3*Nreals*IINTFP,
      &            VOmega)
+C
+C The Icol translations and rotations are the force constants closest
+C to zero. They are not the first Icol: at a transition state the
+C negative force constant sorts first. 10/2026.
+C
+      Do Imode = 1, 3*Nreals
+         Skip(Imode) = .False.
+      Enddo
+      Do K = 1, Icol
+         Fcmin = 1.0D+30
+         Ismall = 0
+         Do Imode = 1, 3*Nreals
+            If (.Not. Skip(Imode) .And.
+     &          Dabs(VOmega(Imode)) .Lt. Fcmin) Then
+               Fcmin  = Dabs(VOmega(Imode))
+               Ismall = Imode
+            Endif
+         Enddo
+         Skip(Ismall) = .True.
+      Enddo
       Call Getcrec(20, "JOBARC", 'VIB_TYPE', 3*Nreals*11*IINTFP, 
      &             Vib_Type)
 
@@ -322,7 +343,7 @@ C
          Else
             Vomega(Imode) = DSQRT(Vomega(Imode))*Au2Invcm
          Endif
-         If (Imode .Gt. Icol) Then
+         If (.Not. Skip(Imode)) Then
              Ivibs = Ivibs + 1
              Omega(Ivibs) = Vomega(Imode)
          Endif 
@@ -354,7 +375,7 @@ C
 C
       Ivibs = 0
       Do Imode = 1, 3*Nreals
-         If (Imode .Gt. Icol) Then
+         If (.Not. Skip(Imode)) Then
             Ivibs = Ivibs + 1
             SymLabel(Ivibs) = SymLabel(Imode)
          Endif
@@ -362,7 +383,7 @@ C
 C
       Ivibs = 0
       Do Imodes = 1, 3*Nreals
-         If (Imodes .Gt. Icol) Then
+         If (.Not. Skip(Imodes)) Then
             Ivibs = Ivibs + 1
             Joff  = 3*Nreals*(Ivibs  - 1) + 1
             Ioff  = 3*Nreals*(Imodes - 1) + 1
@@ -389,6 +410,13 @@ C been removed.
       If (Get_Hess) then
           Length = 9*Nreals*Nreals 
           Call Getrec(20,'JOBARC','CARTHESC',Length*IINTFP,Hess)
+C
+C VHess (Rhess in PES_SCAN_MAIN) is the Hessian the IRC steps use and
+C update; Hess (A2hess) is used as scratch for the eigenvectors in
+C GET_LAMBDA. VHess was only filled in the obsolete block below, so
+C the IRC ran with a zero Hessian. 10/2026.
+C
+          Call Dcopy(Length, Hess, 1, VHess, 1)
 
          Write(6,*)  
          Write(6,*) "@get_ref_vibdata; Hessian from JOBARC"

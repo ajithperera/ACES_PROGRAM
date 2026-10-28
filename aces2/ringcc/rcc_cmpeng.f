@@ -134,7 +134,35 @@ C W(A<B;IJ) -> W(AB,IJ)
           IF(IPRINT.NE.0)WRITE(*,92) E_T
 
           E_flip     = 0.25D0*(E_t + E_s)
-          E_no_flip  = 0.75D0*E_t + 0.25D0*E_s 
+          E_no_flip  = 0.75D0*E_t + 0.25D0*E_s
+C 2026-08-19: switched back to E_flip for ETOT/ESPIN, correcting the
+C 2026-08-13 revert to E_no_flip below (kept for the record, not
+C trusted): that revert relied solely on matching an archived
+C reference file (Testdir_rcc/rccd_rhf_adz.out) that was apparently
+C never itself cross-checked against an independent UHF calculation.
+C Today's independent check does exist: a fresh REF=UHF,CALC=RCCD run
+C (H2/STO-3G) gives a converged correlation energy of
+C -0.011836838064 a.u., matching E_flip's -0.011836838068 to 8 decimal
+C places and NOT matching E_no_flip's -0.026658597092. This also
+C matches the published formula: Rishi, Perera & Bartlett, J. Chem.
+C Phys. 153, 234101 (2020), Eq. 49 gives the plain rCCD ground-state
+C correlation energy as the EQUAL-weight combination
+C E_RrCCD=(1/4)(3B.3T+1B.1T) (no triplet-degeneracy factor) -- exactly
+C E_flip's shape, not E_no_flip's 3x-triplet-weighted one. Per the
+C same paper, the 3x-triplet weight (E_no_flip's shape) belongs to a
+C DIFFERENT quantity -- spin-flip-inclusive excitation/response
+C energies (Eq. 60), not the plain ground-state energy -- so it may
+C still be the right formula for scrnc's response-function assembly
+C (a separate, still-open question, see SCRNC_DEBUG_LOG.md), just not
+C for ETOT/ESPIN here.
+C 2026-08-13 (superseded by the above): reverted to E_no_flip for
+C ETOT/ESPIN -- the archived reference output (Testdir_rcc/
+C rccd_rhf_adz.out) unambiguously reports E_no_flip as "The total
+C correlation energy" (matches TOTENERG/the converged Summary-table
+C energy there, -0.277157669217 a.u. for H2O/cc-pVDZ), not E_flip.
+C Using E_flip here silently corrupted every REF=RHF,CALC=RCCD
+C ground-state energy (confirmed regression, not something that was
+C ever archived as correct).
           ETOT  = E_flip
           ESPIN = E_flip
 

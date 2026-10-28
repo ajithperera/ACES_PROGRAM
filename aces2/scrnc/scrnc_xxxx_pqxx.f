@@ -77,6 +77,19 @@ C (XX,XX) -> (PQ,XX)
         Write(6,*)
 CSSS        Call Checksum("I(XX|XX):",ICORE(I000),NUMXX*NUMXX)
 CSSS        call output(icore(i000),1,numxx,1,numxx,numxx,numxx,1)
+C Diagnostic (2026-08-18, sym=on/off investigation, see
+C SCRNC_DEBUG_LOG.md "continued 19") -- plain dump of the raw
+C I(XX,XX) block exactly as read here, for Iflag=4 (AB/VV), Irrepxx=1,
+C to check directly whether record 17's own row/column is populated in
+C THIS routine's own input, before any transform touches it. Routed
+C through a properly Double-Precision-typed helper (this routine's own
+C "Implicit Integer (A-Z)" would silently bit-reinterpret Icore's
+C elements as integers if read directly here -- same trap as the
+C already-fixed Jj_lrespn bug, "continued 8").
+        If (Iflag .Eq. 4 .And. Irrepxx .Eq. 1 .And. Ispin .Eq. 1) Then
+           Call Scrnc_dump_dble_array(Icore(I000),Numxx*Numxx,
+     +          "ixxxx_iflag4_irrepxx1.dat",Numxx)
+        Endif
         CALL SCRNC_I1TRAN(IFLAG,ICORE(I010),ICORE(I000),ICORE(I020),
      &                   ICORE(I030),ICORE(I040),NAO,NMO,ISPIN,IUHF,
      &                   IRREPXX,IRREPIJ,.FALSE.,"EMPTY")
@@ -138,3 +151,28 @@ c        enddo
 
       RETURN
       END
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_dump_dble_array(X,N,Fname,Numxx)
+C
+C Diagnostic helper (2026-08-18, see SCRNC_DEBUG_LOG.md "continued
+C 19") -- plain one-value-per-line dump of a Double Precision array,
+C called from routines (like Scrnc_xxxx_pqxx.F) that themselves see
+C their Work-array argument as Implicit Integer -- passing it here
+C forces the correct Double Precision reinterpretation of the same
+C underlying memory, since Fortran argument passing is by address.
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension X(N)
+      Character*(*) Fname
+C
+      Open(Unit=91,File=Fname,Form="Formatted",Status="UNKNOWN")
+      Write(91,*) Numxx
+      Do I = 1, N
+         Write(91,*) X(I)
+      Enddo
+      Close(Unit=91)
+C
+      Return
+      End

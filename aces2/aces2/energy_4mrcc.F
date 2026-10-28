@@ -16,7 +16,7 @@
       call a2getrec(20,'JOBARC','IFLAGS2 ',500,iflags2_0)
 
       if (.not.direct) call runit(integral_package)
-      call runit('xvmol2ja')
+      if (.not.erd_ints) call runit('xvmol2ja')
       iuhf0 = iflags0(11)
 
       if (mrcc.or.
@@ -68,7 +68,7 @@ c
 c     integrals are no longer there
 c
                   if (.not.direct) call runit(integral_package)
-                  call runit('xvmol2ja')
+                  if (.not.erd_ints) call runit('xvmol2ja')
                   call runit('xvprops')
                   call runit('rm -f VPOUT')
                endif

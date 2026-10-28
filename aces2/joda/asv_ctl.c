@@ -213,9 +213,9 @@ const ASV_nl_t ASV_nl[] =
 {/*104*/ "IPSI",	"PSI#",		h_ICHAR_handle,	0,	""},
 {/*105*/ "IGEOPT",	"GEOM_OPT#",	h_ICHAR_handle,	0,	""},
 {/*106*/ "IEXTRN",	"EXTERNAL#",	h_ICHAR_handle,	2,	""},
-{/*107*/ "IHESUP",	"HESS_UPD#ATE",	h_ICHAR_handle,	0,	""},
+{/*107*/ "IHESUP",	"HESS_UPD#ATE",	h_ICHAR_handle,	6,	""},
 {/*108*/ "IINHES",	"INIT_HESS#IAN",h_ICHAR_handle,	0,	""},
-{/*109*/ "IEXTRP",	"EXTRAP#OLATE",	h_ICHAR_handle,	0,	""},
+{/*109*/ "","",0,0,""},
 {/*110*/ "","",0,0,""},
 {/*111*/ "","",0,0,""},
 {/*112*/ "","",0,0,""},
@@ -369,16 +369,16 @@ const ASV_nl_t ASV_nl[] =
 {/*253*/ "ISCF",	"SCF_TYPE#",	h_ICHAR_handle,	0,	""},
 {/*254*/ "IDIRCT",	"DIRECT#",	h_ICHAR_handle,	0,	""},
 {/*255*/ "BSNGST",	"SINGLE_STOR#E",h_ICHAR_handle,	0,	""},
-{/*256*/ "IPRVIB",      "PREP_VIB#RON", h_ICHAR_handle, 0,      ""},
-{/*257*/ "IGRVIB",      "GRID_VIB#RON", h_ICHAR_handle, 0,      ""},
-{/*258*/ "ISCAN",       "SCAN_NORMAL#", h_ICHAR_handle, 0,      ""},
-{/*259*/ "ICURVN",      "NORMAL_CURVY#",h_ICHAR_handle, 0,      ""},
-{/*260*/ "ISAMPLE",     "GEO_SAMPLE#"  ,h_ICHAR_handle, 0,      ""},
+{/*256*/ "","",0,0,""},
+{/*257*/ "","",0,0,""},
+{/*258*/ "","",0,0,""},
+{/*259*/ "","",0,0,""},
+{/*260*/ "","",0,0,""},
 {/*261*/ "IPARTEOM",    "PART_EOM#"    ,h_ICHAR_handle, 0,      ""},
 {/*262*/ "IORDER_A",    "ORDER_ALPHA#" ,h_ICHAR_handle, 0,      ""},
 {/*263*/ "IFFIELD ",    "FFIELD#"      ,h_ICHAR_f_int,  0,      "x 10-6"},
 {/*264*/ "AUTO_OCC",    "AUTO_OCC#"    ,h_ICHAR_handle, 2,      ""},
-{/*265*/ "IQUARTIC",    "GEN_QUARTIC#" ,h_ICHAR_handle, 0,      ""},
+{/*265*/ "","",0,0,""},
 {/*266*/ "IOOMPC",      "OOMP_CYC#"    ,h_ICHAR_f_int , 50,     ""},
 {/*267*/ "DKHORDER",    "DKH_ORD#ER"   ,h_ICHAR_f_int,  0,      ""},
 {/*268*/ "UNCONTRACT",  "UNCONT#RACT"  ,h_ICHAR_handle, 0,      ""},
@@ -395,13 +395,29 @@ const ASV_nl_t ASV_nl[] =
 {/*279*/ "IPCC_REFERENCE","PCCD_REF#"  ,h_ICHAR_handle, 0,      ""},
 {/*280*/ "IEOM_SOLVE",  "EOM_SOLVE#"   ,h_ICHAR_handle, 0,      ""},
 {/*281*/ "IOO_CONSTRAIN","OO_CONSTR#AIN",h_ICHAR_handle, 0,     ""},
-{/*282*/ "IOO_MAXCYC",   "OO_MAXCYC#"   ,h_ICHAR_handle, 50,    ""},
+{/*282*/ "IOO_MAXCYC",   "OO_MAXCYC#"   ,h_ICHAR_f_int,  50,    ""},
 {/*283*/ "IOO_DIIS",     "OO_DIIS#"     ,h_ICHAR_handle, 1,     ""},
 {/*284*/ "IOV_CONSTRAIN","OV_CONSTR#AIN",h_ICHAR_handle, 0,     ""},
 {/*285*/ "IGENRLIZD_TDENS" ,"GENRLIZD_TDENS",h_ICHAR_handle,0,  ""},
-{/*286*/ "","",0,0,""},
+{/*286*/ "IIP_ROOT_FND","IP_ROOT_FIND#",h_ICHAR_handle, 0,      ""},
+/* ACES III keywords (xaces3 runs xjoda; 10/2026) */
+{/*287*/ "ILOCK_ORBS",  "LOCK_ORBI#TALS",h_ICHAR_handle, 0,     ""},
+{/*288*/ "IDAMP_END",   "DAMP_END"     ,h_ICHAR_handle, 20,     ""},
+{/*289*/ "EE_GUESS",    "EE_GUESS"     ,h_ICHAR_handle, 0,      ""},
+{/*290*/ "EE_DENOM",    "EE_DENOM"     ,h_ICHAR_handle, 0,      ""},
+{/*291*/ "ICIS_TOL",    "CIS_TOL#"     ,h_ICHAR_f_int,  5,      "tol"},
+{/*292*/ "ROOT_SEARCH", "ROOT_SE#"     ,h_ICHAR_handle, 0,      ""},
+{/*293*/ "SELECT_VECS", "SEL_VEC#"     ,h_ICHAR_handle, 0,      ""},
+{/*294*/ "SUB_SPACE",   "SUB_SPACE"    ,h_ICHAR_handle, 1,      ""},
+{/*295*/ "IF12STG",     "STGF12"       ,h_ICHAR_handle, 0,      ""},
+{/*296*/ "IF12GAMMA",   "F12GAMMA"     ,h_ICHAR_string, 0,      ""},
+{/*297*/ "IFREQ",       "FREQ"         ,h_ICHAR_string, 0,      ""},
+{/*298*/ "IIMFREQ",     "IMFREQ"       ,h_ICHAR_string, 0,      ""},
+{/*299*/ "ISPINORB",    "SPINORB#_CC"  ,h_ICHAR_handle, 0,      ""},
+{/*300*/ "ISOC_ROOTS",  "SOC_ROOTS"    ,h_ICHAR_f_int,  0,      ""},
+{/*301*/ "","",0,0,""},
 }; /* end ASV_nl[] definition */
-#define MAX_ASVs 285
+#define MAX_ASVs 300
 
 /******************************************************************************/
 
@@ -485,7 +501,8 @@ void asv_handle_proc(const f_int * index, const char * value)
       /*44-47*/ "CCSDT(Qf)",	"OO-MP2",       "OO-MBPT(2)",   "CC2",
       /*48-51*/ "rCCD",         "drCCD",        "EXTRNL_CCD",   "EXTRNL_CCSD", 
       /*52-55*/ "pCCD",         "OO-LCCD",      "OO-CCD",       "pCCD-(S)",
-      /*56-57*/ "pCCD-(TS)",    "PCCDQF",       "PCCD-(TSD)",   "CCDQF"};
+      /*56-57*/ "pCCD-(TS)",    "PCCDQF",       "PCCD-(TSD)",   "CCDQF",
+                "" };
             asv_update_handle(index,value,handles);
             break;
         }
@@ -516,6 +533,11 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "EOM_NLO",	/* 11 */
                 "GEERTSEN",	/* 12 */
                 "JSC_ALL",	/* 13 */
+                "POLAR",	/* 14, ACES III */
+                "A-TEN",	/* 15, ACES III */
+                "G-TEN",	/* 16, ACES III */
+                "D-TEN",	/* 17, ACES III */
+                "SOC",		/* 18, ACES III */
                 ""
             };
             asv_update_handle(index,value,handles);
@@ -570,7 +592,8 @@ void asv_handle_proc(const f_int * index, const char * value)
               "FRACTIONAL",
               "BCANONICAL",
               "BFRACTIONAL",
-              "NWCHEM_MOS_2A2" 
+              "NWCHEM_MOS_2A2",
+               ""
             };
             asv_update_handle(index,value,handles);
             break;
@@ -590,7 +613,7 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "HUCKEL",	/* 7 */
                 "OVERRIDE",     /* 8 */
                 "ATOMIC",       /* 9 */
-                "AODENS"        /* 10 */
+                "AODENS",       /* 10 */
                 ""
             };
             asv_update_handle(index,value,handles);
@@ -648,6 +671,7 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "MS",		/* 3 */
                 "BOFILL",	/* 4 */
                 "PSB",		/* 5 */
+                "AUTO",		/* 6 - BFGS for minima, BOFILL for TS */
                 ""
             };
             asv_update_handle(index,value,handles);
@@ -668,20 +692,6 @@ void asv_handle_proc(const f_int * index, const char * value)
             break;
         }
 
-        case h_IOPPAR_extrap:
-        {
-            const char *handles[] =
-            {
-                "NONE",		/* 0 */
-                "GRADIENT",	/* 1 */
-                "ENERGY",	/* 2 */
-                "COMBO",	/* 3 */
-                ""
-            };
-            asv_update_handle(index,value,handles);
-            break;
-        }
-
         case h_IOPPAR_opt_method:
         {
             const char *handles[] =
@@ -692,8 +702,6 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "MANR",		/* 3 */
                 "EVFTS",	/* 4 */
                 "MAEVFTS",	/* 5 */
-                "IGTS",		/* 6 - used to be ENERONLY? */
-                "QSD",		/* 7 */
                 ""
             };
             asv_update_handle(index,value,handles);
@@ -708,7 +716,8 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "LST",          /* 1 */
                 "QST",          /* 2 */
                 "CONSTRAINED",  /* 3 */
-                "COMBO"         /* 4 - reserved for QST/LST and constrained*/
+                "COMBO",        /* 4 - reserved for QST/LST and constrained*/
+                ""
             };
             asv_update_handle(index,value,handles);
             break;
@@ -739,7 +748,7 @@ void asv_handle_proc(const f_int * index, const char * value)
         case h_IOPPAR_integrals:
         {
             const char *handles[] = { "ARGOS", "VMOL", "HERMIT", "CADPAC",
-                                      "SEWARD", "GAMESS", "" };
+                                      "SEWARD", "GAMESS", "ERD", "" };
             asv_update_handle(index,value,handles);
             break;
         }
@@ -894,7 +903,8 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "EOM(Sf)-RCCD",   /* 17 */
                 "EOM(Sf)-DRCCD",  /* 18 */
                 "EOM(S)-DXRCCD",  /* 19 */ 
-                "EOM(SF)-DXRCCD", /* 20 */ 
+                "EOM(SF)-DXRCCD", /* 20 */
+                "",
             };  
             asv_update_handle(index,value,handles);
             break;
@@ -1000,7 +1010,7 @@ void asv_handle_proc(const f_int * index, const char * value)
 
         case h_IOPPAR_damp_typ:
         {
-            const char *handles[] = { "NONE", "DAVIDSON", "OTHER", "" };
+            const char *handles[] = { "NONE", "DAVIDSON", "CONSTANT", "OTHER", "" };
             asv_update_handle(index,value,handles);
             break;
         }
@@ -1050,7 +1060,7 @@ void asv_handle_proc(const f_int * index, const char * value)
                 "ADC(2)",     /* 12 */
                 "ADCC(2)",    /* 13 */
                 "COPT",       /* 14 */
-                "DRXCCD"      /* 15 */
+                "DRXCCD",     /* 15 */
                 ""  
             };
             asv_update_handle(index,value,handles);
@@ -1134,7 +1144,7 @@ void asv_handle_proc(const f_int * index, const char * value)
         case h_IOPPAR_program:
         {
             const char *handles[] = { "DEFAULT", "NOT_USED", "ACES2", "MN_A3",
-                                      "PCCD" };
+                                      "PCCD", "" };
             asv_update_handle(index,value,handles);
             break;
         }
@@ -1192,14 +1202,22 @@ void asv_handle_proc(const f_int * index, const char * value)
 
         case h_IOPPAR_rpa_solve:
         {
-            const char *handles[] = { "FULL_DIAG", "DAVIDSON" };
+            const char *handles[] = { "FULL_DIAG", "DAVIDSON", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_ip_root_find:
+        {
+            const char *handles[] = { "DAVIDSON","FULL_DIAG", ""};
             asv_update_handle(index,value,handles);
             break;
         }
 
         case h_IOPPAR_ee_root_find:
         {
-            const char *handles[] = { "DAVIDSON","BLOCK_DAVIDSON","LANCZOS"};
+            const char *handles[] = { "DAVIDSON","BLOCK_DAVIDSON","LANCZOS",
+                                      "FULL_DIAG", ""};
             asv_update_handle(index,value,handles);
             break;
         }
@@ -1211,7 +1229,7 @@ void asv_handle_proc(const f_int * index, const char * value)
                                       "BRUECKNER",
                                       "NATURAL",
                                       "LOCAL",
-                                      "OPTIMIZED"};
+                                      "OPTIMIZED", ""};
             asv_update_handle(index,value,handles);
             break;
         }
@@ -1219,30 +1237,7 @@ void asv_handle_proc(const f_int * index, const char * value)
         case h_IOPPAR_oo_method:
         {
             const char *handles[] = { "NONE","BB-SD", "BFGS", "FULL-NR",
-                                      "AMSGRAD","ROTGRAD"};
-            asv_update_handle(index,value,handles);
-            break;
-        }
-
-        case h_IOPPAR_grid_vibron:
-        {
-            const char *handles[] =
-            {
-                "GRID_1",     /* 1 */
-                "GRID_2",     /* 2 */
-                "GRID_3",     /* 3 */
-                "GRID_4",     /* 4 */
-                "GRID_5",     /* 5 */
-                "GRID_6",     /* 6 */
-                "GRID_7",     /* 7 */
-                "GRID_8",     /* 8 */
-                "GRID_9",    /* 9 */
-                "GRID10",    /* 10 */
-                "GRID11",    /* 11 */
-                "GRID12",    /* 12 */
-                "GRID13",    /* 13 */
-                ""
-            };
+                                      "AMSGRAD","ROTGRAD","RFO", ""};
             asv_update_handle(index,value,handles);
             break;
         }
@@ -1256,7 +1251,7 @@ void asv_handle_proc(const f_int * index, const char * value)
 
         case h_IOPPAR_newvrt:
         {
-            const char *handles[] = { "OFF", "SELF_CONSISTENT", "POST_HF" };
+            const char *handles[] = { "OFF", "SELF_CONSISTENT", "POST_HF", "" };
             asv_update_handle(index,value,handles);
             break;
         }
@@ -1271,6 +1266,49 @@ void asv_handle_proc(const f_int * index, const char * value)
         case h_IOPPAR_auto_occ:
         {
            const char *handles[] = { "OFF", "ON", "AUTO", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_ee_guess:
+        {
+            const char *handles[] = { "CIS", "EXTERNAL", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_ee_denom:
+        {
+            const char *handles[] = { "FOCK", "HBAR", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_root_search:
+        {
+            const char *handles[] = { "MAX_OVERLAP", "MIN_ENERGY", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_select_vecs:
+        {
+            const char *handles[] = { "FIRST", "PREVIOUS", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_sub_space:
+        {
+            const char *handles[] = { "KEEP", "NEW", "" };
+            asv_update_handle(index,value,handles);
+            break;
+        }
+
+        case h_IOPPAR_stgf12:
+        case h_IOPPAR_spinorb_cc:
+        {
+            const char *handles[] = { "OFF", "ON", "" };
             asv_update_handle(index,value,handles);
             break;
         }

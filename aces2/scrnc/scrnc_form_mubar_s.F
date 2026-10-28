@@ -25,11 +25,14 @@ C ARE INCLUDED.
 C
       IMPLICIT INTEGER (A-Z)
       LOGICAL PRINT
+      LOGICAL Ccsd,Mbpt,Parteom,Nodavid,Aoladder,Rccd,Drccd
       DOUBLE PRECISION ONE,ONEM,ZILCH,SNRM2,TWO,SCR,SDOT,
-     &                 SIGN1, SIGN2
+     &                 SIGN1, SIGN2, HALF, HALFM
       DOUBLE PRECISION MIJ(*),MAB(*),MAI(*),MEXPECT,MBAR00
       DOUBLE PRECISION MIJBAR(*),MABBAR(*),MAIBAR(*),MIABAR(*)
       DIMENSION SCR(MAXCOR)
+      COMMON /Eominfo/Ccsd,Mbpt,Parteom,Nodavid,Aoladder,Rccd,
+     +                Drccd
       COMMON/MACHSP/IINTLN,IFLTLN,IINTFP,IALONE,IBITWD
       COMMON/SYMINF/NSTART,NIRREP,IRREPS(255,2),DIRPRD(8,8)
       COMMON/SYM/POP(8,2),VRT(8,2),NT(2),NFMI(2),NFEA(2)
@@ -37,6 +40,7 @@ C
       COMMON/SYMLOC/ISYMOFF(8,8,25)
 C
       DATA ONE,ONEM,ZILCH,TWO /1.0D0,-1.0D0,0.0D0,2.0D0/
+      DATA HALF,HALFM /0.5D0,-0.5D0/
 C
       LISTT1=90+100*(ISIDE-1)
 C
@@ -159,7 +163,15 @@ C
        I0GV=I000+LENT1
        I0GO=I0GV+NFEA(ISPIN)
        I010=I0GO+NFMI(ISPIN)
-       I020=I010+MAX(NT2DSZAA*NT2DISAA,NT2DSZAB*NT2DSZAB)
+
+C Bug fix 2026-08-14: was NT2DSZAB*NT2DSZAB (squared -- copy-paste typo
+C off the AA term above, which correctly uses SZ*DIS). Numerically inert
+C for closed-shell-like UHF references where alpha/beta occ/virt counts
+C match (NT2DSZAB happens to equal NT2DISAB there), which is why this
+C survived undetected -- but wrong in general, and a real corruption risk
+C (I020 landing too close, overlapping still-needed T2AB data) for any
+C case where the AB block truly is non-square.
+       I020=I010+MAX(NT2DSZAA*NT2DISAA,NT2DSZAB*NT2DISAB)
        IF(IUHF.EQ.0)I030=I020+NT2DSZAA*NT2DISAA
        CALL GETLST(SCR(I000),1,1,1,ISPIN,LISTT1)
        IF(ISIDE.EQ.2)THEN
@@ -273,22 +285,117 @@ C
           ENDIF
 C
           CALL GETLST(SCR(I010),1,NT2DISAB,1,IRREPX,LISTT2AB)
+#ifdef _DEBUG_LVL0
+C 2026-08-22: raw, pre-combination T(list37-family) checksum -- settles
+C whether LISTT2AB (Iside-dependent, =37 R-side/=137 L-side for RCCD
+C ISPIN=1) actually equals the converged singlet channel amplitude
+C T_S, independent of the 2*T37-T34 combination done below. See
+C SCRNC_DEBUG_LOG.md, 2026-08-22 (Lead B empirical checksum test).
+      Write(6,"(a,I2,a,I5,a,20F15.10)")
+     +     " LEADB_RAW37 Iside=",Iside," LISTT2AB=",LISTT2AB," val=",
+     +     (SCR(I010-1+I),I=1,MIN(NT2DSZAB*NT2DISAB,20))
+#endif
           IF(IUHF.EQ.0)THEN
-             CALL GETLST(SCR(I020),1,NT2DISAA,1,IRREPX,
-     &                   100*(ISIDE-1)+39)
-             CALL SSCAL(NT2DSZAB*NT2DISAB,TWO,SCR(I010),1)
-             CALL SAXPY(NT2DSZAB*NT2DISAB,ONEM,SCR(I020),1,SCR(I010),1)
+C 2026-08-19: RCCD's own T2(Ij,Ab) (list 37, read above as LISTT2AB)
+C is never antisymmetrized (rcc_dwmbej.F's own comment) -- unlike
+C CCSD's, so list 39 (the generic RNABIJ 'Ab<->bA'-type resort of list
+C 46, valid for CCSD's antisymmetrized amplitudes) turns out IDENTICAL
+C to list 37 for RCCD, element for element (confirmed empirically,
+C H2/STO-3G and H2/DZ both). That silently collapses this routine's
+C "2*T37-T39" CCSD-style dressing combination to just "T37" for RCCD,
+C losing the intended second (exchange-type) contribution entirely --
+C the real source of the still-open RHF/UHF response mismatch (see
+C SCRNC_DEBUG_LOG.md). rcc_dwmbej.F's OWN Hbar construction already
+C solves this correctly using list 34 (not 39) as list 37's exchange-
+C type partner -- reuse that same list here for RCCD specifically.
+C CCSD (and DRCCD, deferred separately, not fixed here) keep list 39.
+             LISTT2B = 100*(ISIDE-1) + 39
+             IF (RCCD) LISTT2B = 100*(ISIDE-1) + 34
+             CALL GETLST(SCR(I020),1,NT2DISAA,1,IRREPX,LISTT2B)
+#ifdef _DEBUG_LVL0
+C 2026-08-22: raw list34 (RCCD's "exchange partner", flagged in
+C SCRNC_DEBUG_LOG.md 2026-08-20 "continued 3" as actually being ring-CC's
+C TRIPLET channel's own primary amplitude, REFLST=44/SPCAS2='AAAA') --
+C print BEFORE the SAXPY combination below so it can be compared
+C directly against T_T=+0.163485120840 (H2/STO-3G RHF RCCD, list 61).
+      Write(6,"(a,I2,a,I5,a,20F15.10)")
+     +     " LEADB_RAW34 Iside=",Iside," LISTT2B =",LISTT2B," val=",
+     +     (SCR(I020-1+I),I=1,MIN(NT2DSZAA*NT2DISAA,20))
+#endif
+C 2026-08-22 FIX (see SCRNC_DEBUG_LOG.md "Lead B" test): the empirical
+C checksum test above confirms list34/list134 EXACTLY equals the
+C converged triplet-channel amplitude T_T (RCC_RHF_CMPENEG list 61) and
+C list37/list137 EXACTLY equals the converged singlet-channel amplitude
+C T_S (list 63) -- both to ~8 printed digits. Finding 1's proven
+C spin-adaptation identity T(ABAB) = (T_S - T_T)/2 (see log -- this is
+C the SAME quantity UHF's raw, un-dressed list37 IS) therefore predicts
+C the correct RHF reconstruction of that spin-orbital ABAB amplitude is
+C (T37-T34)/2, NOT the CCSD-style 2*T37-T34 previously shipped here
+C (empirically tuned, not derived, in 498542f8 -- see 2026-08-20
+C "continued 3", which already cast doubt on its theoretical grounding).
+C VERIFIED: H2/STO-3G RCCD response-only ratio (UHF/RHF) improved
+C 5.18x->1.88x; H2O/STO-3G RCCD improved on ALL 49 diagonal JJ elements,
+C no regressions. Guarded to RCCD only; CCSD's own list-39
+C antisymmetrized-amplitude formula (2*T37-T39) is untouched; DRCCD
+C (separate flag) also untouched, reconfirmed bit-identical.
+             IF (RCCD) THEN
+                CALL SSCAL(NT2DSZAB*NT2DISAB,HALF,SCR(I010),1)
+                CALL SAXPY(NT2DSZAB*NT2DISAB,HALFM,SCR(I020),1,
+     &                     SCR(I010),1)
+             ELSE
+                CALL SSCAL(NT2DSZAB*NT2DISAB,TWO,SCR(I010),1)
+                CALL SAXPY(NT2DSZAB*NT2DISAB,ONEM,SCR(I020),1,
+     &                     SCR(I010),1)
+             ENDIF
           ENDIF
+#ifdef _DEBUG_LVL0
+      call checksum("T2AB(pre-xgemm)              :",SCR(I010),
+     +               NT2DSZAB*NT2DISAB)
+      call checksum("MAI(IOFFVO2)(pre-xgemm)      :",MAI(IOFFVO2),
+     +               NT2DISAB)
+      Write(6,"(a,I2,a,I2,a,I2,a,I5,a,I5)")
+     +     " RAWTRACE Iside=",Iside," Irrepx=",Irrepx," Ispin=",Ispin,
+     +     " NT2DSZAB=",NT2DSZAB," NT2DISAB=",NT2DISAB
+      Write(6,"(a,20F15.10)") " RAWTRACE T2AB(1:NT2DSZAB,dis=1)  :",
+     +     (SCR(I010-1+I),I=1,MIN(NT2DSZAB,20))
+      Write(6,"(a,20F15.10)") " RAWTRACE MAI(IOFFVO2)            :",
+     +     (MAI(IOFFVO2-1+I),I=1,MIN(NT2DISAB,20))
+#endif
           CALL XGEMM('N','N',NT2DSZAB,1,NT2DISAB,ONE*SIGN1,SCR(I010),
      &                NT2DSZAB,MAI(IOFFVO2),NT2DISAB,ONE,
      &                MAIBAR(IOFFVO1),NT2DSZAB)
+#ifdef _DEBUG_LVL0
+      call checksum("MAIBAR(post-AB-xgemm)        :",MAIBAR(IOFFVO1),
+     +               NT2DSZAB)
+      Write(6,"(a,20F15.10)") " RAWTRACE MAIBAR(post-AB-xgemm)   :",
+     +     (MAIBAR(IOFFVO1-1+I),I=1,MIN(NT2DSZAB,20))
+#endif
           IF(IUHF.NE.0)THEN
              CALL GETLST(SCR(I010),1,NT2DISAA,1,IRREPX,LISTT2AA)
+#ifdef _DEBUG_LVL0
+      call checksum("T2AA(pre-xgemm)              :",SCR(I010),
+     +               NT2DSZAA*NT2DISAA)
+      call checksum("MAI(IOFFVO1)(pre-xgemm)      :",MAI(IOFFVO1),
+     +               NT2DISAA)
+      Write(6,"(a,I2,a,I2,a,I2,a,I5,a,I5)")
+     +     " RAWTRACE Iside=",Iside," Irrepx=",Irrepx," Ispin=",Ispin,
+     +     " NT2DSZAA=",NT2DSZAA," NT2DISAA=",NT2DISAA
+      Write(6,"(a,20F15.10)") " RAWTRACE T2AA(1:NT2DSZAA,dis=1)  :",
+     +     (SCR(I010-1+I),I=1,MIN(NT2DSZAA,20))
+      Write(6,"(a,20F15.10)") " RAWTRACE MAI(IOFFVO1)            :",
+     +     (MAI(IOFFVO1-1+I),I=1,MIN(NT2DISAA,20))
+#endif
              CALL XGEMM('N','N',NT2DSZAA,1,NT2DISAA,ONEM*SIGN1,
      &                   SCR(I010),NT2DSZAA,MAI(IOFFVO1),NT2DISAA,ONE,
      &                   MAIBAR(IOFFVO1),NT2DSZAA)
+#ifdef _DEBUG_LVL0
+      call checksum("MAIBAR(post-AA-xgemm)        :",MAIBAR(IOFFVO1),
+     +               NT2DSZAA)
+      Write(6,"(a,20F15.10)") " RAWTRACE MAIBAR(post-AA-xgemm)   :",
+     +     (MAIBAR(IOFFVO1-1+I),I=1,MIN(NT2DSZAA,20))
+#endif
           ENDIF
-       ENDIF 
+       ENDIF
 C
        IF (ISIDE .EQ. 2 .AND. IRREPX .EQ. 1 .AND. IEOMPROP .EQ. 0) THEN
           CALL GETLST(SCR(I000),1,1,1,ISPIN,190)

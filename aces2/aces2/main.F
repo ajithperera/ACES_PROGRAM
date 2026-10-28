@@ -57,6 +57,16 @@ C
 c   o initialize the ACES environment and turn off the job archive subsystem
       call crapsi(ijunk,iuhf,-1)
       call aces_ja_fin
+C
+C PROGRAM=PCCD: the pCCD family (including OO-pCCD) has its own driver,
+C xrunpccd, which runs xjoda again, handles all the branches and prints
+C the completion message.
+C
+      if (iflags2(h_IFLAGS2_program).eq.4) then
+         call runit('xrunpccd')
+         call parenv_stop
+         call c_exit(0)
+      end if
 
       call init
       if (iflags2(113).eq.1.and.
@@ -75,12 +85,6 @@ c
       if (mrcc) then
          write(6,*) ' @aces2.main: enter mrcc_branch '
          call mrcc_branch
-       else if (iflags2(h_IFLAGS2_prep_vibron).eq.1 .or.
-     $         iflags2(h_IFLAGS2_geo_sample).eq.1 .or.
-     $         iflags2(h_IFLAGS2_gen_quartic).eq.1 .or.
-     $          iflags2(h_IFLAGS2_scan_normal).eq.1 ) then
-         write(6,*) ' @aces2.main: enter aces2_heff'
-         call aces2_heff
       else
          call Job_control
       end if

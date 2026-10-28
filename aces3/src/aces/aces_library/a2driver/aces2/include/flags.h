@@ -343,8 +343,6 @@
 #define h_IOPPAR_init_hessian	108
 #define h_IFLAGS2_init_hessian	8
 
-#define h_IOPPAR_extrap		109
-#define h_IFLAGS2_extrap	9
 
 #define h_IOPPAR_ea_calc	201
 #define h_IFLAGS2_ea_calc	101
@@ -513,59 +511,130 @@
 #define h_IOPPAR_single_store	255
 #define h_IFLAGS2_single_store	155
 
-#define h_IOPPAR_oomp_cyc       256
-#define h_IFLAGS2_oomp_cyc	156
 
-#define h_IOPPAR_dkh_order      257
-#define h_IFLAGS2_dkh_order     157
 
-#define h_IOPPAR_uncontract     258
-#define h_IFLAGS2_uncontract    158
 
-#define h_IOPPAR_opt_control    259
-#define h_IFLAGS2_opt_control   159
 
-#define h_IOPPAR_lock_orbitals  260
-#define h_IFLAGS2_lock_orbials  160
 
-#define h_IOPPAR_damp_end       261
-#define h_IFLAGS2_damp_end      161
+#define h_IOPPAR_parteom    261
+#define h_IFLAGS2_parteom   161
 
-#define h_IOPPAR_ee_guess       262
-#define h_IFLAGS2_ee_guess      162
+#define h_IOPPAR_order_alpha    262
+#define h_IFLAGS2_order_alpha   162
 
-#define h_IOPPAR_ee_denom       263
-#define h_IFLAGS2_ee_denom      163
+#define h_IOPPAR_ffield    263
+#define h_IFLAGS2_ffield   163
 
-#define h_IOPPAR_cis_tol        264
-#define h_IFLAGS2_cis_tol       164
+#define h_IOPPAR_auto_occ    264
+#define h_IFLAGS2_auto_occ   164
 
-#define h_IOPPAR_root_search    265
-#define h_IFLAGS2_root_search   165
 
-#define h_IOPPAR_select_vecs    266
-#define h_IFLAGS2_select_vecs   166
+#define h_IOPPAR_oomp_cyc       266
+#define h_IFLAGS2_oomp_cyc	166
 
-#define h_IOPPAR_sub_space      267
-#define h_IFLAGS2_sub_space     167
+#define h_IOPPAR_dkh_order      267
+#define h_IFLAGS2_dkh_order     167
 
-#define h_IOPPAR_stgf12         268
-#define h_IFLAGS2_stgf12        168
+#define h_IOPPAR_uncontract     268
+#define h_IFLAGS2_uncontract    168
 
-#define h_IOPPAR_f12gamma       269
-#define h_IFLAGS2_f12gamma      169
+#define h_IOPPAR_opt_control    269
+#define h_IFLAGS2_opt_control   169
 
-#define h_IOPPAR_pol_freq       270
-#define h_IFLAGS2_pol_freq      170
+#define h_IOPPAR_damp_cc        270
+#define h_IFLAGS2_damp_cc       170
 
-#define h_IOPPAR_pol_freq_im    271
-#define h_IFLAGS2_pol_freq_im   171
+#define h_IOPPAR_pes_scan       271
+#define h_IFLAGS2_pes_scan      171
 
-#define h_IOPPAR_spinorb_cc     272
-#define h_IFLAGS2_spinorb_cc    172
+#define h_IOPPAR_core_window    272
+#define h_IFLAGS2_core_window   172
 
-#define h_IOPPAR_soc_roots      273
-#define h_IFLAGS2_soc_root      173
+#define h_IOPPAR_prjct_single   273
+#define h_IFLAGS2_prjct_single  173
+
+#define h_IOPPAR_copt           274
+#define h_IFLAGS2_copt          174
+
+#define h_IOPPAR_rpa_solve      275
+#define h_IFLAGS2_rpa_solve     175
+
+#define h_IOPPAR_time_dpd_cc     276
+#define h_IFLAGS2_time_dpd_cc    176
+
+#define h_IOPPAR_ee_root_find    277
+#define h_IFLAGS2_ee_root_find   177
+
+#define h_IOPPAR_oo_method       278
+#define h_IFLAGS2_oo_method      178
+
+#define h_IOPPAR_pccd_reference  279
+#define h_IFLAGS2_pccd_reference 179
+
+#define h_IOPPAR_eom_solve       280
+#define h_IFLAGS2_eom_solve      180
+
+#define h_IOPPAR_oo_constrain    281
+#define h_IFLAGS2_oo_constrain   181 
+
+#define h_IOPPAR_oo_maxcyc       282
+#define h_IFLAGS2_oo_maxcyc      182 
+
+#define h_IOPPAR_oo_diis         283
+#define h_IFLAGS2_oo_diis        183 
+
+#define h_IOPPAR_ov_constrain    284
+#define h_IFLAGS2_ov_constrain   184 
+
+#define h_IOPPAR_genrlizd_tdens    285
+#define h_IFLAGS2_genrlizd_tdens   185
+
+#define h_IOPPAR_ip_root_find    286
+#define h_IFLAGS2_ip_root_find   186
+
+/* ACES III keywords (xaces3 runs xjoda) */
+#define h_IOPPAR_lock_orbitals   287
+#define h_IFLAGS2_lock_orbitals  187
+
+#define h_IOPPAR_damp_end        288
+#define h_IFLAGS2_damp_end       188
+
+#define h_IOPPAR_ee_guess        289
+#define h_IFLAGS2_ee_guess       189
+
+#define h_IOPPAR_ee_denom        290
+#define h_IFLAGS2_ee_denom       190
+
+#define h_IOPPAR_cis_tol         291
+#define h_IFLAGS2_cis_tol        191
+
+#define h_IOPPAR_root_search     292
+#define h_IFLAGS2_root_search    192
+
+#define h_IOPPAR_select_vecs     293
+#define h_IFLAGS2_select_vecs    193
+
+#define h_IOPPAR_sub_space       294
+#define h_IFLAGS2_sub_space      194
+
+#define h_IOPPAR_stgf12          295
+#define h_IFLAGS2_stgf12         195
+
+#define h_IOPPAR_f12gamma        296
+#define h_IFLAGS2_f12gamma       196
+
+#define h_IOPPAR_pol_freq        297
+#define h_IFLAGS2_pol_freq       197
+
+#define h_IOPPAR_pol_freq_im     298
+#define h_IFLAGS2_pol_freq_im    198
+
+#define h_IOPPAR_spinorb_cc      299
+#define h_IFLAGS2_spinorb_cc     199
+
+#define h_IOPPAR_soc_roots       300
+#define h_IFLAGS2_soc_roots      200
+
 
 #endif /* _FLAGS_H_ */
 

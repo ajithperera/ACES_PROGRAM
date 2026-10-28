@@ -1,0 +1,26 @@
+test -n "$USERDIR" || exit 1
+# OO-pCCD, OO_METHOD=RFO from HF orbitals (xjoda + xrunpccd driver).
+# SYMMETRY=OFF: the broken-symmetry minimum (with the default frozen-
+# Hessian model the symmetric saddle is not visited; with CONST it is
+# passed and left along its negative mode); SYMMETRY=ON: the C2v minimum. TOTENERG is the energy of the stationary point.
+cat <<. >ZMAT
+H2O OO-pCCD RFO STO-3G
+H
+O 1 R
+H 2 R 1 A
+
+R=0.957
+A=104.5
+
+*ACES2(BASIS=STO-3G
+CALC=PCCD,PROGRAM=PCCD
+REF=RHF,MEM_SIZE=2gb
+sym=off
+PCCD_REF=OPTIMIZED,OO_METHOD=RFO
+BRUCK_CONV=6,OO_MAXCYC=300
+cc_conv=10,scf_conv=10)
+
+.
+ln -s $GENBAS . || exit 1
+xjoda || exit 1
+xrunpccd || exit 1

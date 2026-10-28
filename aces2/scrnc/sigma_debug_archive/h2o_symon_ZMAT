@@ -1,0 +1,15 @@
+H2O, SCRNC screened-Coulomb test, DRCCD (ring-CC) path, sym=on consistency check.
+H
+O 1 R
+H 2 R 1 A
+
+R=0.957
+A=104.5
+
+*ACES2(BASIS=STO-3G
+CALC=DRCCD,DAMP_TYPE=DAVIDSON
+REF=UHF,MEM_SIZE=1gb
+DENSITY=RESPONSE
+sym=on
+CC_EXTRAP=OFF
+cc_conv=9,scf_conv=10)

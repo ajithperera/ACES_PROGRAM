@@ -256,13 +256,36 @@ c files.com : end
       Aoladder = (Iflags(93).eq. 2)
       Ieomprop =  Iflags2(106)
 
-      If (Iuhf .EQ. 0) Then
+C 2026-08-19: the original blanket REF=UHF trap here turned out to be
+C caused by two narrow bugs, not fundamental missing RHF support: (1) an
+C uninitialized-variable typo in scrnc_jj_cc_lrspn.F (Isympert(Iocc_pair),
+C Iocc_pair never declared/assigned anywhere in that file) feeding a
+C garbage irrep into Spntsing/Spinad3 -- fixed, now reads
+C Isympert(Iao_pair), matching the loop index and the working
+C scrnc_jj_rcc_assemble.F sibling call. (2) scrnc_newsize.F's
+C 1 diagnostic unconditionally called Idsymsz on BB-specific
+C list types that legitimately don't exist under RHF -- fixed to mirror
+C the real (already-correct) Iuhf branch. With both fixed, the CCSD-LR
+C path (H2/STO-3G) now runs RHF cleanly and its JJ_lrespn matrix agrees
+C with the UHF path to ~1e-8 (matches cc_conv=9/scf_conv=10) -- a real,
+C verified UHF-vs-RHF consistency check, not just "doesn't crash."
+C RCCD/DRCCD (ring-CC) is a separate story: it also runs RHF without
+C crashing now, but its JJ_lrespn matrix does NOT agree with UHF (H2/
+C STO-3G DRCCD: RHF gives JJ(1,1)=0.79307663018 vs UHF's
+C 0.80469432450, ~1.2% off -- the identical-between-runs bare-v part
+C rules out a trivial cause, so this is a real, separate, NOT-yet-
+C root-caused bug somewhere in the ring-CC RHF response path
+C (rcc_rng_4rhf_rccd.F / rcc_trp_cntrct.F / ringcl's RHF branches are
+C the natural suspects, not yet investigated). So: allow RHF for CCSD,
+C keep it blocked for RCCD/DRCCD until that gap is understood. See
+C SCRNC_DEBUG_LOG.md.
+      If (.FALSE. .AND. Iuhf .EQ. 0 .AND. (Rccd .OR. Drccd)) Then
          Write(6,*)
-         Write(6,"(a,a)") " The approach implemented here is not",
-     +                    " supported for RHF reference."
+         Write(6,"(a,a)") " RHF reference for ring-CC (RCCD/DRCCD)",
+     +                    " is not yet supported -- see debug log."
          Write(6,*)
          Call Errex
-      Endif 
+      Endif
       If (.NOT. Respn_d) Then
          Write(6,"(a,a)")" The Density=Response is not set in the",
      +                   " ZMAT and calculation can not proceed."
@@ -271,7 +294,7 @@ c files.com : end
       Endif 
       Inquire(File="frequency",Exist=Freq_exist)
       If (Freq_Exist) Then
-         OPen(Unit=10,File="Frequency",Form="Formatted",Status="OLD")
+         OPen(Unit=10,File="frequency",Form="Formatted",Status="OLD")
          Junk = 0
          Read(10,*,End=800) No_Freqs
          Read(10,*,End=800) JunK

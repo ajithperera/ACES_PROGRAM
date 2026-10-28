@@ -1,0 +1,30 @@
+test -n "$USERDIR" || exit 1
+# OO-pCCD RFO Hessian stability check with exact invariance zero modes.
+# N2 (SYMMETRY=OFF) has three exactly flat orbital rotations at the
+# optimized orbitals. The stability check (exact Hessian by amplitude
+# response, or finite differences) must skip the |lambda| < 1e-8 roots
+# and still converge the lowest physical roots before declaring a
+# minimum (before 6627b5e6 the three zero roots converged first and
+# the FD check stopped there).
+cat <<. >ZMAT
+N2 OO-pCCD RFO 6-31G
+N
+N 1 R
+
+R=1.1016
+
+*ACES2(BASIS=6-31G
+CALC=PCCD,PROGRAM=PCCD
+REF=RHF,MEM_SIZE=2gb
+sym=off
+PCCD_REF=OPTIMIZED,OO_METHOD=RFO
+BRUCK_CONV=6,OO_MAXCYC=800
+cc_conv=10,cc_maxcyc=300,scf_conv=10,scf_maxcyc=300)
+
+.
+ln -s $GENBAS . || exit 1
+xjoda || exit 1
+xrunpccd >run.out 2>&1 || { tail -15 run.out; exit 1; }
+cat run.out
+grep -E "minimum \( *[1-9][0-9]* zero modes skipped\)" run.out >/dev/null || { echo "no zero modes skipped"; exit 1; }
+grep -q "converged to a minimum" run.out || { echo "no verified minimum"; exit 1; }

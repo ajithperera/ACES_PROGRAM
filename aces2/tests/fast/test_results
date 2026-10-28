@@ -373,3 +373,61 @@ TOTENERG 1
 032 zmat.032
 TOTENERG 1
 -0.389625753410E+02
+h2o_ccsd_rhf_sto3g_symoff zmat.h2o_ccsd_rhf_sto3g_symoff
+TOTENERG 1
+-7.5013036960829E+01
+h2o_ccsd_uhf_sto3g_symoff zmat.h2o_ccsd_uhf_sto3g_symoff
+TOTENERG 1
+-7.5013036960830E+01
+h2_ccsd_rhf_sto3g_symoff zmat.h2_ccsd_rhf_sto3g_symoff
+TOTENERG 1
+-1.1372633595310E+00
+h2_ccsd_uhf_sto3g_symoff zmat.h2_ccsd_uhf_sto3g_symoff
+TOTENERG 1
+-1.1372633595310E+00
+h2o_ccsd_rhf_sto3g_symon zmat.h2o_ccsd_rhf_sto3g_symon
+TOTENERG 1
+-7.5013036960830E+01
+h2o_ccsd_uhf_sto3g_symon zmat.h2o_ccsd_uhf_sto3g_symon
+TOTENERG 1
+-7.5013036960830E+01
+h2_ccsd_rhf_sto3g_symon zmat.h2_ccsd_rhf_sto3g_symon
+TOTENERG 1
+-1.1372633595310E+00
+h2_ccsd_uhf_sto3g_symon zmat.h2_ccsd_uhf_sto3g_symon
+TOTENERG 1
+-1.1372633595310E+00
+
+pccd_oo_rfo_h2o_symoff
+TOTENERG 1
+-7.500566550373600E+01
+
+pccd_oo_rfo_h2o_symon
+TOTENERG 1
+-7.499206590503000E+01
+
+pccd_oo_rfo_ccd_h2o
+TOTENERG 1
+-7.50122317254E+01
+
+pccd_oo_rfo_lccd_h2o
+TOTENERG 1
+-7.50129333320E+01
+pccd_oo_rfo_tguess_h2o
+TOTENERG 1
+-7.49939037245E+01
+pccd_oo_rfo_n2_zeromode
+TOTENERG 1
+-1.08977153587E+02
+pccd_oo_rfo_fc_h2o_symon
+TOTENERG 1
+-7.60367084266E+01
+pccd_oo_rfo_fc_h2o_symoff
+TOTENERG 1
+-7.60531931768E+01
+pccd_oo_rfo_xaces2_h2o
+TOTENERG 1
+-7.500566550373600E+01
+pccd_oo_rfo_doci_h2o
+DOCIENER 1
+-7.5005667504051E+01

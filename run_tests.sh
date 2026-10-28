@@ -32,6 +32,18 @@ fi
 
 mkdir -p "$ROOT/build_logs"
 
+# The aces2 binaries the suites run (xaces2, xjoda, ...): wherever the gmake
+# build installed them -- this checkout's aces2/bin, or the DIR_INSTBIN an
+# untracked aces2/Makefiles/local.mk sets (e.g. $(HOME)/Develop/bin). ACES2_BIN
+# overrides both.
+if [ -z "${ACES2_BIN:-}" ]; then
+  if [ -f "$ROOT/aces2/Makefiles/local.mk" ]; then
+    ACES2_BIN=$(printf 'include local.mk\nall:;@echo $(DIR_INSTBIN)\n' |
+                make -s --no-print-directory -C "$ROOT/aces2/Makefiles" -f - 2>/dev/null)
+  fi
+  ACES2_BIN=${ACES2_BIN:-$ROOT/aces2/bin}
+fi
+
 TARGETS="$*"
 [ -z "$TARGETS" ] && TARGETS="aces2 aces3 pyaces"
 
@@ -40,23 +52,25 @@ for t in $TARGETS; do
   LOG="$ROOT/build_logs/unified_test_$t.log"
   case "$t" in
     aces2)
-      PATH="$ROOT/aces2/bin:$PATH" bash -c \
+      PATH="$ACES2_BIN:$PATH" bash -c \
         "cd '$ROOT/aces2' && python3 tests/fast/run_tests.py --jobs $ACES_PROGRAM_NP" \
         > "$LOG" 2>&1
       ;;
     aces3)
-      ( cd "$ROOT/aces3" && python3 tests/fast/run_tests.py --jobs "$ACES_PROGRAM_NP" --np "$ACES_PROGRAM_NP" ) \
+      # xaces3 runs the ACES II xjoda, found on PATH.
+      ( cd "$ROOT/aces3" && PATH="$ACES2_BIN:$PATH" \
+          python3 tests/fast/run_tests.py --jobs "$ACES_PROGRAM_NP" --np "$ACES_PROGRAM_NP" ) \
         > "$LOG" 2>&1
       ;;
     pyaces)
       # The suite gives every case its own working directory. The runner keeps
-      # them under build_logs/pyaces_suite_run by default; on HiPerGator they
-      # go to the /blue scratch filesystem as before -- unless the caller
-      # already named somewhere better.
-      if [ -z "${PYACES_RUN_DIR:-}" ] && [ -d /blue/ufhpc ]; then
-        export PYACES_RUN_DIR=/blue/ufhpc/perera/aces_program_pyaces_suite_test
+      # them under pyaces/suite_run by default; on HiPerGator they go to the
+      # /blue scratch filesystem as before -- unless the caller already named
+      # somewhere better.
+      if [ -z "${PYACES_SUITE_RUN_DIR:-}" ] && [ -d /blue/ufhpc ]; then
+        export PYACES_SUITE_RUN_DIR=/blue/ufhpc/perera/aces_program_pyaces_suite_test
       fi
-      ( cd "$ROOT/pyaces" && python3 pyaces_suite_runner.py ) \
+      ( cd "$ROOT/pyaces" && PATH="$ACES2_BIN:$PATH" python3 pyaces_suite_runner.py ) \
         > "$LOG" 2>&1
       ;;
     *)

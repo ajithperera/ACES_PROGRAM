@@ -219,6 +219,7 @@ C
 
 
 
+
 c machsp.com : begin
 
 c This data is used to measure byte-lengths and integer ratios of variables.
@@ -443,6 +444,8 @@ C
       CALL PCCD_SETLST(WORK(INEXT),MAXCOR,IUHF,"R")
 
       CALL PCCD_INIT(WORK(INEXT),MAXCOR,IUHF,"R")
+      CALL PCCD_RFO_TGUESS(WORK(INEXT),MAXCOR,"LOAD ")
+      CALL PCCD_FCMASK(WORK(INEXT),MAXCOR,46)
       CALL PCCD_RNABIJ(WORK(INEXT),MAXCOR,IUHF,'T')
 
       IF (IFLAGS(21) .EQ.1) THEN
@@ -500,6 +503,7 @@ C
 C Denominator weigh the T2 increments. 
 C
       IF(PCCD) CALL PCCD_RESET(WORK(INEXT),MAXCOR,IUHF,63)
+      IF(PCCD) CALL PCCD_FCMASK(WORK(INEXT),MAXCOR,63)
       CALL PCCD_NEWT2(WORK(INEXT),MAXCOR,IUHF)
 
        call pccd_check_t2(work(inext),Maxcor,Iuhf)
@@ -532,6 +536,7 @@ C
          CALL PCCD_AMPSUM(WORK(INEXT),MAXCOR,IUHF,0,.FALSE.,'T')
 
          CALL PCCD_RFINISH(ICYCLE+1,"R")
+         CALL PUTREC(20,"JOBARC","PCCD_TCV",1,1)
          CALL PCCD_DDMPTGSS(WORK(INEXT), MAXCOR/IINTFP, IUHF, 0,
      &                      'TGUESS  ')
          IF (BRUECK) CALL BRUECKIT(WORK(INEXT),MAXCOR,IUHF,
@@ -545,6 +550,8 @@ C
       IF (ICYCLE .LE. NCYCLE) GOTO 100
        
       IF (ICONVG .NE. 0) THEN
+C Flag for Pccd (main): the amplitudes are not a solution.
+         CALL PUTREC(20,"JOBARC","PCCD_TCV",1,0)
          CALL PCCD_AMPSUM(WORK(INEXT),MAXCOR,IUHF,0,.FALSE.,'T')
          IF (pCCD) THEN
          Write(6,"(2a)") "The pCCD equations did not converge",

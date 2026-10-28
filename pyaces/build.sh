@@ -5,15 +5,13 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 SHIM=$SCRIPT_DIR/tools/compat_bin
 export PATH=$SHIM:$PATH
-# Driven from ../build.sh this must use the module set ./configure recorded
-# (this script purges the environment build.sh already set up, so it has to
-# be told); run standalone it falls back to the HiPerGator set.
-module purge
-if ! module load ${ACES_PROGRAM_MODULES:-intel/2025.1.0 openmpi/5.0.7 python/3.12}; then
-    echo "module load failed: ${ACES_PROGRAM_MODULES:-intel/2025.1.0 openmpi/5.0.7 python/3.12}" >&2
-    echo "Set ACES_PROGRAM_MODULES, or run ../configure --modules=\"...\" and ../build.sh pyaces" >&2
-    exit 1
-fi
+# Module set: PYACES_MODULES (the CMake superbuild), else the set ../configure
+# recorded (ACES_PROGRAM_MODULES, when driven from ../build.sh), else the
+# HiPerGator default; PYACES_MODULES="" uses the current environment (ifx,
+# MKLROOT, python3 with numpy already set up).
+PYACES_MODULES=${PYACES_MODULES-${ACES_PROGRAM_MODULES:-"intel/2025.1.0 openmpi/5.0.7 python/3.12"}}
+source "$SCRIPT_DIR/../cmake/env.sh"
+aces_load_modules "$PYACES_MODULES"
 : "${MKLROOT:?is unset -- the loaded modules provide no Intel MKL}"
 # The globs and sorts below set archive member and -l order, and with them which
 # copy of a multiply-defined routine the link picks. Collate bytewise so that
@@ -107,6 +105,14 @@ echo "=== step 4: link ==="
 # stale/dead location -- ACES is always this same build's own aces2 tree.
 LIBDIRS=$(find $ACES -maxdepth 2 -iname "*.a" | xargs -n1 dirname | sort -u | sed 's/^/-L/' | tr '\n' ' ')
 LIBNAMES=$(find $ACES -maxdepth 2 -iname "*.a" | xargs -n1 basename | sed -E 's/^lib(.*)\.a$/\1/' | sort -u | sed 's/^/-l/' | tr '\n' ' ')
+# 2026-10-21: standalone aces2 programs pyaces never calls, left out of the
+# link. They were re-enabled in aces2 after 08/2026 (723989ab) and carry
+# their own copies of vcc routines; sorted ahead of -lvcc they won the link
+# (rpa: coreng, e4seng, dmptgss, linear, ...), and UCC(4) case 025 came out
+# 2.5e-5 off while standalone xvcc stayed right.
+for m in a2mix aux rpa scrnc; do
+  LIBNAMES=$(echo " $LIBNAMES " | sed "s/ -l$m / /")
+done
 
 # 12 aces2 modules (intprc, vmol, joda, vcc, vscf, vtran, hbar, lambda, vee,
 # pccd, props, vmol2ja) each have their own Fortran PROGRAM entry (MAIN__) --

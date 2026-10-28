@@ -9,20 +9,23 @@
 
 
 
-      Subroutine Scrnc_jj_rcc_lrspn(Work,Maxcor,Iuhf,JJ_lrespn,Isympert,
-     +                             Ioffpert,Nao_pair)
+      Subroutine Scrnc_jj_rcc_lrspn(Work,Maxcor,Iuhf,Isympert,
+     +                             Ioffpert,Nao_pair,Hbarinv,Iloc,
+     +                             Icount,Itop,Imult)
 
       Implicit Double Precision (A-H,O-Z)
-      
+
       Double Precision M_expect,Mbar_00
-      Double Precision JJ_lrespn(Nao_pair,Nao_pair)
       Logical Incore
       Logical ccsd,Mbpt,Parteom,Nodavid,Aoladder,Rccd,Drccd
       Logical Realfreq
       Integer Occ_pair,Occ_pair_4irrep
       Dimension Isympert(Nao_pair),Ioffpert(Nao_pair)
       Dimension Work(Maxcor)
+      Dimension Hbarinv(*)
+      Dimension Iloc(8)
       Character*8 Label(3),Work_label
+      Data One, Zilch /1.0D0,0.0D0/
 
       COMMON/AOSYM/IAOPOP(8),IOFFAO(8),ioffv(8,2),ioffo(8,2),
      &             IRPDPDAO(8),IRPDPDAOMO_OCCBK(8,2),
@@ -94,7 +97,31 @@ c info.com : end
       Irreprl     = 1
       Npert_count = 0
 
+C See the matching comment in Scrnc_lrspn_rcc_main.F -- Loffset routes
+C this channel's L-side vector to its own list numbers (0 for Imult=1/
+C singlet, reproducing the original 374/376; 4 for Imult=2/triplet).
+      Loffset = 4*(Imult-1)
+
       Write(6,"(1x,a)") "-----Entering scrnc_jj_rcc_lrspn------"
+
+C The left-hand (L) response also needs multiplying by Hbar^(-1), same
+C as the right-hand (R) response does in scrnc_lrspn_rcc_main.F -- this
+C was previously entirely missing (L was just the raw, un-inverted
+C Mbar operator), which broke JJ_lrespn's symmetry (large error for
+C strongly-coupled AO pairs, negligible for weakly-coupled ones, since
+C skipping the inversion is closer to correct when Hbar is close to
+C diagonal). 2026-08-12.
+C
+C 2026-08-14: Hbar^(-1) is now built ONCE by the caller
+C (Scrnc_driver.F) and passed in via Hbarinv/Iloc, instead of being
+C independently rebuilt here. Scrnc_form_rcc_hbar.F hands its result to
+C Scrnc_form_rcc_hbar_inv.F by writing it back into the same list it
+C read the raw integrals from, so a second, independent build (as this
+C routine used to do) silently re-added the one-particle Fock diagonal
+C on top of the first build's already-dressed output -- breaking L/R
+C Hbar consistency and hence the symmetry of the final W=v+v*chi*v
+C matrix.
+
       Do Irrepr = 1, Nirrep
          Irrepl = Dirprd(Irrepr,Irreprl)
          Irrepx = Irrepl
@@ -103,6 +130,8 @@ c info.com : end
          If (Iuhf .NE. 0) Then
             Nsizec = Nsizec + Irpdpd(Irrepx,10)
          Endif
+
+         Ifnd = Iloc(irrepr)
 
          Call Scrnc_reset_lrspn_rcc_lists(Work,Maxcor,Iuhf,Irrepx)
 
@@ -157,9 +186,21 @@ C We construct e^-TMue(pq)^T, similarity transformed Mu(p,q).
          Call Scrnc_form_mubar_s(Work(Ioff_oo),Work(Ioff_vv),
      +                           Work(Ioff_vo),Work(I030),
      +                           Work(I040),Work(I050),
-     +                           Work(I060),Work(Iend),Mxcor, 
+     +                           Work(I060),Work(Iend),Mxcor,
      +                           Iuhf,Irrepx,Iside,Mbar_00,
      +                           Ieomprop)
+
+C R-side/L-routine cross-checkpoint (SCRNC_DEBUG_LOG.md step 1): this is
+C this routine's own Iside=1 stage, on the same raw integrals for this
+C Npert_count as Scrnc_lrspn_rcc_main.F's (proven-correct) R-side. Diff
+C against that routine's matching checksum before trusting the Iside=2
+C stage below.
+      write(6,"(1x,a,i4)") "L-routine Npert_count=",Npert_count
+      call checksum("L-routine Mbar_00:",Mbar_00,1)
+      call checksum("L-routine Mubar_s(Iside=1):",Work(I030),
+     +              Lenoo+Lenvv+2*Lenvo)
+      Write(6,"(a,20F15.10)") " RAWTRACE Work(I050) right after "//
+     +     "Iside=1 returns:",(Work(I050-1+I),I=1,MIN(Lenvo,20))
 
          Iside = 2
          Ibgn  = I070 
@@ -184,91 +225,60 @@ C We construct e^-TMue(pq)^T, similarity transformed Mu(p,q).
      +                           Iuhf,Irrepx,Iside,Mbar_00-
      +                           M_expect,Ieomprop)
 
-         If (Iside .Eq. 2) Then 
+         If (Iside .Eq. 2) Then
              Mu_s    = 482
-             Ioffset = 1
              Lenr1a = Irpdpd(Irrepx,9)
              Lenr1b = Irpdpd(Irrepx,10)
 
-             I000 = 1
-             I020 = I010 + Lenr1a
+             I000  = 1
+             Iloc2 = I000 + Lenr1a
+             Iwrk  = Iloc2 + Lenr1b
              Call Getlst(Work(I000),1,1,1,1,Mu_s)
              If (Iuhf .NE. 0) Then
-                 I020 = I010 + Lenr1b
-                 Call Getlst(Work(I010),1,1,1,2,Mu_s)
+                 Call Getlst(Work(Iloc2),1,1,1,2,Mu_s)
              Endif
 
-             Call Putlst(Work(I010),1,1,0,Irrepx,374)
+C Hbar is NOT symmetric (EOM-CC has distinct left/right eigenvectors),
+C so the L-side needs (Hbar^-1)^T, not the same Hbar^-1 used for R.
+C (A^-1)^T = (A^T)^-1 always, so transposing the already-computed
+C Hbar^-1 here is exact, not an approximation. 2026-08-12.
+             Call Xgemm("T","N",Nsizec,1,Nsizec,One,Hbarinv(Ifnd),
+     +                  Nsizec,Work(I000),Nsizec,Zilch,Work(Iwrk),
+     +                  Nsizec)
 
       write(6,*)
-      call checksum("Jbar_L<(S,D)|pq>:",Work(I010),Nsizec)
-          Endif 
+      call checksum("Jbar_L<(S,D)|pq>:",Work(Iwrk),Nsizec)
 
-C Save the left amplitudeds.
+C Save the left amplitude straight to its real per-perturbation record.
+C Bug fix 2026-08-14 (see SCRNC_DEBUG_LOG.md): this used to go through a
+C "scratch" record 1 of list 374 (Putlst(...,1,...) here, then
+C Getlst(record 1)+Putlst(record Npert_count) below) -- but record 1 of
+C list 374 IS ALSO Npert_count=1's own permanent slot, so every later
+C Npert_count's scratch write silently clobbered Npert_count=1's
+C finished value with whatever the LAST perturbation's result happened
+C to be. That's what broke JJ_lrespn's symmetry (record 1 ended up
+C holding Npert_count=Nao_pair's value instead of its own). Writing
+C directly to Npert_count (already known here) removes the collision.
 
-          Call Getlst(Work(I000),Ioffset,1,1,Irrepx,372+Iside)
-          Call Putlst(Work(I000),Npert_count,1,1,Irrepx,372+Iside)
+          Call Putlst(Work(Iwrk),Npert_count,1,1,Irrepx,374+Loffset)
 
-         Enddo ! Enddo for Iao_pair 
+C Dynamic (frequency-dependent) response, 2026-08-15: this routine now
+C runs once per +/-Freq pass of Scrnc_driver.F's Icount loop (Hbarinv
+C is rebuilt fresh, (Hbar+Freq)^(-1), for each pass and shared here).
+C Unlike the CCSD path, ring-CC's L-side genuinely depends on Freq too
+C (it goes through the same Hbarinv), so on the +Freq pass also save to
+C list 376 -- the L-side counterpart of 375, mirroring the R-side save
+C in Scrnc_lrspn_rcc_main.F -- before the -Freq pass overwrites 374.
+
+             If (Icount .EQ. 1 .AND. Itop .EQ. 2) Then
+                Call Putlst(Work(Iwrk),Npert_count,1,1,Irrepx,
+     +                      376+Loffset)
+             Endif
+
+          Endif
+
+         Enddo ! Enddo for Iao_pair
       Enddo ! Enddo of irrepr
 
-      Call Dzero(JJ_lrespn,Nao_pair*Nao_pair)
-
-      I_pairs = Nao_pair
-      J_pairs = Nao_pair
-
-      Write(6,*)
-      Write(6,"(a)") " Symmetry of perturbations"
-      Write(6,"(5(1x,I5))") (Isympert(i),i=1,Nao_pair)
-      Write(6,"(a)") " Offset for perturbations"
-      Write(6,"(5(1x,I5))") (Ioffpert(i),i=1,Nao_pair)
-      Write(6,*)
-      Do Iao_pair = 1, I_pairs 
-
-         Irrepx = Isympert(Iao_pair)
-
-         Nsizec = Irpdpd(Irrepx,9)
-         If (Iuhf .NE. 0) Then
-            Nsizec = Nsizec + Irpdpd(Irrepx,10)
-         Endif
-
-         I000 = 1
-         I010 = I000 + Nsizec 
-         I020 = I010 + Nsizec 
-         Iend = I020
-
-         Memleft = Maxcor - Iend 
-         If (Iend .Gt. Maxcor)  Call Insmem("Scrnc_jj_lrspn",Iend,
-     +                                      Memleft)
-
-         Call Getlst(Work(I000),Iao_pair,1,1,Irrepx,373)
-         Write(6,"(a)") " <0|(1+L)M_bar and first-order e^T|0>"
-         call checksum("373",work(i000),nsizec)
-         If (Iuhf .eq. 0) Then
-            Call Spntsing(Isympert(Iao_pair),Work(I000),Work(Iend),
-     +                    Memleft) 
-         Endif 
-
-         Do Jao_pair = 1, J_pairs 
-
-            If (Isympert(Iao_pair) .eq. Isympert(Jao_pair)) Then
- 
-               Call Getlst(Work(I010),Jao_pair,1,1,Irrepx,
-     +                     374)
-               call checksum("374",work(i010),nsizec)
-               X = Ddot(Nsizec,Work(I010),1,Work(I000),1)
-
-               JJ_lrespn(Iao_pair,Jao_pair) = 
-     +                  JJ_lrespn(Iao_pair,Jao_pair) + X
-            Endif 
-              
-         Enddo
-      Enddo 
-      Write(6,*)
-      Write(6,"(a)") " RPA JJ matrix"
-      call output(JJ_lrespn,1,Nao_pair,1,Nao_pair,Nao_pair,
-     +            Nao_pair,1)
-      Write(6,*)
-      
       Return
-      End 
+      End

@@ -49,7 +49,12 @@ C
      &                                      ZOVRLP1,ZOVRLP2,
      &                                      MEFOLOW
 
-      IF (ZOVRLP1 .GT. OVRLP_MIN .OR. ZOVRLP1 .GT. TWO*ZOVRLP2) THEN
+C Peng and Schlegel: follow the eigenvector with the largest overlap
+C with the tangent when the overlap exceeds 0.8, otherwise the one with
+C the lowest eigenvalue. (The extra test, overlap larger than twice the
+C next one, is not in the paper and was dropped.) 10/2026.
+C
+      IF (ZOVRLP1 .GT. OVRLP_MIN) THEN
          IMODE = MEFOLOW
 
       Write(6,"(a,1x,I3)")"The LST/QST mode that is being followed  = ", 

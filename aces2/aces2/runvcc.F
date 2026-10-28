@@ -24,11 +24,6 @@ c JDW 3/17/95
 c CC5SD[T]
       if (iflags(2).eq.31) call runit('xvcc5t')
 
-c Extrapolate energy (only for correlated methods), 01/2006, Ajith Perera
-      if (bEExtrap.or.bCExtrap) then
-         call runit('xa2proc extrap energy')
-      end if
-
       if (iflags(22).eq.1) then
          call a2getrec(20,'JOBARC','BRUKTEST',1,itest)
          if(itest.eq.1)return

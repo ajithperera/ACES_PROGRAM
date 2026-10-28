@@ -9,11 +9,28 @@
 
 
 
-
       SUBROUTINE EVAL_QSTLST_PATH_RIC(QST_TANGENT, LST_TANGENT, WORK,
      &                                PMAT, LST, QST)
+C
+C The normalized tangent to the synchronous transit path at the current
+C point X in redundant internal coordinates (C. Peng and H. B. Schlegel,
+C Israel J. Chem. 33, 449 (1993)):
+C
+C   LST (eq. 1):  T = (P - R)/|P - R|
+C   QST (eq. 8):  T ~ (P - X)/|P - X|^2 - (R - X)/|R - X|^2,
+C                 the tangent at X of the circle through R, X and P.
+C
+C R and P are the RIC values of the reactant and product (RX_RICS_,
+C PR_RICS_, computed with the coordinate set of the current structure
+C in GEN_REDNINTRNLS), X the current values (R in /COORD/). Dihedral
+C differences are brought to (-pi, pi]. The tangent is projected onto
+C the nonredundant space with PMAT (= G^-G, Peng et al., J. Comput.
+C Chem. 17, 49 (1996)) and normalized. When the tangent is not defined
+C (X on top of R or P) it is returned as zero and the caller does not
+C use it. 10/2026.
+C
       IMPLICIT DOUBLE PRECISION(A-H, O-Z)
-
+C
 C MXATMS     : Maximum number of atoms currently allowed
 C MAXCNTVS   : Maximum number of connectivites per center
 C MAXREDUNCO : Maximum number of redundant coordinates.
@@ -54,206 +71,86 @@ C
 C coord.com : end
 
 
-
-      LOGICAL XYZIN, NWFINDIF, QST, LST
-      DOUBLE PRECISION LST_NORM_SQR, LST_NORM_INV, LST_TANGENT
-      INTEGER TOTREDNCO
-
+C
+      LOGICAL QST, LST
+      DOUBLE PRECISION LST_TANGENT
+      INTEGER TOTREDNCO, TOTNOFBND, TOTNOFANG
+C
       COMMON /USINT/NX, NXM6, IARCH, NCYCLE, NUNIQUE, NOPT
-      COMMON /INPTYP/XYZIN,NWFINDIF
-
+C
       DIMENSION WORK(NX*NX), LST_TANGENT(*), QST_TANGENT(*),
      &          PMAT(NX*NX)
 C
-C Use Eqn. 1 and 8 in Schlegel to evaluate the QST and LST normalized
-C tangent vectors.
+      PARAMETER (TINY = 1.0D-10)
 C
-C Read the guess structures (user provided) for the transition
-C state and the products.
-C 
       CALL GETREC(20, 'JOBARC', 'REDNCORD', 1, TOTREDNCO)
-
-      IRECTNT = 1
-      IPRDUCT = IRECTNT + TOTREDNCO
-      ICURENT = IPRDUCT + TOTREDNCO
-      ISCR    = ICURENT + TOTREDNCO
-      IEND    = ISCR    + TOTREDNCO
-
+      CALL GETREC(20, 'JOBARC', 'TNUMOBND', 1, TOTNOFBND)
+      CALL GETREC(20, 'JOBARC', 'TNUMOANG', 1, TOTNOFANG)
+C
+      IREACT = 1
+      IPROD  = IREACT + TOTREDNCO
+      ITAN   = IPROD  + TOTREDNCO
+      IEND   = ITAN   + TOTREDNCO
       IF (IEND .GT. NX*NX) CALL INSMEM("@EVAL_QSTLST_PATH_RIC",
      &                                  IEND, NX*NX)
-
-C Cautionary note: The reactant coordinates are copied to the
-C memory location desiganted as IPRDUCT. This was as a result
-C of a earlier confusion in designating multiple structures. This
-C has no effect on actual work done, Ajith Perera, 12/2012
-
-      CALL GETREC(20,'JOBARC','RX_RICS_',TOTREDNCO*IINTFP,
-     &            WORK(IPRDUCT))
-
-CSSS      CALL CNVRT2RAD(WORK(IPRDUCT),3*NATOMS)
-CSSS      CALL SQUSH(WORK(IPRDUCT),3*NATOMS)
 C
-      Write(6,"(a)") "Debug-Info: The Reactant Structure"
-      Write(6,"(3(1x,F12.6))") (Work(IPRDUCT + I),I= 0,TOTREDNCO-1)
-
+      CALL GETREC(20, 'JOBARC', 'RX_RICS_', TOTREDNCO*IINTFP,
+     &            WORK(IREACT))
+      CALL GETREC(20, 'JOBARC', 'PR_RICS_', TOTREDNCO*IINTFP,
+     &            WORK(IPROD))
+C
       IF (LST) THEN
-        CALL GETREC(1,'JOBARC','PR_RICS_',TOTREDNCO*IINTFP,
-     &              WORK(IRECTNT))
-
-      Write(6,"(a)") "Debug-Info: Product Structure"
-      Write(6,"(3(1x,F12.6))") (Work(IRECTNT + I), I= 0,TOTREDNCO-1)
-        CALL DAXPY(TOTREDNCO, -1.0D0, WORK(IPRDUCT), 1,
-     &             WORK(IRECTNT), 1)
-
-      Write(6,"(a)") "Debug-Info: The Diff. Structure"
-      Write(6,"(3(1x,F12.6))") (Work(IRECTNT + I), I= 0,TOTREDNCO-1)
-
-CSSS            CALL DCOPY(NX, WORK(IPRDUCT), 1, LST_TANGENT, 1)
-CSSS            CALL GETREC(20, "JOBARC", "BMATRIX ", 3*NATOMS*NOPT*
-CSSS     &                  IINTFP, WORK(1))
-CSSS            IOFFSET = 3*NATOMS*NOPT + 1
-CSSS            CALL XGEMM("N", "N", NOPT, 1, 3*NATOMS, 1.0D0, WORK,
-CSSS     &                  NOPT, LST_TANGENT, 3*NATOMS, 0.0D0, WORK
-CSSS     &                  (IOFFSET), NOPT)
-CSSS            CALL DCOPY(NOPT, WORK(IOFFSET), 1, LST_TANGENT, 1)
-CSSS        CALL SYMUNQONLY(WORK(IPRDUCT), LST_TANGENT)
-
-        CALL XGEMM("N", "N", TOTREDNCO, 1, TOTREDNCO, 1.0D0, 
-     &              PMAT, TOTREDNCO, WORK(IRECTNT),
-     &              TOTREDNCO, 0.0D0, WORK(ISCR), TOTREDNCO)
-        CALL DCOPY(TOTREDNCO, WORK(ISCR), 1, WORK(IRECTNT), 1)
-
-        CALL NORMAL(WORK(IRECTNT), TOTREDNCO)
-        TNORM = DDOT(TOTREDNCO, WORK(IRECTNT),1,WORK(IRECTNT), 1)
 C
-        IF (TNORM .NE. 1.0D0) THEN
-           WRITE(6,*)
-           WRITE(6,"(a,a)") "Norm condition for the LST tangent is ",
-     &                      "incorrect! Can not proceed."
-            CALL ERREX
-        ENDIF
+C P - R
 C
-        CALL DCOPY(TOTREDNCO, WORK(IRECTNT), 1, LST_TANGENT, 1)
-
-            Write(6,"(a)") "Debug-Info: LST tangent"
-            Write(6,"(3(1x,F12.6))") (LST_TANGENT(I), I= 1, NOPT)
-
+         DO I = 1, TOTREDNCO
+            WORK(ITAN-1+I) = WORK(IPROD-1+I) - WORK(IREACT-1+I)
+         ENDDO
+         CALL REMOVE_360(WORK(ITAN), TOTNOFBND, TOTNOFANG, TOTREDNCO)
+C
       ELSE IF (QST) THEN
-
-C Cautionary note: The reactant coordinates are copied to the
-C memory location desiganted as IRECTNT. This was as a result
-C of a earlier confusion in designating multiple structures. This
-C has no effect on actual work done, Ajith Perera, 12/2012
-
-        CALL GETREC(1,'JOBARC','PR_RICS_',TOTREDNCO*IINTFP,
-     &              WORK(IRECTNT))
-
-CSSS        CALL CNVRT2RAD(WORK(IRECTNT), 3*NATOMS)
-CSSS        CALL SQUSH(WORK(IRECTNT), 3*NATOMS)
 C
-        CALL DCOPY(TOTREDNCO, R, 1, WORK(ICURENT), 1)
-
-      Write(6,"(a)") "Debug-Info: Product Structure"
-      Write(6,"(3(1x,F12.6))") (Work(IRECTNT + I), I= 0,TOTREDNCO-1)
-      Write(6,"(a)") "Debug-Info: Reactant Structure"
-      Write(6,"(3(1x,F12.6))") (Work(IPRDUCT + I), I= 0,TOTREDNCO-1)
-      Write(6,"(a)") "Debug-Info: Current Structure"
-      Write(6,"(3(1x,F12.6))") (Work(ICURENT + I), I= 0,TOTREDNCO-1)
-
-        CALL DAXPY(TOTREDNCO, -1.0D0, WORK(ICURENT), 1,
-     &             WORK(IPRDUCT), 1)
-        CALL DAXPY(TOTREDNCO, -1.0D0, WORK(ICURENT), 1,
-     &             WORK(IRECTNT), 1)
-
-        QST_NORM_SQR_PX = DDOT(TOTREDNCO, WORK(IPRDUCT), 1,
-     &                         WORK(IPRDUCT), 1)
-        QST_NORM_SQR_RX = DDOT(TOTREDNCO, WORK(IRECTNT), 1,
-     &                         WORK(IRECTNT), 1)
-      Write(6,"(a)") "Debug-Info: P-X tructure"
-      Write(6,"(3(1x,F12.6))") (Work(IPRDUCT + I), I= 0,TOTREDNCO-1)
-      Write(6,"(a)") "Debug-Info: R-X Structure"
-      Write(6,"(3(1x,F12.6))") (Work(IRECTNT + I), I= 0,TOTREDNCO-1)
-        QST_NORM_SQR_PX = DDOT(TOTREDNCO, WORK(IPRDUCT), 1,
-     &                         WORK(IPRDUCT), 1)
-        QST_NORM_SQR_RX = DDOT(TOTREDNCO, WORK(IRECTNT), 1,
-     &                         WORK(IRECTNT), 1)
-        QST_NORM_PX_RX  = DDOT(TOTREDNCO, WORK(IRECTNT), 1,
-     &                         WORK(IPRDUCT), 1)
-
-        QST_NORM_PX = DSQRT(QST_NORM_SQR_PX)
-        QST_NORM_RX = DSQRT(QST_NORM_SQR_RX)
-
-        IF ((QST_NORM_SQR_PX.LE.1.0D-14).OR.
-     &     (QST_NORM_SQR_RX.LE.1.0D-14)    ) THEN
-          Write(6,*)
-          Write(6,"(a)")"AN INPUT ERROR: INSPECT THE INPUT STRUCTURES"
-          CALL ERREX
-        END IF
-
-        QST_NORM_PX_INV = 1.0D0/(QST_NORM_SQR_PX)
-        QST_NORM_RX_INV = 1.0D0/(QST_NORM_SQR_RX)
-
-        CALL DSCAL(TOTREDNCO, QST_NORM_PX_INV, WORK(IPRDUCT), 1)
-        CALL DSCAL(TOTREDNCO, QST_NORM_RX_INV, WORK(IRECTNT), 1)
-
-        CALL DAXPY(TOTREDNCO, -1.0D0, WORK(IRECTNT), 1,
-     &             WORK(IPRDUCT), 1)
-        DENOM = (QST_NORM_SQR_PX + QST_NORM_SQR_RX - 
-     &           2.0D0*QST_NORM_PX_RX)
-
-        IF (DENOM .LE. 1.0D-14) THEN
-           Write(6,*)
-           Write(6,"(a)")"AN INPUT ERROR: INSPECT THE INPUT STRUCTURES"
-           CALL ERREX
-        ENDIF
-
-        A_SCALE = DSQRT((QST_NORM_SQR_PX*QST_NORM_SQR_RX)/DENOM)
-
-      Write(6,*)
-      Write(6,"(a)") "Various Norms"
-      Write(6,"(a,2(1x,F12.6))") "QST_NORM_SQR_PX,RX :",QST_NORM_SQR_PX,
-     &                          QST_NORM_SQR_RX
-      Write(6,"(a,2(1x,F12.6))") "QST_NORM_PX,RX     :",QST_NORM_PX,
-     &                          QST_NORM_RX
-      Write(6,"(a,(1x,F12.6))") "QST_NORM_PX_RX     :",QST_NORM_PX_RX
-CSSS            CALL DCOPY(3*NATOMS, WORK(IPRDUCT), 1, QST_TANGENT, 1)
-CSSS            CALL GETREC(20, "JOBARC", "BMATRIX ", 3*NOPT*NATOMS*
-CSSS     &                  IINTFP, WORK(1))
-CSSS            IOFFSET = 3*NATOMS*NOPT + 1
-CSSS            CALL XGEMM("N", "N", NOPT, 1, 3*NATOMS, 1.0D0, WORK,
-CSSS     &                  NOPT, QST_TANGENT, 3*NATOMS, 0.0D0, WORK
-CSSS     &                  (IOFFSET), NOPT)
-
-        CALL DSCAL(TOTREDNCO, A_SCALE, WORK(IPRDUCT), 1)
+C R - X and P - X
 C
-        CALL XGEMM("N", "N", TOTREDNCO, 1, TOTREDNCO, 1.0D0,
-     &              PMAT, TOTREDNCO, WORK(IPRDUCT),
-     &              TOTREDNCO, 0.0D0, WORK(ISCR), TOTREDNCO)
-        CALL DCOPY(TOTREDNCO, WORK(ISCR), 1, WORK(IPRDUCT), 1)
-
-        CALL NORMAL(WORK(IPRDUCT), TOTREDNCO)
-
-        TNORM = DDOT(TOTREDNCO, WORK(IPRDUCT),1,WORK(IPRDUCT), 1)
+         DO I = 1, TOTREDNCO
+            WORK(IREACT-1+I) = WORK(IREACT-1+I) - R(I)
+            WORK(IPROD-1+I)  = WORK(IPROD-1+I)  - R(I)
+         ENDDO
+         CALL REMOVE_360(WORK(IREACT), TOTNOFBND, TOTNOFANG, TOTREDNCO)
+         CALL REMOVE_360(WORK(IPROD),  TOTNOFBND, TOTNOFANG, TOTREDNCO)
 C
-        IF (TNORM .NE. 1.0D0) THEN
-           WRITE(6,*)
-           WRITE(6,"(a,a)") "Norm condition for the QST tangent is ",
-     &                      "incorrect! Can not proceed."
-           CALL ERREX
-        ENDIF
+         DRX2 = DDOT(TOTREDNCO, WORK(IREACT), 1, WORK(IREACT), 1)
+         DPX2 = DDOT(TOTREDNCO, WORK(IPROD),  1, WORK(IPROD),  1)
+         CALL ZERO(WORK(ITAN), TOTREDNCO)
+         IF (DRX2 .GT. TINY .AND. DPX2 .GT. TINY) THEN
+            CALL DAXPY(TOTREDNCO,  1.0D0/DPX2, WORK(IPROD),  1,
+     &                 WORK(ITAN), 1)
+            CALL DAXPY(TOTREDNCO, -1.0D0/DRX2, WORK(IREACT), 1,
+     &                 WORK(ITAN), 1)
+         ENDIF
+      ENDIF
 C
-      Write(6,"(a)") "Checking the Norm of QST tangent"
-      Write(6,"(a,1x,F12.6)")"Tangent: ", TNORM
+C Project onto the nonredundant space and normalize.
 C
-CSSS        CALL SYMUNQONLY(WORK(IPRDUCT), QST_TANGENT)
-          
-         CALL DCOPY(TOTREDNCO, WORK(IPRDUCT), 1, QST_TANGENT, 1)
+      CALL XGEMM("N", "N", TOTREDNCO, 1, TOTREDNCO, 1.0D0,
+     &           PMAT, TOTREDNCO, WORK(ITAN), TOTREDNCO,
+     &           0.0D0, WORK(IREACT), TOTREDNCO)
+      TNORM = DSQRT(DDOT(TOTREDNCO, WORK(IREACT), 1, WORK(IREACT), 1))
+      IF (TNORM .GT. TINY) THEN
+         CALL DSCAL(TOTREDNCO, 1.0D0/TNORM, WORK(IREACT), 1)
+      ELSE
+         CALL ZERO(WORK(IREACT), TOTREDNCO)
+         WRITE(6,"(a)") "  The LST/QST tangent is not defined at this"//
+     &                  " point; it is not used."
+      ENDIF
 C
-      Write(6,*)
-      Write(6,"(a)") "Debug-Info: QST tangent"
-      Write(6,"(3(1x,F12.6))") (QST_TANGENT(I), I= 1, NOPT)
-         END IF
-
-       RETURN
-       END
-
+      IF (LST) THEN
+         CALL DCOPY(TOTREDNCO, WORK(IREACT), 1, LST_TANGENT, 1)
+      ELSE
+         CALL DCOPY(TOTREDNCO, WORK(IREACT), 1, QST_TANGENT, 1)
+      ENDIF
+C
+      Write(6,"(a)") " @EVAL_QSTLST_PATH_RIC: the projected tangent"
+      Write(6,"(6(1x,F10.6))") (WORK(IREACT-1+I), I=1, TOTREDNCO)
+      RETURN
+      END

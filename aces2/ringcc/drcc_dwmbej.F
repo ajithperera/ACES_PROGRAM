@@ -91,11 +91,24 @@ C
 
         CALL IZERO(ICORE(I000),DISSYQ*NUMSYQ*IINTFP)
         NSIZE=DISSYQ*NUMSYQ
-        CALL GETLST(ICORE(I000),1,NUMSYQ,1,IRREP,LSTINT) 
+        CALL GETLST(ICORE(I000),1,NUMSYQ,1,IRREP,LSTINT)
+#ifdef _DEBUG_LVL0
+        Write(6,"(a,a,a,i4,a,i4)") " DRCC_DWMBEJ ",SPCASE,
+     &        " irrep=",IRREP," after GETLST(LSTINT=",LSTINT,")"
+        call checksum(SPCASE//"-lstint",ICORE(I000),NSIZE)
+        call output(ICORE(I000),1,DISSYQ,1,NUMSYQ,DISSYQ,NUMSYQ,1)
+#endif
         CALL GETLST(ICORE(I020),1,NMSYTA,1,IRREP,LISTTA)
         CALL CNTRCT(ICORE(I000),ICORE(I010),ICORE(I020),
      &              DISSYQ,NUMSYQ,DSSYTA,NMSYTA,DSSYWA,NMSYWA,
      &              IRREP,LISTWA,LISTWA,LISTTA,'WxT',X,-C4,0)
+#ifdef _DEBUG_LVL0
+        Write(6,"(a,a,a,i4,a,i4,a,i4)") " DRCC_DWMBEJ ",SPCASE,
+     &        " irrep=",IRREP," after term1 CNTRCT(LISTWA=",LISTWA,
+     &        ",LISTTA=",LISTTA,")"
+        call checksum(SPCASE//"-term1",ICORE(I000),NSIZE)
+        call output(ICORE(I000),1,DISSYQ,1,NUMSYQ,DISSYQ,NUMSYQ,1)
+#endif
         I020=I010+IINTFP*NMSYWB*DSSYWB
         I030=I020+IINTFP*NMSYTB*DSSYTB
 
@@ -103,6 +116,13 @@ C
         CALL CNTRCT(ICORE(I000),ICORE(I010),ICORE(I020),
      &              DISSYQ,NUMSYQ,DSSYTB,NMSYTB,DSSYWB,NMSYWB,
      &              IRREP,LISTWB,LISTWB,LISTTB,'WxT',X,-C4,0)
+#ifdef _DEBUG_LVL0
+        Write(6,"(a,a,a,i4,a,i4,a,i4)") " DRCC_DWMBEJ ",SPCASE,
+     &        " irrep=",IRREP," after term2 CNTRCT(LISTWB=",LISTWB,
+     &        ",LISTTB=",LISTTB,")"
+        call checksum(SPCASE//"-term2",ICORE(I000),NSIZE)
+        call output(ICORE(I000),1,DISSYQ,1,NUMSYQ,DISSYQ,NUMSYQ,1)
+#endif
 #ifdef _DEBUG_LVL0
         Write(6,"(a,i4)") "AAAA and BBBB-the target list",listq
         call checksum(SPCASE, ICORE(I000), NSIZE)

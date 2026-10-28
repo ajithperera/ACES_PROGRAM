@@ -55,21 +55,21 @@ C
          Write(6,"(2a)") " Hbar for EOM(S)-DXRCCD or EOM(SF)-DXRCCD is",
      +                   " constructed"
       Endif 
-C These Hbar terms originaly used only for EOM(SF)-CCD (non RPA) methods 
-C However, during the developement of doubles correction, it occurs that
-C these contributions can be added perturatively (as a correction) to 
-C RPA. So, now these terms are always built. 
-  
-CSSS      If (.Not. Get_rpa) Then
+C These Hbar terms originaly used only for EOM(SF)-CCD (non RPA) methods
+C were previously always built regardless of Get_rpa (see git history) --
+C restored the original guard: skip this amplitude correction for pure
+C RPA/DRPA, where Hbar(a,b)/Hbar(i,j) must stay at the bare Fock diagonal.
+
+      If (.Not. Get_rpa) Then
          Scale = 0.50D0
          Write(6,*)
          Write(6,"(a,a)") " Hbar(i,j) and Hbar(a,b) including",
      +                    " -1/2T2(mn,ae)<mn||be> -> Hbar(a,b) and"
          Write(6,"(a,a)") " 1/2T2(im,ef)<jm||ef> -> Hbar(i,j) is",
      +                    " built.`"
-         Write(6,*) 
+         Write(6,*)
 
-C COnstruct W(ab,ij) from W(a<b,i<j) and save 
+C COnstruct W(ab,ij) from W(a<b,i<j) and save
 
          Call Rcl_expanded_abij(WORK(INEXT),MAXCOR,IUHF)
 
@@ -80,7 +80,7 @@ C Construct Hbar(a,b) = f(a,b) - 1/2T2(mn,ae)<mn||be>
 C Construct Hbar(j,i) = f(j,i) + 1/2T2(im,ef)<jm||ef>
 
          Call Rcl_form_hbar_ji(Work,Maxcor,Iuhf,Scale)
-CSSS      Endif 
+      Endif
 
 C Construc Hbar(aj,ib) = <aj||ib> - T(im,ea)<mj||eb>
 C for various ring methods.
@@ -116,6 +116,49 @@ C side, lets zero out the rest of the Hbar list. This is to
 C aoid the existing EOM code getting confused.
       
       Call rcl_set_hbar2zero(Work,Maxor,Iuhf)
+
+C SCRNC_DEBUG_LOG.md step 2/3: independent ringcc-side Hbar
+C diagonalization self-check. This is the actually-exercised path for
+C excite=EOM(Sf)-DRCCD runs (RCL_DRIVER's own call site only fires for
+C Solve_4lambda=.True., which this pathway never sets) -- Hbar lists
+C 54-59 are fully built at this point, so diagonalize them now to get
+C ringcc's own independent EOM(Sf)-DRCCD eigenvalues.
+C
+C Rcl_heffxc (called inside Rcl_check_rcchbar) destructively overwrites
+C the same same-spin list(s) it reads from -- 54/55 for UHF, 56 for RHF
+C -- adding the Fock diagonal on top, same pattern as the scrnc Hbar
+C double-build bug fixed 2026-08-14. That's fine for Rcl_drvrpa's own
+C diagonalization, but would corrupt those lists for whatever downstream
+C production EOM step consumes rcl_hbar's raw output next. Save/restore
+C around the diagnostic call so it stays side-effect-free.
+#ifdef _DEBUG_LVL0
+      If (Iuhf .Ne. 0) Then
+         Isz54 = Isymsz(Isytyp(1,54),Isytyp(1,54))
+         Isz55 = Isymsz(Isytyp(1,55),Isytyp(1,55))
+         I900  = 1
+         I910  = I900 + Isz54*Iintfp
+         I920  = I910 + Isz55*Iintfp
+         If (I920 .Gt. Maxcor) Call Insmem("Rcl_hbar-chk",I920,Maxcor)
+         Call Getall(Work(I900),Isz54,1,54)
+         Call Getall(Work(I910),Isz55,1,55)
+      Else
+         Isz56 = Isymsz(Isytyp(1,56),Isytyp(1,56))
+         I900  = 1
+         I920  = I900 + Isz56*Iintfp
+         If (I920 .Gt. Maxcor) Call Insmem("Rcl_hbar-chk",I920,Maxcor)
+         Call Getall(Work(I900),Isz56,1,56)
+      Endif
+
+      Call Rcl_check_rcchbar(Work(I920),Maxcor-I920+1,Iuhf)
+
+      If (Iuhf .Ne. 0) Then
+         Call Putall(Work(I900),Isz54,1,54)
+         Call Putall(Work(I910),Isz55,1,55)
+      Else
+         Call Putall(Work(I900),Isz56,1,56)
+         Call Checksum('rcl_hbar-restored-List-56:',Work(I900),Isz56)
+      Endif
+#endif
 
       Return
       End

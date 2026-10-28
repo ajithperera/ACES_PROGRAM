@@ -205,7 +205,7 @@ C
           If (Iuhf .EQ. 0) Then
              Length(Irrep) = Length(Irrep) + Idsymsz(Irrep,13,14)
           Else
-             Length(Irrep) = Length(Irrep) + Irpdpd(Irrep,9)
+             Length(Irrep) = Length(Irrep) + Irpdpd(Irrep,10)
              Length(Irrep) = Length(Irrep) + Idsymsz(Irrep,1,3)
              Length(Irrep) = Length(Irrep) + Idsymsz(Irrep,2,4)
              Length(Irrep) = Length(Irrep) + Idsymsz(Irrep,13,14)
