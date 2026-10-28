@@ -224,7 +224,15 @@ C scrnc's own process.
 C
          CALL RCC_RNABIJ(WORK(INEXT),MAXCOR,IUHF,'T')
          CALL RCC_GENINT(WORK(INEXT),MAXCOR,IUHF)
-         CALL RCC_LAGRANGIAN_FIX(WORK(INEXT),MAXCOR,IUHF,RCCD,DRCCD)
+C
+C RCC_LAGRANGIAN_FIX is not called (2026-10-28). Both of its corrections
+C are switched off (CORR_2P=0, FACT2=0), and what remained -- registering
+C list 91/92 sub-index 9 for RHF -- broke the RHF Lambda (ringcl RHF/UHF
+C DRCCD pairs) and the EOM ring-CC excitation energies (jcp2020 suite)
+C from dabea903 on. To try Part 2 again, restore this call together with
+C the list 91/92 sub-index 9 read in scrnc/scrnc_form_rcc_hbar.F.
+C
+C        CALL RCC_LAGRANGIAN_FIX(WORK(INEXT),MAXCOR,IUHF,RCCD,DRCCD)
 C
          CALL RCC_FINISH(ICYCLE+1)
          CALL DDMPTGSS(WORK(INEXT), MAXCOR/IINTFP, IUHF, 0, 'TGUESS  ')

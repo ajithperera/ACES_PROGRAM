@@ -13,10 +13,8 @@ ringcl/rcl_lrngdrv_r.F's RHF-collapsed contraction sometime after 2018 --
 see the routine's own comment and project memory, 2026-08-13) and is not a
 reliable reference for the current, fully-migrated source.
 
-Instead, for DRCCD specifically, REF=RHF and REF=UHF are mathematically
-required to agree (unlike RCCD-with-exchange, where the archive itself
-shows RHF and UHF legitimately compute different quantities for this
-truncated method -- see tests/ringcc's rccd_rhf/rccd_uhf notes). So each
+Instead, REF=RHF and REF=UHF are required to agree for a closed shell (for
+RCCD as well since d80f2742 -- see tests/ringcc's rccd_rhf notes). So each
 case here is a matched RHF/UHF pair, and the test asserts the two
 TOTENERG values agree to DEFAULT_TOLERANCE, rather than checking either
 one against a fixed number. This was verified by hand 2026-08-13 for both

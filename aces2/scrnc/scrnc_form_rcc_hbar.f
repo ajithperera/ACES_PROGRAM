@@ -204,6 +204,22 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE SCRNC_FORM_RCC_HBAR(ICORE,MAXCOR,IUHF,IMULT)
 C
 C THIS ROUTINE FORMS THE SINGLE-SINGLE BLOCK OF EITHER THE REGULAR
@@ -316,10 +332,14 @@ C list 91/92 sub-index 9 was written by PDCC_QUAD2/3 whenever FACT2!=0
 C but never read back here, so Hbar(i,j)/Hbar(a,b) stayed exactly zero
 C regardless of FACT2. Re-enabled for real this session -- see
 C SCRNC_DEBUG_LOG.md for the first actual FACT2=1.0 result.
-             IF (IUHF .EQ. 0) THEN
-                CALL GETLST(ICORE(I000),1,1,1,9,91)
-                CALL GETLST(ICORE(I020),1,1,1,9,92)
-             ENDIF
+C 2026-10-28: xringcc no longer calls RCC_LAGRANGIAN_FIX (see
+C ringcc/rcc_driver.F), so list 91/92 sub-index 9 is never registered.
+C With FACT2=0 it only ever held zeros, which is what the IZERO above
+C leaves in place. Restore this read together with that call.
+C            IF (IUHF .EQ. 0) THEN
+C               CALL GETLST(ICORE(I000),1,1,1,9,91)
+C               CALL GETLST(ICORE(I020),1,1,1,9,92)
+C            ENDIF
           ENDIF
        ENDIF
 

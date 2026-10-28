@@ -1,0 +1,14 @@
+RING-CCD.
+H
+O 1 R
+H 2 R 1 A
+
+R=0.957
+A=104.5
+
+*ACES2(BASIS=CC-PVDZ
+CALC=RCCD,DAMP_TYPE=DAVIDSON
+REF=UHF,MEM_SIZE=1gb
+sym=off
+cc_conv=12,scf_conv=12)
+

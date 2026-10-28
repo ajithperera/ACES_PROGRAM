@@ -221,6 +221,22 @@ C
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 c machsp.com : begin
 
 c This data is used to measure byte-lengths and integer ratios of variables.
@@ -401,7 +417,7 @@ C
          CALL AMPSUM(ICORE(INEXT),MAXCOR,IUHF,0,SING1,'T')
          IF (IUHF.NE.0) CALL S2PROJ(ICORE(INEXT),MAXCOR,IUHF,SING1)
 C
-         CALL FINISH(ICYCLE+1)
+         CALL FINISH(ICYCLE+1,.FALSE.,.FALSE.,.FALSE.)
          CALL DDMPTGSS(ICORE(INEXT), MAXCOR/IINTFP, IUHF, 0, 'TGUESS  ')
 
          CALL INIT2(IUHF)

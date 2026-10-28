@@ -11,28 +11,20 @@ just runs `xaces2` once per case), this driver manually chains the same
 executable sequence /blue/bartlett/perera/Testing/Testdir_rcc/run_rcc uses:
 xjoda, xvmol, xvmol2ja, xvprops, xvscf, xvtran, xintprc, xringcc, xringcl.
 
-Reference TOTENERG values (test_results) come directly from re-running each
-case's exact ZMAT keyword block against its corresponding archived legacy
-output in /blue/bartlett/perera/Testing/Testdir_rcc/ (drccd_rhf_sto3g.out,
-drccd_uhf_sto3g.out, rccd_uhf_sto3g.out, rccd_rhf_adz.out) -- same geometry
-(H2O, R=0.957 Ang, A=104.5 deg, the group's standard test geometry) used
-throughout that whole reference directory.
+Reference TOTENERG values (test_results) for drccd_rhf, drccd_uhf and
+rccd_uhf come from re-running each case's exact ZMAT keyword block against
+its archived legacy output in /blue/bartlett/perera/Testing/Testdir_rcc/
+(drccd_rhf_sto3g.out, drccd_uhf_sto3g.out, rccd_uhf_sto3g.out) -- same
+geometry (H2O, R=0.957 Ang, A=104.5 deg) throughout.
 
-All 4 cases PASS (sub-1e-8 a.u. vs the archived legacy reference). rccd_rhf
-(CALC=RCCD, REF=RHF, cc-pVDZ) previously failed by ~0.12 hartree despite
-converging cleanly -- root cause found in aces2/ringcc/rcc_cmpeng.F: the
-RHF+RCCD energy branch computes two candidate correlation energies,
-E_flip and E_no_flip (spin-flip vs non-spin-flip contributions), and used
-E_flip for ETOT/ESPIN. The archived reference
-(Testdir_rcc/rccd_rhf_adz.out) unambiguously reports E_no_flip as "The
-total correlation energy" instead. Fixed 2026-08-13 by switching
-ETOT/ESPIN to E_no_flip -- verified against the archive to 2e-9 a.u.
-Note this is NOT the same underlying bug as rcc_dodiis0.f (a compiler
-miscompilation): this one is a genuine source-level formula selection
-bug, and it does not reproduce as a UHF-vs-RHF mismatch (the two
-references legitimately compute different quantities for this truncated/
-approximate method -- RHF and UHF RCCD are not required to agree, unlike
-exact CCD/CCSD).
+rccd_rhf (CALC=RCCD, REF=RHF, cc-pVDZ) is NOT the archive value. Its archive
+(rccd_rhf_adz.out, -76.3039658461) was made with the old singlet/triplet
+weighting of the RHF RCCD energy (0.75/0.25) in aces2/ringcc/rcc_cmpeng.F.
+d80f2742 (2026-08-19) changed it to the equal weighting (0.25/0.25) of
+Rishi, Perera and Bartlett, JCP 153, 234101 (2020), Eq. 49, after which RHF
+and UHF RCCD agree for a closed shell. The reference is that value,
+-76.1821730567, and rccd_uhf_ccpvdz (the same job with REF=UHF, through the
+UHF code path) must give it too.
 
 Usage:
     module load intel/2025.1.0 openmpi/5.0.7   # must be loaded first

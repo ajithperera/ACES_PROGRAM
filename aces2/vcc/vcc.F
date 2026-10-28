@@ -1237,7 +1237,7 @@ C
          END IF
 C-----------------------------------------------------------------------
 
-         CALL FINISH(ICYCLE+1,pCCD,PCCDS,PCCDTS,PCCDTSD)
+         CALL FINISH(ICYCLE+1,pCCD,PCCDS,PCCDTS)
 
 C SG 7/21/98 
          CALL DDMPTGSS(ICORE(I0), MAXCOR/IINTFP, IUHF, 0, 'TGUESS  ')

@@ -602,7 +602,8 @@ C
 C-----------------------------------------------------------------------
 c this has sense only to be called once!
          if (iref+1.gt.nref) then
-            CALL FINISH(ICYCLE+1)
+C FINISH takes the pCCD flags too; BW-CC is never pCCD.
+            CALL FINISH(ICYCLE+1,.FALSE.,.FALSE.,.FALSE.)
          end if
 C SG 7/21/98
          CALL DDMPTGSS(ICORE(I0), MAXCOR/IINTFP, IUHF, 0, 'TGUESS  ')
