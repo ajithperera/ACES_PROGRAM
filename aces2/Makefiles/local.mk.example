@@ -1,5 +1,6 @@
 # Per-site settings for the aces2 gmake build. Copy to local.mk (untracked)
-# and edit. Included by GNUmakefile.src before the defaults are set.
+# and edit. Included by GNUmakefile.src after the defaults are set, so
+# what is assigned here overrides them.
 #
 # Install the binaries somewhere other than this checkout's aces2/bin,
 # e.g. a development bin directory that is first on PATH:

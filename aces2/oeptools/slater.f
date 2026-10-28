@@ -489,7 +489,7 @@ c machsp.com : end
 
       integer
      &     znull, pnull, zevec, zdens, zeval, zscraxm, 
-     &     zscrmxm, zscrpxz, zslat, zprm2ao, setptr, i
+     &     zscrmxm, zscrpxz, zslat, zprm2ao, setptr, i, max_angpts
 c
       double precision ddot
 c
@@ -539,7 +539,10 @@ c
       zscrmxm = setptr (1, 1, nbastot*nbastot)
 c
 c     .. setup the grid for numerical integration (INTGRT/setuprd.F) ..
-      call setupgrd
+c 2026-10-02: SETUPGRD now takes MAX_ANGPTS and stores into it; the
+c old argument-less call wrote through a garbage address and segfaulted
+c (ASYMPTOTIC=SLATER). The value itself is not needed here.
+      call setupgrd(max_angpts)
 c
 c     .. primitive coefficients (read in LIBRA3/A3PRIM) are for the   ..
 c     .. ZMAT AO's, transform them to symmetry adapted (VMOL,         ..

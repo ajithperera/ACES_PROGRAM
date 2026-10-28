@@ -1,7 +1,7 @@
       subroutine oep_dowork(iter, iuhf, nbas, nocc, icore, maxmem,  
      &                      usdmem, scfh1e, scfevl, scfevc, scfden, 
      &                      scfham, scfenr, dmax, itertype, 
-     &                      transfer,slat,Zslater,islaterON)
+     &                      transfer,slat,Zslater,islaterON,tol)
 c
       implicit none
 c
@@ -40,7 +40,7 @@ c
       parameter (lnbuf=600)
       parameter (luint=10, luout=6)
 c
-      double precision homo, OEPTOL, au2ev, dmax, tol, etot
+      double precision homo, au2ev, dmax, tol, etot
 c
 c     Define the one- and two-electron integrals array sizes.
 c     
@@ -117,7 +117,11 @@ C
      &        OEP2UPDATE = 9999
          if (OEP2ALWAYS.or.iter - (iter/OEP2UPDATE)*OEP2UPDATE .eq. 0)
      &        OEP2ITR = .TRUE.
-         if (dmax.le.0.0000) then
+c 2026-10-02: release the convergence hold set in OEP_INIT once the
+c density is converged to the requested SCF_CONV (OEPTOL), and force an
+c OEP2 update on this iteration so convergence is never declared on a
+c stale (xc') potential. The old test, DMAX.LE.0, could never fire.
+         if (tol.lt.OEPTOL .and. dmax.le.OEPTOL) then
             tol = OEPTOL
             OEP2ITR = .TRUE. 
          endif
@@ -129,10 +133,13 @@ c
            
          i010 = i000 + (iuhf+1) * isqrln (nirrep+1) * iintfp
          if (.not.OEP2ITR) then
+c           Between OEP2 updates keep the stored correlation potential.
+            addoep2 = OEP2ON
             call oep1iter (
      &           nbas, nocc (1),  
      &           icore (i000), maxmem, usdmem,  
-     &           scfh1e, scfevl, scfevc, scfden, scfham, scfenr)
+     &           scfh1e, scfevl, scfevc, scfden, scfham, scfenr,
+     &           addoep2)
          else
             call oep2iter (
      &           nbas, nocc (1), 

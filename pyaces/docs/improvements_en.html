@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pyaces Improvement Plan</title>
+<style>
+@page { size: A4; margin: 18mm 18mm 18mm 18mm;
+  @bottom-center { content: counter(page); font-size: 9pt; color: #666; } }
+:root { --ink:#1b1f24; --muted:#5b6470; --rule:#d5dae0; --accent:#1f5f8b; --bg-code:#f4f6f8; --warn:#9a3b00; }
+html { font-size: 10pt; }
+body { font-family: "Noto Sans", "DejaVu Sans", sans-serif; color: var(--ink); background:#fff; line-height: 1.55; margin: 0; }
+h1 { font-size: 22pt; color: var(--accent); margin: 0 0 4pt; }
+.sub { color: var(--muted); font-size: 10.5pt; margin-bottom: 10pt; }
+h2 { font-size: 14pt; border-bottom: 2px solid var(--accent); padding-bottom: 3pt; margin: 18pt 0 6pt; break-after: avoid; }
+h3 { font-size: 11pt; margin: 12pt 0 4pt; color: var(--accent); break-after: avoid; }
+p { margin: 4pt 0; }
+code { font-family: "DejaVu Sans Mono", "Liberation Mono", monospace; font-size: 8.6pt; background: var(--bg-code); padding: 0 2pt; border-radius: 2pt; }
+ul, ol { margin: 3pt 0 5pt; padding-left: 18pt; }
+li { margin: 2pt 0; }
+table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt; font-size: 8.8pt; }
+th, td { border: 1px solid var(--rule); padding: 3pt 5pt; vertical-align: top; text-align: left; }
+th { background: #eaf0f5; }
+tr { break-inside: avoid; }
+.item { break-inside: avoid; margin-bottom: 6pt; }
+.meta { font-size: 8.8pt; color: var(--muted); }
+.tag { display: inline-block; font-size: 7.8pt; padding: 0 5pt; border-radius: 7pt; background: #e1ecf4; color: var(--accent); margin-left: 4pt; }
+.tag.hi { background: #fbe4d6; color: var(--warn); }
+.note { border: 1px solid var(--rule); border-left: 4px solid var(--accent); padding: 5pt 9pt; margin: 8pt 0; background: #f7fafc; break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<h1>pyaces Improvement Plan</h1>
+<div class="sub">Review of structure, build and tests — reference commit <code>3a123417</code> (2026-10-23)</div>
+
+<div class="note">
+<b>Scope</b>: this review covers the layout of <code>pyaces/</code>, its build (<code>build.sh</code>), the f2py interface and the test tooling. It combines the known issues in chapter 11 of the
+developer manual (<code>docs/pyaces_developer_manual.pdf</code>) with items found on a second pass. Current state: pyaces 51/51 PASS and an identical 296-entry link audit on both the local workstation and the ccsd server.
+</div>
+
+<h2>Summary</h2>
+<table>
+<tr><th style="width:6%">#</th><th>Item</th><th style="width:14%">Area</th><th style="width:11%">Priority</th><th style="width:15%">Size</th></tr>
+<tr><td>1</td><td>Per-module partial links that reproduce the classic name resolution</td><td>Correctness</td><td>High</td><td>Large (needs a prototype)</td></tr>
+<tr><td>2</td><td>An ACES error terminates the Python interpreter</td><td>Robustness</td><td>High</td><td>Medium–large</td></tr>
+<tr><td>3</td><td>Check for calls bound to COMMON blocks</td><td>Correctness</td><td>High</td><td>Small</td></tr>
+<tr><td>4</td><td>Fail the build when a rename does not apply</td><td>Correctness</td><td>High</td><td>Small</td></tr>
+<tr><td>5</td><td>Remaining known defects (Getlstpy, Get1ehpy, Runpccd)</td><td>Correctness</td><td>Medium</td><td>Small–medium</td></tr>
+<tr><td>6</td><td>Stop f2py from generating the module twice</td><td>Build</td><td>Medium</td><td>Medium</td></tr>
+<tr><td>7</td><td>Remove the hard-coded Python version</td><td>Build</td><td>High</td><td>Small</td></tr>
+<tr><td>8</td><td>Incremental builds</td><td>Build</td><td>Low</td><td>Large</td></tr>
+<tr><td>9</td><td>Compiler and flag cleanup (mpicc, -qopenmp)</td><td>Build</td><td>Low</td><td>Small</td></tr>
+<tr><td>10</td><td>Relax build-environment assumptions (module, ifort check)</td><td>Build</td><td>Medium</td><td>Small</td></tr>
+<tr><td>11</td><td>Remove legacy files (about 47 MB)</td><td>Structure</td><td>Medium</td><td>Small</td></tr>
+<tr><td>12</td><td>Remove duplicated headers</td><td>Structure</td><td>Medium</td><td>Small</td></tr>
+<tr><td>13</td><td>Move the rename list into a data file</td><td>Structure</td><td>Medium</td><td>Medium</td></tr>
+<tr><td>14</td><td>A Python package and API layer</td><td>Structure</td><td>Medium</td><td>Medium–large</td></tr>
+<tr><td>15</td><td>Fix <code>Python/moio_len.py</code></td><td>Structure</td><td>Low</td><td>Small</td></tr>
+<tr><td>16</td><td>Gaps in the test roll-up and the classifier</td><td>Tests</td><td>High</td><td>Small</td></tr>
+<tr><td>17</td><td>API unit tests</td><td>Tests</td><td>Medium</td><td>Medium</td></tr>
+</table>
+
+<h2>A. Correctness and robustness</h2>
+
+<div class="item">
+<h3>1. Per-module partial links that reproduce the classic name resolution <span class="tag hi">High</span></h3>
+<p><b>Problem</b></p>
+<ul>
+<li>A single <code>.so</code> holding about 107 archives depends on about 60 hand-written rename pairs (<code>EXTRA_LOCALIZE_SYMBOLS</code>).</li>
+<li>A new module or a different toolchain can introduce new collisions, and the audit baseline already holds 296 known differences.</li>
+</ul>
+<p><b>Proposal</b></p>
+<ul>
+<li>Partially link each entry module (vcc, vee, lambda, …) with <code>ld -r</code> together with its own link list (<code>ACES_LINK_LISTS</code>), so each module gets the same routines as its classic executable.</li>
+<li>Then hide every symbol except the entry point with <code>objcopy</code>.</li>
+<li>The rename list should become unnecessary and the audit should drop to near zero.</li>
+</ul>
+<p><b>Caveat</b>: COMMON blocks that modules share in-process (<code>/flags/</code>, <code>/icore/</code>, …) must stay global, and the <code>.so</code> will grow. Prototype with one module first.</p>
+</div>
+
+<div class="item">
+<h3>2. An ACES error terminates the Python interpreter <span class="tag hi">High</span></h3>
+<ul>
+<li><code>aces_exit</code> calls <code>c_exit</code>, which ends the whole process, so Python cannot catch the error.</li>
+<li>Given the one-calculation-per-process rule as well, add an API layer that runs each calculation in a subprocess. The test runner (<code>pyaces_suite_runner.py</code>) already works this way.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>3. Check for calls bound to COMMON blocks <span class="tag hi">High</span></h3>
+<ul>
+<li>The <code>hbar_</code> defect fixed on 2026-10-23 (Runhbar calling lambda's <code>COMMON /HBAR/</code>) is invisible to the current audit, because there is no <code>T hbar_</code> anywhere.</li>
+<li>Add a check that fails the build when a symbol a pyaces <code>.o</code> calls (<code>U</code>) resolves to data (<code>B</code>/<code>D</code>) in the <code>.so</code>.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>4. Fail the build when a rename does not apply <span class="tag hi">High</span></h3>
+<ul>
+<li>Today a typo, or a pair for a module that is not processed, is silently ignored (<code>2&gt;/dev/null || true</code>).</li>
+<li>Check that the symbol exists in that archive and that the module is processed; otherwise fail the build.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>5. Remaining known defects <span class="tag">Medium</span></h3>
+<ul>
+<li><code>Getlstpy</code> ignores its <code>Irrep</code> and <code>Ndim</code> arguments and uses <code>Left_index</code> as the irrep. Clean up the arguments or make them match their documented meaning.</li>
+<li>Verify the symmetry-block offset in <code>Get1ehpy</code> (<code>get1ehpy.F:101</code>) on a molecule with symmetry.</li>
+<li>The runner calls <code>Init()</code> before <code>Runpccd</code>, which calls Joda itself. This path has never been tested.</li>
+</ul>
+</div>
+
+<h2>B. Build and compilation</h2>
+
+<div class="item">
+<h3>6. Stop f2py from generating the module twice <span class="tag">Medium</span></h3>
+<ul>
+<li>The <code>.pyf</code> and the source scan each generate the module, and the second overwrites the first, so the intents and COMMON declarations in the <code>.pyf</code> are never applied.</li>
+<li>Pick one source of truth: <code>Cf2py</code> directives in the sources, or the <code>.pyf</code> alone.</li>
+<li>f2py's <code>--lower</code> option could replace the <code>sed</code> lower-casing workaround. That would make the Python names lower-case, which changes the API.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>7. Remove the hard-coded Python version <span class="tag hi">High</span></h3>
+<ul>
+<li>The output name is fixed to <code>aces2py.cpython-312-x86_64-linux-gnu.so</code>, so other Python versions cannot import it.</li>
+<li>Use the output of <code>python3 -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))"</code>.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>8. Incremental builds <span class="tag">Low</span></h3>
+<ul>
+<li>Every build deletes <code>gen/</code> and <code>build/</code> entirely and unpacks about 37 archives again.</li>
+<li>Splitting the steps with make or meson would make rebuilds after small changes much faster.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>9. Compiler and flag cleanup <span class="tag">Low</span></h3>
+<ul>
+<li>The C wrapper is compiled with <code>mpicc</code>, but nothing uses MPI. Plain <code>icx</code> or <code>gcc</code> is enough.</li>
+<li>The Fortran shims are built with <code>-qopenmp</code>, which may be unnecessary with sequential MKL. Check, then clean up.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>10. Relax build-environment assumptions <span class="tag">Medium</span></h3>
+<ul>
+<li><code>pyaces/build.sh</code> always runs <code>module purge/load</code>, so it fails in setvars/path environments or where there is no <code>module</code> command. Make it follow configure's <code>ACES_PROGRAM_ENV_MODE</code>.</li>
+<li>The top-level <code>build.sh</code> checks for <code>ifort</code> before the pyaces <code>ifort</code> shim is on PATH, so it refuses an ifx-only toolchain.</li>
+</ul>
+</div>
+
+<h2>C. Structure</h2>
+
+<div class="item">
+<h3>11. Remove legacy files <span class="tag">Medium</span></h3>
+<ul>
+<li>Unused files (about 47 MB in total): <code>Fxx/</code> (45 MB, about 6,100 files), <code>include/</code>, <code>a2_pyf/include_no/</code>, the <code>Archive/</code> folders, <code>Exp/</code>, <code>rename.py</code>.</li>
+<li>Also unused: 35 stale <code>.f</code> files and <code>suite_classification.tsv.before_*</code>.</li>
+<li>How: keep them on a separate tag or branch and delete them from master; the history stays intact.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>12. Remove duplicated headers <span class="tag">Medium</span></h3>
+<ul>
+<li>The nine <code>Main/*.com</code> files are old copies that differ from aces2's headers (explicit <code>integer*8</code>, no include guards).</li>
+<li>Use the aces2 headers instead, so the two cannot drift apart.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>13. Move the rename list into a data file <span class="tag">Medium</span></h3>
+<ul>
+<li>About 60 pairs and their explanations are buried in the comments of a 510-line script.</li>
+<li>Move them to a data file with one pair and its reason per line (e.g. <code>tools/localize.txt</code>), so the build and the audit read the same file.</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>14. A Python package and API layer <span class="tag">Medium</span></h3>
+<ul>
+<li>Today users call the raw f2py functions: mixed-case names, results passed back through caller-supplied arrays, record names padded to 8 characters.</li>
+<li>Add a thin <code>pyaces</code> package with lower-case functions, return values, exceptions and a <code>pyproject.toml</code>. Design it together with item 2 (subprocess execution).</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>15. Fix <code>Python/moio_len.py</code> <span class="tag">Low</span></h3>
+<ul>
+<li>It writes dictionaries as <code>"key" = value</code>, which is a syntax error, and it has duplicate keys.</li>
+<li>Turned into a valid dictionary module, it can serve as the table of list numbers.</li>
+</ul>
+</div>
+
+<h2>D. Tests</h2>
+
+<div class="item">
+<h3>16. Gaps in the test roll-up and the classifier <span class="tag hi">High</span></h3>
+<ul>
+<li>The pyaces roll-up in <code>run_tests.sh</code> does not count MISMATCH or TIMEOUT, so failures can drop out of the summary.</li>
+<li>Rerunning <code>classify_suite.py</code> would erase the hand-edited TSV rows (KS → Runintgrt, 117a/b/c → Rundirmp2, excluded cases). Move those exceptions into the code.</li>
+<li>The runner's default run directory is a HiPerGator path (<code>/blue/...</code>).</li>
+</ul>
+</div>
+
+<div class="item">
+<h3>17. API unit tests <span class="tag">Medium</span></h3>
+<ul>
+<li>Only energies are tested today.</li>
+<li>Add small tests for record read/write, <code>Getreclenpy</code>/<code>Cgetrecpy</code>, each <code>Runhbar</code> branch and list access.</li>
+</ul>
+</div>
+
+<h2>Recommended order</h2>
+<table>
+<tr><th style="width:12%">Stage</th><th style="width:22%">Items</th><th>Why</th></tr>
+<tr><td>1</td><td>3, 4, 7, 16</td><td>Low risk, a few hours of work. Closes the paths through which defects pass silently.</td></tr>
+<tr><td>2</td><td>11, 12, 15</td><td>Structural cleanup. No change in behaviour; makes later work easier.</td></tr>
+<tr><td>3</td><td>6, 13, 14</td><td>Usability and maintainability. API names may change, so this needs agreement with users.</td></tr>
+<tr><td>4</td><td>1, 2, 8</td><td>Large structural changes. Decide after a prototype shows the benefit and the cost.</td></tr>
+</table>
+<p class="meta">After every change, confirm aces2 125/125, pyaces 51/51 and matching link-audit results on both the local workstation and ccsd.</p>
+
+</body>
+</html>

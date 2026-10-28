@@ -11,7 +11,7 @@
 
       subroutine oep1iter (
      &     nbas, nocc, icore, maxmem, usdmem,
-     &     scfh1e, scfevl, scfevc, scfden, scfham, scfenr)
+     &     scfh1e, scfevl, scfevc, scfden, scfham, scfenr, addoep2)
 c
 c This routine solves the first-order Optimized Effective Potential
 c equations to get the local exchange OEP.
@@ -112,7 +112,7 @@ c
      &     OEPSVDTHR, OEPSVDTHRDEF, OEP1HYBRIDINT, OEP1HYBRIDDEF,
      &     R12ONTHR, R12ONTHRDEF
 c
-      double precision OEP1HYBRID
+      double precision OEP1HYBRID, OEPTOL
 c     
       character*(50)
      &     OEPH0, OEPH0DEF, OEPAXP, OEPAXPDEF
@@ -124,7 +124,7 @@ c
      &     OEP1, OEP2, OEP1ON, OEP2ON, OEP2ALWAYS, OEP2ITR,
      &     BOEPR12, R12ON, OEPDFF, OEPDFW, OEPDWW, OEPFDF, OEPWDW,
      &     OEP1ONTHR, OEP2ONTHR, OEP2OFFTHR, OEP2ALWAYSTHR, 
-     &     OEPSVDTHR, NAUX, OEP2UPDATE, R12ONTHR,OEP1HYBRID, 
+     &     OEPSVDTHR, NAUX, OEP2UPDATE, R12ONTHR,OEP1HYBRID, OEPTOL,
      &     OEPH0, OEPAXP
 c     
       parameter (OEP1ONTHRDEF  = 1)
@@ -143,6 +143,9 @@ c
 c
 c     The input parameters
 c
+c 2026-10-02: ADDOEP2 had dropped out of the argument list and was an
+c uninitialized local, so non-update (xc') OEP2 iterations ran with the
+c bare exchange potential instead of exchange + stored OEP2AU.
       logical addoep2
 c 
       integer

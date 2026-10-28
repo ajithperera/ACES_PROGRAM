@@ -819,8 +819,12 @@ ifeq (${CMPLR},intel) ##########################################################
    F9XC = ifx -c -Wall -traceback #-shared -fPIC
    LD   = ifx
  # make sure the other compilers f9x, cc, and CC all get double alignment
-   CFLAGS   = -Zp8 
-   F9XFLAGS = -Zp8 -zero 
+   CFLAGS   = -Zp8
+ # -assume dummy_aliases: callers routinely pass several slices of one work
+ # array (even an INTEGER slice of a REAL one) as separate dummies, e.g.
+ # vmol's CALL VGAMMA2(F,F(1+IGAM),...). ifx 2023.2 -O2 assumes they cannot
+ # alias and miscompiles vgamma2 (H2O/6-31G** SCF 0.2 Eh too low).
+   F9XFLAGS = -Zp8 -zero -assume dummy_aliases
    LDFLAGS  = -Zp8
    ifneq (,$(findstring ${ARCH},em64t itanium2))
       64BIT = 1
@@ -1335,50 +1339,50 @@ ext_d   := $(strip ${EXT_d})
 ext_mod := $(strip ${EXT_mod})
 ext_o   := $(strip ${EXT_o})
 
-tmp     := $(filter-out mod-%, $(wildcard *.${ext_F95}))
-F95_F95 := $(wildcard mod-*.${ext_F95} ${tmp})  # all F95 files
+tmp     := $(sort $(filter-out mod-%, $(wildcard *.${ext_F95})))
+F95_F95 := $(sort $(wildcard mod-*.${ext_F95})) ${tmp}  # all F95 files
 F95_f95 := $(F95_F95:.${ext_F95}=.${ext_f95})   # processed source code
 F95_o   := $(F95_F95:.${ext_F95}=.${ext_o})     # compiled objects
 F95_mod := $(filter mod-%, ${F95_F95})          # module source files
 F95_mod := $(patsubst mod-%, %, ${F95_mod})
 F95_mod := $(F95_mod:.${ext_F95}=.${ext_mod})   # module description files
 
-tmp     := $(filter-out mod-%, $(wildcard *.${ext_f95}))
-f95_f95 := $(wildcard mod-*.${ext_f95} ${tmp})  # all f95 files
+tmp     := $(sort $(filter-out mod-%, $(wildcard *.${ext_f95})))
+f95_f95 := $(sort $(wildcard mod-*.${ext_f95})) ${tmp}  # all f95 files
 f95_f95 := $(filter-out ${F95_f95}, ${f95_f95}) # parentless f95 files
 f95_o   := $(f95_f95:.${ext_f95}=.${ext_o})     # compiled objects
 f95_mod := $(filter mod-%, ${f95_f95})          # module source files
 f95_mod := $(patsubst mod-%, %, ${f95_mod})
 f95_mod := $(f95_mod:.${ext_f95}=.${ext_mod})   # module description files
 
-tmp     := $(filter-out mod-%, $(wildcard *.${ext_F90}))
-F90_F90 := $(wildcard mod-*.${ext_F90} ${tmp})  # all F90 files
+tmp     := $(sort $(filter-out mod-%, $(wildcard *.${ext_F90})))
+F90_F90 := $(sort $(wildcard mod-*.${ext_F90})) ${tmp}  # all F90 files
 F90_f90 := $(F90_F90:.${ext_F90}=.${ext_f90})   # processed source code
 F90_o   := $(F90_F90:.${ext_F90}=.${ext_o})     # compiled objects
 F90_mod := $(filter mod-%, ${F90_F90})          # module source files
 F90_mod := $(patsubst mod-%, %, ${F90_mod})
 F90_mod := $(F90_mod:.${ext_F90}=.${ext_mod})   # module description files
 
-tmp     := $(filter-out mod-%, $(wildcard *.${ext_f90}))
-f90_f90 := $(wildcard mod-*.${ext_f90} ${tmp})  # all f90 files
+tmp     := $(sort $(filter-out mod-%, $(wildcard *.${ext_f90})))
+f90_f90 := $(sort $(wildcard mod-*.${ext_f90})) ${tmp}  # all f90 files
 f90_f90 := $(filter-out ${F90_f90}, ${f90_f90}) # parentless f90 files
 f90_o   := $(f90_f90:.${ext_f90}=.${ext_o})     # compiled objects
 f90_mod := $(filter mod-%, ${f90_f90})          # module source files
 f90_mod := $(patsubst mod-%, %, ${f90_mod})
 f90_mod := $(f90_mod:.${ext_f90}=.${ext_mod})   # module description files
 
-F_F     := $(wildcard *.${ext_F})               # all F files
+F_F     := $(sort $(wildcard *.${ext_F}))               # all F files
 F_f     := $(F_F:.${ext_F}=.${ext_f})           # processed source code
 F_o     := $(F_F:.${ext_F}=.${ext_o})           # compiled objects
 
-f_f     := $(wildcard *.${ext_f})               # all f files
+f_f     := $(sort $(wildcard *.${ext_f}))               # all f files
 f_f     := $(filter-out ${F_f}, ${f_f})         # parentless f files
 f_o     := $(f_f:.${ext_f}=.${ext_o})           # compiled objects
 
-cxx_cxx := $(wildcard *.${ext_cxx})             # all C++ files
+cxx_cxx := $(sort $(wildcard *.${ext_cxx}))             # all C++ files
 cxx_o   := $(cxx_cxx:.${ext_cxx}=.${ext_o})     # compiled objects
 
-c_c     := $(wildcard *.${ext_c})               # all C files
+c_c     := $(sort $(wildcard *.${ext_c}))               # all C files
 c_o     := $(c_c:.${ext_c}=.${ext_o})           # compiled objects
 
 tmp :=

@@ -16,11 +16,33 @@ fi
 # shellcheck source=/dev/null
 source "$ROOT/build_config.sh"
 
-module purge
-# shellcheck disable=SC2086
-module load $ACES_PROGRAM_MODULES
+# How the toolchain gets onto PATH (modules / a setvars script / nothing at
+# all) is whatever ./configure probed on this host; build_config.sh carries the
+# loader itself. Older build_config.sh files predate it and were modules-only.
+if type aces_program_load_env >/dev/null 2>&1; then
+  aces_program_load_env || exit 1
+else
+  module purge
+  # shellcheck disable=SC2086
+  if ! module load $ACES_PROGRAM_MODULES; then
+    echo "module load failed: $ACES_PROGRAM_MODULES -- re-run ./configure" >&2
+    exit 1
+  fi
+fi
 
 mkdir -p "$ROOT/build_logs"
+
+# The aces2 binaries the suites run (xaces2, xjoda, ...): wherever the gmake
+# build installed them -- this checkout's aces2/bin, or the DIR_INSTBIN an
+# untracked aces2/Makefiles/local.mk sets (e.g. $(HOME)/Develop/bin). ACES2_BIN
+# overrides both.
+if [ -z "${ACES2_BIN:-}" ]; then
+  if [ -f "$ROOT/aces2/Makefiles/local.mk" ]; then
+    ACES2_BIN=$(printf 'include local.mk\nall:;@echo $(DIR_INSTBIN)\n' |
+                make -s --no-print-directory -C "$ROOT/aces2/Makefiles" -f - 2>/dev/null)
+  fi
+  ACES2_BIN=${ACES2_BIN:-$ROOT/aces2/bin}
+fi
 
 TARGETS="$*"
 [ -z "$TARGETS" ] && TARGETS="aces2 aces3 pyaces"
@@ -30,18 +52,25 @@ for t in $TARGETS; do
   LOG="$ROOT/build_logs/unified_test_$t.log"
   case "$t" in
     aces2)
-      PATH="$HOME/Develop/bin:$PATH" bash -c \
+      PATH="$ACES2_BIN:$PATH" bash -c \
         "cd '$ROOT/aces2' && python3 tests/fast/run_tests.py --jobs $ACES_PROGRAM_NP" \
         > "$LOG" 2>&1
       ;;
     aces3)
       # xaces3 runs the ACES II xjoda, found on PATH.
-      ( cd "$ROOT/aces3" && PATH="$HOME/Develop/bin:$PATH" \
+      ( cd "$ROOT/aces3" && PATH="$ACES2_BIN:$PATH" \
           python3 tests/fast/run_tests.py --jobs "$ACES_PROGRAM_NP" --np "$ACES_PROGRAM_NP" ) \
         > "$LOG" 2>&1
       ;;
     pyaces)
-      ( cd "$ROOT/pyaces" && PATH="$HOME/Develop/bin:$PATH" python3 pyaces_suite_runner.py ) \
+      # The suite gives every case its own working directory. The runner keeps
+      # them under pyaces/suite_run by default; on HiPerGator they go to the
+      # /blue scratch filesystem as before -- unless the caller already named
+      # somewhere better.
+      if [ -z "${PYACES_SUITE_RUN_DIR:-}" ] && [ -d /blue/ufhpc ]; then
+        export PYACES_SUITE_RUN_DIR=/blue/ufhpc/perera/aces_program_pyaces_suite_test
+      fi
+      ( cd "$ROOT/pyaces" && PATH="$ACES2_BIN:$PATH" python3 pyaces_suite_runner.py ) \
         > "$LOG" 2>&1
       ;;
     *)
@@ -62,7 +91,9 @@ for t in $TARGETS; do
   TOTAL="?"; PASS="?"; FAIL="?"; OTHER="?"
   case "$t" in
     aces2)
-      LINE=$(grep -oE '[0-9]+ case\(s\), [0-9]+ passed, [0-9]+ failed, [0-9]+ errored' "$LOG" | tail -1)
+      # -a: a crashed case can leave non-UTF-8 bytes in the log, and grep would
+      # then answer only "binary file matches" and the rollup would show "?".
+      LINE=$(grep -aoE '[0-9]+ case\(s\), [0-9]+ passed, [0-9]+ failed, [0-9]+ errored' "$LOG" | tail -1)
       if [ -n "$LINE" ]; then
         TOTAL=$(echo "$LINE" | grep -oE '^[0-9]+')
         PASS=$(echo "$LINE"  | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+')
@@ -71,7 +102,7 @@ for t in $TARGETS; do
       fi
       ;;
     aces3)
-      LINE=$(grep -oE '[0-9]+ case\(s\), [0-9]+ failed,' "$LOG" | tail -1)
+      LINE=$(grep -aoE '[0-9]+ case\(s\), [0-9]+ failed,' "$LOG" | tail -1)
       if [ -n "$LINE" ]; then
         TOTAL=$(echo "$LINE" | grep -oE '^[0-9]+')
         FAIL=$(echo "$LINE"  | grep -oE '[0-9]+ failed' | grep -oE '[0-9]+')
@@ -80,13 +111,19 @@ for t in $TARGETS; do
       fi
       ;;
     pyaces)
-      P=$(grep -oE 'PASS: [0-9]+' "$LOG" | grep -oE '[0-9]+')
-      FC=$(grep -oE 'FAIL_CLEAN: [0-9]+' "$LOG" | grep -oE '[0-9]+')
-      CR=$(grep -oE 'CRASH: [0-9]+' "$LOG" | grep -oE '[0-9]+')
-      NR=$(grep -oE 'NO_RESULT: [0-9]+' "$LOG" | grep -oE '[0-9]+')
-      if [ -n "$P" ]; then
-        PASS=$P; FAIL=${FC:-0}
-        OTHER=$(( ${CR:-0} + ${NR:-0} ))
+      # Read every "  STATUS: n" line of the runner's Summary block rather than
+      # a fixed list: MISMATCH and TIMEOUT used to fall out of the totals, and
+      # a run with no PASS at all printed "?" everywhere.
+      SUMMARY=$(sed -n '/^=== Summary ===$/,/^$/p' "$LOG" | grep -aE '^  [A-Z_]+: [0-9]+$')
+      if [ -n "$SUMMARY" ]; then
+        PASS=0; FAIL=0; OTHER=0
+        while read -r STATUS N; do
+          case "${STATUS%:}" in
+            PASS)                PASS=$((PASS + N)) ;;
+            MISMATCH|FAIL_CLEAN) FAIL=$((FAIL + N)) ;;
+            *)                   OTHER=$((OTHER + N)) ;;
+          esac
+        done <<< "$SUMMARY"
         TOTAL=$(( PASS + FAIL + OTHER ))
       fi
       ;;

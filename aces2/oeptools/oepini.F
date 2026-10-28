@@ -110,6 +110,11 @@ c     OEP ASV list. <> Update the variables. <> Reports all the OEP
 c     control ASV if requested.
 c     
       asv_null=achar(0)
+c 2026-10-02: the DATA defaults in oep.com carry no NUL terminator, but
+c ASV_UPDATE_STRING/ASV_STRLEN require one, so the default REFERENCE
+c ('OEP') was rejected as invalid. Terminate them here.
+      OEPH0DEF  = 'OEP'//asv_null
+      OEPAXPDEF = 'NONE'//asv_null
       call asv_parse_list (
      &     luzmt, ncache, maxlen, maxpair,
      &     cache, 'OEP'//asv_null, npair, list1, list2)

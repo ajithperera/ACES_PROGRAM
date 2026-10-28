@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pyaces Developer Manual</title>
+<style>
+@page { size: A4; margin: 20mm 18mm 20mm 18mm;
+  @bottom-center { content: counter(page); font-size: 9pt; color: #666; } }
+:root { --ink:#1b1f24; --muted:#5b6470; --rule:#d5dae0; --accent:#1f5f8b; --bg-code:#f4f6f8; --warn:#9a3b00; }
+html { font-size: 10pt; }
+body { font-family: "Noto Sans", "DejaVu Sans", sans-serif; color: var(--ink); background:#fff; line-height: 1.55; margin: 0; }
+h1, h2, h3, h4 { line-height: 1.3; color: var(--ink); }
+h2 { font-size: 17pt; border-bottom: 2px solid var(--accent); padding-bottom: 4pt; margin-top: 0; break-before: page; }
+h3 { font-size: 12.5pt; margin: 16pt 0 6pt; color: var(--accent); break-after: avoid; }
+h4 { font-size: 10.5pt; margin: 12pt 0 4pt; break-after: avoid; }
+p { margin: 5pt 0; }
+code, pre { font-family: "DejaVu Sans Mono", "Liberation Mono", monospace; font-size: 8.6pt; }
+code { background: var(--bg-code); padding: 0 2pt; border-radius: 2pt; }
+pre { background: var(--bg-code); border-left: 3px solid var(--accent); padding: 6pt 9pt; white-space: pre-wrap; word-break: break-all; break-inside: avoid; margin: 6pt 0; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt; font-size: 8.8pt; }
+th, td { border: 1px solid var(--rule); padding: 3pt 5pt; vertical-align: top; text-align: left; }
+th { background: #eaf0f5; }
+tr { break-inside: avoid; }
+td code, th code { font-size: 8pt; }
+.note, .warn { border: 1px solid var(--rule); border-left: 4px solid var(--accent); padding: 5pt 9pt; margin: 8pt 0; background: #f7fafc; break-inside: avoid; }
+.warn { border-left-color: var(--warn); background: #fdf6f1; }
+.note > b:first-child { color: var(--accent); }
+.warn > b:first-child { color: var(--warn); }
+ul, ol { margin: 4pt 0 6pt; padding-left: 18pt; }
+li { margin: 2pt 0; }
+.cover { height: 247mm; display: flex; flex-direction: column; justify-content: center; }
+.cover h1 { font-size: 30pt; margin: 0 0 6pt; color: var(--accent); }
+.cover .sub { font-size: 14pt; color: var(--muted); margin-bottom: 30pt; }
+.cover table { width: auto; font-size: 10pt; }
+.cover td { border: none; padding: 2pt 14pt 2pt 0; }
+.toc { break-before: page; }
+.toc h2 { break-before: avoid; }
+.toc ol { list-style: none; padding-left: 0; font-size: 10.5pt; }
+.toc a { color: var(--ink); text-decoration: none; }
+.flow { display: flex; flex-direction: column; gap: 3pt; margin: 8pt 0; break-inside: avoid; }
+.flow div { border: 1px solid var(--accent); border-radius: 3pt; padding: 4pt 8pt; background: #f2f7fb; }
+.flow .arrow { border: none; background: none; text-align: center; padding: 0; color: var(--accent); }
+.small { font-size: 8.6pt; color: var(--muted); }
+.pill { display: inline-block; font-size: 7.8pt; padding: 0 5pt; border-radius: 7pt; background: #e1ecf4; color: var(--accent); }
+.pill.legacy { background: #eee; color: #777; }
+.pill.gen { background: #eef6e8; color: #3d6b1f; }
+</style>
+</head>
+<body>
+
+<!-- ============================ Cover ============================ -->
+<section class="cover">
+  <h1>pyaces Developer Manual</h1>
+  <div class="sub">Structure, build, extension and testing of <code>aces2py</code>, the f2py extension module that drives ACES II from Python</div>
+  <table>
+    <tr><td><b>Repository</b></td><td><code>ACES_PROGRAM/pyaces</code> (GitHub youngchoonpark/ACES, private)</td></tr>
+    <tr><td><b>Reference commit</b></td><td>master, 2026-10-23 (TODO stage 1 applied)</td></tr>
+    <tr><td><b>Written</b></td><td>2026-10-23</td></tr>
+    <tr><td><b>Verified</b></td><td>pyaces suite 51/51 PASS on the local workstation (oneAPI 2024.0) and the ccsd server (oneAPI 2023.2)</td></tr>
+    <tr><td><b>Link audit</b></td><td>296 collision-baseline entries, 0 COMMON shadows, identical on both machines</td></tr>
+  </table>
+  <p class="small" style="margin-top:30pt">This manual was written from the source code (<code>pyaces/build.sh</code>, <code>a2_pyf/*.F</code>, the generated
+  <code>Main/gen/aces2pymodule.c</code>, the test scripts) and from inspecting the built shared object. Line numbers refer to the reference commit.</p>
+</section>
+
+<!-- ============================ TOC ============================ -->
+<section class="toc">
+<h2>Contents</h2>
+<ol>
+  <li><a href="#c1">1. Overview</a></li>
+  <li><a href="#c2">2. Directory layout</a></li>
+  <li><a href="#c3">3. Build environment</a></li>
+  <li><a href="#c4">4. Build pipeline (<code>build.sh</code>)</a></li>
+  <li><a href="#c5">5. Linking into one .so: symbol collisions and their fixes</a></li>
+  <li><a href="#c6">6. The link-resolution audit (<code>collision_audit.py</code>)</a></li>
+  <li><a href="#c7">7. The <code>aces2py</code> API</a></li>
+  <li><a href="#c8">8. Running calculations</a></li>
+  <li><a href="#c9">9. The test suite</a></li>
+  <li><a href="#c10">10. Extending pyaces: new entry points and new tests</a></li>
+  <li><a href="#c11">11. Known issues (with fix history)</a></li>
+  <li><a href="#c12">12. Development history and server deployment</a></li>
+  <li><a href="#ca">Appendix A. Legacy files · Appendix B. Command summary</a></li>
+</ol>
+</section>
+
+<!-- ============================ 1 ============================ -->
+<section id="c1">
+<h2>1. Overview</h2>
+
+<p><b>pyaces</b> lets Python call the computational modules of the Fortran quantum-chemistry program ACES II (<code>ACES_PROGRAM/aces2</code>) directly.
+Classic ACES II builds one executable per module (<code>xjoda</code>, <code>xvscf</code>, <code>xvcc</code>, …); a driver runs them in turn and they exchange
+state through files on disk (JOBARC, MOINTS, …). pyaces links those modules into <b>a single shared library</b>,
+<code>aces2py.cpython-312-x86_64-linux-gnu.so</code>, and puts a Python wrapper generated by numpy's f2py on top.</p>
+
+<div class="flow">
+  <div><b>Python</b>: <code>import aces2py</code>; <code>aces2py.Init()</code>; <code>aces2py.Runcc(0)</code>; <code>aces2py.Dgetrecpy("TOTENERG", e)</code></div>
+  <div class="arrow">▼ f2py C wrapper (<code>Main/gen/aces2pymodule.c</code>)</div>
+  <div><b>pyaces Fortran shims</b>: <code>Main/init.F</code>, <code>a2_pyf/run*.F</code>, <code>a2_pyf/*recpy.F</code>, <code>*lstpy.F</code>, <code>aux_pyaces/*.F</code></div>
+  <div class="arrow">▼ static link (<code>-Wl,--start-group</code> … about 107 archives)</div>
+  <div><b>aces2 archives</b>: <code>aces2/lib/lib*.a</code> (joda, vmol, vscf, vtran, intprc, vcc, lambda, vee, props, intgrt, dirmp2, …), some replaced by patched copies in <code>build/patched_libs</code></div>
+  <div class="arrow">▼</div>
+  <div><b>Intel MKL ILP64 (sequential)</b> and the Intel Fortran runtime</div>
+</div>
+
+<h3>1.1 Key facts</h3>
+<ul>
+  <li><b>The aces2 sources are never touched.</b> pyaces links aces2's <code>.a</code> files as they are. Only for archives with collisions does it make temporary copies and rename symbols in them with <code>objcopy</code>. The aces2 tree is shared with the classic driver and its test suite.</li>
+  <li><b>All integers are 64-bit.</b> aces2 and pyaces are compiled with <code>-i8</code>, and MKL is linked in its ILP64 flavour.</li>
+  <li><b>One calculation per process.</b> aces2's COMMON-block state assumes a single use; calling Vtran/Vcc twice in one process has been seen to converge silently to a wrong answer.</li>
+  <li><b>The main risk is at link time.</b> Routines that share a name but differ in implementation were harmless when every executable was linked on its own. In one .so they collide, and the linker silently picks one. The safeguards for this are the core of chapters 5 and 6.</li>
+  <li><b>Tests reuse the aces2 fast suite.</b> Of its 125 cases, the 51 that pyaces can run (SCF 9, CC 31, EOM 8, KS 3) are executed and their JOBARC energies compared with the reference values to within 1×10<sup>-6</sup> E<sub>h</sub>.</li>
+</ul>
+
+<h3>1.2 How to read this manual</h3>
+<p>If you are new to pyaces, read chapter 2 (which files are live), then chapter 4 (the build), then chapters 7–8 (API and running).
+Before exposing a new Fortran routine or linking another aces2 module, read chapters 5, 6 and 10. Chapter 11 lists the defects still present in the code.</p>
+</section>
+
+<!-- ============================ 2 ============================ -->
+<section id="c2">
+<h2>2. Directory layout</h2>
+
+<p><code>pyaces/</code> still carries much of the original 2023 acespy, so it matters which files the current build actually uses.
+<span class="pill">live</span> marks files used by the build or tests, <span class="pill gen">generated</span> marks build output (gitignored), and <span class="pill legacy">legacy</span> marks files nothing uses.</p>
+
+<table>
+<tr><th style="width:30%">Path</th><th style="width:11%">Status</th><th>Contents</th></tr>
+<tr><td><code>build.sh</code></td><td><span class="pill">live</span></td><td>The whole build (about 510 lines): f2py wrapper generation, C/Fortran compilation, patched archives, link, import test, link audit. The history of every collision fix is recorded in its comments.</td></tr>
+<tr><td><code>Main/init.F</code>, <code>Main/aces2_main.F</code></td><td><span class="pill">live</span></td><td>The <code>Init()</code> entry point. Joda reads ZMAT, then <code>aces_init</code> sets up core memory, flags and lists.</td></tr>
+<tr><td><code>a2_pyf/*.F</code></td><td><span class="pill">live</span></td><td>Wrappers and drivers exposed to Python: <code>run*.F</code>, <code>*recpy.F</code>, <code>*lstpy.F</code>, <code>*allpy.F</code>, <code>get1ehpy/get2ehpy.F</code>, <code>acesja*.F</code>, plus the internal <code>a2_get*/a2_put*.F</code>. <code>rungrads</code>, <code>run1props</code> and <code>run</code> are excluded from the build.</td></tr>
+<tr><td><code>aux_pyaces/*.F</code></td><td><span class="pill">live</span></td><td><code>init_legacies</code> (initialises legacy COMMON blocks), <code>get1ents</code>/<code>get2eints</code> (read AO integrals from the IIII file), <code>sym_expand</code>.</td></tr>
+<tr><td><code>tools/collision_audit.py</code></td><td><span class="pill">live</span></td><td>The link-resolution audit (chapter 6), with <code>collision_baseline.txt</code> (296 entries) and <code>common_shadow_baseline.txt</code> (0).</td></tr>
+<tr><td><code>tools/compat_bin/ifort</code></td><td><span class="pill">live</span></td><td>A two-line shim, <code>exec ifx "$@"</code>, so that <code>ifort</code> resolves to ifx on oneAPI releases without ifort.</td></tr>
+<tr><td><code>pyaces_run_case.py</code></td><td><span class="pill">live</span></td><td>Runs one case in its own process and prints the result as marker lines (chapter 8).</td></tr>
+<tr><td><code>pyaces_suite_runner.py</code></td><td><span class="pill">live</span></td><td>Runs the 51 cases and grades each one PASS/MISMATCH/… (chapter 9).</td></tr>
+<tr><td><code>classify_suite.py</code>, <code>suite_classification.tsv</code></td><td><span class="pill">live</span></td><td>The table that classifies the aces2 fast-suite cases by category, entry point and reference value, and the script that first generated it. <b>The TSV contains hand-edited rows</b> (section 9.4).</td></tr>
+<tr><td><code>docs/</code></td><td><span class="pill">live</span></td><td>This manual (HTML source and PDF).</td></tr>
+<tr><td><code>Main/gen/</code></td><td><span class="pill gen">generated</span></td><td>f2py output: <code>aces2pymodule.c</code>, <code>aces2py-f2pywrappers.f</code>.</td></tr>
+<tr><td><code>Main/build/</code></td><td><span class="pill gen">generated</span></td><td>All <code>.o</code> files and the final <code>aces2py.cpython-312-x86_64-linux-gnu.so</code>.</td></tr>
+<tr><td><code>build/patched_libs/</code></td><td><span class="pill gen">generated</span></td><td>Copies of aces2 archives with renamed symbols (about 37). Wiped and rebuilt on every build.</td></tr>
+<tr><td><code>f2py_gen.log</code></td><td><span class="pill gen">generated</span></td><td>The f2py wrapper-generation log. Read it to see how the wrappers were built.</td></tr>
+<tr><td><code>python/</code></td><td><span class="pill">live</span></td><td>The <code>pyaces</code> Python package (<code>pyproject.toml</code>, <code>python/pyaces/</code>): lower-case in-process wrappers, a subprocess <code>run()</code>, and the MO-list tables in <code>pyaces.moio</code> (section 7.7).</td></tr>
+<tr><td><code>tools/localize.txt</code></td><td><span class="pill">live</span></td><td>Every symbol rename and extracted module, one per line with its reason, plus the history of how each was found (section 5.2).</td></tr>
+<tr><td><code>README</code>, <code>frequently_asked_questions</code>, <code>LICENSE</code></td><td><span class="pill legacy">legacy</span></td><td>Old acespy build notes and the generic f2py FAQ; LICENSE (GPL v3) is still in force (Appendix A).</td></tr>
+</table>
+
+<div class="note"><b>Removed legacy tree</b>: the acespy-era files (<code>Fxx/</code>, <code>include/</code>, the <code>Archive/</code> folders, stale lower-case <code>.f</code> copies, <code>Main/*.com</code> header copies, …) were deleted on 2026-10-23. They remain reachable through the tag <code>pyaces-legacy-20261023</code> (Appendix A).</div>
+</section>
+
+<!-- ============================ 3 ============================ -->
+<section id="c3">
+<h2>3. Build environment</h2>
+
+<h3>3.1 Required tools</h3>
+<table>
+<tr><th style="width:24%">Item</th><th>Requirement</th></tr>
+<tr><td>Fortran</td><td>Intel <code>ifx</code> (verified with oneAPI 2023.2 and 2024.0). The name <code>ifort</code> is provided by the <code>tools/compat_bin</code> shim.</td></tr>
+<tr><td>C</td><td><code>mpicc</code>, to compile the f2py C wrapper and <code>fortranobject.c</code> (it wraps gcc on the local workstation).</td></tr>
+<tr><td>Python</td><td>3.12 (verified) with numpy (including f2py). The extension suffix is taken from the building interpreter (<code>EXT_SUFFIX</code>), so the module imports only under the Python version that built it.</td></tr>
+<tr><td>BLAS/LAPACK</td><td>Intel MKL; <code>MKLROOT</code> must be set. Linked as ILP64, sequential.</td></tr>
+<tr><td>binutils</td><td><code>ar</code>, <code>nm</code>, <code>objcopy</code></td></tr>
+<tr><td>Environment modules</td><td>The <code>module</code> command. <code>pyaces/build.sh</code> runs <code>module purge</code> and loads its own set.</td></tr>
+<tr><td>Prerequisite</td><td>aces2 must be built first, so that <code>aces2/lib/lib*.a</code> exists.</td></tr>
+</table>
+
+<h3>3.2 configure and the module set</h3>
+<p>The top-level <code>./configure</code> finds a toolchain and writes <code>build_config.sh</code>. The top-level <code>build.sh</code> exports the
+<code>ACES_PROGRAM_MODULES</code> recorded there, and <code>pyaces/build.sh</code> reloads exactly that set after <code>module purge</code>
+(<code>aces_load_modules</code> in <code>cmake/env.sh</code>). <code>PYACES_MODULES</code>, which the CMake superbuild sets, takes precedence; if neither is
+set it falls back to the HiPerGator set (<code>intel/2025.1.0 openmpi/5.0.7 python/3.12</code>). <code>PYACES_MODULES=""</code> skips the module load and uses
+the current environment.</p>
+<pre><code># ccsd server
+./configure --modules="intel/oneapi_2023.2.0 python/3.12.3" --np=4
+# local workstation: build_config.sh has ACES_PROGRAM_MODULES="intel-ompi/2024.0"</code></pre>
+<div class="warn"><b>Caution</b>: include a Python module in the set. If <code>module purge</code> unloads the Python that has numpy, the f2py step fails.</div>
+
+<h3>3.3 Locale</h3>
+<p><code>pyaces/build.sh</code> forces <code>export LC_ALL=C</code> (line 19). The globs and <code>sort</code> calls in the script set archive-member order and
+<code>-l</code> order, and that order decides which copy of a duplicated routine gets linked. For the same reason the aces2 makefile wraps its source lists in
+<code>$(sort …)</code>: GNU Make 4.2 does not sort wildcard results, and 4.3 sorts them by locale.</p>
+
+<h3>3.4 Build commands</h3>
+<pre><code>./build.sh aces2 pyaces          # top level: aces2, then pyaces
+./build.sh pyaces                # only pyaces, when aces2 is already built
+bash pyaces/build.sh             # run directly (set PYACES_MODULES or ACES_PROGRAM_MODULES yourself)</code></pre>
+<p>The log is <code>build_logs/unified_build_pyaces.log</code>. On the shared local workstation, stay inside the allocated cores:
+<code>taskset -c 20-23 flock -s /tmp/qtoy-bench.lock ./build.sh pyaces</code>. On the ccsd server, build only through PBS (<code>build_logs/build_ccsd.pbs</code>).</p>
+<div class="note"><b>After changing compiler flags</b>: make does not track flag changes. After changing aces2 flags, remove its build output with <code>git clean -fdXq aces2</code> and rebuild. pyaces wipes and recreates <code>gen/</code> and <code>build/</code> on every build.</div>
+</section>
+
+<!-- ============================ 4 ============================ -->
+<section id="c4">
+<h2>4. Build pipeline (<code>build.sh</code>)</h2>
+
+<h3>4.0 Setup (lines 1–36)</h3>
+<ul>
+  <li>Prepend <code>tools/compat_bin</code> to PATH, so <code>ifort</code> runs ifx.</li>
+  <li>Choose the module set (<code>PYACES_MODULES</code>, else <code>ACES_PROGRAM_MODULES</code>, else the HiPerGator set) and load it with <code>aces_load_modules</code> from <code>cmake/env.sh</code>: <code>module purge; module load</code>, nothing for an empty set, a warning and the current environment on a host without a <code>module</code> command.</li>
+  <li>Exit if <code>MKLROOT</code> is empty. <code>MKL=$MKLROOT/lib/intel64</code> (or <code>$MKLROOT/lib</code>).</li>
+  <li><code>export LC_ALL=C</code>.</li>
+  <li>Ask the running python3 for <code>NUMPY_INC</code>, <code>PY_INC</code> and <code>F2PY_SRC</code> (numpy's <code>f2py/src</code>).</li>
+  <li><code>cd Main; rm -rf gen build; mkdir -p build</code>.</li>
+</ul>
+
+<h3>4.1 Source lists</h3>
+<p><b><code>PYF_SOURCES</code></b> lists the sources whose routines make up the Python interface. f2py scans them and wraps every routine it finds; there is no <code>.pyf</code>.
+Passing every source would also wrap internal helpers, whose all-caps F77 names trip over case mangling. Hence the hand-picked list.</p>
+<p><b><code>SOURCES</code></b> (lines 52–62) is every Fortran file to compile: <code>a2_pyf/*.F</code> except <code>rungrads</code>, <code>run1props</code> and <code>run</code>, plus
+<code>Main/init.F</code>, <code>Main/aces2_main.F</code> and <code>aux_pyaces/*.F</code>. So <code>a2_get*/a2_put*</code>, <code>getlstpy_dbg</code>, <code>get1epy</code> and <code>returnpy</code> are linked but not exposed to Python.</p>
+
+<h3>4.2 Steps</h3>
+<table>
+<tr><th style="width:17%">Step</th><th>Command / action</th><th style="width:25%">Output</th></tr>
+<tr><td>1. Generate wrappers</td><td><code>python3 -m numpy.f2py $PYF_SOURCES -m aces2py --build-dir gen</code> (generate only, no <code>-c</code>). Then a <code>sed</code> lower-cases the first argument of every <code>F_FUNC(Name,…)</code>: ifx exports lower-case symbols such as <code>init_</code>, but f2py uses the source spelling <code>Init</code>.</td><td><code>gen/aces2pymodule.c</code><br><code>gen/aces2py-f2pywrappers.f</code><br><code>f2py_gen.log</code></td></tr>
+<tr><td>2. Compile C</td><td><code>mpicc -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC</code> on the module C file and <code>fortranobject.c</code>.</td><td><code>build/aces2pymodule.o</code>, <code>build/fortranobject.o</code></td></tr>
+<tr><td>3. Compile Fortran</td><td>Compile <code>$SOURCES</code> and the f2py wrapper with the <code>FFLAGS</code> below. Then <code>objcopy --redefine-sym props_=pyaces_vprops_props_ build/runee.o</code>, so Runee calls the renamed vprops PROPS.</td><td><code>build/*.o</code></td></tr>
+<tr><td>4. Link</td><td>Build LIBDIRS/LIBNAMES, build the patched archives for colliding modules (chapter 5), then <code>ifx -shared -nofor-main</code>.</td><td><code>build/aces2py.cpython-312-x86_64-linux-gnu.so</code></td></tr>
+<tr><td>5. Import test</td><td><code>python3 -c "import aces2py; print('IMPORT OK')"</code>, then <code>collision_audit.py --calls</code> (section 6.1). Either failure fails the build (<code>set -e</code>).</td><td>none</td></tr>
+<tr><td>6. Link audit</td><td><code>python3 tools/collision_audit.py || true</code>. Advisory only; it never fails the build.</td><td><code>@COLLISION_AUDIT:</code> lines in the log</td></tr>
+</table>
+
+<h4>Fortran flags</h4>
+<pre><code>FFLAGS="-diag-disable=10448 -i8 -fPIC -fp-model strict -O1 -assume minus0 -qopenmp \
+        -D__fortran -D__fortran77 -D_INTEL -D_RECL_IS_WORDS_ \
+        -I$ACES/include -I$ACES/acescore/include -I. -FI"</code></pre>
+<ul>
+  <li><code>-i8</code>: 8-byte default INTEGER, matching aces2 and MKL ILP64.</li>
+  <li><code>-FI</code>: fixed-form source. <code>-D__fortran77</code> selects the F77 branch of aces2's headers.</li>
+  <li>Headers come from aces2's <code>include</code> and <code>acescore/include</code>. <code>Main/init.F</code> and <code>Main/aces2_main.F</code> include them the same way as every other pyaces source.</li>
+</ul>
+
+<h4>Link command</h4>
+<pre><code>ifx -shared -nofor-main -o build/aces2py${EXT_SUFFIX} build/*.o \
+    -L$PATCHED_LIBDIR $LIBDIRS -Wl,--start-group $LIBNAMES -Wl,--end-group \
+    -L$MKL -Wl,--start-group -lmkl_intel_ilp64 -lmkl_lapack95_ilp64 \
+           -lmkl_sequential -lmkl_core -Wl,--end-group -lpthread</code></pre>
+<ul>
+  <li><code>LIBDIRS</code>/<code>LIBNAMES</code> are regenerated every build from <code>find $ACES -maxdepth 2 -iname "*.a"</code> (sorted, de-duplicated). All aces2 archives sit in one group, so circular dependencies resolve.</li>
+  <li><code>-L$PATCHED_LIBDIR</code> comes first, so a patched copy wins over the original archive of the same name.</li>
+  <li><code>-nofor-main</code> stops ifx from requiring its own main program.</li>
+</ul>
+</section>
+
+<!-- ============================ 5 ============================ -->
+<section id="c5">
+<h2>5. Linking into one .so: symbol collisions and their fixes</h2>
+
+<p>The classic ACES II build links each module into its own executable. Routines that <b>share a name but not an implementation</b>, such as vcc's
+<code>FINISH</code> and lambda's <code>FINISH</code>, were therefore harmless. pyaces puts all of them into one .so, so the linker picks one copy and hands it to every caller,
+without a warning. The result is a segfault, <code>@GETLST: List (x,y) does not exist</code>, or a <b>silently wrong energy</b>.
+The pyaces link step has four safeguards against this.</p>
+
+<h3>5.1 Localizing MAIN__</h3>
+<p>Twelve modules (<code>hbar joda lambda pccd props vcc vee vmol vmol2ja vscf vtran intprc</code>, <code>MAIN_COLLISION_MODULES</code>) contain a Fortran PROGRAM,
+so each defines <code>MAIN__</code>. The standalone executables need it, but in one .so it means "multiple definition of MAIN__".
+The build extracts each of these archives with <code>ar x</code> into a temporary directory, applies <code>objcopy --localize-symbol=MAIN__</code> to the objects that define it,
+and repacks them as <code>build/patched_libs/lib&lt;mod&gt;.a</code>. aces2's own <code>.a</code> files are not modified.</p>
+
+<h3>5.2 <code>tools/localize.txt</code>: renaming the losing copy</h3>
+<p>Each <code>rename &lt;module&gt; &lt;symbol&gt;</code> line in <code>tools/localize.txt</code> (60 today, each with its reason) becomes a <code>module:symbol</code> pair in build.sh's <code>EXTRA_LOCALIZE_SYMBOLS</code>, and each <code>extract &lt;module&gt;</code> line an entry of <code>EXTRA_LOCALIZE_MODULES</code>. For each pair the build applies
+<code>objcopy --redefine-sym sym=pyaces_&lt;mod&gt;_sym</code> to <b>every object</b> in that module's archive. The definition and the module's own calls are renamed together,
+so the losing module keeps using its own implementation under the new name, and the original name is left to the winner.</p>
+<div class="warn"><b>Rule</b>: a rename only takes effect if its module is extracted, i.e. in <code>MAIN_COLLISION_MODULES</code> or on an <code>extract</code> line. Before patching, the build checks every pair: if the module is not extracted, or its archive defines no <code>T</code> symbol of that name, the build stops with <code>tools/localize.txt has renames that cannot be applied</code>. Keep extract lines that have no rename of their own (libr2): repacking an archive reorders its members, which can change which duplicate wins.</div>
+<p>The build used <code>--localize-symbol</code> at first, but that sent the losing module's own calls to the winner (lambda's <code>vlamcc</code> ended up calling vcc's FINISH), so on 2026-08-11 it switched to <code>--redefine-sym</code>.</p>
+
+<h4>Main collisions resolved so far</h4>
+<table>
+<tr><th style="width:30%">Symbol</th><th style="width:26%">Renamed (losing) copy</th><th>Symptom / note</th></tr>
+<tr><td><code>FINISH</code></td><td>lambda, molcas</td><td>Runcc reported the iteration-0 TOTENERG instead of the converged one</td></tr>
+<tr><td><code>GSCHMIDT</code></td><td>joda, libr, vcceh, vea</td><td>SIGSEGV from an argument-count mismatch</td></tr>
+<tr><td><code>MODF</code></td><td>lambda, fsip, vcceh, hcmult, vea, lcct</td><td>Failures on EOM paths</td></tr>
+<tr><td><code>EXPDEN</code>, <code>PROPS</code> and vprops helpers</td><td>props, vcceh / vprops</td><td>Dipole calculation in Runee</td></tr>
+<tr><td><code>HBARXC</code>, <code>DT2INT2</code>, <code>DRAOLAD</code>, <code>T2TOAO</code>, <code>GETAOINF</code>, <code>Z2TOMO</code></td><td>vcceh, lcct, hcmult, lambda, vee, dens</td><td>GETLST "list does not exist"; Z2TOMO gave an error of about 1e-5</td></tr>
+<tr><td><code>W45T3DRV</code></td><td>lambda</td><td>lambda's 8-argument copy won over trp's 4-argument one</td></tr>
+<tr><td><code>CMPENG</code></td><td>rpa</td><td>Singles term dropped: a silent 2.49e-05 error</td></tr>
+<tr><td><code>XGEMM</code></td><td>tools</td><td>Illegal argument passed to DGEMM</td></tr>
+<tr><td><code>CHECK_T2</code>, <code>INITIN/INITSN/DIISLST/DODIIS0</code></td><td>ringcc / lambda</td><td>vcc used other modules' DIIS and initialisation routines</td></tr>
+<tr><td><code>ABCD</code> (COMMON shadow)</td><td>intgrt</td><td>Every KS case faulted on instruction fetch (section 5.4)</td></tr>
+<tr><td><code>getdt1</code>, <code>fndmaxs</code>, <code>t2l2rng</code>, <code>r1l2y2c</code></td><td>vcc, vee, lcct, lcct</td><td>The winner depended on link order (make 4.2 vs 4.3); pinned in eab3c4e6</td></tr>
+</table>
+<p class="small">The cause and diagnosis of each entry are recorded next to its entry in <code>tools/localize.txt</code>.</p>
+
+<h3>5.3 <code>NEWLY_LINKED_MODULES</code>: bulk handling of re-enabled modules</h3>
+<p><code>a2mix aux rpa scrnc</code> were <code>.skip</code> directories until they were re-enabled, so the classic build never linked them next to the other modules.
+The build collects the <code>T</code> symbols of every <code>aces2/lib/lib*.a</code> and automatically adds to <code>EXTRA_LOCALIZE_SYMBOLS</code> every symbol (except
+<code>MAIN__</code>) that one of these four modules shares with another module. The log shows <code>shadowed by &lt;mod&gt;, renaming: …</code>.</p>
+
+<h3>5.4 COMMON blocks that shadow subroutines</h3>
+<p>A Fortran <code>COMMON /abcd/</code> emits a tentative symbol <code>abcd_</code> (<code>C</code> in <code>nm</code>). A subroutine <code>ABCD</code> is also <code>abcd_</code>.
+If the COMMON satisfies the reference before the linker extracts the object holding the subroutine, <code>call abcd</code> jumps into zero-filled BSS.
+The symptom is a SIGSEGV on instruction fetch, recognisable in gdb by <code>si_addr == $pc</code>.</p>
+<ul>
+  <li><b>rename-definer</b>: if only the defining module calls the routine, add <code>rename &lt;definer&gt; &lt;sym&gt;</code> to <code>tools/localize.txt</code> (e.g. <code>rename intgrt abcd_</code>).</li>
+  <li><b>rename-commons</b>: if other modules call it too, renaming would orphan them, so the COMMON block has to move instead.</li>
+</ul>
+<p>Nine latent cases (mopac <code>deriv/grid/local/polar</code>, nddo <code>guess/local</code>, aces2 and ccd_light <code>energy</code>, pdens <code>one/tab</code>, vdint <code>sym2</code>) were renamed ahead of time.</p>
+
+<h3>5.5 Keeping patched_libs clean</h3>
+<p><code>build/patched_libs</code> comes before aces2/lib on the <code>-L</code> path, so a stale file there shadows the real archive. A <code>libintgrt.a</code> left over from an
+experiment once caused <code>undefined symbol: intgrt_run_</code>. The directory is now removed and rebuilt on every build.</p>
+
+<h3>5.6 Finding out which copy won</h3>
+<pre><code># First choice: ask the linker (add to the link command)
+-Wl,-trace-symbol=getdt1_
+# Fallback: match the size in the .so against the archives
+nm -S Main/build/aces2py*.so | grep ' getdt1_$'
+nm -S ../aces2/lib/libvcc.a ../aces2/lib/libvee.a | grep ' getdt1_$'
+# COMMON shadow check: B or D instead of T means data, not code
+nm Main/build/aces2py*.so | grep -E ' (abcd_|hbar_)$'
+# Which symbol does a pyaces object actually call?
+nm Main/build/runhbar.o | grep -i hbar</code></pre>
+</section>
+
+<!-- ============================ 6 ============================ -->
+<section id="c6">
+<h2>6. The link-resolution audit (<code>collision_audit.py</code>)</h2>
+
+<p>It runs automatically as build step 6 and can also be run by hand. It needs an already built <code>Main/build/aces2py*.so</code>.</p>
+<pre><code>python3 tools/collision_audit.py            # report against the baselines
+python3 tools/collision_audit.py --update   # overwrite both baseline files with the current findings
+python3 tools/collision_audit.py --calls    # fail if a pyaces call binds to data (run by build step 5)</code></pre>
+
+<h3>6.1 What it checks</h3>
+<p><b>(1) Resolution differences.</b> For every symbol defined by more than one module:</p>
+<ol>
+  <li>Reconstruct the classic link order from <code>ACES_LINK_LISTS</code> in <code>aces2/Makefiles/GNUmakefile</code>.</li>
+  <li>Identify the copy actually in the .so by its <code>nm -S</code> size (skipped if sizes cannot tell the copies apart).</li>
+  <li>For each calling module, compare it with the copy the classic build would have given (its own copy, otherwise the first library in its link list that defines the symbol).</li>
+  <li>If the two differ, and their comment-stripped sources differ too, report <code>symbol winner classic caller</code>.</li>
+</ol>
+<p>Pairs already renamed by <code>build.sh</code> are excluded; the audit reads the rename lines of <code>tools/localize.txt</code> and <code>NEWLY_LINKED_MODULES</code> from build.sh.</p>
+<p><b>(2) COMMON shadows.</b> It reports symbols that are <code>T</code> in one archive and <code>C</code> in another and B/b/D/d in the .so, with a verdict of
+<code>rename-definer</code> or <code>rename-commons</code>.</p>
+<p><b>(3) Calls bound to data</b> (<code>--calls</code>). Every <code>U</code> symbol in pyaces's own Fortran objects (<code>Main/build/*.o</code> except the two C objects) is a call, because Fortran references COMMON blocks as <code>C</code>. If the .so defines that name as data (B/b/D/d), the call would jump into a COMMON block. This catches the case (2) cannot, where no subroutine of that name exists anywhere (the <code>hbar_</code> defect). It is not advisory: build step 5 runs it and any hit fails the build.</p>
+
+<h3>6.2 Reading the output</h3>
+<pre><code>@COLLISION_AUDIT: 0 subroutines shadowed by a same-named COMMON block ...
+@COLLISION_AUDIT: 296 resolution differences (296 in the baseline)
+  resolved since the baseline: ...             # in the baseline, now gone
+@COLLISION_AUDIT: NEW resolution differences ...
+    getdt1_   .so gives vcc, lcct expects lcct   # new: needs action</code></pre>
+
+<h3>6.3 When NEW entries appear</h3>
+<ol>
+  <li>Compare the two implementations (argument count, list numbers, what they compute). If they compute the same thing, the entry can be accepted into the baseline.</li>
+  <li>If they differ, choose the copy to rename and add <code>rename &lt;loser&gt; &lt;symbol&gt;</code> to <code>tools/localize.txt</code>, with an <code>extract &lt;loser&gt;</code> line if the module is not extracted yet.</li>
+  <li>Rebuild pyaces and confirm the NEW entry is gone and no other symbol flipped. Adding a module to the processed set can change how its other symbols resolve.</li>
+  <li>Update the baseline with <code>--update</code> only after the suite has passed.</li>
+</ol>
+<div class="warn"><b>The baseline is not a to-do list</b>: its 296 entries are known, accepted differences. Renaming 42 "safe-looking" entries in one pass once dropped the suite from 45 to 31 PASS. Also, <code>ACES_LINK_LISTS</code> only covers modules that build executables, so callers inside library modules (libr, libr2, tools, acescore, …) are invisible to the audit. Calls from pyaces's own objects into COMMON blocks are covered separately by <code>--calls</code>.</div>
+</section>
+
+<!-- ============================ 7 ============================ -->
+<section id="c7">
+<h2>7. The <code>aces2py</code> API</h2>
+
+<h3>7.1 Signatures come from the Fortran sources</h3>
+<p>f2py builds the module from the sources in <code>PYF_SOURCES</code> alone. (Until 2026-10-23 a <code>Main/aces2.pyf</code> was passed as well; f2py then built the module twice and the source scan overwrote the <code>.pyf</code> version, so the <code>.pyf</code> never took effect. Dropping it left <code>aces2pymodule.c</code> byte-for-byte the same.) As a result:</p>
+<ul>
+  <li>Python names follow the capitalisation in the source: <code>Init</code>, <code>Dgetrecpy</code>, <code>IGetrecpy</code> (capital G).</li>
+  <li>Argument types and intents come from the source. To change an intent, put a <code>Cf2py intent(...)</code> line in the <code>.F</code> file. Every <code>Run*</code> takes an <code>Iuhf</code> argument.</li>
+  <li>No COMMON blocks (<code>/flags/</code>, <code>/jobarc/</code>, <code>/lists/</code>, …) are exposed; read state through JOBARC records instead.</li>
+  <li>Check exact signatures with <code>print(aces2py.Runcc.__doc__)</code> or the docstrings in <code>gen/aces2pymodule.c</code>.</li>
+</ul>
+
+<h3>7.2 Array arguments</h3>
+<p>Every function is a Fortran subroutine. Apart from the two functions in 7.4 that return a value, results are <b>written into numpy arrays the caller passes in</b>.
+f2py wraps those arrays as "input", so if the dtype or memory layout is wrong it silently passes a <b>copy</b>, and whatever Fortran writes is lost with the copy.</p>
+<div class="warn"><b>Always</b> pre-allocate C-contiguous 1-D arrays: <code>np.zeros(n, dtype=np.float64)</code> for reals, <code>np.zeros(n, dtype=np.int64)</code> for integers. Record names are 8 characters, padded with blanks (<code>"IFLAGS  "</code>).</div>
+
+<h3>7.3 Calculation drivers</h3>
+<p><code>Iuhf</code>: 0 = RHF, 1 = UHF/ROHF (<code>Integer*8</code> on the Fortran side, <code>long long</code> in C). No driver calls <code>aces_fin</code>, so the session stays open afterwards and records can be read.</p>
+<table>
+<tr><th style="width:21%">Function</th><th style="width:19%">Source</th><th>What it runs</th></tr>
+<tr><td><code>Init()</code></td><td><code>Main/init.F</code></td><td><code>aces2_main</code>: <code>Joda_</code> (parse ZMAT, create JOBARC), <code>Aces_ja_fin</code>, <code>aces_init</code> (allocate core, set up flags and lists, reopen JOBARC). <b>Call it first, before every driver except Runee.</b></td></tr>
+<tr><td><code>Runints(Iuhf)</code></td><td><code>runints.F</code></td><td><code>Ints_</code> (vmol AO integrals) and <code>V2ja</code></td></tr>
+<tr><td><code>Runscf(Iuhf)</code></td><td><code>runscf.F</code></td><td>Integrals first if there is no IIII file, then <code>Vscf</code></td></tr>
+<tr><td><code>Runcc(Iuhf)</code></td><td><code>runcc.F</code></td><td>SCF first if it has not run (no <code>SCFEVCA0</code> record), then <code>aces_init_chemsys</code>, <code>Vtran</code>, <code>Init_legacies</code>, <code>Intproc</code>, <code>Vcc</code>. Covers the MBPT/CC family.</td></tr>
+<tr><td><code>Runhbar(Iuhf)</code>, <code>Buildhbar()</code></td><td><code>runhbar.F</code>, <code>buildhbar.F</code></td><td>The Runcc steps, then <code>Hbar_</code>. If SCF is done (<code>SCFEVCA0</code>) it starts at Vtran; if CC is done (<code>CC_DONE</code>) it runs only Hbar. Buildhbar reads iuhf from <code>IFLAGS(11)</code>. <b>Do not call it after Runcc</b>: it takes the SCF-done branch and runs Vtran a second time.</td></tr>
+<tr><td><code>Runprops(Iuhf)</code></td><td><code>runprops.F</code></td><td><code>Props_</code></td></tr>
+<tr><td><code>Runpccd(Iuhf)</code></td><td><code>runpccd.F</code></td><td>Self-contained: Joda, Ints, aces_init, V2ja, Vscf, Vtran, Intproc, Vcc, Vlambda, Pccd</td></tr>
+<tr><td><code>Runee(Iuhf)</code></td><td><code>runee.F</code></td><td>Self-contained EOM-CC: Joda, aces_init, Ints, V2ja, vprops Props (renamed copy), Vscf, Vtran, Intproc, Vcc, Vlambda, Vee. <b>Do not call <code>Init()</code> before it.</b></td></tr>
+<tr><td><code>Rundirmp2(Iuhf)</code></td><td><code>rundirmp2.F</code></td><td>SCF if needed, then <code>Dirmp2_run(0)</code>. Iuhf is not forwarded.</td></tr>
+<tr><td><code>Runintgrt(Iuhf)</code></td><td><code>runintgrt.F</code></td><td>SCF if needed, then <code>Intgrt_run</code> (KS/DFT numerical integration, XC energy)</td></tr>
+<tr><td><code>Acesjafin()</code> / <code>Acesjainit()</code></td><td><code>acesjafin.F</code> / <code>acesjainit.F</code></td><td>Close (flush) / reopen the JOBARC session. Reopening an already open session is a hard <code>aces_exit</code>.</td></tr>
+</table>
+
+<h3>7.4 JOBARC records</h3>
+<table>
+<tr><th style="width:40%">Signature</th><th>Description</th></tr>
+<tr><td><code>Dgetrecpy(Name, Dest, [Length])</code></td><td>Read a float64 record into <code>Dest</code>, e.g. <code>"TOTENERG"</code>, <code>"SCFENEG "</code></td></tr>
+<tr><td><code>IGetrecpy(Name, IDest, [Length])</code></td><td>Read an int64 record, e.g. <code>"IFLAGS  "</code> (100), <code>"NBASTOT "</code></td></tr>
+<tr><td><code>Dputrecpy(Name, Source, [Length])</code></td><td>Write a float64 record</td></tr>
+<tr><td><code>Iputrecpy(Name, Isource, [Length])</code></td><td>Write an int64 record</td></tr>
+<tr><td><code>Cputrecpy(Name, Length, Source)</code></td><td>Write a character record</td></tr>
+<tr><td><code>Dest = Cgetrecpy(Name, Length)</code></td><td>Read <code>Length</code> bytes of a character record and return them as <code>bytes</code> (length 1024, blank-padded). A length above 1024 is an <code>aces_exit</code>.</td></tr>
+<tr><td><code>Length = Getreclenpy(Name)</code></td><td>Return the record length in integer words, or <code>-1</code> if the record does not exist.</td></tr>
+</table>
+<p>Lengths are in integer words; with <code>-i8</code>, one integer = one real = 8 bytes. If <code>Length</code> is omitted, the array length is used.</p>
+
+<h3>7.5 MO lists (MOIO)</h3>
+<table>
+<tr><th style="width:52%">Signature</th><th>Description</th></tr>
+<tr><td><code>Getlstpy(Column_Index, No_columns, Irrep, Left_index, Right_index, Destn, Ndim)</code></td><td>Calls <code>A2_getlst(Destn, Column_Index, No_columns, 1, Left_index, Right_index)</code>. In practice <b><code>Left_index</code> is the irrep and <code>Right_index</code> the list number</b>; <code>Irrep</code> and <code>Ndim</code> are ignored.</td></tr>
+<tr><td><code>Putlstpy(Source, Column_Index, No_columns, Irrep, Left_index, Right_index, [Ndim])</code></td><td>The write counterpart of Getlstpy</td></tr>
+<tr><td><code>Getallpy(Destn, Irrep, Right_index, [Ndim])</code></td><td>Read all irrep blocks of list <code>Right_index</code> with total symmetry <code>Irrep</code></td></tr>
+<tr><td><code>Putallpy(Source, Irrep, Right_index, [Ndim])</code></td><td>The write counterpart</td></tr>
+</table>
+<p class="small">A table of list numbers is in <code>pyaces.moio</code> (e.g. T2(Ij,Ab) = 46, T1(AI) = 901, W&lt;AB||IJ&gt; = 14). Use <code>list_numbers(label)</code>, <code>list_labels(number)</code> or <code>distribution_numbers(label)</code>; some labels and numbers repeat, so each returns a list. The entries were transcribed by hand and have not been checked one by one against the ACES II sources.</p>
+
+<h3>7.6 AO integrals</h3>
+<table>
+<tr><th style="width:36%">Signature</th><th>Description</th></tr>
+<tr><td><code>Get1ehpy(Name, Dest, Ndim)</code></td><td>Read <code>"overlap"</code>, <code>"oneh"</code> or <code>"kinetic"</code> from the IIII file and expand it into a full <code>Ndim×Ndim</code> matrix (<code>Ndim = NBASTOT</code>).</td></tr>
+<tr><td><code>Get2ehpy(Name, Dest, Ndim)</code></td><td><code>"2elints"</code>: expand all two-electron integrals from IIII/IJIJ/IIJJ/IJKL into an array of size <code>Ndim<sup>4</sup></code>. Mind the memory.</td></tr>
+</table>
+<h3>7.7 The <code>pyaces</code> Python package</h3>
+<p><code>python/</code> holds a small package on top of <code>aces2py</code>. It does not replace the raw module (still available as <code>pyaces.ext()</code>, names unchanged); it adds lower-case functions, return values instead of output arrays, and a way to run a calculation without risking the caller's process.</p>
+<pre><code>pip install -e pyaces/python          # or: export PYTHONPATH=.../pyaces/python
+# aces2py is found in pyaces/Main/build, or in $PYACES_EXT_DIR</code></pre>
+<table>
+<tr><th style="width:36%">Function</th><th>What it does</th></tr>
+<tr><td><code>run(method, zmat, genbas, iuhf=None, record="TOTENERG", workdir=None, timeout=None, keep=False)</code></td><td>Runs one calculation in a child process (<code>pyaces_run_case.py</code>, including its FNO handling) and returns <code>Result(value, record, workdir, log)</code>. <code>method</code> is <code>scf</code>, <code>cc</code>, <code>ee</code>, <code>pccd</code>, <code>dirmp2</code>, <code>ks</code>, <code>hbar</code> or <code>props</code>; <code>zmat</code> is text or a path; <code>iuhf</code> is guessed from REF/REFERENCE and QRHF. Any failure, including an ACES II <code>aces_exit</code> or a crash, raises <code>CalculationError</code> (with <code>status</code>, <code>returncode</code>, <code>workdir</code>, <code>log_tail</code>) and the caller keeps running.</td></tr>
+<tr><td><code>init()</code>, <code>run_scf(iuhf)</code>, <code>run_cc</code>, <code>run_hbar</code>, <code>run_ee</code>, <code>run_pccd</code>, <code>run_dirmp2</code>, <code>run_intgrt</code>, <code>run_props</code>, <code>run_ints</code>, <code>close_jobarc()</code>, <code>open_jobarc()</code></td><td>In-process drivers: the same calls as section 7.3, same rules (one calculation per process, an ACES II error ends the process).</td></tr>
+<tr><td><code>record_length(name)</code>, <code>get_record(name, dtype=float64)</code>, <code>put_record(name, values)</code>, <code>get_string_record(name, nbytes)</code>, <code>put_string_record(name, data)</code></td><td>JOBARC records with names padded for you. <code>get_record</code> sizes the array from the record and raises <code>KeyError</code> for a missing record instead of letting aces2py end the process.</td></tr>
+<tr><td><code>get_list(lst, irrep, first_column, n_columns, size)</code>, <code>put_list</code>, <code>get_all_irreps</code>, <code>put_all_irreps</code></td><td>MO lists, with arguments named for what Getlstpy actually does (7.5).</td></tr>
+<tr><td><code>moio.list_numbers(label)</code>, <code>moio.list_labels(n)</code>, <code>moio.distribution_numbers(label)</code></td><td>MO-list and distribution number tables.</td></tr>
+</table>
+<pre><code>import pyaces
+r = pyaces.run("cc", "ZMAT", "/path/to/GENBAS")
+print(r.value)                       # TOTENERG
+try:
+    pyaces.run("cc", bad_zmat, "/path/to/GENBAS")
+except pyaces.CalculationError as e:
+    print(e.status, e.log_tail)      # the caller is still alive</code></pre>
+</section>
+
+
+<!-- ============================ 8 ============================ -->
+<section id="c8">
+<h2>8. Running calculations</h2>
+
+<h3>8.1 Runtime environment</h3>
+<ul>
+  <li><b>Working directory</b>: must contain <code>ZMAT</code> and <code>GENBAS</code>. ACES writes JOBARC, JAINDX, IIII/IJIJ/IIJJ/IJKL, MOINTS, MOABCD, MOL, NEWMOS and others into the same directory. Memory size comes from the ZMAT keywords.</li>
+  <li><b>Libraries</b>: the Intel runtime and MKL are needed. Load the same module set as for the build, or set <code>LD_LIBRARY_PATH</code>. Otherwise the import fails with <code>libmkl_intel_ilp64.so.2: cannot open shared object file</code>.</li>
+  <li><b>Import path</b>: put <code>pyaces/Main/build</code> on <code>sys.path</code> or <code>PYTHONPATH</code>.</li>
+</ul>
+
+<h3>8.2 Basic usage</h3>
+<pre><code>import os, sys, numpy as np
+os.chdir("/path/to/workdir")                 # contains ZMAT and GENBAS
+sys.path.insert(0, "/path/to/ACES_PROGRAM/pyaces/Main/build")
+import aces2py
+
+aces2py.Init()                               # skip for Runee
+aces2py.Runcc(0)                             # 0 = RHF, 1 = UHF/ROHF
+
+e = np.zeros(1, dtype=np.float64)
+aces2py.Dgetrecpy("TOTENERG", e)
+print("E =", e[0])
+print("TOTENERG length:", aces2py.Getreclenpy("TOTENERG"))</code></pre>
+
+<h3>8.3 Reading and modifying records</h3>
+<pre><code>iflags = np.zeros(100, dtype=np.int64)
+aces2py.IGetrecpy("IFLAGS  ", iflags)
+iflags[1] = 1                                # IFLAGS(2) = CALC
+aces2py.Iputrecpy("IFLAGS  ", iflags)
+aces2py.Acesjafin()                          # flush before an external executable reads JOBARC
+# ... run ../aces2/bin/xvtran etc. as subprocesses ...
+aces2py.Acesjainit()</code></pre>
+
+<h3>8.4 Rules</h3>
+<ul>
+  <li><b>One calculation per process.</b> Do not run several ZMATs in a row in one process. The test runner starts a new process for each case.</li>
+  <li><b>Do not run the same module twice.</b> Calling Vtran/Vcc twice in one process has converged to wrong values. This includes calling Runhbar after Runcc.</li>
+  <li><b>Runee and Runpccd call Joda themselves.</b> Do not call <code>Init()</code> before Runee.</li>
+  <li><b>Out of scope</b>: geometry optimisation, frequencies, analytic derivatives (gradients and Hessians), Brueckner, <code>HFSTABILITY=FOLLOW</code> and CCSD(TQ) cannot run under pyaces yet (<code>rungrads.F</code> is excluded from the build).</li>
+</ul>
+
+<h3>8.5 FNO special case (<code>pyaces_run_case.py</code>)</h3>
+<p>When ZMAT contains <code>FNO_KEEP=</code>, the classic driver runs a preliminary Vtran/Intproc/Vcc/Fno pass to choose which virtual orbitals to freeze.
+Doing that in-process would call Vtran/Vcc twice, so the runner does this instead:</p>
+<ol>
+  <li>Run <code>Runscf</code>.</li>
+  <li>Temporarily change <code>IFLAGS</code> 2, 93, 83 and 100, and move <code>NUMDROPA</code> to <code>FNOFREEZ</code>.</li>
+  <li>Call <code>Acesjafin()</code>, then run the standalone <code>../aces2/bin/{xvtran,xintprc,xvcc,xfno}</code> as subprocesses (logs: <code>fno_prelim_&lt;exe&gt;.log</code>).</li>
+  <li>Restore the flags; regenerate IIII with <code>xvmol</code>/<code>xvmol2ja</code> if it was consumed.</li>
+  <li>Call <code>Acesjainit()</code>, then <code>Runcc</code>.</li>
+</ol>
+
+<h3>8.6 <code>pyaces_run_case.py</code> output protocol</h3>
+<pre><code>python3 -u pyaces_run_case.py &lt;workdir&gt; &lt;entrypoint&gt; &lt;iuhf&gt; &lt;record&gt;
+# progress: PYACES_CASE: ...
+# success:  PYACES_CASE_VALUE: &lt;repr&gt;   /   PYACES_CASE_RESULT: SUCCESS &lt;%.10f&gt;
+# failure (exit 1): IMPORT_FAILED, &lt;ENTRY&gt;_FAILED, RECORD_ZERO_OR_MISSING, DGETRECPY_FAILED</code></pre>
+<p>A record value of exactly 0.0 is treated as missing.</p>
+</section>
+
+<!-- ============================ 9 ============================ -->
+<section id="c9">
+<h2>9. The test suite</h2>
+
+<h3>9.1 Running it</h3>
+<pre><code>./run_tests.sh pyaces                                   # top level (log: build_logs/unified_test_pyaces.log)
+cd pyaces && python3 pyaces_suite_runner.py             # directly
+cd pyaces && python3 pyaces_suite_runner.py 010a 117b   # selected cases only</code></pre>
+<ul>
+  <li>Case input: <code>aces2/tests/fast/cases/&lt;name&gt;/ZMAT</code>; basis: <code>aces2/tests/fast/GENBAS</code>. There is no pyaces-specific test directory.</li>
+  <li>Working directory: <code>$PYACES_SUITE_RUN_DIR/&lt;name&gt;</code>, by default <code>pyaces/suite_run</code> (untracked). On HiPerGator, <code>run_tests.sh</code> points it at the <code>/blue/...</code> scratch filesystem.</li>
+  <li>Each case gets a fresh directory with ZMAT copied in and GENBAS symlinked, then <code>pyaces_run_case.py</code> runs with a 300-second limit. Log: <code>&lt;dir&gt;/run.log</code>; summary: <code>$RUN_DIR/summary.tsv</code>.</li>
+  <li>Local workstation: <code>OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 taskset -c 20-23 flock -s /tmp/qtoy-bench.lock ./run_tests.sh pyaces</code>. ccsd server: <code>qsub build_logs/test_ccsd.pbs</code>.</li>
+</ul>
+
+<h3>9.2 Grading</h3>
+<table>
+<tr><th style="width:18%">Status</th><th>Condition</th></tr>
+<tr><td>PASS</td><td>Exit code 0 and |computed − reference| ≤ 1×10<sup>-6</sup> E<sub>h</sub> (<code>TOLERANCE</code>, no per-case overrides)</td></tr>
+<tr><td>MISMATCH</td><td>Exit code 0, but the difference exceeds the tolerance</td></tr>
+<tr><td>NO_RESULT</td><td>Exit code 0, but no <code>PYACES_CASE_RESULT: SUCCESS</code> line</td></tr>
+<tr><td>TIMEOUT</td><td>More than 300 seconds</td></tr>
+<tr><td>FAIL_CLEAN</td><td>Positive exit code with a recognised message: an <code>@ROUTINE:</code> banner, "Assertion failed", "did not converge", "forrtl: severe", …</td></tr>
+<tr><td>CRASH</td><td>Killed by a signal (negative code), or a positive exit with no recognised message</td></tr>
+</table>
+<p>Latest result: 51/51 PASS, largest difference 4.95×10<sup>-8</sup> (case 078).</p>
+
+<h3>9.3 <code>suite_classification.tsv</code></h3>
+<p>Columns: <code>name</code>, <code>category</code>, <code>reason</code>, <code>entrypoint</code>, <code>iuhf</code>, <code>record</code> (the JOBARC record compared, <code>TOTENERG</code> or <code>SCFENEG</code>), <code>ref_value</code> (Fortran E/D format).
+The runner only runs rows whose category is SCF, CC, EOM, PCCD or KS.</p>
+<table>
+<tr><th>Category</th><th>Count</th><th>Entry point / iuhf</th></tr>
+<tr><td>CC</td><td>31</td><td>Runcc (iuhf 0: 12, 1: 16), Rundirmp2 (3)</td></tr>
+<tr><td>EOM</td><td>8</td><td>Runee (0: 6, 1: 2)</td></tr>
+<tr><td>SCF</td><td>9</td><td>Runscf (0: 6, 1: 3)</td></tr>
+<tr><td>KS</td><td>3</td><td>Runintgrt (0)</td></tr>
+<tr><td>PCCD</td><td>0</td><td>none</td></tr>
+<tr><td>EXCLUDED</td><td>59</td><td>Geometry optimisation, VIB, derivatives, MRCC, Brueckner, HFSTABILITY=FOLLOW, CCSD(TQ), …</td></tr>
+<tr><td>SCRIPT</td><td>15</td><td>Cases driven by scripts rather than a ZMAT</td></tr>
+</table>
+
+<h3>9.4 <code>classify_suite.py</code> is the source of the TSV</h3>
+<p><code>classify_suite.py</code> builds the TSV from <code>aces2/tests/fast/test_results</code> and the ZMATs. Every routing rule lives in <code>classify()</code>, including the ones that were
+once hand edits: <code>SCF_TYPE=KS</code> → KS/Runintgrt, <code>FOCK=AO</code> MBPT(2) → Rundirmp2, and the exclusions for CCSD(TQ), <code>BRUECKNER</code> and <code>HFSTABILITY=FOLLOW</code>.
+<b>Never edit the TSV by hand</b>: change <code>classify()</code> and regenerate.</p>
+<pre><code>python3 classify_suite.py           # rewrite suite_classification.tsv
+python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differs from the rules</code></pre>
+
+<div class="note"><b>Roll-up</b>: <code>run_tests.sh</code> reads every <code>STATUS: n</code> line of the runner's Summary block. PASS counts as PASS, MISMATCH and FAIL_CLEAN as FAIL, and everything else (CRASH, NO_RESULT, TIMEOUT, …) as OTHER, so TOTAL is always the number of cases run.</div>
+</section>
+
+<!-- ============================ 10 ============================ -->
+<section id="c10">
+<h2>10. Extending pyaces: new entry points and new tests</h2>
+
+<h3>10.1 Exposing a new Fortran routine to Python</h3>
+<ol>
+  <li><b>Make the aces2 side callable.</b> If the target is a PROGRAM, split its body into a subroutine (the "wrapper-split" pattern used for <code>dirmp2_run</code>, <code>intgrt_run</code>, <code>joda_</code>, <code>hbar_</code>, <code>props_</code>). Rebuild aces2 first.</li>
+  <li><b>Write <code>a2_pyf/&lt;name&gt;.F</code>.</b>
+    <ul>
+      <li>Fixed form, with every <code>#include</code> starting in column 1 (oneAPI 2023.2 ifort rejects indented includes).</li>
+      <li>Declare every dummy argument <b>explicitly</b> as <code>Integer*8</code> or <code>Double Precision</code>. A plain <code>Integer</code> makes f2py pass a 4-byte C <code>int</code> while <code>-i8</code> Fortran reads 8 bytes.</li>
+      <li>Mark outputs with <code>Cf2py intent(out) &lt;arg&gt;</code>; the source is the only place signatures are defined (7.1).</li>
+      <li>The capitalisation of the subroutine name becomes the Python name.</li>
+      <li>Use <code>Icore(i0), Icrsiz</code> from <code>icore.com</code>/<code>istart.com</code> for core memory (see <code>runcc.F</code>). Do not call <code>aces_fin</code>.</li>
+      <li>Call aces2 routines by their real symbol: if aces2 defines <code>SUBROUTINE HBAR_</code>, the call must be <code>Call Hbar_</code>; <code>Call Hbar</code> would bind to a COMMON block (chapter 11).</li>
+    </ul></li>
+  <li><b>Add a lower-case wrapper</b> to <code>python/pyaces/drivers.py</code> (and to <code>runner.ENTRY_POINTS</code> if it is a calculation entry point).</li>
+  <li><b>Add the file to <code>PYF_SOURCES</code> in <code>build.sh</code>.</b> The <code>a2_pyf/*.F</code> glob compiles it automatically unless it is on the exclusion list.</li>
+  <li><b>Handle collisions.</b>
+    <ul>
+      <li>If a newly pulled-in module has a PROGRAM, add it to <code>MAIN_COLLISION_MODULES</code>.</li>
+      <li>For a same-named routine, add <code>rename &lt;loser&gt; &lt;sym_&gt;</code> (and <code>extract &lt;loser&gt;</code> if needed) to <code>tools/localize.txt</code>.</li>
+      <li>If a pyaces object calls a renamed routine directly, add an <code>objcopy --redefine-sym</code> after step 3 (as done for <code>runee.o</code>).</li>
+      <li>If you re-enable a <code>.skip</code> module, add it to <code>NEWLY_LINKED_MODULES</code>.</li>
+    </ul></li>
+  <li><b>Build and check</b>: "IMPORT OK", the new wrapper in the second (source-case) module build in <code>f2py_gen.log</code>, and <code>print(aces2py.&lt;Name&gt;.__doc__)</code>.</li>
+  <li><b>Handle NEW audit entries</b> as described in section 6.3.</li>
+  <li><b>Check that every name you call is code</b>: <code>nm Main/build/&lt;name&gt;.o</code> lists the undefined symbols your object calls, and <code>nm Main/build/aces2py*.so | grep ' &lt;sym&gt;$'</code> must show <code>T</code>. <code>B</code> or <code>D</code> means the call is bound to a COMMON block.</li>
+  <li><b>Add a test case</b> and run the whole suite.</li>
+</ol>
+
+<h3>10.2 Adding a test case</h3>
+<ol>
+  <li>Add the case to the aces2 suite: <code>aces2/tests/fast/cases/&lt;name&gt;/ZMAT</code> and a three-line entry in <code>aces2/tests/fast/test_results</code> (<code>name src</code> / <code>RECORD 1</code> / reference value).</li>
+  <li>Add a row to <code>pyaces/suite_classification.tsv</code> by hand (category, entrypoint, iuhf, record, ref_value).</li>
+  <li>Check it with <code>PYACES_SUITE_RUN_DIR=... python3 pyaces_suite_runner.py &lt;name&gt;</code>, then read <code>&lt;dir&gt;/run.log</code> and <code>summary.tsv</code>.</li>
+  <li>Make sure the full suites (<code>./run_tests.sh aces2 pyaces</code>) still pass.</li>
+</ol>
+
+<h3>10.3 Checklist after a change</h3>
+<table>
+<tr><th style="width:38%">What changed</th><th>What to verify</th></tr>
+<tr><td>Fortran in a2_pyf / Main</td><td>pyaces build, IMPORT OK, suite 51/51, <code>nm</code> check of the changed objects</td></tr>
+<tr><td>Rename lists in build.sh</td><td>Audit (no NEW entries; any "resolved" entries are intended), suite, then <code>--update</code></td></tr>
+<tr><td>aces2 sources or flags</td><td><code>git clean -fdXq aces2</code>, rebuild aces2 and pyaces, aces2 suite 125/125, pyaces 51/51, audit</td></tr>
+<tr><td>Toolchain / another machine</td><td>All of the above, plus identical audit results on both machines</td></tr>
+</table>
+</section>
+
+<!-- ============================ 11 ============================ -->
+<section id="c11">
+<h2>11. Known issues (with fix history)</h2>
+
+<div class="note"><b>Fixed on 2026-10-23 (commit f97a9759)</b>: three defects found while writing this manual.
+<ul>
+<li><b><code>Call Hbar</code> in Runhbar/Buildhbar</b>: the symbol <code>hbar_</code> is not a subroutine but lambda's <code>COMMON /HBAR/</code> (<code>B hbar_</code> in the .so), so the SCF-done and CC-done branches could jump into BSS. Changed to <code>Call Hbar_</code> (= <code>hbar__</code>). The audit cannot catch this case because there is no <code>T hbar_</code> anywhere, which is why step 8 of section 10.1 asks for an <code>nm</code> check. Verified with <code>Init → Runscf → Runhbar</code> on case 026 (CCSD energy matches the reference to 7×10<sup>-11</sup>).</li>
+<li><b>Width of <code>Iuhf</code></b>: the <code>Integer Iuhf</code> in <code>run*.F</code> made f2py pass a 4-byte C <code>int</code> while <code>-i8</code> Fortran read 8 bytes. Now declared <code>Integer*8 Iuhf</code>, so both sides are 64-bit.</li>
+<li><b><code>Getreclenpy</code>, <code>Cgetrecpy</code></b>: their outputs never reached Python. <code>Cf2py intent(out)</code> now makes them return the length and the string (section 7.4); the debug prints in Cgetrecpy were removed.</li>
+</ul></div>
+
+<div class="note"><b>Fixed on 2026-10-23 (TODO stage 1: T-03, T-04, T-07, T-16)</b>
+<ul>
+<li><b>Calls bound to data</b>: <code>collision_audit.py --calls</code> now fails the build when a pyaces object calls a name the .so defines as data (section 6.1). It reports both <code>hbar_</code> calls when run against the pre-f97a9759 objects.</li>
+<li><b>Rename pairs that cannot apply</b>: the build stops instead of ignoring them (section 5.2), and <code>objcopy</code> errors are no longer discarded.</li>
+<li><b>Python version</b>: the extension suffix comes from <code>EXT_SUFFIX</code> instead of a hard-coded <code>cpython-312</code>.</li>
+<li><b>Test roll-up and classifier</b>: the roll-up counts every status, the former hand edits are rules in <code>classify()</code> with a <code>--check</code> mode, and the runner's default run directory is inside the repository (sections 9.1–9.4).</li>
+</ul></div>
+
+<p>The remaining issues below are present in the current code. They do not affect the paths the suite exercises today, but you will meet them when using or extending the affected features.</p>
+<table>
+<tr><th style="width:4%">#</th><th style="width:26%">Issue</th><th>Details / recommended action</th></tr>
+<tr><td>1</td><td>Meaning of <code>Getlstpy</code> arguments</td><td><code>Irrep</code> and <code>Ndim</code> are ignored; <code>Left_index</code> is used as the irrep.</td></tr>
+<tr><td>2</td><td>Runpccd and Init</td><td>Runpccd calls Joda itself, yet the runner calls <code>Init()</code> before it. Untested, since there are no PCCD cases.</td></tr>
+<tr><td>3</td><td>ifort check in the top-level build</td><td>The top-level <code>build.sh</code> requires <code>ifort</code> before the pyaces shim is on PATH, so an ifx-only toolchain is refused.</td></tr>
+<tr><td>4</td><td>Assumes environment modules</td><td>In setvars/path mode <code>build_config.sh</code> records no module set, so <code>pyaces/build.sh</code> falls back to the HiPerGator set and its <code>module load</code> fails. Run it with <code>PYACES_MODULES=""</code> after loading the toolchain yourself.</td></tr>
+<tr><td>5</td><td>Symmetry-block offset in <code>Get1ehpy</code></td><td><code>Index = Index + Nelms*(K-1)</code> at <code>get1ehpy.F:101</code> looks wrong. Verify the result on a molecule with symmetry before relying on it.</td></tr>
+</table>
+</section>
+
+<!-- ============================ 12 ============================ -->
+<section id="c12">
+<h2>12. Development history and server deployment</h2>
+
+<h3>12.1 History</h3>
+<table>
+<tr><th style="width:22%">Period</th><th>Work</th></tr>
+<tr><td>2023-11</td><td>Original acespy (Ajith Perera), built as per-module shared libraries (<code>Fxx/</code>) wrapped with f2py.</td></tr>
+<tr><td>2026-08-08 – 08-11</td><td>Subtree-merged into ACES_PROGRAM (<code>ff876bec</code>). Hard-coded paths removed and the link list generated from the aces2 archives (<code>37d57822</code>). Fixing the first collision (FINISH) took the suite from 13 to 30 of 58 PASS. EOM-path collisions fixed (GSCHMIDT, MODF, Z2TOMO, …); switched from localize to redefine-sym.</td></tr>
+<tr><td>2026-09-02 – 09-04</td><td>Portable test runners; W45T3DRV, CMPENG, XGEMM, CHECK_T2 and INITIN collisions fixed; bulk renaming via NEWLY_LINKED_MODULES; the audit tool; the Rundirmp2 and Runintgrt entry points; exclusions cleaned up.</td></tr>
+<tr><td>2026-09-04 – 09-11</td><td>COMMON shadowing found (ABCD → the KS crash); the KS category brought the suite to 51/51; COMMON audit added; nine latent shadows renamed pre-emptively.</td></tr>
+<tr><td>2026-10-14</td><td>Ported to a second machine (ccsd): init.F includes in column 1 (<code>73944a6d</code>); aces2 built with <code>-assume dummy_aliases</code> (<code>dbed9377</code>, ifx 2023.2 miscompiled vgamma2); sorted source lists, <code>LC_ALL=C</code> and extra renames (<code>eab3c4e6</code>). 51/51 and an identical 296-entry audit on both machines.</td></tr>
+<tr><td>2026-10-23</td><td>Defects found while writing this manual fixed (<code>f97a9759</code>): <code>Hbar</code> → <code>Hbar_</code> in Runhbar/Buildhbar, <code>Iuhf</code> as <code>Integer*8</code>, Getreclenpy and Cgetrecpy return their values. Still 51/51 on both machines.</td></tr>
+<tr><td>2026-10-23</td><td>TODO stage 1 (T-03, T-04, T-07, T-16): the <code>--calls</code> check fails the build on calls into COMMON blocks, unapplicable rename pairs stop the build, the extension suffix comes from <code>EXT_SUFFIX</code>, and the test roll-up and classifier were fixed.</td></tr>
+<tr><td>2026-10-23</td><td>TODO stage 2 (T-11, T-12, T-15): the acespy legacy tree removed (tag <code>pyaces-legacy-20261023</code>), <code>Main</code> built against aces2's own headers (the old <code>lists.com</code> copy had a different <code>/lists/</code> layout), <code>Python/moio_len.py</code> made importable.</td></tr>
+<tr><td>2026-10-23</td><td>TODO stage 3 (T-06, T-13, T-14) and T-02: f2py builds the module from the sources alone (<code>Main/aces2.pyf</code> removed), renames moved to <code>tools/localize.txt</code>, and the <code>python/pyaces</code> package with a subprocess <code>run()</code>.</td></tr>
+</table>
+
+<h3>12.2 Deployment on the ccsd server</h3>
+<ul>
+  <li>Installed at <code>ycpark@172.24.7.130:/home/ycpark/program/ACES</code>. The server has no internet access, so it is updated from the workstation with <code>git push ccsd master</code> (the server repository has <code>receive.denyCurrentBranch=updateInstead</code>).</li>
+  <li>Toolchain: <code>intel/oneapi_2023.2.0</code> (ifx 2023.2, MKL 2023.2, Intel MPI 2021.10) and <code>python/3.12.3</code>.</li>
+  <li>Build and test only through PBS: <code>build_logs/build_ccsd.pbs</code> (<code>qsub -v TARGETS=pyaces …</code>), <code>build_logs/test_ccsd.pbs</code>, and <code>build_logs/rebuild_test.pbs</code> (clean aces2 rebuild plus tests).</li>
+  <li>Built with <code>-march=core-avx2</code>, so the binaries run on any of the ccsd50/51/52 nodes.</li>
+</ul>
+
+<h3>12.3 Lessons from the toolchain differences</h3>
+<ul>
+  <li>After a compiler change, rerun all three suites (aces2, aces3, pyaces). ifx 2023.2 handled two pieces of code differently from 2024.0, which had passed them.</li>
+  <li>Compare the link-audit results across machines. The same sources linked different implementations because of make and locale differences.</li>
+</ul>
+</section>
+
+<!-- ============================ Appendices ============================ -->
+<section id="ca">
+<h2>Appendix A. Legacy files</h2>
+<p>The acespy-era files were removed on 2026-10-23 (TODO T-11). To look at them, check out the tag <code>pyaces-legacy-20261023</code>:</p>
+<pre><code>git show pyaces-legacy-20261023:pyaces/Fxx/README
+git checkout pyaces-legacy-20261023 -- pyaces/Fxx    # restore a directory into the working tree</code></pre>
+<table>
+<tr><th style="width:30%">Removed path</th><th>What it was</th></tr>
+<tr><td><code>Fxx/</code></td><td>A copy of aces2 sources from the 2023 per-module shared-library build (45 directories, about 6,100 files, 45 MB), long drifted from aces2.</td></tr>
+<tr><td><code>include/</code>, <code>a2_pyf/include_no/</code>, <code>Main/*.com</code></td><td>Old header copies. The <code>Main/*.com</code> copies were still read by init.F; their <code>lists.com</code> declared a smaller <code>/lists/</code> block (<code>maxref=1</code>, 0x61a80 bytes) than aces2's (0x64b540). init.F only includes the headers and never touches the variables, so nothing broke, but the layouts did not match.</td></tr>
+<tr><td><code>Main/Archive/</code>, <code>Main/compile_acespy</code>, <code>Main/GNUmakefile*</code>, <code>a2_pyf/GNUmakefile*</code></td><td>Early prototypes and the old make / <code>f2py -c</code> build recipes.</td></tr>
+<tr><td><code>a2_pyf/Archive/</code>, <code>Main/Pilot_tests/</code></td><td>Per-routine <code>.pyf</code> files and early COMMON/icore experiments.</td></tr>
+<tr><td><code>a2_pyf/*.f</code>, <code>Main/init.f</code>, <code>Main/aces2_main.f</code></td><td>Stale preprocessed copies of the <code>.F</code> sources.</td></tr>
+<tr><td><code>Exp/</code>, <code>rename.py</code></td><td>An f2py tutorial and a <code>.a</code> → <code>.so</code> renamer with a hard-coded path.</td></tr>
+<tr><td><code>suite_classification.tsv.before_*</code></td><td>TSV snapshots taken before earlier classification fixes.</td></tr>
+</table>
+<p>Still present: <code>README</code> and <code>frequently_asked_questions</code> (old notes and the generic f2py FAQ) and <code>LICENSE</code> (GPL v3, still in force).</p>
+
+<h2 style="break-before:auto; margin-top:24pt">Appendix B. Command summary</h2>
+<pre><code># Build (local workstation, inside the allocated cores)
+taskset -c 20-23 flock -s /tmp/qtoy-bench.lock ./build.sh aces2 pyaces
+
+# Tests
+OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+  taskset -c 20-23 flock -s /tmp/qtoy-bench.lock ./run_tests.sh aces2 pyaces
+cd pyaces && python3 pyaces_suite_runner.py 010a       # one case
+
+# Link audit
+cd pyaces && python3 tools/collision_audit.py
+cd pyaces && python3 tools/collision_audit.py --update # only after verification
+
+# Inspect the module
+python3 -c "import sys; sys.path.insert(0,'pyaces/Main/build'); import aces2py; print(aces2py.__doc__)"
+nm pyaces/Main/build/aces2py*.so | grep ' runcc_$'
+
+# Clean rebuild after changing aces2 flags
+git clean -fdXq aces2 && ./build.sh aces2 pyaces
+
+# ccsd server
+git push ccsd master
+ssh ycpark@172.24.7.130 'cd program/ACES/build_logs && qsub rebuild_test.pbs'</code></pre>
+</section>
+
+</body>
+</html>

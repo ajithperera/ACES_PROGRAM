@@ -2,7 +2,7 @@
       Subroutine Run1props(Iuhf)
 
       Implicit None
-      Integer Iuhf 
+      Integer*8 Iuhf 
       Logical FileExist
 
 #include "icore.com"

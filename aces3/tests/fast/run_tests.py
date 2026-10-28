@@ -12,7 +12,9 @@ Usage:
 """
 import argparse
 import concurrent.futures
+import functools
 import os
+import resource
 import re
 import shutil
 import subprocess
@@ -29,6 +31,13 @@ XTEST_COMPARE = os.path.join(REPO_DIR, "bin", "xtest_compare")
 
 DEFAULT_TOLERANCE = 1e-6  # a.u., RMS error gate
 DEFAULT_TIMEOUT = 600  # seconds, per-case xaces3 wall-clock budget
+
+# The budgets below are sized for a HiPerGator compute node. A slower or
+# busier machine (a workstation running several cases at once, say) needs the
+# same runs to be allowed more wall clock before they count as a failure --
+# a timeout says nothing about correctness. Scale them all with --timeout-scale
+# rather than editing the table per machine.
+TIMEOUT_SCALE = float(os.environ.get("ACES3_TIMEOUT_SCALE", "1"))
 
 # Per-case timeout overrides. The gten_* cases are full CCSD g-tensor
 # property runs (SCF+transform+CCSD+lambda+response, np=4) that measured
@@ -172,6 +181,79 @@ def compare_gtensor(name, ref_text, actual_text):
     return rms <= tol, rms, f"g-tensor RMS error {rms:.3e} (tol {tol:.1e})"
 
 
+def raise_stack_limit():
+    """Give the ranks the stack the SOC superinstructions need.
+
+    steom_so_diag.F (and the other aces_instructions_extnd routines it is
+    modelled on) declares its working matrices as automatic arrays --
+    AAA/BBB/CMATR/VL/VR are all msize x msize, and msize is 4 * nocc * nvirt --
+    so case steom_so alone wants a few hundred MB of *stack* per rank. Under a
+    login shell's default 8MB that is an immediate SIGSEGV inside
+    steom_so_diag at line 32, which looks like a code bug and is not one; a
+    batch environment like HiPerGator's simply has no such limit, which is why
+    the baseline never saw it. Children of this process inherit the limit, so
+    raising it here covers every mpirun the suite launches.
+    """
+    try:
+        soft, hard = resource.getrlimit(resource.RLIMIT_STACK)
+        if soft != hard:
+            resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))
+    except (ValueError, OSError):
+        pass  # not fatal: only the SOC cases care
+
+
+@functools.lru_cache(maxsize=1)
+def mpirun_extra_args():
+    """--oversubscribe is an OpenMPI flag: it is required there whenever the
+    suite runs more ranks than the box has cores, but Intel MPI's Hydra
+    launcher rejects it outright (it oversubscribes by default), so hardcoding
+    it makes every case fail with an argument error on an Intel MPI build.
+    Ask mpirun which one it is."""
+    try:
+        out = subprocess.run(["mpirun", "--version"], capture_output=True,
+                             text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return []
+    banner = (out.stdout or "") + (out.stderr or "")
+    if "Intel(R) MPI" in banner or "Intel MPI" in banner:
+        return []
+    return ["--oversubscribe"]
+
+
+
+# xaces3 says why it died in a diagnostic line on stdout, then calls
+# dump_block_ids()/array_block_summary(), which print hundreds of lines of
+# block tables before mpi_abort finally exits. Keeping only the stdout tail
+# therefore keeps only the dump and throws the reason away -- that is how the
+# gten_* "will not fit on any stack" abort stayed invisible for a month --
+# and stderr, which carries the Fortran traceback, was dropped entirely.
+# Pull out the diagnostic lines by name, then the tail, then stderr.
+ABORT_LINE_RE = re.compile(
+    r"error|cannot|will not fit|abort|assertion|insufficient|exceeds",
+    re.IGNORECASE)
+
+
+def summarize_failure(stdout, stderr, ncontext=2, nmatch=12, ntail=8):
+    out = []
+    lines = (stdout or "").splitlines()
+    hits = [i for i, l in enumerate(lines) if ABORT_LINE_RE.search(l)]
+    if hits:
+        out.append("-- diagnostics --")
+        shown = set()
+        for i in hits[:nmatch]:
+            for j in range(i, min(i + 1 + ncontext, len(lines))):
+                if j not in shown:
+                    shown.add(j)
+                    out.append(lines[j])
+    if lines:
+        out.append("-- last %d stdout lines --" % ntail)
+        out.extend(lines[-ntail:])
+    err = (stderr or "").splitlines()
+    if err:
+        out.append("-- last %d stderr lines --" % ntail)
+        out.extend(err[-ntail:])
+    return "\n".join(out)
+
 def run_case(name, np):
     case_dir = os.path.join(CASES_DIR, name)
     zmat = os.path.join(case_dir, "ZMAT")
@@ -189,11 +271,11 @@ def run_case(name, np):
         if not env.get("ACES_XJODA") and not shutil.which("xjoda", path=env.get("PATH")):
             env["ACES_XJODA"] = os.path.join(os.path.dirname(REPO_DIR), "aces2", "bin", "xjoda")
 
-        timeout = TIMEOUT_OVERRIDES.get(name, DEFAULT_TIMEOUT)
+        timeout = int(TIMEOUT_OVERRIDES.get(name, DEFAULT_TIMEOUT) * TIMEOUT_SCALE)
         t0 = time.time()
         try:
             run = subprocess.run(
-                ["mpirun", "--oversubscribe", "-np", str(np), XACES3],
+                ["mpirun", *mpirun_extra_args(), "-np", str(np), XACES3],
                 cwd=scratch, env=env, capture_output=True, text=True,
                 timeout=timeout,
             )
@@ -203,12 +285,14 @@ def run_case(name, np):
         elapsed = time.time() - t0
 
         if run.returncode != 0:
-            tail = "\n".join(run.stdout.splitlines()[-15:])
-            return name, False, elapsed, f"xaces3 exited {run.returncode}\n{tail}"
+            return name, False, elapsed, (
+                f"xaces3 exited {run.returncode}\n"
+                + summarize_failure(run.stdout, run.stderr)
+            )
 
         env["ACES_EXE_PATH"] = FAST_DIR
         cmp_run = subprocess.run(
-            ["mpirun", "--oversubscribe", "-np", "1", XTEST_COMPARE, name],
+            ["mpirun", *mpirun_extra_args(), "-np", "1", XTEST_COMPARE, name],
             cwd=scratch, env=env, capture_output=True, text=True, timeout=60,
         )
 
@@ -267,10 +351,20 @@ def main():
                          help="MPI ranks per case (default 4 -- 2 ranks was "
                               "found unreliable for gradient/EOM cases, "
                               "crashing inside the SIP block-server layer)")
+    parser.add_argument("--timeout-scale", type=float, default=None,
+                        help="multiply every per-case timeout by this factor "
+                             "(also settable as ACES3_TIMEOUT_SCALE); use >1 on "
+                             "a machine slower than a HiPerGator node")
     parser.add_argument("--case", action="append", dest="cases",
                          help="run only these case names (repeatable); "
                               "default is all cases in tests/fast/cases/")
     args = parser.parse_args()
+
+    raise_stack_limit()
+
+    if args.timeout_scale is not None:
+        global TIMEOUT_SCALE
+        TIMEOUT_SCALE = args.timeout_scale
 
     if not os.path.isfile(XACES3):
         sys.exit(f"bin/xaces3 not found at {XACES3} -- build it first")

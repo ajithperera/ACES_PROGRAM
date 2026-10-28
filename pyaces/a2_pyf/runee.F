@@ -1,7 +1,7 @@
       Subroutine Runee(Iuhf)
 
       Implicit None
-      Integer Iuhf
+      Integer*8 Iuhf
 
 #include "icore.com"
 #include "istart.com"

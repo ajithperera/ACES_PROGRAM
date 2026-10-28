@@ -66,6 +66,17 @@ c      parameter (c_pardo_tserver_timer = c_lineno+1)
 c      parameter (c_pardo_ovrhead_timer = c_pardo_tserver_timer+1)
 c      parameter (c_pardo_act_timer = c_pardo_ovrhead_timer+1)
 
+c--------------------------------------------------------------------------
+c   Capacity of proctab, the (target, last) table build_proctab fills with
+c   one entry per distinct proc call target in a SIAL program. It lives here
+c   rather than in vtdemo_init.F because sip_fmain.F allocates the storage,
+c   vtdemo_init.F redeclares it and build_proctab.f fills it -- and when only
+c   vtdemo_init.F knew the number, sip_fmain.F's own `proctab(200)` capped it
+c   at 100 procs while the other two believed 1000. See build_proctab.f.
+c--------------------------------------------------------------------------
+      integer mx_proctab
+      parameter (mx_proctab = 1000)
+
       integer loptable_entry
 c      parameter (loptable_entry = c_pardo_act_timer)
       parameter (loptable_entry = c_lineno)

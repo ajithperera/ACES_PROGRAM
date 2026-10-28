@@ -1,6 +1,6 @@
       subroutine oep1iter (
      &     nbas, nocc, icore, maxmem, usdmem,
-     &     scfh1e, scfevl, scfevc, scfden, scfham, scfenr)
+     &     scfh1e, scfevl, scfevc, scfden, scfham, scfenr, addoep2)
 c
 c This routine solves the first-order Optimized Effective Potential
 c equations to get the local exchange OEP.
@@ -43,6 +43,9 @@ c
 c
 c     The input parameters
 c
+c 2026-10-02: ADDOEP2 had dropped out of the argument list and was an
+c uninitialized local, so non-update (xc') OEP2 iterations ran with the
+c bare exchange potential instead of exchange + stored OEP2AU.
       logical addoep2
 c 
       integer

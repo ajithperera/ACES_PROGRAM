@@ -1,0 +1,401 @@
+# Symbol renames for the single aces2py .so -- read by build.sh and by
+# tools/collision_audit.py. One entry per line:
+#
+#   rename  <module> <symbol>   objcopy --redefine-sym <symbol>=pyaces_<module>_<symbol>
+#                               on every object of lib<module>.a; the module keeps
+#                               its own copy, everyone else gets the other one.
+#   extract <module>            repack lib<module>.a into build/patched_libs (needed
+#                               for every module named by a rename line that is not
+#                               in build.sh's MAIN_COLLISION_MODULES).
+#
+# Text after a second "#" on an entry line is the reason. build.sh refuses to
+# link if a rename names a module that is not extracted or a symbol the
+# archive does not define (T). Repacking an archive reorders its members,
+# which can change which duplicate wins elsewhere -- so do not drop an
+# extract line (libr2 has no rename of its own) without rerunning the audit.
+#
+# NEWLY_LINKED_MODULES (a2mix aux rpa scrnc) are handled in build.sh: every
+# symbol they share with another module is renamed automatically.
+
+# ---------------------------------------------------------------- modules
+extract intgrt
+extract intpack
+extract vksdint
+extract molcas
+extract libr
+extract vcceh
+extract vea
+extract fsip
+extract hcmult
+extract lcct
+extract vprops
+extract libr2
+extract dens
+extract tools
+extract ringcc
+extract mopac
+extract nddo
+extract aces2
+extract ccd_light
+extract pdens
+extract vdint
+
+# ---------------------------------------------------------------- renames
+rename  lambda     finish_        # lambda/molcas FINISH beat vcc FINISH; Runcc reported the iteration-0 TOTENERG
+rename  molcas     finish_        # lambda/molcas FINISH beat vcc FINISH; Runcc reported the iteration-0 TOTENERG
+rename  joda       gschmidt_      # arity differs between modules; SIGSEGV on EOM paths
+rename  libr       gschmidt_      # arity differs between modules; SIGSEGV on EOM paths
+rename  vcceh      gschmidt_      # arity differs between modules; SIGSEGV on EOM paths
+rename  vea        gschmidt_      # arity differs between modules; SIGSEGV on EOM paths
+rename  lambda     modf_          # vee calls MODF right after GSCHMIDT; other modules' copies differ
+rename  fsip       modf_          # vee calls MODF right after GSCHMIDT; other modules' copies differ
+rename  vcceh      modf_          # vee calls MODF right after GSCHMIDT; other modules' copies differ
+rename  hcmult     modf_          # vee calls MODF right after GSCHMIDT; other modules' copies differ
+rename  vea        modf_          # vee calls MODF right after GSCHMIDT; other modules' copies differ
+rename  lcct       modf_          # vee calls MODF right after GSCHMIDT; other modules' copies differ
+rename  props      expden_        # props/vcceh EXPDEN differ from the copy vee/vprops expect
+rename  vcceh      expden_        # props/vcceh EXPDEN differ from the copy vee/vprops expect
+rename  vprops     props_         # Runee calls vprops PROPS directly (runee.o is redefined to match)
+rename  vprops     setrhf_        # vprops helper with same-named copies elsewhere
+rename  vprops     rhftce_        # vprops helper with same-named copies elsewhere
+rename  vprops     fmc_           # vprops helper; a2mix and others carry copies
+rename  vprops     aainer_        # vprops helper; a2mix and others carry copies
+rename  vprops     civpt_         # vprops helper; a2mix and others carry copies
+rename  vcceh      hbarxc_        # HBARXC chain gave "@GETLST: List does not exist"
+rename  lcct       hbarxc_        # HBARXC chain gave "@GETLST: List does not exist"
+rename  vcceh      dt2int2_       # HBARXC chain gave "@GETLST: List does not exist"
+rename  hcmult     dt2int2_       # HBARXC chain gave "@GETLST: List does not exist"
+rename  lcct       dt2int2_       # HBARXC chain gave "@GETLST: List does not exist"
+rename  vcceh      draolad_       # vee and vcc need different copies; libr2's wins globally
+rename  lambda     draolad_       # vee and vcc need different copies; libr2's wins globally
+rename  vee        draolad_       # vee and vcc need different copies; libr2's wins globally
+rename  vcceh      t2toao_        # vee and vcc need different copies; libr2's wins globally
+rename  vee        t2toao_        # vee and vcc need different copies; libr2's wins globally
+rename  dens       getaoinf_      # vee and vcc need different copies; libr2's wins globally
+rename  vee        getaoinf_      # vee and vcc need different copies; libr2's wins globally
+rename  vcceh      z2tomo_        # 4-way collision; wrong copy gave a ~1e-5 EOM error
+rename  lambda     z2tomo_        # 4-way collision; wrong copy gave a ~1e-5 EOM error
+rename  vee        z2tomo_        # 4-way collision; wrong copy gave a ~1e-5 EOM error
+rename  lambda     w45t3drv_      # lambda's 8-arg copy beat trp's 4-arg one
+rename  tools      xgemm_         # crust's XGEMM must win as in the classic link (illegal DGEMM arg otherwise)
+rename  ringcc     check_t2_      # vcc must get trp's CHECK_T2, not ringcc's
+rename  lambda     initin_        # vcc must keep its own, not lambda's
+rename  lambda     initsn_        # vcc must keep its own, not lambda's
+rename  lambda     diislst_       # vcc must keep its own, not lambda's
+rename  lambda     dodiis0_       # vcc must keep its own, not lambda's
+rename  intgrt     abcd_          # COMMON /abcd/ shadowed intgrt ABCD; every KS case faulted on instruction fetch
+rename  intpack    intpath_       # flipped when intgrt joined the processed modules
+rename  vksdint    primvecint_    # flipped when intgrt joined the processed modules
+rename  mopac      deriv_         # latent COMMON shadow (renamed ahead of gradient entry points)
+rename  mopac      grid_          # latent COMMON shadow (renamed ahead of gradient entry points)
+rename  mopac      local_         # latent COMMON shadow (renamed ahead of gradient entry points)
+rename  mopac      polar_         # latent COMMON shadow (renamed ahead of gradient entry points)
+rename  nddo       guess_         # latent COMMON shadow (renamed ahead of gradient entry points)
+rename  nddo       local_         # latent COMMON shadow (renamed ahead of gradient entry points)
+rename  aces2      energy_        # latent COMMON shadow (renamed ahead of gradient entry points)
+rename  ccd_light  energy_        # latent COMMON shadow (renamed ahead of gradient entry points)
+rename  pdens      one_           # latent COMMON shadow (renamed ahead of gradient entry points)
+rename  pdens      tab_           # latent COMMON shadow; pdens now defines and calls its own
+rename  vdint      sym2_          # latent COMMON shadow (renamed ahead of gradient entry points)
+rename  vcc        getdt1_        # vcc's copy differs; winner depended on archive member order
+rename  vee        fndmaxs_       # vee's copy differs from vea's; winner depended on member order
+rename  lcct       t2l2rng_       # lcct's copy differs from vee's; winner depended on member order
+rename  lcct       r1l2y2c_       # lcct's copy differs from vee's; winner depended on member order
+
+# ---------------------------------------------------------------- history
+#
+# How each of the renames above was found, moved here verbatim from build.sh.
+#
+# aces2's ~150 modules are historically full of same-named "generic" utility
+# routines (independently written per-module, never meant to share a link
+# unit -- the classic driver never links more than one module together, so
+# these never collided there). aces2py.so links dozens of them into ONE
+# process, so any such collision becomes real. Found empirically, one at a
+# time, same as every other instance of this bug class in this project:
+# lambda/finish.f's own SUBROUTINE FINISH(ICYCLE,pCCD) (2 args, unrelated to
+# CC convergence) silently wins over vcc/finish.f's SUBROUTINE
+# FINISH(ICYCLE,pCCD,pCCDS,pCCDTS[,PCCDTSD]) (5 args at vcc's call site --
+# arity mismatch is itself benign/pre-existing, PCCDTSD is unused) when both
+# libvcc.a and liblambda.a are linked together -- silently drops vcc's own
+# "write the converged TOTENERG to JOBARC" step, leaving Runcc's reported
+# energy stuck at the pre-convergence value mbptout.f wrote early on.
+# "module:symbol" pairs to localize (module's OWN copy is neutralized so the
+# OTHER module's same-named symbol wins the link) -- extend this list as new
+# collisions are found instead of touching aces2's own sources. molcas also
+# defines its own unrelated finish_ (no MAIN__ of its own, so it's not in
+# MAIN_COLLISION_MODULES otherwise) -- same collision class, 3rd copy found.
+# joda/gschmidt.f is a 4th instance: 6 modules (libr, vcceh, joda, vea, vee,
+# a vee/librv.skip backup) each define their own GSCHMIDT with DIFFERENT
+# argument counts (vee's own davidtda.f callers pass 6 args matching vee's/
+# vcceh's/vea's own 6-arg signature; joda's is a 5-arg version missing the
+# leading VEC arg entirely -- a straight argument shift, exactly the shape
+# that corrupts an address into an integer slot and segfaults, matching the
+# observed vee_->drvtda_->davidtda_->gschmidt_ SIGSEGV backtrace). Confirmed
+# via `grep -rl "call gschmidt"` that joda's OWN code never calls its own
+# gschmidt (dead/unused there) -- zero risk to localize. libr/vcceh/vea DO
+# have real internal callers of their own gschmidt (libr/david1.f,
+# vcceh/{blcklineq,truncate}.f, vea/truncate.f) -- do NOT blindly localize
+# those without confirming they aren't also needed by some other pyaces
+# entry point first.
+# libr's own copy (7-arg, extra TOL) turned out to be the actual winner
+# once joda's was suppressed (confirmed via nm -S size-matching against the
+# linked .so: 0x159 bytes matches libr/gschmidt.o exactly, not vee's
+# 0x17b). libr/david1.f calls its own gschmidt internally and IS present in
+# the linked .so (nm shows david1_ defined). vcceh/{blcklineq,truncate}.f
+# and vea/truncate.f likewise each call their own gschmidt internally.
+# 5th instance, same collision class again: MODF, called next inside vee_
+# itself (vee.f:406/410/481/485, CALL MODF(ICORE,MAXCOR,IUHF,ITYPE), 4 args)
+# after gschmidt_ was fixed and the crash moved past davidtda_. 8 modules
+# define their own MODF -- lambda's has a genuinely different (longer)
+# signature (extra IRREPT,IRREPF args, an arity mismatch matching the
+# FINISH bug's shape); fsip/vcceh/hcmult/vea/lcct all share vee's own
+# identical 4-arg shape but are still each a DIFFERENT module's own
+# implementation, not guaranteed semantically identical just because the
+# call shape matches. fsip/fs01.f, vcceh/vcceh.f, vea/{exitea,initea}.f all
+# call their own MODF internally too.
+# 6th instance: EXPDEN, next in the chain after MODF (vee_->doeomee_david_->
+# nextdav_->tdens_->expden_, crashing inside a memset -- an out-of-bounds
+# write, matching a wrong-copy/wrong-array-size symptom again). props's own
+# copy has a COMPLETELY different signature/purpose (DTRUNC,DFULL,NORB,...
+# vs vee's/vcceh's identical DOO,DVV,DVO,DOV,F,NMO,IRREPX,ISPIN,REFCONT).
+# props/props.f and vcceh/cmpdso.f both call their own EXPDEN internally.
+#
+# 2026-08-11: switched this whole mechanism from --localize-symbol (hide
+# the losing module's copy, forcing EVERYTHING -- including that module's
+# OWN internal self-calls -- onto the winning module's copy) to
+# --redefine-sym (rename the losing module's copy to a unique name,
+# applied uniformly to every .o in its archive, definer AND any internal
+# caller alike). Discovered why this matters the hard way: lambda/vlamcc.f
+# calls its own 2-arg FINISH and its own 13-arg MODF internally
+# (lambda:finish_/lambda:modf_ above) -- localizing those left vlamcc_'s
+# own calls resolving to vcc's 4-arg FINISH / vee's 4-arg MODF instead of
+# lambda's own, corrupting the args and SIGSEGVing inside Runee (found via
+# a fresh gdb bt on case 054b: runee_->vlambda_->finish_). Every prior
+# "safe to localize" judgment call above (libr/vcceh/vea's own gschmidt
+# self-calls, fsip/vcceh/vea's own modf self-calls, props/vcceh's own
+# expden self-calls) was exactly this same latent risk, just not yet hit by
+# a live call path -- redefine-sym makes the whole reachability analysis
+# moot: each losing module keeps calling ITS OWN renamed copy correctly,
+# only the winning module's plain symbol name remains globally visible.
+#
+# 7th instance, but the FIRST triggered by ADDING a call rather than fixing
+# a crash on an existing one: vprops/props.F's own SUBROUTINE PROPS(S,
+# MAXCOR,IS,IMAXCOR) collides with props/props.F's SUBROUTINE PROPS(ICORE,
+# MAXCOR,IUHF) (needed by Runprops) -- both modules just happen to be named
+# "PROPS". Runee.F (a2_pyf, pyaces's OWN driver source, not aces2's) now
+# calls vprops's PROPS directly (to populate DIPOLE_X/etc before Vee's own
+# EOM transition-property code needs it, matching classic energy.f's own
+# "call runit('xvprops')" placement before xvscf whenever EXCITE= is set).
+# Since this is a NEW pyaces-side call site, not an existing aces2-internal
+# one, redefine-sym must ALSO be applied to pyaces's own compiled runee.o
+# (not just vprops's archive) -- see the loop right after step 3 below.
+# Linking vprops in for the first time ALSO surfaced 5 more of its own
+# helper routines colliding with liboeptools/nucatt.f's bundled same-named
+# routines (setrhf_/rhftce_/fmc_/aainer_/civpt_) -- oeptools's copies are
+# left as the global winners, vprops's own renamed so its internal call
+# chain (props.f calling rhftce.f/fmc.f/aainer.f/civpt.f) stays self-bound.
+#
+# 8th instance: HBARXC, called right after NEWGES in vee/doeomee_david.F's
+# own EOM Davidson iteration loop (the sigma-vector build step) -- crashed
+# with "@GETLST: List (1,3) does not exist" for cases 054a/054b. vcceh AND
+# lcct BOTH also define their own HBARXC (confirmed meaningfully different
+# implementations via diff/size, not just a naming coincidence -- vee's own
+# copy has LANCZOS/DAVID/BLOCK_DAVID-gated LISTT1/LISTT2/LISTT2IN branching
+# that vcceh's/lcct's copies lack). All three modules ALSO have their own
+# internal callers (vcceh: blcklineq.f/lineqy*.f/phbarxc2.f/secprp.f; lcct:
+# clczeta2.f/calczeta.f/lineqy.f; vee: calczeta.f/clczeta2.f/diagall.f/
+# doeomee_david.f) -- redefine, not localize, same reasoning as FINISH.
+# Fixing HBARXC alone didn't fix 054a/054b -- a fresh gdb bt (via a
+# temporary out-of-bounds write injected at the GETLST assertion site
+# itself, since this is a clean aces_exit not a real crash -- ifx's own
+# ABORT() intrinsic doesn't raise a real signal/produce a core, a genuine
+# invalid memory write does) showed the REAL call chain: vee_->
+# doeomee_david_->hbarxc_->dt2int2_->draolad_->t2toao_->getlst_. Every one
+# of dt2int2/draolad/t2toao is ALSO a multi-module collision (9th, 10th,
+# 11th instances): DT2INT2 in vcceh/hcmult/vee/lcct (4 genuinely different
+# implementations, confirmed via `size`), DRAOLAD in vcceh/lambda/libr2/vee
+# (vcceh's and vee's happen to be byte-identical; lambda's/libr2's differ),
+# T2TOAO in vcceh/libr2/vee (vcceh's and vee's again byte-identical;
+# libr2's differs), GETAOINF (12th instance) in vcceh/dens/vee/libr2
+# (libr2's was missed on the first pass: it declares "subroutine getaoinf"
+# in lowercase, a case-sensitive grep for "SUBROUTINE GETAOINF" silently
+# skipped it -- confirmed the actual winner via
+# `ld -Wl,-trace-symbol=<sym>`, which prints the exact archive member
+# providing/referencing a symbol, more reliable than guessing from nm -S
+# size comparisons alone; use this first for any FUTURE "which copy
+# actually won" question).
+#
+# UNLIKE every other instance so far, this one is NOT a single global
+# winner -- it's a genuine two-context ambiguity. draolad_/t2toao_/
+# getaoinf_ are called from BOTH vee's own EOMEE Davidson path (via
+# hbarxc_->dt2int2_, needs vee's own copy) AND vcc's own ABCDTYPE=AOBASIS
+# path (via dre3en_->draolad_ directly, needs libr2's copy) -- confirmed
+# by checking which library the CLASSIC per-executable build actually
+# links for each (vcc/GNUmakefile's ACES_LINK_LISTS): xvcc's own link
+# list is "vcc:trp:librt3:libr2:crust:pccd:...", no vee at all, so libr2
+# must be what it uses; xvee's is "vee:trp:librt3:libr2:crust:hbar:vcc:
+# ...", vee's own archive scanned FIRST so vee's own copy wins there.
+# First attempt (renaming vcceh/lambda/libr2, letting vee win globally)
+# fixed the vee-originated crash but broke the vcc-originated one instead
+# (same @GETLST-class bug, now via getaoinf_'s own array-index arithmetic
+# reading an uninitialized COMMON block vee's own Davidson setup would
+# have populated but vcc's plain CC path never does). Fix: DON'T rename
+# libr2's copies (let libr2 be the natural global winner, matching what
+# vcc/most other modules actually need) -- instead rename VEE's OWN
+# copies (vee:draolad_/t2toao_/getaoinf_), so vee's internal chain
+# (hbarxc.f->dt2int2.f->draolad.f->t2toao.f->getaoinf.f, all within vee's
+# own archive) stays correctly self-bound to ITS OWN implementations,
+# while everyone else (vcc included) transparently gets libr2's. vcceh's
+# copies of draolad_/t2toao_ (byte-identical to vee's OLD copies, now
+# irrelevant either way) and dens's getaoinf_ (genuinely different, still
+# wrong for anyone) stay renamed away as before.
+#
+# 13th instance, and the actual explanation for 054a/054b's own remaining
+# small (~1e-5) MISMATCH after all of the above: libr2's own draolad.f
+# calls Z2TOMO internally (the routine that prints "W(abef) AB
+# contribution", directly comparable against classic's own log) -- but
+# Z2TOMO ITSELF is a 4-way collision (vcceh/lambda/libr2/vee; tdee's and
+# pccd's own "z2tomo"-named files are already safely prefixed at the
+# source level as TDEE_Z2TOMO/PCCD_Z2TOMO, not real collisions) and
+# lambda's copy was winning globally -- so libr2's OWN internal call fell
+# through to lambda's DIFFERENT implementation, exactly the same
+# self-caller trap as every other instance today. Same two-context split
+# as draolad/t2toao/getaoinf (vee's own iabcont.f also calls its own
+# z2tomo internally) -- rename vcceh/lambda/vee's copies, let libr2 win.
+# 14th instance, found by gdb on suite case 021 (CALC=CCSDT) rather than by
+# reading: runcc_ -> vcc_ -> trps_ -> w45t3drv_ -> SIGSEGV. W45T3DRV exists in
+# trp (CORE,MAXCOR,IUHF,EXTRNL_CCSD -- 4 args, what trp/trps.f:599 and
+# ccsdtqf/trps_pccd.f pass) and in lambda (CORE,MAXCOR,IUHF,LZOOFF,LZVOFF,
+# LWOFF,LT3OFF,INIT -- 8 args, what lambda/vlamcc.f passes). lambda's copy was
+# winning the link, confirmed by size: nm -S gives 0x2a74 = 10868 bytes in the
+# linked .so, matching liblambda.a exactly, against libtrp.a's 0x22ee = 8942.
+# So trp's 4-argument call landed in an 8-argument routine and the four
+# missing argument addresses came from whatever was on the stack. Rename
+# lambda's so trp's -- the one two different modules call -- wins globally;
+# lambda/vlamcc.f keeps reaching its own through the rename, as everywhere
+# else here. (trp/grad_trps.f calls it with only THREE arguments, which is a
+# separate pre-existing arity bug in a path this suite does not reach; left
+# alone deliberately rather than papered over from here.)
+# 15th instance, and the first one this tree created rather than inherited:
+# rpa was a .skip module until 723989ab re-enabled it, so its archive only
+# started competing in this link after that commit -- which is why the
+# zero-point baseline never saw it. CMPENG ("compute energy") exists in libr
+# (0xb37 = 2871 bytes) and rpa (0xc79 = 3193), same 9-argument signature, so
+# nothing crashes: rpa's simply won and vcc/eucc.f quietly got RPA's variant.
+# They are not interchangeable -- libr's has the singles block
+#   IF((METHOD.GT.9.AND.SING1.AND.METHOD.NE.21.AND.METHOD.NE.23)
+#  &    .OR.NONHF.AND.SING1)THEN
+# that accumulates ESING from the T1 amplitudes, while rpa's drops it and
+# zeroes ESING_KEEP/EDBLS_KEEP instead. Caught on suite case 025 (CALC=UCC(4)):
+# the correlation energy came out -0.227165476 against the serial run's
+# -0.227215217, 4.97e-05 adrift before the UCC(4) correction even started, and
+# the final energy missed the archive reference by 2.49e-05. vcc, lambda, pccd,
+# ccsdtqf and ccsdtqf_mm all call CMPENG expecting libr's, so libr wins
+# globally and rpa's own callers (mkt1at2.f, t2int1.f) follow the rename.
+# 16th instance, and the first where the classic build itself resolves the
+# same call two different ways depending on which executable you are in.
+# XGEMM (the BLAS wrapper) lives in both crust and tools with identical
+# argument lists but different degenerate-case handling: crust's returns
+# without calling DGEMM at all when lda*ldb is zero (a zero-length operand
+# contributes nothing) and sanitises with max(1,ld*) in the k=0 case, while
+# tools' hands whatever it was given straight to DGEMM. ACES_LINK_LISTS puts
+# crust ahead of LIST_DEF_LIBS (which is where tools lives) for vcc, vee and
+# friends, so xvee gets crust's; a module without crust in its list gets
+# tools'. Everything lands in one .so here, tools won, and suite case 057
+# (EXCITE=EOMEE with ESTATE_PROP=EXPECTATION) died inside
+# vee -> doeomee_david -> hbarxc -> dt1int2b -> xgemm with
+# "** On entry to DGEMM parameter number 10 had an illegal value" -- parameter
+# 10 is LDB, passed as zero. Let crust's win: it is the strictly more
+# defensive of the two and identical on every non-degenerate call, so the
+# modules that used to get tools' see no change.
+# 17th instance, and the first one the audit script called before the test did:
+# CHECK_T2 is trp's (33 lines, checks the T2 amplitudes against a stored copy)
+# and ringcc's (115 lines, its own ring-CC variant). vcc's ACES_LINK_LISTS entry
+# is vcc:trp:librt3:..., with no ringcc anywhere in it, so xvcc has always meant
+# trp's; in the .so ringcc's won and vcc -> check_t2 -> getall asked for list 34,
+# which does not exist under SINGLE_STORE=ON (clmoio.F builds that layout with
+# INIT_NOREDNT_LIST instead of INIPCK). Cases 116a/b/c died on
+# "@GETLST: List (1,34) does not exist". ccsdtqf, ccsdtqf_mm and pccd resolve to
+# trp's as well, so trp wins globally and ringcc keeps its own by the rename.
+# 18th instance, and the one that showed the audit script was only looking
+# half way: a module that DEFINES a routine and calls it can still lose to
+# somebody else's copy here, which the classic build makes impossible (the
+# linker satisfies the call from the archive member it is already pulling in).
+# vcc owns INITIN (252 bytes), INITSN, DIISLST and DODIIS0; lambda has its own
+# larger versions (INITIN is 688 there) and won all four, so vcc ran lambda's
+# initialisation and then asked for list 1, which the FNO run has not built:
+# cases 124c/d/e/g.fno (FNO with CCSD(T)) died on "@GETLST: List (1,1) does not
+# exist" while the five FNO cases that stop at CCSD were fine. ccsdtqf,
+# ccsdtqf_mm, copt, pccd, psi4dbg, ringcc and ringcl all resolve these to vcc's
+# in the classic link too, so vcc wins and lambda follows the rename.
+# 19th instance, and the first of a DIFFERENT KIND: the shadowing definition is
+# not another subroutine, it is a Fortran COMMON block. `common /abcd/` in anti,
+# eompccd, intprc, lcct, nmr, tdee and vee emits a global data symbol abcd_,
+# exactly the name of intgrt/abcd.F's 8-line SUBROUTINE ABCD. A tentative (C)
+# symbol only loses to a strong (T) definition if the linker has already pulled
+# the member defining it; here the commons satisfied the reference first, so
+# abcd.o was never extracted and abcd_ ended up in BSS (nm on the .so: "B abcd_").
+# vscf -> setnumint -> abcd then jumped into zero-filled data. Confirmed under
+# gdb: si_addr == $pc (an instruction-fetch fault, not a bad data address),
+# landing just past sympop2_. This is what blocked every KS case -- 103.ks and
+# friends died in vscf long before Runintgrt could reach xintgrt's own work.
+# Renaming intgrt's copy is safe and complete: libintgrt.a holds the only T
+# definition and the only U reference (setnumint.o), and no intgrt file declares
+# a /abcd/ common of its own, so the rename moves definer and caller together
+# and leaves the seven commons alone.
+#
+# Auditing the whole class (T in one archive, C in another) turns up 17 names,
+# 10 of which the linker currently resolves to the common block: abcd, deriv,
+# energy, grid, guess, local, one, polar, sym2 and tab. abcd is fixed here
+# because it is on a call path this suite reaches; the other nine are recorded
+# in tools/common_shadow_baseline.txt and all nine are handled in 20 below.
+# 19b. Renaming intgrt's abcd_ has a second-order effect worth recording: once
+# abcd.o is actually extracted, libintgrt.a satisfies more of the link than it
+# used to, and intgrt's intpath_ and primvecint_ started winning over intpack's
+# and vksdint's. Both are genuine two-context symbols, the same shape as
+# draolad/t2toao above. ACES_LINK_LISTS settles each: xintpack is
+# "intpack:oeptools:intgrt:..." so intpack means intpack's own 1701-line
+# intpath, while xintgrt ("intgrt:libr:...") and xvksdint ("vksdint:intgrt:...")
+# both mean intgrt's 619-line one; and primvecint is each module's own in both
+# xintgrt and xvksdint. Renaming intpack's intpath and vksdint's primvecint
+# leaves intgrt's as the global winner and reproduces every classic answer.
+# 20th instance, and the first fixed BEFORE a test reached it. The audit's
+# common-block class (19 above) leaves nine names whose subroutine is shadowed.
+# Eight of them -- deriv, grid, local and polar (mopac), guess and local (nddo),
+# energy (aces2 and ccd_light), one (pdens), sym2 (vdint) -- are
+# "rename-definer", meaning the defining archive holds the ONLY U reference as
+# well, so a rename moves definition and caller together exactly as abcd's did.
+# Checked one by one with nm over all 107 archives: each definer has T=1/C=0
+# for its own name (no module renames a common out from under itself), and no
+# pyaces-side .o references any of the nine, so no orphaned caller of the
+# vprops:props_ kind.
+#
+# Unlike abcd these are LATENT, not live: none of the six defining archives
+# currently contributes a single symbol to the .so (unique-symbol count in
+# aces2py.so: mopac 0/123, nddo 0/141, ccd_light 0/16, pdens 0/19, vdint 0/225,
+# aces2 1/43), so nothing calls them yet and the rename is a no-op for every
+# path the suite exercises today -- which is the point: it must leave 51/51
+# untouched. What makes it worth doing now rather than on speculation is where
+# the next work goes. vdint (derivative integrals), pdens (perturbed density)
+# and mopac/nddo (semiempirical guess) are precisely the modules a gradient or
+# GEOM_OPT entry point has to pull in, and the 59 EXCLUDED cases are gradient
+# and Hessian paths. The moment one of those archives is extracted, its own
+# internal call lands in BSS and faults on instruction fetch -- the abcd
+# signature, which cost a full gdb session to read the first time.
+#
+# tab is the ninth and arrived by a different route: the baseline recorded it
+# as "rename-commons" (defined in vmol2ja, called from pdens -- renaming the
+# definition would have orphaned that caller), but 09abd13f gave pdens its own
+# pdens/tab.f, so pdens now defines and calls its own and the verdict flips to
+# rename-definer. vmol2ja's copy keeps the plain name and has no caller left.
+# That same commit is also why the collision baseline gains gformg_ and gsden_:
+# ccsdtqf got its own copies for the classic xccsdtqf link, vee's still win
+# here, and ccsdtqf contributes nothing to this .so -- accepted into the
+# baseline as "on a path nothing exercises yet", not renamed on speculation.
+#
+# getdt1, fndmaxs, t2l2rng and r1l2y2c were won by link order alone: vcc's
+# getdt1 differs from the identical copies in lcct/lhbar/tdcc2/vcceh/vee, vee's
+# fndmaxs from vea's (also called by vip), and lcct's t2l2rng/r1l2y2c from vee's.
+# Which copy won flipped between make 4.2's unsorted wildcards on ccsd and make
+# 4.3's locale-sorted ones here. Renaming the odd copy out gives every caller
+# the code it was written against whatever the member order.

@@ -607,8 +607,21 @@ c           buffer for MPI_ALLREDUCE
          imemget = imemget + iTmp
       end if
 
+C 2026-09-02: GUESS=READ_AO_MOS (h_IFLAGS_guess.EQ.5) used to raise IMEMGET to
+C MAXCOR, i.e. to the whole MEMORY keyword value (IFLAGS(36), set at line 264).
+C But the check two lines below compares IMEMGET against ICRSIZ, the core left
+C at THIS point -- always smaller than MAXCOR, since earlier stages have already
+C taken their share (~1.5M words in the H2O/DZP cases). So the test was
+C unconditionally true and every READ_AO_MOS job aborted with a bogus
+C "@scf: Insufficient memory available", no matter how large MEMORY was set:
+C raising MEMORY raised the demand by exactly the same amount. Found via
+C tests/fast cases s_108 and s_119b, whose only distinguishing feature is this
+C keyword (s_119a, identical but GUESS=READ_SO_MOS, always passed). Keep the
+C original intent -- take as much as this path can get -- but never ask for
+C more than is actually left. The genuine requirement here is what SYMSIZ
+C computed into IMEMGET above (1,506,805 words in those cases).
       If (IFLAGS(h_IFLAGS_guess) .EQ. 5)
-     &   imemget=Max(imemget,Min(Maxcor,Icrsiz))
+     &   imemget=Max(imemget,Min(Maxcor,ICRSIZ))
      
 cwc0
 C
@@ -622,9 +635,14 @@ c keep the number of modified VSCF files at minimum. So let's ignore
 c SYMSIZ's efforts and simply ask for as much memory as specified
 c via the MEMORY ASV.
 
+C 2026-10-02: same defect as the READ_AO_MOS case above. OEP_MEM_INIT
+C sized IMEMGET from IFLAGS(36) (the whole MEMORY value), but the check
+C below compares it against ICRSIZ, the core left at this point, so every
+C OEPX/OEP2 job aborted with "@scf: Insufficient memory available" no
+C matter how large MEMORY was. Take as much as is actually left instead.
       if (iflags2 (153).eq.3 .or. iflags2 (153).eq.4) then
-         if (imemget .lt. iflags (36)) then
-            call oep_mem_init(MAXMEM, IRPPMEM, IMEMGET)
+         if (imemget .lt. Min(iflags (36),ICRSIZ)) then
+            call oep_mem_init(MAXMEM, IRPPMEM, IMEMGET, ICRSIZ)
          endif
       endif
 C
@@ -764,7 +782,7 @@ c threshold into OEPTOL and set the threshold ridiculously small. <>
 c Set the iteration type to ' '.
       if (iflags2 (153).eq.3 .or. iflags2 (153).eq.4) then
          call oep_init(petite_list,iuhf,icore(i010),
-     &                 (maxmem-i010+i000),loslater)
+     &                 (maxmem-i010+i000),loslater,tol)
       endif
 C
 C PICK UP THE CORE HAMILTONIAN AND OVERLAP MATRICES
@@ -1152,7 +1170,7 @@ C
      &                     icore (i010), icore (i050), 
      &                     icore (i060), icore (i030), icore (i040), 
      &                     etot, MAX_ERROR, itertype, transfer,
-     &                     slater,loslater,iSlaterON)
+     &                     slater,loslater,iSlaterON,tol)
 #ifdef _BUILD_KSPOT
         if(transfer) then 
          Call buildKSpot(dcore(izkspot),kscore(iz1),

@@ -259,20 +259,8 @@ c   o initialize the parallel_aces common block
 
 c ----------------------------------------------------------------------
 
-      call nr2asc (irank,str)
-      open (96,file='OUT.'//str)
-      open (97,file='DUMP.'//str)
-      write (96,'(a,2i3)') 'nprocs,irank:',nprocs,irank
+      call dirmp2_run (irank)
 
-      call CRAPSI (icore(1),iuhf,-1)
-      
-      if (iuhf.eq.0) then
-         write (96,'(a)') 'CLOSED SHELL DIRECT MP2 CALCULATION'
-         call mp2_rhf
-      else
-         write (96,'(a)') 'OPEN SHELL DIRECT MP2 CALCULATION'
-         call mp2_uhf
-      end if
       call aces_ja_fin
 
       call MPW_Finalize(iErr)
@@ -286,6 +274,7 @@ c ----------------------------------------------------------------------
      &         (is1-is0)*1.d0+(ius1-ius0)*1.d-6,' seconds.'
 
       end
+
 c------------------------------------------------------------------------
       subroutine mp2_rhf
       implicit double precision (a-h,o-z)
