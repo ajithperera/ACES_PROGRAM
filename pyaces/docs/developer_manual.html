@@ -507,7 +507,7 @@ Doing that in-process would call Vtran/Vcc twice, so the runner does this instea
 cd pyaces && python3 pyaces_suite_runner.py             # directly
 cd pyaces && python3 pyaces_suite_runner.py 010a 117b   # selected cases only</code></pre>
 <ul>
-  <li>Case input: <code>aces2/tests/fast/cases/&lt;name&gt;/ZMAT</code>; basis: <code>aces2/tests/fast/GENBAS</code>. There is no pyaces-specific test directory.</li>
+  <li>Case input: <code>aces2/tests/fast/cases/&lt;name&gt;/ZMAT</code>; basis: <code>basis/GENBAS</code>. There is no pyaces-specific test directory.</li>
   <li>Working directory: <code>$PYACES_SUITE_RUN_DIR/&lt;name&gt;</code>, by default <code>pyaces/suite_run</code> (untracked). On HiPerGator, <code>run_tests.sh</code> points it at the <code>/blue/...</code> scratch filesystem.</li>
   <li>Each case gets a fresh directory with ZMAT copied in and GENBAS symlinked, then <code>pyaces_run_case.py</code> runs with a 300-second limit. Log: <code>&lt;dir&gt;/run.log</code>; summary: <code>$RUN_DIR/summary.tsv</code>.</li>
   <li>Local workstation: <code>OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 taskset -c 20-23 flock -s /tmp/qtoy-bench.lock ./run_tests.sh pyaces</code>. ccsd server: <code>qsub build_logs/test_ccsd.pbs</code>.</li>

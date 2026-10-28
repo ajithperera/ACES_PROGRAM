@@ -63,16 +63,24 @@ require_tools() {
 # build, while without it a half-finished tree can still look fine. What the
 # tree does record is the enumerated list of built binaries in aces2/.gitignore
 # -- explicit paths, no globs, by that file's own stated convention. Diff it
-# against what is actually installed in aces2/bin.
+# against what is actually installed in $ACES2_BINDIR.
 #
 # xrspdens1 is excluded: ACES_LINK_LISTS names an rspdens1 module, but no
 # rspdens1/ directory exists in this repo (it is not in git history either), so
 # that .gitignore line is aspirational and nothing can ever satisfy it.
+# Where `gmake install` puts the aces2 binaries: aces2/bin, unless
+# aces2/Makefiles/local.mk sets DIR_INSTBIN (the development install in
+# ~/Develop/bin does).
+ACES2_BINDIR=$(sed -n 's/^DIR_INSTBIN *:*= *//p' "$ROOT/aces2/Makefiles/local.mk" 2>/dev/null | tail -1)
+ACES2_BINDIR=${ACES2_BINDIR//\$(HOME)/$HOME}
+ACES2_BINDIR=${ACES2_BINDIR//\$\{HOME\}/$HOME}
+ACES2_BINDIR=${ACES2_BINDIR:-$ROOT/aces2/bin}
+
 aces2_missing_binaries() {
   comm -23 \
     <(grep -oE '^[a-z0-9_]+/x[a-z0-9_]+$' "$ROOT/aces2/.gitignore" \
         | cut -d/ -f2 | grep -vx xrspdens1 | sort -u) \
-    <(ls "$ROOT/aces2/bin" 2>/dev/null | grep '^x' | sort -u)
+    <(ls "$ACES2_BINDIR" 2>/dev/null | grep '^x' | sort -u)
 }
 
 # aces2's makefile makes each module's binary depend on that module's OWN
@@ -94,7 +102,7 @@ aces2_stale_binaries() {
   newest_lib=$(ls -t "$ROOT/aces2/lib"/*.a 2>/dev/null | head -1)
   [ -n "$newest_lib" ] || return 0
   lib_mtime=$(stat -c %Y "$newest_lib" 2>/dev/null) || return 0
-  for b in "$ROOT/aces2/bin"/x*; do
+  for b in "$ACES2_BINDIR"/x*; do
     [ -f "$b" ] || continue
     if [ "$(stat -c %Y "$b" 2>/dev/null || echo 0)" -lt "$lib_mtime" ]; then
       basename "$b"
@@ -215,7 +223,9 @@ for t in $TARGETS; do
     pyaces)
       # pyaces/build.sh hardcodes ifort/ifx/mpicc and links against
       # $MKLROOT/lib/intel64 -- an unset MKLROOT silently becomes "-L/lib/intel64".
-      if require_tools pyaces ifort ifx mpicc python3 && [ -n "${MKLROOT:-}" ]; then
+      # ifort is not checked: pyaces/build.sh puts its own ifort (a wrapper
+      # around ifx, tools/compat_bin) first on PATH, and oneAPI 2025 has none.
+      if require_tools pyaces ifx mpicc python3 && [ -n "${MKLROOT:-}" ]; then
         bash "$ROOT/pyaces/build.sh" > "$LOG" 2>&1
         RESULT[$t]=$?
       else
