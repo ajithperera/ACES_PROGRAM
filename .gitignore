@@ -13,3 +13,5 @@ docs/programmer/jobarc.md
 docs/user/aces3_jobflows.md
 # old ACES II test archive (zmat.NNN, OUTPUT/, KEEP/); kept locally, not tracked
 aces2/tests/legacy_archive/
+# old ACES III test archive (zmat.N, staging Makefile, Archive/, GENBAS); kept locally, not tracked
+aces3/tests/legacy_archive/
