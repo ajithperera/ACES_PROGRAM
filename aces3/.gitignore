@@ -32,7 +32,6 @@ Makefile
 !/src/aces/aces_library/Makefile
 !/src/aces/aces_library/a2driver/Makefile
 !/src/aces/aces_library/special_directory/Makefile
-!/src/aces/aces_library/special_directory/prop_ints/Makefile
 !/src/sia/Makefile
 !/src/sia/sip/Makefile
 !/src/sial_compiler/Makefile

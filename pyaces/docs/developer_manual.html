@@ -166,22 +166,24 @@ Before exposing a new Fortran routine or linking another aces2 module, read chap
 
 <h3>3.2 configure and the module set</h3>
 <p>The top-level <code>./configure</code> finds a toolchain and writes <code>build_config.sh</code>. The top-level <code>build.sh</code> exports the
-<code>ACES_PROGRAM_MODULES</code> recorded there, and <code>pyaces/build.sh</code> reloads exactly that set after <code>module purge</code>. If the variable is
-empty it falls back to the HiPerGator set (<code>intel/2025.1.0 openmpi/5.0.7 python/3.12</code>).</p>
+<code>ACES_PROGRAM_MODULES</code> recorded there, and <code>pyaces/build.sh</code> reloads exactly that set after <code>module purge</code>
+(<code>aces_load_modules</code> in <code>cmake/env.sh</code>). <code>PYACES_MODULES</code>, which the CMake superbuild sets, takes precedence; if neither is
+set it falls back to the HiPerGator set (<code>intel/2025.1.0 openmpi/5.0.7 python/3.12</code>). <code>PYACES_MODULES=""</code> skips the module load and uses
+the current environment.</p>
 <pre><code># ccsd server
 ./configure --modules="intel/oneapi_2023.2.0 python/3.12.3" --np=4
 # local workstation: build_config.sh has ACES_PROGRAM_MODULES="intel-ompi/2024.0"</code></pre>
 <div class="warn"><b>Caution</b>: include a Python module in the set. If <code>module purge</code> unloads the Python that has numpy, the f2py step fails.</div>
 
 <h3>3.3 Locale</h3>
-<p><code>pyaces/build.sh</code> forces <code>export LC_ALL=C</code> (line 21). The globs and <code>sort</code> calls in the script set archive-member order and
+<p><code>pyaces/build.sh</code> forces <code>export LC_ALL=C</code> (line 19). The globs and <code>sort</code> calls in the script set archive-member order and
 <code>-l</code> order, and that order decides which copy of a duplicated routine gets linked. For the same reason the aces2 makefile wraps its source lists in
 <code>$(sort …)</code>: GNU Make 4.2 does not sort wildcard results, and 4.3 sorts them by locale.</p>
 
 <h3>3.4 Build commands</h3>
 <pre><code>./build.sh aces2 pyaces          # top level: aces2, then pyaces
 ./build.sh pyaces                # only pyaces, when aces2 is already built
-bash pyaces/build.sh             # run directly (set ACES_PROGRAM_MODULES yourself)</code></pre>
+bash pyaces/build.sh             # run directly (set PYACES_MODULES or ACES_PROGRAM_MODULES yourself)</code></pre>
 <p>The log is <code>build_logs/unified_build_pyaces.log</code>. On the shared local workstation, stay inside the allocated cores:
 <code>taskset -c 20-23 flock -s /tmp/qtoy-bench.lock ./build.sh pyaces</code>. On the ccsd server, build only through PBS (<code>build_logs/build_ccsd.pbs</code>).</p>
 <div class="note"><b>After changing compiler flags</b>: make does not track flag changes. After changing aces2 flags, remove its build output with <code>git clean -fdXq aces2</code> and rebuild. pyaces wipes and recreates <code>gen/</code> and <code>build/</code> on every build.</div>
@@ -191,10 +193,10 @@ bash pyaces/build.sh             # run directly (set ACES_PROGRAM_MODULES yourse
 <section id="c4">
 <h2>4. Build pipeline (<code>build.sh</code>)</h2>
 
-<h3>4.0 Setup (lines 1–38)</h3>
+<h3>4.0 Setup (lines 1–36)</h3>
 <ul>
   <li>Prepend <code>tools/compat_bin</code> to PATH, so <code>ifort</code> runs ifx.</li>
-  <li><code>module purge</code>, then <code>module load $ACES_PROGRAM_MODULES</code>. On failure, exit with a hint to rerun configure.</li>
+  <li>Choose the module set (<code>PYACES_MODULES</code>, else <code>ACES_PROGRAM_MODULES</code>, else the HiPerGator set) and load it with <code>aces_load_modules</code> from <code>cmake/env.sh</code>: <code>module purge; module load</code>, nothing for an empty set, a warning and the current environment on a host without a <code>module</code> command.</li>
   <li>Exit if <code>MKLROOT</code> is empty. <code>MKL=$MKLROOT/lib/intel64</code> (or <code>$MKLROOT/lib</code>).</li>
   <li><code>export LC_ALL=C</code>.</li>
   <li>Ask the running python3 for <code>NUMPY_INC</code>, <code>PY_INC</code> and <code>F2PY_SRC</code> (numpy's <code>f2py/src</code>).</li>
@@ -204,7 +206,7 @@ bash pyaces/build.sh             # run directly (set ACES_PROGRAM_MODULES yourse
 <h3>4.1 Source lists</h3>
 <p><b><code>PYF_SOURCES</code></b> lists the sources whose routines make up the Python interface. f2py scans them and wraps every routine it finds; there is no <code>.pyf</code>.
 Passing every source would also wrap internal helpers, whose all-caps F77 names trip over case mangling. Hence the hand-picked list.</p>
-<p><b><code>SOURCES</code></b> (lines 54–64) is every Fortran file to compile: <code>a2_pyf/*.F</code> except <code>rungrads</code>, <code>run1props</code> and <code>run</code>, plus
+<p><b><code>SOURCES</code></b> (lines 52–62) is every Fortran file to compile: <code>a2_pyf/*.F</code> except <code>rungrads</code>, <code>run1props</code> and <code>run</code>, plus
 <code>Main/init.F</code>, <code>Main/aces2_main.F</code> and <code>aux_pyaces/*.F</code>. So <code>a2_get*/a2_put*</code>, <code>getlstpy_dbg</code>, <code>get1epy</code> and <code>returnpy</code> are linked but not exposed to Python.</p>
 
 <h3>4.2 Steps</h3>
@@ -506,7 +508,7 @@ cd pyaces && python3 pyaces_suite_runner.py             # directly
 cd pyaces && python3 pyaces_suite_runner.py 010a 117b   # selected cases only</code></pre>
 <ul>
   <li>Case input: <code>aces2/tests/fast/cases/&lt;name&gt;/ZMAT</code>; basis: <code>aces2/tests/fast/GENBAS</code>. There is no pyaces-specific test directory.</li>
-  <li>Working directory: <code>$PYACES_RUN_DIR/&lt;name&gt;</code>, by default <code>build_logs/pyaces_suite_run</code> in the repository. On HiPerGator, <code>run_tests.sh</code> points it at the <code>/blue/...</code> scratch filesystem.</li>
+  <li>Working directory: <code>$PYACES_SUITE_RUN_DIR/&lt;name&gt;</code>, by default <code>pyaces/suite_run</code> (untracked). On HiPerGator, <code>run_tests.sh</code> points it at the <code>/blue/...</code> scratch filesystem.</li>
   <li>Each case gets a fresh directory with ZMAT copied in and GENBAS symlinked, then <code>pyaces_run_case.py</code> runs with a 300-second limit. Log: <code>&lt;dir&gt;/run.log</code>; summary: <code>$RUN_DIR/summary.tsv</code>.</li>
   <li>Local workstation: <code>OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 taskset -c 20-23 flock -s /tmp/qtoy-bench.lock ./run_tests.sh pyaces</code>. ccsd server: <code>qsub build_logs/test_ccsd.pbs</code>.</li>
 </ul>
@@ -582,7 +584,7 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <ol>
   <li>Add the case to the aces2 suite: <code>aces2/tests/fast/cases/&lt;name&gt;/ZMAT</code> and a three-line entry in <code>aces2/tests/fast/test_results</code> (<code>name src</code> / <code>RECORD 1</code> / reference value).</li>
   <li>Add a row to <code>pyaces/suite_classification.tsv</code> by hand (category, entrypoint, iuhf, record, ref_value).</li>
-  <li>Check it with <code>PYACES_RUN_DIR=... python3 pyaces_suite_runner.py &lt;name&gt;</code>, then read <code>&lt;dir&gt;/run.log</code> and <code>summary.tsv</code>.</li>
+  <li>Check it with <code>PYACES_SUITE_RUN_DIR=... python3 pyaces_suite_runner.py &lt;name&gt;</code>, then read <code>&lt;dir&gt;/run.log</code> and <code>summary.tsv</code>.</li>
   <li>Make sure the full suites (<code>./run_tests.sh aces2 pyaces</code>) still pass.</li>
 </ol>
 
@@ -621,7 +623,7 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <tr><td>1</td><td>Meaning of <code>Getlstpy</code> arguments</td><td><code>Irrep</code> and <code>Ndim</code> are ignored; <code>Left_index</code> is used as the irrep.</td></tr>
 <tr><td>2</td><td>Runpccd and Init</td><td>Runpccd calls Joda itself, yet the runner calls <code>Init()</code> before it. Untested, since there are no PCCD cases.</td></tr>
 <tr><td>3</td><td>ifort check in the top-level build</td><td>The top-level <code>build.sh</code> requires <code>ifort</code> before the pyaces shim is on PATH, so an ifx-only toolchain is refused.</td></tr>
-<tr><td>4</td><td>Assumes environment modules</td><td><code>pyaces/build.sh</code> always runs <code>module purge/load</code>, so it fails in setvars/path mode or on hosts without a <code>module</code> command.</td></tr>
+<tr><td>4</td><td>Assumes environment modules</td><td>In setvars/path mode <code>build_config.sh</code> records no module set, so <code>pyaces/build.sh</code> falls back to the HiPerGator set and its <code>module load</code> fails. Run it with <code>PYACES_MODULES=""</code> after loading the toolchain yourself.</td></tr>
 <tr><td>5</td><td>Symmetry-block offset in <code>Get1ehpy</code></td><td><code>Index = Index + Nelms*(K-1)</code> at <code>get1ehpy.F:101</code> looks wrong. Verify the result on a molecule with symmetry before relying on it.</td></tr>
 </table>
 </section>

@@ -23,13 +23,13 @@ Requirements: Intel oneAPI compilers and MKL, an MPI library, Python 3 with NumP
 On HiPerGator, build and test through Slurm, and run the ACES III suite on a single node
 (`--nodes=1`). See `docs/getting_started/index.md` for options and details.
 
-**Baseline**: current numbers, aces2/pyaces measured 2026-09-04 and aces3 2026-09-09, on the local workstation
+**Baseline**: current numbers, measured 2026-10-28 after merging upstream/master, on the local workstation
 (`build_logs/unified_test_*.log`) -- treat these as the reference point, not something to re-derive
 from scratch each session:
 
 | suite  | result                | notes                                                          |
 |--------|-----------------------|----------------------------------------------------------------|
-| aces2  | 125 pass / 0 fail / 0 error | case 020 runs `REF=UHF`; the RHF CCSD(TQ) path is still broken |
+| aces2  | 141 pass / 0 fail / 2 error | of 143; the errors are `pccd_oo_rfo_{ccd,lccd}_h2o` (`@Pccd_form_uhtau: Insufficient memory`), which fail the same way in a pure upstream build with ifx 2024.0 |
 | aces3  | 37 pass / 0 fail      | `ccsd_f12` needs `--jobs 1` or `--timeout-scale 3` locally -- at `--jobs 4` it exceeds its 1200s budget on shared cores (549s alone) |
 | pyaces | 51 pass / 0 fail      | 51 runnable of 125 classified cases (59 EXCLUDED, 15 SCRIPT)   |
 
