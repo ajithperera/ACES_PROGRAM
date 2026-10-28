@@ -29,7 +29,7 @@ from scratch each session:
 
 | suite  | result                | notes                                                          |
 |--------|-----------------------|----------------------------------------------------------------|
-| aces2  | 141 pass / 0 fail / 2 error | of 143; the errors are `pccd_oo_rfo_{ccd,lccd}_h2o` (`@Pccd_form_uhtau: Insufficient memory`), which fail the same way in a pure upstream build with ifx 2024.0 |
+| aces2  | 143 pass / 0 fail / 0 error | case 020 runs as RHF again (upstream e722dced)                 |
 | aces3  | 37 pass / 0 fail      | `ccsd_f12` needs `--jobs 1` or `--timeout-scale 3` locally -- at `--jobs 4` it exceeds its 1200s budget on shared cores (549s alone) |
 | pyaces | 51 pass / 0 fail      | 51 runnable of 125 classified cases (59 EXCLUDED, 15 SCRIPT)   |
 

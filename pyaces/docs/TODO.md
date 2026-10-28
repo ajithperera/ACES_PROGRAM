@@ -7,7 +7,7 @@ For background and rationale, see the [improvement plan](pyaces_improvements_en.
 
 - **Number:** `T-<n>`. A number is never reused (a finished item keeps its number in DONE.md).
 - **Priority:** high / medium / low. **Size:** small (a few hours) / medium (about a day) / large (several days, needs a trial implementation).
-- **Done when:** a change counts as finished only after both the local workstation and ccsd show aces2 125/125, pyaces 51/51 and a matching link audit. Add any item-specific criteria to the item.
+- **Done when:** a change counts as finished only after both the local workstation and ccsd show aces2 143/143, pyaces 51/51 and a matching link audit. Add any item-specific criteria to the item.
 - To add an item, copy the template below into the right stage.
 
 ```markdown
