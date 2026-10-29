@@ -16,5 +16,6 @@ duplicate_symbols
 extending
 conventions
 sial
+issues/index
 testing
 ```
