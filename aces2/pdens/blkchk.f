@@ -21,7 +21,9 @@ C OF T(1)_J NONZERO AND CONTRACTED WITH THE ATOMIC FC INTEGRALS.
 C
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
       LOGICAL SPN_SPN, POLAR
-      CHARACTER*4 BLKNAM(6)
+      CHARACTER*4 BLKNAM(6), DNAM(5)
+      COMMON /DBLKMASK/ IDMASK
+      DATA DNAM /'all ','OO  ','VV  ','VO  ','OV  '/
 C
 
 
@@ -76,7 +78,7 @@ C
       DO I = 1, NPERTX
          CALL GETLST(ICORE(IL), I, 1, 1, IRREPX, 374)
          CALL BLKDOT(ICORE(IL), ICORE(IV), NOFF, DOTS)
-         WRITE(6,"(a,2I3,5F18.10)") " BLKCHK vcceh I,J ", I, IPERT,
+         WRITE(6,"(a,2I3,5F16.10)") " BLKCHK vcceh I,J ", I, IPERT,
      &                              (DOTS(K), K = 1, 5)
       ENDDO
 C
@@ -93,6 +95,23 @@ C
 C
          WRITE(6,"(a,a4)") " BLKCHK density from block ", BLKNAM(K)
          CALL GEN_PERTRB_RSPNS_DENS(ICORE, MAXCOR, IRREPX, IUHF)
+C
+C DENSITY-BLOCK SPLIT (OO, VV, VO, OV) OF THIS T(1) BLOCK'S CONTRIBUTION
+C
+         DO IDM = 2, 5
+            IDMASK = IDM - 1
+            CALL PRP_DEN4PROPS(ICORE, MAXCOR, NAO, NATOMS, NCENTER, 99,
+     &                         IRREPX, IUHF)
+            CALL ZERO(SCRT, NTPERT*NTPERT)
+            CALL ZERO(POLT, 9)
+            ILEFT = 1 + NAO*NAO*IINTFP
+            CALL COMP_2NDORD_PROPS(ICORE(1), ICORE(ILEFT), NTPERT,
+     &                             MAXCOR-ILEFT, NAO, NATOMS, 1, IUHF,
+     &                             SPN_SPN, POLAR, SCRT, POLT)
+            IF (SPN_SPN) WRITE(6,"(a,a4,a,a4,9F14.8)") " BLKCHK dblk ",
+     &         BLKNAM(K), " ", DNAM(IDM), (SCRT(I), I = 1, NTPERT)
+         ENDDO
+         IDMASK = 0
          CALL PRP_DEN4PROPS(ICORE, MAXCOR, NAO, NATOMS, NCENTER, 99,
      &                      IRREPX, IUHF)
 C
@@ -107,7 +126,7 @@ C
      &           IPERT, (POLT(I), I = 1, 3)
          ENDIF
          IF (SPN_SPN) THEN
-            WRITE(6,"(a,a4,I3,6F18.10)") " BLKCHK pdens ", BLKNAM(K),
+            WRITE(6,"(a,a4,I3,9F14.8)") " BLKCHK pdens ", BLKNAM(K),
      &           IPERT, (SCRT(I), I = 1, NTPERT)
          ENDIF
       ENDDO
