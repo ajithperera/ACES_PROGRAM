@@ -4,7 +4,7 @@
 C
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
       CHARACTER*8 LABELSD(6), LABELPSO(3), LABELDPL(3)
-      LOGICAL JFC, JPSO, JSD, POLAR, SPN_SPN
+      LOGICAL JFC, JPSO, JSD, POLAR, SPN_SPN, LINTDMP
 C
 #include "mxatms.par"
 C
@@ -14,6 +14,7 @@ C
       COMMON /FLAGS/ IFLAGS(100) 
       COMMON /FILES/ LUOUT, MOINTS
       COMMON /SPN_SPN_TYPE/ JFC, JPSO, JSD 
+      COMMON /PDDMP/ IUDMP, LINTDMP
 C
 
       DATA LABELSD/'  SDXX  ','  SDXY  ','  SDXZ  ','  SDYY  ',
@@ -88,6 +89,8 @@ C
             CALL SEEKLB ('   DEN  ', IERR, IRWND, 30)
             IF (IERR .NE. 0) CALL ERREX
             CALL LOADINT (SCR(I000), NATOM, NSIZE, NAO, IUHF)
+            IF (LINTDMP) CALL PDDUMP('INT     ', IPERT, NSIZE,
+     &                             SCR(I000))
 C
             IF (IFLAGS(1) .GT. 40) THEN
                CALL HEADER ('PROPERTY INTEGRALS (FC)', 1, 6)
@@ -129,6 +132,8 @@ C
                CALL SEEKLB (LABELSD(IPERT), IERR, IRWND, 30)
                IF (IERR .NE. 0) CALL ERREX
                CALL LOADINT (SCR(I000), NATOM, NSIZE, NAO, IUHF)
+               IF (LINTDMP) CALL PDDUMP('INT     ', IPERT+ICONT, NSIZE,
+     &                             SCR(I000))
 C     
                IF (IFLAGS(1) .GT. 40) THEN
                   CALL HEADER ('PROPERTY INTEGRALS (SD)', 1, 6)
@@ -160,6 +165,8 @@ C
                IF (IERR .NE. 0) CALL ERREX
                CALL LOADINT (SCR(I000), NATOM, NSIZE, NAO, IUHF)
                CALL ANTI_SYM(SCR(I000), NAO)
+               IF (LINTDMP) CALL PDDUMP('INT     ', IPERT+ICONT, NSIZE,
+     &                             SCR(I000))
 C
                IF (IFLAGS(1) .GT. 40) THEN
                   CALL HEADER ('PROPERTY INTEGRALS (PSO)', 1, 6)
@@ -187,6 +194,8 @@ C
           CALL SEEKLB (LABELDPL(IPERT), IERR, IRWND, 30)
           IF (IERR .NE. 0) CALL ERREX
           CALL LOADINT (SCR(I000), NATOM, NSIZE, NAO, IUHF)
+          IF (LINTDMP) CALL PDDUMP('INT     ', IPERT, NSIZE,
+     &                             SCR(I000))
 C
           IF (IFLAGS(1) .GT. 40) THEN
              CALL HEADER ('PROPERTY INTEGRALS (Dipole)', 1, 6)

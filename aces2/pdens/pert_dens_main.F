@@ -5,7 +5,7 @@ C
       IMPLICIT DOUBLE PRECISION(A-H, O-Z)
 C
       INTEGER POP, VRT, DIRPRD
-      LOGICAL SPN_SPN, POLAR, JFC, JPSO, JSD
+      LOGICAL SPN_SPN, POLAR, JFC, JPSO, JSD, LINTDMP
 C
 #include "machsp.com"
 #include "mxatms.par"
@@ -13,12 +13,13 @@ C
 C
       DIMENSION ICORE(MAXCOR), LENGTH(8), LENGTH_SD(8, 2, 3), 
      &          POL_TENSOR(3, 3), SPNC_TENSOR(6*MXATMS*6*MXATMS),
-     &          NPERT(8)
+     &          NPERT(8), NPRTRB(4)
 C
       COMMON/SYMPOP/IRPDPD(8,22),ISYTYP(2,500),ID(18)
       COMMON/SYM/POP(8,2),VRT(8,2),NT(2),NFMI(2),NFEA(2)
       COMMON/SYMINF/NSTART,NIRREP,IRREPY(255,2),DIRPRD(8,8)
       COMMON /SPN_SPN_TYPE/ JFC, JPSO, JSD
+      COMMON /PDDMP/ IUDMP, LINTDMP
 C
       DATA IONE /1/      
 C
@@ -96,6 +97,19 @@ C
       POLAR   = .FALSE.
       SPN_SPN = .FALSE.
       JPERT   = 0
+C
+C ANALYSIS FILE (SEE PDDUMP): RESPONSE DENSITIES, PROPERTY INTEGRALS
+C AND BASIS INFORMATION.
+C
+      IUDMP   = 77
+      LINTDMP = .TRUE.
+      OPEN(UNIT=IUDMP, FILE='pdens_dump.bin', FORM='UNFORMATTED',
+     &     ACCESS='STREAM', STATUS='REPLACE')
+      NPRTRB(1) = IFLAGS(18)
+      NPRTRB(2) = NTPERT
+      NPRTRB(3) = NIRREP
+      NPRTRB(4) = IUHF
+      CALL PDDUMPI('HEADER  ', 0, 4, NPRTRB)
       DO IRREPX = 1, NIRREP
 C
          IF (NPERT(IRREPX) .GT. 0) CALL NEWLST(IRREPX, ICORE, MAXCOR,
@@ -210,6 +224,22 @@ C
             CALL PRP_DEN4PROPS(ICORE, MAXCOR, NAO, NATOMS, NCENTER, 
      &                         JPERT, IRREPX, IUHF)
 C
+            IF (JPERT .EQ. 1) THEN
+               CALL GETREC(20, 'JOBARC', 'AOOVRLAP', NAO*NAO*IINTFP,
+     &                     ICORE(1+NAO*NAO*IINTFP))
+               CALL PDDUMP('OVERLAP ', 0, NAO*NAO,
+     &                     ICORE(1+NAO*NAO*IINTFP))
+               CALL GETREC(20, 'JOBARC', 'CENTERBF', NAO,
+     &                     ICORE(1+NAO*NAO*IINTFP))
+               CALL PDDUMPI('CENTERBF', 0, NAO,
+     &                      ICORE(1+NAO*NAO*IINTFP))
+               CALL GETREC(20, 'JOBARC', 'ANGMOMBF', NAO,
+     &                     ICORE(1+NAO*NAO*IINTFP))
+               CALL PDDUMPI('ANGMOMBF', 0, NAO,
+     &                      ICORE(1+NAO*NAO*IINTFP))
+            ENDIF
+            CALL PDDUMP('DENSITY ', JPERT, NAO*NAO, ICORE(1))
+C
                I000 = IONE
               ILEFT = I000 + NAO*NAO*IINTFP
             MEMLEFT = MAXCOR - ILEFT
@@ -218,6 +248,7 @@ C
      &                            MEMLEFT, NAO, NATOMS, JPERT, IUHF,
      &                            SPN_SPN, POLAR, SPNC_TENSOR, 
      &                            POL_TENSOR)
+            LINTDMP = .FALSE.
 C
 C RESPONSE NATURAL ORBITAL DECOMPOSITION OF THE FC RESPONSE (NO
 C SYMMETRY: THE PERTURBATIONS ARE THEN THE INDIVIDUAL NUCLEI).
@@ -234,6 +265,9 @@ C PER PERTURBATION; RUN WITH EOMPROP=LINEAR SO LIST 374 IS M(L)).
 #endif
          ENDDO
       ENDDO
+C
+      CLOSE(IUDMP)
+      IUDMP = 0
 C
       IF (SPN_SPN) THEN
          IF (NIRREP .NE. 1) THEN
