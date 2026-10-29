@@ -1956,6 +1956,23 @@ C
      &            ' reference.'
          call errex
       endif
+C
+C FC AND SD ARE TRIPLET (SPIN-DEPENDENT) PERTURBATIONS. THE CORRELATED
+C RESPONSE (VCCEH) WITH AN RHF REFERENCE IS SPIN-ADAPTED FOR SINGLETS
+C ONLY AND SILENTLY DROPS THE TRIPLET COUPLING, SO STOP HERE: A CLOSED
+C SHELL J_FC/J_SD/JSC_ALL CALCULATION MUST USE REF=UHF.
+C
+      if ((ioppar(h_IOPPAR_props).eq. 9 .or.
+     &     ioppar(h_IOPPAR_props).eq.10 .or.
+     &     ioppar(h_IOPPAR_props).eq.13) .and.
+     &    ioppar(h_IOPPAR_reference).eq.0 .and.
+     &    ioppar(h_IOPPAR_calc).ne.0) then
+         print *, '@GTFLGS: J_FC, J_SD and JSC_ALL are triplet',
+     &            ' perturbations; correlated calculations of them'
+         print *, '         need REF=UHF (REF=RHF drops the triplet',
+     &            ' coupling).'
+         call errex
+      endif
       if (ioppar(h_IOPPAR_props).ge.1) then
          szTmp = 'deriv=first'//achar(0)
          call asv_update_kv(szTmp,iASV,szData,0)

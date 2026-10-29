@@ -80,7 +80,7 @@ C
      &               ICORE(I030), LENOO(1), LENVV(1), LENVO(1), 1)
 CSSS      CALL DCOPY(LENVO(1)*IINTFP,ICORE(I020),1,ICORE(I030),1) 
       CALL EXPDEN (ICORE(I000), ICORE(I010), ICORE(I020),
-     &             ICORE(I030), ICORE(I040), NMO, 1, 1, .FALSE.)
+     &             ICORE(I030), ICORE(I040), NMO, IRREPX, 1, .FALSE.)
       IF (ANTI) CALL SCALEBLOCK(ICORE(I040),NOCCO(1),NOCCO(2),
      &                          NVRTO(1),NVRTO(2), NMO,.TRUE.,
      &                          .FALSE.,.FALSE.,.FALSE.,1,-1.0D0)
@@ -116,9 +116,9 @@ C
      &                  ICORE(I150), LENOO(2), LENVV(2), LENVO(2), 2)
 CSSS         CALL DCOPY(LENVO(2)*IINTFP,ICORE(I140),1,ICORE(I150),1) 
          cALL EXPDEN (ICORE(I120), ICORE(I130), ICORE(I140),
-     &                ICORE(I150), ICORE(I160), NMO, 1, 2,
+     &                ICORE(I150), ICORE(I160), NMO, IRREPX, 2,
      &               .FALSE.)
-      IF (ANTI) CALL SCALEBLOCK(ICORE(I040),NOCCO(1),NOCCO(2),
+      IF (ANTI) CALL SCALEBLOCK(ICORE(I160),NOCCO(1),NOCCO(2),
      &                          NVRTO(1),NVRTO(2), NMO,.TRUE.,
      &                          .FALSE.,.FALSE.,.FALSE.,2,-1.0D0)
 C-----------ZERO-BLOCK TEST
@@ -152,6 +152,13 @@ C
 CSSS         CALL SAXPY (NAO*NAO, ONE, ICORE(I170), 1, ICORE(I050), 1)
       ENDIF
 C
+#ifdef _DEBUG_LVL0
+      IF (IUHF .NE. 0) THEN
+C CLOSED-SHELL CHECK: D(B) = +D(A) (SINGLET) OR -D(A) (TRIPLET) IN
+C THE MO BASIS, BLOCK BY BLOCK.
+         CALL DNORM_PM(ICORE(I040), ICORE(I160), NMO, NOCCO(1))
+      ENDIF
+#endif
       TRIPLET_PERT = .FALSE.
       IF (IFLAGS(18) .EQ.  9 .OR. IFLAGS(18) .EQ. 10) 
      &    TRIPLET_PERT = .TRUE.

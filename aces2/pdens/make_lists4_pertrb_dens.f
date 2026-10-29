@@ -233,6 +233,22 @@ C
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 c This common block contains the IFLAGS and IFLAGS2 arrays for JODA ROUTINES
 c ONLY! The reason is that it contains both arrays back-to-back. If the
 c preprocessor define MONSTER_FLAGS is set, then the arrays are compressed
@@ -300,8 +316,26 @@ C
       ENDDO
 C
 C
-C CREATE AREA FOR Q(AB) AND Q(IJ) THREE-BODY INTERMEDIATES
+C CREATE AREA FOR Q(AB) AND Q(IJ) THREE-BODY INTERMEDIATES (LISTS 491
+C AND 492, WHERE PTDENS/GFORMG PUT THE L2*R2 G-TYPE INTERMEDIATES).
+C LIST 490 IS ALREADY THERE (ABOVE).
 C
+      DO ISPIN=1,1+IUHF
+         MAXAB=0
+         MAXIJ=0
+         MAXIA=0
+C
+         DO IRREP=1,NIRREP
+            MAXAB=MAX(MAXAB,IRPDPD(IRREP,18+ISPIN))
+            MAXIJ=MAX(MAXIJ,IRPDPD(IRREP,20+ISPIN))
+            MAXIA=MAX(MAXIA,IRPDPD(IRREP,8+ISPIN))
+         ENDDO
+       
+         CALL UPDMOI(1,MAXAB,ISPIN,492,INEWFIL,0)
+         CALL UPDMOI(1,MAXIJ,ISPIN,491,INEWFIL,0)
+         CALL UPDMOI(1,MAXAB,ISPIN+2,492,INEWFIL,0)
+         CALL UPDMOI(1,MAXIJ,ISPIN+2,491,INEWFIL,0)
+      ENDDO
 C
 C CALCULATE MAXIMUM SIZE OF DAVIDSON LISTS
 C

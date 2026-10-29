@@ -226,6 +226,22 @@ CEND
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       IMPLICIT INTEGER (A-Z)
       DOUBLE PRECISION ONE,ONEM,FACT,FAC1,FAC2
       DIMENSION ICORE(MAXCOR)
@@ -507,12 +523,14 @@ C
 CSSS          CALL XGEMM('T','N',NROW,NCOL,NSUM,ONE,ICORE(IOFFT),NSUM,
 CSSS     &               ICORE(IOFFC),NSUM,ONE,ICORE(IOFFG),NROW)
 
-          If ((Iflags(18) .EQ. 9) .or.
-     &       (Iflags(18) .EQ. 10)) THEN
-             FAC1 = ONEM
-          ELSE
-             FAC1 = ONE
-          ENDIF
+C
+C NO EXTRA SIGN FOR TRIPLET (FC/SD) PERTURBATIONS: IN UHF THE TRIPLET
+C STRUCTURE IS ALREADY IN THE AMPLITUDES (R2(AA) = -R2(BB)) AND THE
+C OPERATOR SIGN ENTERS ONCE, AS D(A) - D(B), IN PRP_DEN4PROPS. A SIGN
+C SWITCH HERE FLIPPED THE SAME-SPIN R2 CONTRIBUTIONS (CHECKED BLOCK BY
+C BLOCK AGAINST VCCEH <M(L)|T(1)>).
+C
+          FAC1 = ONE
 
           CALL XGEMM('T','N',NROW,NCOL,NSUM,FAC1,ICORE(IOFFT),NSUM,
      &             ICORE(IOFFC),NSUM,ONE,ICORE(IOFFG),NROW)
@@ -627,12 +645,7 @@ C
      &                 (ISYMOFF(IRREPE,IRREPTL,ISYTABAA)-1)
           IOFFC=IOFFC0+IINTFP*NUMDSC*
      &                 (ISYMOFF(IRREPB,IRREPCL,ISYTABAA)-1)
-          If ((Iflags(18) .EQ. 9) .or.
-     &       (Iflags(18) .EQ. 10)) THEN
-              FAC2 = ONE
-          ELSE
-              FAC2 = ONEM
-          ENDIF
+          FAC2 = ONEM
           CALL XGEMM('T','N',NROW,NCOL,NSUM,FAC2,ICORE(IOFFT),NSUM,
      &               ICORE(IOFFC),NSUM,ONE,ICORE(IOFFG),NROW)
 140      CONTINUE

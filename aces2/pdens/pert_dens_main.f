@@ -206,6 +206,22 @@ C
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 C
       IMPLICIT DOUBLE PRECISION(A-H, O-Z)
 C
@@ -313,23 +329,41 @@ C
        LISTR2_BB = 445
        LISTR2_AB = 446
 C
+C
+C JPERT RUNS OVER ALL PERTURBATIONS, IRREP BY IRREP (VCCEH ORDER);
+C IPERT IS ONLY THE INDEX WITHIN IRREPX.
+C
+      POLAR   = .FALSE.
+      SPN_SPN = .FALSE.
+      JPERT   = 0
       DO IRREPX = 1, NIRREP
 C
+         IF (NPERT(IRREPX) .GT. 0) CALL NEWLST(IRREPX, ICORE, MAXCOR,
+     &                                         IUHF)
+C
+         IF (NPERT(IRREPX) .GT. 0 .AND. IUHF .NE. 0)
+     &      CALL VCCEH_XPROP(ICORE, MAXCOR/IINTFP, LENGTH(IRREPX),
+     &                       NPERT(IRREPX), IRREPX)
          DO IPERT = 1,  NPERT(IRREPX)
+            JPERT = JPERT + 1
 
             IOFF_T1_A  = IONE
             IOFF_T2_AB = IONE + (LENGTH_SD(IRREPX, 1, 1))*IINTFP
             IOFF_T2_AA = IONE + (LENGTH_SD(IRREPX, 1, 1) +
      &                           LENGTH_SD(IRREPX, 1, 2))*IINTFP
 
+C
+C THE VCCEH VECTOR ON LIST 373 IS T1(A), T1(B), T2(AB), T2(BB),
+C T2(AA) (SEE LOADVEC1/LOADVEC2).
+C
             IF (IUHF .NE. 0) THEN
               IOFF_T1_B  = IONE + (LENGTH_SD(IRREPX,1,1))*IINTFP
               IOFF_T2_AB = IONE + (LENGTH_SD(IRREPX,1,1) +
      &                             LENGTH_SD(IRREPX,1,2))*IINTFP
-              IOFF_T2_AA = IONE + (LENGTH_SD(IRREPX,1,1) +
+              IOFF_T2_BB = IONE + (LENGTH_SD(IRREPX,1,1) +
      &                             LENGTH_SD(IRREPX,1,2) +
      &                             LENGTH_SD(IRREPX,2,3))*IINTFP
-              IOFF_T2_BB = IONE + (LENGTH_SD(IRREPX,1,1) +
+              IOFF_T2_AA = IONE + (LENGTH_SD(IRREPX,1,1) +
      &                             LENGTH_SD(IRREPX,1,2) +
      &                             LENGTH_SD(IRREPX,2,3) +
      &                             LENGTH_SD(IRREPX,2,2))*IINTFP
@@ -365,56 +399,59 @@ C
             print*, "The offsets for T 1s: ", Ioff_t1_a,
      &      ioff_t1_b
             print*, "The perturbed T1s AI"
-            call output(icore(ioff_t1_a), 1,nt(1), 1,1,nt(1),1,1)
-            call checksumP("T1AA", icore(ioff_t1_a),nt(1))
+            call output(icore(ioff_t1_a), 1,ilen_t1_a,1,1,ilen_t1_a,1,1)
+            call checksumP("T1AA", icore(ioff_t1_a),ilen_t1_a)
             print*, "The perturbed T1s ai"
-            call output(icore(ioff_t1_b), 1,nt(2), 1,1,nt(2),1,1)
-            call checksumP("T1BB", icore(ioff_t1_b),nt(2))
-     
-            IOFF_T1_A = IOFF_T1_A + ILEN_T1_A*IINTFP    
-            IF (IUHF .NE . 0) IOFF_T1_B = IOFF_T1_B + ILEN_T1_B*
-     &                                    IINTFP
-            DO IRREP = 1, NIRREP
-               IRREPR = IRREP
-               IRREPL = DIRPRD(IRREPR, IRREPX) 
-
-               LENGTH_OOAA = IRPDPD(IRREPR, 3)
-               LENGTH_VVAA = IRPDPD(IRREPL, 1)
-               LENGTH_AAAA = LENGTH_OOAA*LENGTH_VVAA
-               IF (IUHF .NE . 0) THEN
-                   LENGTH_OOBB = IRPDPD(IRREPR, 4)
-                   LENGTH_VVBB = IRPDPD(IRREPL, 2)
-                   LENGTH_BBBB = LENGTH_OOBB*LENGTH_VVBB
-               ENDIF
-               LENGTH_OOAB = IRPDPD(IRREPR, 14)
-               LENGTH_VVAB = IRPDPD(IRREPL, 13)
-               LENGTH_ABAB = LENGTH_OOAB*LENGTH_VVAB
+            call output(icore(ioff_t1_b), 1,ilen_t1_b,1,1,ilen_t1_b,1,1)
+            call checksumP("T1BB", icore(ioff_t1_b),ilen_t1_b)
 C
+C PUT T(1) WHERE PTDENS READS THE RIGHT VECTOR: R1 ON 490, R2 ON
+C 444-446 (RETYPED FOR IRREPX BY NEWLST ABOVE).
 C
-              IOFF_T2_AB = IOFF_T2_AB +  LENGTH_ABAB*IINTFP
-              IOFF_T2_AA = IOFF_T2_AA +  LENGTH_AAAA*IINTFP
-              IF (IUHF .NE. 0) IOFF_T2_BB = IOFF_T2_BB + 
-     &                                      LENGTH_BBBB*IINTFP
-
-            END DO
+            CALL PUTLST(ICORE(IOFF_T1_A), 1, 1, 1, 1, LISTR1)
+            IF (IUHF .NE. 0) CALL PUTLST(ICORE(IOFF_T1_B), 1, 1, 1,
+     &                                   2, LISTR1) 
+            CALL PUTALL(ICORE(IOFF_T2_AB), LENGTH_SD(IRREPX,2,3),
+     &                  IRREPX, LISTR2_AB)
+            IF (IUHF .NE. 0) THEN
+               CALL PUTALL(ICORE(IOFF_T2_AA), LENGTH_SD(IRREPX,2,1),
+     &                     IRREPX, LISTR2_AA)
+               CALL PUTALL(ICORE(IOFF_T2_BB), LENGTH_SD(IRREPX,2,2),
+     &                     IRREPX, LISTR2_BB)
+            ENDIF
 C
 C
             CALL GEN_PERTRB_RSPNS_DENS(ICORE, MAXCOR, IRREPX, IUHF)
             CALL PRP_DEN4PROPS(ICORE, MAXCOR, NAO, NATOMS, NCENTER, 
-     &                         IPERT, IRREPX, IUHF)
+     &                         JPERT, IRREPX, IUHF)
 C
                I000 = IONE
               ILEFT = I000 + NAO*NAO*IINTFP
             MEMLEFT = MAXCOR - ILEFT
                                      
             CALL COMP_2NDORD_PROPS(ICORE(I000), ICORE(ILEFT), NTPERT,
-     &                            MEMLEFT, NAO, NATOMS, IPERT, IUHF,
+     &                            MEMLEFT, NAO, NATOMS, JPERT, IUHF,
      &                            SPN_SPN, POLAR, SPNC_TENSOR, 
      &                            POL_TENSOR)
          ENDDO
       ENDDO
 C
       IF (SPN_SPN) THEN
+         IF (NIRREP .NE. 1) THEN
+            I000 = IONE
+            I010 = I000 + NTPERT*NTPERT*IINTFP
+            I020 = I010 + NTPERT*NTPERT*IINTFP
+            IF (I020 .GT. MAXCOR) CALL INSMEM("@-PERT_DENS_MAIN",
+     &                                        I020, MAXCOR)
+            Write(6,"(a)") " Raw atom x SALC response matrix"
+            CALL OUTPUT(SPNC_TENSOR, 1, NTPERT, 1, NTPERT,
+     &                  NTPERT, NTPERT, 1)
+            CALL SALC2ATM(SPNC_TENSOR, ICORE(I000), ICORE(I010),
+     &                    NTPERT)
+         ENDIF
+         Write(6,"(a)") " Atom x atom response matrix before symmet."
+         CALL OUTPUT(SPNC_TENSOR, 1, NTPERT, 1, NTPERT,
+     &               NTPERT, NTPERT, 1)
          CALL SYMMET2(SPNC_TENSOR, NTPERT)
          CALL DSCAL(NTPERT*NTPERT, 2.0D0, SPNC_TENSOR, 1)
          CALL OUTPUT(SPNC_TENSOR, 1, NTPERT, 1, NTPERT, 

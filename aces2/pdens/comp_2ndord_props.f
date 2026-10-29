@@ -144,7 +144,7 @@ C
                IRWND = IONE
 C     
  30         CONTINUE 
-            ICONT = ICONT + IONE 
+            ICONT = ICONT + 6
 C     
  20      CONTINUE
 
