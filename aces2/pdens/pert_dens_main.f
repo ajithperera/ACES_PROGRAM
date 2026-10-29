@@ -433,6 +433,13 @@ C
      &                            MEMLEFT, NAO, NATOMS, JPERT, IUHF,
      &                            SPN_SPN, POLAR, SPNC_TENSOR, 
      &                            POL_TENSOR)
+C
+C RESPONSE NATURAL ORBITAL DECOMPOSITION OF THE FC RESPONSE (NO
+C SYMMETRY: THE PERTURBATIONS ARE THEN THE INDIVIDUAL NUCLEI).
+C
+            IF (NIRREP .EQ. 1 .AND. JFC)
+     &         CALL RSPNS_NO(ICORE(I000), ICORE(ILEFT), MEMLEFT/IINTFP,
+     &                       NAO, NATOMS, JPERT, IUHF)
          ENDDO
       ENDDO
 C

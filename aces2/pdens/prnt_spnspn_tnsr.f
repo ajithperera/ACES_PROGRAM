@@ -145,7 +145,7 @@ C
       WRITE(LUOUT, 5005)
             
 
- 5000 FORMAT (1X, 'The NMR spin-spin colsupling tensors correspond to',
+ 5000 FORMAT (1X, 'The NMR spin-spin coupling tensors correspond to',
      &      /, 1X,'the following orientation and atomic ordering.')
 
  5005 FORMAT (T4, 56('-'))      
@@ -219,6 +219,8 @@ C
          WRITE(6,*)
          CALL HEADER(STRINGFC, -1, 6)
          CALL PRNTLO (6, VMLORDSPINJJ, LABEL, NNUCL, NNUCL, 100, 100)
+         CALL PRNT_REDUCED_K(VMLORDSPINJJ, ICHARGE, GTAB, LABEL, NNUCL,
+     &                       'Fermi-contact')
 C
       END IF
 C
@@ -250,6 +252,8 @@ C
          WRITE(6, *)
          CALL HEADER(STRINGPSO, -1, 6)
          CALL PRNTLO (6, VMLORDSPINJJ, LABEL, NNUCL, NNUCL, 100, 100)
+         CALL PRNT_REDUCED_K(VMLORDSPINJJ, ICHARGE, GTAB, LABEL, NNUCL,
+     &                       'PSO')
 C
       END IF
 C
@@ -286,6 +290,8 @@ C
          WRITE(6, *) 
          CALL HEADER(STRINGSD, -1, 6)
          CALL PRNTLO (6, VMLORDSPINJJ, LABEL, NNUCL, NNUCL, 100, 100)
+         CALL PRNT_REDUCED_K(VMLORDSPINJJ, ICHARGE, GTAB, LABEL, NNUCL,
+     &                       'Spin-dipole')
 C
       END IF
 C
