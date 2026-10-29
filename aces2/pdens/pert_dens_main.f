@@ -452,6 +452,16 @@ C
      &                     ICORE(1+NAO*NAO*IINTFP))
                CALL PDDUMPI('ANGMOMBF', 0, NAO,
      &                      ICORE(1+NAO*NAO*IINTFP))
+C SCF MO COEFFICIENTS AND ENERGIES (ALPHA) FOR MO-PAIR ANALYSES; THE
+C AOS ARE THOSE OF THE DENSITIES, AS IN MO2AO3.
+               CALL GETREC(20, 'JOBARC', 'SCFEVECA', NAO*NAO*IINTFP,
+     &                     ICORE(1+NAO*NAO*IINTFP))
+               CALL PDDUMP('SCFEVECA', 0, NAO*NAO,
+     &                     ICORE(1+NAO*NAO*IINTFP))
+               CALL GETREC(20, 'JOBARC', 'SCFEVALA', NAO*IINTFP,
+     &                     ICORE(1+NAO*NAO*IINTFP))
+               CALL PDDUMP('SCFEVALA', 0, NAO,
+     &                     ICORE(1+NAO*NAO*IINTFP))
             ENDIF
             CALL PDDUMP('DENSITY ', JPERT, NAO*NAO, ICORE(1))
 C
