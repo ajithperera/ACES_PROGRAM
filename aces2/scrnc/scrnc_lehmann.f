@@ -123,6 +123,17 @@ C
          Go To 20
       Endif
 C
+C Bare (orbital-difference) spin-orbital states, one per (spin,i,a):
+C the vertex variants must then reproduce GF2 exactly.
+C
+      If (Isrc .EQ. 2) Then
+         Nroot  = 2*Nocc*(Nmo-Nocc)
+         Iuhf_t = 1
+         Write(6,"(a,I6)") " @-Scrnc_lehmann: bare spin-orbital"//
+     +                     " states (GF2 test), roots ",Nroot
+         Go To 20
+      Endif
+C
 C First pass over eom_tdm.dat: count the roots.
 C
       Open(Unit=83,File="eom_tdm.dat",Form="FORMATTED",Status="OLD")
@@ -171,6 +182,22 @@ C
       I_scr  = I_sq   + 2*Nmo*Nmo*Next
       Iend   = I_scr  + Nmo_pairs*Nao_pairs + Nao*Nao + Nao*Nmo +
      +                  Nmo*Nmo
+C Exchange vertices X, X' (right/left), each from the alpha density
+C (slot 1) and from the triplet part t = (alpha-beta)/2 (slot 2), and
+C the alpha, beta and t densities of one state.
+      Nx     = 2*Nmo_pairs*Nroot
+      I_xr   = Iend
+      I_xl   = I_xr   + Nx
+      I_xpr  = I_xl   + Nx
+      I_xpl  = I_xpr  + Nx
+      I_gra  = I_xpl  + Nx
+      I_gla  = I_gra  + Nmo_pairs
+      I_grb  = I_gla  + Nmo_pairs
+      I_glb  = I_grb  + Nmo_pairs
+      I_gtr  = I_glb  + Nmo_pairs
+      I_gtl  = I_gtr  + Nmo_pairs
+      I_vd   = I_gtl  + Nmo_pairs
+      Iend   = I_vd   + Nmo_pairs
       If (Iend .GT. Maxcor) Call Insmem("Scrnc_lehmann",Iend,Maxcor)
 C
       Call Getrec(20,"JOBARC",Labelc,Iintfp*Nao*Nmo,Work(I_c))
@@ -204,6 +231,44 @@ C
          Go To 30
       Endif
 C
+      If (Isrc .EQ. 2) Then
+         Nvrt = Nmo - Nocc
+         Iroot = 0
+         Do Isp = 1, 2
+         Do Ii = 1, Nocc
+         Do Ia = Nocc+1, Nmo
+            Iroot = Iroot + 1
+            Work(I_om-1+Iroot) = Work(I_eps-1+Ia) - Work(I_eps-1+Ii)
+            Call Zero(Work(I_gr),Nmo_pairs)
+            Call Zero(Work(I_gl),Nmo_pairs)
+            Work(I_gr-1+(Ii-1)*Nmo+Ia) = 1.0D0
+            Work(I_gl-1+(Ia-1)*Nmo+Ii) = 1.0D0
+            Call Zero(Work(I_gra),Nmo_pairs)
+            Call Zero(Work(I_gla),Nmo_pairs)
+            Call Zero(Work(I_grb),Nmo_pairs)
+            Call Zero(Work(I_glb),Nmo_pairs)
+            If (Isp .EQ. 1) Then
+               Call Dcopy(Nmo_pairs,Work(I_gr),1,Work(I_gra),1)
+               Call Dcopy(Nmo_pairs,Work(I_gl),1,Work(I_gla),1)
+            Else
+               Call Dcopy(Nmo_pairs,Work(I_gr),1,Work(I_grb),1)
+               Call Dcopy(Nmo_pairs,Work(I_gl),1,Work(I_glb),1)
+            Endif
+            Ioff = (Iroot-1)*Nmo_pairs
+            Call Scrnc_lehmann_vx(Nmo,Nmo_pairs,Work(I_vmo),
+     +           Work(I_gr),Work(I_gl),Work(I_gra),Work(I_gla),
+     +           Work(I_vr+Ioff),Work(I_vl+Ioff),Work(I_xr+Ioff),
+     +           Work(I_xl+Ioff),Work(I_xpr+Ioff),Work(I_xpl+Ioff))
+            Call Scrnc_lehmann_vt(Nmo,Nmo_pairs,Nroot,Ioff,Work(I_vmo),
+     +           Work(I_gra),Work(I_gla),Work(I_grb),Work(I_glb),
+     +           Work(I_gtr),Work(I_gtl),Work(I_vd),Work(I_xr),
+     +           Work(I_xl),Work(I_xpr),Work(I_xpl))
+         Enddo
+         Enddo
+         Enddo
+         Go To 30
+      Endif
+C
 C Second pass: spin-summed gamma^R_s, gamma^L_s -> V^R_s, V^L_s.
 C
       Rewind(83)
@@ -216,21 +281,36 @@ C
             Read(83,*) (Work(I_gt-1+I),I=1,Nmo_pairs)
             If (Iside .EQ. 1) Then
                Call Daxpy(Nmo_pairs,1.0D0,Work(I_gt),1,Work(I_gr),1)
+               If (Ispin .EQ. 1) Call Dcopy(Nmo_pairs,Work(I_gt),1,
+     +                                      Work(I_gra),1)
+               If (Ispin .EQ. 2) Call Dcopy(Nmo_pairs,Work(I_gt),1,
+     +                                      Work(I_grb),1)
             Else
                Call Daxpy(Nmo_pairs,1.0D0,Work(I_gt),1,Work(I_gl),1)
+               If (Ispin .EQ. 1) Call Dcopy(Nmo_pairs,Work(I_gt),1,
+     +                                      Work(I_gla),1)
+               If (Ispin .EQ. 2) Call Dcopy(Nmo_pairs,Work(I_gt),1,
+     +                                      Work(I_glb),1)
             Endif
          Enddo
-C        Closed-shell RHF-based EOM stores one spin case only.
+C        Closed-shell RHF-based EOM stores one spin case only (singlets;
+C        the triplet part of the vertex variants is then missing).
          If (Iuhf_t .EQ. 0) Then
             Call Dscal(Nmo_pairs,2.0D0,Work(I_gr),1)
             Call Dscal(Nmo_pairs,2.0D0,Work(I_gl),1)
+            Call Dcopy(Nmo_pairs,Work(I_gra),1,Work(I_grb),1)
+            Call Dcopy(Nmo_pairs,Work(I_gla),1,Work(I_glb),1)
          Endif
          Work(I_om-1+Iroot) = Root
          Ioff = (Iroot-1)*Nmo_pairs
-         Call Dgemv("N",Nmo_pairs,Nmo_pairs,1.0D0,Work(I_vmo),
-     +              Nmo_pairs,Work(I_gr),1,0.0D0,Work(I_vr+Ioff),1)
-         Call Dgemv("N",Nmo_pairs,Nmo_pairs,1.0D0,Work(I_vmo),
-     +              Nmo_pairs,Work(I_gl),1,0.0D0,Work(I_vl+Ioff),1)
+         Call Scrnc_lehmann_vx(Nmo,Nmo_pairs,Work(I_vmo),
+     +        Work(I_gr),Work(I_gl),Work(I_gra),Work(I_gla),
+     +        Work(I_vr+Ioff),Work(I_vl+Ioff),Work(I_xr+Ioff),
+     +        Work(I_xl+Ioff),Work(I_xpr+Ioff),Work(I_xpl+Ioff))
+         Call Scrnc_lehmann_vt(Nmo,Nmo_pairs,Nroot,Ioff,Work(I_vmo),
+     +        Work(I_gra),Work(I_gla),Work(I_grb),Work(I_glb),
+     +        Work(I_gtr),Work(I_gtl),Work(I_vd),Work(I_xr),Work(I_xl),
+     +        Work(I_xpr),Work(I_xpl))
       Enddo
       Close(Unit=83)
    30 Continue
@@ -310,6 +390,14 @@ C
      +                      Work(I_vr),Work(I_vl),Work(I_om),
      +                      Work(I_eps),Work(I_pp),Work(I_pc),
      +                      Work(I_ix))
+C
+C
+C Self-energy vertex variants (direct x exchange, antisymmetrized);
+C dRPA supplies no transition densities, so they are skipped there.
+C
+      If (Isrc .NE. 1) Call Scrnc_lehmann_vtx(Nmo,Nocc,Nmo_pairs,
+     +   Nroot,Isrc,Work(I_vr),Work(I_vl),Work(I_xr),Work(I_xl),
+     +   Work(I_xpr),Work(I_xpl),Work(I_om),Work(I_eps),Work(I_vmo))
 C
       Write(6,"(a)") " @-Scrnc_lehmann: wrote wcreduc_lehmann.dat,"//
      +               " sigma_lehmann_imag.dat, qp_lehmann.dat"
@@ -746,6 +834,255 @@ C
      +              Gam,1,0.0D0,Vr(1,Is),1)
          Call Dcopy(Nmo_pairs,Vr(1,Is),1,Vl(1,Is),1)
       Enddo
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_lehmann_vx(Nmo,Nmo_pairs,Vmo,Gr,Gl,Gra,Gla,
+     +                            Vr,Vl,Xr,Xl,Xpr,Xpl)
+C
+C Direct and exchange vertices of one state, index (p-1)*Nmo+m:
+C   V(pm)  = Sum_rs (pm|rs) g(rs)        (spin-summed g)
+C   X(pm)  = Sum_rs (ps|rm) ga(rs)       (alpha g only)
+C   X'(pm) = Sum_rs (pr|sm) ga(rs)
+C with g(r,s) stored at (s-1)*Nmo+r, as in eom_tdm.dat.
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Vmo(Nmo_pairs,Nmo_pairs),Gr(Nmo_pairs),Gl(Nmo_pairs)
+      Dimension Gra(Nmo,Nmo),Gla(Nmo,Nmo),Vr(Nmo_pairs),Vl(Nmo_pairs)
+      Dimension Xr(Nmo,Nmo),Xl(Nmo,Nmo),Xpr(Nmo,Nmo),Xpl(Nmo,Nmo)
+C
+      Call Dgemv("N",Nmo_pairs,Nmo_pairs,1.0D0,Vmo,Nmo_pairs,Gr,1,
+     +           0.0D0,Vr,1)
+      Call Dgemv("N",Nmo_pairs,Nmo_pairs,1.0D0,Vmo,Nmo_pairs,Gl,1,
+     +           0.0D0,Vl,1)
+      Do Ip = 1, Nmo
+         Do Im = 1, Nmo
+            Sr  = 0.0D0
+            Sl  = 0.0D0
+            Spr = 0.0D0
+            Spl = 0.0D0
+            Do Is = 1, Nmo
+               Do Ir = 1, Nmo
+                  Ex  = Vmo((Is-1)*Nmo+Ip,(Im-1)*Nmo+Ir)
+                  Exq = Vmo((Ir-1)*Nmo+Ip,(Im-1)*Nmo+Is)
+                  Sr  = Sr  + Ex *Gra(Ir,Is)
+                  Sl  = Sl  + Ex *Gla(Ir,Is)
+                  Spr = Spr + Exq*Gra(Ir,Is)
+                  Spl = Spl + Exq*Gla(Ir,Is)
+               Enddo
+            Enddo
+            Xr(Im,Ip)  = Sr
+            Xl(Im,Ip)  = Sl
+            Xpr(Im,Ip) = Spr
+            Xpl(Im,Ip) = Spl
+         Enddo
+      Enddo
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_lehmann_res(Iv,Im,Nocc,Ipm,Is,Nmo_pairs,Nroot,
+     +                             Vr,Vl,Xr,Xl,Xpr,Xpl,Om,Eps,C,P)
+C
+C Pole P and residue C of Sigma_pp for state Is and orbital Im:
+C   Iv=1 (a) direct x direct          (G0W)
+C   Iv=2 (b) direct x (direct - exchange)
+C   Iv=3 (c) 1/2 (direct - exchange) x (direct - exchange)
+C (b) and (c) are both exact GF2 for bare states; (c) also carries
+C the triplet channel: X x X' from the Ms=0 states, plus the spin-flip
+C (Ms=+-1) states, which for a closed-shell singlet reference give
+C twice the triplet-part product At*Bt (spin isotropy).
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Vr(Nmo_pairs,Nroot),Vl(Nmo_pairs,Nroot)
+      Dimension Xr(Nmo_pairs,Nroot,2),Xl(Nmo_pairs,Nroot,2)
+      Dimension Xpr(Nmo_pairs,Nroot,2),Xpl(Nmo_pairs,Nroot,2)
+      Dimension Om(Nroot),Eps(*)
+C
+      If (Im .LE. Nocc) Then
+         P  = Eps(Im) - Om(Is)
+         A  = Vr(Ipm,Is)
+         B  = Vl(Ipm,Is)
+         Ax = Xr(Ipm,Is,1)
+         Bx = Xpl(Ipm,Is,1)
+         At = Xr(Ipm,Is,2)
+         Bt = Xpl(Ipm,Is,2)
+      Else
+         P  = Eps(Im) + Om(Is)
+         A  = Vl(Ipm,Is)
+         B  = Vr(Ipm,Is)
+         Ax = Xl(Ipm,Is,1)
+         Bx = Xpr(Ipm,Is,1)
+         At = Xl(Ipm,Is,2)
+         Bt = Xpr(Ipm,Is,2)
+      Endif
+      If (Iv .EQ. 1) Then
+         C = A*B
+      Else If (Iv .EQ. 2) Then
+         C = A*(B-Bx)
+      Else
+         C = 0.5D0*((A-Ax)*(B-Bx) + 2.0D0*At*Bt)
+      Endif
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_lehmann_vtx(Nmo,Nocc,Nmo_pairs,Nroot,Isrc,
+     +                             Vr,Vl,Xr,Xl,Xpr,Xpl,Om,Eps,Vmo)
+C
+C Quasiparticle energies with the three vertex variants (diagonal
+C Newton solve from eps_p, Z = 1/(1 - dSigma/dw)), to qp_vertex.dat.
+C Isrc=2 (bare states): also checks (a) against the direct part of
+C GF2 and (b), (c) against full GF2 at z = eps_p + 0.1i.
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Vr(Nmo_pairs,Nroot),Vl(Nmo_pairs,Nroot)
+      Dimension Xr(Nmo_pairs,Nroot,2),Xl(Nmo_pairs,Nroot,2)
+      Dimension Xpr(Nmo_pairs,Nroot,2),Xpl(Nmo_pairs,Nroot,2)
+      Dimension Om(Nroot),Eps(Nmo),Vmo(Nmo_pairs,Nmo_pairs)
+      Dimension Qp(3),Zq(3)
+      Double Complex Z,S(3),Gd,Gx
+C
+      Hev = 27.211386245988D0
+      Open(Unit=89,File="qp_vertex.dat",Form="FORMATTED",
+     +     Status="UNKNOWN")
+      Write(89,"(a)") "# p   eps(eV)   QP_a(eV)   Z_a   QP_b(eV)"//
+     +  "   Z_b   QP_c(eV)   Z_c   (a GW, b +exchange vertex,"//
+     +  " c antisymmetrized)"
+C
+      Dmax = 0.0D0
+      Do Ip = 1, Nmo
+         Do Iv = 1, 3
+            W = Eps(Ip)
+            Do It = 1, 200
+               Sg = 0.0D0
+               Dg = 0.0D0
+               Do Is = 1, Nroot
+                  Do Im = 1, Nmo
+                     Ipm = (Ip-1)*Nmo + Im
+                     Call Scrnc_lehmann_res(Iv,Im,Nocc,Ipm,Is,
+     +                    Nmo_pairs,Nroot,Vr,Vl,Xr,Xl,Xpr,Xpl,Om,
+     +                    Eps,C,P)
+                     Sg = Sg + C/(W-P)
+                     Dg = Dg + C/((W-P)*(W-P))
+                  Enddo
+               Enddo
+               F  = W - Eps(Ip) - Sg
+               Fp = 1.0D0 + Dg
+               Dw = -F/Fp
+               If (Abs(Dw) .GT. 0.05D0) Dw = Sign(0.05D0,Dw)
+               W = W + Dw
+               If (Abs(Dw) .LT. 1.0D-10) Go To 40
+            Enddo
+            Write(6,"(a,2I4)") " @-Scrnc_lehmann_vtx: no convergence,"//
+     +                         " p, variant ",Ip,Iv
+   40       Continue
+            Qp(Iv) = W
+            Zq(Iv) = 1.0D0/Fp
+         Enddo
+         Write(89,"(I4,7F11.5)") Ip,Eps(Ip)*Hev,(Qp(K)*Hev,Zq(K),K=1,3)
+C
+         If (Isrc .EQ. 2) Then
+            Z = Dcmplx(Eps(Ip),0.1D0)
+            Do Iv = 1, 3
+               S(Iv) = Dcmplx(0.0D0,0.0D0)
+               Do Is = 1, Nroot
+                  Do Im = 1, Nmo
+                     Ipm = (Ip-1)*Nmo + Im
+                     Call Scrnc_lehmann_res(Iv,Im,Nocc,Ipm,Is,
+     +                    Nmo_pairs,Nroot,Vr,Vl,Xr,Xl,Xpr,Xpl,Om,
+     +                    Eps,C,P)
+                     S(Iv) = S(Iv) + C/(Z-P)
+                  Enddo
+               Enddo
+            Enddo
+            Call Scrnc_lehmann_gf2(Nmo,Nocc,Nmo_pairs,Ip,Z,Eps,Vmo,
+     +                             Gd,Gx)
+            D1 = Abs(S(1)-Gd)
+            D2 = Abs(S(2)-Gd-Gx)
+            D3 = Abs(S(3)-Gd-Gx)
+            Write(6,"(a,I4,3(1PD12.3))") " @-Scrnc_lehmann_vtx: GF2"//
+     +         " test p, |a-GF2dir| |b-GF2| |c-GF2| ",Ip,D1,D2,D3
+            Dmax = Max(Dmax,D1,D2,D3)
+         Endif
+      Enddo
+      Close(Unit=89)
+      If (Isrc .EQ. 2) Write(6,"(a,1PD12.3)")
+     +   " @-Scrnc_lehmann_vtx: GF2 test, max deviation ",Dmax
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_lehmann_gf2(Nmo,Nocc,Nmo_pairs,Ip,Z,Eps,Vmo,
+     +                             Gd,Gx)
+C
+C Closed-shell second-order self-energy Sigma_pp(z), split into its
+C direct (Gd) and exchange (Gx) parts:
+C   Sum_ijb (pi|bj)[2(pi|bj)-(pj|bi)]/(z+e_b-e_i-e_j)
+C + Sum_iab (pa|ib)[2(pa|ib)-(pb|ia)]/(z+e_i-e_a-e_b)
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Eps(Nmo),Vmo(Nmo_pairs,Nmo_pairs)
+      Double Complex Z,Gd,Gx,Rd
+C
+      Gd = Dcmplx(0.0D0,0.0D0)
+      Gx = Dcmplx(0.0D0,0.0D0)
+      Do Ii = 1, Nocc
+         Do Ij = 1, Nocc
+            Do Ib = Nocc+1, Nmo
+               V1 = Vmo((Ii-1)*Nmo+Ip,(Ij-1)*Nmo+Ib)
+               V2 = Vmo((Ij-1)*Nmo+Ip,(Ii-1)*Nmo+Ib)
+               Rd = 1.0D0/(Z+Eps(Ib)-Eps(Ii)-Eps(Ij))
+               Gd = Gd + 2.0D0*V1*V1*Rd
+               Gx = Gx - V1*V2*Rd
+            Enddo
+         Enddo
+      Enddo
+      Do Ii = 1, Nocc
+         Do Ia = Nocc+1, Nmo
+            Do Ib = Nocc+1, Nmo
+               V1 = Vmo((Ia-1)*Nmo+Ip,(Ib-1)*Nmo+Ii)
+               V2 = Vmo((Ib-1)*Nmo+Ip,(Ia-1)*Nmo+Ii)
+               Rd = 1.0D0/(Z+Eps(Ii)-Eps(Ia)-Eps(Ib))
+               Gd = Gd + 2.0D0*V1*V1*Rd
+               Gx = Gx - V1*V2*Rd
+            Enddo
+         Enddo
+      Enddo
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_lehmann_vt(Nmo,Nmo_pairs,Nroot,Ioff,Vmo,Gra,
+     +                            Gla,Grb,Glb,Gtr,Gtl,Vd,Xr,Xl,Xpr,Xpl)
+C
+C Exchange vertices of the triplet part t = (alpha-beta)/2 of one
+C state's densities, into slot 2 of Xr, Xl, Xpr, Xpl (column Ioff).
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Vmo(Nmo_pairs,Nmo_pairs),Gra(Nmo_pairs),Gla(Nmo_pairs)
+      Dimension Grb(Nmo_pairs),Glb(Nmo_pairs),Gtr(Nmo_pairs)
+      Dimension Gtl(Nmo_pairs),Vd(Nmo_pairs)
+      Dimension Xr(*),Xl(*),Xpr(*),Xpl(*)
+C
+      Do I = 1, Nmo_pairs
+         Gtr(I) = 0.5D0*(Gra(I)-Grb(I))
+         Gtl(I) = 0.5D0*(Gla(I)-Glb(I))
+      Enddo
+      I2 = Nmo_pairs*Nroot + Ioff + 1
+      Call Scrnc_lehmann_vx(Nmo,Nmo_pairs,Vmo,Gtr,Gtl,Gtr,Gtl,Vd,Vd,
+     +                      Xr(I2),Xl(I2),Xpr(I2),Xpl(I2))
 C
       Return
       End

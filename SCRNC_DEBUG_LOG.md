@@ -4,6 +4,41 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-10-29: SELF-ENERGY VERTEX AND SPIN CHANNEL (NEWEST, RESUME HERE)
+
+Motivation (Ajith): scrnc came from the J-coupling idea of a two-point
+interaction mediated by the response; GW uses only the charge channel.
+Literature: Lewis & Berkelbach JCTC 15, 2925 (2019) (CC chi, charge only,
+slightly worse than RPA; "vertex in Sigma cannot be neglected"); Marie &
+Loos JCP 163, 194115 (2025) (molecular FLEX, uncoupled eh/eh-bar/pp with
+bare kernel: IP MAE 0.66-1.13 eV vs G0W0 0.36; channel coupling needed).
+
+Code (uncommitted):
+- vee/gdens1.f: UHF alpha OO block of the transition density was transposed
+  twice (net none), beta once; RHF once. Same bug as pdens gdens1 (fixed
+  17b67827). Fixed: one transpose per spin. Charge-only W_c and dipole TMs
+  unchanged (symmetric operators); antisymmetric TDM uses change.
+- scrnc_lehmann.F: keeps alpha/beta TDMs, builds direct V and exchange X, X'
+  vertices; QP variants (diagonal Newton from eps_p) to qp_vertex.dat:
+  (a) V V (G0W, as before); (b) V (V - X') (exchange vertex, singlets only);
+  (c) 1/2 (V-X)(V-X') + spin-flip term 2 X_t X'_t, t=(a-b)/2 (spin isotropy).
+  lehmann_input Isrc=2: bare spin-orbital states; (a) = GF2 direct, (b) and
+  (c) = full GF2 to 1e-16 (STO-3G) and 1.6e-15 (DZ). Conventions verified.
+
+Results, H2O IP (eV), error vs IP-EOM-CCSD:
+            EOM     (a) G0W_CC     (b) +exch vtx   (c) +spin channel
+ STO 1b1    8.42    8.25 -0.17     8.71 +0.29      7.30 -1.12
+     3a1   10.91   10.77 -0.14    11.14 +0.23     10.39 -0.52
+     1b2   16.63   16.55 -0.08    16.46 -0.17     16.53 -0.10
+ DZ  1b1   11.74   11.37 -0.37    12.12 +0.38     10.08 -1.66
+     3a1   13.76   13.40 -0.36    14.03 +0.27     12.39 -1.37
+     1b2   18.76   18.35 -0.41    18.58 -0.18     17.91 -0.85
+(a) at DZ reproduces the 1016 G0W_CC values (vee fix does not touch it).
+Reading: the spin channel resummed this way (c) is much worse, as Marie &
+Loos found for FLEX; the exchange vertex (b) flips the sign of the error
+without reducing it. Neither single-channel form fixes G0W_CC.
+Dirs: /blue/ufhpc/perera/scrnc_test/h2o_vertex_{sto3g,dz}_1029.
+
 ## >>> START HERE (end of 2026-10-15) <<<
 
 State: Lehmann (sum-over-states) G0W_CC from ACES II EOM-EE-CCSD works
