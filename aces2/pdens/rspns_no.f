@@ -146,7 +146,7 @@ C
             SCR(ICON+(IA-1)*NAO+K-1) = SCR(IEV+K-1)*Q
             TOT = TOT + SCR(IEV+K-1)*Q
          ENDDO
-         WRITE(6,"(a,I3,a,ES16.8,a,ES16.8,a,F10.5)")
+         WRITE(6,"(a,I3,a,ES16.8,a,ES16.8,a,ES16.8)")
      &        "   nucleus ", IA, ": sum over modes ", TOT,
      &        "  Tr(D h) ", TRDH, "  K ", TOT*XTOK
       ENDDO
