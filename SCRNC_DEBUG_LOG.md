@@ -39,6 +39,28 @@ Loos found for FLEX; the exchange vertex (b) flips the sign of the error
 without reducing it. Neither single-channel form fixes G0W_CC.
 Dirs: /blue/ufhpc/perera/scrnc_test/h2o_vertex_{sto3g,dz}_1029.
 
+Loos-set cc-pVDZ batch (job 48231477, /blue/ufhpc/perera/scrnc_loos/
+run_ccpvdz.sbatch): ne hf h2o nh3 ch4 bf co n2, IP-EOM + EE full diag +
+xscrnc Isrc=0/1/2. NH3 xscrnc died: the Nirrep>1 guard in
+scrnc_get2ints.F demanded IJKL, which cannot exist for Nirrep=2 (Cs).
+Fixed (uncommitted): IJKL is required only when Nirrep>=4. NH3 xscrnc
+rerun via rerun_nh3.sbatch. The others are in 4-irrep subgroups, so the fix
+does not affect them.
+NH3 rerun OK (job 48235274). The "Convergence fails" lines in ee logs are
+the CIS-guess DAVID1, before DIAGALL full diag, so they are harmless.
+Interim, 4 molecules (Ne HF H2O NH3), outer valence (n=10), MSE/MAE eV vs
+IP-EOM-CCSD: G0W_RPA +0.19/0.22, (a) G0W_CC -0.46/0.46, (b) +exch
++0.34/0.35, (c) +spin -0.63/1.16. Table: ~/claude_docs/scrnc_report/
+tab_loos.py <basisdir>.
+
+FULL 8-molecule cc-pVDZ table (2026-10-30, tab_loos.py; CH4 HOMO fixed: degenerate t2
+roots came out of ip_fulldiag as a round-off complex pair, Im 3e-15 Ha, and get P=0 there;
+the table now uses the best-resolved member of a degenerate set). Outer valence (EOM weight
+> 0.8), n = 19, MSE/MAE/max eV vs IP-EOM-CCSD: G0W_RPA +0.29/0.33/0.97, (a) G0W_CC
+-0.39/0.41/1.14, (b) +exch +0.37/0.41/1.40, (c) +spin -0.81/1.22/3.00.
+TODO (minor): ip_fulldiag.F should treat |Im| below a relative threshold as real.
+Manuscript (JCP, revtex): ~/claude_docs/scrnc_paper/ ; intro + theory drafted 2026-10-30.
+
 ## >>> START HERE (end of 2026-10-15) <<<
 
 State: Lehmann (sum-over-states) G0W_CC from ACES II EOM-EE-CCSD works
