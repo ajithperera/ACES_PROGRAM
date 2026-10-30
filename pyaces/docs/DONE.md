@@ -16,7 +16,7 @@ Items that came from [TODO.md](TODO.md) keep their number (`T-<n>`); work that w
 ---
 
 ### T-05. Remaining known defects: Getlstpy and Get1ehpy (2026-10-30)
-- **Commits:** (not committed yet)
+- **Commits:** `dc9b4cd7`
 - **What changed:**
   - `Get1ehpy` returned zeros for every molecule. `Aces_malloc` can return a negative `J0` (the heap lies below the anchor `Jcore`), which the routine took for a failed allocation, so it printed "Unable to allocate" and returned before reading IIII. It now tests `Jcore(1) = 0`, as `aces2/acescore/aces_malloc.c` says to. With symmetry the irrep blocks also went to wrong offsets (`Index = Index + Nelms*(K-1)`, and the triangle offsets were one too far); it now returns the full block-diagonal matrix in the SO basis, functions in `NUMBASIR` order. Unknown names are rejected instead of reading an unset label.
   - `Getlstpy`'s arguments now have documented meanings: `Left_index` is the irrep of the columns and `Right_index` the list number (`MOIO(irrep, list)`, as in ACES II's `getlst`); `Irrep` is unused and kept for existing callers. `Getlstpy` and `Putlstpy` check that the list exists, the column range and `Ndim`, and print a message and do nothing instead of overrunning the array. The new f2py function `Getlstdimpy(left, right)` returns a list's rows and columns (27 exposed functions).
@@ -24,6 +24,7 @@ Items that came from [TODO.md](TODO.md) keep their number (`T-<n>`); work that w
 - **Verification:**
   - Local (ifort 2024.0): H2O 6-31G* CCSD in C2v (NUMBASIR 9/3/5/1) and with `SYMMETRY=OFF`. In both, `CᵀSC = 1` with `SCFEVCA0` to 5×10⁻¹⁵. The (H, S) generalized eigenvalues agree between the two runs, and so does the one-electron energy 2 tr(DH) = −123.0176492438 (to 10⁻¹¹; 10.000 electrons). List 46 read irrep by irrep equals `Getallpy`, and the T2 sum of squares agrees between the runs. The error paths and a `put_list` round trip were also checked.
   - Audit 244 with no NEW entries; pyaces 60/60.
+  - ccsd (ifx 2023.2, PBS 8123): pyaces rebuilt, audit 268 with no NEW entries, aces2 158/158, pyaces 60/60; the same checks give `CᵀSC = 1` to 1×10⁻¹⁴ and the same one-electron energy in C2v and C1 (to 10⁻¹¹).
 - **Open:** `get1epy.F` (linked, not exposed, never called) is an old copy of Get1ehpy with the same defects. The checks above are a scratch script; T-17 should turn them into tests.
 
 ### D-2026-10-30b. Runpccd fixed and a pCCD test case added (2026-10-30; the Runpccd part of T-05)
