@@ -16,7 +16,7 @@ Items that came from [TODO.md](TODO.md) keep their number (`T-<n>`); work that w
 ---
 
 ### T-10. Fewer assumptions about the build environment (2026-10-30)
-- **Commits:** (not committed yet)
+- **Commits:** `442efa80`
 - **What changed:**
   - The top-level half was already done by Ajith's `f444e634`. `build.sh` checks for configure's `ACES_PROGRAM_FC`, and the ifort→ifx shim is gone; in setvars/path mode it passes `PYACES_MODULES=""` after loading the toolchain itself.
   - Left: `pyaces/build.sh` run on its own ignored `build_config.sh` and loaded the HiPerGator module set. On this workstation (setvars mode, but `module` exists) that failed with "Unable to locate a modulefile for 'intel/2025.1.0'".
@@ -25,6 +25,7 @@ Items that came from [TODO.md](TODO.md) keep their number (`T-<n>`); work that w
 - **Verification:**
   - Local, setvars mode: `bash pyaces/build.sh` on its own, `./build.sh pyaces`, and `PYACES_MODULES=""` with setvars loaded all build. The standalone run used ifort and icx 2024.0. Audit 244 each time.
   - pyaces 60/60 for the standalone and top-level builds, every `got=` value identical to the run before T-09.
+  - ccsd, modules mode (ifx/icx 2023.2, PBS 8128): `bash pyaces/build.sh` on its own after `module purge` loads configure's modules itself, uses ifx and icx, audit 268, pyaces 60/60. Then `./build.sh pyaces`: audit 268, aces2 158/158, pyaces 60/60. Both runs give every `got=` value identical to the T-09 ccsd run.
 
 ### T-09. Compiler and flag cleanup (2026-10-30)
 - **Commits:** `0213f6a7`
