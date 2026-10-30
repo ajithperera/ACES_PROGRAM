@@ -6,6 +6,68 @@ QTP17. It covers the working equations, the program flow, every routine
 that was added or changed, the input rules, the limits, and how the code
 was checked. {doc}`../user/methods` shows how to run these methods.
 
+## Summary
+
+### What ACES did not have
+
+- No erf(ω r₁₂)/r₁₂ integrals: exact exchange could only be mixed in by a
+  constant factor (`coef_pot_nonlocal`).
+- No erfc-attenuated DFT exchange (the ITYH `becke_sr`).
+- Only the VWN5 fit of VWN correlation (`vwn`), not the RPA form
+  (`vwn_rpa`).
+- B3LYP was the only hybrid, and its coefficients were written into
+  several routines.
+
+### What was added
+
+- **VMOL**
+  - `rsattn.F` turns the ordinary integrals into long-range ones by
+    changing ρ and the prefactor.
+  - `rsfiles.F` opens the long-range integral files `IIIILR`, `IJIJLR`,
+    `IIJJLR` and `IJKLLR`.
+  - `rsomega.F` determines ω from the input.
+- **VSCF:** `lrxfock.F` adds the long-range exchange to the KS Fock matrix.
+- **INTGRT**
+  - `lrexch.F` computes the long-range exchange energy.
+  - `ityh_attn.F`, `becke_sr_spin.F` and `func/pot_exch_becke_sr.F`
+    compute the short-range Becke exchange.
+  - `func/pot_corr_vwnrpa.F` computes VWN_RPA.
+  - `hybparm.F` is the single table of the coefficients and ω of every
+    hybrid.
+- **New functionals:** `cam-b3lyp`, `cam-qtp-00`, `cam-qtp-01`,
+  `cam-qtp-02`, `lc-qtp` and `qtp17`.
+- **New terms and keyword:** `hf_lr`, `becke_sr`, `vwn_rpa` and `rs_omega`.
+
+### What was changed
+
+- **`vmol/molecu.F`, `conlor.F`, `conlox.F`:** when ω≠0, the integral
+  pass (TWOEL) runs a second time to write the long-range integrals.
+- **`libr/mkrhff.F`, `mkuhff.F`:** call `LRXFOCK`; stop with an error
+  when combined with SEWARD or direct SCF.
+- **`intgrt/initintgrt.F`:** reads the hybrids from the `hybparm` table,
+  determines ω and checks the input.
+- **`integ*.F`, `numint*.F`, `anlytc.F`**
+  - compute the potential and energy of the new terms;
+  - get the hybrid energies from a generic loop over the `hybparm` table
+    instead of the formula written for B3LYP.
+- **Include files**
+  - `dftfunc.com`: more functional indices.
+  - `intgrtflags.com`: `coef_pot_lrx` and `int_rs_omega`.
+  - `energ.com`: `ehflx`.
+- **`vksdint`:** stops with an error when gradients are requested for a
+  range-separated hybrid.
+- **`GNUmakefile`:** `xvmol` links `intgrt`.
+- **Tests and docs:** eleven regression tests, `methods.md` and this
+  chapter.
+
+### Remaining limits
+
+- Energies only; there are no gradients yet.
+- VMOL integrals only; SEWARD and direct SCF are not supported.
+- One ω per run.
+
+The sections below give the details.
+
 ## Theory
 
 ### Splitting the exchange operator
