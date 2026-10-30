@@ -57,7 +57,7 @@ li { margin: 2pt 0; }
     <tr><td><b>Repository</b></td><td><code>ACES_PROGRAM/pyaces</code> (GitHub youngchoonpark/ACES, private)</td></tr>
     <tr><td><b>Reference commit</b></td><td>master, 2026-10-23 (TODO stage 1 applied)</td></tr>
     <tr><td><b>Written</b></td><td>2026-10-23</td></tr>
-    <tr><td><b>Verified</b></td><td>pyaces suite 51/51 PASS on the local workstation (oneAPI 2024.0) and the ccsd server (oneAPI 2023.2); 60/60 on the local workstation after the 2026-10-30 reclassification and Runpccd fix</td></tr>
+    <tr><td><b>Verified</b></td><td>pyaces suite 51/51 PASS on the local workstation (oneAPI 2024.0) and the ccsd server (oneAPI 2023.2); 60/60 on both after the 2026-10-30 reclassification and Runpccd fix</td></tr>
     <tr><td><b>Link audit</b></td><td>296 collision-baseline entries, 0 COMMON shadows, identical on both machines</td></tr>
   </table>
   <p class="small" style="margin-top:30pt">This manual was written from the source code (<code>pyaces/build.sh</code>, <code>a2_pyf/*.F</code>, the generated
@@ -522,7 +522,7 @@ cd pyaces && python3 pyaces_suite_runner.py 010a 117b   # selected cases only</c
 <tr><td>FAIL_CLEAN</td><td>Positive exit code with a recognised message: an <code>@ROUTINE:</code> banner, "Assertion failed", "did not converge", "forrtl: severe", …</td></tr>
 <tr><td>CRASH</td><td>Killed by a signal (negative code), or a positive exit with no recognised message</td></tr>
 </table>
-<p>Latest result: 60/60 PASS (2026-10-30, local workstation), largest difference 4.95×10<sup>-8</sup> (case 078).</p>
+<p>Latest result: 60/60 PASS (2026-10-30, local workstation and ccsd), largest difference 4.95×10<sup>-8</sup> (case 078).</p>
 
 <h3>9.3 <code>suite_classification.tsv</code></h3>
 <p>Columns: <code>name</code>, <code>category</code>, <code>reason</code>, <code>entrypoint</code>, <code>iuhf</code>, <code>record</code> (the JOBARC record compared, <code>TOTENERG</code> or <code>SCFENEG</code>), <code>ref_value</code> (Fortran E/D format).

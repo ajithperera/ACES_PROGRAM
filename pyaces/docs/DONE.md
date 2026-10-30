@@ -15,6 +15,22 @@ Items that came from [TODO.md](TODO.md) keep their number (`T-<n>`); work that w
 
 ---
 
+### D-2026-10-30b. Runpccd fixed and a pCCD test case added (2026-10-30; the Runpccd part of T-05)
+- **Commits:** `11762bef`
+- **What changed:**
+  - `Runpccd` read ZMAT again with its own `Joda_`/`aces_init` although the worker calls `Init()` first ("job archive subsystem is already initialized"), and called `Ints_()` with no arguments. It now runs after `Init()` like `Runcc` and stops at `Vcc`, as xrunpccd's HF/KS branch and xaces2 do for single-point pCCD. `Vlambda` and `Pccd` were dropped: `Vlambda` stopped on "List (3,144) does not exist".
+  - New aces2 fast case `pccd_h2o_sto3g` (H2O STO-3G, `CALC=PCCD`, HF reference; reference −74.988498185196 from xaces2). It is the first case the TSV routes to `Runpccd`.
+  - Dropping the two calls changed the link: hcmult's `check_t2_` started winning for vcc, then libc4's (whose `check_t2.o` also defines `checksum_`, clashing with lcct's). Both are renamed in `tools/localize.txt` (21st instance), leaving trp's as in the classic links. The new `symoff_` common-block shadow is latent (its only callers, dens's `intov5`/`xint7`, are not in the .so) and is recorded in `common_shadow_baseline.txt`.
+- **Verification:**
+  - Local (ifort 2024.0): `pccd_h2o_sto3g` passes in aces2 and pyaces (difference 4×10⁻¹²), pyaces 60/60, audit 244 with no NEW entries.
+  - ccsd (ifx 2023.2, PBS 8116): pyaces rebuilt, audit 268 with no NEW entries, aces2 158/158, pyaces 60/60.
+- **Open:** orbital-optimized pCCD (`PROGRAM=PCCD`) remains out of reach for pyaces; it is xrunpccd's own loop. T-05 keeps the Getlstpy and Get1ehpy items.
+
+### D-2026-10-30a. Suite classifier repaired and TSV regenerated (2026-10-30)
+- **Commits:** `847b1aeb`
+- **What changed:** `classify_suite.py --check` stopped with a ValueError on the bare-name `test_results` entries upstream added on 2026-10-19 (`pccd_oo_rfo_*`); the parser now reads the first field only, as aces2's runner does. `PROGRAM=PCCD` cases are excluded (xaces2 hands them to xrunpccd). The regenerated TSV covers all 157 aces2 cases (32 were missing) and adds eight H2/H2O CCSD cases to the pyaces suite. The manual (chapter 2, 9.3, 10.2) and TODO no longer say to edit the TSV by hand.
+- **Verification:** local pyaces 59/59; ccsd (PBS 8114) pyaces 59/59.
+
 ### T-02. An ACES error terminates the Python interpreter (2026-10-23)
 - **Commits:** `ba6c8646` (together with T-14)
 - **What changed:** `pyaces.run()` runs the calculation in a subprocess (`pyaces_run_case.py`) and returns a `Result` on success, or a `CalculationError` (status, returncode, workdir, log_tail) on failure (`aces_exit`, crash, timeout). `pyaces_run_case.py` now honours `PYACES_EXT_DIR`.
