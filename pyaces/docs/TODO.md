@@ -7,7 +7,7 @@ For background and rationale, see the [improvement plan](pyaces_improvements_en.
 
 - **Number:** `T-<n>`. A number is never reused (a finished item keeps its number in DONE.md).
 - **Priority:** high / medium / low. **Size:** small (a few hours) / medium (about a day) / large (several days, needs a trial implementation).
-- **Done when:** a change counts as finished only after both the local workstation and ccsd show aces2 143/143, pyaces 51/51 and a matching link audit. Add any item-specific criteria to the item.
+- **Done when:** a change counts as finished only after both the local workstation and ccsd show aces2 157/157, pyaces 59/59 and a matching link audit. Add any item-specific criteria to the item.
 - To add an item, copy the template below into the right stage.
 
 ```markdown
@@ -50,7 +50,7 @@ T-02 was finished together with T-14's `pyaces.run()`. See [DONE.md](DONE.md).
 - **Priority / size:** high / large
 - **Problem:** a single `.so` holding about 107 archives is held together by about 60 hand-written rename pairs. A new module or a toolchain change can introduce new collisions, and the audit baseline carries 296 known differences.
 - **To do:** partially link each entry module with its own `ACES_LINK_LISTS` (`ld -r`) and hide every symbol other than the entry point with `objcopy`. Shared COMMON blocks stay global. Try it on one module (e.g. vcc) first.
-- **Done when:** 51/51 with no rename list; the audit differences drop substantially; `.so` size and build time are compared and recorded.
+- **Done when:** 59/59 with no rename list; the audit differences drop substantially; `.so` size and build time are compared and recorded.
 - **Files:** `pyaces/build.sh`, `aces2/Makefiles/GNUmakefile` (`ACES_LINK_LISTS`)
 
 ### T-08. Incremental build

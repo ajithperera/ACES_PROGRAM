@@ -57,7 +57,7 @@ li { margin: 2pt 0; }
     <tr><td><b>Repository</b></td><td><code>ACES_PROGRAM/pyaces</code> (GitHub youngchoonpark/ACES, private)</td></tr>
     <tr><td><b>Reference commit</b></td><td>master, 2026-10-23 (TODO stage 1 applied)</td></tr>
     <tr><td><b>Written</b></td><td>2026-10-23</td></tr>
-    <tr><td><b>Verified</b></td><td>pyaces suite 51/51 PASS on the local workstation (oneAPI 2024.0) and the ccsd server (oneAPI 2023.2)</td></tr>
+    <tr><td><b>Verified</b></td><td>pyaces suite 51/51 PASS on the local workstation (oneAPI 2024.0) and the ccsd server (oneAPI 2023.2); 59/59 on the local workstation after the 2026-10-30 reclassification</td></tr>
     <tr><td><b>Link audit</b></td><td>296 collision-baseline entries, 0 COMMON shadows, identical on both machines</td></tr>
   </table>
   <p class="small" style="margin-top:30pt">This manual was written from the source code (<code>pyaces/build.sh</code>, <code>a2_pyf/*.F</code>, the generated
@@ -109,7 +109,7 @@ state through files on disk (JOBARC, MOINTS, …). pyaces links those modules in
   <li><b>All integers are 64-bit.</b> aces2 and pyaces are compiled with <code>-i8</code>, and MKL is linked in its ILP64 flavour.</li>
   <li><b>One calculation per process.</b> aces2's COMMON-block state assumes a single use; calling Vtran/Vcc twice in one process has been seen to converge silently to a wrong answer.</li>
   <li><b>The main risk is at link time.</b> Routines that share a name but differ in implementation were harmless when every executable was linked on its own. In one .so they collide, and the linker silently picks one. The safeguards for this are the core of chapters 5 and 6.</li>
-  <li><b>Tests reuse the aces2 fast suite.</b> Of its 125 cases, the 51 that pyaces can run (SCF 9, CC 31, EOM 8, KS 3) are executed and their JOBARC energies compared with the reference values to within 1×10<sup>-6</sup> E<sub>h</sub>.</li>
+  <li><b>Tests reuse the aces2 fast suite.</b> Of its 157 cases, the 59 that pyaces can run (SCF 9, CC 39, EOM 8, KS 3) are executed and their JOBARC energies compared with the reference values to within 1×10<sup>-6</sup> E<sub>h</sub>.</li>
 </ul>
 
 <h3>1.2 How to read this manual</h3>
@@ -132,8 +132,8 @@ Before exposing a new Fortran routine or linking another aces2 module, read chap
 <tr><td><code>aux_pyaces/*.F</code></td><td><span class="pill">live</span></td><td><code>init_legacies</code> (initialises legacy COMMON blocks), <code>get1ents</code>/<code>get2eints</code> (read AO integrals from the IIII file), <code>sym_expand</code>.</td></tr>
 <tr><td><code>tools/collision_audit.py</code></td><td><span class="pill">live</span></td><td>The link-resolution audit (chapter 6), with <code>collision_baseline.txt</code> (296 entries) and <code>common_shadow_baseline.txt</code> (0).</td></tr>
 <tr><td><code>pyaces_run_case.py</code></td><td><span class="pill">live</span></td><td>Runs one case in its own process and prints the result as marker lines (chapter 8).</td></tr>
-<tr><td><code>pyaces_suite_runner.py</code></td><td><span class="pill">live</span></td><td>Runs the 51 cases and grades each one PASS/MISMATCH/… (chapter 9).</td></tr>
-<tr><td><code>classify_suite.py</code>, <code>suite_classification.tsv</code></td><td><span class="pill">live</span></td><td>The table that classifies the aces2 fast-suite cases by category, entry point and reference value, and the script that first generated it. <b>The TSV contains hand-edited rows</b> (section 9.4).</td></tr>
+<tr><td><code>pyaces_suite_runner.py</code></td><td><span class="pill">live</span></td><td>Runs the 59 cases and grades each one PASS/MISMATCH/… (chapter 9).</td></tr>
+<tr><td><code>classify_suite.py</code>, <code>suite_classification.tsv</code></td><td><span class="pill">live</span></td><td>The table that classifies the aces2 fast-suite cases by category, entry point and reference value, and the script that generates it. <b>The TSV is generated; never edit it by hand</b> (section 9.4).</td></tr>
 <tr><td><code>docs/</code></td><td><span class="pill">live</span></td><td>This manual (HTML source and PDF).</td></tr>
 <tr><td><code>Main/gen/</code></td><td><span class="pill gen">generated</span></td><td>f2py output: <code>aces2pymodule.c</code>, <code>aces2py-f2pywrappers.f</code>.</td></tr>
 <tr><td><code>Main/build/</code></td><td><span class="pill gen">generated</span></td><td>All <code>.o</code> files and the final <code>aces2py.cpython-312-x86_64-linux-gnu.so</code>.</td></tr>
@@ -522,25 +522,26 @@ cd pyaces && python3 pyaces_suite_runner.py 010a 117b   # selected cases only</c
 <tr><td>FAIL_CLEAN</td><td>Positive exit code with a recognised message: an <code>@ROUTINE:</code> banner, "Assertion failed", "did not converge", "forrtl: severe", …</td></tr>
 <tr><td>CRASH</td><td>Killed by a signal (negative code), or a positive exit with no recognised message</td></tr>
 </table>
-<p>Latest result: 51/51 PASS, largest difference 4.95×10<sup>-8</sup> (case 078).</p>
+<p>Latest result: 59/59 PASS (2026-10-30, local workstation), largest difference 4.95×10<sup>-8</sup> (case 078).</p>
 
 <h3>9.3 <code>suite_classification.tsv</code></h3>
 <p>Columns: <code>name</code>, <code>category</code>, <code>reason</code>, <code>entrypoint</code>, <code>iuhf</code>, <code>record</code> (the JOBARC record compared, <code>TOTENERG</code> or <code>SCFENEG</code>), <code>ref_value</code> (Fortran E/D format).
 The runner only runs rows whose category is SCF, CC, EOM, PCCD or KS.</p>
 <table>
 <tr><th>Category</th><th>Count</th><th>Entry point / iuhf</th></tr>
-<tr><td>CC</td><td>31</td><td>Runcc (iuhf 0: 12, 1: 16), Rundirmp2 (3)</td></tr>
+<tr><td>CC</td><td>39</td><td>Runcc (iuhf 0: 16, 1: 20), Rundirmp2 (3)</td></tr>
 <tr><td>EOM</td><td>8</td><td>Runee (0: 6, 1: 2)</td></tr>
 <tr><td>SCF</td><td>9</td><td>Runscf (0: 6, 1: 3)</td></tr>
 <tr><td>KS</td><td>3</td><td>Runintgrt (0)</td></tr>
 <tr><td>PCCD</td><td>0</td><td>none</td></tr>
-<tr><td>EXCLUDED</td><td>59</td><td>Geometry optimisation, VIB, derivatives, MRCC, Brueckner, HFSTABILITY=FOLLOW, CCSD(TQ), …</td></tr>
-<tr><td>SCRIPT</td><td>15</td><td>Cases driven by scripts rather than a ZMAT</td></tr>
+<tr><td>EXCLUDED</td><td>67</td><td>Geometry optimisation, VIB, derivatives, MRCC, Brueckner, HFSTABILITY=FOLLOW, CCSD(TQ), PROGRAM=PCCD, …</td></tr>
+<tr><td>SCRIPT</td><td>31</td><td>Cases driven by scripts rather than a ZMAT</td></tr>
 </table>
 
 <h3>9.4 <code>classify_suite.py</code> is the source of the TSV</h3>
 <p><code>classify_suite.py</code> builds the TSV from <code>aces2/tests/fast/test_results</code> and the ZMATs. Every routing rule lives in <code>classify()</code>, including the ones that were
 once hand edits: <code>SCF_TYPE=KS</code> → KS/Runintgrt, <code>FOCK=AO</code> MBPT(2) → Rundirmp2, and the exclusions for CCSD(TQ), <code>BRUECKNER</code> and <code>HFSTABILITY=FOLLOW</code>.
+<code>PROGRAM=PCCD</code> is excluded too: <code>aces2/aces2/main.F</code> hands such a job to <code>xrunpccd</code>, which runs xjoda again and the OO-pCCD loop, and <code>Runpccd</code> does not.
 <b>Never edit the TSV by hand</b>: change <code>classify()</code> and regenerate.</p>
 <pre><code>python3 classify_suite.py           # rewrite suite_classification.tsv
 python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differs from the rules</code></pre>
@@ -582,7 +583,7 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <h3>10.2 Adding a test case</h3>
 <ol>
   <li>Add the case to the aces2 suite: <code>aces2/tests/fast/cases/&lt;name&gt;/ZMAT</code> and a three-line entry in <code>aces2/tests/fast/test_results</code> (<code>name src</code> / <code>RECORD 1</code> / reference value).</li>
-  <li>Add a row to <code>pyaces/suite_classification.tsv</code> by hand (category, entrypoint, iuhf, record, ref_value).</li>
+  <li>Run <code>python3 classify_suite.py</code> to regenerate <code>pyaces/suite_classification.tsv</code>, and check the new row (category, entrypoint, iuhf, record, ref_value). If the case is routed wrongly, change <code>classify()</code>, not the TSV. The entry's first line may be <code>name src</code> or just <code>name</code>.</li>
   <li>Check it with <code>PYACES_SUITE_RUN_DIR=... python3 pyaces_suite_runner.py &lt;name&gt;</code>, then read <code>&lt;dir&gt;/run.log</code> and <code>summary.tsv</code>.</li>
   <li>Make sure the full suites (<code>./run_tests.sh aces2 pyaces</code>) still pass.</li>
 </ol>
@@ -590,9 +591,9 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <h3>10.3 Checklist after a change</h3>
 <table>
 <tr><th style="width:38%">What changed</th><th>What to verify</th></tr>
-<tr><td>Fortran in a2_pyf / Main</td><td>pyaces build, IMPORT OK, suite 51/51, <code>nm</code> check of the changed objects</td></tr>
+<tr><td>Fortran in a2_pyf / Main</td><td>pyaces build, IMPORT OK, suite 59/59, <code>nm</code> check of the changed objects</td></tr>
 <tr><td>Rename lists in build.sh</td><td>Audit (no NEW entries; any "resolved" entries are intended), suite, then <code>--update</code></td></tr>
-<tr><td>aces2 sources or flags</td><td><code>git clean -fdXq aces2</code>, rebuild aces2 and pyaces, aces2 suite 125/125, pyaces 51/51, audit</td></tr>
+<tr><td>aces2 sources or flags</td><td><code>git clean -fdXq aces2</code>, rebuild aces2 and pyaces, aces2 suite 157/157, pyaces 59/59, audit</td></tr>
 <tr><td>Toolchain / another machine</td><td>All of the above, plus identical audit results on both machines</td></tr>
 </table>
 </section>
@@ -643,6 +644,7 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <tr><td>2026-10-23</td><td>TODO stage 1 (T-03, T-04, T-07, T-16): the <code>--calls</code> check fails the build on calls into COMMON blocks, unapplicable rename pairs stop the build, the extension suffix comes from <code>EXT_SUFFIX</code>, and the test roll-up and classifier were fixed.</td></tr>
 <tr><td>2026-10-23</td><td>TODO stage 2 (T-11, T-12, T-15): the acespy legacy tree removed (tag <code>pyaces-legacy-20261023</code>), <code>Main</code> built against aces2's own headers (the old <code>lists.com</code> copy had a different <code>/lists/</code> layout), <code>Python/moio_len.py</code> made importable.</td></tr>
 <tr><td>2026-10-23</td><td>TODO stage 3 (T-06, T-13, T-14) and T-02: f2py builds the module from the sources alone (<code>Main/aces2.pyf</code> removed), renames moved to <code>tools/localize.txt</code>, and the <code>python/pyaces</code> package with a subprocess <code>run()</code>.</td></tr>
+<tr><td>2026-10-30</td><td><code>classify_suite.py</code> reads the bare-name <code>test_results</code> entries upstream added (it stopped with a ValueError before), excludes <code>PROGRAM=PCCD</code>, and the regenerated TSV covers the 157-case aces2 suite: eight new CCSD cases bring the pyaces suite to 59/59.</td></tr>
 </table>
 
 <h3>12.2 Deployment on the ccsd server</h3>
