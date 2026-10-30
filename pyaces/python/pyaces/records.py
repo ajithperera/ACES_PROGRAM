@@ -50,8 +50,7 @@ def get_string_record(name, nbytes):
 
 
 def put_string_record(name, data):
-    """Write a character record; data is bytes or str."""
+    """Write a character record (at most 1024 bytes); data is bytes or str."""
     if isinstance(data, str):
         data = data.encode()
-    buf = np.array(data, dtype=f'S{len(data)}')
-    ext().Cputrecpy(recname(name), len(data), buf)
+    ext().Cputrecpy(recname(name), len(data), data)

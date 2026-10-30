@@ -104,6 +104,8 @@ aces2py.IGetrecpy("IFLAGS  ", iflags)
 `pyaces/pyaces_suite_runner.py` runs the ACES II test inputs through
 `aces2py` (one process per case, through `pyaces_run_case.py`) and compares
 the energies with the ACES II references; see {doc}`../programmer/testing`.
+`pyaces/tests/api_cases.py` tests the record, list and integral functions
+in the same way (`python3 tests/run_api_tests.py`).
 `pyaces_run_case.py` is also the best worked example of driving each entry
 point, including a frozen-natural-orbital job that mixes `aces2py` calls
 with stand-alone ACES II programs.

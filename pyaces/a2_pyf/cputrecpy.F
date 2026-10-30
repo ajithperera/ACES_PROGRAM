@@ -6,9 +6,9 @@
       Integer*8 Length
       Character*6 File
       Character*8 Name
-      Character*8 Source
-
-Cf2py intent (inout) Source
+C Source holds Length characters (assumed length: Character*8 here passed
+C only the first 8 and stored whatever followed them in memory).
+      Character*(*) Source
 
       Flag = 20
       File = "JOBARC"

@@ -139,6 +139,7 @@ Before exposing a new Fortran routine or linking another aces2 module, read chap
 <tr><td><code>Main/build/</code></td><td><span class="pill gen">generated</span></td><td>All <code>.o</code> files and the final <code>aces2py.cpython-312-x86_64-linux-gnu.so</code>.</td></tr>
 <tr><td><code>build/patched_libs/</code></td><td><span class="pill gen">generated</span></td><td>Copies of aces2 archives with renamed symbols (about 37). Wiped and rebuilt on every build.</td></tr>
 <tr><td><code>f2py_gen.log</code></td><td><span class="pill gen">generated</span></td><td>The f2py wrapper-generation log. Read it to see how the wrappers were built.</td></tr>
+<tr><td><code>tests/</code></td><td><span class="pill">live</span></td><td>API tests: <code>api_cases.py</code> (the tests and their ZMATs) and <code>run_api_tests.py</code> (section 9.5).</td></tr>
 <tr><td><code>python/</code></td><td><span class="pill">live</span></td><td>The <code>pyaces</code> Python package (<code>pyproject.toml</code>, <code>python/pyaces/</code>): lower-case in-process wrappers, a subprocess <code>run()</code>, and the MO-list tables in <code>pyaces.moio</code> (section 7.7).</td></tr>
 <tr><td><code>tools/localize.txt</code></td><td><span class="pill">live</span></td><td>Every symbol rename and extracted module, one per line with its reason, plus the history of how each was found (section 5.2).</td></tr>
 <tr><td><code>README</code>, <code>frequently_asked_questions</code>, <code>LICENSE</code></td><td><span class="pill legacy">legacy</span></td><td>Old acespy build notes and the generic f2py FAQ; LICENSE (GPL v3) is still in force (Appendix A).</td></tr>
@@ -228,10 +229,11 @@ Passing every source would also wrap internal helpers, whose all-caps F77 names 
 
 <h4>Fortran flags</h4>
 <pre><code>FFLAGS="-diag-disable=10448 -i8 -fPIC -fp-model strict -O1 -assume minus0 \
-        -D__fortran -D__fortran77 -D_INTEL -D_RECL_IS_WORDS_ \
+        -D__fortran -D__fortran77 -D_INTEL -D_RECL_IS_WORDS_ -DF_64BIT \
         -I$ACES/include -I$ACES/acescore/include -I. -FI"</code></pre>
 <ul>
   <li><code>-i8</code>: 8-byte default INTEGER, matching aces2 and MKL ILP64.</li>
+  <li><code>-DF_64BIT</code>: set by aces2's makefiles together with <code>-i8</code>. Here it only affects <code>a2_getcrec</code>/<code>a2_putcrec</code>, which count a character record in 8-byte words. Without it (before 2026-10-30) they counted 4-byte words, so <code>Cgetrecpy</code> asked for twice the length of a record written by aces2 and ended the process.</li>
   <li><code>-FI</code>: fixed-form source. <code>-D__fortran77</code> selects the F77 branch of aces2's headers.</li>
   <li>No <code>-qopenmp</code>: the pyaces sources have no OpenMP directives, aces2 is compiled without it and MKL is sequential. It was dropped on 2026-10-30 (T-09) with identical suite results; it only made every local variable automatic.</li>
   <li>Headers come from aces2's <code>include</code> and <code>acescore/include</code>. <code>Main/init.F</code> and <code>Main/aces2_main.F</code> include them the same way as every other pyaces source.</li>
@@ -400,8 +402,8 @@ f2py wraps those arrays as "input", so if the dtype or memory layout is wrong it
 <tr><td><code>IGetrecpy(Name, IDest, [Length])</code></td><td>Read an int64 record, e.g. <code>"IFLAGS  "</code> (100), <code>"NBASTOT "</code></td></tr>
 <tr><td><code>Dputrecpy(Name, Source, [Length])</code></td><td>Write a float64 record</td></tr>
 <tr><td><code>Iputrecpy(Name, Isource, [Length])</code></td><td>Write an int64 record</td></tr>
-<tr><td><code>Cputrecpy(Name, Length, Source)</code></td><td>Write a character record</td></tr>
-<tr><td><code>Dest = Cgetrecpy(Name, Length)</code></td><td>Read <code>Length</code> bytes of a character record and return them as <code>bytes</code> (length 1024, blank-padded). A length above 1024 is an <code>aces_exit</code>.</td></tr>
+<tr><td><code>Cputrecpy(Name, Length, Source)</code></td><td>Write the first <code>Length</code> bytes of <code>Source</code> as a character record (<code>Source</code> is assumed-length; it was <code>Character*8</code> before 2026-10-30 and stored only 8 characters).</td></tr>
+<tr><td><code>Dest = Cgetrecpy(Name, Length)</code></td><td>Read <code>Length</code> bytes of a character record and return them as <code>bytes</code> (length 1024, blank-padded). A length above 1024 is an <code>aces_exit</code>. The record length is counted in 8-byte words, as aces2's <code>getcrec</code> counts it (<code>-DF_64BIT</code>, section 4.2), so character records written by aces2 programs read back correctly.</td></tr>
 <tr><td><code>Length = Getreclenpy(Name)</code></td><td>Return the record length in integer words, or <code>-1</code> if the record does not exist.</td></tr>
 </table>
 <p>Lengths are in integer words; with <code>-i8</code>, one integer = one real = 8 bytes. If <code>Length</code> is omitted, the array length is used.</p>
@@ -516,7 +518,7 @@ Doing that in-process would call Vtran/Vcc twice, so the runner does this instea
 cd pyaces && python3 pyaces_suite_runner.py             # directly
 cd pyaces && python3 pyaces_suite_runner.py 010a 117b   # selected cases only</code></pre>
 <ul>
-  <li>Case input: <code>aces2/tests/fast/cases/&lt;name&gt;/ZMAT</code>; basis: <code>basis/GENBAS</code>. There is no pyaces-specific test directory.</li>
+  <li>Case input: <code>aces2/tests/fast/cases/&lt;name&gt;/ZMAT</code>; basis: <code>basis/GENBAS</code>. The suite checks energies; the API tests in <code>pyaces/tests</code> (section 9.5) check the rest.</li>
   <li>Working directory: <code>$PYACES_SUITE_RUN_DIR/&lt;name&gt;</code>, by default <code>pyaces/suite_run</code> (untracked). On HiPerGator, <code>run_tests.sh</code> points it at the <code>/blue/...</code> scratch filesystem.</li>
   <li>Each case gets a fresh directory with ZMAT copied in and GENBAS symlinked, then <code>pyaces_run_case.py</code> runs with a 300-second limit. Log: <code>&lt;dir&gt;/run.log</code>; summary: <code>$RUN_DIR/summary.tsv</code>.</li>
   <li>Local workstation: <code>OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 taskset -c 20-23 flock -s /tmp/qtoy-bench.lock ./run_tests.sh pyaces</code>. ccsd server: <code>qsub build_logs/test_ccsd.pbs</code>.</li>
@@ -557,6 +559,22 @@ once hand edits: <code>SCF_TYPE=KS</code> → KS/Runintgrt, <code>FOCK=AO</code>
 python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differs from the rules</code></pre>
 
 <div class="note"><b>Roll-up</b>: <code>run_tests.sh</code> reads every <code>STATUS: n</code> line of the runner's Summary block. PASS counts as PASS, MISMATCH and FAIL_CLEAN as FAIL, and everything else (CRASH, NO_RESULT, TIMEOUT, …) as OTHER, so TOTAL is always the number of cases run.</div>
+
+<h3>9.5 API tests</h3>
+<p>The suite only compares energies. <code>pyaces/tests</code> tests the in-process API itself, each test in its own process and directory (an ACES II error ends the process):</p>
+<pre><code>cd pyaces && python3 tests/run_api_tests.py           # all (log lines and a Summary block)
+cd pyaces && python3 tests/run_api_tests.py lists     # one test
+# work directories: $PYACES_API_RUN_DIR, default pyaces/suite_run/api; extension: $PYACES_EXT_DIR as usual</code></pre>
+<table>
+<tr><th style="width:20%">Test</th><th>Checks</th></tr>
+<tr><td><code>records</code></td><td><code>Getreclenpy</code> returns an int, <code>record_length</code>, a missing record (<code>None</code>, <code>KeyError</code>), float64/int64/character round trips, the 8-byte-word length of a character record, records after <code>close_jobarc</code>/<code>open_jobarc</code></td></tr>
+<tr><td><code>scf_rhf</code>, <code>scf_uhf</code></td><td><code>run_scf(0)</code>/<code>run_scf(1)</code> energies against xaces2; reading vscf's character record <code>EVCSYMAF</code>; UHF writes beta orbitals</td></tr>
+<tr><td><code>hbar_from_scratch</code>, <code>hbar_after_scf</code></td><td>Runhbar's "nothing done" and "SCF done" branches: the CCSD energy and the <code>HBAR</code> record hbar writes when it finishes. The "CC done" branch needs a <code>CC_DONE</code> record without <code>SCFEVCA0</code>; no ACES II program writes <code>CC_DONE</code>, so it cannot be reached.</td></tr>
+<tr><td><code>lists</code></td><td>After <code>run_cc</code>: list 46 read irrep by irrep and column by column equals <code>get_all_irreps</code>; <code>list_shape</code>; <code>KeyError</code>/<code>ValueError</code> for bad requests; <code>Getlstpy</code> leaves a short array alone; <code>put_list</code> round trip</td></tr>
+<tr><td><code>one_electron_c2v</code>, <code>one_electron_c1</code></td><td><code>get_1e_ints</code>: symmetric, block diagonal by irrep (C<sub>2v</sub> STO-3G H<sub>2</sub>O has an empty A<sub>2</sub>), <code>C<sup>T</sup>SC = 1</code>, and E(SCF) = Σ<sub>occ</sub>(h<sub>ii</sub> + ε<sub>i</sub>) + E<sub>nuc</sub> rebuilt from <code>oneh</code> against xaces2's E(SCF)</td></tr>
+</table>
+<p>The reference energies come from the classic <code>xaces2</code> on the same inputs, not from pyaces. <code>run_tests.sh pyaces</code> runs them after the suite (log <code>build_logs/unified_test_pyaces_api.log</code>) and adds a <code>py-api</code> row to the roll-up.
+On a build with <code>f97a9759</code> reverted the <code>hbar_after_scf</code> test crashes (SIGSEGV in the <code>/HBAR/</code> common) and every test that uses <code>record_length</code> fails (<code>Getreclenpy</code> returned nothing); the build's own <code>--calls</code> check also stops at the two <code>hbar_</code> calls. The UHF test passes there: the 4-byte <code>Iuhf</code> happened to arrive as 1.</p>
 </section>
 
 <!-- ============================ 10 ============================ -->
@@ -651,6 +669,7 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <tr><td>2026-10-30</td><td>T-05: <code>Get1ehpy</code> returned zeros for every molecule. It took a negative <code>J0</code> from <code>Aces_malloc</code> (the heap lies below its anchor) for a failed allocation and returned before reading IIII; the irrep blocks were also placed at the wrong offsets. It now tests <code>Jcore(1)</code>, as <code>aces_malloc.c</code> says to, and builds the block-diagonal SO matrix. <code>Getlstpy</code>/<code>Putlstpy</code> check the list, the column range and <code>Ndim</code> (new <code>Getlstdimpy</code>); Python gets <code>list_shape</code> and <code>get_1e_ints</code>. Verified on H<sub>2</sub>O 6-31G* CCSD in C<sub>2v</sub> and C<sub>1</sub>: <code>C<sup>T</sup>SC = 1</code> to 5×10<sup>-15</sup>, the same (H, S) eigenvalues and one-electron energy (to 10<sup>-11</sup>), list 46 read irrep by irrep equal to <code>Getallpy</code>. pyaces 60/60.</td></tr>
 <tr><td>2026-10-30</td><td>T-09: the C wrappers are compiled with <code>$PYACES_CC</code> (configure's C compiler, icx) instead of <code>mpicc</code>, and <code>-qopenmp</code> is gone from the Fortran flags. The .so has the same dependencies and no OpenMP symbols before or after; the 60 suite energies are unchanged.</td></tr>
 <tr><td>2026-10-30</td><td>T-10: <code>pyaces/build.sh</code> run on its own follows <code>build_config.sh</code> (<code>aces_program_load_env</code>: modules, setvars or PATH, and configure's compilers) instead of loading the HiPerGator modules, which failed on a setvars host with a <code>module</code> command. The build log names the compilers. Run on its own, from <code>./build.sh</code> and with <code>PYACES_MODULES=""</code> it builds the same .so (audit 244, pyaces 60/60, energies unchanged).</td></tr>
+<tr><td>2026-10-30</td><td>T-17: API tests in <code>pyaces/tests</code> (8 tests, records, Runscf RHF/UHF, two Runhbar branches, MO lists, one-electron integrals), run by <code>run_tests.sh pyaces</code> as the <code>py-api</code> row. They found two character-record defects, both fixed: <code>Cputrecpy</code> stored only 8 characters (<code>Character*8 Source</code>), and without <code>-DF_64BIT</code> <code>Cgetrecpy</code> asked for twice the length of a record written by aces2 and ended the process.</td></tr>
 </table>
 
 <h3>12.2 Deployment on the ccsd server</h3>

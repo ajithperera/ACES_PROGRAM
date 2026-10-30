@@ -87,6 +87,12 @@ case table. Besides PASS it reports MISMATCH (finished, wrong value),
 FAIL_CLEAN (stopped with a normal ACES error exit), CRASH, NO_RESULT, and
 TIMEOUT.
 
+`pyaces/tests/run_api_tests.py` tests the in-process API itself: JOBARC
+records (numeric and character), the RHF and UHF SCF drivers, two branches of
+`Runhbar`, MO-list access and the one-electron integrals, each test in its
+own process against energies from the classic `xaces2`. `./run_tests.sh
+pyaces` runs them after the suite and reports them as the `py-api` row.
+
 ## Rollup
 
 `cmake/rollup.sh` reads the three suite logs and prints one table of

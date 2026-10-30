@@ -15,6 +15,27 @@ Items that came from [TODO.md](TODO.md) keep their number (`T-<n>`); work that w
 
 ---
 
+### T-17. API unit tests (2026-10-30)
+- **Commits:** (not committed yet)
+- **What changed:**
+  - New `pyaces/tests`. `api_cases.py` holds 8 tests and their ZMATs; `run_api_tests.py` runs each test in a fresh process and directory and prints a Summary block. `run_tests.sh pyaces` runs them after the suite (log `build_logs/unified_test_pyaces_api.log`) as a separate `py-api` roll-up row.
+  - Tests:
+    - `records`: `Getreclenpy`, missing records, float64/int64/character round trips, reopen.
+    - `scf_rhf`, `scf_uhf`: energies against xaces2, and reading vscf's character record `EVCSYMAF`.
+    - `hbar_from_scratch`, `hbar_after_scf`: CCSD energy and the `HBAR` record.
+    - `lists`: list 46 by irrep and column vs `get_all_irreps`, error paths, `put_list`.
+    - `one_electron_c2v`, `one_electron_c1`: `CᵀSC = 1`, block structure with an empty irrep, and E(SCF) rebuilt from `oneh` against xaces2.
+  - The reference energies are from xaces2, not pyaces.
+  - Runhbar's "CC done" branch is not tested: it needs a `CC_DONE` record without `SCFEVCA0`, and no ACES II program writes `CC_DONE`, so the API cannot reach it.
+  - The tests found two character-record defects, now fixed:
+    - `Cputrecpy` declared `Source` as `Character*8`, so only 8 characters were stored and the rest of the record was whatever followed in memory. It is now assumed-length, and `put_string_record` passes the bytes directly.
+    - pyaces was compiled without aces2's `-DF_64BIT`, so `a2_getcrec`/`a2_putcrec` counted 4-byte words. `Cgetrecpy` on a record written by aces2 (e.g. `EVCSYMAF`) asked for twice its length and ended the process ("record length mismatch"). `FFLAGS` now has `-DF_64BIT`; in pyaces it only affects those two files.
+- **Verification:**
+  - Local: py-api 8/8; audit 244; pyaces 60/60 with every `got=` value unchanged.
+  - With `f97a9759` reverted in a scratch copy, `hbar_after_scf` crashes (SIGSEGV), and the six tests that call `record_length` fail on `Getreclenpy`. The build's `--calls` check also reports the two `hbar_` calls.
+  - `scf_uhf` still passes on that copy: the 4-byte `Iuhf` happened to arrive as 1, so the test cannot show that fix.
+  - The new character-record checks fail on the code before this change.
+
 ### T-10. Fewer assumptions about the build environment (2026-10-30)
 - **Commits:** `442efa80`
 - **What changed:**

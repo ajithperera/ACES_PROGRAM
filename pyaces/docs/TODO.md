@@ -25,7 +25,6 @@ For background and rationale, see the [improvement plan](pyaces_improvements_en.
 |---|---|---|---|---|---|
 | T-01 | Per-module partial links that resolve names as the classic build does | correctness | high | large | 4 |
 | T-08 | Incremental build | build | low | large | 4 |
-| T-17 | API unit tests | testing | medium | medium | any time |
 
 ## Stage 1 — low risk, immediate payoff
 
@@ -59,9 +58,4 @@ T-02 was finished together with T-14's `pyaces.run()`. See [DONE.md](DONE.md).
 
 ## Any time — fold into other work
 
-### T-17. API unit tests
-- **Priority / size:** medium / medium
-- **Problem:** only energies are checked today.
-- **To do:** add small tests for reading and writing records, `Getreclenpy`/`Cgetrecpy`, each branch of `Runhbar`, and list access, and include them in `run_tests.sh pyaces`.
-- **Done when:** the tests pass on the current code, and the relevant tests fail on the code before f97a9759.
-- **Files:** new `pyaces/tests/` (tentative), `run_tests.sh`
+The "any time" items (T-05, T-09, T-10, T-17) were finished on 2026-10-30. See [DONE.md](DONE.md).

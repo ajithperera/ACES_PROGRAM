@@ -117,7 +117,9 @@ $PYACES_CC -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC \
     -c $F2PY_SRC/fortranobject.c -o build/fortranobject.o
 
 echo "=== step 3: compile Fortran sources ==="
-FFLAGS="-diag-disable=10448 -i8 -fPIC -fp-model strict -O1 -assume minus0 -D__fortran -D__fortran77 -D_INTEL -D_RECL_IS_WORDS_ -I$ACES/include -I$ACES/acescore/include -I. -FI"
+# -DF_64BIT as aces2's makefiles set it for -i8: a2_getcrec/a2_putcrec count a
+# character record in 8-byte words, like the getcrec/putcrec linked from aces2.
+FFLAGS="-diag-disable=10448 -i8 -fPIC -fp-model strict -O1 -assume minus0 -D__fortran -D__fortran77 -D_INTEL -D_RECL_IS_WORDS_ -DF_64BIT -I$ACES/include -I$ACES/acescore/include -I. -FI"
 
 for f in $SOURCES; do
     base=$(basename "$f" .F)
