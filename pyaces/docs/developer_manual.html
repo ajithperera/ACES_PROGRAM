@@ -163,15 +163,22 @@ Before exposing a new Fortran routine or linking another aces2 module, read chap
 <tr><td>Prerequisite</td><td>aces2 must be built first, so that <code>aces2/lib/lib*.a</code> exists.</td></tr>
 </table>
 
-<h3>3.2 configure and the module set</h3>
-<p>The top-level <code>./configure</code> finds a toolchain and writes <code>build_config.sh</code>. The top-level <code>build.sh</code> exports the
-<code>ACES_PROGRAM_MODULES</code> recorded there, and <code>pyaces/build.sh</code> reloads exactly that set after <code>module purge</code>
-(<code>aces_load_modules</code> in <code>cmake/env.sh</code>). <code>PYACES_MODULES</code>, which the CMake superbuild sets, takes precedence; if neither is
-set it falls back to the HiPerGator set (<code>intel/2025.1.0 openmpi/5.0.7 python/3.12</code>). <code>PYACES_MODULES=""</code> skips the module load and uses
-the current environment.</p>
-<pre><code># ccsd server
+<h3>3.2 configure and the toolchain</h3>
+<p>The top-level <code>./configure</code> finds a toolchain and writes <code>build_config.sh</code>: how to put it on PATH
+(<code>ACES_PROGRAM_ENV_MODE</code> = <code>modules</code>, <code>setvars</code> or <code>path</code>) and the Intel Fortran and C compilers.
+<code>pyaces/build.sh</code> takes the first of these that applies:</p>
+<ol>
+  <li><code>PYACES_MODULES</code>, when set: <code>module purge; module load</code> that set (<code>aces_load_modules</code> in <code>cmake/env.sh</code>), or nothing for <code>""</code>.
+      The CMake superbuild sets it, and so does the top-level <code>build.sh</code>, to the recorded module set (empty in setvars/path mode, where it has already loaded the toolchain).</li>
+  <li><code>ACES_PROGRAM_MODULES</code> from the environment, when non-empty.</li>
+  <li>Run on its own: <code>../build_config.sh</code>'s own loader (<code>aces_program_load_env</code>) and its <code>ACES_PROGRAM_FC</code>/<code>ACES_PROGRAM_CC</code>.</li>
+  <li>No <code>build_config.sh</code>: the HiPerGator set (<code>intel/2025.1.0 openmpi/5.0.7 python/3.12</code>).</li>
+</ol>
+<p>The log's <code>compilers:</code> line shows which Fortran and C compilers were used.</p>
+<pre><code># ccsd server (modules mode)
 ./configure --modules="intel/oneapi_2023.2.0 python/3.12.3" --np=4
-# local workstation: build_config.sh has ACES_PROGRAM_MODULES="intel-ompi/2024.0"</code></pre>
+# local workstation (setvars mode)
+./configure --setvars=/opt/intel/oneapi/setvars.sh --fortran=ifort</code></pre>
 <div class="warn"><b>Caution</b>: include a Python module in the set. If <code>module purge</code> unloads the Python that has numpy, the f2py step fails.</div>
 
 <h3>3.3 Locale</h3>
@@ -182,7 +189,7 @@ the current environment.</p>
 <h3>3.4 Build commands</h3>
 <pre><code>./build.sh aces2 pyaces          # top level: aces2, then pyaces
 ./build.sh pyaces                # only pyaces, when aces2 is already built
-bash pyaces/build.sh             # run directly (set PYACES_MODULES or ACES_PROGRAM_MODULES yourself)</code></pre>
+bash pyaces/build.sh             # run directly: uses build_config.sh as ./build.sh does</code></pre>
 <p>The log is <code>build_logs/unified_build_pyaces.log</code>. On the shared local workstation, stay inside the allocated cores:
 <code>taskset -c 20-23 flock -s /tmp/qtoy-bench.lock ./build.sh pyaces</code>. On the ccsd server, build only through PBS (<code>build_logs/build_ccsd.pbs</code>).</p>
 <div class="note"><b>After changing compiler flags</b>: make does not track flag changes. After changing aces2 flags, remove its build output with <code>git clean -fdXq aces2</code> and rebuild. pyaces wipes and recreates <code>gen/</code> and <code>build/</code> on every build.</div>
@@ -195,7 +202,7 @@ bash pyaces/build.sh             # run directly (set PYACES_MODULES or ACES_PROG
 <h3>4.0 Setup (lines 1–36)</h3>
 <ul>
   <li>Pick the Fortran compiler: <code>$PYACES_FC</code>, else ifx, else ifort. Pick the C compiler: <code>$PYACES_CC</code>, else icx, else gcc.</li>
-  <li>Choose the module set (<code>PYACES_MODULES</code>, else <code>ACES_PROGRAM_MODULES</code>, else the HiPerGator set) and load it with <code>aces_load_modules</code> from <code>cmake/env.sh</code>: <code>module purge; module load</code>, nothing for an empty set, a warning and the current environment on a host without a <code>module</code> command.</li>
+  <li>Load the toolchain as in section 3.2 (<code>PYACES_MODULES</code>, else <code>ACES_PROGRAM_MODULES</code>, else <code>build_config.sh</code>'s loader, else the HiPerGator set). A module set goes through <code>aces_load_modules</code> from <code>cmake/env.sh</code>: <code>module purge; module load</code>, nothing for an empty set, a warning and the current environment on a host without a <code>module</code> command.</li>
   <li>Exit if <code>MKLROOT</code> is empty. <code>MKL=$MKLROOT/lib/intel64</code> (or <code>$MKLROOT/lib</code>).</li>
   <li><code>export LC_ALL=C</code>.</li>
   <li>Ask the running python3 for <code>NUMPY_INC</code>, <code>PY_INC</code> and <code>F2PY_SRC</code> (numpy's <code>f2py/src</code>).</li>
@@ -620,12 +627,7 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <li><b>Test roll-up and classifier</b>: the roll-up counts every status, the former hand edits are rules in <code>classify()</code> with a <code>--check</code> mode, and the runner's default run directory is inside the repository (sections 9.1–9.4).</li>
 </ul></div>
 
-<p>The remaining issues below are present in the current code. They do not affect the paths the suite exercises today, but you will meet them when using or extending the affected features.</p>
-<table>
-<tr><th style="width:4%">#</th><th style="width:26%">Issue</th><th>Details / recommended action</th></tr>
-<tr><td>1</td><td>ifort check in the top-level build</td><td>The top-level <code>build.sh</code> requires <code>ifort</code> before the pyaces shim is on PATH, so an ifx-only toolchain is refused.</td></tr>
-<tr><td>2</td><td>Assumes environment modules</td><td>In setvars/path mode <code>build_config.sh</code> records no module set, so <code>pyaces/build.sh</code> falls back to the HiPerGator set and its <code>module load</code> fails. Run it with <code>PYACES_MODULES=""</code> after loading the toolchain yourself.</td></tr>
-</table>
+<p>No known issues are open. The last ones were fixed on 2026-10-30: <code>Getlstpy</code> and <code>Get1ehpy</code> (T-05), and the build environment (T-10; the top-level ifort check had already gone with <code>f444e634</code>). See section 12.1 and <code>DONE.md</code>.</p>
 </section>
 
 <!-- ============================ 12 ============================ -->
@@ -648,6 +650,7 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <tr><td>2026-10-30</td><td>Runpccd fixed: it read ZMAT again after <code>Init()</code> and called <code>Ints_</code> with no arguments. It now runs single-point pCCD as xrunpccd does (no Vlambda/Pccd), with a new aces2 case <code>pccd_h2o_sto3g</code> (pyaces 60/60). Dropping those calls changed the link: <code>check_t2_</code> renames for hcmult and libc4, and the latent <code>symoff_</code> shadow is in the common-block baseline (<code>tools/localize.txt</code>, 21st instance).</td></tr>
 <tr><td>2026-10-30</td><td>T-05: <code>Get1ehpy</code> returned zeros for every molecule. It took a negative <code>J0</code> from <code>Aces_malloc</code> (the heap lies below its anchor) for a failed allocation and returned before reading IIII; the irrep blocks were also placed at the wrong offsets. It now tests <code>Jcore(1)</code>, as <code>aces_malloc.c</code> says to, and builds the block-diagonal SO matrix. <code>Getlstpy</code>/<code>Putlstpy</code> check the list, the column range and <code>Ndim</code> (new <code>Getlstdimpy</code>); Python gets <code>list_shape</code> and <code>get_1e_ints</code>. Verified on H<sub>2</sub>O 6-31G* CCSD in C<sub>2v</sub> and C<sub>1</sub>: <code>C<sup>T</sup>SC = 1</code> to 5×10<sup>-15</sup>, the same (H, S) eigenvalues and one-electron energy (to 10<sup>-11</sup>), list 46 read irrep by irrep equal to <code>Getallpy</code>. pyaces 60/60.</td></tr>
 <tr><td>2026-10-30</td><td>T-09: the C wrappers are compiled with <code>$PYACES_CC</code> (configure's C compiler, icx) instead of <code>mpicc</code>, and <code>-qopenmp</code> is gone from the Fortran flags. The .so has the same dependencies and no OpenMP symbols before or after; the 60 suite energies are unchanged.</td></tr>
+<tr><td>2026-10-30</td><td>T-10: <code>pyaces/build.sh</code> run on its own follows <code>build_config.sh</code> (<code>aces_program_load_env</code>: modules, setvars or PATH, and configure's compilers) instead of loading the HiPerGator modules, which failed on a setvars host with a <code>module</code> command. The build log names the compilers. Run on its own, from <code>./build.sh</code> and with <code>PYACES_MODULES=""</code> it builds the same .so (audit 244, pyaces 60/60, energies unchanged).</td></tr>
 </table>
 
 <h3>12.2 Deployment on the ccsd server</h3>

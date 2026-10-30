@@ -25,7 +25,6 @@ For background and rationale, see the [improvement plan](pyaces_improvements_en.
 |---|---|---|---|---|---|
 | T-01 | Per-module partial links that resolve names as the classic build does | correctness | high | large | 4 |
 | T-08 | Incremental build | build | low | large | 4 |
-| T-10 | Fewer assumptions about the build environment (module, ifort check) | build | medium | small | any time |
 | T-17 | API unit tests | testing | medium | medium | any time |
 
 ## Stage 1 — low risk, immediate payoff
@@ -59,13 +58,6 @@ T-02 was finished together with T-14's `pyaces.run()`. See [DONE.md](DONE.md).
 - **Files:** `pyaces/build.sh`
 
 ## Any time — fold into other work
-
-### T-10. Fewer assumptions about the build environment
-- **Priority / size:** medium / small
-- **Problem:** `pyaces/build.sh` always runs `module purge/load`, so it fails in a setvars/path environment. The top-level `build.sh` checks for `ifort` before the `ifort` shim is on PATH, so it rejects an ifx-only toolchain.
-- **To do:** follow configure's `ACES_PROGRAM_ENV_MODE`, and move the `ifort` check after the shim or accept ifx.
-- **Done when:** modules mode (local and ccsd) gives the same results, and a setvars-mode build succeeds.
-- **Files:** `pyaces/build.sh` (lines 1–17), `build.sh` (top level, around lines 215–225), `configure`
 
 ### T-17. API unit tests
 - **Priority / size:** medium / medium

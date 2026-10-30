@@ -109,4 +109,6 @@ on each problem it works around; the main ones are:
   results.
 
 `PYACES_MODULES=""` builds with the current environment instead of loading
-modules.
+modules. Run on its own (no `PYACES_MODULES` or `ACES_PROGRAM_MODULES`),
+`pyaces/build.sh` sets up the toolchain from `build_config.sh` as `./build.sh`
+does: modules, a setvars script or PATH, and configure's compilers.

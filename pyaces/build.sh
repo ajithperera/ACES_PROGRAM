@@ -3,13 +3,33 @@ set -e
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-# Module set: PYACES_MODULES (the CMake superbuild), else the set ../configure
-# recorded (ACES_PROGRAM_MODULES, when driven from ../build.sh), else the
-# HiPerGator default; PYACES_MODULES="" uses the current environment (ifx,
-# MKLROOT, python3 with numpy already set up).
-PYACES_MODULES=${PYACES_MODULES-${ACES_PROGRAM_MODULES:-"intel/2025.1.0 openmpi/5.0.7 python/3.12"}}
+# Toolchain, first match wins:
+#  1. PYACES_MODULES, when set (the CMake superbuild; ../build.sh passes the
+#     set ../configure recorded). "" uses the current environment (ifx,
+#     MKLROOT, python3 with numpy already set up).
+#  2. ACES_PROGRAM_MODULES from the environment, when non-empty.
+#  3. Run on its own: ../build_config.sh's loader, i.e. ../configure's choice
+#     of modules, a setvars script or PATH, and its Fortran and C compilers.
+#  4. No build_config.sh: the HiPerGator module set.
 source "$SCRIPT_DIR/../cmake/env.sh"
-aces_load_modules "$PYACES_MODULES"
+if [ -n "${PYACES_MODULES+set}" ]; then
+    aces_load_modules "$PYACES_MODULES"
+elif [ -n "${ACES_PROGRAM_MODULES:-}" ]; then
+    aces_load_modules "$ACES_PROGRAM_MODULES"
+elif [ -f "$SCRIPT_DIR/../build_config.sh" ]; then
+    # shellcheck source=/dev/null
+    source "$SCRIPT_DIR/../build_config.sh"
+    if type aces_program_load_env >/dev/null 2>&1; then
+        aces_program_load_env || exit 1
+    else
+        # Written by an older ./configure, which knew only modules.
+        aces_load_modules "$ACES_PROGRAM_MODULES"
+    fi
+    PYACES_FC=${PYACES_FC:-${ACES_PROGRAM_FC:-}}
+    PYACES_CC=${PYACES_CC:-${ACES_PROGRAM_CC:-}}
+else
+    aces_load_modules "intel/2025.1.0 openmpi/5.0.7 python/3.12"
+fi
 : "${MKLROOT:?is unset -- the loaded modules provide no Intel MKL}"
 # Fortran compiler for every pyaces object and the link: PYACES_FC (../build.sh
 # passes ./configure's --fortran choice), else ifx, else ifort.
@@ -23,6 +43,7 @@ if [ -z "${PYACES_CC:-}" ]; then
     if command -v icx >/dev/null 2>&1; then PYACES_CC=icx; else PYACES_CC=gcc; fi
 fi
 command -v "$PYACES_CC" >/dev/null 2>&1 || { echo "$PYACES_CC is not on PATH" >&2; exit 1; }
+echo "compilers: $(command -v $PYACES_FC), $(command -v $PYACES_CC)"
 # The globs and sorts below set archive member and -l order, and with them which
 # copy of a multiply-defined routine the link picks. Collate bytewise so that
 # does not change with the caller's locale (PBS jobs often run with none).

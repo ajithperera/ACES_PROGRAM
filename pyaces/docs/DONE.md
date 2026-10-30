@@ -15,6 +15,17 @@ Items that came from [TODO.md](TODO.md) keep their number (`T-<n>`); work that w
 
 ---
 
+### T-10. Fewer assumptions about the build environment (2026-10-30)
+- **Commits:** (not committed yet)
+- **What changed:**
+  - The top-level half was already done by Ajith's `f444e634`. `build.sh` checks for configure's `ACES_PROGRAM_FC`, and the ifort→ifx shim is gone; in setvars/path mode it passes `PYACES_MODULES=""` after loading the toolchain itself.
+  - Left: `pyaces/build.sh` run on its own ignored `build_config.sh` and loaded the HiPerGator module set. On this workstation (setvars mode, but `module` exists) that failed with "Unable to locate a modulefile for 'intel/2025.1.0'".
+  - It now takes, in order: `PYACES_MODULES` when set (CMake superbuild, `../build.sh`); a non-empty `ACES_PROGRAM_MODULES`; `build_config.sh`'s `aces_program_load_env` with its `ACES_PROGRAM_FC`/`ACES_PROGRAM_CC`; the HiPerGator set only without a `build_config.sh`. A config from an older `./configure` (no loader) still gets its module set.
+  - The build log has a `compilers:` line.
+- **Verification:**
+  - Local, setvars mode: `bash pyaces/build.sh` on its own, `./build.sh pyaces`, and `PYACES_MODULES=""` with setvars loaded all build. The standalone run used ifort and icx 2024.0. Audit 244 each time.
+  - pyaces 60/60 for the standalone and top-level builds, every `got=` value identical to the run before T-09.
+
 ### T-09. Compiler and flag cleanup (2026-10-30)
 - **Commits:** `0213f6a7`
 - **What changed:**
