@@ -22,8 +22,8 @@ the status when it changes.
 | Found | Report | Area | Status |
 |---|---|---|---|
 | 2026-10-28 | [pccd: duplicate `Pccd_form_htau` in one archive](2026-10-28-pccd-duplicate-htau.md) | aces2 `pccd` | fixed `0a27e717` |
-| 2026-10-29 | [Missing barrier after `create` in the spin-orbit EOM programs](2026-10-29-sial-create-barrier.md) | aces3 SIAL | fixed (commit pending) |
-| 2026-10-29 | [EOM ring-CC: Ne `Ag` doubles correction differs with ifort](2026-10-29-ring-ne-ag-correction.md) | aces2 `vee` | open |
+| 2026-10-29 | [Missing barrier after `create` in the spin-orbit EOM programs](2026-10-29-sial-create-barrier.md) | aces3 SIAL | fixed in `76353e87` |
+| 2026-10-29 | [EOM ring-CC: Ne `Ag` doubles correction differs between compilers](2026-10-29-ring-ne-ag-correction.md) | aces2 `vee` | open |
 | 2026-10-29 | [aces3 suite: 16 Intel MPI ranks on 4 cores](2026-10-29-aces3-suite-oversubscription.md) | `run_tests.sh` | open |
 
 For the symbols that are defined twice in one aces2 archive (the cause of

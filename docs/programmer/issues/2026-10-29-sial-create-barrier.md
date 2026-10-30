@@ -7,7 +7,7 @@ with `Block not found`. The cause was a race in the SIAL program
 `eom_so_ci_ea.sial` and `eom_so_ci.sial`. This page records the symptom,
 the cause, the fix and how it was checked, found on 2026-10-29.
 
-- **Status:** fixed (commit pending)
+- **Status:** fixed in `76353e87`
 - **Area:** aces3, SIAL programs in `aces3/src/aces/aces_sial/spnorbt_cc_new/`
 - **Found with:** ccsd server, ifx 2023.2 + Intel MPI 2021.10; also listed in upstream's tag `baseline-20261028`
 
