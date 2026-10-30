@@ -15,6 +15,17 @@ Items that came from [TODO.md](TODO.md) keep their number (`T-<n>`); work that w
 
 ---
 
+### T-09. Compiler and flag cleanup (2026-10-30)
+- **Commits:** (not committed yet)
+- **What changed:**
+  - `pyaces/build.sh` compiles the f2py C module and `fortranobject.c` with `$PYACES_CC` instead of `mpicc`; neither uses MPI. The top-level `build.sh` passes configure's `ACES_PROGRAM_CC` (icx locally and on ccsd) and checks for it instead of `mpicc`. Standalone, the default is icx, else gcc. Locally `mpicc` was Intel MPI's wrapper around gcc.
+  - `-qopenmp` is dropped from the Fortran flags. The pyaces sources have no OpenMP directives, aces2 is compiled without it (`-Zp8 -zero -assume dummy_aliases -i8 -O2`), and MKL is linked sequential. Its only effect on the glue code was to make every local variable automatic.
+- **Verification:**
+  - Local (ifort 2024.0, icx 2024.0): audit 244 with no NEW entries; pyaces 60/60.
+  - All 60 `got=` values are identical to the run before the change.
+  - The .so's `NEEDED` libraries are the same before and after, and it has no OpenMP symbols either way.
+  - icx reports 7 `-Wformat` warnings (long vs long long) in the f2py-generated C; the two types have the same size on x86-64 Linux.
+
 ### T-05. Remaining known defects: Getlstpy and Get1ehpy (2026-10-30)
 - **Commits:** `dc9b4cd7`
 - **What changed:**

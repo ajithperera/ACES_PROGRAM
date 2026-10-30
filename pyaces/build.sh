@@ -17,6 +17,12 @@ if [ -z "${PYACES_FC:-}" ]; then
     if command -v ifx >/dev/null 2>&1; then PYACES_FC=ifx; else PYACES_FC=ifort; fi
 fi
 command -v "$PYACES_FC" >/dev/null 2>&1 || { echo "$PYACES_FC is not on PATH" >&2; exit 1; }
+# C compiler for the f2py module and fortranobject.c (plain C, no MPI):
+# PYACES_CC (../build.sh passes ./configure's choice), else icx, else gcc.
+if [ -z "${PYACES_CC:-}" ]; then
+    if command -v icx >/dev/null 2>&1; then PYACES_CC=icx; else PYACES_CC=gcc; fi
+fi
+command -v "$PYACES_CC" >/dev/null 2>&1 || { echo "$PYACES_CC is not on PATH" >&2; exit 1; }
 # The globs and sorts below set archive member and -l order, and with them which
 # copy of a multiply-defined routine the link picks. Collate bytewise so that
 # does not change with the caller's locale (PBS jobs often run with none).
@@ -84,13 +90,13 @@ python3 -m numpy.f2py $PYF_SOURCES -m aces2py --build-dir gen > $WORK/f2py_gen.l
 sed -i -E 's/(F_FUNC(_US)?\()([A-Za-z0-9_]+)(,)/\1\L\3\E\4/g' gen/aces2pymodule.c
 
 echo "=== step 2: compile C sources ==="
-mpicc -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC \
+$PYACES_CC -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC \
     -c gen/aces2pymodule.c -o build/aces2pymodule.o
-mpicc -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC \
+$PYACES_CC -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC \
     -c $F2PY_SRC/fortranobject.c -o build/fortranobject.o
 
 echo "=== step 3: compile Fortran sources ==="
-FFLAGS="-diag-disable=10448 -i8 -fPIC -fp-model strict -O1 -assume minus0 -qopenmp -D__fortran -D__fortran77 -D_INTEL -D_RECL_IS_WORDS_ -I$ACES/include -I$ACES/acescore/include -I. -FI"
+FFLAGS="-diag-disable=10448 -i8 -fPIC -fp-model strict -O1 -assume minus0 -D__fortran -D__fortran77 -D_INTEL -D_RECL_IS_WORDS_ -I$ACES/include -I$ACES/acescore/include -I. -FI"
 
 for f in $SOURCES; do
     base=$(basename "$f" .F)

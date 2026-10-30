@@ -25,7 +25,6 @@ For background and rationale, see the [improvement plan](pyaces_improvements_en.
 |---|---|---|---|---|---|
 | T-01 | Per-module partial links that resolve names as the classic build does | correctness | high | large | 4 |
 | T-08 | Incremental build | build | low | large | 4 |
-| T-09 | Compiler and flag cleanup (mpicc, -qopenmp) | build | low | small | any time |
 | T-10 | Fewer assumptions about the build environment (module, ifort check) | build | medium | small | any time |
 | T-17 | API unit tests | testing | medium | medium | any time |
 
@@ -60,13 +59,6 @@ T-02 was finished together with T-14's `pyaces.run()`. See [DONE.md](DONE.md).
 - **Files:** `pyaces/build.sh`
 
 ## Any time — fold into other work
-
-### T-09. Compiler and flag cleanup
-- **Priority / size:** low / small
-- **Problem:** the C wrappers are compiled with `mpicc` although they need no MPI. It is unclear whether `-qopenmp` on the glue code is needed with sequential MKL.
-- **To do:** switch to `icx`/`gcc`, and check whether `-qopenmp` is needed and tidy it up.
-- **Done when:** build and test results are unchanged.
-- **Files:** `pyaces/build.sh` (lines 79–85), `build.sh` (top level)
 
 ### T-10. Fewer assumptions about the build environment
 - **Priority / size:** medium / small

@@ -155,7 +155,7 @@ Before exposing a new Fortran routine or linking another aces2 module, read chap
 <table>
 <tr><th style="width:24%">Item</th><th>Requirement</th></tr>
 <tr><td>Fortran</td><td>Intel <code>ifx</code> or <code>ifort</code>, from <code>$PYACES_FC</code> (set by <code>../build.sh</code> from <code>./configure --fortran</code>; default ifx when present, else ifort).</td></tr>
-<tr><td>C</td><td><code>mpicc</code>, to compile the f2py C wrapper and <code>fortranobject.c</code> (it wraps gcc on the local workstation).</td></tr>
+<tr><td>C</td><td><code>$PYACES_CC</code> (set by <code>../build.sh</code> from <code>./configure</code>'s C compiler; default icx when present, else gcc), to compile the f2py C wrapper and <code>fortranobject.c</code>. They need no MPI.</td></tr>
 <tr><td>Python</td><td>3.12 (verified) with numpy (including f2py). The extension suffix is taken from the building interpreter (<code>EXT_SUFFIX</code>), so the module imports only under the Python version that built it.</td></tr>
 <tr><td>BLAS/LAPACK</td><td>Intel MKL; <code>MKLROOT</code> must be set. Linked as ILP64, sequential.</td></tr>
 <tr><td>binutils</td><td><code>ar</code>, <code>nm</code>, <code>objcopy</code></td></tr>
@@ -194,7 +194,7 @@ bash pyaces/build.sh             # run directly (set PYACES_MODULES or ACES_PROG
 
 <h3>4.0 Setup (lines 1–36)</h3>
 <ul>
-  <li>Pick the Fortran compiler: <code>$PYACES_FC</code>, else ifx, else ifort.</li>
+  <li>Pick the Fortran compiler: <code>$PYACES_FC</code>, else ifx, else ifort. Pick the C compiler: <code>$PYACES_CC</code>, else icx, else gcc.</li>
   <li>Choose the module set (<code>PYACES_MODULES</code>, else <code>ACES_PROGRAM_MODULES</code>, else the HiPerGator set) and load it with <code>aces_load_modules</code> from <code>cmake/env.sh</code>: <code>module purge; module load</code>, nothing for an empty set, a warning and the current environment on a host without a <code>module</code> command.</li>
   <li>Exit if <code>MKLROOT</code> is empty. <code>MKL=$MKLROOT/lib/intel64</code> (or <code>$MKLROOT/lib</code>).</li>
   <li><code>export LC_ALL=C</code>.</li>
@@ -212,7 +212,7 @@ Passing every source would also wrap internal helpers, whose all-caps F77 names 
 <table>
 <tr><th style="width:17%">Step</th><th>Command / action</th><th style="width:25%">Output</th></tr>
 <tr><td>1. Generate wrappers</td><td><code>python3 -m numpy.f2py $PYF_SOURCES -m aces2py --build-dir gen</code> (generate only, no <code>-c</code>). Then a <code>sed</code> lower-cases the first argument of every <code>F_FUNC(Name,…)</code>: ifx exports lower-case symbols such as <code>init_</code>, but f2py uses the source spelling <code>Init</code>.</td><td><code>gen/aces2pymodule.c</code><br><code>gen/aces2py-f2pywrappers.f</code><br><code>f2py_gen.log</code></td></tr>
-<tr><td>2. Compile C</td><td><code>mpicc -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC</code> on the module C file and <code>fortranobject.c</code>.</td><td><code>build/aces2pymodule.o</code>, <code>build/fortranobject.o</code></td></tr>
+<tr><td>2. Compile C</td><td><code>$PYACES_CC -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC</code> on the module C file and <code>fortranobject.c</code>.</td><td><code>build/aces2pymodule.o</code>, <code>build/fortranobject.o</code></td></tr>
 <tr><td>3. Compile Fortran</td><td>Compile <code>$SOURCES</code> and the f2py wrapper with the <code>FFLAGS</code> below. Then <code>objcopy --redefine-sym props_=pyaces_vprops_props_ build/runee.o</code>, so Runee calls the renamed vprops PROPS.</td><td><code>build/*.o</code></td></tr>
 <tr><td>4. Link</td><td>Build LIBDIRS/LIBNAMES, build the patched archives for colliding modules (chapter 5), then <code>ifx -shared -nofor-main</code>.</td><td><code>build/aces2py.cpython-312-x86_64-linux-gnu.so</code></td></tr>
 <tr><td>5. Import test</td><td><code>python3 -c "import aces2py; print('IMPORT OK')"</code>, then <code>collision_audit.py --calls</code> (section 6.1). Either failure fails the build (<code>set -e</code>).</td><td>none</td></tr>
@@ -220,12 +220,13 @@ Passing every source would also wrap internal helpers, whose all-caps F77 names 
 </table>
 
 <h4>Fortran flags</h4>
-<pre><code>FFLAGS="-diag-disable=10448 -i8 -fPIC -fp-model strict -O1 -assume minus0 -qopenmp \
+<pre><code>FFLAGS="-diag-disable=10448 -i8 -fPIC -fp-model strict -O1 -assume minus0 \
         -D__fortran -D__fortran77 -D_INTEL -D_RECL_IS_WORDS_ \
         -I$ACES/include -I$ACES/acescore/include -I. -FI"</code></pre>
 <ul>
   <li><code>-i8</code>: 8-byte default INTEGER, matching aces2 and MKL ILP64.</li>
   <li><code>-FI</code>: fixed-form source. <code>-D__fortran77</code> selects the F77 branch of aces2's headers.</li>
+  <li>No <code>-qopenmp</code>: the pyaces sources have no OpenMP directives, aces2 is compiled without it and MKL is sequential. It was dropped on 2026-10-30 (T-09) with identical suite results; it only made every local variable automatic.</li>
   <li>Headers come from aces2's <code>include</code> and <code>acescore/include</code>. <code>Main/init.F</code> and <code>Main/aces2_main.F</code> include them the same way as every other pyaces source.</li>
 </ul>
 
@@ -646,6 +647,7 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <tr><td>2026-10-30</td><td><code>classify_suite.py</code> reads the bare-name <code>test_results</code> entries upstream added (it stopped with a ValueError before), excludes <code>PROGRAM=PCCD</code>, and the regenerated TSV covers the 157-case aces2 suite: eight new CCSD cases bring the pyaces suite to 59/59.</td></tr>
 <tr><td>2026-10-30</td><td>Runpccd fixed: it read ZMAT again after <code>Init()</code> and called <code>Ints_</code> with no arguments. It now runs single-point pCCD as xrunpccd does (no Vlambda/Pccd), with a new aces2 case <code>pccd_h2o_sto3g</code> (pyaces 60/60). Dropping those calls changed the link: <code>check_t2_</code> renames for hcmult and libc4, and the latent <code>symoff_</code> shadow is in the common-block baseline (<code>tools/localize.txt</code>, 21st instance).</td></tr>
 <tr><td>2026-10-30</td><td>T-05: <code>Get1ehpy</code> returned zeros for every molecule. It took a negative <code>J0</code> from <code>Aces_malloc</code> (the heap lies below its anchor) for a failed allocation and returned before reading IIII; the irrep blocks were also placed at the wrong offsets. It now tests <code>Jcore(1)</code>, as <code>aces_malloc.c</code> says to, and builds the block-diagonal SO matrix. <code>Getlstpy</code>/<code>Putlstpy</code> check the list, the column range and <code>Ndim</code> (new <code>Getlstdimpy</code>); Python gets <code>list_shape</code> and <code>get_1e_ints</code>. Verified on H<sub>2</sub>O 6-31G* CCSD in C<sub>2v</sub> and C<sub>1</sub>: <code>C<sup>T</sup>SC = 1</code> to 5×10<sup>-15</sup>, the same (H, S) eigenvalues and one-electron energy (to 10<sup>-11</sup>), list 46 read irrep by irrep equal to <code>Getallpy</code>. pyaces 60/60.</td></tr>
+<tr><td>2026-10-30</td><td>T-09: the C wrappers are compiled with <code>$PYACES_CC</code> (configure's C compiler, icx) instead of <code>mpicc</code>, and <code>-qopenmp</code> is gone from the Fortran flags. The .so has the same dependencies and no OpenMP symbols before or after; the 60 suite energies are unchanged.</td></tr>
 </table>
 
 <h3>12.2 Deployment on the ccsd server</h3>
