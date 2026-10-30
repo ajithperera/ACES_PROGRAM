@@ -53,7 +53,8 @@ mkdir -p build
 # called from Python.
 PYF_SOURCES="$MAIN/init.F $PYF/dgetrecpy.F $PYF/igetrecpy.F $PYF/dputrecpy.F \
     $PYF/iputrecpy.F $PYF/cgetrecpy.F $PYF/cputrecpy.F $PYF/getlstpy.F \
-    $PYF/putlstpy.F $PYF/getallpy.F $PYF/putallpy.F $PYF/getreclenpy.F \
+    $PYF/putlstpy.F $PYF/getlstdimpy.F $PYF/getallpy.F $PYF/putallpy.F \
+    $PYF/getreclenpy.F \
     $PYF/get1ehpy.F $PYF/get2ehpy.F $PYF/buildhbar.F $PYF/runints.F \
     $PYF/runscf.F $PYF/runcc.F $PYF/runhbar.F $PYF/runprops.F $PYF/runpccd.F \
     $PYF/runee.F $PYF/rundirmp2.F $PYF/runintgrt.F $PYF/acesjafin.F $PYF/acesjainit.F"

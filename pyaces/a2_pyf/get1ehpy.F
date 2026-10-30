@@ -8,7 +8,6 @@
       Integer*8 J0
       Integer*8 J1
       Integer*8 J2
-      Integer*8 Je
       Integer*8 I
       Integer*8 J
       Integer*8 K
@@ -16,13 +15,12 @@
       Integer*8 Ndim
       Integer*8 Nirrep
       Integer*8 Ione
-      Integer*8 Index
-      Integer*8 Nelms 
       Integer*8 Maxfns 
 
       Integer*8 Jcore(1)
       Integer*8 Nbfirr(8)
       Integer*8 Trioff(8)
+      Integer*8 Bfoff(8)
 
       Double Precision Dest(*)
 
@@ -58,6 +56,11 @@
          Label = 'ONEHAMIL'
       Elseif (Name(1:7) .Eq. "kinetic") Then
          Label = 'KINETINT'
+      Else
+         Write(6,"(3a)") " @Get1ehpy: unknown integral name '",
+     +                   Name(1:Len_trim(Name)),
+     +                   "' (overlap, oneh or kinetic)"
+         Return
       Endif 
   
       Call A2_getrec(Flag,File,"NIRREP  ",Ione,Nirrep)
@@ -67,10 +70,14 @@
          Maxfns = Max(Maxfns,Nbfirr(I)) 
       Enddo 
 
+C Aces_malloc leaves Jcore(1) = 0 on failure. J0 can be negative (the
+C heap lies below Jcore), so it says nothing about success.
+
+      Jcore(1) = 0
       Memneed = Nao*(Nao+1)/2 + Maxfns*Maxfns
       Call Aces_malloc(Memneed,Jcore,J0)
   
-      If (J0 .Le. 0) Then
+      If (Jcore(1) .Eq. 0) Then
           Write(6,"(a,ES12.6E2,a)") " Unable to allocate", 
      +                Dble(Memneed)," integers of memory"
           Return
@@ -85,21 +92,31 @@
 
       Else
 
-         Trioff(1) = Ione
+C The IIII file holds the lower triangle of each irrep block, one block
+C after the other. Dest is the full Nao x Nao matrix in the SO basis
+C (functions in irrep order), block diagonal: block K occupies rows and
+C columns Bfoff(K)+1 .. Bfoff(K)+Nbfirr(K).
+
+         Trioff(1) = 0
+         Bfoff(1)  = 0
          Do J = 1, Nirrep-1
             Trioff(J+1) = Trioff(J) + Nbfirr(J)*(Nbfirr(J)+1)/2
+            Bfoff(J+1)  = Bfoff(J)  + Nbfirr(J)
          Enddo 
             
          J1 = J0
          J2 = J1 + Nao*(Nao+1)/2
-         Je = J2 + Nao*Nao
 
-         Index = 1
+         Call Zero(Dest,Nao*Nao)
          Do K = 1, Nirrep
-            Call Expnd2(Jcore(J1+Trioff(K)),Jcore(J2),Nbfirr(K))
-            Nelms = Nbfirr(K)*Nbfirr(K)
-            Index = Index + Nelms*(K-1)
-            Call Sym_expand(Dest(Index),Jcore(J2),Nelms) 
+            N = Nbfirr(K)
+            If (N .Gt. 0) Then
+               Call Expnd2(Jcore(J1+Trioff(K)),Jcore(J2),N)
+               Do J = 1, N
+                  Call Dcopy(N,Jcore(J2+(J-1)*N),1,
+     +                       Dest(Bfoff(K)+1+(Bfoff(K)+J-1)*Nao),1)
+               Enddo
+            Endif
          Enddo
          Call C_free(Jcore)
       Endif 
@@ -107,22 +124,9 @@
 #ifdef _DEBUG_LVL0
       Write(6,*)
       Write(6,"(a)") " @-Fortran-get1ehpy: The retrieved data"
-      Index = 1
-      Do K = 1, Nirrep
-         Write(6,"(a,1x,i2)") " Irrep block: ", K
-         Nelms = Nbfirr(K)*Nbfirr(K)
-         Index = Index + Nelms*(K-1)
-         call output(Dest(index),1,Nbfirr(K),1,Nbfirr(K),
-     +               Nbfirr(K),Nbfirr(K),1)
-      Enddo 
-      Write(6,*)
       Write(6,"(a)") " Returned matrix (all irreps)"
       call output(Dest,1,nao,1,nao,nao,nao,1)
 #endif 
 
       Return
       End
- 
-
-    
-

@@ -87,9 +87,10 @@ or reads; record names are 8 characters, padded with blanks):
 | `IGetrecpy(name, dest)`, `Iputrecpy(name, src)` | The same for integer records (`dtype=np.int64`) |
 | `Cgetrecpy(name, length, dest)`, `Cputrecpy(...)` | Character records |
 | `Getreclenpy(name, length)` | Length of a record |
-| `Getlstpy(first, ncols, irrep, left, right, dest, ndim)`, `Putlstpy(...)` | Columns of a list (see {doc}`../programmer/io`) |
+| `Getlstpy(first, ncols, irrep, left, right, dest, ndim)`, `Putlstpy(...)` | Columns of a list: `left` is the irrep of the columns, `right` the list number, `irrep` is not used (see {doc}`../programmer/io`) |
+| `Getlstdimpy(left, right)` | Rows and columns of a list (0, 0 if it does not exist) |
 | `Getallpy(dest, irrep, right)`, `Putallpy(...)` | A whole list |
-| `Get1ehpy(name, dest, n)`, `Get2ehpy(name, dest, n)` | One- and two-electron integrals as dense arrays |
+| `Get1ehpy(name, dest, n)`, `Get2ehpy(name, dest, n)` | One- and two-electron integrals as dense arrays (with symmetry, the one-electron matrix is in the SO basis, block diagonal by irrep) |
 
 For example, the job flags:
 

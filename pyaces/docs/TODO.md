@@ -25,7 +25,6 @@ For background and rationale, see the [improvement plan](pyaces_improvements_en.
 |---|---|---|---|---|---|
 | T-01 | Per-module partial links that resolve names as the classic build does | correctness | high | large | 4 |
 | T-08 | Incremental build | build | low | large | 4 |
-| T-05 | Remaining known defects (Getlstpy, Get1ehpy) | correctness | medium | small–medium | any time |
 | T-09 | Compiler and flag cleanup (mpicc, -qopenmp) | build | low | small | any time |
 | T-10 | Fewer assumptions about the build environment (module, ifort check) | build | medium | small | any time |
 | T-17 | API unit tests | testing | medium | medium | any time |
@@ -61,15 +60,6 @@ T-02 was finished together with T-14's `pyaces.run()`. See [DONE.md](DONE.md).
 - **Files:** `pyaces/build.sh`
 
 ## Any time — fold into other work
-
-### T-05. Remaining known defects
-- **Priority / size:** medium / small–medium
-- **Problem:**
-  - `Getlstpy` ignores `Irrep` and `Ndim` and uses `Left_index` as the irrep.
-  - The symmetry-block offset in `Get1ehpy` (`get1ehpy.F:101`) looks wrong.
-- **To do:** fix each one or document its meaning, and verify Get1ehpy on a molecule with symmetry.
-- **Done when:** each function's result matches an independent calculation (e.g. the output of the classic executables).
-- **Files:** `pyaces/a2_pyf/getlstpy.F`, `pyaces/a2_pyf/get1ehpy.F`
 
 ### T-09. Compiler and flag cleanup
 - **Priority / size:** low / small
