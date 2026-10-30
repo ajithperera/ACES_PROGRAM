@@ -7,7 +7,7 @@ For background and rationale, see the [improvement plan](pyaces_improvements_en.
 
 - **Number:** `T-<n>`. A number is never reused (a finished item keeps its number in DONE.md).
 - **Priority:** high / medium / low. **Size:** small (a few hours) / medium (about a day) / large (several days, needs a trial implementation).
-- **Done when:** a change counts as finished only after both the local workstation and ccsd show aces2 157/157, pyaces 59/59 and a matching link audit. Add any item-specific criteria to the item.
+- **Done when:** a change counts as finished only after both the local workstation and ccsd show aces2 158/158, pyaces 60/60 and a matching link audit. Add any item-specific criteria to the item.
 - To add an item, copy the template below into the right stage.
 
 ```markdown
@@ -25,7 +25,7 @@ For background and rationale, see the [improvement plan](pyaces_improvements_en.
 |---|---|---|---|---|---|
 | T-01 | Per-module partial links that resolve names as the classic build does | correctness | high | large | 4 |
 | T-08 | Incremental build | build | low | large | 4 |
-| T-05 | Remaining known defects (Getlstpy, Get1ehpy, Runpccd) | correctness | medium | small–medium | any time |
+| T-05 | Remaining known defects (Getlstpy, Get1ehpy) | correctness | medium | small–medium | any time |
 | T-09 | Compiler and flag cleanup (mpicc, -qopenmp) | build | low | small | any time |
 | T-10 | Fewer assumptions about the build environment (module, ifort check) | build | medium | small | any time |
 | T-17 | API unit tests | testing | medium | medium | any time |
@@ -50,7 +50,7 @@ T-02 was finished together with T-14's `pyaces.run()`. See [DONE.md](DONE.md).
 - **Priority / size:** high / large
 - **Problem:** a single `.so` holding about 107 archives is held together by about 60 hand-written rename pairs. A new module or a toolchain change can introduce new collisions, and the audit baseline carries 296 known differences.
 - **To do:** partially link each entry module with its own `ACES_LINK_LISTS` (`ld -r`) and hide every symbol other than the entry point with `objcopy`. Shared COMMON blocks stay global. Try it on one module (e.g. vcc) first.
-- **Done when:** 59/59 with no rename list; the audit differences drop substantially; `.so` size and build time are compared and recorded.
+- **Done when:** 60/60 with no rename list; the audit differences drop substantially; `.so` size and build time are compared and recorded.
 - **Files:** `pyaces/build.sh`, `aces2/Makefiles/GNUmakefile` (`ACES_LINK_LISTS`)
 
 ### T-08. Incremental build
@@ -67,10 +67,9 @@ T-02 was finished together with T-14's `pyaces.run()`. See [DONE.md](DONE.md).
 - **Problem:**
   - `Getlstpy` ignores `Irrep` and `Ndim` and uses `Left_index` as the irrep.
   - The symmetry-block offset in `Get1ehpy` (`get1ehpy.F:101`) looks wrong.
-  - The runner calls `Init()` before `Runpccd`, but Runpccd calls Joda itself (never tested).
 - **To do:** fix each one or document its meaning, and verify Get1ehpy on a molecule with symmetry.
 - **Done when:** each function's result matches an independent calculation (e.g. the output of the classic executables).
-- **Files:** `pyaces/a2_pyf/getlstpy.F`, `pyaces/a2_pyf/get1ehpy.F`, `pyaces/pyaces_run_case.py`
+- **Files:** `pyaces/a2_pyf/getlstpy.F`, `pyaces/a2_pyf/get1ehpy.F`
 
 ### T-09. Compiler and flag cleanup
 - **Priority / size:** low / small

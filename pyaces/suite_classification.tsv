@@ -127,6 +127,7 @@ h2o_ccsd_rhf_sto3g_symon	CC	CALC=CCSD	Runcc	0	TOTENERG	-7.5013036960830E+01
 h2o_ccsd_uhf_sto3g_symoff	CC	CALC=CCSD	Runcc	1	TOTENERG	-7.5013036960830E+01
 h2o_ccsd_uhf_sto3g_symon	CC	CALC=CCSD	Runcc	1	TOTENERG	-7.5013036960830E+01
 irc_hcoh_reverse	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-1.130622774560E+02
+pccd_h2o_sto3g	PCCD	CALC=PCCD	Runpccd	0	TOTENERG	-7.4988498185196E+01
 pccd_oo_rfo_ccd_h2o	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-7.50122317254E+01
 pccd_oo_rfo_doci_h2o	SCRIPT	chained multi-job case, out of scope for pass 1			DOCIENER	-7.5005667504051E+01
 pccd_oo_rfo_fc_h2o_symoff	SCRIPT	chained multi-job case, out of scope for pass 1			TOTENERG	-7.60531931768E+01

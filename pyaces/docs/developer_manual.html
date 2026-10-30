@@ -57,7 +57,7 @@ li { margin: 2pt 0; }
     <tr><td><b>Repository</b></td><td><code>ACES_PROGRAM/pyaces</code> (GitHub youngchoonpark/ACES, private)</td></tr>
     <tr><td><b>Reference commit</b></td><td>master, 2026-10-23 (TODO stage 1 applied)</td></tr>
     <tr><td><b>Written</b></td><td>2026-10-23</td></tr>
-    <tr><td><b>Verified</b></td><td>pyaces suite 51/51 PASS on the local workstation (oneAPI 2024.0) and the ccsd server (oneAPI 2023.2); 59/59 on the local workstation after the 2026-10-30 reclassification</td></tr>
+    <tr><td><b>Verified</b></td><td>pyaces suite 51/51 PASS on the local workstation (oneAPI 2024.0) and the ccsd server (oneAPI 2023.2); 60/60 on the local workstation after the 2026-10-30 reclassification and Runpccd fix</td></tr>
     <tr><td><b>Link audit</b></td><td>296 collision-baseline entries, 0 COMMON shadows, identical on both machines</td></tr>
   </table>
   <p class="small" style="margin-top:30pt">This manual was written from the source code (<code>pyaces/build.sh</code>, <code>a2_pyf/*.F</code>, the generated
@@ -109,7 +109,7 @@ state through files on disk (JOBARC, MOINTS, …). pyaces links those modules in
   <li><b>All integers are 64-bit.</b> aces2 and pyaces are compiled with <code>-i8</code>, and MKL is linked in its ILP64 flavour.</li>
   <li><b>One calculation per process.</b> aces2's COMMON-block state assumes a single use; calling Vtran/Vcc twice in one process has been seen to converge silently to a wrong answer.</li>
   <li><b>The main risk is at link time.</b> Routines that share a name but differ in implementation were harmless when every executable was linked on its own. In one .so they collide, and the linker silently picks one. The safeguards for this are the core of chapters 5 and 6.</li>
-  <li><b>Tests reuse the aces2 fast suite.</b> Of its 157 cases, the 59 that pyaces can run (SCF 9, CC 39, EOM 8, KS 3) are executed and their JOBARC energies compared with the reference values to within 1×10<sup>-6</sup> E<sub>h</sub>.</li>
+  <li><b>Tests reuse the aces2 fast suite.</b> Of its 158 cases, the 60 that pyaces can run (SCF 9, CC 39, EOM 8, KS 3, PCCD 1) are executed and their JOBARC energies compared with the reference values to within 1×10<sup>-6</sup> E<sub>h</sub>.</li>
 </ul>
 
 <h3>1.2 How to read this manual</h3>
@@ -132,7 +132,7 @@ Before exposing a new Fortran routine or linking another aces2 module, read chap
 <tr><td><code>aux_pyaces/*.F</code></td><td><span class="pill">live</span></td><td><code>init_legacies</code> (initialises legacy COMMON blocks), <code>get1ents</code>/<code>get2eints</code> (read AO integrals from the IIII file), <code>sym_expand</code>.</td></tr>
 <tr><td><code>tools/collision_audit.py</code></td><td><span class="pill">live</span></td><td>The link-resolution audit (chapter 6), with <code>collision_baseline.txt</code> (296 entries) and <code>common_shadow_baseline.txt</code> (0).</td></tr>
 <tr><td><code>pyaces_run_case.py</code></td><td><span class="pill">live</span></td><td>Runs one case in its own process and prints the result as marker lines (chapter 8).</td></tr>
-<tr><td><code>pyaces_suite_runner.py</code></td><td><span class="pill">live</span></td><td>Runs the 59 cases and grades each one PASS/MISMATCH/… (chapter 9).</td></tr>
+<tr><td><code>pyaces_suite_runner.py</code></td><td><span class="pill">live</span></td><td>Runs the 60 cases and grades each one PASS/MISMATCH/… (chapter 9).</td></tr>
 <tr><td><code>classify_suite.py</code>, <code>suite_classification.tsv</code></td><td><span class="pill">live</span></td><td>The table that classifies the aces2 fast-suite cases by category, entry point and reference value, and the script that generates it. <b>The TSV is generated; never edit it by hand</b> (section 9.4).</td></tr>
 <tr><td><code>docs/</code></td><td><span class="pill">live</span></td><td>This manual (HTML source and PDF).</td></tr>
 <tr><td><code>Main/gen/</code></td><td><span class="pill gen">generated</span></td><td>f2py output: <code>aces2pymodule.c</code>, <code>aces2py-f2pywrappers.f</code>.</td></tr>
@@ -378,7 +378,7 @@ f2py wraps those arrays as "input", so if the dtype or memory layout is wrong it
 <tr><td><code>Runcc(Iuhf)</code></td><td><code>runcc.F</code></td><td>SCF first if it has not run (no <code>SCFEVCA0</code> record), then <code>aces_init_chemsys</code>, <code>Vtran</code>, <code>Init_legacies</code>, <code>Intproc</code>, <code>Vcc</code>. Covers the MBPT/CC family.</td></tr>
 <tr><td><code>Runhbar(Iuhf)</code>, <code>Buildhbar()</code></td><td><code>runhbar.F</code>, <code>buildhbar.F</code></td><td>The Runcc steps, then <code>Hbar_</code>. If SCF is done (<code>SCFEVCA0</code>) it starts at Vtran; if CC is done (<code>CC_DONE</code>) it runs only Hbar. Buildhbar reads iuhf from <code>IFLAGS(11)</code>. <b>Do not call it after Runcc</b>: it takes the SCF-done branch and runs Vtran a second time.</td></tr>
 <tr><td><code>Runprops(Iuhf)</code></td><td><code>runprops.F</code></td><td><code>Props_</code></td></tr>
-<tr><td><code>Runpccd(Iuhf)</code></td><td><code>runpccd.F</code></td><td>Self-contained: Joda, Ints, aces_init, V2ja, Vscf, Vtran, Intproc, Vcc, Vlambda, Pccd</td></tr>
+<tr><td><code>Runpccd(Iuhf)</code></td><td><code>runpccd.F</code></td><td>Single-point pCCD after <code>Init()</code>, as xrunpccd's HF/KS branch: Ints, V2ja, Vscf, Vtran, Intproc, Vcc. Orbital-optimized pCCD (<code>PROGRAM=PCCD</code>) is not reachable.</td></tr>
 <tr><td><code>Runee(Iuhf)</code></td><td><code>runee.F</code></td><td>Self-contained EOM-CC: Joda, aces_init, Ints, V2ja, vprops Props (renamed copy), Vscf, Vtran, Intproc, Vcc, Vlambda, Vee. <b>Do not call <code>Init()</code> before it.</b></td></tr>
 <tr><td><code>Rundirmp2(Iuhf)</code></td><td><code>rundirmp2.F</code></td><td>SCF if needed, then <code>Dirmp2_run(0)</code>. Iuhf is not forwarded.</td></tr>
 <tr><td><code>Runintgrt(Iuhf)</code></td><td><code>runintgrt.F</code></td><td>SCF if needed, then <code>Intgrt_run</code> (KS/DFT numerical integration, XC energy)</td></tr>
@@ -474,7 +474,7 @@ aces2py.Acesjainit()</code></pre>
 <ul>
   <li><b>One calculation per process.</b> Do not run several ZMATs in a row in one process. The test runner starts a new process for each case.</li>
   <li><b>Do not run the same module twice.</b> Calling Vtran/Vcc twice in one process has converged to wrong values. This includes calling Runhbar after Runcc.</li>
-  <li><b>Runee and Runpccd call Joda themselves.</b> Do not call <code>Init()</code> before Runee.</li>
+  <li><b>Runee calls Joda itself.</b> Do not call <code>Init()</code> before Runee. Every other entry point, Runpccd included, needs <code>Init()</code> first.</li>
   <li><b>Out of scope</b>: geometry optimisation, frequencies, analytic derivatives (gradients and Hessians), Brueckner, <code>HFSTABILITY=FOLLOW</code> and CCSD(TQ) cannot run under pyaces yet (<code>rungrads.F</code> is excluded from the build).</li>
 </ul>
 
@@ -522,7 +522,7 @@ cd pyaces && python3 pyaces_suite_runner.py 010a 117b   # selected cases only</c
 <tr><td>FAIL_CLEAN</td><td>Positive exit code with a recognised message: an <code>@ROUTINE:</code> banner, "Assertion failed", "did not converge", "forrtl: severe", …</td></tr>
 <tr><td>CRASH</td><td>Killed by a signal (negative code), or a positive exit with no recognised message</td></tr>
 </table>
-<p>Latest result: 59/59 PASS (2026-10-30, local workstation), largest difference 4.95×10<sup>-8</sup> (case 078).</p>
+<p>Latest result: 60/60 PASS (2026-10-30, local workstation), largest difference 4.95×10<sup>-8</sup> (case 078).</p>
 
 <h3>9.3 <code>suite_classification.tsv</code></h3>
 <p>Columns: <code>name</code>, <code>category</code>, <code>reason</code>, <code>entrypoint</code>, <code>iuhf</code>, <code>record</code> (the JOBARC record compared, <code>TOTENERG</code> or <code>SCFENEG</code>), <code>ref_value</code> (Fortran E/D format).
@@ -533,7 +533,7 @@ The runner only runs rows whose category is SCF, CC, EOM, PCCD or KS.</p>
 <tr><td>EOM</td><td>8</td><td>Runee (0: 6, 1: 2)</td></tr>
 <tr><td>SCF</td><td>9</td><td>Runscf (0: 6, 1: 3)</td></tr>
 <tr><td>KS</td><td>3</td><td>Runintgrt (0)</td></tr>
-<tr><td>PCCD</td><td>0</td><td>none</td></tr>
+<tr><td>PCCD</td><td>1</td><td>Runpccd (0: 1)</td></tr>
 <tr><td>EXCLUDED</td><td>67</td><td>Geometry optimisation, VIB, derivatives, MRCC, Brueckner, HFSTABILITY=FOLLOW, CCSD(TQ), PROGRAM=PCCD, …</td></tr>
 <tr><td>SCRIPT</td><td>31</td><td>Cases driven by scripts rather than a ZMAT</td></tr>
 </table>
@@ -591,9 +591,9 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <h3>10.3 Checklist after a change</h3>
 <table>
 <tr><th style="width:38%">What changed</th><th>What to verify</th></tr>
-<tr><td>Fortran in a2_pyf / Main</td><td>pyaces build, IMPORT OK, suite 59/59, <code>nm</code> check of the changed objects</td></tr>
+<tr><td>Fortran in a2_pyf / Main</td><td>pyaces build, IMPORT OK, suite 60/60, <code>nm</code> check of the changed objects</td></tr>
 <tr><td>Rename lists in build.sh</td><td>Audit (no NEW entries; any "resolved" entries are intended), suite, then <code>--update</code></td></tr>
-<tr><td>aces2 sources or flags</td><td><code>git clean -fdXq aces2</code>, rebuild aces2 and pyaces, aces2 suite 157/157, pyaces 59/59, audit</td></tr>
+<tr><td>aces2 sources or flags</td><td><code>git clean -fdXq aces2</code>, rebuild aces2 and pyaces, aces2 suite 158/158, pyaces 60/60, audit</td></tr>
 <tr><td>Toolchain / another machine</td><td>All of the above, plus identical audit results on both machines</td></tr>
 </table>
 </section>
@@ -621,10 +621,9 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <table>
 <tr><th style="width:4%">#</th><th style="width:26%">Issue</th><th>Details / recommended action</th></tr>
 <tr><td>1</td><td>Meaning of <code>Getlstpy</code> arguments</td><td><code>Irrep</code> and <code>Ndim</code> are ignored; <code>Left_index</code> is used as the irrep.</td></tr>
-<tr><td>2</td><td>Runpccd and Init</td><td>Runpccd calls Joda itself, yet the runner calls <code>Init()</code> before it. Untested, since there are no PCCD cases.</td></tr>
-<tr><td>3</td><td>ifort check in the top-level build</td><td>The top-level <code>build.sh</code> requires <code>ifort</code> before the pyaces shim is on PATH, so an ifx-only toolchain is refused.</td></tr>
-<tr><td>4</td><td>Assumes environment modules</td><td>In setvars/path mode <code>build_config.sh</code> records no module set, so <code>pyaces/build.sh</code> falls back to the HiPerGator set and its <code>module load</code> fails. Run it with <code>PYACES_MODULES=""</code> after loading the toolchain yourself.</td></tr>
-<tr><td>5</td><td>Symmetry-block offset in <code>Get1ehpy</code></td><td><code>Index = Index + Nelms*(K-1)</code> at <code>get1ehpy.F:101</code> looks wrong. Verify the result on a molecule with symmetry before relying on it.</td></tr>
+<tr><td>2</td><td>ifort check in the top-level build</td><td>The top-level <code>build.sh</code> requires <code>ifort</code> before the pyaces shim is on PATH, so an ifx-only toolchain is refused.</td></tr>
+<tr><td>3</td><td>Assumes environment modules</td><td>In setvars/path mode <code>build_config.sh</code> records no module set, so <code>pyaces/build.sh</code> falls back to the HiPerGator set and its <code>module load</code> fails. Run it with <code>PYACES_MODULES=""</code> after loading the toolchain yourself.</td></tr>
+<tr><td>4</td><td>Symmetry-block offset in <code>Get1ehpy</code></td><td><code>Index = Index + Nelms*(K-1)</code> at <code>get1ehpy.F:101</code> looks wrong. Verify the result on a molecule with symmetry before relying on it.</td></tr>
 </table>
 </section>
 
@@ -645,6 +644,7 @@ python3 classify_suite.py --check   # exit 1 and show the rows if the TSV differ
 <tr><td>2026-10-23</td><td>TODO stage 2 (T-11, T-12, T-15): the acespy legacy tree removed (tag <code>pyaces-legacy-20261023</code>), <code>Main</code> built against aces2's own headers (the old <code>lists.com</code> copy had a different <code>/lists/</code> layout), <code>Python/moio_len.py</code> made importable.</td></tr>
 <tr><td>2026-10-23</td><td>TODO stage 3 (T-06, T-13, T-14) and T-02: f2py builds the module from the sources alone (<code>Main/aces2.pyf</code> removed), renames moved to <code>tools/localize.txt</code>, and the <code>python/pyaces</code> package with a subprocess <code>run()</code>.</td></tr>
 <tr><td>2026-10-30</td><td><code>classify_suite.py</code> reads the bare-name <code>test_results</code> entries upstream added (it stopped with a ValueError before), excludes <code>PROGRAM=PCCD</code>, and the regenerated TSV covers the 157-case aces2 suite: eight new CCSD cases bring the pyaces suite to 59/59.</td></tr>
+<tr><td>2026-10-30</td><td>Runpccd fixed: it read ZMAT again after <code>Init()</code> and called <code>Ints_</code> with no arguments. It now runs single-point pCCD as xrunpccd does (no Vlambda/Pccd), with a new aces2 case <code>pccd_h2o_sto3g</code> (pyaces 60/60). Dropping those calls changed the link: <code>check_t2_</code> renames for hcmult and libc4, and the latent <code>symoff_</code> shadow is in the common-block baseline (<code>tools/localize.txt</code>, 21st instance).</td></tr>
 </table>
 
 <h3>12.2 Deployment on the ccsd server</h3>

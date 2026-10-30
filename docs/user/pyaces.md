@@ -72,7 +72,7 @@ Running steps (the argument `iuhf` is 0 for RHF, 1 for UHF/ROHF):
 | `Runints(iuhf)` | AO integrals |
 | `Runscf(iuhf)` | Integrals and SCF |
 | `Runcc(iuhf)` | Integral transformation and sorting, then the correlated method in `CALC` |
-| `Runpccd(iuhf)` | A whole pCCD job (and its variants): integrals, SCF, transformation and pCCD |
+| `Runpccd(iuhf)` | Single-point pCCD: integrals, SCF, transformation and pCCD (orbital-optimized pCCD, `PROGRAM=PCCD`, is not available) |
 | `Runhbar(iuhf)`, `Buildhbar()` | Similarity-transformed Hamiltonian |
 | `Runprops(iuhf)` | Properties |
 | `Runee(iuhf)` | EOM-CC excitation energies; self-contained, so call it **instead of** `Init()` |
