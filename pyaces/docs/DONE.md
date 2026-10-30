@@ -16,7 +16,7 @@ Items that came from [TODO.md](TODO.md) keep their number (`T-<n>`); work that w
 ---
 
 ### T-17. API unit tests (2026-10-30)
-- **Commits:** (not committed yet)
+- **Commits:** `22ef0230`
 - **What changed:**
   - New `pyaces/tests`. `api_cases.py` holds 8 tests and their ZMATs; `run_api_tests.py` runs each test in a fresh process and directory and prints a Summary block. `run_tests.sh pyaces` runs them after the suite (log `build_logs/unified_test_pyaces_api.log`) as a separate `py-api` roll-up row.
   - Tests:
@@ -35,6 +35,7 @@ Items that came from [TODO.md](TODO.md) keep their number (`T-<n>`); work that w
   - With `f97a9759` reverted in a scratch copy, `hbar_after_scf` crashes (SIGSEGV), and the six tests that call `record_length` fail on `Getreclenpy`. The build's `--calls` check also reports the two `hbar_` calls.
   - `scf_uhf` still passes on that copy: the 4-byte `Iuhf` happened to arrive as 1, so the test cannot show that fix.
   - The new character-record checks fail on the code before this change.
+  - ccsd (ifx/icx 2023.2, PBS 8129): audit 268 with no NEW entries, aces2 158/158, pyaces 60/60 with every `got=` value identical to the T-09 run, py-api 8/8 (the xaces2 references from the local ifort build hold to 10⁻⁸ there).
 
 ### T-10. Fewer assumptions about the build environment (2026-10-30)
 - **Commits:** `442efa80`
