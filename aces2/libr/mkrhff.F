@@ -142,6 +142,15 @@ c prakash 23/04
                call dzero(ksa,ntotal)
             end if
 
+c Range-separated hybrids add long-range exchange from the VMOL files
+c IIIILR, ... (see LRXFOCK), which neither SEWARD nor direct SCF have.
+      if (scfks .and. coef_pot_lrx.ne.0.d0 .and.
+     &    (petite_list .or. dirscf)) then
+         write(*,*) '@MKRHFF: range-separated hybrids need the VMOL ',
+     &              'integral files'
+         call errex
+      end if
+
 c ----------------------------------------------------------------------
 
       if (petite_list) then
@@ -546,6 +555,13 @@ C___________________________________________________________________
 
 c     END IF (NIRREP.GT.1)
       END IF
+
+c LONG-RANGE EXCHANGE OF RANGE-SEPARATED HYBRIDS (KS ITERATIONS ONLY,
+c LIKE THE COEF_POT_NONLOCAL SCALING ABOVE)
+      if (scfks .and. .not.scfkslastiter .and. .not.kshf .and.
+     &    coef_pot_lrx.ne.0.d0)
+     &   CALL LRXFOCK(F,D,BUF,IBUF,NTOTAL,NBAST,IMAP,ILNBUF,LUINT,
+     &                coef_pot_lrx*FOURTHM)
 
 cwc1
  999  continue

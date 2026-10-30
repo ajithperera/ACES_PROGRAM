@@ -332,10 +332,16 @@ c The common block
        xtmp(fun_exch_hf,2)=0.d0
        xdertmp(fun_exch_hf,1)=0.d0
        xdertmp(fun_exch_hf,2)=0.d0
+       xtmp(fun_exch_hflr,1)=0.d0
+       xtmp(fun_exch_hflr,2)=0.d0
+       xdertmp(fun_exch_hflr,1)=0.d0
+       xdertmp(fun_exch_hflr,2)=0.d0
        xdertmp(fun_exch_lda,1)=0.d0
        xdertmp(fun_exch_lda,2)=0.d0
        cdertmp(fun_corr_vwn,1)=0.d0
        cdertmp(fun_corr_vwn,2)=0.d0
+       cdertmp(fun_corr_vwnrpa,1)=0.d0
+       cdertmp(fun_corr_vwnrpa,2)=0.d0
 
 c       if( bada) then
        if (int_kspot.eq.fun_special) then

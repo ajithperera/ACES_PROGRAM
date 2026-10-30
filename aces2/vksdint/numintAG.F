@@ -142,6 +142,12 @@ c      call mkpra(dcore(zprimcoef))
          end do
        end if
       coef_pot_exch(fun_exch_hf)=0.d0
+      coef_pot_exch(fun_exch_hflr)=0.d0
+      if (int_rs_omega.ne.0.d0) then
+         write(*,*) '@NUMINTAG: no analytic gradients for ',
+     &              'range-separated hybrids'
+         call errex
+      end if
       
       call intpath(kscore(pnshellatom),kscore(pnshellprim),
      &             dcore(zalpha),dcore(zprsqrd),dcore(zvalprim),

@@ -75,11 +75,16 @@ c ene_exch      : the total energy with this functional
 c nam_exch      : the name of the functional
 c coef_pot_exch : the coefficient of each exchange component in the KS potential
 c coef_pot_corr : the coefficient of each correlation component in the KS potential
+c
+c fun_num_xgrid : the exchange functionals evaluated on the grid; they come
+c                 first, followed by the exact (long-range and full)
+c                 exchange taken from the two-electron integrals
 
-      integer fun_num_exch,fun_num_corr,fun_num_hyb
-      parameter (fun_num_exch = 5)
-      parameter (fun_num_corr = 6)
-      parameter (fun_num_hyb  = 1)
+      integer fun_num_exch,fun_num_xgrid,fun_num_corr,fun_num_hyb
+      parameter (fun_num_exch = 7)
+      parameter (fun_num_xgrid= 5)
+      parameter (fun_num_corr = 7)
+      parameter (fun_num_hyb  = 7)
 
       M_REAL
      &    fun_exch(fun_num_exch),fun_corr(fun_num_corr),
@@ -96,10 +101,11 @@ c coef_pot_corr : the coefficient of each correlation component in the KS potent
       integer fun_exch_none,fun_corr_none,fun_special,
      &    fun_dft_none,
      &    fun_exch_lda,fun_exch_becke,fun_exch_pbe,fun_exch_pw91,
-     &    fun_exch_hf,
+     &    fun_exch_becke_sr,fun_exch_hflr,fun_exch_hf,
      &    fun_corr_vwn,fun_corr_lyp,fun_corr_pbe,
-     &    fun_corr_pw91, fun_corr_wl,fun_corr_wi,
-     &    fun_hyb_b3lyp
+     &    fun_corr_pw91, fun_corr_wl,fun_corr_wi,fun_corr_vwnrpa,
+     &    fun_hyb_b3lyp,fun_hyb_camb3lyp,fun_hyb_camqtp00,
+     &    fun_hyb_camqtp01,fun_hyb_camqtp02,fun_hyb_lcqtp,fun_hyb_qtp17
 
       character*50
      &    nam_exch(fun_num_exch),nam_corr(fun_num_corr),
@@ -114,7 +120,9 @@ c coef_pot_corr : the coefficient of each correlation component in the KS potent
       parameter (fun_exch_becke= 2)
       parameter (fun_exch_pbe  = 3)
       parameter (fun_exch_pw91 = 4)
-      parameter (fun_exch_hf   = 5)
+      parameter (fun_exch_becke_sr = 5)
+      parameter (fun_exch_hflr = 6)
+      parameter (fun_exch_hf   = 7)
 
       parameter (fun_corr_none = 0)
       parameter (fun_corr_vwn  = 1)
@@ -123,11 +131,19 @@ c coef_pot_corr : the coefficient of each correlation component in the KS potent
       parameter (fun_corr_pw91 = 4)
       parameter (fun_corr_wl   = 5)
       parameter (fun_corr_wi   = 6)
+      parameter (fun_corr_vwnrpa = 7)
 
       parameter (fun_special   = 0)
 
       parameter (fun_dft_none  = -1)
+c The hybrids and their coefficients are listed in hybparm.F.
       parameter (fun_hyb_b3lyp = 1)
+      parameter (fun_hyb_camb3lyp = 2)
+      parameter (fun_hyb_camqtp00 = 3)
+      parameter (fun_hyb_camqtp01 = 4)
+      parameter (fun_hyb_camqtp02 = 5)
+      parameter (fun_hyb_lcqtp    = 6)
+      parameter (fun_hyb_qtp17    = 7)
 
       common /dftfunc/ fun_exch,fun_corr,fun_hyb,tot_exch,tot_corr,
      &    tot_hyb,ene_exch,ene_corr,ene_hyb,coef_exch,coef_corr,

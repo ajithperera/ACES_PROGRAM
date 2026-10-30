@@ -16,6 +16,8 @@ C-----------------------------------------------------------------------
       common /icomp2/IBEM
       COMMON /REP/ NEWIND(MXCBF) , MSTOLD(8)
       common /meminf/ ijunk(3),ihwm1,ihwm2
+C     RSOMEG > 0: ERF(RSOMEG*R12)/R12 INSTEAD OF 1/R12 (SEE MOLECU)
+      COMMON /RSINT/ RSOMEG
       COMMON /MMMM/ MDUM(7),MRAF,JJUNK(4)
       COMMON /XA/ XAND(3,8,nh4)
       LOGICAL NPL(3,8,2),IFD1X,IFD2X,IFPL,IFLAG
@@ -78,6 +80,7 @@ C
 c     call gather (ibem,A1(I1(10)+(I-1)*NPW),E1,ibe)
    40 CONTINUE
       CALL CMPR1(TMUL,E1)
+      IF (RSOMEG.NE.0.D0) CALL RSATTN(E1,ROOT,NCQRS,RSOMEG)
 c     call gather(ibem,E1,TMUL,IBE)
       IGAM=MAX0(5,NNN)*NCQRS
       CALL TGCAL (A1(I1(10)),F,NCQRS,NNN3,IFPL)

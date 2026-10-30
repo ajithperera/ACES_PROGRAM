@@ -14,6 +14,8 @@ c ecnatr   : correlated
 c ehfcoul  : Hartree-Fock coulomb energy
 c eccoul   : correlated
 c ehfx     : Hartree-Fock exchange energy
+c ehflx    : long-range Hartree-Fock exchange energy (erf(omega*r12)/r12
+c            integrals), only for range-separated hybrids
 c ecx      : correlated (using the correlated relaxed density in the
 c            Hartree-Fock exchange energy expression)
 
@@ -25,9 +27,9 @@ c              energy expression
 
       M_REAL
      &    ehfkin,eckin,ehfnatr,ecnatr,ehfcoul,eccoul,ehfx,ecx,
-     &    ehar,echar,escf,ecor
+     &    ehar,echar,escf,ecor,ehflx
       common /exch/ ehfkin,eckin,ehfnatr,ecnatr,ehfcoul,eccoul,
-     &    ehfx,ecx,ehar,echar,escf,ecor
+     &    ehfx,ecx,ehar,echar,escf,ecor,ehflx
       save /exch/
 
 #endif /* _ENERG_COM_ */

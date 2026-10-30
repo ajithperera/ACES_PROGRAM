@@ -17,8 +17,11 @@ C  end 23/04
        integer intnumradpts
       character*20 list(100),ele
       logical printdef, streq
+      character*10 abbx
+      character*50 namx
       M_REAL
-     &    coef,thresh_power
+     &    coef,thresh_power,rsomega,wh,wfunc,wpot,
+     &    cxh(fun_num_exch),cch(fun_num_corr)
 
         printdef=.true.
 
@@ -125,6 +128,9 @@ c                vwn     : Vosko-Wilk-Nusair, used as VWN5 in Gaussian94
 c                lyp     : Lee-Yang-Parr
 c              pbe_cor   : Perdew-Burke-Ernzerhof
 c              pw91_cor  : Perdew-Wang 91
+c               vwn_rpa  : Vosko-Wilk-Nusair fitted to RPA, with the
+c                          plain f(zeta) spin interpolation (VWN_RPA
+c                          of libxc, used by qtp17)
 c
 c                wl      : Wilson-Levy
 c                wi      : Wilson-Ivanov
@@ -136,14 +142,39 @@ c                lda     : LDA (Slater) exchange
 c                becke   : Becke exchange
 c               pbe_ex   : Perdew-Burke-Ernzerhof
 c               pw91_ex  : Perdew-Wang 91
+c               becke_sr : short-range Becke exchange, the Becke
+c                          functional attenuated as in Iikura, Tsuneda,
+c                          Yanai and Hirao, JCP 115, 3540 (2001)
 c                hf      : Hartree-Fock-like exchange
+c                hf_lr   : long-range Hartree-Fock-like exchange, with
+c                          erf(rs_omega*r12)/r12 integrals
 c
-c              Hybrid functionals are:
+c              Hybrid functionals (their coefficients and references
+c              are in hybparm.F) are:
 c                b3lyp   : Becke III LYP
+c              cam-b3lyp : 0.19 hf + 0.46 hf_lr + 0.35 becke
+c                          + 0.46 becke_sr, 0.19 vwn + 0.81 lyp,
+c                          rs_omega=0.33
+c              cam-qtp-00: 0.54 hf + 0.37 hf_lr + 0.09 becke
+c                          + 0.37 becke_sr, 0.20 vwn + 0.80 lyp,
+c                          rs_omega=0.29
+c              cam-qtp-01: 0.23 hf + 0.77 hf_lr + 0.77 becke_sr,
+c                          0.20 vwn + 0.80 lyp, rs_omega=0.31
+c              cam-qtp-02: 0.28 hf + 0.72 hf_lr + 0.72 becke_sr,
+c                          lyp, rs_omega=0.335
+c                lc-qtp  : hf_lr + becke_sr, lyp, rs_omega=0.475
+c                qtp17   : 0.62 hf + 0.38 lda, 0.20 vwn_rpa + 0.80 lyp
 c
 c              A hybrid functional may only be entered as FUNC=hybrid.
 c
 c              The default functional is none.
+c
+c RS_OMEGA   : the range-separation parameter omega (bohr**-1) used by
+c              becke_sr and hf_lr. Default: the omega of the
+c              range-separated hybrid named in FUNC or KSPOT, else 0
+c              (becke_sr and hf_lr then need it given). VMOL reads it
+c              too (see vmol/rsomega.F) to write the long-range
+c              integral files IIIILR, ...
 c========================================================================
 c                         More Flags                                    =
 c========================================================================
@@ -236,6 +267,8 @@ c Parse the functional to use:
       nam_exch(fun_exch_becke)= 'Becke'
       nam_exch(fun_exch_pbe)= 'Perdew-Burke-Ernzerhof'
       nam_exch(fun_exch_pw91)= 'Perdew-Wang 91'
+      nam_exch(fun_exch_becke_sr)= 'Becke short-range'
+      nam_exch(fun_exch_hflr) = 'Exact long-range'
       nam_exch(fun_exch_hf)   = 'Exact Nonlocal Exchange'
 
       nam_corr(fun_corr_vwn)  = 'Vosko-Wilk-Nusair'
@@ -244,13 +277,14 @@ c Parse the functional to use:
       nam_corr(fun_corr_pw91) = 'Perdew-Wang 91'
       nam_corr(fun_corr_wl)   = 'Wilson-Levy'
       nam_corr(fun_corr_wi)   = 'Wilson-Ivanov'
- 
-      nam_hyb(fun_hyb_b3lyp)  = 'Becke III LYP'
+      nam_corr(fun_corr_vwnrpa) = 'VWN RPA'
 
       abb_exch(fun_exch_lda)  = 'lda'
       abb_exch(fun_exch_becke)= 'becke'
       abb_exch(fun_exch_pbe)  = 'pbe_ex'
       abb_exch(fun_exch_pw91) = 'pw91_ex'
+      abb_exch(fun_exch_becke_sr)= 'becke_sr'
+      abb_exch(fun_exch_hflr) = 'hf_lr'
       abb_exch(fun_exch_hf)   = 'hf'
 
       abb_corr(fun_corr_vwn)  = 'vwn'
@@ -259,8 +293,13 @@ c Parse the functional to use:
       abb_corr(fun_corr_pw91) = 'pw91_cor'
       abb_corr(fun_corr_wl)   = 'wl'
       abb_corr(fun_corr_wi)   = 'wi'
+      abb_corr(fun_corr_vwnrpa) = 'vwn_rpa'
 
-      abb_hyb(fun_hyb_b3lyp) = 'b3lyp'
+      do i=1,fun_num_hyb
+        call hybparm(i,abb_hyb(i),nam_hyb(i),cxh,cch,wh)
+      end do
+      wfunc=0.d0
+      wpot=0.d0
 
       call nl_str('func','none',nam_func)
 
@@ -416,18 +455,16 @@ c           2  : correlation entered
 
 c       Hybrid functionals...
 
-        if (streq(ele,abb_hyb(fun_hyb_b3lyp),.true.)) then
-           int_dft_fun=fun_hyb_b3lyp
-           coef_exch(fun_exch_hf)=b3lypa
-           coef_exch(fun_exch_lda)=(1.d0-b3lypa-b3lypb)
-           coef_exch(fun_exch_becke)=b3lypb
-           coef_corr(fun_corr_vwn)=1.d0-b3lypc
-           coef_corr(fun_corr_lyp)=b3lypc
-        else
-          write (*,910)
-          call errex
-          stop
-        endif
+        do i=1,fun_num_hyb
+          if (streq(ele,abb_hyb(i),.true.)) then
+             int_dft_fun=i
+             call hybparm(i,abbx,namx,coef_exch,coef_corr,wfunc)
+             goto 100
+          end if
+        end do
+        write (*,910)
+        call errex
+        stop
        endif
   100 continue
 
@@ -607,20 +644,20 @@ c           2  : correlation entered
 
   170   continue
 
-c       Hybrid functionals...
+c       Hybrid functionals.  B3LYP has a potential path of its own,
+c       the others are built term by term (fun_special).
 
-        if (streq(ele,abb_hyb(fun_hyb_b3lyp),.true.)) then
-           int_kspot=fun_hyb_b3lyp
-           coef_pot_exch(fun_exch_hf)=b3lypa
-           coef_pot_exch(fun_exch_lda)=(1.d0-b3lypa-b3lypb)
-           coef_pot_exch(fun_exch_becke)=b3lypb
-           coef_pot_corr(fun_corr_vwn)=1.d0-b3lypc
-           coef_pot_corr(fun_corr_lyp)=b3lypc
-        else
-          write (*,1010)
-          call errex
-          stop
-        endif
+        do i=1,fun_num_hyb
+          if (streq(ele,abb_hyb(i),.true.)) then
+             int_kspot=fun_special
+             if (i.eq.fun_hyb_b3lyp) int_kspot=fun_hyb_b3lyp
+             call hybparm(i,abbx,namx,coef_pot_exch,coef_pot_corr,wpot)
+             goto 200
+          end if
+        end do
+        write (*,1010)
+        call errex
+        stop
        endif
 
   200 continue
@@ -630,9 +667,41 @@ c coef_pot_nonlocal. Needed for Vscf.
 
         if (ks_exact_ex) then 
            coef_pot_nonlocal=1.d0
+           coef_pot_lrx=0.d0
         else
            coef_pot_nonlocal=coef_pot_exch(fun_exch_hf)
+           coef_pot_lrx=coef_pot_exch(fun_exch_hflr)
         end if
+
+c Range separation: omega defaults to the one of the hybrid named in
+c func or kspot (vmol/rsomega.F applies the same rule).
+
+      if (wfunc.ne.0.d0 .and. wpot.ne.0.d0 .and. wfunc.ne.wpot) then
+         write (*,1032)
+         call errex
+         stop
+      end if
+      rsomega=wfunc
+      if (rsomega.eq.0.d0) rsomega=wpot
+      call nl_real('rs_omega',rsomega,int_rs_omega)
+      if (int_rs_omega.lt.0.d0) then
+         write (*,1030)
+         call errex
+         stop
+      end if
+      if (int_rs_omega.eq.0.d0 .and.
+     &    (coef_exch(fun_exch_hflr).ne.0.d0 .or.
+     &     coef_exch(fun_exch_becke_sr).ne.0.d0 .or.
+     &     coef_pot_exch(fun_exch_hflr).ne.0.d0 .or.
+     &     coef_pot_exch(fun_exch_becke_sr).ne.0.d0)) then
+         write (*,1031)
+         call errex
+         stop
+      end if
+ 1030 format ('ERROR: rs_omega must not be negative.')
+ 1031 format ('ERROR: becke_sr and hf_lr need rs_omega.')
+ 1032 format ('ERROR: func and kspot name hybrids with different ',
+     &        'rs_omega.')
 
 c If kspot=wl or wi 
         if ((coef_pot_corr(fun_corr_wl).ne.0.d0).or.

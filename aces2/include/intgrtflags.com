@@ -31,6 +31,11 @@ c                        requested
 c                        Default is .false.
 c     int_ks_scf      : .true. if the actual KS SCF energy is being
 c                        calculated and printed out. Default is .false.
+c     coef_pot_lrx    : coefficient of the long-range exact exchange
+c                        (erf(int_rs_omega*r12)/r12) in the KS potential.
+c                        Like coef_pot_nonlocal, needed for Vscf.
+c     int_rs_omega    : range-separation parameter omega (bohr**-1)
+c                        of range-separated hybrids, 0 if none.
 c
       integer int_numradpts,int_radtyp,int_partpoly,int_radscal,
      &    int_parttyp,int_fuzzyiter,int_defenegrid,int_defenetype,
@@ -46,7 +51,7 @@ c
      &        int_ks_finaliter
 
       M_REAL
-     &    int_radlimit,coef_pot_nonlocal
+     &    int_radlimit,coef_pot_nonlocal,coef_pot_lrx,int_rs_omega
 
       common /intgrtflags/  int_numradpts,int_radtyp,int_partpoly,
      &    int_radscal,int_parttyp,int_fuzzyiter,int_defenegrid,
@@ -60,7 +65,8 @@ c
 c
 
 c  prakash added int_ksmem to the common block
-      common /intgrtflagsd/ int_radlimit,coef_pot_nonlocal
+      common /intgrtflagsd/ int_radlimit,coef_pot_nonlocal,
+     &                      coef_pot_lrx,int_rs_omega
       common /intgrtflagsl/ int_ks,num_acc_ks,ks_exact_ex,int_tdks,
      &                      int_ks_scf
 
