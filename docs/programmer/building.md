@@ -57,6 +57,26 @@ every program that uses it. Always run the installed binary: running a stale
 copy from another directory is the most common reason a fixed bug seems to
 come back. `md5sum $(which xvscf) vscf/xvscf` tells you whether they match.
 
+**Generated `.f` files.** The makefile runs cpp on every `.F` and compiles
+the resulting `.f`. It regenerates a `.f` only when the `.F` is newer, and
+it does not track `#include` dependencies. For a long time these generated
+`.f` files were also tracked in git, which goes wrong: after a header such
+as `dftfunc.com` changes, a fresh checkout (or a server updated by
+`git push`) has `.f` files that are as new as their `.F` but still contain
+the old header, and the build compiles them as they are. On the ccsd
+server this mixed old and new common-block layouts and made every
+Kohn–Sham Fock matrix NaN.
+
+Git therefore no longer tracks a `.f` that has a `.F` of the same name in
+these directories: `intgrt`, `intpack`, `vksdint`, `vscf`, `vmol`, `libr`,
+`oeptools`, `erdints` and `erd`. Each has a `.gitignore` with `*.f`. Real
+`.f` sources (with no `.F`) stay tracked; ignore rules do not apply to
+tracked files, so their edits show as usual, and a new one is added with
+`git add -f`. The other directories still track their generated `.f` and
+will be converted the same way later. Until then, after changing a header,
+run `gmake ppclean` (it deletes the generated `.f`) in every directory that
+includes the header, then rebuild.
+
 **Hosts.** `GNUmakefile` holds a table of known machines with their
 compilers and flags. On a machine not in the table it falls back to a
 generic Linux x86-64 Intel configuration when `ifx` is on `PATH`;

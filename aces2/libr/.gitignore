@@ -1,0 +1,4 @@
+# .f files made by cpp from a .F of the same name are build products: the
+# build regenerates them, so git keeps only the .F. Real .f sources (no .F)
+# stay tracked; add a new one with git add -f.
+*.f
