@@ -74,9 +74,11 @@ sources that used to sit there were renamed to `.F`. That was safe because
 cpp gives back exactly the text it is given for all of them, except for
 these:
 
-- `fblocal/fblocal.f` stays a `.f`. It has `#ifdef` blocks that ifx skips
-  over in a `.f`, so both branches are compiled today; through cpp, one
-  of them would be dropped.
+- `fblocal/fblocal.F` has two `#ifdef` debug blocks. As a `.f`, ifx
+  skipped the `#` lines and compiled both. The second one was written
+  `#ifdef _debug_LVL0` (lower case, never defined) and would have been
+  dropped, so it was changed to `_DEBUG_LVL0` to keep the program's
+  output as it was.
 - In five files, cpp changes only comment lines. A comment line ending
   in `\` is joined to the next one: `erd__dsqmin_line_segments`,
   `oed__dsqmin_line_segments`, `nlo__analyze_bond_order_matrix` and

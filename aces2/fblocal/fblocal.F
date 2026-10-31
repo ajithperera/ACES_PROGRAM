@@ -410,7 +410,7 @@ C
 C
 C Write out the Transformation matrix and localized MOs
 C 
-#ifdef _debug_LVL0
+#ifdef _DEBUG_LVL0
       Call Xgemm("T", "N", Norbs, Norbs, Norbs, 1.0D0, Trans,
      &            Norbs, Trans, Norbs, 0.0D0, Scr1, Nbasis)
       Write(6,*) 

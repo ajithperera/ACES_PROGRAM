@@ -362,11 +362,13 @@ c      lrecw=2*2728/iintfp
  1200 FORMAT(T5,'*Permanent address: Institute of Chemistry',/
      *           T25,'Silesian University,Katowice,Poland'//)
  1300 FORMAT(T5,'Relevant papers: S.A.Kucharski,R.J.Bartlett,'/,
-     *       T22,'J.Chem.Phys.,97,4282(1992)',//T22,'S.A.Kucharski,R.J.Ba
-     *rtlett,',/T22,'Theoret.Chim.Acta,80,387(1991)'//,T22,
-     *'S.A.Kucharski, R.J.Bartlett,'/,T22,'Chem.Phys.Lett.,158,550(1989)
-     *',//T22,'S.A.Kucharski,R.J.Bartlett,',/T22,'Chem.Phys.Lett.,206,574
-     *(1993)')
+     *       T22,'J.Chem.Phys.,97,4282(1992)',//,
+     *       T22,'S.A.Kucharski,R.J.Bartlett,',/,
+     *       T22,'Theoret.Chim.Acta,80,387(1991)',//,
+     *       T22,'S.A.Kucharski, R.J.Bartlett,',/,
+     *       T22,'Chem.Phys.Lett.,158,550(1989)',//,
+     *       T22,'S.A.Kucharski,R.J.Bartlett,',/,
+     *       T22,'Chem.Phys.Lett.,206,574(1993)')
       RETURN
       END
       SUBROUTINE rcpu

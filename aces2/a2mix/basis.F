@@ -207,8 +207,8 @@ C
       IF(IPRINT.EQ.1)THEN
 C
          WRITE(LUOUT, *) "The debug info for two particle density"
-         WRITE(LUOUT, *)  "Total No, shells, Angular momentum components,
-     &   No. of contracted functions per shell"
+         WRITE(LUOUT, *)  "Total No, shells, Angular momentum ",
+     &   "components, No. of contracted functions per shell"
 C
          DO 130 IATM=1,NATOMS
             WRITE(LUOUT,1170) IATM,ATMNAM(IATM),NFCT(IATM),
