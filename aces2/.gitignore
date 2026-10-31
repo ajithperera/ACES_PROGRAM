@@ -8,6 +8,13 @@ lib/
 make.error
 make.output
 
+# Every source in a module directory is a .F; the build runs cpp on it and
+# compiles the .f it makes, so a .f there is a build product. The few real
+# .f sources that are left (fblocal/fblocal.f; Test/ and configure/ are not
+# built by the makefile) stay tracked, since ignore rules do not apply to
+# tracked files; add a new one with git add -f.
+/*/*.f
+
 # per-module built binaries -- explicit paths (not a wildcard: several real
 # source/include files in this tree also start with 'x', e.g. joda/xtor.F,
 # vmol/xdab.f, Test/count/include/xcc.com -- so "x*" globs are NOT safe here)

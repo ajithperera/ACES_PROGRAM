@@ -67,15 +67,31 @@ the old header, and the build compiles them as they are. On the ccsd
 server this mixed old and new common-block layouts and made every
 Kohn–Sham Fock matrix NaN.
 
-Git therefore no longer tracks a `.f` that has a `.F` of the same name in
-these directories: `intgrt`, `intpack`, `vksdint`, `vscf`, `vmol`, `libr`,
-`oeptools`, `erdints` and `erd`. Each has a `.gitignore` with `*.f`. Real
-`.f` sources (with no `.F`) stay tracked; ignore rules do not apply to
-tracked files, so their edits show as usual, and a new one is added with
-`git add -f`. The other directories still track their generated `.f` and
-will be converted the same way later. Until then, after changing a header,
-run `gmake ppclean` (it deletes the generated `.f`) in every directory that
-includes the header, then rebuild.
+Git therefore keeps only the `.F`. Every source directly in a module
+directory is a `.F`, and `aces2/.gitignore` ignores `/*/*.f`, so the `.f`
+that cpp writes next to it never shows up in `git status`. The real `.f`
+sources that used to sit there were renamed to `.F`. That was safe because
+cpp gives back exactly the text it is given for all of them, except for
+these:
+
+- `fblocal/fblocal.f` stays a `.f`. It has `#ifdef` blocks that ifx skips
+  over in a `.f`, so both branches are compiled today; through cpp, one
+  of them would be dropped.
+- In five files, cpp changes only comment lines. A comment line ending
+  in `\` is joined to the next one: `erd__dsqmin_line_segments`,
+  `oed__dsqmin_line_segments`, `nlo__analyze_bond_order_matrix` and
+  `nlo__improve_2cen_connections`. The word `unix` in a comment of
+  `vcc/ncycread` becomes `1`.
+- The two `ishell` files of `ccsdtqf` and `ccsdtqf_mm` start with a
+  `#line` line, which cpp drops.
+
+`Test/`, `configure/` and subdirectories such as `old/` are not built by
+the makefile and were left as they are. Ignore rules do not apply to
+tracked files, so a real `.f` that is still tracked shows its edits as
+usual; a new one has to be added with `git add -f`, and is better written
+as a `.F`. A `.F` must not contain `/*`, a line ending in `\`, or a
+word that cpp defines (`unix`, `linux`, the `-D` names of the makefile)
+outside a comment.
 
 **Hosts.** `GNUmakefile` holds a table of known machines with their
 compilers and flags. On a machine not in the table it falls back to a
