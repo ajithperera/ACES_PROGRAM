@@ -35,7 +35,8 @@ C------------------------------------------------------------------------
 C  OPERATION   : ERD__SSSS_PCGTO_BLOCK
 C  MODULE      : ELECTRON REPULSION INTEGRALS DIRECT
 C  MODULE-ID   : ERD
-C  SUBROUTINES : none
+C  SUBROUTINES : none (erf(omega*r12)/r12 when RSOMEG > 0, see
+C                ERD__RS_ATTENUATE)
 C  DESCRIPTION : This operation is designed to provide ultrafast block
 C                evaluation of a batch of normalized electron repulsion
 C                integrals between s-shell primitive gaussian type
@@ -153,6 +154,8 @@ C
 C
          IMPLICIT    NONE
 
+         INCLUDE     'erd__rsomega.inc'
+
          LOGICAL     ATOMIC,ATOM12,ATOM34
 
          INTEGER     CASE
@@ -180,10 +183,11 @@ C
          DOUBLE PRECISION  PXVAL,PYVAL,PZVAL
          DOUBLE PRECISION  RNPQSQ
          DOUBLE PRECISION  SCALE
+         DOUBLE PRECISION  F,W2
          DOUBLE PRECISION  T,TMAX,TSTEP,TVSTEP
          DOUBLE PRECISION  X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3,X4,Y4,Z4
          DOUBLE PRECISION  X12,Y12,Z12,X34,Y34,Z34
-         DOUBLE PRECISION  SIXTH,FIFTH,FOURTH,THIRD,HALF,ONE,PI
+         DOUBLE PRECISION  ZERO,SIXTH,FIFTH,FOURTH,THIRD,HALF,ONE,PI
 
          DOUBLE PRECISION  ALPHA1 (1:NPGTO1)
          DOUBLE PRECISION  ALPHA2 (1:NPGTO2)
@@ -214,6 +218,7 @@ C
 
          DOUBLE PRECISION  FTABLE (0:MGRID,0:NGRID)
 
+         PARAMETER  (ZERO    =  0.D0 )
          PARAMETER  (SIXTH   =  0.166666666666667D0)
          PARAMETER  (FIFTH   =  0.2D0)
          PARAMETER  (FOURTH  =  0.25D0)
@@ -304,6 +309,8 @@ C                         4   |     (AA|CD)  3-center
 C                         5   |     (AB|CD)  4-center
 C
 C
+         W2 = RSOMEG * RSOMEG
+
          GOTO (10,20,30,40,50) CASE
 C
 C
@@ -321,6 +328,10 @@ C
                M = M + 1
                BATCH (M) = PSCALE * SCALEQ (KL)
      +                            / (PVAL * QVAL * DSQRT (PVAL+QVAL))
+               IF (RSOMEG.NE.ZERO) THEN
+                   F = W2 / (PVAL * QVAL / (PVAL+QVAL) + W2)
+                   BATCH (M) = DSQRT (F) * BATCH (M)
+               END IF
  1100       CONTINUE
  1000    CONTINUE
 
@@ -347,6 +358,11 @@ C
                PQPLUS = PVAL + QVAL
                T = RNPQSQ * PQMULT / PQPLUS
                SCALE = PSCALE * SCALEQ (KL) / (PQMULT * DSQRT (PQPLUS))
+               IF (RSOMEG.NE.ZERO) THEN
+                   F = W2 / (PQMULT / PQPLUS + W2)
+                   T = F * T
+                   SCALE = DSQRT (F) * SCALE
+               END IF
 
                IF (T.LE.TMAX) THEN
                    TGRID = INT (T * TVSTEP + HALF)
@@ -390,6 +406,11 @@ C
                PQPLUS = PVAL + QVAL
                T = RNPQSQ * PQMULT / PQPLUS
                SCALE = PSCALE * SCALEQ (KL) / (PQMULT * DSQRT (PQPLUS))
+               IF (RSOMEG.NE.ZERO) THEN
+                   F = W2 / (PQMULT / PQPLUS + W2)
+                   T = F * T
+                   SCALE = DSQRT (F) * SCALE
+               END IF
 
                IF (T.LE.TMAX) THEN
                    TGRID = INT (T * TVSTEP + HALF)
@@ -432,6 +453,11 @@ C
                PQZ = Z1 - QZ (KL)
                T = (PQX*PQX + PQY*PQY + PQZ*PQZ) * PQMULT / PQPLUS
                SCALE = PSCALE * SCALEQ (KL) / (PQMULT * DSQRT (PQPLUS))
+               IF (RSOMEG.NE.ZERO) THEN
+                   F = W2 / (PQMULT / PQPLUS + W2)
+                   T = F * T
+                   SCALE = DSQRT (F) * SCALE
+               END IF
 
                IF (T.LE.TMAX) THEN
                    TGRID = INT (T * TVSTEP + HALF)
@@ -477,6 +503,11 @@ C
                PQZ = PZVAL - QZ (KL)
                T = (PQX*PQX + PQY*PQY + PQZ*PQZ) * PQMULT / PQPLUS
                SCALE = PSCALE * SCALEQ (KL) / (PQMULT * DSQRT (PQPLUS))
+               IF (RSOMEG.NE.ZERO) THEN
+                   F = W2 / (PQMULT / PQPLUS + W2)
+                   T = F * T
+                   SCALE = DSQRT (F) * SCALE
+               END IF
 
                IF (T.LE.TMAX) THEN
                    TGRID = INT (T * TVSTEP + HALF)

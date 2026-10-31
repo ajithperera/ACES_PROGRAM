@@ -50,7 +50,9 @@ erf(ω r₁₂)/r₁₂ integrals) and `becke_sr` (short-range Becke exchange),
 with ω given by `rs_omega` in bohr⁻¹ (the named hybrids set their own ω,
 for example 0.33 for CAM-B3LYP). Test
 `lcblyp_h2o_rks` builds LC-BLYP this way. VMOL then writes the long-range
-integrals to their own files (`IIIILR`, ...). Energies only: analytic
+integrals to their own files (`IIIILR`, ...); with `INTEGRALS=ERD`,
+`xerdints` writes the same files from ERD (tests `camb3lyp_h2o_rks_erd`
+and `camb3lyp_ch2_uks_erd`). Energies only: analytic
 gradients stop with an error, and SEWARD and direct-SCF integrals are not
 supported. CAM-B3LYP for water (test `camb3lyp_h2o_rks`, reference
 −76.391854413937; {doc}`../programmer/range_separated_dft` describes the

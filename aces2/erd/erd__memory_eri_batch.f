@@ -75,8 +75,10 @@ C
          IMPLICIT    NONE
 
          INCLUDE     'erd__tuning.inc'
+         INCLUDE     'erd__rsomega.inc'
 
          LOGICAL     SPHERIC
+         LOGICAL     SPONLY
 
          INTEGER     IMIN,IOPT
          INTEGER     NALPHA,NCOEFF
@@ -98,7 +100,18 @@ C             ...call special memory routine for only s- and p-type
 C                integrals.
 C
 C
-         IF (MAX0(SHELL1,SHELL2,SHELL3,SHELL4).LT.2) THEN
+C
+C             ...the s- and p-type routines have 1/r12 built in; for
+C                erf(omega*r12)/r12 only (ss|ss) stays with them
+C                (see erd__rsomega.inc).
+C
+C
+         SPONLY = MAX0 (SHELL1,SHELL2,SHELL3,SHELL4).LT.2
+         IF (RSOMEG.NE.0.D0) THEN
+             SPONLY = MAX0 (SHELL1,SHELL2,SHELL3,SHELL4).EQ.0
+         END IF
+
+         IF (SPONLY) THEN
 
              CALL  ERD__MEMORY_1111_CSGTO
      +

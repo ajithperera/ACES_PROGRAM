@@ -15,6 +15,8 @@ C   6. OED one-electron integrals -> SO -> IIII         (Erd_ao1e,
 C                                                        Erd_so1e)
 C   7. ERD two-electron integrals -> SO -> IIII, IIJJ, IJIJ, IJKL
 C                                                       (Erd_so2e)
+C   8. range-separated hybrids only: the same for erf(omega*r12)/r12
+C      -> IIIILR, IIJJLR, IJIJLR, IJKLLR                (Erd_so2e)
 C
       Implicit Double Precision (A-H,O-Z)
 #include "mxatms.par"
@@ -24,10 +26,14 @@ C
 
       Integer Icore(Maxcor), Lu(4), Nwr(4)
       Character*3 Kgen(3)
-      Character*8 Title(24), Fname8(4)
+      Character*8 Title(24), Fname8(4), Fnamlr(4)
       Character*80 Fname
       Logical Debug, Lfull, Lecp
+C Omega of the ERD integrals (aces2/erd/erd__rsomega.inc): 0 for
+C 1/r12, omega > 0 for erf(omega*r12)/r12.
+      Common /Erdrso/ Rsomeg
       Data Fname8 /'IIII    ','IIJJ    ','IJIJ    ','IJKL    '/
+      Data Fnamlr /'IIIILR  ','IIJJLR  ','IJIJLR  ','IJKLLR  '/
 
       Lecp = (Iflags(h_IFLAGS_ecp) .Ne. 0)
 
@@ -220,6 +226,36 @@ C scratch share what is left.
       Do I = 1, 4
          If (Lu(I) .Gt. 0) Close(Lu(I),Status='Keep')
       Enddo
+
+C Range-separated hybrids also need the long-range integrals
+C erf(omega*r12)/r12, written like the ordinary ones (same files per
+C symmetry, same order, same labels) to their own files. Only the
+C TWOELSUP part is read from them (LRXFOCK, LREXCH).
+
+      Call Rsomega(Omega)
+      If (Omega .Ne. 0.0D0) Then
+         Write(6,"(a,f10.6,a)") " @Erd_driver: long-range integrals",
+     &        Omega, " bohr**-1"
+         Do I = 1, 4
+            If (Lu(I) .Gt. 0) Then
+               Call Gfname(Fnamlr(I),Fname,Ilength)
+               Open(Unit=Lu(I),File=Fname(1:Ilength),
+     &              Form='Unformatted',Access='Sequential',
+     &              Status='Replace')
+               Write(Lu(I)) '********'
+               Write(Lu(I)) 'TWOELSUP'
+            Endif
+         Enddo
+         Rsomeg = Omega
+         Call Erd_so2e(Lu,Tla,.False.,Icore(I0w),Icore(I0w2),Lw,
+     &                 Icore(I0z),Lzscr,Icore(I0i),Liscr,Asymlr,Nwr)
+         Rsomeg = 0.0D0
+         Write(6,"(a,4i12)") " @Erd_driver: IIIILR IIJJLR IJIJLR "//
+     &        "IJKLLR ", (Nwr(I),I=1,4)
+         Do I = 1, 4
+            If (Lu(I) .Gt. 0) Close(Lu(I),Status='Keep')
+         Enddo
+      Endif
 
       Return
       End

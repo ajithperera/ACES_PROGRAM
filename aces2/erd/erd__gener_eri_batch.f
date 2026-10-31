@@ -102,9 +102,11 @@ C
 
          INCLUDE     'erd__ftable.inc'
          INCLUDE     'erd__tuning.inc'
+         INCLUDE     'erd__rsomega.inc'
 
          LOGICAL     SCREEN
          LOGICAL     SPHERIC
+         LOGICAL     SPONLY
 
          INTEGER     IMAX,ZMAX
          INTEGER     NALPHA,NCOEFF,NCSUM
@@ -131,7 +133,18 @@ C             ...call special routine, if only s- and p-type integrals
 C                are requested.
 C
 C
-         IF (MAX (SHELL1,SHELL2,SHELL3,SHELL4).LT.2) THEN
+C
+C             ...the s- and p-type routines have 1/r12 built in; for
+C                erf(omega*r12)/r12 only (ss|ss) stays with them
+C                (see erd__rsomega.inc).
+C
+C
+         SPONLY = MAX (SHELL1,SHELL2,SHELL3,SHELL4).LT.2
+         IF (RSOMEG.NE.0.D0) THEN
+             SPONLY = MAX (SHELL1,SHELL2,SHELL3,SHELL4).EQ.0
+         END IF
+
+         IF (SPONLY) THEN
 
              CALL  ERD__1111_CSGTO
      +

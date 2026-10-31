@@ -42,6 +42,7 @@ C  OPERATION   : ERD__E0F0_PCGTO_BLOCK
 C  MODULE      : ELECTRON REPULSION INTEGRALS DIRECT
 C  MODULE-ID   : ERD
 C  SUBROUTINES : ERD__RYS_ROOTS_WEIGHTS
+C                ERD__RS_ATTENUATE
 C                ERD__2D_COEFFICIENTS
 C                ERD__2D_PQ_INTEGRALS
 C                ERD__INT2D_TO_E000
@@ -215,6 +216,8 @@ C             ...include files and declare variables.
 C
 C
          IMPLICIT    NONE
+
+         INCLUDE     'erd__rsomega.inc'
 
          LOGICAL     ATOMIC,ATOMAB,ATOMCD
 
@@ -570,6 +573,22 @@ C
          END IF
 C
 C
+C             ...long-range integrals erf(omega*r12)/r12: attenuate
+C                T and the prefactor (and below the roots).
+C
+C
+         IF (RSOMEG.NE.ZERO) THEN
+             CALL  ERD__RS_ATTENUATE
+     +
+     +                  ( MIJ,MKL,MIJKL,NGQP,
+     +                    P,Q,PQPINV,
+     +                    .FALSE.,
+     +
+     +                              TVAL,SCALEPQ,RTS )
+     +
+         END IF
+C
+C
 C             ...if necessary, expand the scaling array size from
 C                MIJKL to MGQIJKL starting from the last elements.
 C
@@ -628,6 +647,16 @@ C
      +                           WTS )
      +
      +
+         IF (RSOMEG.NE.ZERO) THEN
+             CALL  ERD__RS_ATTENUATE
+     +
+     +                  ( MIJ,MKL,MIJKL,NGQP,
+     +                    P,Q,PQPINV,
+     +                    .TRUE.,
+     +
+     +                              TVAL,SCALEPQ,RTS )
+     +
+         END IF
 C
 C
 C             ...perform the following steps:

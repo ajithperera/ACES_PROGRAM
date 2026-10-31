@@ -21,8 +21,8 @@ c    lc-qtp     Haiduke and Bartlett, JCP 148, 184106 (2018)
 c    qtp17      Jin and Bartlett, JCP 149, 064111 (2018)
 c
 c This table is the only place these values are kept: INITINTGRT,
-c the hybrid energies in NUMINTEFF/NUMINTINT and VMOL (RSOMEGA, for
-c omega) all read it.
+c the hybrid energies in NUMINTEFF/NUMINTINT and RSOMEGA (omega for
+c the integral programs VMOL and XERDINTS) all read it.
 
       subroutine hybparm(ihyb,abb,nam,cx,cc,omega)
 

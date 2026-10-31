@@ -161,12 +161,13 @@ c prakash 23/04
                call dzero(ksb,ntotal)
             end if
 
-c Range-separated hybrids add long-range exchange from the VMOL files
-c IIIILR, ... (see LRXFOCK), which neither SEWARD nor direct SCF have.
+c Range-separated hybrids add long-range exchange from the files
+c IIIILR, ... (see LRXFOCK) that VMOL or xerdints write; neither SEWARD
+c nor direct SCF has them.
       if (scfks .and. coef_pot_lrx.ne.0.d0 .and.
      &    (petite_list .or. dirscf)) then
-         write(*,*) '@MKUHFF: range-separated hybrids need the VMOL ',
-     &              'integral files'
+         write(*,*) '@MKUHFF: range-separated hybrids need the ',
+     &              'long-range integral files of VMOL or xerdints'
          call errex
       end if
 c ----------------------------------------------------------------------
