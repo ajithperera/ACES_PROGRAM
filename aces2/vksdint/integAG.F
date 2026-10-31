@@ -19,6 +19,7 @@
 
 #include <timeinfo.com>
 
+      integer ifun
       integer bgrid, bx,pgrid,ncnt
   
       logical bada,ram 
@@ -328,20 +329,23 @@ c The common block
      &    grad2prim(1,izzz),totprim,0.d0,valgrad2ao(1,izzz),naobasfn)
        end do
  
-       xtmp(fun_exch_hf,1)=0.d0
-       xtmp(fun_exch_hf,2)=0.d0
-       xdertmp(fun_exch_hf,1)=0.d0
-       xdertmp(fun_exch_hf,2)=0.d0
-       xtmp(fun_exch_hflr,1)=0.d0
-       xtmp(fun_exch_hflr,2)=0.d0
-       xdertmp(fun_exch_hflr,1)=0.d0
-       xdertmp(fun_exch_hflr,2)=0.d0
-       xdertmp(fun_exch_lda,1)=0.d0
-       xdertmp(fun_exch_lda,2)=0.d0
-       cdertmp(fun_corr_vwn,1)=0.d0
-       cdertmp(fun_corr_vwn,2)=0.d0
-       cdertmp(fun_corr_vwnrpa,1)=0.d0
-       cdertmp(fun_corr_vwnrpa,2)=0.d0
+c Zero every slot: the potential below is a dot product over all of
+c them, and a slot of a functional that is not called would otherwise
+c hold whatever was on the stack (0*NaN is NaN).
+       do ifun=1,fun_num_exch
+          xtmp(ifun,1)=0.d0
+          xtmp(ifun,2)=0.d0
+          xdertmp(ifun,1)=0.d0
+          xdertmp(ifun,2)=0.d0
+       end do
+       do ifun=1,fun_num_corr
+          ctmp(ifun,1)=0.d0
+          ctmp(ifun,2)=0.d0
+          cdertmp(ifun,1)=0.d0
+          cdertmp(ifun,2)=0.d0
+       end do
+       lyptmp(1)=0.d0
+       lyptmp(2)=0.d0
 
 c       if( bada) then
        if (int_kspot.eq.fun_special) then
