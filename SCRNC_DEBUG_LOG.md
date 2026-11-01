@@ -23,6 +23,17 @@ max |a - G0W0| <= 3e-15, max |b - (G0W0+SOX+SOSEX)| <= 3e-15 Eh, all 8 molecules
 Pitfall hit: numpy eig on the non-Hermitian RPA gives non-orthogonal degenerate vectors (Ne, HF:
 1e-3 Eh error); use the Hermitian (A-B)^1/2(A+B)(A-B)^1/2 form.
 
+QP ROOT CHOICE (same day): Newton from eps_p can land on a satellite (HF 2sigma, variant c: Z=0.03).
+Added Scrnc_lehmann_qpv: bracket all roots within eps_p +- 0.5 Eh (interior sampling of each pole
+interval, Nsub=8, since negative residues allow root pairs without sign change), largest Z ->
+qp_vertex_maxz.dat. It can MISS roots (BF 4sigma (b): Newton root Z=0.88 missed, Sum Z in window
+0.02), so tab_loos.py takes the larger-Z of {converged Newton root, bracketed roots} (best_root).
+Final cc-pVDZ stats, n=20 (CO 1pi now included: IP-EOM P summed over degenerate set):
+G0W0 +0.27/0.31/0.97, G0W0+SOSEX +0.80/0.81/2.22, (a) -0.40/0.42/1.14, (b) +0.35/0.39/1.40,
+(c) -1.03/1.16/3.00 (MSE/MAE/max eV). Only (c) changed vs Newton (HF 2sigma +2.64 -> -1.49).
+Runs: /blue/ufhpc/perera/scrnc_loos/cc-pvdz_sosex/<mol>/{qp_vertex,qp_vertex_maxz}_src{0,1}.dat.
+Manuscript ~/claude_docs/scrnc_paper complete draft (19 pp).
+
 ## SESSION 2026-10-31: COMPLEX EOM-EE PAIRS
 
 Prompted by the manuscript review (~/claude_docs/CC_Response_Self_Energy_Review.docx, causality /

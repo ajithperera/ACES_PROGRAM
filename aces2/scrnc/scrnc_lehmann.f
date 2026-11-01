@@ -449,6 +449,10 @@ C
       Call Scrnc_lehmann_vtx(Nmo,Nocc,Nmo_pairs,
      +   Nroot,Isrc,Work(I_vr),Work(I_vl),Work(I_xr),Work(I_xl),
      +   Work(I_xpr),Work(I_xpl),Work(I_om),Work(I_eps),Work(I_vmo))
+      If (Isrc .NE. 2) Call Scrnc_lehmann_qpv(Nmo,Nocc,Nmo_pairs,
+     +   Nroot,Npole,Isrc,Work(I_vr),Work(I_vl),Work(I_xr),Work(I_xl),
+     +   Work(I_xpr),Work(I_xpl),Work(I_om),Work(I_eps),Work(I_pp),
+     +   Work(I_pc),Work(I_ix))
 C
 C Complex EOM pairs: same three variants with each pair entering
 C through its exact 2x2 block, to qp_vertex_cpx.dat.
@@ -1389,6 +1393,129 @@ C
          Write(89,"(I4,7F11.5)") Ip,Eps(Ip)*Hev,(Qp(K)*Hev,Zq(K),K=1,3)
       Enddo
       Close(Unit=89)
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_lehmann_qpv(Nmo,Nocc,Nmo_pairs,Nroot,Npole,
+     +                             Isrc,Vr,Vl,Xr,Xl,Xpr,Xpl,Om,Eps,
+     +                             Pole,Res,Ix)
+C
+C Quasiparticle of each occupied orbital for the vertex variants as
+C the root of LARGEST weight Z of w = eps_p + Sigma_pp(w), searched
+C within eps_p +- Wwin (the Newton root of Scrnc_lehmann_vtx can land
+C on a satellite when the main line is split). Residues of (b), (c)
+C can be negative, so roots need not alternate with poles: each pole
+C interval is also sampled at Nsub interior points and every sign
+C change is bisected. Output qp_vertex_maxz.dat (format of
+C qp_vertex.dat); stdout gives the number of roots and Sum Z found
+C in the window. Variant (c) is skipped for dRPA states (Isrc=1).
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Vr(Nmo_pairs,Nroot),Vl(Nmo_pairs,Nroot)
+      Dimension Xr(*),Xl(*),Xpr(*),Xpl(*)
+      Dimension Om(Nroot),Eps(Nmo),Pole(Npole),Res(Npole)
+      Integer Ix(Npole)
+      Dimension Qp(3),Zq(3)
+      Parameter (Tiny=1.0D-14, Wwin=0.5D0, Tol=1.0D-11, Nsub=8)
+C
+      Hev = 27.211386245988D0
+      Nv  = 3
+      If (Isrc .EQ. 1) Nv = 2
+      Open(Unit=92,File="qp_vertex_maxz.dat",Form="FORMATTED",
+     +     Status="UNKNOWN")
+      Write(92,"(a)") "# p   eps(eV)   QP_a(eV)   Z_a   QP_b(eV)"//
+     +  "   Z_b   QP_c(eV)   Z_c   (largest-Z root within +-0.5 Eh)"
+      Do Ip = 1, Nocc
+         Do Iv = 1, 3
+            Qp(Iv) = 0.0D0
+            Zq(Iv) = 0.0D0
+         Enddo
+         Do Iv = 1, Nv
+            Np = 0
+            Do Is = 1, Nroot
+               Do Im = 1, Nmo
+                  Ipm = (Ip-1)*Nmo + Im
+                  Call Scrnc_lehmann_res(Iv,Im,Nocc,Ipm,Is,
+     +                 Nmo_pairs,Nroot,Vr,Vl,Xr,Xl,Xpr,Xpl,Om,
+     +                 Eps,C,P)
+                  If (Abs(C) .GT. Tiny) Then
+                     Np = Np + 1
+                     Res(Np)  = C
+                     Pole(Np) = P
+                  Endif
+               Enddo
+            Enddo
+            Call Scrnc_lehmann_sort(Np,Pole,Res,Ix)
+            Wlo = Eps(Ip) - Wwin
+            Whi = Eps(Ip) + Wwin
+            Zbest = -1.0D0
+            Ebest = Eps(Ip)
+            Zsum  = 0.0D0
+            Nfound = 0
+            Do Iint = 0, Np
+               If (Iint .EQ. 0) Then
+                  A = Wlo
+               Else
+                  A = Max(Pole(Iint),Wlo)
+               Endif
+               If (Iint .EQ. Np) Then
+                  B = Whi
+               Else
+                  B = Min(Pole(Iint+1),Whi)
+               Endif
+               If (B-A .LT. 1.0D-12) Goto 200
+               Gap = B - A
+               Xprev = A + 1.0D-9*Gap
+               Fprev = Scrnc_lehmann_f(Xprev,Eps(Ip),Np,Pole,Res,Dum)
+               Do Isub = 1, Nsub+1
+                  Xnext = A + Gap*Dble(Isub)/Dble(Nsub+1)
+                  If (Isub .EQ. Nsub+1) Xnext = B - 1.0D-9*Gap
+                  Fnext = Scrnc_lehmann_f(Xnext,Eps(Ip),Np,Pole,Res,
+     +                                    Dum)
+                  If ((Fprev.LT.0.0D0) .NEQV. (Fnext.LT.0.0D0)) Then
+                     Xa = Xprev
+                     Fa = Fprev
+                     Xb = Xnext
+                     Do Iter = 1, 200
+                        Xm = 0.5D0*(Xa+Xb)
+                        Fm = Scrnc_lehmann_f(Xm,Eps(Ip),Np,Pole,Res,
+     +                                       Dum)
+                        If ((Fm.LT.0.0D0) .EQV. (Fa.LT.0.0D0)) Then
+                           Xa = Xm
+                           Fa = Fm
+                        Else
+                           Xb = Xm
+                        Endif
+                        If (Xb-Xa .LT. Tol) Goto 150
+                     Enddo
+  150                Continue
+                     Xr0 = 0.5D0*(Xa+Xb)
+                     Fm = Scrnc_lehmann_f(Xr0,Eps(Ip),Np,Pole,Res,Dsig)
+                     Z  = 1.0D0/(1.0D0+Dsig)
+                     Zsum = Zsum + Z
+                     Nfound = Nfound + 1
+                     If (Z .GT. Zbest) Then
+                        Zbest = Z
+                        Ebest = Xr0
+                     Endif
+                  Endif
+                  Xprev = Xnext
+                  Fprev = Fnext
+               Enddo
+  200          Continue
+            Enddo
+            Qp(Iv) = Ebest
+            Zq(Iv) = Zbest
+            Write(6,"(a,2I4,F12.5,F9.5,I7,F9.5)")
+     +         " @-Scrnc_lehmann_qpv: p, variant, QP(eV), Z, roots,"//
+     +         " Sum Z in window ",Ip,Iv,Ebest*Hev,Zbest,Nfound,Zsum
+         Enddo
+         Write(92,"(I4,7F11.5)") Ip,Eps(Ip)*Hev,(Qp(K)*Hev,Zq(K),K=1,3)
+      Enddo
+      Close(Unit=92)
 C
       Return
       End
