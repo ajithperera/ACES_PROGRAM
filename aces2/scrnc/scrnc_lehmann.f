@@ -230,6 +230,54 @@ C
      +                           Work(I_vr),Work(I_vl),Work(I_zm),
      +                           Work(I_gm),Work(I_dq),Work(I_wk),
      +                           Lwork)
+C
+C Transition densities of the dRPA singlets with X and Y kept apart,
+C so that the exchange vertices (variant b) can be built as for the
+C EOM states. X+Y = D^1/2 Z Om^-1/2, X-Y = D^-1/2 Z Om^1/2. Same slot
+C convention as the bare states (Isrc=2): right density, forward
+C amplitude at (i-1)*Nmo+a, backward at (a-1)*Nmo+i; left density
+C the other way round. Spin-summed g = sqrt(2)(X,Y); alpha = g/2.
+C V^R = V^L = sqrt(2)(X+Y).(pq|ia) is unchanged.
+C
+         Nvrt = Nmo - Nocc
+         Sq2  = Sqrt(2.0D0)
+         Do Is = 1, Nroot
+            Call Zero(Work(I_gr),Nmo_pairs)
+            Call Zero(Work(I_gl),Nmo_pairs)
+            Omh = Sqrt(Work(I_om-1+Is))
+            Do Ia = 1, Nvrt
+               Do Ii = 1, Nocc
+                  Iov = (Ia-1)*Nocc + Ii
+                  Zv  = Work(I_zm-1+(Is-1)*Nov+Iov)
+                  Ds  = Work(I_dq-1+Iov)
+                  Xpy = Ds*Zv/Omh
+                  Xmy = Zv*Omh/Ds
+                  Xa  = Sq2*0.5D0*(Xpy+Xmy)
+                  Ya  = Sq2*0.5D0*(Xpy-Xmy)
+                  Ifw = (Ii-1)*Nmo + Nocc+Ia
+                  Ibw = (Nocc+Ia-1)*Nmo + Ii
+                  Work(I_gr-1+Ifw) = Xa
+                  Work(I_gr-1+Ibw) = Ya
+                  Work(I_gl-1+Ibw) = Xa
+                  Work(I_gl-1+Ifw) = Ya
+               Enddo
+            Enddo
+            Call Dcopy(Nmo_pairs,Work(I_gr),1,Work(I_gra),1)
+            Call Dcopy(Nmo_pairs,Work(I_gl),1,Work(I_gla),1)
+            Call Dscal(Nmo_pairs,0.5D0,Work(I_gra),1)
+            Call Dscal(Nmo_pairs,0.5D0,Work(I_gla),1)
+            Call Dcopy(Nmo_pairs,Work(I_gra),1,Work(I_grb),1)
+            Call Dcopy(Nmo_pairs,Work(I_gla),1,Work(I_glb),1)
+            Ioff = (Is-1)*Nmo_pairs
+            Call Scrnc_lehmann_vx(Nmo,Nmo_pairs,Work(I_vmo),
+     +           Work(I_gr),Work(I_gl),Work(I_gra),Work(I_gla),
+     +           Work(I_vr+Ioff),Work(I_vl+Ioff),Work(I_xr+Ioff),
+     +           Work(I_xl+Ioff),Work(I_xpr+Ioff),Work(I_xpl+Ioff))
+            Call Scrnc_lehmann_vt(Nmo,Nmo_pairs,Nroot,Ioff,Work(I_vmo),
+     +           Work(I_gra),Work(I_gla),Work(I_grb),Work(I_glb),
+     +           Work(I_gtr),Work(I_gtl),Work(I_vd),Work(I_xr),
+     +           Work(I_xl),Work(I_xpr),Work(I_xpl))
+         Enddo
          Go To 30
       Endif
 C
@@ -394,10 +442,11 @@ C
      +                      Work(I_ix))
 C
 C
-C Self-energy vertex variants (direct x exchange, antisymmetrized);
-C dRPA supplies no transition densities, so they are skipped there.
+C Self-energy vertex variants (direct x exchange, antisymmetrized).
+C For dRPA (Isrc=1) only (a) and (b) are meaningful: the dRPA states
+C are singlets only, so (c) lacks its triplet channel.
 C
-      If (Isrc .NE. 1) Call Scrnc_lehmann_vtx(Nmo,Nocc,Nmo_pairs,
+      Call Scrnc_lehmann_vtx(Nmo,Nocc,Nmo_pairs,
      +   Nroot,Isrc,Work(I_vr),Work(I_vl),Work(I_xr),Work(I_xl),
      +   Work(I_xpr),Work(I_xpl),Work(I_om),Work(I_eps),Work(I_vmo))
 C
@@ -1029,6 +1078,46 @@ C
       Close(Unit=89)
       If (Isrc .EQ. 2) Write(6,"(a,1PD12.3)")
      +   " @-Scrnc_lehmann_vtx: GF2 test, max deviation ",Dmax
+C
+C dRPA: Sigma_pp of (a) and (b) at z = mu + i w (mu mid-gap) and the
+C MO integrals, for the independent G0W0 + SOX + SOSEX check
+C (sosex_check.py).
+C
+      If (Isrc .EQ. 1) Then
+         Emu = 0.5D0*(Eps(Nocc)+Eps(Nocc+1))
+         Open(Unit=90,File="sigma_vtx_check.dat",Form="FORMATTED",
+     +        Status="UNKNOWN")
+         Write(90,"(a,1PD22.14)") "# mu = ",Emu
+         Write(90,"(a)") "# w  p  Re/Im Sigma_a  Re/Im Sigma_b (Eh)"
+         Do Iw = 1, 3
+            Wi = 0.0D0
+            If (Iw .EQ. 2) Wi = 0.2D0
+            If (Iw .EQ. 3) Wi = 1.0D0
+            Z = Dcmplx(Emu,Wi)
+            Do Ip = 1, Nmo
+               Do Iv = 1, 2
+                  S(Iv) = Dcmplx(0.0D0,0.0D0)
+                  Do Is = 1, Nroot
+                     Do Im = 1, Nmo
+                        Ipm = (Ip-1)*Nmo + Im
+                        Call Scrnc_lehmann_res(Iv,Im,Nocc,Ipm,Is,
+     +                       Nmo_pairs,Nroot,Vr,Vl,Xr,Xl,Xpr,Xpl,Om,
+     +                       Eps,C,P)
+                        S(Iv) = S(Iv) + C/(Z-P)
+                     Enddo
+                  Enddo
+               Enddo
+               Write(90,"(F6.3,I4,4(1x,1PD22.14))") Wi,Ip,
+     +            Dble(S(1)),Dimag(S(1)),Dble(S(2)),Dimag(S(2))
+            Enddo
+         Enddo
+         Close(Unit=90)
+         Open(Unit=91,File="drpa_check.bin",Form="UNFORMATTED",
+     +        Access="STREAM",Status="UNKNOWN")
+         Write(91) Dble(Nmo),Dble(Nocc),(Eps(I),I=1,Nmo),
+     +             ((Vmo(I,J),I=1,Nmo_pairs),J=1,Nmo_pairs)
+         Close(Unit=91)
+      Endif
 C
       Return
       End

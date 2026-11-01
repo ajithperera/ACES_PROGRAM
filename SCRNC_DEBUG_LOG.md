@@ -4,7 +4,26 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
-## SESSION 2026-10-31: COMPLEX EOM-EE PAIRS (NEWEST, RESUME HERE)
+## SESSION 2026-11-01: dRPA VARIANT (b) = G0W0 + SOSEX, VERIFIED (NEWEST, RESUME HERE)
+
+Goal: finalize the manuscript (user, 2026-11-01: no new projects; scrnc paper first, to show
+P.-F. Loos). Table 1 claim "(b) with dRPA states = G0W0+SOSEX" needed a real test.
+Code: scrnc_lehmann.F Isrc=1 now builds dRPA right/left transition densities with X and Y apart
+(X+Y = D^1/2 Z Om^-1/2, X-Y = D^-1/2 Z Om^1/2; same slot convention as the bare states) and runs
+them through Scrnc_lehmann_vx/vt, so vertex variants are computed for dRPA; G0W0 qp_lehmann.dat
+byte-identical to before on all 8 molecules. Writes sigma_vtx_check.dat (Sigma_a, Sigma_b at
+z = mu + i{0,0.2,1}) and drpa_check.bin (eps, MO integrals).
+Independent check ~/claude_docs/scrnc_report/sosex_check.py (numpy only, own RPA): GW Lehmann,
+SOX = Bruneval & Forster JCTC 20, 3218 (2024) Eq. 18, SOSEX(W_p,v) = their Eq. 16 by quadrature.
+Sign convention of Eq. 16 as transcribed did NOT reproduce SOX when W_p -> v; the convention with
+pair factor 1/(-iw'+e_v-e_w) and overall +1/2pi does (to 1e-15), and is the one used. Result:
+max |a - G0W0| <= 3e-15, max |b - (G0W0+SOX+SOSEX)| <= 3e-15 Eh, all 8 molecules
+(/blue/ufhpc/perera/scrnc_loos/cc-pvdz_sosex/sosex_check_summary.txt). Analytic reason: chi v chi0
+= chi - chi0 (Dyson), so SOX + SOSEX(W_p,v) = int G v chi v_x, which is the Lehmann exchange term.
+Pitfall hit: numpy eig on the non-Hermitian RPA gives non-orthogonal degenerate vectors (Ne, HF:
+1e-3 Eh error); use the Hermitian (A-B)^1/2(A+B)(A-B)^1/2 form.
+
+## SESSION 2026-10-31: COMPLEX EOM-EE PAIRS
 
 Prompted by the manuscript review (~/claude_docs/CC_Response_Self_Energy_Review.docx, causality /
 non-Hermitian residues). DIAGALL logs (read with /usr/bin/grep -a; the default grep = ugrep skips
