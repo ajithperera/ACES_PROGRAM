@@ -4,10 +4,12 @@ Four Ne cases of the `jcp2020_eom_rccd` suite fail with ifort 2024.0 and
 with ifx 2023.2: the doubles correction of some `Ag` states differs from
 the reference by 0.015–1.4 eV, and the two compilers give different wrong
 values. All other numbers match. The failing states are exactly the
-`Ag` components of degenerate atomic states, which points to an ill-posed
-quantity rather than a compiler bug.
+`Ag` components of degenerate atomic states. The cause is that `vee`
+used the left and right eigenvectors of the EOM matrix as `DGEEV`
+returns them, without making them biorthonormal.
 
-- **Status:** open (known upstream as ifort-only; ifx 2023.2 fails too)
+- **Status:** fixed (`vee/biorth_rcc_vecs.F`, 2026-11-01); a second,
+  separate question about the denominator is open (see *Open questions*)
 - **Area:** aces2 `vee` (EOM ring-CC doubles correction), test suite
   `aces2/tests/jcp2020_eom_rccd`
 - **Found with:** local workstation, ifort 2024.0 + Intel MPI 2021.11
@@ -48,52 +50,74 @@ xringcc xringcl xvee`; the table is the "summary of the EOM(S)-RCCD
 results" at the end of the `xvee` output (written by
 `vee/process_uhf_ccd_roots.F`). Each case takes about 2 s.
 
-## What is known about the cause
+## Cause
 
-Ne is an atom, run in D2h. A D state has five components: two in `Ag` and
-one each in `B1g`, `B2g` and `B3g`. In every failing row the base value
-also appears in `B1g`, `B2g` and `B3g`; the `Ag` rows that pass have no
-such partner. So the failures are the `Ag` components of D states, which
-are degenerate within `Ag`.
+`vee/eom_rcc_diags.F` diagonalizes the EOM matrix of one irrep with
+`DGEEV`, sorts the roots and passes the left (L) and right (R)
+eigenvectors to `form_dbls_correctns_2rcc.F`. The doubles correction of
+root i is formed in `dbls_correctns_2rpa.F` as
 
-The reference itself shows that the correction is not the same for all
-components of one state. For `ne_eomsrccd`, base value 21.026280 eV:
+    E(D)_i = <L_i| W |R_i>
 
-| Irrep | Reference | ifort 2024.0 | ifx 2023.2 |
-|---|---|---|---|
-| `Ag` (2 rows) | −4.298957 | −4.283900 | −4.316053 |
-| `B1g`, `B2g`, `B3g` | −4.335160 | −4.335160 | −4.335160 |
+and is only right when <L_i|R_j> = δ_ij. `DGEEV` does not give that: it
+scales every L and every R to unit length on its own.
 
-If the correction were a property of the state, all five components would
-give the same number. They do not, even in the reference. When two roots
-have the same energy, any rotation of their eigenvectors is an equally
-valid solution, and a correction computed from each eigenvector
-separately depends on which rotation the eigensolver happened to return.
-That choice depends on rounding, so it can change with the compiler while
-the eigenvalues stay the same. The `B1g`/`B2g`/`B3g` components are alone
-in their irreps and match on every compiler.
+- For a non-degenerate root, L_i is orthogonal to the other R_j anyway,
+  but <L_i|R_i> is not 1. The correction is multiplied by it. The matrix
+  is nearly symmetric, so this is small: <L|R> = 0.9993–1.0000 in the
+  suite, up to 1.6e-3 eV in N2.
+- For a block of degenerate roots, `DGEEV` picks a basis of the left
+  block and one of the right block independently. <L_i|R_j> is then not
+  diagonal, and <L_i|R_i> depends on rounding. In the local Ne run
+  (`ne_eomsrccd`, ifx 2024.0) it was 0.988058 for the two `Ag` roots of
+  the triplet D state and 0.991022 for the two of the singlet D state,
+  against 1.000000 for every root of the other irreps.
 
-This is a working explanation, not yet checked in the code. It fits all
-six failing rows and none of the passing ones, and it explains why two
-compilers give two different wrong values for the same rows. It also
-means "ifort-only" is not the right description: any compiler can land on
-another rotation, and ifx 2025.1 matching the reference may be luck.
+The `Ag` correction printed was the invariant value times <L|R>:
+−4.283900 / 0.991022 = −4.322711, which is what the fixed code gives on
+any choice of vectors. With a rotation of the same angle on both roots,
+<L_1|R_1> = <L_2|R_2>; this is why the two `Ag` rows printed the same
+value. The degenerate pairs of `B1g`, `B2g` and `B3g` at 21.055947 eV
+(spin label `??????`, not compared by the suite) had the same problem:
+their corrections ranged from −3.75 to −4.21 eV and became −4.319 to
+−4.321 eV with the fix.
 
-## Possible fixes
+## Fix
 
-1. In the suite, compare only the base value for `Ag` rows whose base
-   value also occurs in another irrep (or for the Ne cases only), and say
-   why in the reference table.
-2. In `vee`, make the correction invariant inside a degenerate block, for
-   example by averaging it over the roots of one block, or by fixing the
-   rotation of degenerate eigenvectors before the correction is formed.
-   This changes published-style output and needs the method authors.
+`vee/biorth_rcc_vecs.F`, called right after `Sort_rcc_eigs`, goes
+through the sorted roots in blocks of equal eigenvalues (to 1e-8 a.u.)
+and replaces the left vectors of each block by
+
+    L <- L S^(-T),   S = L^T R,
+
+so that <L_i|R_j> = δ_ij. For a block of one root this divides L_i by
+<L_i|R_i>. The right vectors, which `process_*_ccd_roots` prints, are
+not changed.
+
+## Verification
+
+- Local ifx 2024.0: the four Ne cases now give the same correction for
+  both `Ag` rows of a state, and it no longer depends on which vectors
+  `DGEEV` returns.
+- The suite references were updated for the rows that changed by more
+  than 1e-5 eV (85 rows; the tolerance is 1e-4 eV). Apart from the Ne
+  `Ag` rows (0.02–0.24 eV), the largest change is 1.6e-3 eV (N2 `B1u`).
+  The base values did not change.
+- `./run_tests.sh ring` 49/49, and aces2 and pyaces unchanged.
 
 ## Open questions
 
-- Is the local ifx 2024.0 build also affected? ifx 2023.2 on the ccsd
-  server is (see the table above); upstream reports ifx 2025.1 on
-  HiPerGator as 49/49.
-- Why do both `Ag` rows of one state print the same correction? With two
-  rotated eigenvectors one would expect two different values. The two
-  rows may be the same root found twice.
+- **ω in the denominator.** `form_dbls_correctns_2rcc.F` calls
+  `Form_d2_4rcc(..., Listd0, 1)`, so the denominator ω − D2 of every root
+  uses ω of the first root of the irrep. The CIS caller
+  (`form_dbls_correctns_2cis.F`) passes each root's own energy. With the
+  root's own ω, the `Ag` and `B1g` corrections of the Ne D states agree
+  exactly (triplet −4.276406, singlet −4.340012 eV in both), while with
+  ω of the first root they differ, because the first root of `Ag`
+  (20.730 eV) and of `B1g` (20.944 eV) are different states. But the
+  change moves the corrections of all higher roots by up to 0.5 eV, and
+  the module docstring of the suite records that the current numbers
+  match Table I of the paper. The code was therefore left as it is; this
+  needs the authors of the method.
+- Not yet checked with ifx 2023.2 and ifort 2024.0 (the ccsd run will
+  show it).

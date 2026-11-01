@@ -158,6 +158,8 @@ C Do a full non-symmetric diagonalization
      +                4*MATDIM,IERROR)
  
           CALL SORT_RCC_EIGS(W(I010),W(I040),W(I030),MATDIM)
+          CALL BIORTH_RCC_VECS(W(I010),W(I040),W(I030),MATDIM,
+     +                         W(I050),MAXCOR-I050+1)
 
        Write(6,*) 
        Write(6,"(a)") " The sorted real eigenvalues (eV)"
