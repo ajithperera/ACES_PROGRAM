@@ -4,7 +4,32 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
-## SESSION 2026-10-29: SELF-ENERGY VERTEX AND SPIN CHANNEL (NEWEST, RESUME HERE)
+## SESSION 2026-10-31: COMPLEX EOM-EE PAIRS (NEWEST, RESUME HERE)
+
+Prompted by the manuscript review (~/claude_docs/CC_Response_Self_Energy_Review.docx, causality /
+non-Hermitian residues). DIAGALL logs (read with /usr/bin/grep -a; the default grep = ugrep skips
+these big logs as binary) show complex EOM-EE-CCSD pairs in the Loos cc-pVDZ set: max |Im w| Ne 0,
+HF 0, H2O 4.7e-4, NH3 1.2e-4, CH4 2.3e-4, BF 4.8e-4, CO 1.1e-3, N2 1.4e-3 Eh.
+Old treatment: GEEV pair -> columns u=Re v, w=Im v, each used as a real state at Re w (the mu
+coupling dropped); left vectors = rows of R^-1 (exact dual basis, hence left residual ~1e-3).
+Fix (uncommitted): vee/diagall.f writes eom_evali.dat (per root: irrep, i, Re w, Im w, and for the
+2nd pair member the block M_kl=<L_k|Hbar|R_l> of the stored vectors via H_L at SCR(I0L));
+scrnc_lehmann.F reads it (Scrnc_lehmann_rdcpx) and Scrnc_lehmann_vtxc writes qp_vertex_cpx.dat
+with each pair entering exactly as (x+M)^-1 (occ) / (y-M)^-1 (vrt), split residues via
+Scrnc_lehmann_fac. Checks on H2O: Mkk = Re w to 1e-13, Muw*Mwu = -mu^2; eom_tdm.dat and
+qp_vertex.dat bit-identical to 10-29. H2O: 6 pairs at 73-184 eV; all occupied QPs unchanged
+(<=0.01 meV, print precision); only near-pole virtual roots (Z~0) move. Reruns in
+/blue/ufhpc/perera/scrnc_loos/cc-pvdz_cpx (h2o job 48572377; n2 co bf nh3 ch4 job 48572978).
+
+RESULT (2026-11-01, both jobs done): real-pair qp_vertex.dat and eom_tdm.dat are bit-identical to
+cc-pvdz/<mol>/ee/qp_vertex_0.dat (Isrc=0; NOTE plain qp_vertex.dat there is the last Isrc=2 run) for
+all 6 molecules. Complex-pair treatment (qp_vertex_cpx.dat) vs real-pair, valence occupied QPs, max
+shift over variants a/b/c: H2O 0.01, NH3 0, CH4 0, BF 0, CO 0.38, N2 0.01 meV; HOMOs identical to 1 meV.
+Pairs: H2O 6, NH3 11, CH4 3, BF 15, CO 37, N2 16. Only virtual near-pole roots move (Z<0.2, some
+with unphysical Z e.g. BF p20 Zb -3.95), up to ~3 eV in variant b. CONCLUSION: complex EOM-EE pairs do
+not affect the IP table; manuscript can state this in one sentence. Code still uncommitted.
+
+## SESSION 2026-10-29: SELF-ENERGY VERTEX AND SPIN CHANNEL
 
 Motivation (Ajith): scrnc came from the J-coupling idea of a two-point
 interaction mediated by the response; GW uses only the charge channel.

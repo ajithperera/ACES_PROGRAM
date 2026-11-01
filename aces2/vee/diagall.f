@@ -10,6 +10,7 @@ CEND
       DOUBLE PRECISION SCR,EVAL,SDOT,X,Z0
       DOUBLE PRECISION POLTOT, R
       DOUBLE PRECISION EVALIMX,RESMAX,RESID,DNRM2
+      DOUBLE PRECISION EVI,EVIP,XM(4)
       LOGICAL ESPROP,CORE_SEARCH,DOUBLE_EES
       DIMENSION SCR(MAXCOR),IOFFX(2)
       COMMON/INFO/NOCCO(2),NVRTO(2)
@@ -49,6 +50,15 @@ C
      &     STATUS='UNKNOWN')
       WRITE(83,*) NOCCO(1)+NVRTO(1),IUHF
 C
+C eom_evali.dat: one line per root written to eom_tdm.dat, same order:
+C IRREPX, I, Re w, Im w, and for the 2nd member w of a complex pair
+C (u,w) the block M(k,l) = <L_k|Hbar|R_l> of the stored (normalized)
+C vectors as Muu,Muw,Mwu,Mww (zero otherwise). GEEV returns the pair
+C as the real columns u = Re v, w = Im v; they span an invariant
+C subspace, so the pair enters a resolvent exactly as (z - M)**-1.
+C
+      OPEN(UNIT=85,FILE='eom_evali.dat',FORM='FORMATTED',
+     &     STATUS='UNKNOWN')
 C READ IN THE NUMBER OF ROOTS REQUESTED IN EACH SYMMETRY BLOCK
 C
       CALL GETREC(20,'JOBARC','EESYMINF',NIRREP,NROOT)
@@ -260,6 +270,30 @@ C
      &                DOUBLE_EES)
 C
          CALL PRINTSUM(EVAL,FSTR,.FALSE.,.FALSE.)
+C
+C Complex pair: the stable sort leaves u (Im w > 0) just before w.
+C H_L = transpose(H_R) is still at SCR(I0L), so
+C <L_k|Hbar|R_l> = (H_L l_k) . r_l with both members normalized.
+C
+         EVI=SCR(I010-1+I)
+         CALL ZERO(XM,4)
+         IF(I.GT.1)THEN
+          EVIP=SCR(I010-2+I)
+         ELSE
+          EVIP=ZILCH
+         ENDIF
+         IF(EVI.LT.ZILCH.AND.EVIP.GT.ZILCH)THEN
+          CALL DGEMV('N',NDIMR,NDIMR,ONE,SCR(I0L),NDIMR,
+     &               SCR(IOFFEVCL-NDIMR),1,ZILCH,SCR(I040),1)
+          CALL DGEMV('N',NDIMR,NDIMR,ONE,SCR(I0L),NDIMR,
+     &               SCR(IOFFEVCL),1,ZILCH,SCR(I050),1)
+          XM(1)=SDOT(NDIMR,SCR(I040),1,SCR(IOFFEVCR-NDIMR),1)
+          XM(2)=SDOT(NDIMR,SCR(I040),1,SCR(IOFFEVCR),1)
+          XM(3)=SDOT(NDIMR,SCR(I050),1,SCR(IOFFEVCR-NDIMR),1)
+          XM(4)=SDOT(NDIMR,SCR(I050),1,SCR(IOFFEVCR),1)
+         ENDIF
+         WRITE(85,'(2I7,6(1X,1PE22.14))')IRREPX,I,EVAL,EVI,
+     &        (XM(K),K=1,4)
 c
         ENDIF
         IOFFEVCR=IOFFEVCR+NDIMR
@@ -267,6 +301,7 @@ c
 100    CONTINUE
 10    CONTINUE
       CLOSE(UNIT=83)
+      CLOSE(UNIT=85)
       RETURN
 
 6000  FORMAT(T3,'@DIAGALL-I, Excitation energies computed by the ',

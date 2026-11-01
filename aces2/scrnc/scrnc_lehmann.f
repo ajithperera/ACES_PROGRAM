@@ -197,7 +197,9 @@ C the alpha, beta and t densities of one state.
       I_gtr  = I_glb  + Nmo_pairs
       I_gtl  = I_gtr  + Nmo_pairs
       I_vd   = I_gtl  + Nmo_pairs
-      Iend   = I_vd   + Nmo_pairs
+C Complex-pair flag and 2x2 block per root (eom_evali.dat).
+      I_mb   = I_vd   + Nmo_pairs
+      Iend   = I_mb   + 5*Nroot
       If (Iend .GT. Maxcor) Call Insmem("Scrnc_lehmann",Iend,Maxcor)
 C
       Call Getrec(20,"JOBARC",Labelc,Iintfp*Nao*Nmo,Work(I_c))
@@ -398,6 +400,17 @@ C
       If (Isrc .NE. 1) Call Scrnc_lehmann_vtx(Nmo,Nocc,Nmo_pairs,
      +   Nroot,Isrc,Work(I_vr),Work(I_vl),Work(I_xr),Work(I_xl),
      +   Work(I_xpr),Work(I_xpl),Work(I_om),Work(I_eps),Work(I_vmo))
+C
+C Complex EOM pairs: same three variants with each pair entering
+C through its exact 2x2 block, to qp_vertex_cpx.dat.
+C
+      If (Isrc .EQ. 0) Then
+         Call Scrnc_lehmann_rdcpx(Nroot,Work(I_om),Work(I_mb),Npair)
+         If (Npair .GT. 0) Call Scrnc_lehmann_vtxc(Nmo,Nocc,
+     +      Nmo_pairs,Nroot,Work(I_vr),Work(I_vl),Work(I_xr),
+     +      Work(I_xl),Work(I_xpr),Work(I_xpl),Work(I_om),Work(I_eps),
+     +      Work(I_mb))
+      Endif
 C
       Write(6,"(a)") " @-Scrnc_lehmann: wrote wcreduc_lehmann.dat,"//
      +               " sigma_lehmann_imag.dat, qp_lehmann.dat"
@@ -1083,6 +1096,210 @@ C
       I2 = Nmo_pairs*Nroot + Ioff + 1
       Call Scrnc_lehmann_vx(Nmo,Nmo_pairs,Vmo,Gtr,Gtl,Gtr,Gtl,Vd,Vd,
      +                      Xr(I2),Xl(I2),Xpr(I2),Xpl(I2))
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_lehmann_rdcpx(Nroot,Om,Fm,Npair)
+C
+C Reads eom_evali.dat (xvee DIAGALL, one line per root, in eom_tdm.dat
+C order). Fm(1,Is) = 1 marks Is as the 2nd member w of a complex pair
+C (u = Is-1, w = Is); Fm(2:5,Is) = Muu, Muw, Mwu, Mww, the block
+C <L_k|Hbar|R_l> of the stored vectors. No file: no pairs.
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Om(Nroot),Fm(5,Nroot)
+      Logical Yes
+C
+      Npair = 0
+      Call Zero(Fm,5*Nroot)
+      Inquire(File="eom_evali.dat",Exist=Yes)
+      If (.Not. Yes) Return
+      Open(Unit=86,File="eom_evali.dat",Form="FORMATTED",
+     +     Status="OLD")
+      Dmax = 0.0D0
+      Do Is = 1, Nroot
+         Read(86,*) Ir,I,Ev,Evi,(Fm(K,Is),K=2,5)
+         If (Abs(Ev-Om(Is)) .GT. 1.0D-8) Then
+            Write(6,"(a,I7,2F16.10)") " @-Scrnc_lehmann_rdcpx: root"//
+     +         " order mismatch ",Is,Ev,Om(Is)
+            Call Errex
+         Endif
+         If (Evi .LT. 0.0D0 .AND. Is .GT. 1) Then
+            Npair = Npair + 1
+            Fm(1,Is) = 1.0D0
+            Write(6,"(a,I7,a,F12.6,a,1PE10.3,a,2(1PE11.3),a,"//
+     +         "1PE9.2)") " @-Scrnc_lehmann_rdcpx: pair at root ",Is,
+     +         " Re w (eV) ",Ev*27.211386245988D0," Im w ",-Evi,
+     +         " Muw Mwu ",Fm(3,Is),Fm(4,Is)," |Muu-Re w| ",
+     +         Abs(Fm(2,Is)-Ev)
+            Dmax = Max(Dmax,Abs(Fm(2,Is)-Ev),Abs(Fm(5,Is)-Ev))
+         Endif
+      Enddo
+      Close(Unit=86)
+      Write(6,"(a,I6,a,1PE10.3)") " @-Scrnc_lehmann_rdcpx: complex"//
+     +   " pairs ",Npair,"  max |Mkk - Re w| ",Dmax
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_lehmann_fac(Iv,Im,Nocc,Ipm,Is,Nmo_pairs,Nroot,
+     +                             Vr,Vl,Xr,Xl,Xpr,Xpl,Nt,Cf,Fr,Fl)
+C
+C The residue of Scrnc_lehmann_res as Sum_t Cf(t) Fr(t) Fl(t), with Fr
+C built from the right and Fl from the left transition density of
+C state Is, so that a 2x2 block can couple Fr of one pair member with
+C Fl of the other.
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Vr(Nmo_pairs,Nroot),Vl(Nmo_pairs,Nroot)
+      Dimension Xr(Nmo_pairs,Nroot,2),Xl(Nmo_pairs,Nroot,2)
+      Dimension Xpr(Nmo_pairs,Nroot,2),Xpl(Nmo_pairs,Nroot,2)
+      Dimension Cf(2),Fr(2),Fl(2)
+C
+      Nt    = 1
+      Cf(1) = 1.0D0
+      If (Im .LE. Nocc) Then
+         Fr(1) = Vr(Ipm,Is)
+         Fl(1) = Vl(Ipm,Is)
+         If (Iv .GE. 2) Fl(1) = Vl(Ipm,Is) - Xpl(Ipm,Is,1)
+         If (Iv .EQ. 3) Then
+            Fr(1) = Vr(Ipm,Is) - Xr(Ipm,Is,1)
+            Fr(2) = Xr(Ipm,Is,2)
+            Fl(2) = Xpl(Ipm,Is,2)
+         Endif
+      Else
+         Fl(1) = Vl(Ipm,Is)
+         Fr(1) = Vr(Ipm,Is)
+         If (Iv .GE. 2) Fr(1) = Vr(Ipm,Is) - Xpr(Ipm,Is,1)
+         If (Iv .EQ. 3) Then
+            Fl(1) = Vl(Ipm,Is) - Xl(Ipm,Is,1)
+            Fl(2) = Xl(Ipm,Is,2)
+            Fr(2) = Xpr(Ipm,Is,2)
+         Endif
+      Endif
+      If (Iv .EQ. 3) Then
+         Nt    = 2
+         Cf(1) = 0.5D0
+         Cf(2) = 1.0D0
+      Endif
+C
+      Return
+      End
+C
+C-----------------------------------------------------------------
+C
+      Subroutine Scrnc_lehmann_vtxc(Nmo,Nocc,Nmo_pairs,Nroot,
+     +                              Vr,Vl,Xr,Xl,Xpr,Xpl,Om,Eps,Fm)
+C
+C As Scrnc_lehmann_vtx, but each complex pair (u,w) enters exactly:
+C Sum_kl Fr_k G_kl Fl_l with G = (x + M)**-1, x = w - eps_m (m occ),
+C or G = (y - M)**-1, y = w - eps_m (m virtual), M the 2x2 block of
+C Hbar on the pair. Real states are treated as before. The pair sum
+C is real for real w (it is the sum of the two complex-conjugate
+C poles). To qp_vertex_cpx.dat, same layout as qp_vertex.dat.
+C
+      Implicit Double Precision (A-H,O-Z)
+      Dimension Vr(Nmo_pairs,Nroot),Vl(Nmo_pairs,Nroot)
+      Dimension Xr(Nmo_pairs,Nroot,2),Xl(Nmo_pairs,Nroot,2)
+      Dimension Xpr(Nmo_pairs,Nroot,2),Xpl(Nmo_pairs,Nroot,2)
+      Dimension Om(Nroot),Eps(Nmo),Fm(5,Nroot)
+      Dimension Qp(3),Zq(3),G(2,2),G2(2,2)
+      Dimension Cfu(2),Fru(2),Flu(2),Cfw(2),Frw(2),Flw(2)
+C
+      Hev = 27.211386245988D0
+      Open(Unit=89,File="qp_vertex_cpx.dat",Form="FORMATTED",
+     +     Status="UNKNOWN")
+      Write(89,"(a)") "# p   eps(eV)   QP_a(eV)   Z_a   QP_b(eV)"//
+     +  "   Z_b   QP_c(eV)   Z_c   (complex EOM pairs as exact 2x2"//
+     +  " blocks)"
+C
+      Do Ip = 1, Nmo
+         Do Iv = 1, 3
+            W = Eps(Ip)
+            Do It = 1, 200
+               Sg = 0.0D0
+               Dg = 0.0D0
+               Do Is = 1, Nroot
+                  Ipair = 0
+                  If (Fm(1,Is) .GT. 0.5D0) Ipair = 1
+                  If (Is .LT. Nroot) Then
+                     If (Fm(1,Is+1) .GT. 0.5D0) Ipair = -1
+                  Endif
+                  If (Ipair .EQ. -1) Go To 30
+                  Do Im = 1, Nmo
+                     Ipm = (Ip-1)*Nmo + Im
+                     If (Ipair .EQ. 0) Then
+                        Call Scrnc_lehmann_res(Iv,Im,Nocc,Ipm,Is,
+     +                       Nmo_pairs,Nroot,Vr,Vl,Xr,Xl,Xpr,Xpl,Om,
+     +                       Eps,C,P)
+                        Sg = Sg + C/(W-P)
+                        Dg = Dg + C/((W-P)*(W-P))
+                     Else
+                        X = W - Eps(Im)
+                        If (Im .LE. Nocc) Then
+                           A = X + Fm(2,Is)
+                           B = Fm(3,Is)
+                           Cc = Fm(4,Is)
+                           D = X + Fm(5,Is)
+                        Else
+                           A = X - Fm(2,Is)
+                           B = -Fm(3,Is)
+                           Cc = -Fm(4,Is)
+                           D = X - Fm(5,Is)
+                        Endif
+                        Det = A*D - B*Cc
+                        G(1,1) =  D/Det
+                        G(1,2) = -B/Det
+                        G(2,1) = -Cc/Det
+                        G(2,2) =  A/Det
+                        Do K = 1, 2
+                           Do L = 1, 2
+                              G2(K,L) = G(K,1)*G(1,L) + G(K,2)*G(2,L)
+                           Enddo
+                        Enddo
+                        Call Scrnc_lehmann_fac(Iv,Im,Nocc,Ipm,Is-1,
+     +                       Nmo_pairs,Nroot,Vr,Vl,Xr,Xl,Xpr,Xpl,
+     +                       Nt,Cfu,Fru,Flu)
+                        Call Scrnc_lehmann_fac(Iv,Im,Nocc,Ipm,Is,
+     +                       Nmo_pairs,Nroot,Vr,Vl,Xr,Xl,Xpr,Xpl,
+     +                       Nt,Cfw,Frw,Flw)
+                        Do It2 = 1, Nt
+                           Sg = Sg + Cfu(It2)*(
+     +                          Fru(It2)*G(1,1)*Flu(It2)
+     +                        + Fru(It2)*G(1,2)*Flw(It2)
+     +                        + Frw(It2)*G(2,1)*Flu(It2)
+     +                        + Frw(It2)*G(2,2)*Flw(It2))
+                           Dg = Dg + Cfu(It2)*(
+     +                          Fru(It2)*G2(1,1)*Flu(It2)
+     +                        + Fru(It2)*G2(1,2)*Flw(It2)
+     +                        + Frw(It2)*G2(2,1)*Flu(It2)
+     +                        + Frw(It2)*G2(2,2)*Flw(It2))
+                        Enddo
+                     Endif
+                  Enddo
+   30             Continue
+               Enddo
+               F  = W - Eps(Ip) - Sg
+               Fp = 1.0D0 + Dg
+               Dw = -F/Fp
+               If (Abs(Dw) .GT. 0.05D0) Dw = Sign(0.05D0,Dw)
+               W = W + Dw
+               If (Abs(Dw) .LT. 1.0D-10) Go To 40
+            Enddo
+            Write(6,"(a,2I4)") " @-Scrnc_lehmann_vtxc: no"//
+     +                         " convergence, p, variant ",Ip,Iv
+   40       Continue
+            Qp(Iv) = W
+            Zq(Iv) = 1.0D0/Fp
+         Enddo
+         Write(89,"(I4,7F11.5)") Ip,Eps(Ip)*Hev,(Qp(K)*Hev,Zq(K),K=1,3)
+      Enddo
+      Close(Unit=89)
 C
       Return
       End
