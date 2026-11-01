@@ -104,6 +104,9 @@ not changed.
   `Ag` rows (0.02–0.24 eV), the largest change is 1.6e-3 eV (N2 `B1u`).
   The base values did not change.
 - `./run_tests.sh ring` 49/49, and aces2 and pyaces unchanged.
+- ccsd server, ifx 2023.2 (2026-11-01, jobs 8211/8212): ring 49/49, and
+  aces2 171/171, aces3 37/37, pyaces 60/60, py-api 8/8. Both compilers
+  now give the same corrections.
 
 ## Open questions
 
@@ -119,5 +122,3 @@ not changed.
   the module docstring of the suite records that the current numbers
   match Table I of the paper. The code was therefore left as it is; this
   needs the authors of the method.
-- Not yet checked with ifx 2023.2 and ifort 2024.0 (the ccsd run will
-  show it).
