@@ -5,7 +5,7 @@ functionals (CAM-B3LYP, CAM-QTP-00/01/02, LC-QTP) and the global hybrid
 QTP17. It covers the working equations, the program flow with either
 integral program (VMOL, the default, or ERD with `INTEGRALS=ERD`), every
 routine that was added or changed, the input rules, the limits, and how
-the code was checked. {doc}`../user/methods` shows how to run these methods.
+the code was checked. {doc}`../user/dft` shows how to run these methods.
 
 ## Summary
 
@@ -625,5 +625,11 @@ Errors stop the run in these cases:
   `lcblyp_h2o_rks`, `camqtp00_h2o_rks`, `camqtp01_h2o_rks`,
   `camqtp02_h2o_rks`, `lcqtp_h2o_rks`, `qtp17_h2o_rks`, `qtp17_ch2_uks`,
   and, with `INTEGRALS=ERD`, `camb3lyp_h2o_rks_erd` and
-  `camb3lyp_ch2_uks_erd`. The aces2 suite passes 171/171, pyaces 60/60,
-  and py-api 8/8.
+  `camb3lyp_ch2_uks_erd`. The aces2 suite passed 171/171, pyaces 60/60,
+  and py-api 8/8. Ten cases were added later, so that every QTP hybrid is
+  tested with both references and with ERD: `camqtp00_ch2_uks`,
+  `camqtp01_ch2_uks`, `camqtp02_ch2_uks`, `lcqtp_ch2_uks`,
+  `camqtp00_h2o_rks_erd`, `camqtp01_h2o_rks_erd`, `camqtp02_h2o_rks_erd`,
+  `lcqtp_h2o_rks_erd`, `qtp17_h2o_rks_erd` and `qtp17_ch2_uks_erd`. Their
+  references agree with the PySCF and VMOL values in the tables above. The
+  aces2 suite then passes 181/181.

@@ -29,6 +29,7 @@ getting_started/index
 
 user/aces2_input
 user/methods
+user/dft
 user/aces3
 user/pyaces
 ```

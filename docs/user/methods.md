@@ -34,33 +34,10 @@ stretched HF this way, then runs CCSD(T) with the 1s orbital frozen
 :language: text
 ```
 
-Kohn–Sham DFT is selected with `SCF_TYPE=KS` and the `*VSCF` and
-`*INTGRT` namelists. The test cases `103.ks`, `104.ks` and `105.ks` show
-the input.
-
-The range-separated hybrid CAM-B3LYP is `kspot=cam-b3lyp` and
-`func=cam-b3lyp` in `*INTGRT`. The QTP functionals are named the same
-way: `cam-qtp-00`, `cam-qtp-01`, `cam-qtp-02` and `lc-qtp` (range-separated)
-and `qtp17` (global hybrid, with the RPA form of VWN correlation, `vwn_rpa`).
-Tests `camqtp00_h2o_rks`, `camqtp01_h2o_rks`, `camqtp02_h2o_rks`,
-`lcqtp_h2o_rks`, `qtp17_h2o_rks` and `qtp17_ch2_uks` cover them. Other
-range-separated hybrids are written
-term by term with `hf_lr` (long-range exact exchange, from
-erf(ω r₁₂)/r₁₂ integrals) and `becke_sr` (short-range Becke exchange),
-with ω given by `rs_omega` in bohr⁻¹ (the named hybrids set their own ω,
-for example 0.33 for CAM-B3LYP). Test
-`lcblyp_h2o_rks` builds LC-BLYP this way. VMOL then writes the long-range
-integrals to their own files (`IIIILR`, ...); with `INTEGRALS=ERD`,
-`xerdints` writes the same files from ERD (tests `camb3lyp_h2o_rks_erd`
-and `camb3lyp_ch2_uks_erd`). Energies only: analytic
-gradients stop with an error, and SEWARD and direct-SCF integrals are not
-supported. CAM-B3LYP for water (test `camb3lyp_h2o_rks`, reference
-−76.391854413937; {doc}`../programmer/range_separated_dft` describes the
-implementation):
-
-```{literalinclude} ../../aces2/tests/fast/cases/camb3lyp_h2o_rks/ZMAT
-:language: text
-```
+Kohn–Sham DFT is selected with `SCF_TYPE=KS` and a `*INTGRT` namelist
+that names the functional. LDA, GGA, global hybrid (B3LYP, QTP17) and
+range-separated hybrid functionals (CAM-B3LYP, CAM-QTP-00/01/02, LC-QTP)
+are available. {doc}`dft` describes the input and lists the test cases.
 
 ## Correlated energies
 

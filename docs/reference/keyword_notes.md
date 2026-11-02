@@ -161,7 +161,7 @@ Specifies whether the gradient formulation assumes that the perturbed orbitals a
 
 ## SCF_TYPE
 
-Switches the SCF code between the standard Hartree-Fock program (=HF) and the Kohn-Sham DFT program (=KS). If SCF TYPE=KS, then the KS-DFT program generates the SCF reference and requires separate namelists (viz. *VSCF and *INTGRT).
+Switches the SCF code between the standard Hartree-Fock program (=HF) and the Kohn-Sham DFT program (=KS). If SCF_TYPE=KS, then the KS-DFT program generates the SCF reference and reads the functional and the integration grid from the *INTGRT namelist; see {doc}`../user/dft`.
 
 ## FOCK
 
@@ -631,7 +631,7 @@ Sets the dielectric constant used to determine the orbitals. A cavity size may b
 
 ## KS_POT
 
-Obsoleted by the *VSCF namelist.
+Obsoleted by the *INTGRT namelist (`kspot`); see {doc}`../user/dft`.
 
 ## FUNCTIONAL
 
