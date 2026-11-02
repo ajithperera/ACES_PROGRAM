@@ -25,12 +25,23 @@ getting_started/index
 
 ```{toctree}
 :maxdepth: 2
-:caption: User guide
+:caption: ACES II
 
 user/aces2_input
 user/methods
-user/dft
+```
+
+```{toctree}
+:maxdepth: 2
+:caption: ACES III
+
 user/aces3
+```
+
+```{toctree}
+:maxdepth: 2
+:caption: pyaces
+
 user/pyaces
 ```
 

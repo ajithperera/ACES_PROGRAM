@@ -394,7 +394,7 @@ and the elements need not be in the same order in both.
 Test `erd_grad_cl2_ecp_mp2` is a complete ECP job, an MBPT(2) gradient
 of Cl₂ with the SBKJC ECP. Its script writes the `ZMAT`, copies
 `basis/ECPDATA` (see [](#ecpdata)), then runs the gradient with both integral
-programs (see `INTEGRALS=ERD` in {doc}`methods`):
+programs (see `INTEGRALS=ERD` in {doc}`dft`):
 
 ```{literalinclude} ../../aces2/tests/fast/cases/erd_grad_cl2_ecp_mp2/SCRIPT
 :language: sh

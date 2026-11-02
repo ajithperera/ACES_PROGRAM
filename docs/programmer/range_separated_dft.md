@@ -77,7 +77,7 @@ the code was checked. {doc}`../user/dft` shows how to run these methods.
   the general Rys path.
 - **`GNUmakefile`:** `xvmol` links `intgrt`; `xerdints` links `intgrt` and
   `sbtools`.
-- **Tests and docs:** thirteen regression tests, `methods.md` and this
+- **Tests and docs:** thirteen regression tests, `user/dft.md` and this
   chapter.
 
 ### Remaining limits
