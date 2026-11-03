@@ -19,7 +19,9 @@ Two ways to drive a calculation:
 from ._ext import ext
 from .records import (record_length, get_record, put_record,
                       get_string_record, put_string_record)
-from .lists import get_list, put_list, get_all_irreps, put_all_irreps
+from .lists import (list_shape, get_list, put_list, get_all_irreps,
+                    put_all_irreps)
+from .integrals import get_1e_ints
 from .drivers import (init, run_ints, run_scf, run_cc, run_hbar, run_props,
                       run_pccd, run_ee, run_dirmp2, run_intgrt,
                       close_jobarc, open_jobarc)
@@ -29,8 +31,9 @@ from . import moio
 __all__ = [
     'ext', 'run', 'Result', 'CalculationError', 'ENTRY_POINTS', 'iuhf_from_zmat',
     'record_length', 'get_record', 'put_record', 'get_string_record',
-    'put_string_record', 'get_list', 'put_list', 'get_all_irreps',
-    'put_all_irreps', 'init', 'run_ints', 'run_scf', 'run_cc', 'run_hbar',
+    'put_string_record', 'list_shape', 'get_list', 'put_list',
+    'get_all_irreps', 'put_all_irreps', 'get_1e_ints', 'init', 'run_ints',
+    'run_scf', 'run_cc', 'run_hbar',
     'run_props', 'run_pccd', 'run_ee', 'run_dirmp2', 'run_intgrt',
     'close_jobarc', 'open_jobarc', 'moio',
 ]

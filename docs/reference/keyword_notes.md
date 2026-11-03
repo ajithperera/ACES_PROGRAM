@@ -161,7 +161,7 @@ Specifies whether the gradient formulation assumes that the perturbed orbitals a
 
 ## SCF_TYPE
 
-Switches the SCF code between the standard Hartree-Fock program (=HF) and the Kohn-Sham DFT program (=KS). If SCF TYPE=KS, then the KS-DFT program generates the SCF reference and requires separate namelists (viz. *VSCF and *INTGRT).
+Switches the SCF code between the standard Hartree-Fock program (=HF) and the Kohn-Sham DFT program (=KS). If SCF_TYPE=KS, then the KS-DFT program generates the SCF reference and reads the functional and the integration grid from the *INTGRT namelist; see {doc}`../user/dft`.
 
 ## FOCK
 
@@ -369,7 +369,7 @@ Controls what action is taken by the linear response program. =ON calculates and
 
 ## EXCITE
 
-Selects the method for excited states of the same charge: `TDA` (CIS), `RPA`, `DRPA`, `EOMEE` (EOM-CCSD), `CIS(D)`, `P-EOMEE` (partitioned EOM-CCSD), `STEOM`, and EOM variants built on ring-CCD ground states (`EOM(S)-RCCD`, `EOM(S)-DRCCD` and their spin-flip and doubles forms, used with `EOMREF`). The number of states per irrep is set with `ESTATE_SYM`. See {doc}`../user/methods`.
+Selects the method for excited states of the same charge: `TDA` (CIS), `RPA`, `DRPA`, `EOMEE` (EOM-CCSD), `CIS(D)`, `P-EOMEE` (partitioned EOM-CCSD), `STEOM`, and EOM variants built on ring-CCD ground states (`EOM(S)-RCCD`, `EOM(S)-DRCCD` and their spin-flip and doubles forms, used with `EOMREF`). The number of states per irrep is set with `ESTATE_SYM`. See {doc}`../user/excited_states`.
 
 ## ESTATE_TOL
 
@@ -517,11 +517,11 @@ Specifies the types of property integrals that are computed. Setting this to FUL
 
 ## GEOM_OPT
 
-Specifies the scope of coordinate optimizations. This keyword is automatically set to PARTIAL if a geometry optimization is implied with asterisks in the internal coordinate Z matrix. For Cartesian input (`COORD=CARTESIAN`), =RIC (FULL is the same) optimizes in redundant internal coordinates and =CART in Cartesian coordinates. These run in the point group of the starting structure (with `SYMMETRY=NONE` for a C1 start or a constrained optimization) and preserve it; see {doc}`../user/methods`.
+Specifies the scope of coordinate optimizations. This keyword is automatically set to PARTIAL if a geometry optimization is implied with asterisks in the internal coordinate Z matrix. For Cartesian input (`COORD=CARTESIAN`), =RIC (FULL is the same) optimizes in redundant internal coordinates and =CART in Cartesian coordinates. These run in the point group of the starting structure (with `SYMMETRY=NONE` for a C1 start or a constrained optimization) and preserve it; see {doc}`../user/geometry_optimization`.
 
 ## OPT_CONTROL
 
-=CONSTRAINED keeps the coordinates listed in the `*CONSTRAINS` block at their starting values (RIC and CART optimizations; see {doc}`../user/methods` for the format). =LST and =QST guide a transition state search (`OPT_METHOD=EVFTS`) along a linear or quadratic synchronous path between the reactant and product structures given after the main geometry (or, with only a reactant as the main geometry and a product, from their LST midpoint; for Cartesian input with `GEOM_OPT=RIC` see {doc}`../user/methods`).
+=CONSTRAINED keeps the coordinates listed in the `*CONSTRAINS` block at their starting values (RIC and CART optimizations; see {doc}`../user/geometry_optimization` for the format). =LST and =QST guide a transition state search (`OPT_METHOD=EVFTS`) along a linear or quadratic synchronous path between the reactant and product structures given after the main geometry (or, with only a reactant as the main geometry and a product, from their LST midpoint; for Cartesian input with `GEOM_OPT=RIC` see {doc}`../user/geometry_optimization`).
 
 ## CURVILINEAR
 
@@ -531,7 +531,7 @@ Specifies whether or not the Hessian matrix is transformed (nonlinearly) to curv
 
 ## OPT_METHOD
 
-Specifies the geometry optimization step algorithm. =AUTO (default) becomes =MANR. =NR is Newton-Raphson, =MANR Newton-Raphson with a Morse adjustment of bond stretches, =RFA the rational function step (safe when the Hessian has negative eigenvalues); these search for minima. =EVFTS (Baker eigenvector following) and =MAEVFTS (with the Morse adjustment) search for transition states. With `GEOM_OPT=CART` minimum searches always use RFA. IGTS and QSD were removed in 10/2026. See {doc}`../user/methods`.
+Specifies the geometry optimization step algorithm. =AUTO (default) becomes =MANR. =NR is Newton-Raphson, =MANR Newton-Raphson with a Morse adjustment of bond stretches, =RFA the rational function step (safe when the Hessian has negative eigenvalues); these search for minima. =EVFTS (Baker eigenvector following) and =MAEVFTS (with the Morse adjustment) search for transition states. With `GEOM_OPT=CART` minimum searches always use RFA. IGTS and QSD were removed in 10/2026. See {doc}`../user/geometry_optimization`.
 
 ## MAX_STEP
 
@@ -631,7 +631,7 @@ Sets the dielectric constant used to determine the orbitals. A cavity size may b
 
 ## KS_POT
 
-Obsoleted by the *VSCF namelist.
+Obsoleted by the *INTGRT namelist (`kspot`); see {doc}`../user/dft`.
 
 ## FUNCTIONAL
 
@@ -699,7 +699,7 @@ For finite-field calculations (`FFIELD`), the multipole operator whose response 
 
 ## OO_METHOD
 
-Orbital optimizer for orbital-optimized pCCD and related methods (`PCCD_REF=OPTIMIZED`, `CALC=OO-CCD`, `OO-LCCD`): `RFO` (rational function), `BFGS`, `FULL-NR` (Newton–Raphson), `BB-SD`, `AMSGRAD`, `ROTGRAD`. See {doc}`../user/methods`.
+Orbital optimizer for orbital-optimized pCCD and related methods (`PCCD_REF=OPTIMIZED`, `CALC=OO-CCD`, `OO-LCCD`): `RFO` (rational function), `BFGS`, `FULL-NR` (Newton–Raphson), `BB-SD`, `AMSGRAD`, `ROTGRAD`. See {doc}`../user/pccd`.
 
 ## PCCD_REF
 

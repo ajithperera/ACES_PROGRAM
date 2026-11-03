@@ -978,7 +978,7 @@ ACES_LINK_LISTS = \
    vdintl:ecplib:${LIST_DEF_LIBS} \
    vea:libr2:${LIST_DEF_LIBS} \
    vee:trp:librt3:libr2:crust:hbar:vcc:blockdave:pccd:${LIST_DEF_LIBS} \
-   vmol:ecplib:${LIST_DEF_LIBS} \
+   vmol:ecplib:intgrt:sbtools:${LIST_DEF_LIBS} \
    vmol2ja:ecplib:${LIST_DEF_LIBS} \
    a2rate:${LIST_DEF_LIBS} \
    rccd::librt3:${LIST_DEF_LIBS} \
@@ -1032,7 +1032,7 @@ ACES_LINK_LISTS = \
    cse12:${LIST_DEF_LIBS}\
    hcmult:vee:libr2:${LIST_DEF_LIBS}\
    libint:oed:erd:${LIST_DEF_LIBS}\
-   erdints:ecplib:oed:erd:${LIST_DEF_LIBS}\
+   erdints:ecplib:oed:erd:intgrt:sbtools:${LIST_DEF_LIBS}\
    erdgrad:erdints:ecplib:oed:erd:${LIST_DEF_LIBS}\
    lsccresp:sbtools:vcc:libr2:${LIST_DEF_LIBS}\
    vibavg:a2proc:sbtools:ibr2:${LIST_DEF_LIBS}\

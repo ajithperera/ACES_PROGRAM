@@ -3,13 +3,33 @@ set -e
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-# Module set: PYACES_MODULES (the CMake superbuild), else the set ../configure
-# recorded (ACES_PROGRAM_MODULES, when driven from ../build.sh), else the
-# HiPerGator default; PYACES_MODULES="" uses the current environment (ifx,
-# MKLROOT, python3 with numpy already set up).
-PYACES_MODULES=${PYACES_MODULES-${ACES_PROGRAM_MODULES:-"intel/2025.1.0 openmpi/5.0.7 python/3.12"}}
+# Toolchain, first match wins:
+#  1. PYACES_MODULES, when set (the CMake superbuild; ../build.sh passes the
+#     set ../configure recorded). "" uses the current environment (ifx,
+#     MKLROOT, python3 with numpy already set up).
+#  2. ACES_PROGRAM_MODULES from the environment, when non-empty.
+#  3. Run on its own: ../build_config.sh's loader, i.e. ../configure's choice
+#     of modules, a setvars script or PATH, and its Fortran and C compilers.
+#  4. No build_config.sh: the HiPerGator module set.
 source "$SCRIPT_DIR/../cmake/env.sh"
-aces_load_modules "$PYACES_MODULES"
+if [ -n "${PYACES_MODULES+set}" ]; then
+    aces_load_modules "$PYACES_MODULES"
+elif [ -n "${ACES_PROGRAM_MODULES:-}" ]; then
+    aces_load_modules "$ACES_PROGRAM_MODULES"
+elif [ -f "$SCRIPT_DIR/../build_config.sh" ]; then
+    # shellcheck source=/dev/null
+    source "$SCRIPT_DIR/../build_config.sh"
+    if type aces_program_load_env >/dev/null 2>&1; then
+        aces_program_load_env || exit 1
+    else
+        # Written by an older ./configure, which knew only modules.
+        aces_load_modules "$ACES_PROGRAM_MODULES"
+    fi
+    PYACES_FC=${PYACES_FC:-${ACES_PROGRAM_FC:-}}
+    PYACES_CC=${PYACES_CC:-${ACES_PROGRAM_CC:-}}
+else
+    aces_load_modules "intel/2025.1.0 openmpi/5.0.7 python/3.12"
+fi
 : "${MKLROOT:?is unset -- the loaded modules provide no Intel MKL}"
 # Fortran compiler for every pyaces object and the link: PYACES_FC (../build.sh
 # passes ./configure's --fortran choice), else ifx, else ifort.
@@ -17,6 +37,13 @@ if [ -z "${PYACES_FC:-}" ]; then
     if command -v ifx >/dev/null 2>&1; then PYACES_FC=ifx; else PYACES_FC=ifort; fi
 fi
 command -v "$PYACES_FC" >/dev/null 2>&1 || { echo "$PYACES_FC is not on PATH" >&2; exit 1; }
+# C compiler for the f2py module and fortranobject.c (plain C, no MPI):
+# PYACES_CC (../build.sh passes ./configure's choice), else icx, else gcc.
+if [ -z "${PYACES_CC:-}" ]; then
+    if command -v icx >/dev/null 2>&1; then PYACES_CC=icx; else PYACES_CC=gcc; fi
+fi
+command -v "$PYACES_CC" >/dev/null 2>&1 || { echo "$PYACES_CC is not on PATH" >&2; exit 1; }
+echo "compilers: $(command -v $PYACES_FC), $(command -v $PYACES_CC)"
 # The globs and sorts below set archive member and -l order, and with them which
 # copy of a multiply-defined routine the link picks. Collate bytewise so that
 # does not change with the caller's locale (PBS jobs often run with none).
@@ -53,7 +80,8 @@ mkdir -p build
 # called from Python.
 PYF_SOURCES="$MAIN/init.F $PYF/dgetrecpy.F $PYF/igetrecpy.F $PYF/dputrecpy.F \
     $PYF/iputrecpy.F $PYF/cgetrecpy.F $PYF/cputrecpy.F $PYF/getlstpy.F \
-    $PYF/putlstpy.F $PYF/getallpy.F $PYF/putallpy.F $PYF/getreclenpy.F \
+    $PYF/putlstpy.F $PYF/getlstdimpy.F $PYF/getallpy.F $PYF/putallpy.F \
+    $PYF/getreclenpy.F \
     $PYF/get1ehpy.F $PYF/get2ehpy.F $PYF/buildhbar.F $PYF/runints.F \
     $PYF/runscf.F $PYF/runcc.F $PYF/runhbar.F $PYF/runprops.F $PYF/runpccd.F \
     $PYF/runee.F $PYF/rundirmp2.F $PYF/runintgrt.F $PYF/acesjafin.F $PYF/acesjainit.F"
@@ -83,13 +111,15 @@ python3 -m numpy.f2py $PYF_SOURCES -m aces2py --build-dir gen > $WORK/f2py_gen.l
 sed -i -E 's/(F_FUNC(_US)?\()([A-Za-z0-9_]+)(,)/\1\L\3\E\4/g' gen/aces2pymodule.c
 
 echo "=== step 2: compile C sources ==="
-mpicc -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC \
+$PYACES_CC -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC \
     -c gen/aces2pymodule.c -o build/aces2pymodule.o
-mpicc -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC \
+$PYACES_CC -DNDEBUG -fPIC -O2 -I. -I$NUMPY_INC -I$PY_INC -I$F2PY_SRC \
     -c $F2PY_SRC/fortranobject.c -o build/fortranobject.o
 
 echo "=== step 3: compile Fortran sources ==="
-FFLAGS="-diag-disable=10448 -i8 -fPIC -fp-model strict -O1 -assume minus0 -qopenmp -D__fortran -D__fortran77 -D_INTEL -D_RECL_IS_WORDS_ -I$ACES/include -I$ACES/acescore/include -I. -FI"
+# -DF_64BIT as aces2's makefiles set it for -i8: a2_getcrec/a2_putcrec count a
+# character record in 8-byte words, like the getcrec/putcrec linked from aces2.
+FFLAGS="-diag-disable=10448 -i8 -fPIC -fp-model strict -O1 -assume minus0 -D__fortran -D__fortran77 -D_INTEL -D_RECL_IS_WORDS_ -DF_64BIT -I$ACES/include -I$ACES/acescore/include -I. -FI"
 
 for f in $SOURCES; do
     base=$(basename "$f" .F)

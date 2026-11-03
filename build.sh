@@ -31,8 +31,8 @@ export OMPI_FC="$ACES_PROGRAM_FC" OMPI_F77="$ACES_PROGRAM_FC"
 export OMPI_CC="$ACES_PROGRAM_CC" OMPI_CXX="$ACES_PROGRAM_CXX"
 export ACES3_MPIFC="mpi$ACES_PROGRAM_FC" ACES3_MPICC="mpi$ACES_PROGRAM_CC"
 export ACES3_MPICXX="mpi$ACES_PROGRAM_CXX" ACES3_SERIAL_CXX="$ACES_PROGRAM_CXX"
-# pyaces/build.sh compiles and links with this.
-export PYACES_FC="$ACES_PROGRAM_FC"
+# pyaces/build.sh compiles and links with these.
+export PYACES_FC="$ACES_PROGRAM_FC" PYACES_CC="$ACES_PROGRAM_CC"
 # pyaces/build.sh does its own `module purge` + load, so it has to be told
 # which module set this build is using rather than inheriting the loaded one.
 export ACES_PROGRAM_MODULES
@@ -242,9 +242,9 @@ for t in $TARGETS; do
       fi
       ;;
     pyaces)
-      # pyaces/build.sh compiles with $PYACES_FC and mpicc and links against
+      # pyaces/build.sh compiles with $PYACES_FC and $PYACES_CC and links against
       # $MKLROOT/lib/intel64 -- an unset MKLROOT silently becomes "-L/lib/intel64".
-      if require_tools pyaces $ACES_PROGRAM_FC mpicc python3 && [ -n "${MKLROOT:-}" ]; then
+      if require_tools pyaces $ACES_PROGRAM_FC $ACES_PROGRAM_CC python3 && [ -n "${MKLROOT:-}" ]; then
         # Hand over exactly the configured module set; empty (setvars or
         # PATH toolchains) makes pyaces/build.sh use the environment as loaded
         # here instead of falling back to the HiPerGator modules.

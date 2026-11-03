@@ -72,7 +72,7 @@ Running steps (the argument `iuhf` is 0 for RHF, 1 for UHF/ROHF):
 | `Runints(iuhf)` | AO integrals |
 | `Runscf(iuhf)` | Integrals and SCF |
 | `Runcc(iuhf)` | Integral transformation and sorting, then the correlated method in `CALC` |
-| `Runpccd(iuhf)` | A whole pCCD job (and its variants): integrals, SCF, transformation and pCCD |
+| `Runpccd(iuhf)` | Single-point pCCD: integrals, SCF, transformation and pCCD (orbital-optimized pCCD, `PROGRAM=PCCD`, is not available) |
 | `Runhbar(iuhf)`, `Buildhbar()` | Similarity-transformed Hamiltonian |
 | `Runprops(iuhf)` | Properties |
 | `Runee(iuhf)` | EOM-CC excitation energies; self-contained, so call it **instead of** `Init()` |
@@ -87,9 +87,10 @@ or reads; record names are 8 characters, padded with blanks):
 | `IGetrecpy(name, dest)`, `Iputrecpy(name, src)` | The same for integer records (`dtype=np.int64`) |
 | `Cgetrecpy(name, length, dest)`, `Cputrecpy(...)` | Character records |
 | `Getreclenpy(name, length)` | Length of a record |
-| `Getlstpy(first, ncols, irrep, left, right, dest, ndim)`, `Putlstpy(...)` | Columns of a list (see {doc}`../programmer/io`) |
+| `Getlstpy(first, ncols, irrep, left, right, dest, ndim)`, `Putlstpy(...)` | Columns of a list: `left` is the irrep of the columns, `right` the list number, `irrep` is not used (see {doc}`../programmer/io`) |
+| `Getlstdimpy(left, right)` | Rows and columns of a list (0, 0 if it does not exist) |
 | `Getallpy(dest, irrep, right)`, `Putallpy(...)` | A whole list |
-| `Get1ehpy(name, dest, n)`, `Get2ehpy(name, dest, n)` | One- and two-electron integrals as dense arrays |
+| `Get1ehpy(name, dest, n)`, `Get2ehpy(name, dest, n)` | One- and two-electron integrals as dense arrays (with symmetry, the one-electron matrix is in the SO basis, block diagonal by irrep) |
 
 For example, the job flags:
 
@@ -103,6 +104,8 @@ aces2py.IGetrecpy("IFLAGS  ", iflags)
 `pyaces/pyaces_suite_runner.py` runs the ACES II test inputs through
 `aces2py` (one process per case, through `pyaces_run_case.py`) and compares
 the energies with the ACES II references; see {doc}`../programmer/testing`.
+`pyaces/tests/api_cases.py` tests the record, list and integral functions
+in the same way (`python3 tests/run_api_tests.py`).
 `pyaces_run_case.py` is also the best worked example of driving each entry
 point, including a frozen-natural-orbital job that mixes `aces2py` calls
 with stand-alone ACES II programs.

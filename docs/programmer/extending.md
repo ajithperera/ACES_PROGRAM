@@ -54,6 +54,7 @@ automatically. Add a description under its name in
 ## Documentation
 
 When you add a method or keyword, update the manual in the same commit:
-the keyword notes, an entry in {doc}`../user/methods` with the test case as
-its example, and a description of any new `JOBARC` record in
+the keyword notes, an entry in the matching chapter of
+{doc}`../user/methods` with the test case as its example, and a
+description of any new `JOBARC` record in
 `docs/programmer/jobarc_notes.md`.

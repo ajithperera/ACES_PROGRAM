@@ -57,6 +57,44 @@ every program that uses it. Always run the installed binary: running a stale
 copy from another directory is the most common reason a fixed bug seems to
 come back. `md5sum $(which xvscf) vscf/xvscf` tells you whether they match.
 
+**Generated `.f` files.** The makefile runs cpp on every `.F` and compiles
+the resulting `.f`. It regenerates a `.f` only when the `.F` is newer, and
+it does not track `#include` dependencies. For a long time these generated
+`.f` files were also tracked in git, which goes wrong: after a header such
+as `dftfunc.com` changes, a fresh checkout (or a server updated by
+`git push`) has `.f` files that are as new as their `.F` but still contain
+the old header, and the build compiles them as they are. On the ccsd
+server this mixed old and new common-block layouts and made every
+Kohn–Sham Fock matrix NaN.
+
+Git therefore keeps only the `.F`. Every source directly in a module
+directory is a `.F`, and `aces2/.gitignore` ignores `/*/*.f`, so the `.f`
+that cpp writes next to it never shows up in `git status`. The real `.f`
+sources that used to sit there were renamed to `.F`. That was safe because
+cpp gives back exactly the text it is given for all of them, except for
+these:
+
+- `fblocal/fblocal.F` has two `#ifdef` debug blocks. As a `.f`, ifx
+  skipped the `#` lines and compiled both. The second one was written
+  `#ifdef _debug_LVL0` (lower case, never defined) and would have been
+  dropped, so it was changed to `_DEBUG_LVL0` to keep the program's
+  output as it was.
+- In five files, cpp changes only comment lines. A comment line ending
+  in `\` is joined to the next one: `erd__dsqmin_line_segments`,
+  `oed__dsqmin_line_segments`, `nlo__analyze_bond_order_matrix` and
+  `nlo__improve_2cen_connections`. The word `unix` in a comment of
+  `vcc/ncycread` becomes `1`.
+- The two `ishell` files of `ccsdtqf` and `ccsdtqf_mm` start with a
+  `#line` line, which cpp drops.
+
+`Test/`, `configure/` and subdirectories such as `old/` are not built by
+the makefile and were left as they are. Ignore rules do not apply to
+tracked files, so a real `.f` that is still tracked shows its edits as
+usual; a new one has to be added with `git add -f`, and is better written
+as a `.F`. A `.F` must not contain `/*`, a line ending in `\`, or a
+word that cpp defines (`unix`, `linux`, the `-D` names of the makefile)
+outside a comment.
+
 **Hosts.** `GNUmakefile` holds a table of known machines with their
 compilers and flags. On a machine not in the table it falls back to a
 generic Linux x86-64 Intel configuration when `ifx` is on `PATH`;
@@ -109,4 +147,6 @@ on each problem it works around; the main ones are:
   results.
 
 `PYACES_MODULES=""` builds with the current environment instead of loading
-modules.
+modules. Run on its own (no `PYACES_MODULES` or `ACES_PROGRAM_MODULES`),
+`pyaces/build.sh` sets up the toolchain from `build_config.sh` as `./build.sh`
+does: modules, a setvars script or PATH, and configure's compilers.

@@ -1,7 +1,7 @@
 """In-process calculation drivers: lower-case names for aces2py's Run* entry points.
 
 iuhf is 0 for RHF and 1 for UHF/ROHF. Call init() first, except before
-run_ee() and run_pccd(), which read ZMAT themselves. Do not call the same
+run_ee(), which reads ZMAT itself. Do not call the same
 stage twice in one process (Vtran/Vcc twice has converged to wrong answers),
 and do not call run_hbar() after run_cc() -- it would redo Vtran.
 """

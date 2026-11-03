@@ -65,6 +65,10 @@ c pmap        Array for mapping C1 to symmetry
      &    dcore(zdens1),dcore(zcdens),
      &    kscore(pmap),ehfkin,ehfnatr,ehfx,
      &    ehfcoul,ehar,escf,0)
+c Long-range exact exchange of range-separated hybrids
+      ehflx=0.d0
+      if (idns.eq.0 .and. int_rs_omega.ne.0.d0)
+     &   call lrexch(dcore(zbuf),kscore(pbuf),dcore(zdens),ehflx)
 C#ifdef _NOSKIP
 C I don't think this block is need
       call getrec(0,'JOBARC',"AONTORBA",length,kscore)

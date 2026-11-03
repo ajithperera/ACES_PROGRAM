@@ -42,11 +42,14 @@ def parse_test_results(path):
         if not lines[i].strip():
             i += 1
             continue
-        name, src = lines[i].split(None, 1)
+        # "<name> zmat.<name>", or the bare "<name>" the newer entries use
+        # (aces2/tests/fast/run_tests.py reads only the first field too)
+        fields = lines[i].split()
+        name, src = fields[0], " ".join(fields[1:])
         record_line = lines[i + 1].split()
         record = record_line[0]
         value = lines[i + 2].strip()
-        entries[name] = {"src": src.strip(), "record": record, "value": value}
+        entries[name] = {"src": src, "record": record, "value": value}
         i += 3
     return entries
 
@@ -129,6 +132,9 @@ def classify(name, kw, starred):
     if kw.get("HFSTABILITY", "") == "FOLLOW":
         reasons.append("HFSTABILITY=FOLLOW: precc.F re-runs vtran/intprc off the "
                        "SCFKICK record after the SCF is rotated")
+    if kw.get("PROGRAM", "") == "PCCD":
+        reasons.append("PROGRAM=PCCD: aces2/main.F hands the job to xrunpccd, which "
+                       "runs xjoda again and the OO-pCCD loop; Runpccd does not")
 
     # QRHF (without MAKERHF) makes joda/gtflgs.F internally force the
     # reference to UHF/ROHF regardless of any explicit REFERENCE=/REF=

@@ -112,6 +112,7 @@ cch---------------------------------------------------------------------
 #include "flags2.com"
 C
       COMMON /VMTASK/ ITASK
+      COMMON /RSINT/ RSOMEG
 C
       COMMON /ONE/ 
      &   ALP(mxp2),BET(mxp2),S1(mxp2),CSS1(mxp2),PV(mxp2,8,3),CAB(mxp2),
@@ -371,7 +372,23 @@ C
      &      ' ICRSIZ=',ICRSIZ,' addr(ICORE(I000))=',C_ADR(ICORE(I000)),
      &      ' addr(ICORE(J000))=',C_ADR(ICORE(J000)),
      &      ' addr(ICORE(ICRSIZ))=',C_ADR(ICORE(ICRSIZ))
+         RSOMEG=0.D0
          CALL TWOEL(ICORE(I000),ICORE(J000), NSYMOP)
+C
+C Range-separated hybrids also need the long-range integrals
+C ERF(OMEGA*R12)/R12. They go through TWOEL a second time, with
+C CONLOR/CONLOX attenuating 1/R12, onto their own files (IIIILR, ...).
+C
+         CALL RSOMEGA(OMEGA)
+         IF (OMEGA.NE.0.D0) THEN
+            WRITE(6,104) OMEGA
+ 104        FORMAT(T3,'@MOLECU-I, Long-range integrals with omega =',
+     &             F10.6,' bohr**-1.')
+            CALL RSFILES(NSYMOP)
+            RSOMEG=OMEGA
+            CALL TWOEL(ICORE(I000),ICORE(J000), NSYMOP)
+            RSOMEG=0.D0
+         END IF
       ENDIF
       CALL TIMER(1)
 cYAU      WRITE(6,102)TIMENEW

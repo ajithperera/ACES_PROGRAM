@@ -875,6 +875,7 @@
       create SO_x_pq
       create SO_y_pq
       create SO_z_pq
+      execute sip_barrier
 
       PARDO mu,p
       tSO_x_pmu(mu,p) = 0.0
@@ -915,6 +916,7 @@
       create Fso_pq_x_aux
       create Fso_pq_y_aux
       create Fso_pq_z_aux
+      execute sip_barrier
 
       PARDO p,q
       tSO_x_pq(p,q) = 0.0
@@ -1471,6 +1473,7 @@
       create somfex_x_3
       create somfex_y_3
       create somfex_z_3
+      execute sip_barrier
 #--oopp---
 #------------One-particle contributions------------------------------------------
       PARDO p,q

@@ -72,6 +72,11 @@ for t in $TARGETS; do
       fi
       ( cd "$ROOT/pyaces" && PATH="$ACES2_BIN:$PATH" python3 pyaces_suite_runner.py ) \
         > "$LOG" 2>&1
+      # The API tests (records, lists, integrals, Runhbar's branches) have
+      # their own log and rollup row, so the suite's case count stays as it is.
+      ( cd "$ROOT/pyaces" && python3 tests/run_api_tests.py ) \
+        > "$ROOT/build_logs/unified_test_pyaces_api.log" 2>&1
+      echo "  API tests done (log: build_logs/unified_test_pyaces_api.log)"
       ;;
     ring)
       # The ACES II ring-CC/RPA suites, each with its own runner: ringcc,
@@ -160,4 +165,22 @@ for t in $TARGETS; do
       ;;
   esac
   printf "%-8s %8s %8s %8s %8s\n" "$t" "$TOTAL" "$PASS" "$FAIL" "$OTHER"
+  if [ "$t" = pyaces ]; then
+    # run_api_tests.py: PASS, FAIL, or CRASH/TIMEOUT (OTHER).
+    TOTAL="?"; PASS="?"; FAIL="?"; OTHER="?"
+    SUMMARY=$(sed -n '/^=== Summary ===$/,/^$/p' "$ROOT/build_logs/unified_test_pyaces_api.log" 2>/dev/null \
+                | grep -aE '^  [A-Z_]+: [0-9]+$')
+    if [ -n "$SUMMARY" ]; then
+      PASS=0; FAIL=0; OTHER=0
+      while read -r STATUS N; do
+        case "${STATUS%:}" in
+          PASS) PASS=$((PASS + N)) ;;
+          FAIL) FAIL=$((FAIL + N)) ;;
+          *)    OTHER=$((OTHER + N)) ;;
+        esac
+      done <<< "$SUMMARY"
+      TOTAL=$(( PASS + FAIL + OTHER ))
+    fi
+    printf "%-8s %8s %8s %8s %8s\n" "py-api" "$TOTAL" "$PASS" "$FAIL" "$OTHER"
+  fi
 done

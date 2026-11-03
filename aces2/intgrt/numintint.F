@@ -33,6 +33,11 @@
 
       logical evalpt,init,print_post_ks
       logical dograd,hfdftgrad 
+      character*10 abbx
+      character*50 namx
+      logical okhyb(fun_num_hyb)
+      M_REAL
+     &    wh,cxh(fun_num_exch),cch(fun_num_corr)
 
       integer i, j, naonao
 
@@ -182,6 +187,7 @@ C
             coef_pot_corr(i)=coef_corr(i)
          end do
         coef_pot_exch(fun_exch_hf)=0.d0
+        coef_pot_exch(fun_exch_hflr)=0.d0
       end if
 
       ftotele = 0.d0
@@ -283,7 +289,7 @@ c Print the value of the integrated density
 c        Add atomic result to total
 
          ftotele=ftotele+factor*totele
-         do i=1,fun_num_exch-1
+         do i=1,fun_num_xgrid
             tot_exch(i)=tot_exch(i)+factor*fun_exch(i)
          end do
          do i=1,fun_num_corr
@@ -300,18 +306,24 @@ c     end do ncnt=1,ncount
       istat=fputc(0,'\n')
 #endif /* _TWIRL */
 
-c The energy corresponding to fun_exch_hf is ehfx
+c The energy corresponding to fun_exch_hf is ehfx, the one to
+c fun_exch_hflr is ehflx (zero without range separation)
 
       tot_exch(fun_exch_hf)=ehfx
+      tot_exch(fun_exch_hflr)=ehflx
 
-c Calculate hybrid values
+c Calculate hybrid values.  The long-range terms exist only for the
+c current rs_omega, so a range-separated hybrid with another omega is
+c not evaluated (and not printed).
 
-      tot_hyb(fun_hyb_b3lyp)=
-     &      (b3lypa*ehfx)+
-     &      (1.d0-b3lypa)*tot_exch(fun_exch_lda)+
-     &      b3lypb*(tot_exch(fun_exch_becke)-tot_exch(fun_exch_lda))+
-     &      tot_corr(fun_corr_vwn)+
-     &      b3lypc*(tot_corr(fun_corr_lyp)-tot_corr(fun_corr_vwn))
+      do i=1,fun_num_hyb
+         call hybparm(i,abbx,namx,cxh,cch,wh)
+         okhyb(i)=wh.eq.0.d0 .or. wh.eq.int_rs_omega
+         tot_hyb(i)=0.d0
+         if (okhyb(i)) tot_hyb(i)=
+     &      ddot(fun_num_exch,tot_exch,1,cxh,1)+
+     &      ddot(fun_num_corr,tot_corr,1,cch,1)
+      end do
 
       if (int_ks) then
          if (dograd) then
@@ -350,7 +362,7 @@ c        write(*,2108) ftotw
             write(*,2120) nam_corr(i),tot_corr(i)
          end do
          do i=1,fun_num_hyb
-            write(*,2122) nam_hyb(i),tot_hyb(i)
+            if (okhyb(i)) write(*,2122) nam_hyb(i),tot_hyb(i)
          end do
 
 c         print *, 'DEBUG: POTENTIAL/FUNCTIONAL COEFFICIENTS'

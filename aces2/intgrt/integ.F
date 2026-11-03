@@ -27,6 +27,7 @@ c 12/25/98 SI
 C  replace xcoeff by dprimcoeff
 
 
+      integer ifun
       integer
      &    nshellatom(natoms),nshellprim(maxshell,natoms),
      &    compmemb(natoms),ifctr,kol,jj,
@@ -312,14 +313,23 @@ c          call xgemm('t','n',naobasfn,1,totprim,1.d0,xcoeff,totprim,
 c     &    gradprim(1,xyz),totprim,0.d0,valgradao(1,xyz),naobasfn) 
 c       end do
 
-       xtmp(fun_exch_hf,1)=0.d0
-       xtmp(fun_exch_hf,2)=0.d0
-       xdertmp(fun_exch_hf,1)=0.d0
-       xdertmp(fun_exch_hf,2)=0.d0
-       xdertmp(fun_exch_lda,1)=0.d0
-       xdertmp(fun_exch_lda,2)=0.d0
-       cdertmp(fun_corr_vwn,1)=0.d0
-       cdertmp(fun_corr_vwn,2)=0.d0
+c Zero every slot: the potential below is a dot product over all of
+c them, and a slot of a functional that is not called would otherwise
+c hold whatever was on the stack (0*NaN is NaN).
+       do ifun=1,fun_num_exch
+          xtmp(ifun,1)=0.d0
+          xtmp(ifun,2)=0.d0
+          xdertmp(ifun,1)=0.d0
+          xdertmp(ifun,2)=0.d0
+       end do
+       do ifun=1,fun_num_corr
+          ctmp(ifun,1)=0.d0
+          ctmp(ifun,2)=0.d0
+          cdertmp(ifun,1)=0.d0
+          cdertmp(ifun,2)=0.d0
+       end do
+       lyptmp(1)=0.d0
+       lyptmp(2)=0.d0
 
        if (int_kspot.eq.fun_special) then
 
@@ -351,9 +361,21 @@ c Check what is needed and call it
      &                           xdertmp(fun_exch_pw91,2))
           end if
 
+          if (coef_pot_exch(fun_exch_becke_sr).ne.0.d0) then
+              call pot_exch_becke_sr(xtmp(fun_exch_becke_sr,1),
+     &                               xdertmp(fun_exch_becke_sr,1),
+     &                               xtmp(fun_exch_becke_sr,2),
+     &                               xdertmp(fun_exch_becke_sr,2))
+          end if
+
           if (coef_pot_corr(fun_corr_vwn).ne.0.d0) then
                call pot_corr_vwn(ctmp(fun_corr_vwn,1),
      &                           ctmp(fun_corr_vwn,2))
+          end if
+
+          if (coef_pot_corr(fun_corr_vwnrpa).ne.0.d0) then
+               call pot_corr_vwnrpa(ctmp(fun_corr_vwnrpa,1),
+     &                              ctmp(fun_corr_vwnrpa,2))
           end if
 
           if (coef_pot_corr(fun_corr_lyp).ne.0.d0) then
@@ -505,6 +527,10 @@ c                xao(ispin)=totwt*factor
        call func_corr_vwn(func)
        fun_corr(fun_corr_vwn) = fun_corr(fun_corr_vwn) + totwt*func
 
+       call func_corr_vwnrpa(func)
+       fun_corr(fun_corr_vwnrpa) = fun_corr(fun_corr_vwnrpa) +
+     &                             totwt*func
+
        call func_corr_lyp(func)
        fun_corr(fun_corr_lyp) = fun_corr(fun_corr_lyp) + totwt*func
 
@@ -531,6 +557,12 @@ c                xao(ispin)=totwt*factor
 
        call func_exch_pw91(func)
        fun_exch(fun_exch_pw91) = fun_exch(fun_exch_pw91) + totwt*func
+
+       if (int_rs_omega.ne.0.d0) then
+          call func_exch_becke_sr(func)
+          fun_exch(fun_exch_becke_sr) = fun_exch(fun_exch_becke_sr) +
+     &                                  totwt*func
+       end if
 
        etottf= etottf+totwt*tfkef(roab(1),roab(2),grdaa,grdab,grdbb)
        etotw = etotw +totwt*wkef(roab(1),roab(2),grdaa,grdab,grdbb)

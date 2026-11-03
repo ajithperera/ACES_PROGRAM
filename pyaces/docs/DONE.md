@@ -15,6 +15,80 @@ Items that came from [TODO.md](TODO.md) keep their number (`T-<n>`); work that w
 
 ---
 
+### T-17. API unit tests (2026-10-30)
+- **Commits:** `22ef0230`
+- **What changed:**
+  - New `pyaces/tests`. `api_cases.py` holds 8 tests and their ZMATs; `run_api_tests.py` runs each test in a fresh process and directory and prints a Summary block. `run_tests.sh pyaces` runs them after the suite (log `build_logs/unified_test_pyaces_api.log`) as a separate `py-api` roll-up row.
+  - Tests:
+    - `records`: `Getreclenpy`, missing records, float64/int64/character round trips, reopen.
+    - `scf_rhf`, `scf_uhf`: energies against xaces2, and reading vscf's character record `EVCSYMAF`.
+    - `hbar_from_scratch`, `hbar_after_scf`: CCSD energy and the `HBAR` record.
+    - `lists`: list 46 by irrep and column vs `get_all_irreps`, error paths, `put_list`.
+    - `one_electron_c2v`, `one_electron_c1`: `CᵀSC = 1`, block structure with an empty irrep, and E(SCF) rebuilt from `oneh` against xaces2.
+  - The reference energies are from xaces2, not pyaces.
+  - Runhbar's "CC done" branch is not tested: it needs a `CC_DONE` record without `SCFEVCA0`, and no ACES II program writes `CC_DONE`, so the API cannot reach it.
+  - The tests found two character-record defects, now fixed:
+    - `Cputrecpy` declared `Source` as `Character*8`, so only 8 characters were stored and the rest of the record was whatever followed in memory. It is now assumed-length, and `put_string_record` passes the bytes directly.
+    - pyaces was compiled without aces2's `-DF_64BIT`, so `a2_getcrec`/`a2_putcrec` counted 4-byte words. `Cgetrecpy` on a record written by aces2 (e.g. `EVCSYMAF`) asked for twice its length and ended the process ("record length mismatch"). `FFLAGS` now has `-DF_64BIT`; in pyaces it only affects those two files.
+- **Verification:**
+  - Local: py-api 8/8; audit 244; pyaces 60/60 with every `got=` value unchanged.
+  - With `f97a9759` reverted in a scratch copy, `hbar_after_scf` crashes (SIGSEGV), and the six tests that call `record_length` fail on `Getreclenpy`. The build's `--calls` check also reports the two `hbar_` calls.
+  - `scf_uhf` still passes on that copy: the 4-byte `Iuhf` happened to arrive as 1, so the test cannot show that fix.
+  - The new character-record checks fail on the code before this change.
+  - ccsd (ifx/icx 2023.2, PBS 8129): audit 268 with no NEW entries, aces2 158/158, pyaces 60/60 with every `got=` value identical to the T-09 run, py-api 8/8 (the xaces2 references from the local ifort build hold to 10⁻⁸ there).
+
+### T-10. Fewer assumptions about the build environment (2026-10-30)
+- **Commits:** `442efa80`
+- **What changed:**
+  - The top-level half was already done by Ajith's `f444e634`. `build.sh` checks for configure's `ACES_PROGRAM_FC`, and the ifort→ifx shim is gone; in setvars/path mode it passes `PYACES_MODULES=""` after loading the toolchain itself.
+  - Left: `pyaces/build.sh` run on its own ignored `build_config.sh` and loaded the HiPerGator module set. On this workstation (setvars mode, but `module` exists) that failed with "Unable to locate a modulefile for 'intel/2025.1.0'".
+  - It now takes, in order: `PYACES_MODULES` when set (CMake superbuild, `../build.sh`); a non-empty `ACES_PROGRAM_MODULES`; `build_config.sh`'s `aces_program_load_env` with its `ACES_PROGRAM_FC`/`ACES_PROGRAM_CC`; the HiPerGator set only without a `build_config.sh`. A config from an older `./configure` (no loader) still gets its module set.
+  - The build log has a `compilers:` line.
+- **Verification:**
+  - Local, setvars mode: `bash pyaces/build.sh` on its own, `./build.sh pyaces`, and `PYACES_MODULES=""` with setvars loaded all build. The standalone run used ifort and icx 2024.0. Audit 244 each time.
+  - pyaces 60/60 for the standalone and top-level builds, every `got=` value identical to the run before T-09.
+  - ccsd, modules mode (ifx/icx 2023.2, PBS 8128): `bash pyaces/build.sh` on its own after `module purge` loads configure's modules itself, uses ifx and icx, audit 268, pyaces 60/60. Then `./build.sh pyaces`: audit 268, aces2 158/158, pyaces 60/60. Both runs give every `got=` value identical to the T-09 ccsd run.
+
+### T-09. Compiler and flag cleanup (2026-10-30)
+- **Commits:** `0213f6a7`
+- **What changed:**
+  - `pyaces/build.sh` compiles the f2py C module and `fortranobject.c` with `$PYACES_CC` instead of `mpicc`; neither uses MPI. The top-level `build.sh` passes configure's `ACES_PROGRAM_CC` (icx locally and on ccsd) and checks for it instead of `mpicc`. Standalone, the default is icx, else gcc. Locally `mpicc` was Intel MPI's wrapper around gcc.
+  - `-qopenmp` is dropped from the Fortran flags. The pyaces sources have no OpenMP directives, aces2 is compiled without it (`-Zp8 -zero -assume dummy_aliases -i8 -O2`), and MKL is linked sequential. Its only effect on the glue code was to make every local variable automatic.
+- **Verification:**
+  - Local (ifort 2024.0, icx 2024.0): audit 244 with no NEW entries; pyaces 60/60.
+  - All 60 `got=` values are identical to the run before the change.
+  - The .so's `NEEDED` libraries are the same before and after, and it has no OpenMP symbols either way.
+  - ccsd (ifx 2023.2, icx, PBS 8124): audit 268 with no NEW entries, aces2 158/158, pyaces 60/60, all 60 `got=` values identical to the previous ccsd run; the T-05 checks give the same numbers as before.
+  - icx reports 7 `-Wformat` warnings (long vs long long) in the f2py-generated C; the two types have the same size on x86-64 Linux.
+
+### T-05. Remaining known defects: Getlstpy and Get1ehpy (2026-10-30)
+- **Commits:** `dc9b4cd7`
+- **What changed:**
+  - `Get1ehpy` returned zeros for every molecule. `Aces_malloc` can return a negative `J0` (the heap lies below the anchor `Jcore`), which the routine took for a failed allocation, so it printed "Unable to allocate" and returned before reading IIII. It now tests `Jcore(1) = 0`, as `aces2/acescore/aces_malloc.c` says to. With symmetry the irrep blocks also went to wrong offsets (`Index = Index + Nelms*(K-1)`, and the triangle offsets were one too far); it now returns the full block-diagonal matrix in the SO basis, functions in `NUMBASIR` order. Unknown names are rejected instead of reading an unset label.
+  - `Getlstpy`'s arguments now have documented meanings: `Left_index` is the irrep of the columns and `Right_index` the list number (`MOIO(irrep, list)`, as in ACES II's `getlst`); `Irrep` is unused and kept for existing callers. `Getlstpy` and `Putlstpy` check that the list exists, the column range and `Ndim`, and print a message and do nothing instead of overrunning the array. The new f2py function `Getlstdimpy(left, right)` returns a list's rows and columns (27 exposed functions).
+  - Python: `list_shape(lst, irrep)`; `get_list` sizes its array by default and, with `put_list`, raises `KeyError`/`ValueError` on a bad request; `get_1e_ints(name)` wraps `Get1ehpy` as an `(nbas, nbas)` array.
+- **Verification:**
+  - Local (ifort 2024.0): H2O 6-31G* CCSD in C2v (NUMBASIR 9/3/5/1) and with `SYMMETRY=OFF`. In both, `CᵀSC = 1` with `SCFEVCA0` to 5×10⁻¹⁵. The (H, S) generalized eigenvalues agree between the two runs, and so does the one-electron energy 2 tr(DH) = −123.0176492438 (to 10⁻¹¹; 10.000 electrons). List 46 read irrep by irrep equals `Getallpy`, and the T2 sum of squares agrees between the runs. The error paths and a `put_list` round trip were also checked.
+  - Audit 244 with no NEW entries; pyaces 60/60.
+  - ccsd (ifx 2023.2, PBS 8123): pyaces rebuilt, audit 268 with no NEW entries, aces2 158/158, pyaces 60/60; the same checks give `CᵀSC = 1` to 1×10⁻¹⁴ and the same one-electron energy in C2v and C1 (to 10⁻¹¹).
+- **Open:** `get1epy.F` (linked, not exposed, never called) is an old copy of Get1ehpy with the same defects. The checks above are a scratch script; T-17 should turn them into tests.
+
+### D-2026-10-30b. Runpccd fixed and a pCCD test case added (2026-10-30; the Runpccd part of T-05)
+- **Commits:** `11762bef`
+- **What changed:**
+  - `Runpccd` read ZMAT again with its own `Joda_`/`aces_init` although the worker calls `Init()` first ("job archive subsystem is already initialized"), and called `Ints_()` with no arguments. It now runs after `Init()` like `Runcc` and stops at `Vcc`, as xrunpccd's HF/KS branch and xaces2 do for single-point pCCD. `Vlambda` and `Pccd` were dropped: `Vlambda` stopped on "List (3,144) does not exist".
+  - New aces2 fast case `pccd_h2o_sto3g` (H2O STO-3G, `CALC=PCCD`, HF reference; reference −74.988498185196 from xaces2). It is the first case the TSV routes to `Runpccd`.
+  - Dropping the two calls changed the link: hcmult's `check_t2_` started winning for vcc, then libc4's (whose `check_t2.o` also defines `checksum_`, clashing with lcct's). Both are renamed in `tools/localize.txt` (21st instance), leaving trp's as in the classic links. The new `symoff_` common-block shadow is latent (its only callers, dens's `intov5`/`xint7`, are not in the .so) and is recorded in `common_shadow_baseline.txt`.
+- **Verification:**
+  - Local (ifort 2024.0): `pccd_h2o_sto3g` passes in aces2 and pyaces (difference 4×10⁻¹²), pyaces 60/60, audit 244 with no NEW entries.
+  - ccsd (ifx 2023.2, PBS 8116): pyaces rebuilt, audit 268 with no NEW entries, aces2 158/158, pyaces 60/60.
+- **Open:** orbital-optimized pCCD (`PROGRAM=PCCD`) remains out of reach for pyaces; it is xrunpccd's own loop.
+
+### D-2026-10-30a. Suite classifier repaired and TSV regenerated (2026-10-30)
+- **Commits:** `847b1aeb`
+- **What changed:** `classify_suite.py --check` stopped with a ValueError on the bare-name `test_results` entries upstream added on 2026-10-19 (`pccd_oo_rfo_*`); the parser now reads the first field only, as aces2's runner does. `PROGRAM=PCCD` cases are excluded (xaces2 hands them to xrunpccd). The regenerated TSV covers all 157 aces2 cases (32 were missing) and adds eight H2/H2O CCSD cases to the pyaces suite. The manual (chapter 2, 9.3, 10.2) and TODO no longer say to edit the TSV by hand.
+- **Verification:** local pyaces 59/59; ccsd (PBS 8114) pyaces 59/59.
+
 ### T-02. An ACES error terminates the Python interpreter (2026-10-23)
 - **Commits:** `ba6c8646` (together with T-14)
 - **What changed:** `pyaces.run()` runs the calculation in a subprocess (`pyaces_run_case.py`) and returns a `Result` on success, or a `CalculationError` (status, returncode, workdir, log_tail) on failure (`aces_exit`, crash, timeout). `pyaces_run_case.py` now honours `PYACES_EXT_DIR`.

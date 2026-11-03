@@ -46,14 +46,17 @@ TIMEOUT_SCALE = float(os.environ.get("ACES3_TIMEOUT_SCALE", "1"))
 # tempfile-scratch-on-/tmp) conditions blow past it. gten_no confirmed this
 # directly: it finished at 599.20s under the old default, a hair from a
 # spurious timeout-FAIL. Give real headroom rather than nudging the number
-# until it barely passes.
+# until it barely passes. The F12 cases are the slowest: on the ccsd server
+# (Xeon 6521P, --jobs 4) ccsd_f12/ccsdt_f12 timed out at 1200s, and took
+# 2184s/2235s even at --jobs 2; dea_eomcc_f12 finished at 2681s, a hair
+# under its old 2700s.
 TIMEOUT_OVERRIDES = {
     "gten_h2op": 1200,
     "gten_cn": 1200,
     "gten_no": 1200,
-    "ccsd_f12": 1200,
-    "ccsdt_f12": 1200,
-    "dea_eomcc_f12": 2700,
+    "ccsd_f12": 3600,
+    "ccsdt_f12": 3600,
+    "dea_eomcc_f12": 5400,
 }
 
 # Per-case tolerance overrides, for methods that may not reproduce to the

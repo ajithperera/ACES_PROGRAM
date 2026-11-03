@@ -27,6 +27,7 @@ extract vcceh
 extract vea
 extract fsip
 extract hcmult
+extract libc4
 extract lcct
 extract vprops
 extract libr2
@@ -79,6 +80,8 @@ rename  vee        z2tomo_        # 4-way collision; wrong copy gave a ~1e-5 EOM
 rename  lambda     w45t3drv_      # lambda's 8-arg copy beat trp's 4-arg one
 rename  tools      xgemm_         # crust's XGEMM must win as in the classic link (illegal DGEMM arg otherwise)
 rename  ringcc     check_t2_      # vcc must get trp's CHECK_T2, not ringcc's
+rename  hcmult     check_t2_      # vcc must get trp's CHECK_T2; hcmult's won once Runpccd stopped pulling lambda/pccd
+rename  libc4      check_t2_      # and libc4's next (its check_t2.o also defines checksum_, clashing with lcct's)
 rename  lambda     initin_        # vcc must keep its own, not lambda's
 rename  lambda     initsn_        # vcc must keep its own, not lambda's
 rename  lambda     diislst_       # vcc must keep its own, not lambda's
@@ -399,3 +402,21 @@ rename  lcct       r1l2y2c_       # lcct's copy differs from vee's; winner depen
 # Which copy won flipped between make 4.2's unsorted wildcards on ccsd and make
 # 4.3's locale-sorted ones here. Renaming the odd copy out gives every caller
 # the code it was written against whatever the member order.
+#
+# 21st instance (2026-10-30), set off by a pyaces-side change rather than an
+# aces2 one. Runpccd used to call Vlambda and Pccd after Vcc; for single-point
+# pCCD neither xrunpccd nor xaces2 runs them (Vlambda stops on "List (3,144)
+# does not exist"), so they were dropped. With lambda's and pccd's members no
+# longer pulled in early, the link chose differently in two places:
+# - check_t2_: hcmult's copy won for vcc, pccd and ccsdtqf, which all mean
+#   trp's (their ACES_LINK_LISTS name trp, never hcmult). Renaming hcmult's let
+#   libc4's check_t2.o in next, and it also defines checksum_, a duplicate of
+#   lcct's that stops the link. Renaming libc4's as well leaves trp's as the
+#   only plain check_t2_, which is what the classic links give.
+# - symoff_: now resolves to a COMMON /symoff/ (libr_extn, lsccresp, vcceh)
+#   instead of libr's subroutine. Its only callers are dens's intov5.o and
+#   xint7.o, reached from pccd's orbital-gradient code and vdens, none of which
+#   is in the .so any more. Latent, and "rename-commons" (renaming libr's
+#   definition would orphan dens's calls), so it is recorded in
+#   common_shadow_baseline.txt rather than renamed; a pCCD gradient or
+#   density entry point would have to deal with it first.
