@@ -8,8 +8,9 @@ values. All other numbers match. The failing states are exactly the
 used the left and right eigenvectors of the EOM matrix as `DGEEV`
 returns them, without making them biorthonormal.
 
-- **Status:** fixed (`vee/biorth_rcc_vecs.F`, 2026-11-01); a second,
-  separate question about the denominator is open (see *Open questions*)
+- **Status:** fixed (`vee/biorth_rcc_vecs.F`, 2026-11-01); the separate
+  denominator question was answered and fixed on 2026-11-03 (see *Open
+  questions*)
 - **Area:** aces2 `vee` (EOM ring-CC doubles correction), test suite
   `aces2/tests/jcp2020_eom_rccd`
 - **Found with:** local workstation, ifort 2024.0 + Intel MPI 2021.11
@@ -110,15 +111,7 @@ not changed.
 
 ## Open questions
 
-- **ω in the denominator.** `form_dbls_correctns_2rcc.F` calls
-  `Form_d2_4rcc(..., Listd0, 1)`, so the denominator ω − D2 of every root
-  uses ω of the first root of the irrep. The CIS caller
-  (`form_dbls_correctns_2cis.F`) passes each root's own energy. With the
-  root's own ω, the `Ag` and `B1g` corrections of the Ne D states agree
-  exactly (triplet −4.276406, singlet −4.340012 eV in both), while with
-  ω of the first root they differ, because the first root of `Ag`
-  (20.730 eV) and of `B1g` (20.944 eV) are different states. But the
-  change moves the corrections of all higher roots by up to 0.5 eV, and
-  the module docstring of the suite records that the current numbers
-  match Table I of the paper. The code was therefore left as it is; this
-  needs the authors of the method.
+- **ω in the denominator.** Answered and fixed on 2026-11-03: every root
+  now uses its own ω (`Form_d2_4rcc(..., Listd0, My_root)`), and the Ne
+  `Ag` and `B1g` rows of a D state agree (−4.340012 eV EOM(S)-rCCD). See
+  *Answer* in {doc}`2026-11-01-notes-for-upstream`.
