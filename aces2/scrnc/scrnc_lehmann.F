@@ -1050,23 +1050,30 @@ C
       If (Isrc .EQ. 2) Write(6,"(a,1PD12.3)")
      +   " @-Scrnc_lehmann_vtx: GF2 test, max deviation ",Dmax
 C
-C dRPA: Sigma_pp of (a) and (b) at z = mu + i w (mu mid-gap) and the
-C MO integrals, for the independent G0W0 + SOX + SOSEX check
-C (sosex_check.py).
+C Sigma_pp at z = mu + i w (mu mid-gap) and the MO integrals, for
+C independent checks: dRPA (Isrc=1) variants (a),(b) for the
+C G0W0 + SOX + SOSEX check (sosex_check.py, drpa_check.bin);
+C EOM-CC states (Isrc=0) all three variants for the third-order
+C (lambda-scaling) analysis (lehmann_check.bin).
 C
-      If (Isrc .EQ. 1) Then
+      If (Isrc .NE. 2) Then
+         Nvc = 3
+         If (Isrc .EQ. 1) Nvc = 2
          Emu = 0.5D0*(Eps(Nocc)+Eps(Nocc+1))
          Open(Unit=90,File="sigma_vtx_check.dat",Form="FORMATTED",
      +        Status="UNKNOWN")
          Write(90,"(a,1PD22.14)") "# mu = ",Emu
-         Write(90,"(a)") "# w  p  Re/Im Sigma_a  Re/Im Sigma_b (Eh)"
+         If (Nvc .EQ. 2) Write(90,"(a)")
+     +      "# w  p  Re/Im Sigma_a  Re/Im Sigma_b (Eh)"
+         If (Nvc .EQ. 3) Write(90,"(a)")
+     +      "# w  p  Re/Im Sigma_a  Re/Im Sigma_b  Re/Im Sigma_c (Eh)"
          Do Iw = 1, 3
             Wi = 0.0D0
             If (Iw .EQ. 2) Wi = 0.2D0
             If (Iw .EQ. 3) Wi = 1.0D0
             Z = Dcmplx(Emu,Wi)
             Do Ip = 1, Nmo
-               Do Iv = 1, 2
+               Do Iv = 1, Nvc
                   S(Iv) = Dcmplx(0.0D0,0.0D0)
                   Do Is = 1, Nroot
                      Do Im = 1, Nmo
@@ -1078,13 +1085,15 @@ C
                      Enddo
                   Enddo
                Enddo
-               Write(90,"(F6.3,I4,4(1x,1PD22.14))") Wi,Ip,
-     +            Dble(S(1)),Dimag(S(1)),Dble(S(2)),Dimag(S(2))
+               Write(90,"(F6.3,I4,6(1x,1PD22.14))") Wi,Ip,
+     +            (Dble(S(K)),Dimag(S(K)),K=1,Nvc)
             Enddo
          Enddo
          Close(Unit=90)
-         Open(Unit=91,File="drpa_check.bin",Form="UNFORMATTED",
-     +        Access="STREAM",Status="UNKNOWN")
+         If (Isrc .EQ. 1) Open(Unit=91,File="drpa_check.bin",
+     +        Form="UNFORMATTED",Access="STREAM",Status="UNKNOWN")
+         If (Isrc .EQ. 0) Open(Unit=91,File="lehmann_check.bin",
+     +        Form="UNFORMATTED",Access="STREAM",Status="UNKNOWN")
          Write(91) Dble(Nmo),Dble(Nocc),(Eps(I),I=1,Nmo),
      +             ((Vmo(I,J),I=1,Nmo_pairs),J=1,Nmo_pairs)
          Close(Unit=91)

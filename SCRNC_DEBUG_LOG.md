@@ -4,7 +4,30 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
-## SESSION 2026-11-01: dRPA VARIANT (b) = G0W0 + SOSEX, VERIFIED (NEWEST, RESUME HERE)
+## SESSION 2026-11-03: THIRD-ORDER DIAGRAM CONTENT OF (a),(b),(c), VERIFIED (NEWEST, RESUME HERE)
+
+Prompt: reviewer-style revision plan (~/claude_docs/CC_Response_Manuscript_Revision_Suggestions.docx);
+user: full version, essential pieces in body, rest in appendices, diagrammatic.
+Tools (all in ~/claude_docs/scrnc_paper/pt3): scale_ao2e.py (scales IIII/IIJJ/IJIJ/IJKL after xvscf,
+before xvtran -> H(lam)=F+lam W; MP2(0.5)/MP2(1) = 0.25 to 1e-12), run via
+/blue/ufhpc/perera/scrnc_pt3/run_lambda.sh; xscrnc now writes sigma_vtx_check.dat (a,b,c at
+z=mu+i{0,.2,1}) and lehmann_check.bin (eps, (pq|rs)) for Isrc=0 too (scrnc_lehmann.F, uncommitted).
+pilot.py: spin-orbital FCI (N, N+-1) exact Sigma(lam), variant formulas. PITFALL fixed: double-
+excitation operator order in the FCI builder (a_b+a_a+ vs a_a+a_b+) flips doubles; GF2 still passed.
+H2O/STO-3G results (all exact rationals, residuals 1e-17 formulas, 1e-11 ACES fit, 1e-7 FCI fit):
+* ACES lam^3 of (a),(b),(c) = pilot J1 + r1 + l1, where l1 (Lambda2 in gamma^R) IS present: vee's right
+  density is <0|(1+L) E R|0> (gdens with r0), NOT the commutator stated in the manuscript.
+* Manuscript Eq. vertices/sigma_chi had r<->s transposed: correct is hole -<<h(ip);h(qi)>>, particle
+  <<h(qa);h(ap)>> with h(pm)=sum <pr||ms> E_rs (pilot reproduces GF2 to 1e-17 both orderings).
+* Exact Sigma3 = C-term [2p1h: d_jk<ab||cd> + P(ab)P(cd) d_ac<bk||jd>, U=<ab||pj>; 2h1p: d_ab<kl||ij>
+  - P(ij)P(kl) d_ik<bj||al>, U=<ij||pa>] + 2*ph coupling corr (sum_kc <ak||pc> t_jk^bc; sum_kc <pk||ic>
+  t_jk^ac) + 1*(1/2 sum <kl||pj> t_kl^ab ; 1/2 sum <cd||pa> t_ij^cd) + static.
+* Vertex-resolved (U = Ud - Ux, Ud outer line p-a direct): exact weights dd=dx=xd=xx=1 for the ph
+  C-terms and the ph coupling corrections; (a) dd 1 only; (b) dd 1, dx+xd 1/2; (c) all 1/2.
+  pp/hh ladders, pp/hh coupling corrections, static: 0 in all variants.
+Next: manuscript (App. A perturbative response, App. B classification + figure, body edits).
+
+## SESSION 2026-11-01: dRPA VARIANT (b) = G0W0 + SOSEX, VERIFIED
 
 Goal: finalize the manuscript (user, 2026-11-01: no new projects; scrnc paper first, to show
 P.-F. Loos). Table 1 claim "(b) with dRPA states = G0W0+SOSEX" needed a real test.
