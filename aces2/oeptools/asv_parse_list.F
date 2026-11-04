@@ -43,7 +43,7 @@ c
 c     Local variables
 c     
       integer stat, n, maxline, nchar, ichar, nsection, asv_strlen
-      character*1 last,asv_null
+      character*1 last,asv_null,nl,tab
 c      parameter (asv_null=achar(0))
 c
 c     Messages to the user.
@@ -81,6 +81,12 @@ c     long. <> Rewind the file pointer. <> Copy the file into the cache
 c     line by line.
 c     
       asv_null=achar(0)
+c 2026-11-04: '\n' and '\t' used to stand for newline and tab here, but
+c Fortran keeps the backslash as a character, so a section name ran past
+c the end of its line up to the next '(' or 'n' and could swallow the
+c *OEP(...) that followed. Use the real characters.
+      nl  = achar(10)
+      tab = achar(9)
       maxline = 100
       if (maxline.gt.ncache) maxline = ncache
 c     
@@ -91,7 +97,7 @@ c
       do while (stat.eq.0)
          read (unit = lucfg, fmt = '(a)', iostat = stat)
      &        cache (n+1:n+maxline-1)
-         cache (n+maxline:n+maxline) = '\n'
+         cache (n+maxline:n+maxline) = nl
          n = n + maxline
          if (n+maxline.ge.ncache) then
             write (6, 5905) ncache, maxline, ncache/maxline
@@ -121,7 +127,7 @@ c
      &        stat, last, value (1))
          if (stat.eq.0) call asv_get_token (
      &        nchar, ichar, cache, .true., maxlen,
-     &        '(\n'//asv_null, ' \t,'//asv_null, '#\n',
+     &        '('//nl//asv_null, ' '//tab//','//asv_null, '#'//nl,
      &        stat, last, value (1))
          if (stat.gt.0) then
             write (6, 5910)
@@ -144,7 +150,7 @@ c
 c     
          call asv_get_token (
      &        nchar, ichar, cache, .true., maxlen,
-     &        '=,\n)'//asv_null, ' \t'//asv_null, '#\n',
+     &        '=,'//nl//')'//asv_null, ' '//tab//asv_null, '#'//nl,
      &        stat, last, key (nkey))
      
          if (stat.ne.0) then
@@ -163,7 +169,7 @@ c
 c     
          call asv_get_token (
      &        nchar, ichar, cache, .true., maxlen,
-     &        '=,\n)'//asv_null, ' \t'//asv_null, '#\n',
+     &        '=,'//nl//')'//asv_null, ' '//tab//asv_null, '#'//nl,
      &        stat, last, value (nkey))
          if (stat.ne.0) then
             if (stat.gt.0) write (6, 5910)
