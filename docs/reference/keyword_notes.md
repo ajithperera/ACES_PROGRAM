@@ -161,7 +161,7 @@ Specifies whether the gradient formulation assumes that the perturbed orbitals a
 
 ## SCF_TYPE
 
-Switches the SCF code between the standard Hartree-Fock program (=HF) and the Kohn-Sham DFT program (=KS). If SCF_TYPE=KS, then the KS-DFT program generates the SCF reference and reads the functional and the integration grid from the *INTGRT namelist; see {doc}`../user/dft`.
+Switches the SCF code between the standard Hartree-Fock program (=HF) and the Kohn-Sham DFT program (=KS). If SCF_TYPE=KS, then the KS-DFT program generates the SCF reference and reads the functional and the integration grid from the *INTGRT namelist; see {doc}`../user/dft`. =OEPX and =OEP2 run the exchange-only and second-order optimized effective potential methods; see {doc}`../user/oep`.
 
 ## FOCK
 

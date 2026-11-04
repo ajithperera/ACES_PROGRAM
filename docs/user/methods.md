@@ -7,6 +7,7 @@ the chapter that describes it:
 |---|---|---|---|
 | Reference wavefunction | `REFERENCE`, `SCF_CONV`, `HFSTABILITY` | `REF=UHF`, `HFSTABILITY=FOLLOW` | {doc}`scf` |
 | Kohn–Sham DFT | `SCF_TYPE=KS`; `kspot`, `func` in `*INTGRT` | `func=cam-qtp-01`, `func=b3lyp` | {doc}`dft` |
+| Optimized effective potential | `SCF_TYPE=OEPX`, `SCF_TYPE=OEP2`; `*OEP(...)` | `SCF_TYPE=OEP2`, `*OEP(REFERENCE=SEMI)` | {doc}`oep` |
 | Correlation method | `CALCLEVEL` | `MBPT(2)`, `CCSD`, `CCSD(T)` | {doc}`correlated` |
 | Excited, ionized, attached states | `EXCITE`, `IP_CALC`, `EA_CALC`, `DIP_CALC`, `DEA_CALC` | `EXCITE=EOMEE` | {doc}`excited_states` |
 | Pair coupled cluster | `CALCLEVEL`, `PCCD_REF`, `OO_METHOD` | `CALC=PCCD`, `PCCD_REF=OPTIMIZED` | {doc}`pccd` |
@@ -24,6 +25,7 @@ checks against. They are small enough to run in seconds to minutes.
 
 scf
 dft
+oep
 correlated
 excited_states
 pccd
