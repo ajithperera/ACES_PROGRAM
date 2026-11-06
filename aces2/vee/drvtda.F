@@ -45,6 +45,19 @@ C
       Write(6,"(a)") "  Requested number of roots:"
       Write(6,"(1x,8(1x,I2))") (Nroot(I),I=1,NIRREP)
 #endif 
+C
+C An irrep with no single excitations (possible with symmetry and a
+C small basis, e.g. BeH2/STO-3G in D2h) has no TDA/EOM-EE roots that
+C can be reached from singles; its lists are never created. Skip it.
+C
+      DO IRREP=1,NIRREP
+         LENS=IRPDPD(IRREP,9)+IUHF*IRPDPD(IRREP,10)
+         IF (LENS .EQ. 0 .AND. NROOT(IRREP) .NE. 0) THEN
+            WRITE(6,"(a,I2,a)") "  @DRVTDA-W, irrep ",IRREP,
+     &         " has no single excitations; no roots are searched."
+            NROOT(IRREP)=0
+         ENDIF
+      ENDDO
       CALL ICOPY(8,NROOT,1,NROOT_ORG,1)
 C
 C WRITE OUT SOME STUFF

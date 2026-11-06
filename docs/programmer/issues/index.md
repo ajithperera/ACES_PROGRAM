@@ -25,7 +25,7 @@ the status when it changes.
 | 2026-10-29 | [Missing barrier after `create` in the spin-orbit EOM programs](2026-10-29-sial-create-barrier.md) | aces3 SIAL | fixed in `76353e87` |
 | 2026-10-29 | [EOM ring-CC: Ne `Ag` doubles correction differs between compilers](2026-10-29-ring-ne-ag-correction.md) | aces2 `vee` | fixed (`biorth_rcc_vecs.F`) |
 | 2026-10-29 | [aces3 suite: 16 Intel MPI ranks on 4 cores](2026-10-29-aces3-suite-oversubscription.md) | `run_tests.sh` | open |
-| 2026-11-01 | [Notes for upstream: untracked `.f` files and the ring-CC ω](2026-11-01-notes-for-upstream.md) | aces2 build, `vee` | open |
+| 2026-11-01 | [Notes for upstream: untracked `.f` files and the ring-CC ω](2026-11-01-notes-for-upstream.md) | aces2 build, `vee` | closed 2026-11-03 |
 
 For the symbols that are defined twice in one aces2 archive (the cause of
 the pccd failure) see also {doc}`../duplicate_symbols`.

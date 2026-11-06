@@ -4,6 +4,141 @@ Plain-text resume document, kept in the repo so it survives terminal
 freezes / HPG outages and gets backed up on every `git push`. Read the
 **RESUME POINT** section first on any restart.
 
+## SESSION 2026-11-03: THIRD-ORDER DIAGRAM CONTENT OF (a),(b),(c), VERIFIED (NEWEST, RESUME HERE)
+
+Prompt: reviewer-style revision plan (~/claude_docs/CC_Response_Manuscript_Revision_Suggestions.docx);
+user: full version, essential pieces in body, rest in appendices, diagrammatic.
+Tools (all in ~/claude_docs/scrnc_paper/pt3): scale_ao2e.py (scales IIII/IIJJ/IJIJ/IJKL after xvscf,
+before xvtran -> H(lam)=F+lam W; MP2(0.5)/MP2(1) = 0.25 to 1e-12), run via
+/blue/ufhpc/perera/scrnc_pt3/run_lambda.sh; xscrnc now writes sigma_vtx_check.dat (a,b,c at
+z=mu+i{0,.2,1}) and lehmann_check.bin (eps, (pq|rs)) for Isrc=0 too (scrnc_lehmann.F, uncommitted).
+pilot.py: spin-orbital FCI (N, N+-1) exact Sigma(lam), variant formulas. PITFALL fixed: double-
+excitation operator order in the FCI builder (a_b+a_a+ vs a_a+a_b+) flips doubles; GF2 still passed.
+H2O/STO-3G results (all exact rationals, residuals 1e-17 formulas, 1e-11 ACES fit, 1e-7 FCI fit):
+* ACES lam^3 of (a),(b),(c) = pilot J1 + r1 + l1, where l1 (Lambda2 in gamma^R) IS present: vee's right
+  density is <0|(1+L) E R|0> (gdens with r0), NOT the commutator stated in the manuscript.
+* Manuscript Eq. vertices/sigma_chi had r<->s transposed: correct is hole -<<h(ip);h(qi)>>, particle
+  <<h(qa);h(ap)>> with h(pm)=sum <pr||ms> E_rs (pilot reproduces GF2 to 1e-17 both orderings).
+* Exact Sigma3 = C-term [2p1h: d_jk<ab||cd> + P(ab)P(cd) d_ac<bk||jd>, U=<ab||pj>; 2h1p: d_ab<kl||ij>
+  - P(ij)P(kl) d_ik<bj||al>, U=<ij||pa>] + 2*ph coupling corr (sum_kc <ak||pc> t_jk^bc; sum_kc <pk||ic>
+  t_jk^ac) + 1*(1/2 sum <kl||pj> t_kl^ab ; 1/2 sum <cd||pa> t_ij^cd) + static.
+* Vertex-resolved (U = Ud - Ux, Ud outer line p-a direct): exact weights dd=dx=xd=xx=1 for the ph
+  C-terms and the ph coupling corrections; (a) dd 1 only; (b) dd 1, dx+xd 1/2; (c) all 1/2.
+  pp/hh ladders, pp/hh coupling corrections, static: 0 in all variants.
+Next: manuscript (App. A perturbative response, App. B classification + figure, body edits).
+
+## SESSION 2026-11-01: dRPA VARIANT (b) = G0W0 + SOSEX, VERIFIED
+
+Goal: finalize the manuscript (user, 2026-11-01: no new projects; scrnc paper first, to show
+P.-F. Loos). Table 1 claim "(b) with dRPA states = G0W0+SOSEX" needed a real test.
+Code: scrnc_lehmann.F Isrc=1 now builds dRPA right/left transition densities with X and Y apart
+(X+Y = D^1/2 Z Om^-1/2, X-Y = D^-1/2 Z Om^1/2; same slot convention as the bare states) and runs
+them through Scrnc_lehmann_vx/vt, so vertex variants are computed for dRPA; G0W0 qp_lehmann.dat
+byte-identical to before on all 8 molecules. Writes sigma_vtx_check.dat (Sigma_a, Sigma_b at
+z = mu + i{0,0.2,1}) and drpa_check.bin (eps, MO integrals).
+Independent check ~/claude_docs/scrnc_report/sosex_check.py (numpy only, own RPA): GW Lehmann,
+SOX = Bruneval & Forster JCTC 20, 3218 (2024) Eq. 18, SOSEX(W_p,v) = their Eq. 16 by quadrature.
+Sign convention of Eq. 16 as transcribed did NOT reproduce SOX when W_p -> v; the convention with
+pair factor 1/(-iw'+e_v-e_w) and overall +1/2pi does (to 1e-15), and is the one used. Result:
+max |a - G0W0| <= 3e-15, max |b - (G0W0+SOX+SOSEX)| <= 3e-15 Eh, all 8 molecules
+(/blue/ufhpc/perera/scrnc_loos/cc-pvdz_sosex/sosex_check_summary.txt). Analytic reason: chi v chi0
+= chi - chi0 (Dyson), so SOX + SOSEX(W_p,v) = int G v chi v_x, which is the Lehmann exchange term.
+Pitfall hit: numpy eig on the non-Hermitian RPA gives non-orthogonal degenerate vectors (Ne, HF:
+1e-3 Eh error); use the Hermitian (A-B)^1/2(A+B)(A-B)^1/2 form.
+
+QP ROOT CHOICE (same day): Newton from eps_p can land on a satellite (HF 2sigma, variant c: Z=0.03).
+Added Scrnc_lehmann_qpv: bracket all roots within eps_p +- 0.5 Eh (interior sampling of each pole
+interval, Nsub=8, since negative residues allow root pairs without sign change), largest Z ->
+qp_vertex_maxz.dat. It can MISS roots (BF 4sigma (b): Newton root Z=0.88 missed, Sum Z in window
+0.02), so tab_loos.py takes the larger-Z of {converged Newton root, bracketed roots} (best_root).
+Final cc-pVDZ stats, n=20 (CO 1pi now included: IP-EOM P summed over degenerate set):
+G0W0 +0.27/0.31/0.97, G0W0+SOSEX +0.80/0.81/2.22, (a) -0.40/0.42/1.14, (b) +0.35/0.39/1.40,
+(c) -1.03/1.16/3.00 (MSE/MAE/max eV). Only (c) changed vs Newton (HF 2sigma +2.64 -> -1.49).
+Runs: /blue/ufhpc/perera/scrnc_loos/cc-pvdz_sosex/<mol>/{qp_vertex,qp_vertex_maxz}_src{0,1}.dat.
+Manuscript ~/claude_docs/scrnc_paper complete draft (19 pp).
+
+## SESSION 2026-10-31: COMPLEX EOM-EE PAIRS
+
+Prompted by the manuscript review (~/claude_docs/CC_Response_Self_Energy_Review.docx, causality /
+non-Hermitian residues). DIAGALL logs (read with /usr/bin/grep -a; the default grep = ugrep skips
+these big logs as binary) show complex EOM-EE-CCSD pairs in the Loos cc-pVDZ set: max |Im w| Ne 0,
+HF 0, H2O 4.7e-4, NH3 1.2e-4, CH4 2.3e-4, BF 4.8e-4, CO 1.1e-3, N2 1.4e-3 Eh.
+Old treatment: GEEV pair -> columns u=Re v, w=Im v, each used as a real state at Re w (the mu
+coupling dropped); left vectors = rows of R^-1 (exact dual basis, hence left residual ~1e-3).
+Fix (uncommitted): vee/diagall.f writes eom_evali.dat (per root: irrep, i, Re w, Im w, and for the
+2nd pair member the block M_kl=<L_k|Hbar|R_l> of the stored vectors via H_L at SCR(I0L));
+scrnc_lehmann.F reads it (Scrnc_lehmann_rdcpx) and Scrnc_lehmann_vtxc writes qp_vertex_cpx.dat
+with each pair entering exactly as (x+M)^-1 (occ) / (y-M)^-1 (vrt), split residues via
+Scrnc_lehmann_fac. Checks on H2O: Mkk = Re w to 1e-13, Muw*Mwu = -mu^2; eom_tdm.dat and
+qp_vertex.dat bit-identical to 10-29. H2O: 6 pairs at 73-184 eV; all occupied QPs unchanged
+(<=0.01 meV, print precision); only near-pole virtual roots (Z~0) move. Reruns in
+/blue/ufhpc/perera/scrnc_loos/cc-pvdz_cpx (h2o job 48572377; n2 co bf nh3 ch4 job 48572978).
+
+RESULT (2026-11-01, both jobs done): real-pair qp_vertex.dat and eom_tdm.dat are bit-identical to
+cc-pvdz/<mol>/ee/qp_vertex_0.dat (Isrc=0; NOTE plain qp_vertex.dat there is the last Isrc=2 run) for
+all 6 molecules. Complex-pair treatment (qp_vertex_cpx.dat) vs real-pair, valence occupied QPs, max
+shift over variants a/b/c: H2O 0.01, NH3 0, CH4 0, BF 0, CO 0.38, N2 0.01 meV; HOMOs identical to 1 meV.
+Pairs: H2O 6, NH3 11, CH4 3, BF 15, CO 37, N2 16. Only virtual near-pole roots move (Z<0.2, some
+with unphysical Z e.g. BF p20 Zb -3.95), up to ~3 eV in variant b. CONCLUSION: complex EOM-EE pairs do
+not affect the IP table; manuscript can state this in one sentence. Code still uncommitted.
+
+## SESSION 2026-10-29: SELF-ENERGY VERTEX AND SPIN CHANNEL
+
+Motivation (Ajith): scrnc came from the J-coupling idea of a two-point
+interaction mediated by the response; GW uses only the charge channel.
+Literature: Lewis & Berkelbach JCTC 15, 2925 (2019) (CC chi, charge only,
+slightly worse than RPA; "vertex in Sigma cannot be neglected"); Marie &
+Loos JCP 163, 194115 (2025) (molecular FLEX, uncoupled eh/eh-bar/pp with
+bare kernel: IP MAE 0.66-1.13 eV vs G0W0 0.36; channel coupling needed).
+
+Code (uncommitted):
+- vee/gdens1.f: UHF alpha OO block of the transition density was transposed
+  twice (net none), beta once; RHF once. Same bug as pdens gdens1 (fixed
+  17b67827). Fixed: one transpose per spin. Charge-only W_c and dipole TMs
+  unchanged (symmetric operators); antisymmetric TDM uses change.
+- scrnc_lehmann.F: keeps alpha/beta TDMs, builds direct V and exchange X, X'
+  vertices; QP variants (diagonal Newton from eps_p) to qp_vertex.dat:
+  (a) V V (G0W, as before); (b) V (V - X') (exchange vertex, singlets only);
+  (c) 1/2 (V-X)(V-X') + spin-flip term 2 X_t X'_t, t=(a-b)/2 (spin isotropy).
+  lehmann_input Isrc=2: bare spin-orbital states; (a) = GF2 direct, (b) and
+  (c) = full GF2 to 1e-16 (STO-3G) and 1.6e-15 (DZ). Conventions verified.
+
+Results, H2O IP (eV), error vs IP-EOM-CCSD:
+            EOM     (a) G0W_CC     (b) +exch vtx   (c) +spin channel
+ STO 1b1    8.42    8.25 -0.17     8.71 +0.29      7.30 -1.12
+     3a1   10.91   10.77 -0.14    11.14 +0.23     10.39 -0.52
+     1b2   16.63   16.55 -0.08    16.46 -0.17     16.53 -0.10
+ DZ  1b1   11.74   11.37 -0.37    12.12 +0.38     10.08 -1.66
+     3a1   13.76   13.40 -0.36    14.03 +0.27     12.39 -1.37
+     1b2   18.76   18.35 -0.41    18.58 -0.18     17.91 -0.85
+(a) at DZ reproduces the 1016 G0W_CC values (vee fix does not touch it).
+Reading: the spin channel resummed this way (c) is much worse, as Marie &
+Loos found for FLEX; the exchange vertex (b) flips the sign of the error
+without reducing it. Neither single-channel form fixes G0W_CC.
+Dirs: /blue/ufhpc/perera/scrnc_test/h2o_vertex_{sto3g,dz}_1029.
+
+Loos-set cc-pVDZ batch (job 48231477, /blue/ufhpc/perera/scrnc_loos/
+run_ccpvdz.sbatch): ne hf h2o nh3 ch4 bf co n2, IP-EOM + EE full diag +
+xscrnc Isrc=0/1/2. NH3 xscrnc died: the Nirrep>1 guard in
+scrnc_get2ints.F demanded IJKL, which cannot exist for Nirrep=2 (Cs).
+Fixed (uncommitted): IJKL is required only when Nirrep>=4. NH3 xscrnc
+rerun via rerun_nh3.sbatch. The others are in 4-irrep subgroups, so the fix
+does not affect them.
+NH3 rerun OK (job 48235274). The "Convergence fails" lines in ee logs are
+the CIS-guess DAVID1, before DIAGALL full diag, so they are harmless.
+Interim, 4 molecules (Ne HF H2O NH3), outer valence (n=10), MSE/MAE eV vs
+IP-EOM-CCSD: G0W_RPA +0.19/0.22, (a) G0W_CC -0.46/0.46, (b) +exch
++0.34/0.35, (c) +spin -0.63/1.16. Table: ~/claude_docs/scrnc_report/
+tab_loos.py <basisdir>.
+
+FULL 8-molecule cc-pVDZ table (2026-10-30, tab_loos.py; CH4 HOMO fixed: degenerate t2
+roots came out of ip_fulldiag as a round-off complex pair, Im 3e-15 Ha, and get P=0 there;
+the table now uses the best-resolved member of a degenerate set). Outer valence (EOM weight
+> 0.8), n = 19, MSE/MAE/max eV vs IP-EOM-CCSD: G0W_RPA +0.29/0.33/0.97, (a) G0W_CC
+-0.39/0.41/1.14, (b) +exch +0.37/0.41/1.40, (c) +spin -0.81/1.22/3.00.
+TODO (minor): ip_fulldiag.F should treat |Im| below a relative threshold as real.
+Manuscript (JCP, revtex): ~/claude_docs/scrnc_paper/ ; intro + theory drafted 2026-10-30.
+
 ## >>> START HERE (end of 2026-10-15) <<<
 
 State: Lehmann (sum-over-states) G0W_CC from ACES II EOM-EE-CCSD works

@@ -8,7 +8,9 @@ Second, the EOM ring-CC doubles correction uses ω of the first root of
 an irrep for every root; whether that is intended needs the authors of
 the method.
 
-- **Status:** open (needs action or an answer from upstream)
+- **Status:** both items closed on 2026-11-03. The `.f` change was merged
+  upstream (local `.f` edits moved to the `.F`). The ω question was
+  answered: each root uses its own ω (see *Answer* at the end).
 - **Area:** aces2 build (`aces2/.gitignore`, every module directory);
   aces2 `vee` (`form_dbls_correctns_2rcc.F`)
 - **Found with:** commits `6809d831`, `24d517c9`, `6ec048c4` (`.f`);
@@ -113,3 +115,35 @@ Not related to this question: the Ne `Ag` failures themselves were
 caused by left and right eigenvectors that were not biorthonormal and
 are fixed (`vee/biorth_rcc_vecs.F`, `cfbea037`; ring 49/49 with ifx
 2024.0 and ifx 2023.2).
+
+### Answer (2026-11-03, A. Perera)
+
+Each root uses its own ω. Eqs. 37–41 of the paper write the correction
+per root, Δω_k = ⟨L_k|W|R_k⟩ / (ω_k − D_ijab), so passing `1` was a bug.
+`form_dbls_correctns_2rcc.F` now passes `My_root`, and the
+`jcp2020_eom_rccd` references were generated again (314 rows changed,
+only in the doubles correction and Exc. Eng. columns).
+
+Checked against the paper before the change. Two `xvee` builds from
+`35e71916` were compared, one as is (ω of the first root) and one with
+`My_root`, on all 20 cases:
+
+- **Table 1 of the paper does not change.** Its EOM(S)/EOM(Sf) columns
+  are the base values, before the doubles correction. The module
+  docstring's "matches Table I" refers to those columns.
+- **Table 4 (ΔDoubles, rCCD) changes for states that are not the first
+  root of their irrep.** For N2 and Ne the published values match ω of
+  the first root (N2 ¹Πg EOM(S): published −3.22, first-root ω −3.22,
+  own ω −3.34; N2 ¹Δu EOM(S): −1.80, −1.80, −1.92; Ne ¹P EOM(S): −4.13,
+  −4.13, −4.15). With UHF references the singlet is usually the second
+  root, after a triplet, so its correction had been computed with the
+  triplet's ω. The published H2O EOM(Sf) row matches own ω (−3.46, −3.45,
+  −3.36, −3.38 against −3.457, −3.452, −3.356, −3.377), but Varun Rishi's
+  archived H2O runs match first-root ω. So the published H2O row came
+  from a run that is not in the archive, as does the 0.3 eV gap in its
+  EOM(S) base values. The paper's conclusions are unaffected: the
+  shifts are about 0.1 eV, against deviations of 0.7–0.9 eV from FCI.
+- **High roots near a doubles pole** (ω_k ≈ D2) now get large corrections
+  of either sign, for example N2 `B1g` root 6 at 51.7 eV (EOM(Sf)-rCCD):
+  −2.08 → −32.0 eV. This is the usual CIS(D)-type intruder behavior and
+  does not touch any state in the paper.

@@ -60,8 +60,12 @@ C undetected for so long. Fail loudly instead: under Nirrep>1, require
 C all three of IIJJ/IJIJ/IJKL to still be present (IIII has been
 C observed to survive independently in every case checked so far, but
 C is checked too for completeness). Nirrep already read above.
+C IJKL needs four distinct irreps, so xvmol never writes it when
+C Nirrep=2 (e.g. NH3 in Cs); only require it for Nirrep>=4.
       If (Nirrep .Gt. 1) Then
-         Do Ifile = 1, 4
+         Nreq = 3
+         If (Nirrep .Ge. 4) Nreq = 4
+         Do Ifile = 1, Nreq
             Inquire(File=filename(Ifile),Exist=Fexist2)
             If (.NOT. Fexist2) Then
                Write(6,"(a)")

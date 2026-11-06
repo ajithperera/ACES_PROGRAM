@@ -68,8 +68,11 @@ CSSS      call check_ints(Work,Length,Iuhf,0)
       Write(6,"(a)") "--------Forming R1*W->R2*L1*W=E(D)----------"
 #endif 
          Ioff = 1
+C The denominator (omega_k - D2) uses this root's own excitation
+C energy (JCP 153, 234101 (2020), eqs. 37-41). Until 2026-11 the
+C first root's omega was used for every root of the irrep.
          Call Form_d2_4rcc(Work,Rcc_eigs,Len_ov,Length,Iuhf,Irrepx,
-     +                     Listd0,1)
+     +                     Listd0,My_root)
          Do Ispin = 3,3-2*Iuhf,-1  
             Call Zerolist(Work,Length,Listt2in-1+Ispin)
          Enddo 
