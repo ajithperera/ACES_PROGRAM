@@ -6,7 +6,7 @@
 
       Double precision Mq
       Dimension Dens(Nao,Nao),Scr1(Nao,Nao),Scr2(Nao,Nao)
-      Dimension Work(Maxcor),Qm(4,8,4,6,6),Om(4,8,4,8,10),
+      Dimension Work(Maxcor),Qm(4,8,4,8,6),Om(4,8,4,8,10),
      +                       Am(4,8,4,8,3),Mq(4,8,4,8,9),
      +                       Dm(4,8,4,8,3)
 
@@ -69,7 +69,8 @@ C Angular momentum contribution (rxp + s)
 C For excited states <0|S|Psi_k> is zero. This term contribute
 C only to ioniized or attached states. 
 
-      Call Putrec(20,"JOBARC",A_string(Iside),Ithr,Am)
+C (11/2026: removed a Putrec of Am under the unset label A_string(Iside)
+C  -- Iside is not defined here; the moments live in the Am argument.)
 
 C Lets do the orbital magnetic quadrupole contribution 
 C r(rxp) - (rxp)r
@@ -108,12 +109,12 @@ C  (yd/dx-xd/dy)(x,y,z) =>  (y,-x,0)
      +                                + Dm(Jroot,Irrepy,Iroot,Irrepx,3)
       Mq(Jroot,Irrepy,Iroot,Irrepx,5) = Mq(Jroot,Irrepy,Iroot,Irrepx,5) 
       Mq(Jroot,Irrepy,Iroot,Irrepx,6) = Mq(Jroot,Irrepy,Iroot,Irrepx,6) 
-     +                                + Dm(Jroot,Irrepy,Iroot,Irrepx,1)
+     +                                - Dm(Jroot,Irrepy,Iroot,Irrepx,1)
 
       Mq(Jroot,Irrepy,Iroot,Irrepx,7) = Mq(Jroot,Irrepy,Iroot,Irrepx,7)
      +                                + Dm(Jroot,Irrepy,Iroot,Irrepx,2)
       Mq(Jroot,Irrepy,Iroot,Irrepx,8) = Mq(Jroot,Irrepy,Iroot,Irrepx,8)
-     +                                - Dm(Jroot,Irrepy,Iroot,Irrepx,8)
+     +                                - Dm(Jroot,Irrepy,Iroot,Irrepx,1)
       Mq(Jroot,Irrepy,Iroot,Irrepx,9) = Mq(Jroot,Irrepy,Iroot,Irrepx,9) 
 
       Return 

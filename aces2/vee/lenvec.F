@@ -1,0 +1,16 @@
+      INTEGER FUNCTION LENVEC(IRREPX,IUHF)
+C
+C Length of an EOM-EE vector (singles + doubles) of symmetry IRREPX
+C as stored on list 472 (same count as maklst/form_genrlizd_tdens).
+C
+      IMPLICIT INTEGER (A-Z)
+      COMMON /SYMPOP/ IRPDPD(8,22),ISYTYP(2,500),ID(18)
+C
+      LENVEC=IRPDPD(IRREPX,9)+IUHF*IRPDPD(IRREPX,10)
+      LENVEC=LENVEC+IDSYMSZ(IRREPX,ISYTYP(1,46),ISYTYP(2,46))
+      IF (IUHF.NE.0) THEN
+         LENVEC=LENVEC+IDSYMSZ(IRREPX,ISYTYP(1,44),ISYTYP(2,44))
+         LENVEC=LENVEC+IDSYMSZ(IRREPX,ISYTYP(1,45),ISYTYP(2,45))
+      ENDIF
+      RETURN
+      END

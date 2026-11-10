@@ -60,8 +60,13 @@ def load_test_results():
             i += 1
             continue
         name = lines[i].split()[0]
-        # lines[i+1] is "<RECORD> 1", lines[i+2] is the value
-        record = lines[i + 1].split()[0]
+        # lines[i+1] is "<RECORD> N", lines[i+2] is the value. N=1 (the
+        # usual case) checks the record's first element; N>1 checks its
+        # N-th element (e.g. "GEN_OSCS 7"), carried as "RECORD#N".
+        rtok = lines[i + 1].split()
+        record = rtok[0]
+        if len(rtok) > 1 and int(rtok[1]) > 1:
+            record = f"{record}#{int(rtok[1])}"
         value = float(lines[i + 2].replace("D", "E").replace("d", "e"))
         refs[name] = (record, value)
         i += 3
@@ -69,17 +74,24 @@ def load_test_results():
 
 
 def _compare_record(scratch, env, name, record, ref_energy, elapsed):
+    rec, _, nth = record.partition("#")
+    nth = int(nth) if nth else 1
     jr = subprocess.run(
-        ["xa2proc", "jareq", "d", record, "1"],
+        ["xa2proc", "jareq", "d", rec, str(nth)],
         cwd=scratch, env=env, capture_output=True, text=True, errors="replace", timeout=60,
     )
-    m = re.search(r"[-+]?\d*\.\d+[eEdD][-+]?\d+", jr.stdout)
-    if not m:
+    if nth == 1:
+        m = re.search(r"[-+]?\d*\.\d+[eEdD][-+]?\d+", jr.stdout)
+        vals = [m.group(0)] if m else []
+    else:
+        # jareq prints one value per line, plain or exponent format
+        vals = re.findall(r"[-+]?\d*\.\d+(?:[eEdD][-+]?\d+)?", jr.stdout)
+    if len(vals) < nth:
         return name, "ERROR", elapsed, (
             f"xa2proc jareq produced no parseable value for {record}\n"
             f"stdout: {jr.stdout}\nstderr: {jr.stderr}"
         )
-    got = float(m.group(0).replace("D", "E").replace("d", "e"))
+    got = float(vals[nth - 1].replace("D", "E").replace("d", "e"))
     tol = TOLERANCE_OVERRIDES.get(name, DEFAULT_TOLERANCE)
     diff = abs(got - ref_energy)
     status = "PASS" if diff <= tol else "FAIL"

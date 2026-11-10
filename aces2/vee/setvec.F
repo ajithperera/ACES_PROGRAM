@@ -1,0 +1,27 @@
+      SUBROUTINE SETVEC(IRREPX,IOFF,LIST0,IUHF)
+C
+C Shape the lists that hold one EOM-EE vector of symmetry IRREPX
+C before UPDATES(IRREPX,V,LIST0,IOFF,490,IUHF) is called:
+C singles on slots IOFF+1 (and IOFF+2 for UHF) of list 490, doubles
+C on lists LIST0..LIST0+2 (only LIST0+2 for RHF). Same list types
+C as newlst.F uses for the Davidson vectors.
+C
+      IMPLICIT INTEGER (A-Z)
+      LOGICAL MBPT2,CC,CCD,RCCD,DRCCD,LCCD,LCCSD,CC2
+      COMMON /SYMPOP/ IRPDPD(8,22),ISYTYP(2,500),ID(18)
+      COMMON /REFTYPE/ MBPT2,CC,CCD,RCCD,DRCCD,LCCD,LCCSD,CC2
+C
+      DO ISPIN=1,1+IUHF
+         CALL ACES_LIST_RESIZE(IOFF+ISPIN,490,IRPDPD(IRREPX,8+ISPIN))
+      ENDDO
+      DO ISPIN=3,3-2*IUHF,-1
+         TTYPEL=ISYTYP(1,43+ISPIN)
+         TTYPER=ISYTYP(2,43+ISPIN)
+         IF ((RCCD .OR. DRCCD) .AND. ISPIN .NE. 3) THEN
+            TTYPEL=ISPIN
+            TTYPER=2+ISPIN
+         ENDIF
+         CALL NEWTYP2(IRREPX,LIST0-1+ISPIN,TTYPEL,TTYPER,.TRUE.)
+      ENDDO
+      RETURN
+      END
