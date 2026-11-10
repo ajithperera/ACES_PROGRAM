@@ -746,6 +746,11 @@ C
          Call Magqmom(S(IA),NOC,C,S(IC),S(ID),S(IK4),S(IK1),S(IK2),
      &                S(IG),S(IH),S(II),NCONT,S(IKS1),S(IKS1),S(IN),
      &                IBUF,S(IK3),NGROUP,S(IK5),S(IK6),MXPRM2)
+C r^2 r_c (trace of the third moment) for the beyond-dipole
+C dipole/octupole term, 11/2026
+         Call R2rmom(S(IA),NOC,C,S(IC),S(ID),S(IK4),S(IK1),S(IK2),
+     &               S(IG),S(IH),S(II),NCONT,S(IKS1),S(IKS1),S(IN),
+     &               IBUF,S(IK3),NGROUP,S(IK5),S(IK6),MXPRM2)
       ELSE
          DO ICENT = 1, NPASSX
             C(1) = S(IA + ICENT - 1)
@@ -757,6 +762,9 @@ C
             Call Magqmom(S(IA),NOC,C,S(IC),S(ID),S(IK4),S(IK1),S(IK2),
      &                   S(IG),S(IH),S(II),NCONT,S(IKS1),S(IKS1),S(IN),
      &                   IBUF,S(IK3),NGROUP,S(IK5),S(IK6),MXPRM2)
+            Call R2rmom(S(IA),NOC,C,S(IC),S(ID),S(IK4),S(IK1),S(IK2),
+     &                  S(IG),S(IH),S(II),NCONT,S(IKS1),S(IKS1),S(IN),
+     &                  IBUF,S(IK3),NGROUP,S(IK5),S(IK6),MXPRM2)
 
          ENDDO
       ENDIF

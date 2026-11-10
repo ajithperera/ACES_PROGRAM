@@ -2,94 +2,85 @@
      +                                  A_strength,D_strength,
      +                                  M_strength,Root,D_iso,A_iso,
      +                                  O_iso,Q_iso,M_iso)
-   
+C
+C Isotropically averaged oscillator-strength contributions from the
+C products of genrlizd_multipole_init (omega = Root > 0, a.u.,
+C alpha = 1/c):
+C
+C  f(mu)   =  (2/3) w Sum_a Dl Dr
+C  f(m)    = -(1/6) a^2 w Sum_a Al Ar           (magnetic dipole,
+C                                                orbital part)
+C  f(Q)    =  (1/45) a^2 w^3 Sum_ab Theta_ab^2     (traceless Theta;
+C             = (1/60) a^2 w^3 [3 Sum_ab Q_ab^2 - (Tr Q)^2], raw Q)
+C  f(mu,O) = -(1/45) a^2 w^3 Sum_c (mu_c <r^2 r_c>)_sym
+C  f(mu,M) = -(1/9)  a^2 w^2 Sum e_bad (mu_d M_ab)_antisym
+C
+C (from the expansion of exp(ik.r) e.p to second order in k, with
+C [H,r]=-ip relating the e.p, (k.r)(e.p) and (k.r)^2(e.p) matrix
+C elements to r, rr, rrr and {r,l}). The sum is origin independent
+C for exact states. The sign of f(mu,M) is the one that makes the
+C sum origin independent with the vee AO transition densities (the
+C only sym x antisym contraction, so it depends on the D(pq) index
+C order); checked for HeH+ aug-cc-pVQZ EOM-CCSD (= FCI) with the
+C property origin moved by 1.5 bohr: total f(2) varies by < 0.5%
+C while f(Q), f(mu,O), f(mu,M) individually change by up to 100%.
+C
+C 11/2026 (Ajith Perera): f(Q) used the raw-Q formula with the
+C traceless Theta integrals (2.25 times too large); f(m) had +2/3 w (no a^2/4, wrong sign for
+C the antisymmetric l), f(mu,O) had the wrong sign and f(mu,M) the
+C 27-term sum (see init); single-precision fine-structure constant.
+C
       Implicit Double Precision(A-H,O-Z)
-      Double Precision Mq_r,Mq_l,M_strength,M_iso,M_fac
+      Double Precision M_strength,M_iso
 
-      Data Isix,Iten,Ithr,Inin /6,10,3,9/
-      Data Dzero,Two,Three,Twozero,Fourfive/0.0D0,2.0D0,3.0D0,
-     +                                      20.0D0,45.0D0/
-      Data Done,Dnine,Six/1.0D0,9.0D0,6.0D0/
-      Data Recp_fsc/137.03599/
-
-      Dimension A_strength(3),Q_strength(9),O_strength(10)
+      Dimension A_strength(3),Q_strength(9),O_strength(3)
       Dimension D_strength(3),M_strength(27)
 
-#ifdef _DEBUG_LVL0
-      Write(6,*)
-      Write(6,"(a)") " @-genrlizd_multipole_fin The tensor components" 
-      Write(6,"(a)") " The <(L_0|mu|n><n|mu|0> "
-      Write(6,"(3(1x,F15.10))") (D_strength(i),i=1,3)
-      Write(6,"(a)") " The <L_0|r^p|n><n|r^p>"
-      Write(6,"(3(1x,F15.10))") (A_strength(i),i=1,3)
-      Write(6,"(a)") " The <L_0|Q|n><n|Q|0>  "
-      Write(6,"(3(1x,F15.10))") (Q_strength(i),i=1,9)
-      Write(6,"(a)") " The <L_0|mu|n><n|O|0> "
-      Write(6,"(3(1x,F15.10))") (O_strength(i),i=1,9)
-      Write(6,"(a)") " The <L_0|mu|n><n|Mq|0> "
-      Write(6,"(3(1x,F15.10))") (M_strength(i),i=1,27)
-#endif 
-C Istropic averaging 
+      Data Dzero,Done,Two,Three,Six/0.0D0,1.0D0,2.0D0,3.0D0,6.0D0/
+      Data Recp_fsc/137.035999084D0/
 
-      Two_ov_three = Two/Three   
-      One_ov_three = Done/Three
-      One_ov_tzero = Done/Twozero 
-      One_ov_nine  = Done/Dnine 
-      Half         = Done/Two 
-      Fsc   = Done/Recp_fsc
+      Alpha2 = (Done/Recp_fsc)**2
 
       D_iso = Dzero
-      Do Icomp = 1, 3
-         D_iso = D_iso + D_strength(Icomp)
-      Enddo
-      D_iso = Two_ov_three*Root*D_iso
-
       A_iso = Dzero
-      Do Icomp = 1, 3
-         A_iso = A_iso + A_strength(Icomp)
+      Do Ic = 1, 3
+         D_iso = D_iso + D_strength(Ic)
+         A_iso = A_iso + A_strength(Ic)
       Enddo
-      A_iso = Two_ov_three*Root*A_iso
+      D_iso = (Two/Three)*Root*D_iso
+      A_iso = -(Done/Six)*Alpha2*Root*A_iso
 
-      Q_fac = One_ov_three*One_ov_tzero*Fsc**2
-      Q_iso_1 = Two*(Q_strength(1)+Q_strength(2)+Q_strength(3))
-      Q_iso_2 = Six*(Q_strength(4)+Q_strength(5)+Q_strength(6))
-C The elements 7, 8 and 9 are build with a factor of two.
-      Q_iso_3 = -(Q_strength(7)+Q_strength(8)+Q_strength(9))
-
-      Q_iso = Q_iso_1 + Q_iso_2 + Q_iso_3
-      Q_iso = Q_fac*Q_iso*Root**3
+C Sum_ab Theta_ab^2 = Sum_a Theta_aa^2 + 2 Sum_a<b Theta_ab^2
+      Q_iso = (Q_strength(1)+Q_strength(2)+Q_strength(3))
+     +      + Two*(Q_strength(4)+Q_strength(5)+Q_strength(6))
+      Q_iso = (Alpha2/45.0D0)*Root**3*Q_iso
 
       O_iso = Dzero
-      O_fac = Done/Fourfive
-      O_fac = O_fac*Fsc**2
-      Do Icomp = 1, 9
-         O_iso = O_iso + O_Strength(Icomp)
+      Do Ic = 1, 3
+         O_iso = O_iso + O_strength(Ic)
       Enddo
-      O_iso = O_fac*O_iso*Root**3
+      O_iso = -(Alpha2/45.0D0)*Root**3*O_iso
 
-C The factor 1/3c associated with the integral is also absorbed 
-C in here. The factor half is to account for the factor two 
-C introduced in the symmetrization (see above)
-
-      M_iso = Dzero 
-      M_fac = Half*One_ov_nine*Fsc**2 
-      Do Icomp = 1, 27
-         M_iso = M_iso + M_strength(Icomp)
+      M_iso = Dzero
+      Do Ic = 1, 27
+         M_iso = M_iso + M_strength(Ic)
       Enddo
-      M_iso = M_fac*M_iso*Root**2
+      M_iso = -(Alpha2/9.0D0)*Root**2*M_iso
+
       Write(6,*)
       Write(6,100) "Electric dipole contribution                   :",
      +              D_iso
       Write(6,100) "Magnetic dipole contribution                   :",
      +              A_iso
       Write(6,100) "Electric quadrupole contribution               :",
-     +              Q_iso 
+     +              Q_iso
       Write(6,100) "Electric dipole/electric octupole contribution :",
-     +             O_iso 
-      Write(6,100) "Electric dipole/Magnetic octupole contribution :",
-     +             M_iso 
+     +             O_iso
+      Write(6,100) "Electric dipole/magnetic quadrupole contrib.   :",
+     +             M_iso
+      Write(6,100) "Total (second order in k)                      :",
+     +             D_iso+A_iso+Q_iso+O_iso+M_iso
  100  Format(1x,a,1x,es12.4e2)
 
       Return
       End
-

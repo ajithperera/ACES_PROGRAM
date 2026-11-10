@@ -156,7 +156,6 @@ modhbar_ vee vea vea
 modhbar_ vee vea vip
 modiajk_ libr2 lambda pccd
 modt2_ libr2 vcceh vcceh
-newlst_ vee vcceh vcceh
 newt1_ vcc ccsd_light ccsd_light
 newt1_ vcc cse12 cse12
 newt2_ libr2 ccd_light ccd_light

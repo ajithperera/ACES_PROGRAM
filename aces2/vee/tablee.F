@@ -130,7 +130,11 @@ C
       G_TDENS      = (IFLAGS2(h_IFLAGS2_genrlizd_tdens) .Gt. 0) 
       CORE_SEARCH  = (Iflags2(h_IFLAGS2_ee_search) .EQ. 1)
       DOUBLE_EES   = (Iflags2(h_IFLAGS2_ee_search) .EQ. 4)
-      EXT_PRINTING = (G_TDENS .OR. CORE_SEARCH .OR. DOUBLE_EES)
+C The state-to-state table needs the GENRLIZD_TDENS records
+C (GEN_OSCS, QUADMOMC, ...); CORE/DOUBLE searches alone do not
+C write them (their ground-state beyond-dipole terms are printed
+C per root by multipole.F).
+      EXT_PRINTING = G_TDENS
 
       CALL GETREC(20,'JOBARC','TOTENERG',IINTFP,ECC)
 
@@ -140,7 +144,7 @@ C
       ENDIF 
 
       
-      IF (CORE_SEARCH .OR. DOUBLE_EES .OR. G_TDENS) THEN
+      IF (G_TDENS) THEN
           Call GETREC(0,"JOBARC","GEN_OSCS",Length,Dummy) 
           Call GETREC(20,"JOBARC","QUADMOMC",Length*Iintfp,Osc_Qm)
           Call GETREC(20,"JOBARC","OCTPMOMC",Length*Iintfp,Osc_Om)
@@ -238,11 +242,12 @@ C
          Enddo
 
           IF (EXT_PRINTING .And. S .Gt. 0) THEN
+              Ndone = 0
               Write(6,*)
               Write(6,"(3a)")"  -------------------Oscillator",
      &                       " strengths between states-----",
      &                       "------------------"
-              Write(6,"(25x,3a)")"  -(Beypnd Dipole",
+              Write(6,"(25x,3a)")"  -(Beyond Dipole",
      &                       " approximation)-"
               Write(6,*)
               Write(6,19)
@@ -252,9 +257,11 @@ C
                   Es    = Eigval(Iroot,Irrep) + Ecc
                    Do Jrrep = 1, Nirrep
                       Do Jroot = 1,  Nroot(Jrrep)
+C GEN_OSCS and the beyond-dipole records hold every (I,J) pair in
+C this loop order, singlets and triplets alike
+                         Ndone = Ndone + 1
                          If (Nature(Iroot,Irrep) .EQ. "S" .and.
      &                       Nature(Jroot,Jrrep) .EQ. "S") Then
-                             Ndone = Ndone + 1
                              Ef    = Eigval(Jroot,Jrrep) + Ecc
       Write(6,*)
       Write(6,200) "Electric dipole contribution                   :",
@@ -265,7 +272,7 @@ C
      +              Osc_qm(Ndone)
       Write(6,200) "Electric dipole/electric octupole contribution :",
      +              Osc_om(Ndone)
-      Write(6,200) "Electric dipole/Magnetic octupole contribution :",
+      Write(6,200) "Electric dipole/magnetic quadrupole contrib.   :",
      +              Osc_mq(Ndone)
       Os =  Osc(Ndone)+OSc_am(Ndone)+Osc_qm(Ndone)+ Osc_om(Ndone) + 
      +      Osc_mq(Ndone)
@@ -301,11 +308,12 @@ C
           Endif 
 
           IF (EXT_PRINTING .And. T .Gt. 0) THEN
+              Ndone = 0
               Write(6,*)
               Write(6,"(3a)")"  -------------------Oscillator",
      &                       " strengths between states-----",
      &                       "------------------"
-              Write(6,"(25x,3a)")"  -(Beypnd Dipole",
+              Write(6,"(25x,3a)")"  -(Beyond Dipole",
      &                       " approximation)-"
               Write(6,*)
               Write(6,19)
@@ -314,9 +322,11 @@ C
                   Es    = Eigval(Iroot,Irrep) + Ecc
                    Do Jrrep = 1, Nirrep
                       Do Jroot = 1,  Nroot(Jrrep)
+C GEN_OSCS and the beyond-dipole records hold every (I,J) pair in
+C this loop order, singlets and triplets alike
+                         Ndone = Ndone + 1
                          If (Nature(Iroot,Irrep) .EQ. "T" .and.
      &                       Nature(Jroot,Jrrep) .EQ. "T") Then
-                             Ndone = Ndone + 1
                              Ef    = Eigval(Jroot,Jrrep) + Ecc
       Write(6,*)
       Write(6,200) "Electric dipole contribution                   :",
@@ -327,7 +337,7 @@ C
      +              Osc_qm(Ndone)
       Write(6,200) "Electric dipole/electric octupole contribution :",
      +              Osc_om(Ndone)
-      Write(6,200) "Electric dipole/Magnetic octupole contribution :",
+      Write(6,200) "Electric dipole/magnetic quadrupole contrib.   :",
      +              Osc_mq(Ndone)
       Os =  Osc(Ndone)+OSc_am(Ndone)+Osc_qm(Ndone)+ Osc_om(Ndone) + 
      +      Osc_mq(Ndone)

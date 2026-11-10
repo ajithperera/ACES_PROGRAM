@@ -37,7 +37,14 @@ ECPDATA = os.path.join(BASIS_DIR, "ECPDATA")
 TEST_RESULTS = os.path.join(FAST_DIR, "test_results")
 
 DEFAULT_TOLERANCE = 1e-6  # a.u.
-TOLERANCE_OVERRIDES = {}
+# Beyond-dipole oscillator-strength terms are O(alpha^2) ~ 1e-6..1e-8,
+# printed by jareq with 12 decimals.
+TOLERANCE_OVERRIDES = {
+    "h2o_gtdens_bd_q": 1e-11,
+    "h2o_gtdens_bd_o": 1e-11,
+    "h2o_gtdens_bd_m": 1e-11,
+    "h2o_gtdens_bd_mq": 1e-11,
+}
 
 # Cases that are expected to exit nonzero even when correct -- e.g.
 # opt_maxcyc=1 gradient-only jobs that intentionally hit "Maximum number of

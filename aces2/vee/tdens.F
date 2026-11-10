@@ -13,7 +13,7 @@ C coded limit (very reasonable) is imposed to avoid changes in several
 C different places in the code. 04/96 S. Ajith perera
 C
       INTEGER POP,VRT
-      LOGICAL PRINT,PRINT2,VPROP,CORE_SEARCH,DOUBLE_EES
+      LOGICAL PRINT,PRINT2,VPROP,CORE_SEARCH,DOUBLE_EES,BYDIP
       CHARACTER*8 LABEL(3),STRNG(2), STRNGNMR(2)
       DIMENSION SCR(MAXCOR),LENVV(2),LENOO(2),LENVO(2),TM(3),
      &          TMNMR (6*MAXCENT)
@@ -74,8 +74,18 @@ C
       ITMP1 =IDPROP+NAO*NAO
       ITMP2 =ITMP1 +NAO*NAO
       ITMP3 =ITMP2 +NAO*NAO
+      IDSUM =ITMP3 +NAO*NAO
+      IF (IDSUM+NAO*NAO .GT. MAXCOR) CALL INSMEM("@-TDENS",
+     &                                    IDSUM+NAO*NAO,MAXCOR)
 C
       MXCOR=MAXCOR-ITOP+1
+C
+C Beyond-dipole moments (CORE_SEARCH/DOUBLE_EES, vprops integrals)
+C are evaluated after the spin loop from the spin-summed AO
+C transition density, scaled by FACT exactly as the dipole moments.
+C
+      BYDIP=(CORE_SEARCH .OR. DOUBLE_EES) .AND. VPROP
+      IF (BYDIP) CALL ZERO(SCR(IDSUM),NAO*NAO)
 C
       IF(ISIDE.EQ.2)THEN
 C
@@ -217,12 +227,8 @@ C
 C Extend the transition moments beyound the dipole approximation. 
 C Ajith Perera, 02/2020.
 
-        IF (CORE_SEARCH .OR. DOUBLE_EES) THEN
-           ITOP   = ITMP3 + NAO*NAO
-           MAXCOR = MAXCOR-ITOP+1
-           CALL BEYOND_DIPOLE(SCR(ITMP1),SCR(ITMP2),SCR(ITMP3),
-     &                        TM,SCR,MAXCOR,NAO,ISIDE)
-        ENDIF 
+        IF (BYDIP) CALL SAXPY(NAO*NAO,FACT,SCR(ITMP1),1,
+     &                        SCR(IDSUM),1)
 C
 C Compute the effectve one-particle spin-orbit coupling contributions
 C
@@ -270,6 +276,9 @@ C
        ENDIF
 
  100  CONTINUE
+C
+      IF (BYDIP) CALL BEYOND_DIPOLE(SCR(IDSUM),SCR(ITMP2),SCR(ITMP3),
+     &                              NAO,ISIDE)
 C
       IF (IFLAGS(18) .EQ. 10 .OR. IFLAGS(18) .EQ. 9 .OR.
      &   IFLAGS(18) .EQ. 8) THEN

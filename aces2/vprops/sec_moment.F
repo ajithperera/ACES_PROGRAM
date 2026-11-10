@@ -2,7 +2,7 @@
 
       IMPLICIT DOUBLE PRECISION(A-H,O-Z)
 
-      DIMENSION FNU(9),V(6),D(3)
+      DIMENSION FNU(10),V(6),D(3)
       NT=6
       FNU(1)=OLAP(L,M,N,GA)
       FNU(2)=OLAP(L+1,M,N,GA)

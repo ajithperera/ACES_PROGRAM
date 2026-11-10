@@ -8,6 +8,12 @@ C &  Evaluates magnetic quadrupole momentum AO integrals             &
 C &  Ajith Perera, 22/2020                                           &
 C &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 C
+C 11/2026 (Ajith Perera): stores the antisymmetrized operator (see
+C below); fixed the l_y block (z d/dx part accumulated r_z z into
+C TEMP(3,2), losing MQZY and corrupting MQYY) and the x d/dy half of
+C the l_z block (called DIP_MOMENT, three -r values, and read V(4),
+C V(5) as second moments; MQXZ, MQYZ, MQZZ were wrong).
+C
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       INTEGER AND
       CHARACTER*8 DUML1,LABELD(9),LABELJA(9,26),JUNKLAB
@@ -33,6 +39,7 @@ C
       DIMENSION LMN(200),JMN(200)
       DIMENSION A(3),B(3),EP(3),DISTQD(3),AAA(200),BBB(200),
      &          V(10),DV(9)
+      DIMENSION DIPS(3),VD(3)
 C     
       DATA LABELD /'   MQXX ', '   MQYX ','   MQZX ','   MQXY ',
      &             '   MQYY ', '   MQZY ','   MQXZ ','   MQYZ ',
@@ -59,6 +66,7 @@ C
       ZERO = 0.0D+00
       ONE  = 1.00D+00
       TWO  = 2.00D+00
+      HALF = 0.50D+00
       EIGHT = 8.00D+00
 C
 C Do some initializations (No nuclear contribution for this term)
@@ -374,7 +382,7 @@ C
 C     
                        TEMP(3, 1) = EFACTP*DD*V(5) + TEMP(3, 1)
                        TEMP(3, 2) = EFACTP*DD*V(6) + TEMP(3, 2)
-                       TEMP(3, 2) = EFACTP*DD*V(3) + TEMP(3, 3)
+                       TEMP(3, 3) = EFACTP*DD*V(3) + TEMP(3, 3)
 C                          
   224                  CONTINUE
                     ENDDO
@@ -445,7 +453,7 @@ C
 C
 C Now everything is ready to do the actual evaluation of overlap integral
 C                
-                       CALL DIP_MOMENT(JL, JM, JN, GAMAP, V, NT,
+                       CALL SEC_MOMENT(JL, JM, JN, GAMAP, V, NT1,
      &                                 DISTQD)
 C                
                        TEMP(1, 1) = EFACTP*DD*V(1) + TEMP(1, 1)
@@ -475,7 +483,7 @@ C
      &                      + IM
                        JN = IBTAND(JMN(KKQ), 2**10 - 1) + IN
 C
-                       CALL DIP_MOMENT(JL, JM, JN, GAMAP, V, NT,
+                       CALL SEC_MOMENT(JL, JM, JN, GAMAP, V, NT1,
      &                                 DISTQD)
 C
                        TEMP(2, 1) = EFACTP*DD*V(1) + TEMP(2, 1)
@@ -559,6 +567,52 @@ C
                  DV(9) = (MB*TEMP(1, 3) - TWO*EXPS(JEX)*TEMP(2, 3)) - 
      &                   (LB*TEMP(3, 3) - TWO*EXPS(JEX)*TEMP(4, 3))
 C
+C 11/2026 (Ajith Perera): r_a l_b is neither symmetric nor
+C antisymmetric (its transpose is -l_b r_a = -r_a l_b - e_abc r_c),
+C so it cannot be stored as one triangle; the old code packed it as
+C if symmetric. Store instead the antisymmetric (Hermitian, up to i)
+C magnetic quadrupole operator
+C    MQ_ab = -(1/2)(r_a l_b + l_b r_a) = -(r_a l_b + (1/2)e_abc r_c),
+C with the electron charge included as for DIPOLE_*, AM* and the
+C electric multipoles (DIP_MOMENT returns -r). The packed triangle
+C is then expanded as an antisymmetric matrix (see the MTYP=26
+C sign flip below and EXPND2A).
+C
+                 CALL RHFTCE (BBB, B, EP, JTYP, JTM, ONE, JMN)
+                 CALL DZERO(DIPS,3)
+                 DO JJQ = 1, ITM
+                    IF (AAA(JJQ) .EQ. 0.0) GO TO 241
+                    IL = IBTAND(IBTSHR(LMN(JJQ),20), 2**10 - 1)
+                    IM = IBTAND(IBTSHR(LMN(JJQ),10), 2**10 - 1)
+                    IN = IBTAND(LMN(JJQ), 2**10 - 1)
+                    DO KKQ = 1, JTM
+                       DD = AAA(JJQ)*BBB(KKQ)
+                       IF (ABS(DD) .LT. THR2)  GO TO 242
+                       JL = IBTAND(IBTSHR(JMN(KKQ),20), 2**10 - 1)
+     &                      + IL
+                       JM = IBTAND(IBTSHR(JMN(KKQ),10), 2**10 - 1)
+     &                      + IM
+                       JN = IBTAND(JMN(KKQ), 2**10 - 1) + IN
+                       CALL DIP_MOMENT(JL, JM, JN, GAMAP, VD, NTD,
+     &                                 DISTQD)
+                       DIPS(1) = DIPS(1) + EFACTP*DD*VD(1)
+                       DIPS(2) = DIPS(2) + EFACTP*DD*VD(2)
+                       DIPS(3) = DIPS(3) + EFACTP*DD*VD(3)
+  242                  CONTINUE
+                    ENDDO
+  241               CONTINUE
+                 ENDDO
+C DIPS = -r (charge included); MQ_ab = -r_a l_b + (1/2)e_abc DIPS_c
+                 DO MM = 1, 9
+                    DV(MM) = -DV(MM)
+                 ENDDO
+                 DV(2) = DV(2) - HALF*DIPS(3)
+                 DV(3) = DV(3) + HALF*DIPS(2)
+                 DV(4) = DV(4) + HALF*DIPS(3)
+                 DV(6) = DV(6) - HALF*DIPS(1)
+                 DV(7) = DV(7) - HALF*DIPS(2)
+                 DV(8) = DV(8) + HALF*DIPS(1)
+C
 #ifdef _DEBUG_LVLM1
                  write(luout,*)
                  write(luout,*) 'Center1  ', i ,'     ',ITYP
@@ -604,7 +658,8 @@ C
                     IF(ABS(VSINT) .LT. THRESH) GO TO 112
                     IHOLD(M) = IHOLD(M) + 1
                     IPUT = IHOLD(M) + 2
-                    IF(JJND.GT.IIND.AND.MTYP.EQ.16) VSINT = -VSINT
+                    IF(JJND.GT.IIND.AND.(MTYP.EQ.16.OR.MTYP.EQ.26))
+     &                 VSINT = -VSINT
                     BUF(IPUT, M) = VSINT
                     IOFF = IPUT + IWPB
                     IBUF(IOFF*IINTFP, M) = IBTOR(IBTSHL(MAX0(IIND,JJND)
@@ -685,7 +740,7 @@ C
                   JS = ITRN(JJ, I)
                   IF(IS .LT. JS) GO TO 724
                   XP = CC*CTRN(JJ, I)*X
-                  IF(MTYP .EQ. 24) XP = -XP
+                  IF(MTYP .EQ. 24 .OR. MTYP .EQ. 26) XP = -XP
                   IJF = IS*(IS-1)/2+JS
                   AOINT(IJF)=XP+AOINT(IJF)
  724           CONTINUE

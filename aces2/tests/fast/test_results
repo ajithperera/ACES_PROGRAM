@@ -565,3 +565,19 @@ GEN_OSCS 2
 h2o_gtdens_x new (2026-11)
 GEN_OSCS 7
 4.1071525446E-02
+
+h2o_gtdens_bd_q new (2026-11)
+QUADMOMC 7
+9.9173E-08
+
+h2o_gtdens_bd_o new (2026-11)
+OCTPMOMC 7
+-1.17468E-07
+
+h2o_gtdens_bd_m new (2026-11)
+ANGLMOMC 8
+3.138449E-06
+
+h2o_gtdens_bd_mq new (2026-11)
+MAGQUADC 7
+-5.1661E-08

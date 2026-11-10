@@ -763,7 +763,7 @@ With `CORE_WINDOW`, also restricts single excitations to holes in the window (`O
 
 ## GENRLIZD_TDENS
 
-In EOM-EE (`xvee`, Davidson solver), stores up to four left and right vectors per irrep and forms the generalized transition densities ⟨L<sub>k</sub>|p<sup>†</sup>q|R<sub>l</sub>⟩ between all pairs of states and the corresponding oscillator strengths, including excited-to-excited transitions.
+In EOM-EE (`xvee`, Davidson solver), stores up to four left and right vectors per irrep and forms the generalized transition densities ⟨L<sub>k</sub>|p<sup>†</sup>q|R<sub>l</sub>⟩ between all pairs of states and the corresponding oscillator strengths, including excited-to-excited transitions. For every pair the oscillator strength is also given to second order in the photon wave vector (length gauge, isotropically averaged): magnetic-dipole, electric-quadrupole, electric-dipole/octupole and electric-dipole/magnetic-quadrupole terms, whose sum is origin independent for exact states. The same terms are printed for ground-to-excited transitions with `EE_SEARCH=CORE` or `DOUBLE`. They use the `xvprops` property integrals.
 
 ## PES_SCAN
 

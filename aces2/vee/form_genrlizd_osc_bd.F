@@ -20,9 +20,9 @@ C
 
       Dimension Eigval(100,8)
       Dimension Work(Maxcor)
-      Dimension Qm_tl(6),Om_tl(10),Am_tl(3),Dm_tl(3),Mq_tl(9)
-      Dimension Qm_tr(6),Om_tr(10),Am_tr(3),Dm_tr(3),Mq_tr(9)
-      Dimension Qm2_t(9),Om2_t(10),Am2_t(3),Dm2_t(3),Mq2_t(27)
+      Dimension Qm_tl(6),Om_tl(3),Am_tl(3),Dm_tl(3),Mq_tl(9)
+      Dimension Qm_tr(6),Om_tr(3),Am_tr(3),Dm_tr(3),Mq_tr(9)
+      Dimension Qm2_t(9),Om2_t(3),Am2_t(3),Dm2_t(3),Mq2_t(27)
 
 #include "flags.com"
 #include "sym.com"
@@ -52,7 +52,7 @@ C
 
       Iqm   = Ione
       Iom   = Iqm   + N1*6
-      Iam   = Iom   + N1*10
+      Iam   = Iom   + N1*3
       Idm   = Iam   + N1*3
       Imq   = Idm   + N1*3
       Ioscq = Imq   + N1*9
@@ -84,8 +84,7 @@ C
             Call Genrlizd_beyond_dipole(Work(Ioff),Work(Iscr1),
      +                                  Work(Iscr2),Work(Iqm),
      +                                  Work(Iom),Work(Iam),
-     +                                  Work(Idm),Work(Imq),
-     +                                  Work(Iend),Mxcor,Nao,
+     +                                  Work(Idm),Work(Imq),Nao,
      +                                  Jroot,Irrepy,Iroot,Irrepx)
          Enddo
          Enddo
@@ -105,7 +104,7 @@ C
                E = Dabs(E_i - E_j)
             Endif
 C
-C "r" = <L_J|O|R_I>, "l" = <L_I|O|R_J>
+C "r" = <L_J|O|R_I> = <J|O|I>, "l" = <L_I|O|R_J> = <I|O|J>
 C
             Ir = Jroot + 4*(Irrepy-1) + 32*(Iroot-1) + 128*(Irrepx-1)
             Il = Iroot + 4*(Irrepx-1) + 32*(Jroot-1) + 128*(Irrepy-1)
@@ -113,7 +112,7 @@ C
                Qm_tr(Ic) = Work(Iqm-1+Ir+N1*(Ic-1))
                Qm_tl(Ic) = Work(Iqm-1+Il+N1*(Ic-1))
             Enddo
-            Do Ic = 1, 10
+            Do Ic = 1, 3
                Om_tr(Ic) = Work(Iom-1+Ir+N1*(Ic-1))
                Om_tl(Ic) = Work(Iom-1+Il+N1*(Ic-1))
             Enddo
@@ -128,9 +127,19 @@ C
                Mq_tl(Ic) = Work(Imq-1+Il+N1*(Ic-1))
             Enddo
 
+C
+C init wants l = <lower|X|upper>, r = <upper|X|lower> (only the
+C mu-M cross term depends on the direction).
+C
+            If (E_i .Le. E_j) Then
             Call Genrlizd_multipole_init(Qm_tl,Om_tl,Am_tl,Mq_tl,Dm_tl,
      +                                   Qm_tr,Om_tr,Am_tr,Mq_tr,Dm_tr,
      +                                   Qm2_t,Om2_t,Am2_t,Mq2_t,Dm2_t)
+            Else
+            Call Genrlizd_multipole_init(Qm_tr,Om_tr,Am_tr,Mq_tr,Dm_tr,
+     +                                   Qm_tl,Om_tl,Am_tl,Mq_tl,Dm_tl,
+     +                                   Qm2_t,Om2_t,Am2_t,Mq2_t,Dm2_t)
+            Endif
             Call Genrlizd_multipole_fin(Qm2_t,Om2_t,Am2_t,Dm2_t,Mq2_t,
      +                                  E,D_iso,A_iso,O_iso,Q_iso,
      +                                  M_iso)

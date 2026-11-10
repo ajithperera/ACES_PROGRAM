@@ -77,6 +77,7 @@ rename  vee        getaoinf_      # vee and vcc need different copies; libr2's w
 rename  vcceh      z2tomo_        # 4-way collision; wrong copy gave a ~1e-5 EOM error
 rename  lambda     z2tomo_        # 4-way collision; wrong copy gave a ~1e-5 EOM error
 rename  vee        z2tomo_        # 4-way collision; wrong copy gave a ~1e-5 EOM error
+rename  vee        newlst_        # vee's NEWLST (lists 410, Lanczos, RCCD types) beat vcceh's; vcceh/pdens callers need theirs
 rename  lambda     w45t3drv_      # lambda's 8-arg copy beat trp's 4-arg one
 rename  tools      xgemm_         # crust's XGEMM must win as in the classic link (illegal DGEMM arg otherwise)
 rename  ringcc     check_t2_      # vcc must get trp's CHECK_T2, not ringcc's

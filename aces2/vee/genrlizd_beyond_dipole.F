@@ -1,121 +1,36 @@
       Subroutine Genrlizd_Beyond_dipole(Dens,Scr1,Scr2,Qm,Om,Am,
-     +                                  Dm,Mq,Work,Maxcor,Nao,
+     +                                  Dm,Mq,Nao,
      +                                  Jroot,Irrepy,Iroot,Irrepx)
-    
+C
+C Multipole moments <L_J|O|R_I> of one generalized (state-to-state)
+C transition density (spin summed, AO basis), stored at
+C (Jroot,Irrepy,Iroot,Irrepx). See vee_bd_moments for the operators.
+C
+C 11/2026 (Ajith Perera): uses vee_bd_moments (antisymmetric AM/MQ
+C expansion, MQ antisymmetrized in vprops).
+C
       Implicit Double Precision(A-H,O-Z)
+      Double Precision Mq,Mq1
+      Dimension Dens(Nao,Nao),Scr1(*),Scr2(Nao,Nao)
+      Dimension Qm(4,8,4,8,6),Om(4,8,4,8,3),Am(4,8,4,8,3),
+     +          Mq(4,8,4,8,9),Dm(4,8,4,8,3)
+      Dimension Qm1(6),Om1(3),Am1(3),Mq1(9),Dm1(3)
 
-      Double precision Mq
-      Dimension Dens(Nao,Nao),Scr1(Nao,Nao),Scr2(Nao,Nao)
-      Dimension Work(Maxcor),Qm(4,8,4,8,6),Om(4,8,4,8,10),
-     +                       Am(4,8,4,8,3),Mq(4,8,4,8,9),
-     +                       Dm(4,8,4,8,3)
+      Call Vee_bd_moments(Dens,Scr1,Scr2,Nao,Dm1,Qm1,Om1,Am1,Mq1)
 
-      Character*8 Label_Angm(3)
-      Character*8 Label_dmom(3)
-      Character*8 Label_octp(10)
-      Character*8 Label_quad(6)
-      Character*8 Label_magd(9)
-      Character*8 Q_string(2),O_string(2),A_string(2),M_string(2)
-
-      COMMON/AOSYM/IAOPOP(8),IOFFAO(8),IOFFV(8,2),IOFFO(8,2),
-     +             IRPDPDAO(8),IRPDPDAOS(8),
-     +             ISTART(8,8),ISTARTMO(8,3)
- 
-      Data Label_dmom/'DIPOLE_X','DIPOLE_Y','DIPOLE_Z'/
-      Data Label_quad/'QUAD_XX ','QUAD_YY ','QUAD_ZZ ','QUAD_XY ',
-     +                'QUAD_XZ ','QUAD_YZ '/
-      Data Label_octp/'OCTUPXXX','OCTUPYYY','OCTUPZZZ','OCTUPXXY',
-     +                'OCTUPXXZ','OCTUPXYY','OCTUPYYZ','OCTUPXZZ',
-     +                'OCTUPYZZ','OCTUPXYZ'/
-      Data Label_angm/'   AMX  ', '   AMY  ','   AMZ  '/
-      Data Label_magd/'   MQXX ','   MQYX ','   MQZX ','   MQXY ',
-     +                '   MQYY ','   MQZY ','   MQXZ ','   MQYZ ',
-     +                '   MQZZ '/
-      Data Isix,Iten,Ithr,Inin /6,10,3,9/
-
-      Length = Nao*(Nao+1)/2
-
-C See below for the dipole contribution 
-
-C Lets do the quadrapole contriubtion 
-      Do Icomp = 1, 6
-         Call Getrec(20,"JOBARC",Label_quad(Icomp),Length,Scr1)
-         Call Expnd2(Scr1,Scr2,Nao)
-         Qm(Jroot,Irrepy,Iroot,Irrepx,Icomp) = 
-     +   Qm(Jroot,Irrepy,Iroot,Irrepx,Icomp) + 
-     +   Ddot(Nao*Nao,Dens,1,Scr2,1)
+      Do Ic = 1, 3
+         Dm(Jroot,Irrepy,Iroot,Irrepx,Ic) = Dm1(Ic)
+         Am(Jroot,Irrepy,Iroot,Irrepx,Ic) = Am1(Ic)
+      Enddo
+      Do Ic = 1, 6
+         Qm(Jroot,Irrepy,Iroot,Irrepx,Ic) = Qm1(Ic)
+      Enddo
+      Do Ic = 1, 3
+         Om(Jroot,Irrepy,Iroot,Irrepx,Ic) = Om1(Ic)
+      Enddo
+      Do Ic = 1, 9
+         Mq(Jroot,Irrepy,Iroot,Irrepx,Ic) = Mq1(Ic)
       Enddo
 
-C Similarly Octapole contribution
-
-      Do Icomp = 1, 10
-         Call Getrec(20,"JOBARC",Label_Octp(Icomp),Length,Scr1)
-         Call Expnd2(Scr1,Scr2,Nao)
-         Om(Jroot,Irrepy,Iroot,Irrepx,Icomp) = 
-     +   Om(Jroot,Irrepy,Iroot,Irrepx,Icomp) + 
-     +   Ddot(Nao*Nao,Dens,1,Scr2,1)
-      Enddo
-
-C Angular momentum contribution (rxp + s)
-
-      Do Icomp = 1,3 
-         Call Getrec(20,"JOBARC",Label_Angm(Icomp),Length,Scr1)
-         Call Expnd2(Scr1,Scr2,Nao)
-         Am(Jroot,Irrepy,Iroot,Irrepx,Icomp) = 
-     +   Am(Jroot,Irrepy,Iroot,Irrepx,Icomp) + 
-     +   Ddot(Nao*Nao,Dens,1,Scr2,1)
-      Enddo
-
-C For excited states <0|S|Psi_k> is zero. This term contribute
-C only to ioniized or attached states. 
-
-C (11/2026: removed a Putrec of Am under the unset label A_string(Iside)
-C  -- Iside is not defined here; the moments live in the Am argument.)
-
-C Lets do the orbital magnetic quadrupole contribution 
-C r(rxp) - (rxp)r
-
-      Do Icomp = 1,3
-         Call Getrec(20,"JOBARC",Label_Dmom(Icomp),Length,Scr1)
-         Call Expnd2(Scr1,Scr2,Nao)
-         Dm(Jroot,Irrepy,Iroot,Irrepx,Icomp) = 
-     +   Dm(Jroot,Irrepy,Iroot,Irrepx,Icomp) + 
-     +   Ddot(Nao*Nao,Dens,1,Scr2,1)
-      Enddo
-
-      Do Icomp = 1, 9
-         Call Getrec(20,"JOBARC",Label_magd(Icomp),Length,Scr1)
-         Call Expnd2(Scr1,Scr2,Nao)
-         Mq(Jroot,Irrepy,Iroot,Irrepx,Icomp) = 
-     +   Mq(Jroot,Irrepy,Iroot,Irrepx,Icomp) + 
-     +   Ddot(Nao*Nao,Dens,1,Scr2,1)
-      Enddo 
-
-C These are the contributions from the second part of the 
-C magtentic quadrupole operator (L*r) piece. This translate to 
-C using dipole moment integrals. 
-C This is (r^p) r is evaluated as 
-C  (yd/dz-zd/dy)(x,y,z) =>  (0,-z,y)
-C -(xd/dz-zd/dx)(x,y,z) => -(-z,0,x)
-C  (yd/dx-xd/dy)(x,y,z) =>  (y,-x,0)
-
-      Mq(Jroot,Irrepy,Iroot,Irrepx,1) = Mq(Jroot,Irrepy,Iroot,Irrepx,1)
-      Mq(Jroot,Irrepy,Iroot,Irrepx,2) = Mq(Jroot,Irrepy,Iroot,Irrepx,2)
-     +                                - Dm(Jroot,Irrepy,Iroot,Irrepx,3)
-      Mq(Jroot,Irrepy,Iroot,Irrepx,3) = Mq(Jroot,Irrepy,Iroot,Irrepx,3) 
-     +                                + Dm(Jroot,Irrepy,Iroot,Irrepx,2)
-
-      Mq(Jroot,Irrepy,Iroot,Irrepx,4) = Mq(Jroot,Irrepy,Iroot,Irrepx,4) 
-     +                                + Dm(Jroot,Irrepy,Iroot,Irrepx,3)
-      Mq(Jroot,Irrepy,Iroot,Irrepx,5) = Mq(Jroot,Irrepy,Iroot,Irrepx,5) 
-      Mq(Jroot,Irrepy,Iroot,Irrepx,6) = Mq(Jroot,Irrepy,Iroot,Irrepx,6) 
-     +                                - Dm(Jroot,Irrepy,Iroot,Irrepx,1)
-
-      Mq(Jroot,Irrepy,Iroot,Irrepx,7) = Mq(Jroot,Irrepy,Iroot,Irrepx,7)
-     +                                + Dm(Jroot,Irrepy,Iroot,Irrepx,2)
-      Mq(Jroot,Irrepy,Iroot,Irrepx,8) = Mq(Jroot,Irrepy,Iroot,Irrepx,8)
-     +                                - Dm(Jroot,Irrepy,Iroot,Irrepx,1)
-      Mq(Jroot,Irrepy,Iroot,Irrepx,9) = Mq(Jroot,Irrepy,Iroot,Irrepx,9) 
-
-      Return 
-      End 
+      Return
+      End
